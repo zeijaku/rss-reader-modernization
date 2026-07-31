@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Qiita style</title>
+  <link rel="self" type="application/atom+xml" href="https://qiita.example/tags/test/feed"/>
+  <link>https://qiita.example/tags/test</link>
+  <entry>
+    <title>Article A</title>
+    <link rel="self" type="application/atom+xml" href="https://qiita.example/api/items/a"/>
+    <link rel="alternate" type="text/html" href="https://qiita.example/user/items/a"/>
+    <url>https://qiita.example/user/items/a-fallback</url>
+    <published>2026-07-30T01:02:03+09:00</published>
+  </entry>
+</feed>

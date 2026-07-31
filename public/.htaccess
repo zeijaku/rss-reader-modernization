@@ -1,0 +1,14 @@
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+<FilesMatch "(^\.|\.(?:env|ini|log|sql|sqlite|db|bak|backup|old|orig|swp|tmp|dist)$)">
+    Require all denied
+</FilesMatch>
+
+ErrorDocument 403 /error_403
+ErrorDocument 404 /error_404

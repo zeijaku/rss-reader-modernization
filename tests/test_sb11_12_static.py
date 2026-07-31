@@ -1,0 +1,94 @@
+from pathlib import Path
+import re
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
+api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8')
+common_func = (ROOT / 'app' / 'common' / 'common_func.php').read_text(encoding='utf-8')
+common_db = (ROOT / 'app' / 'common' / 'common_db.php').read_text(encoding='utf-8')
+common_conf = (ROOT / 'app' / 'common' / 'common_conf.php').read_text(encoding='utf-8')
+bootstrap = (ROOT / 'app' / 'bootstrap.php').read_text(encoding='utf-8')
+validation = (ROOT / 'app' / 'validation.php').read_text(encoding='utf-8')
+root_ht = (ROOT / '.htaccess').read_text(encoding='utf-8')
+public_ht = (ROOT / 'public' / '.htaccess').read_text(encoding='utf-8')
+version = (ROOT / 'app' / 'version.php').read_text(encoding='utf-8')
+
+checks = []
+def check(cond: bool, msg: str) -> None:
+    print(('PASS' if cond else 'FAIL') + ': ' + msg)
+    checks.append(bool(cond))
+
+# SB-11-01: exact four-tab mapping.
+check("for ($tabLocation = 0; $tabLocation <= 3; $tabLocation++)" in index, 'drawer renders all four tab locations 0..3 from one mapping')
+check("'conf_style_tabname' . ($tabLocation + 1)" in index, 'drawer maps location N to tab name N+1')
+check('href="./?tab=2"' not in index or "for ($tabLocation" in index, 'Legacy hard-coded 0,2,3,3 drawer mapping removed')
+check("'conf_style_tabname' . ($tabParam + 1)" in index, 'navbar title uses the same 0-based location to 1-based label mapping')
+check("value=\"<?php echo app_html(is_int($content_location) ? (string) $content_location : '0'); ?>\"" in index, 'RSS create hidden location uses current validated tab location')
+
+# SB-11-02/03: parser semantics and item bounds.
+check("$feedType = rss_check_string" not in api and "new rss_parse()" in api, 'API always parses fetched response instead of trusting Legacy feed-type hint')
+check("'invalid_feed'" in api and 'supported RSS or Atom feed' in api, 'unsupported/malformed upstream response returns structured invalid_feed error')
+check("'title' => 'Text'" not in api and "'feed_type' => 'Text'" not in api, 'Legacy text-success fallback removed')
+check("$rootName === 'feed'" in common_func and "$rootName === 'rss'" in common_func and "$rootName === 'rdf'" in common_func, 'parser explicitly recognizes Atom, RSS2, and RSS1 roots')
+check('default_namespace_children' in common_func and "http://purl.org/rss/1.0/" in common_func, 'Atom/default-namespace and RSS1 namespace parsing are handled explicitly')
+check("'$1UTF-8$2'" in common_func and 'Feed XML declaration could not be normalized.' in common_func, 'converted Feed bytes keep XML encoding declaration aligned to UTF-8')
+check("'item' => []" in common_func and 'Zero-item feeds are valid' in common_func, 'zero-item feeds remain valid parser results')
+check('Math.min(5, items.length)' in index, 'browser only renders available items up to five')
+
+# SB-11-04: close partial rows for Feed and Stock branches.
+check(index.count("if ($row_cnt > 0) {") >= 2, 'partial Feed/Stock grid rows are explicitly closed')
+check("$row_cnt = 0;" in index and "$row_cnt = '0';" not in index, 'grid row counter uses integer state')
+check('rsort($result_stock)' not in index, 'Stock order is not re-sorted incorrectly after ordered DB query')
+
+# SB-11-05/06: tab update is isolated and one request path.
+match = re.search(r'function api_tabs_update\([^)]*\): array\s*\{(?P<body>.*?)\n\}', api, re.S)
+body = match.group('body') if match else ''
+check(bool(match), 'tabs.update handler exists')
+check('update_content' not in body and 'delete_content' not in body, 'tabs.update contains no stray content mutation logic')
+check("$('#tabsForm').on('submit'" in index and 'event.preventDefault();' in index[index.find("$('#tabsForm').on('submit'"):], 'tabs form uses AJAX submit with preventDefault')
+check('type="submit" class="btn btn-primary submit_tab"' in index, 'tab button uses the single form submit path')
+
+# SB-11-07/08: settings persistence/current values.
+check('$_SESSION' not in api, 'settings/tab API does not cache mutable UI settings in Session')
+check('function app_selected_attr' in validation and 'function app_checked_attr' in validation, 'selected/checked output helpers exist')
+check("app_selected_attr($ui['conf_style']" in index and "app_selected_attr($ui['conf_style_nav']" in index, 'theme and navbar selects render stored current values')
+check('app_checked_attr($ui[$iconKey]' in index, 'navbar icon radios render stored current values')
+check("$('#settingsForm').on('submit'" in index and 'type="submit" class="btn btn-primary submit_setting"' in index, 'settings form uses one AJAX submit path')
+
+# Additional functional corrections found while auditing SB-11.
+check('content-edit-trigger' in index and 'data-content-style' in index, 'content edit modal carries the current style explicitly')
+check("$('.changeContentStyle').val(content_style);" in index, 'content edit modal restores current style instead of silently resetting it')
+check("$('.fa-edit').on('click'" not in index, 'generic FontAwesome edit icons no longer trigger content-edit behavior')
+check('id="saveContent"' in index, 'Stock modal no longer duplicates the content-edit modal id')
+check('id="exampleModalCenterTitle"' not in index and 'aria-labelledby="changeContent"' not in index, 'modal title ids/aria references are unique instead of Legacy duplicates')
+check('class="nav-link disabled"' not in index, 'configured navbar links are no longer rendered disabled')
+
+# SB-11-09/10: previous fixes remain present.
+stock_start = api.find('function api_stock_create')
+stock_end = api.find('function api_settings_update')
+stock_body = api[stock_start:stock_end] if stock_start >= 0 and stock_end > stock_start else ''
+check('app_safe_http_fetch' not in stock_body and 'preg_match' not in stock_body, 'Stock title save does not refetch/scrape article page')
+check("$_SERVER['HTTP_USER_AGENT'] ?? '-'" in common_func, 'missing HTTP_USER_AGENT is handled without warning in access log')
+
+# SB-12-01/02: signatures/runtime settings.
+check('function update_setting(' in common_db, 'update_setting exists in PDO layer')
+check('short_open_tag' not in root_ht + public_ht, 'no short_open_tag runtime dependency')
+check('Options +MultiViews' not in root_ht + public_ht and 'Options MultiViews' not in root_ht + public_ht, 'MultiViews is not required')
+check('href="./logout"' not in index and "action=\"./logout.php\"" in index, 'logout does not depend on extensionless MultiViews routing')
+check('CURLOPT_BINARYTRANSFER' not in (ROOT / 'app' / 'http_fetch.php').read_text(encoding='utf-8'), 'obsolete CURLOPT_BINARYTRANSFER is absent')
+
+# SB-12-03/04: PHP 8 policy/gate.
+check('error_reporting(E_ALL);' in bootstrap, 'runtime error policy enables E_ALL')
+check("ini_set('display_errors', APP_DEBUG ? '1' : '0');" in bootstrap, 'display_errors follows APP_DEBUG')
+check("ini_set('display_startup_errors', APP_DEBUG ? '1' : '0');" in bootstrap, 'display_startup_errors follows APP_DEBUG')
+check("ini_set('html_errors', '0');" in bootstrap, 'HTML-formatted PHP errors are disabled')
+check('PHP_VERSION_ID < 80100' in common_conf, 'runtime health check enforces PHP 8.1+ used by the codebase')
+check('strtotime($date)' not in common_func, 'parser no longer passes nullable dates through strtotime/date')
+check('mb_internal_encoding(' not in common_func and 'mb_detect_order(' not in common_func and 'mb_language(' not in common_func, 'Feed parser no longer mutates global mbstring runtime settings')
+check(bool(re.search(r'mb_detect_encoding\([^;]+?true\s*\)', common_func, re.S)), 'Feed encoding detection uses strict failure-aware detection')
+check(bool(re.search(r"const APP_VERSION = 'SB-(?:1[2-9]|[2-9]\d+) R\d+';", version)) and 'Secure Baseline SB-' in version, 'visible release marker is SB-12 or later')
+
+if not all(checks):
+    sys.exit(1)
+print(f'All {len(checks)} SB-11/SB-12 static checks passed.')

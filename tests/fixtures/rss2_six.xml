@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Six feed</title>
+    <link>https://example.test/six</link>
+    <description>Six items</description>
+    <item><title>One</title><link>https://example.test/1</link></item>
+    <item><title>Two</title><link>https://example.test/2</link></item>
+    <item><title>Three</title><link>https://example.test/3</link></item>
+    <item><title>Four</title><link>https://example.test/4</link></item>
+    <item><title>Five</title><link>https://example.test/5</link></item>
+    <item><title>Six</title><link>https://example.test/6</link></item>
+  </channel>
+</rss>

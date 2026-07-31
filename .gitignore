@@ -1,0 +1,68 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+config/.env
+config/.env.*
+!config/.env.example
+*.local.php
+*secret*.php
+
+# Runtime data
+/var/*
+!/var/.gitkeep
+!/var/log/
+!/var/log/.gitkeep
+!/var/session/
+!/var/session/.gitkeep
+/var/session/*
+!/var/session/.gitkeep
+/public/session_file/
+/public/dat/
+/session_file/
+/dat/
+*.log
+*.pid
+
+# Databases, production dumps and backups
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.bak
+*.backup
+*.old
+*.orig
+*.zip
+*.tar
+*.tar.gz
+
+# Editor / OS / test artifacts
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.tmp
+.phpunit.result.cache
+coverage/
+
+/config/local.php
+
+# Sanitized SB-13 database artifacts are intentionally versioned.
+!/database/schema.sql
+!/database/audit/preflight.sql
+!/database/audit/postflight.sql
+!/database/migrations/001_sb13_integrity.sql
+!/database/fixtures/sample.sql
+
+# Keep only the private migration directory placeholder; JSON snapshots remain ignored.
+!/var/db-migration/
+!/var/db-migration/.gitkeep
+/var/db-migration/*
+!/var/db-migration/.gitkeep
+
+# Distribution/checkpoint handoff notes (kept in ZIP, not needed in repository history)
+/CHECKLIST_FOR_USER.md
+/UPDATED_FILES_SB*.md

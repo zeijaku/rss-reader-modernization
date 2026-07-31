@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Publickey style</title>
+  <link rel="alternate" type="text/html" href="https://www.publickey.example/"/>
+  <entry>
+    <title>Article B</title>
+    <link rel="alternate" type="text/html" href="https://www.publickey.example/blog/26/article.html"/>
+    <summary>Example</summary>
+    <updated>2026-07-30T00:00:00Z</updated>
+  </entry>
+</feed>

@@ -1,0 +1,303 @@
+<?php
+
+declare(strict_types=1);
+
+final class DatabaseConnectionException extends RuntimeException
+{
+}
+
+/** @var PDO|null */
+$GLOBALS['app_pdo_connection'] = null;
+
+/**
+ * Return a shared PDO connection configured for safe failure and predictable rows.
+ *
+ * SQLite is supported only as an explicit test/development driver. Production
+ * defaults to MySQL.
+ */
+function conn_db(string $type = ''): PDO
+{
+    if ($GLOBALS['app_pdo_connection'] instanceof PDO) {
+        return $GLOBALS['app_pdo_connection'];
+    }
+
+    $driver = strtolower($type !== '' ? $type : (string) DB_DRIVER);
+    $options = [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+        PDO::ATTR_STRINGIFY_FETCHES => false,
+    ];
+
+    try {
+        if ($driver === 'sqlite') {
+            $pdo = new PDO('sqlite:' . DB_SQLITE_PATH, null, null, $options);
+            $pdo->exec('PRAGMA foreign_keys = ON');
+        } elseif ($driver === 'mysql') {
+            $dsn = sprintf(
+                'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
+                DB_HOST,
+                DB_PORT,
+                DB_CONNECT
+            );
+            $pdo = new PDO($dsn, DB_USER, DB_PW, $options);
+        } else {
+            throw new InvalidArgumentException('Unsupported database driver.');
+        }
+    } catch (Throwable $exception) {
+        error_log(sprintf('Database connection failed [%s]: %s', $exception::class, $exception->getMessage()));
+        throw new DatabaseConnectionException('Database connection is unavailable.', 0, $exception);
+    }
+
+    $GLOBALS['app_pdo_connection'] = $pdo;
+    return $pdo;
+}
+
+/** Test-only connection injection. */
+function set_db_connection_for_testing(?PDO $pdo): void
+{
+    $GLOBALS['app_pdo_connection'] = $pdo;
+}
+
+function app_now(): string
+{
+    return (new DateTimeImmutable('now', new DateTimeZone('Asia/Tokyo')))->format('Y-m-d H:i:s');
+}
+
+function entry_user(?string $user_email = null, ?string $user_password = null): int
+{
+    $conn = conn_db();
+
+    try {
+        $conn->beginTransaction();
+
+        $stmt = $conn->prepare(
+            'INSERT INTO ' . db_table_name('user_info') . ' (user_date, user_email, user_password) VALUES (:date, :email, :password)'
+        );
+        $stmt->execute([
+            ':date' => app_now(),
+            ':email' => $user_email,
+            ':password' => $user_password,
+        ]);
+        $userId = (int) $conn->lastInsertId();
+
+        $stmt = $conn->prepare(
+            'INSERT INTO ' . db_table_name('user_conf') . ' (conf_date, user_id, conf_style, conf_style_nav) '
+            . 'VALUES (:date, :user_id, :style, :nav_style)'
+        );
+        $stmt->execute([
+            ':date' => app_now(),
+            ':user_id' => $userId,
+            ':style' => 'bootstrap',
+            ':nav_style' => 'dark',
+        ]);
+
+        $conn->commit();
+        return $userId;
+    } catch (Throwable $exception) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+function entry_content(
+    int|string|null $content_owner = null,
+    ?string $content = null,
+    string $style_select = 'success',
+    int|string $content_location = 0
+): int {
+    $stmt = conn_db()->prepare(
+        'INSERT INTO ' . db_table_name('content') . ' '
+        . '(content_date, content_owner, content_location, content_style, content_value) '
+        . 'VALUES (:date, :owner, :location, :style, :value)'
+    );
+    $stmt->execute([
+        ':date' => app_now(),
+        ':owner' => $content_owner === null ? null : (int) $content_owner,
+        ':location' => (int) $content_location,
+        ':style' => $style_select,
+        ':value' => $content,
+    ]);
+
+    return (int) conn_db()->lastInsertId();
+}
+
+function info_dbsave(int|string|null $save_owner, ?string $stock_data, ?string $stock_title): int
+{
+    $stmt = conn_db()->prepare(
+        'INSERT INTO ' . db_table_name('content_stock') . ' (stock_date, stock_owner, stock_data, stock_title) '
+        . 'VALUES (:date, :owner, :data, :title)'
+    );
+    $stmt->execute([
+        ':date' => app_now(),
+        ':owner' => $save_owner === null ? null : (int) $save_owner,
+        ':data' => $stock_data,
+        ':title' => $stock_title,
+    ]);
+
+    return (int) conn_db()->lastInsertId();
+}
+
+
+function find_active_users_by_identity(string $identity): array
+{
+    $stmt = conn_db()->prepare(
+        'SELECT user_id, user_email, user_password, user_flag FROM ' . db_table_name('user_info') . ' '
+        . 'WHERE user_email = :email AND user_flag = 0 ORDER BY user_id ASC LIMIT 2'
+    );
+    $stmt->execute([':email' => $identity]);
+    return $stmt->fetchAll();
+}
+
+function user_identity_exists(string $identity): bool
+{
+    $stmt = conn_db()->prepare('SELECT user_id FROM ' . db_table_name('user_info') . ' WHERE user_email = :email LIMIT 1');
+    $stmt->execute([':email' => $identity]);
+    return $stmt->fetchColumn() !== false;
+}
+
+function update_user_password_hash(int $userId, string $passwordHash): int
+{
+    $stmt = conn_db()->prepare(
+        'UPDATE ' . db_table_name('user_info') . ' SET user_password = :password WHERE user_id = :user_id AND user_flag = 0'
+    );
+    $stmt->execute([':password' => $passwordHash, ':user_id' => $userId]);
+    return $stmt->rowCount();
+}
+
+function search_content(int|string|null $content_owner = null, int|string $content_location = 0): array
+{
+    $stmt = conn_db()->prepare(
+        'SELECT * FROM ' . db_table_name('content') . ' '
+        . 'WHERE content_flag = 0 AND content_owner = :owner AND content_location = :location '
+        . 'ORDER BY content_id ASC'
+    );
+    $stmt->execute([':owner' => $content_owner === null ? null : (int) $content_owner, ':location' => (int) $content_location]);
+    return $stmt->fetchAll();
+}
+
+function search_stock(int|string|null $stock_owner): array
+{
+    $stmt = conn_db()->prepare(
+        'SELECT * FROM ' . db_table_name('content_stock') . ' '
+        . 'WHERE stock_flag = 0 AND stock_owner = :owner ORDER BY stock_id DESC'
+    );
+    $stmt->execute([':owner' => $stock_owner === null ? null : (int) $stock_owner]);
+    return $stmt->fetchAll();
+}
+
+function search_conf(int|string|null $conf_owner = null): array
+{
+    $stmt = conn_db()->prepare('SELECT * FROM ' . db_table_name('user_conf') . ' WHERE user_id = :user_id');
+    $stmt->execute([':user_id' => $conf_owner === null ? null : (int) $conf_owner]);
+    return $stmt->fetchAll();
+}
+
+function find_owned_active_content(int $userId, int $contentId): ?array
+{
+    $stmt = conn_db()->prepare(
+        'SELECT * FROM ' . db_table_name('content') . ' '
+        . 'WHERE content_id = :content_id AND content_owner = :owner AND content_flag = 0 LIMIT 1'
+    );
+    $stmt->execute([':content_id' => $contentId, ':owner' => $userId]);
+    $row = $stmt->fetch();
+    return is_array($row) ? $row : null;
+}
+
+function update_content_owned(
+    int $userId,
+    int $contentId,
+    string $contentValue,
+    string $contentStyle = 'success'
+): int {
+    $stmt = conn_db()->prepare(
+        'UPDATE ' . db_table_name('content') . ' SET content_flag = 0, content_style = :style, content_value = :value '
+        . 'WHERE content_id = :content_id AND content_owner = :owner AND content_flag = 0'
+    );
+    $stmt->execute([
+        ':style' => $contentStyle,
+        ':value' => $contentValue,
+        ':content_id' => $contentId,
+        ':owner' => $userId,
+    ]);
+    return $stmt->rowCount();
+}
+
+function delete_content_owned(int $userId, int $contentId): int
+{
+    $stmt = conn_db()->prepare(
+        'UPDATE ' . db_table_name('content') . ' SET content_flag = 1 '
+        . 'WHERE content_id = :content_id AND content_owner = :owner AND content_flag = 0'
+    );
+    $stmt->execute([':content_id' => $contentId, ':owner' => $userId]);
+    return $stmt->rowCount();
+}
+
+function update_setting(
+    int|string $user_id,
+    string $conf_style,
+    string $conf_style_nav,
+    ?string $conf_style_navlink1,
+    ?string $conf_style_navlink_view1,
+    ?string $conf_style_navlink_icon1,
+    ?string $conf_style_navlink2,
+    ?string $conf_style_navlink_view2,
+    ?string $conf_style_navlink_icon2,
+    ?string $conf_style_navlink3,
+    ?string $conf_style_navlink_view3,
+    ?string $conf_style_navlink_icon3,
+    ?string $conf_style_navlink4,
+    ?string $conf_style_navlink_view4,
+    ?string $conf_style_navlink_icon4
+): int {
+    $stmt = conn_db()->prepare(
+        'UPDATE ' . db_table_name('user_conf') . ' SET '
+        . 'conf_style = :style, conf_style_nav = :nav_style, '
+        . 'conf_style_navlink1 = :link1, conf_style_navlink_view1 = :view1, conf_style_navlink_icon1 = :icon1, '
+        . 'conf_style_navlink2 = :link2, conf_style_navlink_view2 = :view2, conf_style_navlink_icon2 = :icon2, '
+        . 'conf_style_navlink3 = :link3, conf_style_navlink_view3 = :view3, conf_style_navlink_icon3 = :icon3, '
+        . 'conf_style_navlink4 = :link4, conf_style_navlink_view4 = :view4, conf_style_navlink_icon4 = :icon4 '
+        . 'WHERE user_id = :user_id'
+    );
+    $stmt->execute([
+        ':style' => $conf_style,
+        ':nav_style' => $conf_style_nav,
+        ':link1' => $conf_style_navlink1,
+        ':view1' => $conf_style_navlink_view1,
+        ':icon1' => $conf_style_navlink_icon1,
+        ':link2' => $conf_style_navlink2,
+        ':view2' => $conf_style_navlink_view2,
+        ':icon2' => $conf_style_navlink_icon2,
+        ':link3' => $conf_style_navlink3,
+        ':view3' => $conf_style_navlink_view3,
+        ':icon3' => $conf_style_navlink_icon3,
+        ':link4' => $conf_style_navlink4,
+        ':view4' => $conf_style_navlink_view4,
+        ':icon4' => $conf_style_navlink_icon4,
+        ':user_id' => (int) $user_id,
+    ]);
+    return $stmt->rowCount();
+}
+
+function update_tab(
+    int|string $user_id,
+    ?string $conf_style_tabname1,
+    ?string $conf_style_tabname2,
+    ?string $conf_style_tabname3,
+    ?string $conf_style_tabname4
+): int {
+    $stmt = conn_db()->prepare(
+        'UPDATE ' . db_table_name('user_conf') . ' SET conf_style_tabname1 = :tab1, conf_style_tabname2 = :tab2, '
+        . 'conf_style_tabname3 = :tab3, conf_style_tabname4 = :tab4 WHERE user_id = :user_id'
+    );
+    $stmt->execute([
+        ':tab1' => $conf_style_tabname1,
+        ':tab2' => $conf_style_tabname2,
+        ':tab3' => $conf_style_tabname3,
+        ':tab4' => $conf_style_tabname4,
+        ':user_id' => (int) $user_id,
+    ]);
+    return $stmt->rowCount();
+}

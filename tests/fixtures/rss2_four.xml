@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Four feed</title>
+    <link>https://example.test/four</link>
+    <description>Four items</description>
+    <item><title>One</title><link>https://example.test/1</link><pubDate>Wed, 29 Jul 2026 10:00:00 +0900</pubDate></item>
+    <item><title>Two</title><link>https://example.test/2</link><pubDate>invalid-date</pubDate></item>
+    <item><title>Three</title><link>https://example.test/3</link></item>
+    <item><title>Four</title><link>https://example.test/4</link><pubDate>Wed, 29 Jul 2026 13:00:00 +0900</pubDate></item>
+  </channel>
+</rss>

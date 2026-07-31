@@ -1,0 +1,93 @@
+from __future__ import annotations
+import http.client
+import os
+from pathlib import Path
+import re
+import socket
+import subprocess
+import time
+import urllib.parse
+
+ROOT = Path(__file__).resolve().parents[1]
+PUBLIC = ROOT / 'public'
+VERSION_TEXT = (ROOT / 'app' / 'version.php').read_text(encoding='utf-8')
+VERSION_MATCH = re.search(r"const APP_VERSION_LABEL = '([^']+)';", VERSION_TEXT)
+VERSION_LABEL = VERSION_MATCH.group(1) if VERSION_MATCH else ''
+
+def port():
+    with socket.socket() as s:
+        s.bind(('127.0.0.1',0))
+        return int(s.getsockname()[1])
+
+def req(p, method, path, body=None, cookie=None):
+    h={}
+    if body is not None:
+        h['Content-Type']='application/x-www-form-urlencoded'
+        h['Content-Length']=str(len(body.encode()))
+    if cookie: h['Cookie']=cookie
+    c=http.client.HTTPConnection('127.0.0.1',p,timeout=5)
+    c.request(method,path,body=body,headers=h)
+    r=c.getresponse(); data=r.read().decode('utf-8','replace'); headers=dict(r.getheaders()); status=r.status; c.close()
+    return status,headers,data
+
+def check(cond,msg):
+    print(('PASS' if cond else 'FAIL')+': '+msg)
+    if not cond: raise AssertionError(msg)
+
+def csrf_from_html(body):
+    m=re.search(r'name="csrf_token" value="([a-f0-9]{64})"', body)
+    return m.group(1) if m else ''
+
+p=port()
+env=os.environ.copy()
+env.update({
+    'APP_ENV':'testing',
+    'APP_DEBUG':'false',
+    'APP_HASH_KEY':'0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+    'DB_DRIVER':'mysql','DB_HOST':'test','DB_NAME':'test','DB_USER':'test','DB_PASSWORD':'test',
+    'REGISTRATION_ENABLED':'true',
+})
+proc=subprocess.Popen(['php','-S',f'127.0.0.1:{p}','-t',str(PUBLIC)],cwd=ROOT,env=env,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True)
+try:
+    for _ in range(50):
+        try:
+            status,headers,body=req(p,'GET','/')
+            if status==200: break
+        except OSError: time.sleep(0.05)
+    else: raise RuntimeError('public smoke server failed to start')
+
+    check('Sign in' in body and 'Register in' in body,'login and registration UI renders')
+    check(bool(VERSION_LABEL) and VERSION_LABEL in body,'visible release marker renders on login page')
+    cookie_header=headers.get('Set-Cookie','')
+    cookie=cookie_header.split(';',1)[0]
+    check('iguguru_session=' in cookie_header and 'HttpOnly' in cookie_header and 'SameSite=Lax' in cookie_header,'public login page uses hardened session cookie')
+    check('Max-Age=7776000' not in cookie_header,'Legacy 90-day cookie is absent')
+    csrf=csrf_from_html(body)
+    check(len(csrf)==64,'authentication forms expose per-session CSRF token')
+
+    s,_,_=req(p,'GET','/css/bootstrap.min.css')
+    check(s==200,'Bootstrap stylesheet is served')
+    s,_,_=req(p,'GET','/logout.php')
+    check(s==405,'direct GET logout is rejected')
+
+    form=urllib.parse.urlencode({'token':'regist','email':'new@example.com','password':'short','csrf_token':csrf})
+    s,h,_=req(p,'POST','/',form,cookie=cookie)
+    check(s==303 and h.get('Location')=='./?result=regist_password','short registration password is rejected before DB write with valid CSRF')
+
+    form=urllib.parse.urlencode({'token':'login','email':'not-an-email','password':'not-a-real-password','csrf_token':csrf})
+    s,_,b=req(p,'POST','/',form,cookie=cookie)
+    check(s==200 and 'Login failed.' in b,'invalid login fails safely with valid CSRF')
+
+    form=urllib.parse.urlencode({'token':'login','email':'not-an-email','password':'not-a-real-password'})
+    s,_,b=req(p,'POST','/',form,cookie=cookie)
+    check(s==403 and 'form expired' in b.lower(),'login without CSRF is rejected before authentication')
+
+    form=urllib.parse.urlencode({'token':'regist','email':'new@example.com','password':'correct horse battery staple','csrf_token':'0'*64})
+    s,_,b=req(p,'POST','/',form,cookie=cookie)
+    check(s==403 and 'form expired' in b.lower(),'registration with wrong CSRF is rejected before DB access')
+
+    print('All public HTTP smoke checks passed.')
+finally:
+    proc.terminate()
+    try: proc.wait(timeout=3)
+    except subprocess.TimeoutExpired: proc.kill()
