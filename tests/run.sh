@@ -87,3 +87,8 @@ python3 "$ROOT/tests/test_m1a_architecture.py"
 echo '== M1-B Feed Source checks =='
 php "$ROOT/tests/test_m1b_feed_source.php"
 python3 "$ROOT/tests/test_m1b_architecture.py"
+
+echo '== M1-C Feed Adapter / Date Normalization checks =='
+php "$ROOT/tests/test_m1c_feed_adapters.php"
+python3 "$ROOT/tests/test_m1c_architecture.py"
+python3 "$ROOT/tests/test_m1c_fixture_shapes.py"

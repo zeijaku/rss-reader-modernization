@@ -2,6 +2,20 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## RSS Engine M1-C / R1 — 2026-08-01
+
+### RSS / Atom adapters and date normalization
+
+- `FeedParser` をsecure XML loadとAdapter dispatch中心へ縮小。
+- `Rss2Adapter`、`Rss1Adapter`、`AtomAdapter` と共通 `FeedAdapterInterface` を追加。
+- namespace、channel/entry/item、description、`content:encoded`、Dublin Core date等の形式別処理をAdapterへ分離。
+- `FeedDateNormalizer` を追加し、既存 `Y-m-d H:i:s` 出力とsource timezone非変換を維持。
+- Atomは従来の `updated` を優先し、未設定時に標準 `published` をfallbackとして使用。
+- `FeedLinkSelector` と `FeedXmlHelper` を追加し、Qiita/Publickey型alternate link、text link、`url` fallbackを共通化。
+- `rss_parse`、`parse_start()`、`rss_normalize_date()`、`rss_select_link_candidate()` の互換境界を維持。
+- DB、Frontend、FeedSource、Fetcher、API response、SSRF/XSS、cache/ETag/Retryは変更なし。
+- Adapter/Date/fixture/architecture/security regression testを追加。
+
 ## RSS Engine M1-B / R1 — 2026-08-01
 
 ### Feed Source model

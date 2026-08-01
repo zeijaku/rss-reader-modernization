@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Atom date priority</title>
+  <link rel="alternate" type="text/html" href="https://example.test/atom-priority"/>
+  <entry>
+    <title>Priority item</title>
+    <link rel="alternate" type="text/html" href="https://example.test/atom-priority/item"/>
+    <updated>2026-08-01T11:00:00+09:00</updated>
+    <published>2026-07-31T09:00:00+09:00</published>
+  </entry>
+</feed>

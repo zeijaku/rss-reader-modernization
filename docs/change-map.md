@@ -50,10 +50,10 @@ Statusの `Policy` は、単純実装ではなく「安全な方針を明示し�
 | FETCH-001 cURL/HTTP result | 09 | Fixed | `app/http_fetch.php` | fetch tests |
 | FETCH-002 response size | 09 | Fixed | streaming size limit | fetch tests |
 | FETCH-003 timeout policy | 09 | Fixed | configurable connect/total timeout | fetch tests |
-| RSS-001 Feed structural detection | 11-12 | Fixed for Baseline | parser logic | parser fixtures/static tests |
-| RSS-002 XML parse error | 09,11-12 | Fixed | `LIBXML_NONET`, structured failure | parser tests |
-| RSS-003 invalid/missing date | 11-12 | Fixed | parser normalization | parser matrix |
-| RSS-004 Atom alternate link | 12 R2 | Fixed | `app/common/common_func.php` | Atom fixture/link tests |
+| RSS-001 Feed structural detection | 11-12, M1-C | Fixed / Refactored | `FeedParser` + RSS/Atom adapters | parser fixtures/static tests |
+| RSS-002 XML parse error | 09,11-12, M1-C | Fixed | `FeedParser` secure XML boundary, `LIBXML_NONET`, structured failure | parser tests |
+| RSS-003 invalid/missing date | 11-12, M1-C | Fixed / Centralized | `FeedDateNormalizer`, adapter field priority | parser matrix |
+| RSS-004 Atom alternate link | 12 R2, M1-C | Fixed / Centralized | `FeedLinkSelector`, `FeedXmlHelper`, `AtomAdapter` | Atom fixture/link tests |
 | DATA-001 registration transaction | 02,14 | Fixed | DB transaction | rollback test |
 | DATA-002 FK decision | 13 | Policy | no automatic FK at Baseline | schema tests |
 | DATA-003 duplicate identity | 04,13 | Policy/Guard | fail closed + audit, no destructive cleanup | auth/integrity tests |
@@ -65,6 +65,6 @@ Statusの `Policy` は、単純実装ではなく「安全な方針を明示し�
 
 ## Notes
 
-- RSS Engineそのもののcache/conditional request/source modelはSecure Baseline後へ分離しています。
+- FeedSource / Parser / Adapter / Normalized ItemはM1-A〜Cで導入済みです。cache / conditional request / Item identityは後続M1へ分離しています。
 - Frontend dependency更新もSecure Baseline後です。
 - Change mapの「Fixed for Baseline」は、今後のEngine再設計余地を残しながら、現在の安全/機能要件を満たしたことを意味します。

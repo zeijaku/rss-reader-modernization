@@ -201,6 +201,20 @@ SB-15ではproduct behaviorを変更しません。Visible version markerとdocu
 
 詳細: [`m1-b-implementation.md`](m1-b-implementation.md)
 
+## M1-C — RSS / Atom Adapter split + Date normalization
+
+- `FeedParser` はencoding normalization、control-character cleanup、`LIBXML_NONET`付きXML load、Adapter dispatchを担当。
+- `Rss2Adapter`、`Rss1Adapter`、`AtomAdapter` が各形式のchannel/item/entry/namespace差分を `NormalizedItem` へ変換。
+- `FeedXmlHelper` がformat-neutralなtitle/link/description/content/date抽出を共有し、形式ごとのfield priorityはAdapter側に保持。
+- `FeedDateNormalizer` へDateTimeImmutable処理を集約し、既存 `Y-m-d H:i:s` とsource timezoneの壁時計時刻を維持。
+- Atomは既存priorityを壊さず `updated` の直後に `published` fallbackを追加。
+- Qiita/Publickey型alternate link、RSS text link、RSS 1.0 namespace、Dublin Core、`content:encoded`、0件Feedをfixtureで固定。
+- `rss_parse` / `parse_start()` / `rss_normalize_date()` / `rss_select_link_candidate()` はcompatibility boundaryとして維持。
+- DB、Frontend、API response、FeedSource/Fetcher、cache、ETag、Retry、Item identityはM1-Cのscope外。
+
+詳細: [`m1-c-implementation.md`](m1-c-implementation.md)
+
 ## Result
 
 Secure Baseline終了時点で、Legacy版の主要機能を維持しつつ、次のEngine/Frontend改修を安全に積み上げるための境界・DB・test・docsが揃いました。
+
