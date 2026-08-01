@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `M2-F / R1`。M2-E / R2を基準に、互換性を保てるjQueryとFont Awesomeを更新しました。Bootstrap / Bootswatch、Popper、Drawer、iScrollは現在の画面構造との組合せを優先して据え置き、major migrationを混在させていません。
+現在は `M2-G / R1`。M2-A〜Fの実装を基準に、Secure Baseline、M1、M2の全回帰、Frontend Asset、Documentation、配布物の整合を確認し、M2 Frontend Modernizationを完了しました。Bootstrap / Bootswatch、Popper、Drawer、iScrollは現在の画面構造との組合せを優先して据え置き、major migrationを混在させていません。
 
 ## M1 — Source / RSS Engine
 
@@ -74,9 +74,9 @@ HTML scrapingはサイト構造変更の影響が大きいため、generic parse
 - [x] M2-D Responsive・UI / UX
 - [x] M2-E 不要Frontend Asset整理
 - [x] M2-F Frontend依存関係更新
-- [ ] M2-G 最終回帰・Documentation
+- [x] M2-G 最終回帰・Documentation
 
-M2-AではインラインJavaScript / CSSを外部Assetへ分離し、PHP生成JavaScriptをdata属性ベースへ変更しました。M2-BではFeed通信とDOM描画を分け、Loading、0件、取得失敗、不正Response、欠損タイトル、長いUnicodeタイトルを扱います。M2-Cではdoctype / lang / landmark、Form / Button、Keyboard、Focus、ARIAを改善しました。M2-DではMobile 1列、Tablet 2列、Desktop 4列のgrid、長い文字列の折返し、空画面、RSS削除、Feed再読込、画面内通知を改善しました。M2-Eでは画面から参照されないCSS / JavaScript、SCSS / LESS、metadata、SVG spriteを削除しました。M2-FではjQuery 3.3.1を3.7.1、Font Awesome Free 5.3.1を6.7.2へ更新しました。Bootstrap / Bootswatch 4.1.3、Popper 1系、Drawer 3.2.2、iScroll 5.2.0-snapshotは、既存MarkupとThemeの組合せを壊さないため維持しています。
+M2-AではインラインJavaScript / CSSを外部Assetへ分離し、PHP生成JavaScriptをdata属性ベースへ変更しました。M2-BではFeed通信とDOM描画を分け、Loading、0件、取得失敗、不正Response、欠損タイトル、長いUnicodeタイトルを扱います。M2-Cではdoctype / lang / landmark、Form / Button、Keyboard、Focus、ARIAを改善しました。M2-DではMobile 1列、Tablet 2列、Desktop 4列のgrid、長い文字列の折返し、空画面、RSS削除、Feed再読込、画面内通知を改善しました。M2-Eでは画面から参照されないCSS / JavaScript、SCSS / LESS、metadata、SVG spriteを削除しました。M2-FではjQuery 3.3.1を3.7.1、Font Awesome Free 5.3.1を6.7.2へ更新しました。M2-Gでは全工程の回帰、Asset allowlist、Documentation link、配布除外、手動確認Matrixを整理しました。Bootstrap / Bootswatch 4.1.3、Popper 1系、Drawer 3.2.2、iScroll 5.2.0-snapshotは、既存MarkupとThemeの組合せを壊さないため維持しています。
 
 Frontend刷新はSecurity behaviorを変えないよう、SB-14以降とM1のregressionを継続します。
 

@@ -143,3 +143,7 @@ echo '== M2-F Frontend dependency checks =='
 python3 "$ROOT/tests/test_m2f_dependency_inventory.py"
 python3 "$ROOT/tests/test_m2f_cleanup_script.py"
 python3 "$ROOT/tests/test_m2f_browser_smoke.py"
+
+echo '== M2-G Final regression / Documentation checks =='
+python3 "$ROOT/tests/test_m2g_final_regression.py"
+python3 "$ROOT/tests/test_m2g_documentation.py"

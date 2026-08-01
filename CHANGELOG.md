@@ -2,6 +2,17 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## Frontend M2-G / R1 — 2026-08-02
+
+### M2 final regression and documentation
+
+- M2-A〜F、M1-A〜G、Secure Baselineの全testを横断実行。
+- M2完了用のfinal regression testとDocumentation整合testを追加。
+- 現在Version、Frontend Asset allowlist、8テーマ、依存Version、主要UI / Accessibility invariantを再確認。
+- README、Roadmap、Version policy、配置ChecklistをM2完了状態へ更新。
+- M2全体の実施内容、維持した契約、既知の保留事項、手動Browser確認Matrixをまとめた。
+- DB、公開API、Authentication / Session / CSRF / SSRF / XSS、M1 RSS Engine、画面処理、Frontend依存Versionは変更なし。
+
 ## Frontend M2-F / R1 — 2026-08-02
 
 ### Compatible Frontend dependency refresh
