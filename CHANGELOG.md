@@ -2,6 +2,18 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## Frontend M2-F / R1 — 2026-08-02
+
+### Compatible Frontend dependency refresh
+
+- jQueryを3.3.1から3.7.1 full buildへ更新し、既存のAJAX処理を維持。
+- Font Awesome Freeを5.3.1から6.7.2 LTSへ更新し、旧icon class aliasとlocal WebFontを維持。
+- Font AwesomeのWebFontを現在のCSSが参照するTTF / WOFF2 8ファイルへ入替え。
+- Bootstrap / Bootswatch 4.1.3、Popper 1系、Drawer 3.2.2、iScroll 5.2.0-snapshotは互換性を優先して据え置き。
+- Bootstrap 5移行はdata属性、jQuery plugin、Drawer、8テーマを横断するmajor migrationとなるため、この工程へ混在させない。
+- script読込順、jQuery AJAX、Bootstrap Modal / Collapse、Drawer、8テーマ、Font Awesome icon / fontを回帰testへ追加。
+- DB、公開API、Authentication / CSRF / SSRF / XSS、M1 RSS Engine、M2-Dの表示と操作は変更なし。
+
 ## Frontend M2-E / R2 — 2026-08-02
 
 ### Windows PowerShell cleanup helper correction

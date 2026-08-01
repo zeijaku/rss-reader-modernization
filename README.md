@@ -1,10 +1,10 @@
 # RSS Reader Modernization
 
-**Current checkpoint:** `Frontend M2-E / R2`
+**Current checkpoint:** `Frontend M2-F / R1`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
-M1: Source / RSS Engine ModernizationはM1-Gまで完了しました。現在は **M2: Frontend Modernization** を進めています。M2-A〜M2-DでFrontend構造、Feed表示、Accessibility、Responsive、UI / UXを整理し、M2-Eでは実行時に使用していないFrontend配布物を削除しました。Bootstrap 8テーマ、jQuery、Drawer、iScroll、Font AwesomeのVersionと、既存のNavbar、4タブ、Feed CRUD、Stock、Settings、公開API、DB、M1 RSS Engineは維持しています。
+M1: Source / RSS Engine ModernizationはM1-Gまで完了しました。現在は **M2: Frontend Modernization** を進めています。M2-A〜M2-DでFrontend構造、Feed表示、Accessibility、Responsive、UI / UXを整理し、M2-Eで実行時に使用していないFrontend配布物を削除しました。M2-Fでは互換性を崩さない範囲としてjQueryを3.7.1、Font Awesome Freeを6.7.2へ更新しています。Bootstrap / Bootswatchは4.1.3の組合せ、Drawer 3.2.2、iScroll 5.2.0-snapshotを維持し、Bootstrap 5への移行は別のmajor migrationとして保留しています。Navbar、4タブ、Feed CRUD、Stock、Settings、公開API、DB、M1 RSS Engineは変更していません。
 
 ## 現在できること
 
@@ -73,10 +73,10 @@ M1-Aの詳細は [`docs/m1-a-implementation.md`](docs/m1-a-implementation.md)、
 | M2-C | HTML構造・Accessibility | 完了 |
 | M2-D | Responsive・UI / UX | 完了 |
 | M2-E | 不要Frontend Asset整理 | 完了 |
-| M2-F | Frontend依存関係更新 | 未着手 |
+| M2-F | Frontend依存関係更新 | 完了 |
 | M2-G | 最終回帰・Documentation | 未着手 |
 
-M2-Aの詳細は [`docs/m2-a-implementation.md`](docs/m2-a-implementation.md)、M2-Bは [`docs/m2-b-implementation.md`](docs/m2-b-implementation.md)、M2-Cは [`docs/m2-c-implementation.md`](docs/m2-c-implementation.md)、M2-Dは [`docs/m2-d-implementation.md`](docs/m2-d-implementation.md)、M2-Eは [`docs/m2-e-implementation.md`](docs/m2-e-implementation.md) を参照してください。test結果は [`docs/test-report-m2-a.md`](docs/test-report-m2-a.md)、[`docs/test-report-m2-b.md`](docs/test-report-m2-b.md)、[`docs/test-report-m2-c.md`](docs/test-report-m2-c.md)、[`docs/test-report-m2-d.md`](docs/test-report-m2-d.md)、[`docs/test-report-m2-e.md`](docs/test-report-m2-e.md) に記録しています。
+M2-Aの詳細は [`docs/m2-a-implementation.md`](docs/m2-a-implementation.md)、M2-Bは [`docs/m2-b-implementation.md`](docs/m2-b-implementation.md)、M2-Cは [`docs/m2-c-implementation.md`](docs/m2-c-implementation.md)、M2-Dは [`docs/m2-d-implementation.md`](docs/m2-d-implementation.md)、M2-Eは [`docs/m2-e-implementation.md`](docs/m2-e-implementation.md)、M2-Fは [`docs/m2-f-implementation.md`](docs/m2-f-implementation.md) を参照してください。test結果は [`docs/test-report-m2-a.md`](docs/test-report-m2-a.md)、[`docs/test-report-m2-b.md`](docs/test-report-m2-b.md)、[`docs/test-report-m2-c.md`](docs/test-report-m2-c.md)、[`docs/test-report-m2-d.md`](docs/test-report-m2-d.md)、[`docs/test-report-m2-e.md`](docs/test-report-m2-e.md)、[`docs/test-report-m2-f.md`](docs/test-report-m2-f.md) に記録しています。
 
 ## Runtime requirements
 
@@ -179,9 +179,9 @@ bash tests/run.sh
 
 SB-14の最終Matrixでは、Authentication、Authorization/IDOR、CSRF、SSRF、XSS、Parser、4タブ、DB integrity、table prefix、repository leak scan、PHP 8 runtimeを横断して検証しています。
 
-Build環境では `pdo_mysql` / cURL / SimpleXML / mbstringが揃わないため、実MySQL/cURL/SimpleXML E2Eはローカルでは完全実行できません。代替としてFake PDO/transport、fixture、static invariantを使用し、M1-AではFetcher境界・Normalized Item・API contract・Security ordering、M1-BではFeedSource/Mapper、owner再検証、異常DB rowのfail-closed、SSRF継承、M1-CではAdapter dispatch、Date normalization、Atom `published` fallback、namespace/link/content/date fixture、XML network禁止、M1-DではGUID / `rdf:about` / Atom `id`抽出、link/fingerprint fallback、Feed URL scope、identity安定性・非公開API契約、M1-EではTTL境界、破損Cache復旧、atomic write、権限・symlink拒否、Cache無効化、5 process同時実行時の単一Fetchを確認し、M1-FではETag / Last-Modified検証、redirect時の非漏えい、HTTP 304本文再利用、schema 1互換、5 process同時revalidationを確認し、M1-GではRetry-After、エラー分類、Fetch state、Backoff境界、stale age境界、Security error非隠蔽、5 process同時障害時の単一Fetchと単一失敗記録を専用testで確認しています。M2-Cではdoctype / lang / landmark / Form / Button / Label / fieldset、Feedのaria-busy / live region、DrawerのEscape / Tab循環 / focus return、ModalとPage Topのfocus移動を確認しています。M2-Dではresponsive class、長いURL、Touch target、明示的な削除、画面内通知、Feed再読込、Feed / Stockの実描画をstatic test、Node runtime、Fake PDO renderで確認しています。M2-Eでは直接参照Asset、Theme、CSS内Font参照、Icon定義、削除対象、License header、HTTP 200を専用testで確認しています。配置先ではMySQL 8のCRUDと実RSS/Atomを手動確認してください。
+Build環境では `pdo_mysql` / cURL / SimpleXML / mbstringが揃わないため、実MySQL/cURL/SimpleXML E2Eはローカルでは完全実行できません。代替としてFake PDO/transport、fixture、static invariantを使用し、M1-AではFetcher境界・Normalized Item・API contract・Security ordering、M1-BではFeedSource/Mapper、owner再検証、異常DB rowのfail-closed、SSRF継承、M1-CではAdapter dispatch、Date normalization、Atom `published` fallback、namespace/link/content/date fixture、XML network禁止、M1-DではGUID / `rdf:about` / Atom `id`抽出、link/fingerprint fallback、Feed URL scope、identity安定性・非公開API契約、M1-EではTTL境界、破損Cache復旧、atomic write、権限・symlink拒否、Cache無効化、5 process同時実行時の単一Fetchを確認し、M1-FではETag / Last-Modified検証、redirect時の非漏えい、HTTP 304本文再利用、schema 1互換、5 process同時revalidationを確認し、M1-GではRetry-After、エラー分類、Fetch state、Backoff境界、stale age境界、Security error非隠蔽、5 process同時障害時の単一Fetchと単一失敗記録を専用testで確認しています。M2-Cではdoctype / lang / landmark / Form / Button / Label / fieldset、Feedのaria-busy / live region、DrawerのEscape / Tab循環 / focus return、ModalとPage Topのfocus移動を確認しています。M2-Dではresponsive class、長いURL、Touch target、明示的な削除、画面内通知、Feed再読込、Feed / Stockの実描画をstatic test、Node runtime、Fake PDO renderで確認しています。M2-Eでは直接参照Asset、Theme、CSS内Font参照、Icon定義、削除対象、License header、HTTP 200を確認し、M2-FではjQuery full build、Bootstrap plugin互換、8テーマ、Font Awesome alias / WebFont、script読込順、旧Asset不存在を専用testで確認しています。headless browser smokeはharnessを用意していますが、Build環境ではruntime不足のためSKIPします。配置先ではMySQL 8のCRUDと実RSS/Atomを手動確認してください。
 
-詳細: [`docs/test-report-sb14.md`](docs/test-report-sb14.md) / [`docs/test-report-sb15.md`](docs/test-report-sb15.md) / [`docs/test-report-m1-a.md`](docs/test-report-m1-a.md) / [`docs/test-report-m1-b.md`](docs/test-report-m1-b.md) / [`docs/test-report-m1-c.md`](docs/test-report-m1-c.md) / [`docs/test-report-m1-d.md`](docs/test-report-m1-d.md) / [`docs/test-report-m1-e.md`](docs/test-report-m1-e.md) / [`docs/test-report-m1-f.md`](docs/test-report-m1-f.md) / [`docs/test-report-m1-g.md`](docs/test-report-m1-g.md) / [`docs/test-report-m2-a.md`](docs/test-report-m2-a.md) / [`docs/test-report-m2-b.md`](docs/test-report-m2-b.md) / [`docs/test-report-m2-c.md`](docs/test-report-m2-c.md) / [`docs/test-report-m2-d.md`](docs/test-report-m2-d.md)
+詳細: [`docs/test-report-sb14.md`](docs/test-report-sb14.md) / [`docs/test-report-sb15.md`](docs/test-report-sb15.md) / [`docs/test-report-m1-a.md`](docs/test-report-m1-a.md) / [`docs/test-report-m1-b.md`](docs/test-report-m1-b.md) / [`docs/test-report-m1-c.md`](docs/test-report-m1-c.md) / [`docs/test-report-m1-d.md`](docs/test-report-m1-d.md) / [`docs/test-report-m1-e.md`](docs/test-report-m1-e.md) / [`docs/test-report-m1-f.md`](docs/test-report-m1-f.md) / [`docs/test-report-m1-g.md`](docs/test-report-m1-g.md) / [`docs/test-report-m2-a.md`](docs/test-report-m2-a.md) / [`docs/test-report-m2-b.md`](docs/test-report-m2-b.md) / [`docs/test-report-m2-c.md`](docs/test-report-m2-c.md) / [`docs/test-report-m2-d.md`](docs/test-report-m2-d.md) / [`docs/test-report-m2-e.md`](docs/test-report-m2-e.md) / [`docs/test-report-m2-f.md`](docs/test-report-m2-f.md)
 
 ## Security model
 
@@ -209,17 +209,17 @@ Legacy版は比較・解析対象として保持し、Secure BaselineのRuntime�
 
 ## Current limitations / deferred modernization
 
-Secure Baseline以降も、現在のM2-E時点では次を残しています。
+Secure Baseline以降も、現在のM2-F時点では次を残しています。
 
 - Server-side cacheは固定TTL + ETag / Last-Modified + 最大24時間のstale-if-error。FrontendはLoading / Empty / Errorを表示するが、Cache / Retryの内部状態は公開しない
 - Feed提供元がValidatorを返さない場合はTTL経過後に通常のHTTP 200取得
 - Feed取得は表示時の同期処理
 - Foreign Key未導入
 - Dashboard固有JS/CSS、Feed描画、semantic HTML、Keyboard / Focus / ARIA、Responsive layout、基本的な表示文言と通知は整理済み
-- 未使用Frontend配布物はM2-Eで整理済み。Bootstrap / jQuery / Drawer / iScroll / Font AwesomeのVersion更新と、全Themeのcontrast最終調整はM2-F以降
+- 未使用Frontend配布物はM2-Eで整理済み。jQueryとFont AwesomeはM2-Fで互換更新済み。Bootstrap / Bootswatch 4.1.3、Popper 1系、Drawer、iScrollのmajor migrationと、全Themeのcontrast最終調整は別途検討
 - Source abstractionはFetcher / FeedSource / Parser dispatcher / RSS 2.0・RSS 1.0・Atom Adapter / Normalized Item / deterministic Item identity / cache-aware Feed serviceまで導入済み
 
-これらはM2-E以降へ意図的に分離しています。
+これらはM2-F以降へ意図的に分離しています。
 
 ## Roadmap
 
@@ -228,7 +228,7 @@ Secure Baseline SB-15 / R3
   ↓
 M1 Source / RSS Engine (M1-G complete)
   ↓
-M2 Frontend (M2-E complete)
+M2 Frontend (M2-F complete)
   ↓
 Release / Portfolio
 ```

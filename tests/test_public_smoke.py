@@ -87,7 +87,7 @@ try:
         '/css/bootstrap-slate.min.css',
         '/css/all.css',
         '/css/drawer.min.css',
-        '/js/jquery-3.3.1.min.js',
+        '/js/jquery-3.7.1.min.js',
         '/js/popper.min.js',
         '/js/bootstrap.min.js',
         '/js/iscroll.js',
@@ -95,6 +95,7 @@ try:
         '/webfonts/fa-brands-400.woff2',
         '/webfonts/fa-regular-400.woff2',
         '/webfonts/fa-solid-900.woff2',
+        '/webfonts/fa-v4compatibility.woff2',
     ]
     for asset_path in retained_http_assets:
         s,_,asset_body=req(p,'GET',asset_path)

@@ -40,7 +40,7 @@ $requiredAssets = [
     'css/bootstrap.min.css',
     'css/all.css',
     'css/drawer.min.css',
-    'js/jquery-3.3.1.min.js',
+    'js/jquery-3.7.1.min.js',
     'js/popper.min.js',
     'js/bootstrap.min.js',
 ];

@@ -18,7 +18,7 @@ check((ROOT / 'public/js/dashboard.js').is_file(), 'dashboard JavaScript asset e
 check((ROOT / 'public/css/dashboard.css').is_file(), 'dashboard CSS asset exists')
 check('<link rel="stylesheet" href="./css/dashboard.css">' in index, 'dashboard CSS is loaded')
 check('<script src="./js/dashboard.js"></script>' in index, 'dashboard JavaScript is loaded')
-check(index.index('./js/jquery-3.3.1.min.js') < index.index('./js/dashboard.js'), 'jQuery loads before dashboard JavaScript')
+check(index.index('./js/jquery-3.7.1.min.js') < index.index('./js/dashboard.js'), 'jQuery loads before dashboard JavaScript')
 check(index.index('./js/bootstrap.min.js') < index.index('./js/dashboard.js'), 'Bootstrap loads before dashboard JavaScript')
 check(index.index('./js/drawer.min.js') < index.index('./js/dashboard.js'), 'Drawer loads before dashboard JavaScript')
 check('<style>' not in index, 'dashboard style block is removed from index.php')

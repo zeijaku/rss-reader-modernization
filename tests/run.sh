@@ -138,3 +138,8 @@ python3 "$ROOT/tests/test_m2d_dashboard_render.py"
 echo '== M2-E Frontend asset cleanup checks =='
 python3 "$ROOT/tests/test_m2e_asset_inventory.py"
 python3 "$ROOT/tests/test_m2e_cleanup_script.py"
+
+echo '== M2-F Frontend dependency checks =='
+python3 "$ROOT/tests/test_m2f_dependency_inventory.py"
+python3 "$ROOT/tests/test_m2f_cleanup_script.py"
+python3 "$ROOT/tests/test_m2f_browser_smoke.py"

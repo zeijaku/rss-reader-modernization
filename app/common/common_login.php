@@ -96,7 +96,7 @@ function view_login(?string $message = null, string $messageType = 'danger', boo
     </main>
 
     <div class="row"></div>
-    <script src="./js/jquery-3.3.1.min.js"></script>
+    <script src="./js/jquery-3.7.1.min.js"></script>
     <script src="./js/popper.min.js"></script>
     <script src="./js/bootstrap.min.js"></script>
     </body>
