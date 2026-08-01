@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `M1-E / R1`。Fetcher / Parser責務分離、Normalized Item、Feed Source、RSS 2.0 / RSS 1.0 / Atom Adapter、Date normalization、deterministic Item identity、Server-side cache、重複Fetch抑制まで完了しています。次はETag / Last-Modified / HTTP 304（M1-F）を扱います。
+現在は `M1-F / R1`。Fetcher / Parser責務分離、Normalized Item、Feed Source、RSS 2.0 / RSS 1.0 / Atom Adapter、Date normalization、deterministic Item identity、Server-side cache、重複Fetch抑制、ETag / Last-Modified / HTTP 304まで完了しています。次はFetch state / error state / Retry strategy（M1-G）を扱います。
 
 ## M1 — Source / RSS Engine
 
@@ -44,7 +44,7 @@ local/manual data
 - [x] M1-C RSS 2.0 / RSS 1.0 / Atom Adapter整理 + Date normalization
 - [x] M1-D Item identity
 - [x] M1-E Server-side cache + 重複Fetch抑制
-- [ ] M1-F ETag / Last-Modified / HTTP 304
+- [x] M1-F ETag / Last-Modified / HTTP 304
 - [ ] M1-G Fetch status / error state + Retry strategy
 
 ### Planned topics

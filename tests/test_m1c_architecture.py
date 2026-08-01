@@ -63,8 +63,8 @@ check(bootstrap.index('/feed/feed_date_normalizer.php') < bootstrap.index('/feed
 parser_stack = '\n'.join([parser, helper, date, selector, interface, rss2, rss1, atom])
 for forbidden in ['app_safe_http_fetch(', 'curl_', 'file_get_contents("http', "file_get_contents('http", 'stream_socket_client(']:
     check(forbidden not in parser_stack, f'parser/adapter layer performs no outbound HTTP operation: {forbidden}')
-check('app_safe_http_fetch($source->url)' in fetcher, 'outbound HTTP remains isolated in FeedFetcher')
-check('public function fetch(FeedSource $source): array' in fetcher, 'M1-B FeedSource boundary remains intact')
+check('app_safe_http_fetch($source->url, null, null, $validators)' in fetcher, 'outbound HTTP remains isolated in FeedFetcher')
+check('public function fetch(FeedSource $source, array $validators = []): array' in fetcher, 'M1-B FeedSource boundary remains intact')
 check('FeedSource' not in index and 'feed_source' not in schema.lower(), 'M1-C adds no frontend or database FeedSource coupling')
 check('ETag' not in parser_stack and 'Last-Modified' not in parser_stack, 'M1-C does not implement later conditional-cache scope')
 

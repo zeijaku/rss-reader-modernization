@@ -102,3 +102,9 @@ echo '== M1-E Server-side Cache / Duplicate Fetch checks =='
 php "$ROOT/tests/test_m1e_feed_cache.php"
 python3 "$ROOT/tests/test_m1e_architecture.py"
 python3 "$ROOT/tests/test_m1e_concurrency.py"
+
+echo '== M1-F Conditional Request / HTTP 304 checks =='
+php "$ROOT/tests/test_m1f_http_conditional.php"
+php "$ROOT/tests/test_m1f_cache_revalidation.php"
+python3 "$ROOT/tests/test_m1f_architecture.py"
+python3 "$ROOT/tests/test_m1f_concurrency.py"

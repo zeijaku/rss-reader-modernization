@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-/** Transport boundary used by the cache-aware Feed loading service. */
+/** Feed取得処理の共通入口。 */
 interface FeedTransportInterface
 {
     /** @return array<string,mixed> */
-    public function fetch(FeedSource $source): array;
+    public function fetch(FeedSource $source, array $validators = []): array;
 }

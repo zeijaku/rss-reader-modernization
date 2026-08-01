@@ -129,6 +129,9 @@ if (!defined('APP_HTTP_USER_AGENT')) {
 if (!defined('APP_FEED_CACHE_ENABLED')) {
     define('APP_FEED_CACHE_ENABLED', app_env_bool('APP_FEED_CACHE_ENABLED', true));
 }
+if (!defined('APP_FEED_CONDITIONAL_REQUEST_ENABLED')) {
+    define('APP_FEED_CONDITIONAL_REQUEST_ENABLED', app_env_bool('APP_FEED_CONDITIONAL_REQUEST_ENABLED', true));
+}
 if (!defined('APP_FEED_CACHE_TTL_SECONDS')) {
     define('APP_FEED_CACHE_TTL_SECONDS', max(1, min(86400, (int) app_env('APP_FEED_CACHE_TTL_SECONDS', '60'))));
 }
@@ -268,6 +271,7 @@ function app_runtime_status(): array
         'issues' => $issues,
         'local_config_present' => is_file(dirname(__DIR__, 2) . '/config/local.php'),
         'feed_cache_enabled' => (bool) APP_FEED_CACHE_ENABLED,
+        'feed_conditional_request_enabled' => (bool) APP_FEED_CONDITIONAL_REQUEST_ENABLED,
         'feed_cache_ttl_seconds' => (int) APP_FEED_CACHE_TTL_SECONDS,
         'feed_cache_dir' => (string) APP_FEED_CACHE_DIR,
     ];

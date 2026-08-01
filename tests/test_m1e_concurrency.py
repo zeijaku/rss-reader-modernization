@@ -33,7 +33,7 @@ with tempfile.TemporaryDirectory(prefix='rss-m1e-concurrency-') as td:
 
     final class ConcurrentTransport implements FeedTransportInterface {{
         public function __construct(private string $counterPath) {{}}
-        public function fetch(FeedSource $source): array {{
+        public function fetch(FeedSource $source, array $validators = []): array {{
             $h = fopen($this->counterPath, 'c+b');
             flock($h, LOCK_EX);
             rewind($h);

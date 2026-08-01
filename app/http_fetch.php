@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/feed/feed_http_headers.php';
+
 /**
  * SB-09 safe outbound HTTP fetcher.
  *
@@ -16,20 +18,26 @@ declare(strict_types=1);
  * - bounded response body and timeouts
  */
 
-/** @return array{ok:bool,url:string,status:int,body:string,error_code:string,error_message:string} */
+/** @return array<string,mixed> */
 function app_fetch_result(
     bool $ok,
     string $url,
     int $status = 0,
     string $body = '',
     string $errorCode = '',
-    string $errorMessage = ''
+    string $errorMessage = '',
+    ?string $etag = null,
+    ?string $lastModified = null,
+    bool $notModified = false
 ): array {
     return [
         'ok' => $ok,
         'url' => $url,
         'status' => $status,
         'body' => $body,
+        'etag' => $etag,
+        'last_modified' => $lastModified,
+        'not_modified' => $notModified,
         'error_code' => $errorCode,
         'error_message' => $errorMessage,
     ];
@@ -351,13 +359,10 @@ function app_resolve_redirect_url(string $baseUrl, string $location): ?string
 }
 
 /**
- * Default single-hop transport. DNS hostnames are pinned to the validated IP
- * with CURLOPT_RESOLVE while the original hostname remains in the URL for HTTP
- * Host, TLS SNI and certificate hostname verification. Literal IP URLs do not
- * need CURLOPT_RESOLVE because the validated address is already the destination.
+ * 1回分のcURL取得。DNS pinning、TLS確認、本文上限は従来どおり維持する。
  *
- * @param array{url:string,host:string,port:int,ip:string,max_bytes:int,connect_timeout_ms:int,total_timeout_ms:int,user_agent:string} $request
- * @return array{ok:bool,status:int,body:string,location:?string,error_code:string,error_message:string}
+ * @param array<string,mixed> $request
+ * @return array<string,mixed>
  */
 function app_curl_single_hop(array $request): array
 {
@@ -367,6 +372,8 @@ function app_curl_single_hop(array $request): array
             'status' => 0,
             'body' => '',
             'location' => null,
+            'etag' => null,
+            'last_modified' => null,
             'error_code' => 'curl_unavailable',
             'error_message' => 'cURL extension is unavailable.',
         ];
@@ -375,7 +382,9 @@ function app_curl_single_hop(array $request): array
     $body = '';
     $tooLarge = false;
     $location = null;
-    $maxBytes = $request['max_bytes'];
+    $etag = null;
+    $lastModified = null;
+    $maxBytes = (int) $request['max_bytes'];
 
     $ch = curl_init();
     if ($ch === false) {
@@ -384,9 +393,21 @@ function app_curl_single_hop(array $request): array
             'status' => 0,
             'body' => '',
             'location' => null,
+            'etag' => null,
+            'last_modified' => null,
             'error_code' => 'curl_init_failed',
             'error_message' => 'HTTP client initialization failed.',
         ];
+    }
+
+    $httpHeaders = ['Accept: application/rss+xml, application/atom+xml, application/xml, text/xml, */*;q=0.1'];
+    foreach (($request['request_headers'] ?? []) as $header) {
+        if (!is_string($header) || str_contains($header, "\r") || str_contains($header, "\n")) {
+            continue;
+        }
+        if (str_starts_with($header, 'If-None-Match: ') || str_starts_with($header, 'If-Modified-Since: ')) {
+            $httpHeaders[] = $header;
+        }
     }
 
     $options = [
@@ -398,19 +419,32 @@ function app_curl_single_hop(array $request): array
         CURLOPT_SSL_VERIFYPEER => true,
         CURLOPT_SSL_VERIFYHOST => 2,
         CURLOPT_USERAGENT => $request['user_agent'],
-        CURLOPT_HTTPHEADER => ['Accept: application/rss+xml, application/atom+xml, application/xml, text/xml, */*;q=0.1'],
-        CURLOPT_HEADERFUNCTION => static function ($curl, string $line) use (&$location): int {
+        CURLOPT_HTTPHEADER => $httpHeaders,
+        CURLOPT_HEADERFUNCTION => static function ($curl, string $line) use (&$location, &$etag, &$lastModified): int {
             $length = strlen($line);
             $trimmed = trim($line);
             if ($trimmed === '') {
                 return $length;
             }
+            if (str_starts_with(strtoupper($trimmed), 'HTTP/')) {
+                $location = null;
+                $etag = null;
+                $lastModified = null;
+                return $length;
+            }
+
             $separator = strpos($trimmed, ':');
-            if ($separator !== false) {
-                $name = strtolower(trim(substr($trimmed, 0, $separator)));
-                if ($name === 'location') {
-                    $location = trim(substr($trimmed, $separator + 1));
-                }
+            if ($separator === false) {
+                return $length;
+            }
+            $name = strtolower(trim(substr($trimmed, 0, $separator)));
+            $value = trim(substr($trimmed, $separator + 1));
+            if ($name === 'location') {
+                $location = $value;
+            } elseif ($name === 'etag') {
+                $etag = feed_clean_etag($value);
+            } elseif ($name === 'last-modified') {
+                $lastModified = feed_clean_last_modified($value);
             }
             return $length;
         },
@@ -430,7 +464,6 @@ function app_curl_single_hop(array $request): array
     }
 
     curl_setopt_array($ch, $options);
-
     if (defined('CURLOPT_PROTOCOLS') && defined('CURLPROTO_HTTP') && defined('CURLPROTO_HTTPS')) {
         curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);
     }
@@ -447,6 +480,8 @@ function app_curl_single_hop(array $request): array
             'status' => $status,
             'body' => '',
             'location' => $location,
+            'etag' => $etag,
+            'last_modified' => $lastModified,
             'error_code' => 'response_too_large',
             'error_message' => 'Feed response exceeded the configured size limit.',
         ];
@@ -457,6 +492,8 @@ function app_curl_single_hop(array $request): array
             'status' => $status,
             'body' => '',
             'location' => $location,
+            'etag' => $etag,
+            'last_modified' => $lastModified,
             'error_code' => 'transport_error',
             'error_message' => $errorMessage !== '' ? $errorMessage : 'Feed request failed.',
         ];
@@ -467,6 +504,8 @@ function app_curl_single_hop(array $request): array
         'status' => $status,
         'body' => $body,
         'location' => $location,
+        'etag' => $etag,
+        'last_modified' => $lastModified,
         'error_code' => '',
         'error_message' => '',
     ];
@@ -475,10 +514,15 @@ function app_curl_single_hop(array $request): array
 /**
  * @param callable(string):list<string>|null $resolver
  * @param callable(array):array|null $transport
- * @return array{ok:bool,url:string,status:int,body:string,error_code:string,error_message:string}
+ * @param array<string,mixed> $validators
+ * @return array<string,mixed>
  */
-function app_safe_http_fetch(string $url, ?callable $resolver = null, ?callable $transport = null): array
-{
+function app_safe_http_fetch(
+    string $url,
+    ?callable $resolver = null,
+    ?callable $transport = null,
+    array $validators = []
+): array {
     if ($resolver === null && defined('APP_ENV') && APP_ENV === 'testing'
         && isset($GLOBALS['app_http_fetch_test_resolver']) && is_callable($GLOBALS['app_http_fetch_test_resolver'])) {
         $resolver = $GLOBALS['app_http_fetch_test_resolver'];
@@ -505,10 +549,14 @@ function app_safe_http_fetch(string $url, ?callable $resolver = null, ?callable 
             );
         }
 
-        // All DNS answers were validated public. Pin one exact validated address.
+        $requestUrl = (string) $target['url'];
+        $requestHeaders = feed_conditional_request_headers($validators, $requestUrl);
+        $sentConditional = $requestHeaders !== [];
+
+        // DNSで確認した公開IPへ固定して送信する。
         $ip = (string) $target['ips'][0];
         $response = $transportFn([
-            'url' => (string) $target['url'],
+            'url' => $requestUrl,
             'host' => (string) $target['host'],
             'port' => (int) $target['port'],
             'ip' => $ip,
@@ -516,12 +564,13 @@ function app_safe_http_fetch(string $url, ?callable $resolver = null, ?callable 
             'connect_timeout_ms' => APP_HTTP_CONNECT_TIMEOUT_MS,
             'total_timeout_ms' => APP_HTTP_TIMEOUT_MS,
             'user_agent' => APP_HTTP_USER_AGENT,
+            'request_headers' => $requestHeaders,
         ]);
 
         if (($response['ok'] ?? false) !== true) {
             return app_fetch_result(
                 false,
-                (string) $target['url'],
+                $requestUrl,
                 (int) ($response['status'] ?? 0),
                 '',
                 (string) ($response['error_code'] ?? 'transport_error'),
@@ -530,29 +579,39 @@ function app_safe_http_fetch(string $url, ?callable $resolver = null, ?callable 
         }
 
         $status = (int) ($response['status'] ?? 0);
+        $etag = feed_clean_etag($response['etag'] ?? null);
+        $lastModified = feed_clean_last_modified($response['last_modified'] ?? null);
+
         if (in_array($status, [301, 302, 303, 307, 308], true)) {
             if ($hop >= $maxRedirects) {
-                return app_fetch_result(false, (string) $target['url'], $status, '', 'too_many_redirects', 'Too many redirects.');
+                return app_fetch_result(false, $requestUrl, $status, '', 'too_many_redirects', 'Too many redirects.');
             }
             $location = isset($response['location']) && is_string($response['location']) ? $response['location'] : '';
-            $nextUrl = app_resolve_redirect_url((string) $target['url'], $location);
+            $nextUrl = app_resolve_redirect_url($requestUrl, $location);
             if ($nextUrl === null) {
-                return app_fetch_result(false, (string) $target['url'], $status, '', 'invalid_redirect', 'Redirect target is invalid.');
+                return app_fetch_result(false, $requestUrl, $status, '', 'invalid_redirect', 'Redirect target is invalid.');
             }
             $currentUrl = $nextUrl;
             continue;
         }
 
+        if ($status === 304) {
+            if (!$sentConditional) {
+                return app_fetch_result(false, $requestUrl, 304, '', 'unexpected_not_modified', 'Unexpected HTTP 304 response.');
+            }
+            return app_fetch_result(true, $requestUrl, 304, '', '', '', $etag, $lastModified, true);
+        }
+
         if ($status < 200 || $status >= 300) {
-            return app_fetch_result(false, (string) $target['url'], $status, '', 'http_status', 'Feed server returned an unsuccessful HTTP status.');
+            return app_fetch_result(false, $requestUrl, $status, '', 'http_status', 'Feed server returned an unsuccessful HTTP status.');
         }
 
         $body = isset($response['body']) && is_string($response['body']) ? $response['body'] : '';
         if ($body === '') {
-            return app_fetch_result(false, (string) $target['url'], $status, '', 'empty_response', 'Feed response was empty.');
+            return app_fetch_result(false, $requestUrl, $status, '', 'empty_response', 'Feed response was empty.');
         }
 
-        return app_fetch_result(true, (string) $target['url'], $status, $body);
+        return app_fetch_result(true, $requestUrl, $status, $body, '', '', $etag, $lastModified, false);
     }
 
     return app_fetch_result(false, $currentUrl, 0, '', 'too_many_redirects', 'Too many redirects.');

@@ -6,7 +6,7 @@ require_once __DIR__ . '/feed_source.php';
 require_once __DIR__ . '/feed_cache_entry.php';
 require_once __DIR__ . '/feed_cache_lock.php';
 
-/** Filesystem cache for validated upstream Feed response bodies. */
+/** Feed本文を保存するファイルCache。 */
 final class FeedCache
 {
     private const FILE_PREFIX = 'feed-v1-';
@@ -15,9 +15,7 @@ final class FeedCache
     /** @var Closure():int */
     private Closure $clock;
 
-    /**
-     * @param Closure():int|null $clock
-     */
+    /** @param Closure():int|null $clock */
     public function __construct(
         private readonly string $directory,
         private readonly int $ttlSeconds,
@@ -49,6 +47,18 @@ final class FeedCache
     }
 
     public function readFresh(FeedSource $source): ?FeedCacheEntry
+    {
+        $entry = $this->read($source);
+        return $entry !== null && $this->isFresh($entry) ? $entry : null;
+    }
+
+    public function readStale(FeedSource $source): ?FeedCacheEntry
+    {
+        $entry = $this->read($source);
+        return $entry !== null && !$this->isFresh($entry) ? $entry : null;
+    }
+
+    public function read(FeedSource $source): ?FeedCacheEntry
     {
         $path = $this->cachePath($source);
         if (!is_file($path) || is_link($path)) {
@@ -86,13 +96,11 @@ final class FeedCache
         }
 
         $now = ($this->clock)();
-        if ($entry->fetchedAt > $now + self::FUTURE_CLOCK_TOLERANCE_SECONDS) {
+        if ($entry->validatedAt > $now + self::FUTURE_CLOCK_TOLERANCE_SECONDS) {
             $this->delete($source);
             return null;
         }
-
-        $age = $now - $entry->fetchedAt;
-        return $age >= 0 && $age < $this->ttlSeconds ? $entry : null;
+        return $entry;
     }
 
     /** @param array<string,mixed> $fetch */
@@ -104,58 +112,14 @@ final class FeedCache
             ($this->clock)(),
             $this->maxBodyBytes
         );
-        if ($entry === null || !$this->ensureDirectory()) {
-            return false;
-        }
+        return $entry !== null && $this->writeEntry($source, $entry);
+    }
 
-        $target = $this->cachePath($source);
-        if (is_link($target)) {
-            return false;
-        }
-
-        try {
-            $json = json_encode(
-                $entry->toPayload(),
-                JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR
-            );
-        } catch (Throwable) {
-            return false;
-        }
-
-        $temp = @tempnam($this->directory, '.feed-cache-');
-        if (!is_string($temp) || $temp === '') {
-            return false;
-        }
-
-        $ok = false;
-        try {
-            @chmod($temp, 0600);
-            $written = @file_put_contents($temp, $json, LOCK_EX);
-            if (!is_int($written) || $written !== strlen($json)) {
-                return false;
-            }
-
-            if (@rename($temp, $target)) {
-                $ok = true;
-                @chmod($target, 0600);
-                return true;
-            }
-
-            // Windows cannot atomically replace an existing target. The URL
-            // lock still serializes writers, so remove-and-rename is a safe
-            // availability fallback while readers treat the brief gap as miss.
-            if (is_file($target) && !is_link($target) && @unlink($target) && @rename($temp, $target)) {
-                $ok = true;
-                @chmod($target, 0600);
-                return true;
-            }
-
-            return false;
-        } finally {
-            if (!$ok && is_file($temp)) {
-                @unlink($temp);
-            }
-        }
+    /** @param array<string,mixed> $fetch */
+    public function writeNotModified(FeedSource $source, FeedCacheEntry $cached, array $fetch): bool
+    {
+        $entry = FeedCacheEntry::fromNotModified($cached, $fetch, ($this->clock)());
+        return $entry !== null && $this->writeEntry($source, $entry);
     }
 
     public function delete(FeedSource $source): void
@@ -196,6 +160,66 @@ final class FeedCache
 
         @fclose($handle);
         return null;
+    }
+
+    private function isFresh(FeedCacheEntry $entry): bool
+    {
+        $age = ($this->clock)() - $entry->validatedAt;
+        return $age >= 0 && $age < $this->ttlSeconds;
+    }
+
+    private function writeEntry(FeedSource $source, FeedCacheEntry $entry): bool
+    {
+        if (!$this->ensureDirectory()) {
+            return false;
+        }
+
+        $target = $this->cachePath($source);
+        if (is_link($target)) {
+            return false;
+        }
+
+        try {
+            $json = json_encode(
+                $entry->toPayload(),
+                JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR
+            );
+        } catch (Throwable) {
+            return false;
+        }
+
+        $temp = @tempnam($this->directory, '.feed-cache-');
+        if (!is_string($temp) || $temp === '') {
+            return false;
+        }
+
+        $ok = false;
+        try {
+            @chmod($temp, 0600);
+            $written = @file_put_contents($temp, $json, LOCK_EX);
+            if (!is_int($written) || $written !== strlen($json)) {
+                return false;
+            }
+
+            if (@rename($temp, $target)) {
+                $ok = true;
+                @chmod($target, 0600);
+                return true;
+            }
+
+            // Windowsでは既存ファイルへのrenameが失敗するため、一度削除して置き換える。
+            if (is_file($target) && !is_link($target) && @unlink($target) && @rename($temp, $target)) {
+                $ok = true;
+                @chmod($target, 0600);
+                return true;
+            }
+
+            return false;
+        } finally {
+            if (!$ok && is_file($temp)) {
+                @unlink($temp);
+            }
+        }
     }
 
     private function ensureDirectory(): bool

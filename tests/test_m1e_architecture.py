@@ -31,8 +31,8 @@ for name in [
 
 check('interface FeedTransportInterface' in transport, 'safe transport has an injectable interface for cache/concurrency tests')
 check('implements FeedTransportInterface' in fetcher, 'existing hardened FeedFetcher implements the transport interface')
-check('app_safe_http_fetch($source->url)' in fetcher, 'M1-E still delegates network access to the SB-09 hardened transport')
-check('final class FeedCacheEntry' in entry and 'SCHEMA_VERSION = 1' in entry, 'cache payload is an explicit versioned immutable value')
+check('app_safe_http_fetch($source->url, null, null, $validators)' in fetcher, 'FeedFetcher still delegates network access to the SB-09 hardened transport')
+check('final class FeedCacheEntry' in entry and 'SCHEMA_VERSION = ' in entry, 'cache payload remains an explicit versioned immutable value')
 check("'body_base64'" in entry and "'body_sha256'" in entry, 'cache body uses base64 plus integrity hash')
 check("base64_decode($payload['body_base64'], true)" in entry, 'cache base64 decoding uses strict mode')
 check("hash_equals($payload['body_sha256'], hash('sha256', $body))" in entry, 'cache validates body integrity before use')
@@ -42,7 +42,7 @@ check("self::FILE_PREFIX . $this->cacheKey($source)" in cache, 'raw Feed URL is 
 check("tempnam($this->directory" in cache and "rename($temp, $target)" in cache, 'cache writes use a same-directory temporary file and rename')
 check('LOCK_EX | LOCK_NB' in cache and 'hrtime(true)' in cache, 'duplicate fetch suppression uses bounded non-blocking file locking')
 check('finally {' in service and '$lock->release();' in service, 'Feed URL lock is released on every service path')
-check('Double-checked locking' in service and service.count('loadFreshCache($source)') >= 3, 'service rechecks cache after waiting for a lock')
+check(service.count('loadFreshCache($source)') >= 3, 'service rechecks cache after waiting for a lock')
 check("parse_start($entry->body, $source->url)" in service, 'cache hit still passes body through Parser and Item Identity scope')
 check("parse_start($body, $source->url)" in service, 'network body uses the same Parser and Item Identity scope')
 check('writeSuccessfulFetch($source, $fetch)' in service, 'cache persistence occurs only after successful parse')
@@ -50,7 +50,7 @@ write_pos = service.find('writeSuccessfulFetch($source, $fetch)')
 parse_pos = service.find('$feed = $this->parser->parse_start($body, $source->url)')
 check(parse_pos >= 0 and write_pos > parse_pos, 'parse validation precedes cache persistence')
 check('CACHE_BYPASS' in service and 'fetchAndParse($source, self::CACHE_BYPASS, false)' in service, 'lock/filesystem failure degrades to uncached safe transport without racing writes')
-check('stale' not in re.sub(r'//.*', '', service.lower()), 'M1-E does not silently implement stale-if-error behavior')
+check('return $stale' not in service.lower() and 'stale-if-error' not in service.lower(), 'expired cache is not returned when an upstream fetch fails')
 
 for token, default in [
     ('APP_FEED_CACHE_ENABLED', 'true'),
@@ -87,7 +87,6 @@ check('feedcache' not in index.lower() and 'cache_status' not in index.lower(), 
 m1e_stack = '\n'.join([cache, entry, lock, service, transport])
 for forbidden in ['PDO(', 'mysqli_', 'Redis', 'Memcached', 'session_start(', 'setcookie(']:
     check(forbidden not in m1e_stack, f'cache layer has no unrelated persistence/session dependency: {forbidden}')
-check('ETag' not in m1e_stack and 'Last-Modified' not in m1e_stack and 'If-None-Match' not in m1e_stack, 'M1-E does not implement deferred M1-F conditional requests')
 check('array_unique' not in service and 'unset($feed[' not in service, 'M1-E does not remove or reorder duplicate Feed items')
 
 if not all(checks):

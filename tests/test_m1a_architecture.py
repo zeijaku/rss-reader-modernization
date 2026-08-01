@@ -26,7 +26,7 @@ check(bootstrap.index('/feed/feed_fetcher.php') < bootstrap.index('/common/commo
 check(bootstrap.index('/feed/feed_parser.php') < bootstrap.index('/common/common_func.php'), 'FeedParser loads before Legacy common compatibility helpers')
 check("require_once dirname(__DIR__) . '/feed/feed_parser.php';" in common, 'direct common_func consumers retain parser compatibility without bootstrap')
 check('class rss_parse' not in common and 'class FeedParser' not in common, 'parser implementation is removed from common_func')
-check('class FeedFetcher' in fetcher and 'app_safe_http_fetch($source->url)' in fetcher, 'FeedFetcher owns transport delegation while retaining SB-09 implementation')
+check('class FeedFetcher' in fetcher and 'app_safe_http_fetch($source->url, null, null, $validators)' in fetcher, 'FeedFetcher owns transport delegation while retaining SB-09 implementation')
 check('class FeedParser' in parser and 'class rss_parse extends FeedParser' in parser, 'FeedParser is explicit while Legacy parser name remains a compatibility alias')
 
 m = re.search(r'function api_feed_fetch\([^)]*\): array\s*\{(?P<body>.*?)(?=\n\})', api, re.S)
@@ -60,7 +60,7 @@ check('FeedLinkSelector::select($candidates)' in helper and 'function rss_select
 check("return $date->format('Y-m-d H:i:s');" in date_normalizer and 'function rss_normalize_date' in date_normalizer, 'existing date-normalization output and compatibility wrapper remain unchanged')
 
 check("Math.min(5, items.length)" in index, 'existing frontend feed item cap remains unchanged')
-check('ETag' not in fetcher and 'Last-Modified' not in fetcher, 'M1-A does not prematurely implement conditional HTTP caching')
+check('api_safe_feed_payload($resultFeed, $effectiveUrl)' in body, 'later HTTP improvements do not bypass the M1-A public payload boundary')
 
 if not all(checks):
     raise SystemExit(1)

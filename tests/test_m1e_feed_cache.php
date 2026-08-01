@@ -66,7 +66,7 @@ final class M1eFakeTransport implements FeedTransportInterface
         $this->responses = $responses;
     }
 
-    public function fetch(FeedSource $source): array
+    public function fetch(FeedSource $source, array $validators = []): array
     {
         $this->calls++;
         if ($this->responses !== []) {

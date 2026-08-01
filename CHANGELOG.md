@@ -2,6 +2,21 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## RSS Engine M1-F / R1 — 2026-08-01
+
+### Conditional Feed requests and HTTP 304 reuse
+
+- ETag / Last-Modifiedを安全に取得し、Cache schema 2へ保存。
+- TTL経過後は `If-None-Match` / `If-Modified-Since` を使い、HTTP 304時は既存Feed本文を再利用。
+- `body_fetched_at` と `validated_at` を分離し、304では本文取得時刻を変更しない。
+- Validatorは前回のeffective URLと今回の送信先が完全一致するときだけ送信し、redirect先変更時の漏えいを防止。
+- 条件なしHTTP 304を拒否し、HTTP 200では新本文をParse成功後にCache置換。
+- M1-E Cache schema 1の読み込み互換を維持し、次回200取得時にschema 2へ更新。
+- `APP_FEED_CONDITIONAL_REQUEST_ENABLED` を追加し、Cacheを維持したまま条件付きRequestだけ無効化可能。
+- Validator専用class hierarchyは追加せず、小さなhelper関数と既存Cache/Serviceの拡張に留めた。
+- stale-if-error、Retry、Fetch state、Cache-Control / Expiresは後続工程へ分離。
+- HTTP / Cache / redirect / concurrency / architecture / security regression testを追加。
+
 ## RSS Engine M1-E / R1 — 2026-08-01
 
 ### Server-side Feed cache and duplicate Fetch suppression

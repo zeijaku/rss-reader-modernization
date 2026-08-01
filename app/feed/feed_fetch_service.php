@@ -7,11 +7,12 @@ require_once __DIR__ . '/feed_fetcher.php';
 require_once __DIR__ . '/feed_cache.php';
 require_once __DIR__ . '/feed_parser.php';
 
-/** Cache-aware orchestration of safe transport and Feed parsing. */
+/** Feed取得、Cache確認、Parser呼び出しをまとめる。 */
 final class FeedFetchService
 {
     public const CACHE_HIT = 'hit';
     public const CACHE_MISS = 'miss';
+    public const CACHE_REVALIDATED = 'revalidated';
     public const CACHE_DISABLED = 'disabled';
     public const CACHE_BYPASS = 'bypass';
 
@@ -20,7 +21,8 @@ final class FeedFetchService
         private readonly FeedParser $parser,
         private readonly ?FeedCache $cache,
         private readonly bool $cacheEnabled,
-        private readonly int $lockTimeoutMs
+        private readonly int $lockTimeoutMs,
+        private readonly bool $conditionalRequestEnabled = true
     ) {
         if ($lockTimeoutMs < 0) {
             throw new InvalidArgumentException('Feed cache lock timeout cannot be negative.');
@@ -38,13 +40,12 @@ final class FeedFetchService
                 (int) APP_HTTP_MAX_BYTES
             ),
             (bool) APP_FEED_CACHE_ENABLED,
-            (int) APP_FEED_CACHE_LOCK_TIMEOUT_MS
+            (int) APP_FEED_CACHE_LOCK_TIMEOUT_MS,
+            (bool) APP_FEED_CONDITIONAL_REQUEST_ENABLED
         );
     }
 
-    /**
-     * @return array{ok:bool,cache_status:string,result_feed?:array<string,mixed>,effective_url?:string,fetch?:array<string,mixed>,error_type?:string,parse_error?:string}
-     */
+    /** @return array<string,mixed> */
     public function load(FeedSource $source): array
     {
         if (!$this->cacheEnabled || $this->cache === null) {
@@ -58,19 +59,22 @@ final class FeedFetchService
 
         $lock = $this->cache->acquireLock($source, $this->lockTimeoutMs);
         if ($lock === null) {
-            // Cache/lock failure must not take down Feed display. One final
-            // read catches a response stored just before the timeout; if still
-            // absent, use the hardened transport without writing concurrently.
             $cached = $this->loadFreshCache($source);
             return $cached ?? $this->fetchAndParse($source, self::CACHE_BYPASS, false);
         }
 
         try {
-            // Double-checked locking: another process may have populated the
-            // cache while this request waited for the URL-specific lock.
+            // Lock待ちの間に別processが更新している可能性があるため再確認する。
             $cached = $this->loadFreshCache($source);
             if ($cached !== null) {
                 return $cached;
+            }
+
+            if ($this->conditionalRequestEnabled) {
+                $stale = $this->loadStaleCache($source);
+                if ($stale !== null && $stale['entry']->validators() !== []) {
+                    return $this->revalidate($source, $stale['entry'], $stale['feed']);
+                }
             }
 
             return $this->fetchAndParse($source, self::CACHE_MISS, true);
@@ -93,8 +97,6 @@ final class FeedFetchService
 
         $feed = $this->parser->parse_start($entry->body, $source->url);
         if ($feed === []) {
-            // A structurally valid cache may become unparsable after a parser
-            // upgrade. Invalidate it and allow one safe network refresh.
             $this->cache->delete($source);
             return null;
         }
@@ -107,10 +109,88 @@ final class FeedFetchService
         ];
     }
 
+    /** @return array{entry:FeedCacheEntry,feed:array<string,mixed>}|null */
+    private function loadStaleCache(FeedSource $source): ?array
+    {
+        if ($this->cache === null) {
+            return null;
+        }
+
+        $entry = $this->cache->readStale($source);
+        if ($entry === null) {
+            return null;
+        }
+
+        $feed = $this->parser->parse_start($entry->body, $source->url);
+        if ($feed === []) {
+            $this->cache->delete($source);
+            return null;
+        }
+
+        return ['entry' => $entry, 'feed' => $feed];
+    }
+
+    /** @param array<string,mixed> $cachedFeed @return array<string,mixed> */
+    private function revalidate(FeedSource $source, FeedCacheEntry $cached, array $cachedFeed): array
+    {
+        $fetch = $this->transport->fetch($source, $cached->validators());
+        if (($fetch['ok'] ?? false) !== true) {
+            return [
+                'ok' => false,
+                'cache_status' => self::CACHE_MISS,
+                'error_type' => 'fetch',
+                'fetch' => $fetch,
+            ];
+        }
+
+        if (($fetch['not_modified'] ?? false) === true) {
+            if (($fetch['status'] ?? null) !== 304) {
+                return [
+                    'ok' => false,
+                    'cache_status' => self::CACHE_MISS,
+                    'error_type' => 'fetch',
+                    'fetch' => [
+                        'ok' => false,
+                        'status' => (int) ($fetch['status'] ?? 0),
+                        'error_code' => 'unexpected_not_modified',
+                        'error_message' => 'Invalid not-modified response.',
+                    ],
+                ];
+            }
+
+            $this->cache?->writeNotModified($source, $cached, $fetch);
+            return [
+                'ok' => true,
+                'cache_status' => self::CACHE_REVALIDATED,
+                'result_feed' => $cachedFeed,
+                'effective_url' => $cached->effectiveUrl,
+                'fetch' => $fetch,
+            ];
+        }
+
+        return $this->parseFetchResult($source, $fetch, self::CACHE_MISS, true);
+    }
+
     /** @return array<string,mixed> */
     private function fetchAndParse(FeedSource $source, string $cacheStatus, bool $storeOnSuccess): array
     {
         $fetch = $this->transport->fetch($source);
+        if (($fetch['not_modified'] ?? false) === true) {
+            $fetch = [
+                'ok' => false,
+                'url' => $source->url,
+                'status' => 304,
+                'body' => '',
+                'error_code' => 'unexpected_not_modified',
+                'error_message' => 'Unexpected HTTP 304 response.',
+            ];
+        }
+        return $this->parseFetchResult($source, $fetch, $cacheStatus, $storeOnSuccess);
+    }
+
+    /** @param array<string,mixed> $fetch @return array<string,mixed> */
+    private function parseFetchResult(FeedSource $source, array $fetch, string $cacheStatus, bool $storeOnSuccess): array
+    {
         if (($fetch['ok'] ?? false) !== true) {
             return [
                 'ok' => false,
@@ -133,8 +213,6 @@ final class FeedFetchService
             ];
         }
 
-        // Only a response that passed both hardened transport and supported
-        // Feed parsing is eligible for persistence.
         if ($storeOnSuccess && $this->cache !== null) {
             $this->cache->writeSuccessfulFetch($source, $fetch);
         }

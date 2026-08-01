@@ -26,8 +26,8 @@ check('final class FeedSourceMapper' in mapper and 'fromOwnedContent' in mapper,
 check("$content['content_id']" in mapper and "$content['content_owner']" in mapper, 'mapper reads only source identity from content row')
 check("$content['content_value']" not in mapper, 'mapper cannot bypass separately validated URL with raw DB content_value')
 check('$ownerId !== $authenticatedOwnerId' in mapper, 'mapper verifies authenticated ownership again')
-check('public function fetch(FeedSource $source): array' in fetcher, 'FeedFetcher no longer accepts arbitrary URL strings')
-check('app_safe_http_fetch($source->url)' in fetcher, 'FeedFetcher still delegates to SB-09 transport')
+check('public function fetch(FeedSource $source, array $validators = []): array' in fetcher, 'FeedFetcher no longer accepts arbitrary URL strings')
+check('app_safe_http_fetch($source->url, null, null, $validators)' in fetcher, 'FeedFetcher still delegates to SB-09 transport')
 
 # Central loading order must make types available before API/common consumers.
 for module in ['/feed/feed_source.php', '/feed/feed_source_mapper.php', '/feed/feed_fetcher.php', '/feed/feed_parser.php']:

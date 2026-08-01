@@ -239,6 +239,20 @@ SB-15ではproduct behaviorを変更しません。Visible version markerとdocu
 
 詳細: [`m1-e-implementation.md`](m1-e-implementation.md)
 
+
+## M1-F — ETag / Last-Modified / HTTP 304
+
+- M1-Eのstale CacheへETag / Last-Modifiedを保存し、TTL経過後に条件付きRequestを行う。
+- Validatorは以前のeffective URLと今回の送信先が完全一致するときだけ送信する。
+- HTTP 304ではCache本文と `body_fetched_at` を維持し、`validated_at` だけ更新する。
+- HTTP 200では新本文をParse成功後に置換し、responseにない旧Validatorは引き継がない。
+- M1-E schema 1を互換読み込みし、Validatorなしの通常Fetch後にschema 2へ更新する。
+- 条件付きRequestだけを無効化できる `APP_FEED_CONDITIONAL_REQUEST_ENABLED` を追加する。
+- DB / Frontend / Stock / Parser / Adapter / Item identityは変更しない。
+- stale-if-error、Fetch status、Retry、Cache-Control / ExpiresはM1-Fのscope外。
+
+詳細: [`m1-f-implementation.md`](m1-f-implementation.md)
+
 ## Result
 
 Secure Baseline終了時点で、Legacy版の主要機能を維持しつつ、次のEngine/Frontend改修を安全に積み上げるための境界・DB・test・docsが揃いました。
