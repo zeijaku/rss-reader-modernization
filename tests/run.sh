@@ -118,3 +118,7 @@ python3 "$ROOT/tests/test_m1g_concurrency.py"
 echo '== M2-A Frontend foundation checks =='
 python3 "$ROOT/tests/test_m2a_frontend_structure.py"
 node "$ROOT/tests/test_m2a_dashboard_runtime.js"
+
+echo '== M2-B Feed rendering checks =='
+python3 "$ROOT/tests/test_m2b_feed_structure.py"
+node "$ROOT/tests/test_m2b_feed_runtime.js"

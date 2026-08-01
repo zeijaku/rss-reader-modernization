@@ -58,6 +58,7 @@ try:
 
     check('Sign in' in body and 'Register in' in body,'login and registration UI renders')
     check('./css/dashboard.css' in body,'login page references the external dashboard stylesheet')
+    check('<link rel="icon" type="image/png" href="./favicon.png">' in body,'login page explicitly references the local favicon')
     check(bool(VERSION_LABEL) and VERSION_LABEL in body,'visible release marker renders on login page')
     cookie_header=headers.get('Set-Cookie','')
     cookie=cookie_header.split(';',1)[0]
@@ -65,6 +66,9 @@ try:
     check('Max-Age=7776000' not in cookie_header,'Legacy 90-day cookie is absent')
     csrf=csrf_from_html(body)
     check(len(csrf)==64,'authentication forms expose per-session CSRF token')
+
+    s,_,favicon=req(p,'GET','/favicon.png')
+    check(s==200 and len(favicon)>0,'favicon asset is served without a 404 redirect')
 
     s,_,_=req(p,'GET','/css/bootstrap.min.css')
     check(s==200,'Bootstrap stylesheet is served')

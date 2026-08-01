@@ -217,6 +217,153 @@
             });
     }
 
+    /* Feed表示用の短い文字列を作る。絵文字の途中では切らない */
+    function truncateFeedTitle(value, maxLength) {
+        var text = String(value || '');
+        var chars = text.match(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[\s\S]/g) || [];
+        if (chars.length <= maxLength) {
+            return text;
+        }
+        return chars.slice(0, maxLength).join('') + '...';
+    }
+
+    /* APIから返った外部リンクはhttp / httpsだけ使用する */
+    function safeFeedLink(value) {
+        var link = String(value || '');
+        return /^https?:\/\//i.test(link) ? link : '';
+    }
+
+    function renderFeedMessage($card, state, title, message) {
+        $card.attr('data-feed-state', state);
+        $card.find('.content-title').empty().text('　' + title);
+
+        var $body = $card.find('.content-body').empty();
+        if (message !== '') {
+            var $row = $('<tr>').addClass('content-state-row feed-state-' + state);
+            $('<td>')
+                .attr('colspan', '2')
+                .text(message)
+                .appendTo($row);
+            $row.appendTo($body);
+        }
+    }
+
+    function renderFeedBodyMessage($card, state, message) {
+        $card.attr('data-feed-state', state);
+        var $body = $card.find('.content-body').empty();
+        var $row = $('<tr>').addClass('content-state-row feed-state-' + state);
+        $('<td>')
+            .attr('colspan', '2')
+            .text(message)
+            .appendTo($row);
+        $row.appendTo($body);
+    }
+
+    function renderFeedLoading($card) {
+        renderFeedMessage($card, 'loading', '読み込み中...', 'フィードを読み込んでいます');
+    }
+
+    function renderFeedError($card, message) {
+        renderFeedMessage($card, 'error', 'コンテンツを取得出来ませんでした', message || 'しばらくしてから再度お試しください');
+    }
+
+    function renderFeedTitle($card, channel) {
+        var channelTitle = String(channel.title || '');
+        var channelLink = safeFeedLink(channel.link);
+        var viewTitle = channelTitle !== '' ? channelTitle : 'タイトルなし';
+        var $title = $card.find('.content-title').empty();
+
+        if (channelLink !== '') {
+            $('<a>')
+                .addClass('text-white')
+                .attr('href', channelLink)
+                .attr('target', '_blank')
+                .attr('rel', 'noopener noreferrer')
+                .text('　' + viewTitle)
+                .appendTo($title);
+        } else {
+            $('<span>').text('　' + viewTitle).appendTo($title);
+        }
+    }
+
+    function renderFeedItems($card, rawItems) {
+        var items = Array.isArray(rawItems) ? rawItems : [];
+        var $body = $card.find('.content-body').empty();
+        var rendered = 0;
+
+        for (var i = 0; i < items.length && rendered < 5; i++) {
+            if (!items[i] || typeof items[i] !== 'object' || Array.isArray(items[i])) {
+                continue;
+            }
+
+            var item = items[i];
+            var itemTitle = String(item.title || '');
+            var itemLink = safeFeedLink(item.link);
+            var viewTitle = truncateFeedTitle(itemTitle !== '' ? itemTitle : 'タイトルなし', 64);
+            var $row = $('<tr>');
+            var $stockCell = $('<td>').appendTo($row);
+
+            if (itemLink !== '') {
+                $('<i>')
+                    .addClass('fas fa-bookmark fa-fw text-info infomation_modal_rewrite')
+                    .attr('data-stock-url', itemLink)
+                    .attr('data-stock-title', itemTitle)
+                    .attr('data-toggle', 'modal')
+                    .attr('data-target', '.save_modal')
+                    .appendTo($('<button type="button" class="btn btn-link p-0" aria-label="Stock this article"></button>').appendTo($stockCell));
+            }
+
+            var $linkCell = $('<td>').appendTo($row);
+            if (itemLink !== '') {
+                $('<a>')
+                    .addClass('text-dark')
+                    .attr('href', itemLink)
+                    .attr('target', '_blank')
+                    .attr('rel', 'noopener noreferrer')
+                    .text(viewTitle)
+                    .appendTo($linkCell);
+            } else {
+                $('<span>').text(viewTitle).appendTo($linkCell);
+            }
+
+            $row.appendTo($body);
+            rendered++;
+        }
+
+        if (rendered === 0) {
+            renderFeedBodyMessage($card, 'empty', '記事はありません');
+            return;
+        }
+
+        $card.attr('data-feed-state', 'ready');
+    }
+
+    function renderFeed($card, resultFeed) {
+        if (!resultFeed || typeof resultFeed !== 'object' || Array.isArray(resultFeed)) {
+            renderFeedError($card, 'フィードの応答形式を確認出来ませんでした');
+            return;
+        }
+
+        var channel = resultFeed.channel;
+        if (!channel || typeof channel !== 'object' || Array.isArray(channel) || !Array.isArray(resultFeed.item)) {
+            renderFeedError($card, 'フィードの応答形式を確認出来ませんでした');
+            return;
+        }
+
+        renderFeedTitle($card, channel);
+        renderFeedItems($card, resultFeed.item);
+    }
+
+    function feedRequestErrorMessage(xhr, textStatus) {
+        if (textStatus === 'timeout') {
+            return 'コンテンツの取得がタイムアウトしました';
+        }
+        if (xhr && xhr.status === 404) {
+            return '登録されたコンテンツが見つかりませんでした';
+        }
+        return 'しばらくしてから再度お試しください';
+    }
+
     /*
      * 登録済みContent IDからFeedを取得。
      * SB-10: external Feed text is inserted with .text(), not HTML concatenation.
@@ -224,70 +371,29 @@
     function fetch_content($card) {
         var content_id = String($card.attr('data-feed-content-id') || '');
         if (!/^\d+$/.test(content_id)) {
+            renderFeedError($card, 'コンテンツIDを確認出来ませんでした');
+            return;
+        }
+        if ($card.data('feed-request-pending') === true) {
             return;
         }
 
+        $card.data('feed-request-pending', true);
+        renderFeedLoading($card);
+
         apiRequest('feed.fetch', {'content_id': content_id}, 25000)
             .done(function (data) {
-                if (data.ok !== true || !data.data || !data.data.result_feed) {
+                if (!data || data.ok !== true || !data.data || !data.data.result_feed) {
+                    renderFeedError($card, 'フィードの応答形式を確認出来ませんでした');
                     return;
                 }
-
-                var resultFeed = data.data.result_feed;
-                var channel = resultFeed.channel || {};
-                var channelTitle = String(channel.title || '');
-                var channelLink = String(channel.link || '');
-                var $title = $card.find('.content-title').empty();
-                if (channelLink !== '') {
-                    $('<a>')
-                        .addClass('text-white')
-                        .attr('href', channelLink)
-                        .attr('target', '_blank')
-                        .attr('rel', 'noopener noreferrer')
-                        .text('　' + channelTitle)
-                        .appendTo($title);
-                } else {
-                    $('<span>').text('　' + channelTitle).appendTo($title);
-                }
-
-                var items = Array.isArray(resultFeed.item) ? resultFeed.item : [];
-                var limit = Math.min(5, items.length);
-                var $body = $card.find('.content-body').empty();
-                for (var i = 0; i < limit; i++) {
-                    var item = items[i] || {};
-                    var itemTitle = String(item.title || '');
-                    var itemLink = String(item.link || '');
-                    var viewTitle = itemTitle.length > 64 ? itemTitle.substr(0, 64) + '...' : itemTitle;
-
-                    var $row = $('<tr>');
-                    var $stockCell = $('<td>').appendTo($row);
-                    if (itemLink !== '') {
-                        $('<i>')
-                            .addClass('fas fa-bookmark fa-fw text-info infomation_modal_rewrite')
-                            .attr('data-stock-url', itemLink)
-                            .attr('data-stock-title', itemTitle)
-                            .attr('data-toggle', 'modal')
-                            .attr('data-target', '.save_modal')
-                            .appendTo($('<button type="button" class="btn btn-link p-0" aria-label="Stock this article"></button>').appendTo($stockCell));
-                    }
-
-                    var $linkCell = $('<td>').appendTo($row);
-                    if (itemLink !== '') {
-                        $('<a>')
-                            .addClass('text-dark')
-                            .attr('href', itemLink)
-                            .attr('target', '_blank')
-                            .attr('rel', 'noopener noreferrer')
-                            .text(viewTitle)
-                            .appendTo($linkCell);
-                    } else {
-                        $('<span>').text(viewTitle).appendTo($linkCell);
-                    }
-                    $row.appendTo($body);
-                }
+                renderFeed($card, data.data.result_feed);
             })
-            .fail(function () {
-                $card.find('.content-title').empty().text('コンテンツを取得出来ませんでした');
+            .fail(function (xhr, textStatus) {
+                renderFeedError($card, feedRequestErrorMessage(xhr, textStatus));
+            })
+            .always(function () {
+                $card.data('feed-request-pending', false);
             });
     }
 

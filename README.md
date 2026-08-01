@@ -1,10 +1,10 @@
 # RSS Reader Modernization
 
-**Current checkpoint:** `Frontend M2-A / R1`
+**Current checkpoint:** `Frontend M2-B / R1`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
-M1: Source / RSS Engine ModernizationはM1-Gまで完了しました。現在は **M2: Frontend Modernization** を進めています。M2-AではDashboard固有のJavaScriptとCSSを外部Assetへ分離し、API Request、Event登録、二重送信防止の基礎を整理しました。既存の4タブ、Feed CRUD、Stock、Settings、公開API、DB、M1 RSS Engineは維持しています。
+M1: Source / RSS Engine ModernizationはM1-Gまで完了しました。現在は **M2: Frontend Modernization** を進めています。M2-AでFrontend Assetと通信処理の土台を整理し、M2-BではFeed取得、状態判定、タイトル・記事描画を分けました。Loading、0件、取得失敗、不正Responseを画面上で区別し、既存の4タブ、Feed CRUD、Stock、Settings、公開API、DB、M1 RSS Engineは維持しています。
 
 ## 現在できること
 
@@ -69,14 +69,14 @@ M1-Aの詳細は [`docs/m1-a-implementation.md`](docs/m1-a-implementation.md)、
 | Work unit | 内容 | 状態 |
 |---|---|---|
 | M2-A | Frontend基盤整理 | 完了 |
-| M2-B | Feed表示処理整理 | 未着手 |
+| M2-B | Feed表示処理整理 | 完了 |
 | M2-C | HTML構造・Accessibility | 未着手 |
 | M2-D | Responsive・UI / UX | 未着手 |
 | M2-E | 不要Frontend Asset整理 | 未着手 |
 | M2-F | Frontend依存関係更新 | 未着手 |
 | M2-G | 最終回帰・Documentation | 未着手 |
 
-M2-Aの詳細は [`docs/m2-a-implementation.md`](docs/m2-a-implementation.md)、test結果は [`docs/test-report-m2-a.md`](docs/test-report-m2-a.md) を参照してください。
+M2-Aの詳細は [`docs/m2-a-implementation.md`](docs/m2-a-implementation.md)、M2-Bは [`docs/m2-b-implementation.md`](docs/m2-b-implementation.md) を参照してください。test結果は [`docs/test-report-m2-a.md`](docs/test-report-m2-a.md) と [`docs/test-report-m2-b.md`](docs/test-report-m2-b.md) に記録しています。
 
 ## Runtime requirements
 
@@ -209,17 +209,17 @@ Legacy版は比較・解析対象として保持し、Secure BaselineのRuntime�
 
 ## Current limitations / deferred modernization
 
-Secure Baseline以降も、現在のM2-A時点では次を残しています。
+Secure Baseline以降も、現在のM2-B時点では次を残しています。
 
-- Server-side cacheは固定TTL + ETag / Last-Modified + 最大24時間のstale-if-error。状態表示UIは未対応
+- Server-side cacheは固定TTL + ETag / Last-Modified + 最大24時間のstale-if-error。FrontendはLoading / Empty / Errorを表示するが、Cache / Retryの内部状態は公開しない
 - Feed提供元がValidatorを返さない場合はTTL経過後に通常のHTTP 200取得
 - Feed取得は表示時の同期処理
 - Foreign Key未導入
-- Dashboard固有JS/CSSは分離済みだが、Legacy由来のBootstrap / jQuery / Drawer / Font Awesome assetsはまだ整理していない
+- Dashboard固有JS/CSSとFeed描画処理は整理済みだが、Legacy由来のBootstrap / jQuery / Drawer / Font Awesome assetsはまだ整理していない
 - UI/UX / accessibilityの本格刷新は未実施
 - Source abstractionはFetcher / FeedSource / Parser dispatcher / RSS 2.0・RSS 1.0・Atom Adapter / Normalized Item / deterministic Item identity / cache-aware Feed serviceまで導入済み
 
-これらはM2-B以降へ意図的に分離しています。
+これらはM2-C以降へ意図的に分離しています。
 
 ## Roadmap
 
@@ -228,7 +228,7 @@ Secure Baseline SB-15 / R3
   ↓
 M1 Source / RSS Engine (M1-G complete)
   ↓
-M2 Frontend (M2-A complete)
+M2 Frontend (M2-B complete)
   ↓
 Release / Portfolio
 ```

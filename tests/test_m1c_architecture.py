@@ -75,7 +75,7 @@ body = m.group('body') if m else ''
 check('FeedFetchService::fromRuntimeConfiguration()' in body and '$this->parser->parse_start($body, $source->url)' in service and '$this->parser->parse_start($entry->body, $source->url)' in service, 'API keeps the FeedParser compatibility boundary through cache-aware service')
 check('api_safe_feed_payload($resultFeed, $effectiveUrl)' in body, 'API XSS-safe payload boundary remains unchanged')
 check("$input['url']" not in body and '$input["url"]' not in body, 'client cannot supply an outbound Feed URL')
-check('Math.min(5, items.length)' in dashboard, 'frontend display cap remains unchanged')
+check('rendered < 5' in dashboard and 'rendered++' in dashboard, 'frontend display cap remains unchanged')
 
 if not all(checks):
     raise SystemExit(1)

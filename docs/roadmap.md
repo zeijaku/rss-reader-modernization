@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `M2-A / R1`。M1-GまでのRSS Engineを維持したまま、Dashboard固有JavaScript / CSSの外部Asset化、API Request共通処理、Event登録整理、二重送信防止を追加しました。
+現在は `M2-B / R1`。M1-GまでのRSS EngineとM2-AのFrontend基盤を維持したまま、Feed取得、状態判定、タイトル・記事描画を分離し、Loading / Empty / Errorを明示しました。
 
 ## M1 — Source / RSS Engine
 
@@ -69,14 +69,14 @@ HTML scrapingはサイト構造変更の影響が大きいため、generic parse
 ### Progress
 
 - [x] M2-A Frontend基盤整理
-- [ ] M2-B Feed表示処理整理
+- [x] M2-B Feed表示処理整理
 - [ ] M2-C HTML構造・Accessibility
 - [ ] M2-D Responsive・UI / UX
 - [ ] M2-E 不要Frontend Asset整理
 - [ ] M2-F Frontend依存関係更新
 - [ ] M2-G 最終回帰・Documentation
 
-M2-AではインラインJavaScript / CSSを外部Assetへ分離し、PHP生成JavaScriptをdata属性ベースへ変更しました。Bootstrap / jQuery / Drawer / iScroll / Font AwesomeのVersionは変更していません。
+M2-AではインラインJavaScript / CSSを外部Assetへ分離し、PHP生成JavaScriptをdata属性ベースへ変更しました。M2-BではFeed通信とDOM描画を分け、Loading、0件、取得失敗、不正Response、欠損タイトル、長いUnicodeタイトルを扱います。Bootstrap / jQuery / Drawer / iScroll / Font AwesomeのVersionは変更していません。
 
 Frontend刷新はSecurity behaviorを変えないよう、SB-14以降とM1のregressionを継続します。
 

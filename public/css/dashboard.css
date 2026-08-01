@@ -27,3 +27,14 @@
 table tr:hover {
     opacity: 0.7;
 }
+
+.content-state-row td {
+    padding: 12px 8px;
+    text-align: center;
+    color: #6c757d;
+}
+
+[data-feed-state="error"] .content-state-row td {
+    color: #721c24;
+}
+

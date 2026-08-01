@@ -47,6 +47,6 @@ for cidr in ['100.64.0.0/10', '192.0.2.0/24', '198.18.0.0/15', '198.51.100.0/24'
 needle = "$links = $xml->xpath('./*[local-name()=\"link\"]');"
 check(feed_helper.count(needle) == 1, 'Atom link XPath is evaluated once per element')
 check('LIBXML_NONET' in feed_parser, 'parser forbids XML network access')
-check('Math.min(5, items.length)' in dashboard, 'frontend safely caps rendered items to five')
+check('rendered < 5' in dashboard and 'rendered++' in dashboard, 'frontend safely caps rendered items to five')
 
 print('All SB-14 surface/static checks passed.')

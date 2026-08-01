@@ -43,7 +43,7 @@ check("getName()) === 'feed'" in atom_adapter and "getName()) !== 'rss'" in rss2
 check('defaultNamespaceChildren' in feed_helper and "http://purl.org/rss/1.0/" in rss1_adapter, 'Atom/default-namespace and RSS1 namespace parsing are handled explicitly')
 check("'$1UTF-8$2'" in feed_parser and 'Feed XML declaration could not be normalized.' in feed_parser, 'converted Feed bytes keep XML encoding declaration aligned to UTF-8')
 check('$items = [];' in rss2_adapter and '$items = [];' in rss1_adapter and '$items = [];' in atom_adapter, 'zero-item feeds remain valid adapter results')
-check('Math.min(5, items.length)' in dashboard, 'browser only renders available items up to five')
+check('rendered < 5' in dashboard and 'rendered++' in dashboard, 'browser only renders available items up to five')
 
 # SB-11-04: close partial rows for Feed and Stock branches.
 check(index.count("if ($row_cnt > 0) {") >= 2, 'partial Feed/Stock grid rows are explicitly closed')

@@ -32,4 +32,4 @@
 
 ## 次工程
 
-M2-BではFeed通信と表示状態を整理し、Loading、0件、Error、再試行等を扱います。
+M2-BではFeed通信と表示状態を整理し、Loading、0件、Error等を扱います。

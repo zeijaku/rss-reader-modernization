@@ -2,6 +2,22 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## Frontend M2-B / R1 — 2026-08-01
+
+### Feed rendering and state handling
+
+- Feed取得、状態判定、Channel title描画、Item描画を小さな関数へ分離。
+- Feed cardへ `loading` / `ready` / `empty` / `error` の状態を追加。
+- 初期表示にLoading、0件Feedに「記事はありません」、Timeout / 404 / upstream failureに制御済みmessageを表示。
+- 不正・不足Responseや配列以外のFeed / Itemを安全側で処理。
+- Channel / Item title欠損時のfallbackを追加し、記事表示は従来どおり最大5件。
+- 長い記事タイトルは絵文字のUTF-16 surrogate pairを分断せず64文字相当で省略。
+- Feed linkはFrontendでもhttp / httpsだけを使用し、`.text()` と `noopener noreferrer` を維持。
+- 同じFeed cardのRequest pending中は重複取得を開始しない。
+- `favicon.png` を明示的に参照し、HTTPS環境のfavicon 404 / Mixed Content経路を回避。
+- DB schema、公開API Response、M1 RSS Engine、Frontend library Version、画面構成は変更なし。
+- M2-B専用のFeed structure testとNode runtime testを追加。
+
 ## Frontend M2-A / R1 — 2026-08-01
 
 ### Frontend script foundation

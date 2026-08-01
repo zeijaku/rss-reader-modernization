@@ -76,6 +76,7 @@ $tabParam = app_tab_from_query($_GET['tab'] ?? null);
     <meta name="keywords" content="iGuguru beta,igoogle,rss,bootstrap,jquery">
 
     <title>iGuguru</title>
+    <link rel="icon" type="image/png" href="./favicon.png">
     <meta name="csrf-token" content="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
     <!-- Bootstrap -->
     <link rel="stylesheet" href="./css/<?php echo htmlspecialchars(resolve_theme_stylesheet($ui['conf_style'] ?? null), ENT_QUOTES, 'UTF-8'); ?>">
@@ -196,14 +197,14 @@ if (is_int($content_location)) {
         }
         echo '
         <!-- Card -->
-            <div class="col-sm " data-feed-content-id="' . $contentId . '" style="padding: 0px; margin: 2px;">
+            <div class="col-sm " data-feed-content-id="' . $contentId . '" data-feed-state="loading" style="padding: 0px; margin: 2px;">
                 <input type="hidden" class="content-value" value="' . app_html($contentValue) . '">
                 <table class="table table-hover">
                     <thead class="">
-                        <tr class=""><td colspan="2" class="bg-' . app_html($contentStyle) . '" style="padding: 4px;"><small><span class="content-title"></span></small>　<div class="float-right" data-toggle="modal" data-target="#changeContent"><i class="fas fa-edit text-white content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" style="margin-top: 2px;"></i></div></td></tr>
+                        <tr class=""><td colspan="2" class="bg-' . app_html($contentStyle) . '" style="padding: 4px;"><small><span class="content-title">　読み込み中...</span></small>　<div class="float-right" data-toggle="modal" data-target="#changeContent"><i class="fas fa-edit text-white content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" style="margin-top: 2px;"></i></div></td></tr>
                     </thead>
                     <tbody class="content-body">
-                        <!-- content_value挿入 -->
+                        <tr class="content-state-row feed-state-loading"><td colspan="2">フィードを読み込んでいます</td></tr>
                     </tbody>
                 </table>
             </div>
