@@ -311,7 +311,7 @@ function api_feed_fetch(int $userId, array $input): array
         if (($loaded['error_type'] ?? '') === 'fetch') {
             $fetch = is_array($loaded['fetch'] ?? null) ? $loaded['fetch'] : [];
             $code = (string) ($fetch['error_code'] ?? 'upstream_error');
-            $blocked = in_array($code, ['invalid_url', 'port_not_allowed', 'dns_failed', 'non_public_address', 'invalid_redirect'], true);
+            $blocked = in_array($code, ['invalid_url', 'port_not_allowed', 'non_public_address', 'invalid_redirect'], true);
             return api_error(
                 $blocked ? 'upstream_blocked' : 'upstream_error',
                 $blocked ? 'Feed URL was blocked by the outbound security policy.' : 'Feed could not be fetched.',

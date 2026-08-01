@@ -260,6 +260,6 @@ Version管理するSQLはreview済みschema/audit/migration/fake fixtureだけ�
 - Foreign Key未導入。
 - Legacy frontend dependenciesは後段で刷新予定。
 - Feed cacheはsingle/shared filesystem前提。複数Web nodeでは共有storageまたは別cache backendが必要。
-- ETag / Last-Modified / HTTP 304、stale-if-errorは未実装。
+- ETag / Last-Modified / HTTP 304とbounded stale-if-errorを実装済み。Security errorはstale表示やBackoffで隠さない。
 
 SecurityはSB-15で完了ではなく、今後のEngine/Frontend変更でも回帰testを維持する前提です。

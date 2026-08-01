@@ -2,6 +2,21 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## RSS Engine M1-G / R1 — 2026-08-01
+
+### Fetch state, Retry-After, Backoff and bounded stale-if-error
+
+- Feed URL hash単位のprivate state JSONへ最終試行、最終成功、結果種別、HTTP status、短いerror code、失敗回数、次回試行時刻を保存。
+- stateへraw Feed URL、query token、Feed本文、詳細なtransport messageを保存しない。
+- transient errorへ60秒 / 300秒 / 900秒 / 最大3600秒の段階的Backoffを追加。
+- HTTP 429 / 503の安全なRetry-After（delta-seconds / HTTP-date）を優先し、上限を適用。
+- timeout、DNS、一時HTTP error、temporary parse errorでは、最後の正常確認から最大24時間以内のstale Cacheを利用。
+- HTTP 404等のpermanent error、TLS、private address、invalid redirect、response size超過等のSecurity errorではstaleを使用しない。
+- 同一URLの同時障害はURL単位Lock内で1回だけFetch・state更新し、待機processはBackoff stateを再確認。
+- 新しいRepository / Factory / Queue等を追加せず、小さなhelper関数と既存FeedCache / FeedFetchServiceの拡張に留めた。
+- DB、Frontend、公開API、Stock、Parser、Adapter、Item identityは変更なし。
+- HTTP / state / stale boundary / concurrency / architecture / security regression testを追加。
+
 ## RSS Engine M1-F / R1 — 2026-08-01
 
 ### Conditional Feed requests and HTTP 304 reuse

@@ -23,6 +23,8 @@ required = [
     ROOT / 'docs' / 'test-report-m1-e.md',
     ROOT / 'docs' / 'm1-f-implementation.md',
     ROOT / 'docs' / 'test-report-m1-f.md',
+    ROOT / 'docs' / 'm1-g-implementation.md',
+    ROOT / 'docs' / 'test-report-m1-g.md',
 ]
 
 for path in required:
@@ -35,9 +37,9 @@ gate = (ROOT / 'docs' / 'initial-commit-gate.md').read_text(encoding='utf-8')
 change_map = (ROOT / 'docs' / 'change-map.md').read_text(encoding='utf-8')
 
 assert 'Secure Baseline SB-15 / R3' in readme
-assert 'RSS Engine M1-F / R1' in readme
-assert "APP_VERSION = 'M1-F R1'" in version
-assert "APP_VERSION_LABEL = 'RSS Engine M1-F / R1'" in version
+assert 'RSS Engine M1-G / R1' in readme
+assert "APP_VERSION = 'M1-G R1'" in version
+assert "APP_VERSION_LABEL = 'RSS Engine M1-G / R1'" in version
 assert 'Secure Baseline SB-15 / R3' in readme
 assert 'PASS — Secure Baseline' in gate
 assert 'DB_TABLE_PREFIX' in readme and '@table_prefix' in readme
@@ -77,7 +79,7 @@ for repository_doc in ['README.md', 'CHANGELOG.md', 'docs/legacy-analysis.md', '
 
 # README must not claim the deferred Engine/Frontend work is already complete.
 assert 'Feed itemのサーバーキャッシュなし' not in readme
-assert 'APP_FEED_CACHE_TTL_SECONDS' in readme and 'ETag / Last-Modified' in readme
+assert 'APP_FEED_CACHE_TTL_SECONDS' in readme and 'ETag / Last-Modified' in readme and 'APP_FEED_RETRY_ENABLED' in readme and 'APP_FEED_RETRY_ENABLED' in readme
 assert 'jQuery' in readme and 'Frontend' in readme
 
 # Check local Markdown links in the SB-15 primary docs.

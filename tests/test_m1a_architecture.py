@@ -43,7 +43,7 @@ source_pos = body.find('fromOwnedContent')
 fetch_pos = body.find('FeedFetchService::fromRuntimeConfiguration()')
 check(owned_pos >= 0 and validate_pos > owned_pos and source_pos > validate_pos and fetch_pos > source_pos, 'owner lookup, stored-URL validation, and FeedSource mapping still occur before outbound fetch')
 check("$input['url']" not in body and '$input["url"]' not in body, 'feed.fetch still does not accept a client-supplied Feed URL')
-check("['invalid_url', 'port_not_allowed', 'dns_failed', 'non_public_address', 'invalid_redirect']" in body, 'blocked outbound error classification is preserved')
+check("['invalid_url', 'port_not_allowed', 'non_public_address', 'invalid_redirect']" in body, 'SSRF policy error classification remains explicit while DNS failure stays retryable')
 check("api_safe_feed_payload($resultFeed, $effectiveUrl)" in body, 'XSS-safe API payload boundary remains after parsing')
 
 check('final class NormalizedItem' in model, 'NormalizedItem model exists')

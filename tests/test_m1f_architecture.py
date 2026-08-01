@@ -56,7 +56,7 @@ check('APP_FEED_CONDITIONAL_REQUEST_ENABLED' in service, 'runtime service reads 
 check('loadStaleCache' in service and 'revalidate' in service, 'stale cache revalidation is kept in the existing service')
 check(service.find('parse_start($entry->body') < service.find('$this->transport->fetch($source, $cached->validators())'), 'stale cache body is parsed before its validators can extend it')
 check('CACHE_REVALIDATED' in service, 'internal result distinguishes an HTTP 304 revalidation')
-check("'error_type' => 'fetch'" in service, 'upstream failure remains an error instead of stale-if-error')
+check('private readonly bool $staleIfErrorEnabled = false' in service, 'M1-F constructor compatibility keeps stale-if-error disabled unless explicitly enabled')
 check("'result_feed' => $cachedFeed" in service, 'HTTP 304 reuses the already validated cached Feed body')
 check('writeNotModified($source, $cached, $fetch)' in service, 'HTTP 304 refreshes cache validation metadata')
 check('writeSuccessfulFetch($source, $fetch)' in service, 'HTTP 200 still replaces cache only after parse success')
@@ -74,8 +74,8 @@ check('cache_status' not in index.lower() and 'etag' not in index.lower(), 'Fron
 check('etag' not in schema.lower() and 'last_modified' not in schema.lower(), 'M1-F adds no database columns')
 
 combined = '\n'.join([headers, fetcher, entry, cache, service, http_fetch])
-for forbidden in ['Retry-After', 'exponential', 'stale-if-error', 'Cache-Control', "'expires'"]:
-    check(forbidden.lower() not in combined.lower(), f'M1-F does not implement deferred behavior: {forbidden}')
+for forbidden in ['Cache-Control', "'expires'"]:
+    check(forbidden.lower() not in combined.lower(), f'M1-F remains independent of upstream cache-policy behavior: {forbidden}')
 check('array_unique' not in service and 'unset($feed[' not in service, 'M1-F does not remove or reorder Feed items')
 
 if not all(checks):

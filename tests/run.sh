@@ -108,3 +108,9 @@ php "$ROOT/tests/test_m1f_http_conditional.php"
 php "$ROOT/tests/test_m1f_cache_revalidation.php"
 python3 "$ROOT/tests/test_m1f_architecture.py"
 python3 "$ROOT/tests/test_m1f_concurrency.py"
+
+echo '== M1-G Fetch State / Retry / Stale-if-error checks =='
+php "$ROOT/tests/test_m1g_http_retry.php"
+php "$ROOT/tests/test_m1g_fetch_resilience.php"
+python3 "$ROOT/tests/test_m1g_architecture.py"
+python3 "$ROOT/tests/test_m1g_concurrency.py"

@@ -138,6 +138,18 @@ if (!defined('APP_FEED_CACHE_TTL_SECONDS')) {
 if (!defined('APP_FEED_CACHE_LOCK_TIMEOUT_MS')) {
     define('APP_FEED_CACHE_LOCK_TIMEOUT_MS', max(0, min(30000, (int) app_env('APP_FEED_CACHE_LOCK_TIMEOUT_MS', '9000'))));
 }
+if (!defined('APP_FEED_RETRY_ENABLED')) {
+    define('APP_FEED_RETRY_ENABLED', app_env_bool('APP_FEED_RETRY_ENABLED', true));
+}
+if (!defined('APP_FEED_RETRY_MAX_DELAY_SECONDS')) {
+    define('APP_FEED_RETRY_MAX_DELAY_SECONDS', max(60, min(86400, (int) app_env('APP_FEED_RETRY_MAX_DELAY_SECONDS', '3600'))));
+}
+if (!defined('APP_FEED_STALE_IF_ERROR_ENABLED')) {
+    define('APP_FEED_STALE_IF_ERROR_ENABLED', app_env_bool('APP_FEED_STALE_IF_ERROR_ENABLED', true));
+}
+if (!defined('APP_FEED_STALE_MAX_AGE_SECONDS')) {
+    define('APP_FEED_STALE_MAX_AGE_SECONDS', max(APP_FEED_CACHE_TTL_SECONDS, min(604800, (int) app_env('APP_FEED_STALE_MAX_AGE_SECONDS', '86400'))));
+}
 if (!defined('APP_FEED_CACHE_DIR')) {
     define('APP_FEED_CACHE_DIR', dirname(__DIR__, 2) . '/var/cache/feed');
 }

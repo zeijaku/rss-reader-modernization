@@ -1,10 +1,10 @@
 # RSS Reader Modernization
 
-**Current checkpoint:** `RSS Engine M1-F / R1`
+**Current checkpoint:** `RSS Engine M1-G / R1`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
-現在は **M1: Source / RSS Engine Modernization** を進めています。M1-AでFetcher / Parserと `NormalizedItem`、M1-Bでowner-scoped `FeedSource` 境界、M1-CでRSS 2.0 / RSS 1.0 / Atom AdapterとDate normalizerを導入し、M1-DではFeed固有ID・記事リンク・Fingerprintから決定的な内部Item identityを生成し、M1-Eでは正常なFeed本文のServer-side cacheとURL単位Lockによる重複Fetch抑制を導入し、M1-FではETag / Last-Modified / HTTP 304による条件付き取得を追加しました。
+現在は **M1: Source / RSS Engine Modernization** を進めています。M1-AでFetcher / Parserと `NormalizedItem`、M1-Bでowner-scoped `FeedSource` 境界、M1-CでRSS 2.0 / RSS 1.0 / Atom AdapterとDate normalizerを導入し、M1-DではFeed固有ID・記事リンク・Fingerprintから決定的な内部Item identityを生成し、M1-Eでは正常なFeed本文のServer-side cacheとURL単位Lockによる重複Fetch抑制を導入し、M1-FではETag / Last-Modified / HTTP 304による条件付き取得を追加し、M1-GではFetch state、Retry-After、段階的Backoff、期限付きstale-if-errorを導入しました。
 
 ## 現在できること
 
@@ -15,6 +15,8 @@
 - 正常Feed本文の短時間Server-side cache（初期TTL 60秒）
 - 同一Feed URLへの同時Fetch抑制
 - ETag / Last-Modified / HTTP 304による本文再送抑制
+- 一時障害時の段階的BackoffとRetry-After対応
+- 最後の正常確認から24時間以内に限るstale-if-error
 - 記事リンクのStock保存と一覧表示
 - Bootstrapテーマ、Navbarリンク、タブ名のユーザー設定
 - MySQL 8系での新規DB構築
@@ -56,9 +58,9 @@ Feed item本文はDBへ永続化せず、登録されたFeed URLから表示時�
 | M1-D | Item identity | 完了 |
 | M1-E | Server-side cache + 重複Fetch抑制 | 完了 |
 | M1-F | ETag / Last-Modified / HTTP 304 | 完了 |
-| M1-G | Fetch state + Retry strategy | 未着手 |
+| M1-G | Fetch state + Retry / stale-if-error | 完了 |
 
-M1-Aの詳細は [`docs/m1-a-implementation.md`](docs/m1-a-implementation.md)、M1-Bは [`docs/m1-b-implementation.md`](docs/m1-b-implementation.md)、M1-Cは [`docs/m1-c-implementation.md`](docs/m1-c-implementation.md)、M1-Dは [`docs/m1-d-implementation.md`](docs/m1-d-implementation.md)、M1-Eは [`docs/m1-e-implementation.md`](docs/m1-e-implementation.md)、M1-Fは [`docs/m1-f-implementation.md`](docs/m1-f-implementation.md) を参照してください。
+M1-Aの詳細は [`docs/m1-a-implementation.md`](docs/m1-a-implementation.md)、M1-Bは [`docs/m1-b-implementation.md`](docs/m1-b-implementation.md)、M1-Cは [`docs/m1-c-implementation.md`](docs/m1-c-implementation.md)、M1-Dは [`docs/m1-d-implementation.md`](docs/m1-d-implementation.md)、M1-Eは [`docs/m1-e-implementation.md`](docs/m1-e-implementation.md)、M1-Fは [`docs/m1-f-implementation.md`](docs/m1-f-implementation.md)、M1-Gは [`docs/m1-g-implementation.md`](docs/m1-g-implementation.md) を参照してください。
 
 ## Runtime requirements
 
@@ -147,6 +149,7 @@ Migration前に必ずDB全体をバックアップしてください。Duplicate
 - `REGISTRATION_ENABLED` は運用方針に合わせて設定
 - `var/session/`、`var/security/login-throttle/`、`var/cache/feed/` がPHPから書込み可能
 - Feed cacheは `APP_FEED_CACHE_ENABLED=true`、`APP_FEED_CONDITIONAL_REQUEST_ENABLED=true`、`APP_FEED_CACHE_TTL_SECONDS=60`、`APP_FEED_CACHE_LOCK_TIMEOUT_MS=9000` が初期値
+- Retryは `APP_FEED_RETRY_ENABLED=true`、最大待機 `3600` 秒、stale-if-errorは有効・最大 `86400` 秒が初期値
 - `var/log/` を利用する場合もDocumentRoot外
 - HTTPSを使用
 
@@ -160,9 +163,9 @@ bash tests/run.sh
 
 SB-14の最終Matrixでは、Authentication、Authorization/IDOR、CSRF、SSRF、XSS、Parser、4タブ、DB integrity、table prefix、repository leak scan、PHP 8 runtimeを横断して検証しています。
 
-Build環境では `pdo_mysql` / cURL / SimpleXML / mbstringが揃わないため、実MySQL/cURL/SimpleXML E2Eはローカルでは完全実行できません。代替としてFake PDO/transport、fixture、static invariantを使用し、M1-AではFetcher境界・Normalized Item・API contract・Security ordering、M1-BではFeedSource/Mapper、owner再検証、異常DB rowのfail-closed、SSRF継承、M1-CではAdapter dispatch、Date normalization、Atom `published` fallback、namespace/link/content/date fixture、XML network禁止、M1-DではGUID / `rdf:about` / Atom `id`抽出、link/fingerprint fallback、Feed URL scope、identity安定性・非公開API契約、M1-EではTTL境界、破損Cache復旧、atomic write、権限・symlink拒否、Cache無効化、5 process同時実行時の単一Fetchを確認し、M1-FではETag / Last-Modified検証、redirect時の非漏えい、HTTP 304本文再利用、schema 1互換、5 process同時revalidationを専用testで確認しています。配置先ではMySQL 8のCRUDと実RSS/Atomを手動確認してください。
+Build環境では `pdo_mysql` / cURL / SimpleXML / mbstringが揃わないため、実MySQL/cURL/SimpleXML E2Eはローカルでは完全実行できません。代替としてFake PDO/transport、fixture、static invariantを使用し、M1-AではFetcher境界・Normalized Item・API contract・Security ordering、M1-BではFeedSource/Mapper、owner再検証、異常DB rowのfail-closed、SSRF継承、M1-CではAdapter dispatch、Date normalization、Atom `published` fallback、namespace/link/content/date fixture、XML network禁止、M1-DではGUID / `rdf:about` / Atom `id`抽出、link/fingerprint fallback、Feed URL scope、identity安定性・非公開API契約、M1-EではTTL境界、破損Cache復旧、atomic write、権限・symlink拒否、Cache無効化、5 process同時実行時の単一Fetchを確認し、M1-FではETag / Last-Modified検証、redirect時の非漏えい、HTTP 304本文再利用、schema 1互換、5 process同時revalidationを確認し、M1-GではRetry-After、エラー分類、Fetch state、Backoff境界、stale age境界、Security error非隠蔽、5 process同時障害時の単一Fetchと単一失敗記録を専用testで確認しています。配置先ではMySQL 8のCRUDと実RSS/Atomを手動確認してください。
 
-詳細: [`docs/test-report-sb14.md`](docs/test-report-sb14.md) / [`docs/test-report-sb15.md`](docs/test-report-sb15.md) / [`docs/test-report-m1-a.md`](docs/test-report-m1-a.md) / [`docs/test-report-m1-b.md`](docs/test-report-m1-b.md) / [`docs/test-report-m1-c.md`](docs/test-report-m1-c.md) / [`docs/test-report-m1-d.md`](docs/test-report-m1-d.md) / [`docs/test-report-m1-e.md`](docs/test-report-m1-e.md) / [`docs/test-report-m1-f.md`](docs/test-report-m1-f.md)
+詳細: [`docs/test-report-sb14.md`](docs/test-report-sb14.md) / [`docs/test-report-sb15.md`](docs/test-report-sb15.md) / [`docs/test-report-m1-a.md`](docs/test-report-m1-a.md) / [`docs/test-report-m1-b.md`](docs/test-report-m1-b.md) / [`docs/test-report-m1-c.md`](docs/test-report-m1-c.md) / [`docs/test-report-m1-d.md`](docs/test-report-m1-d.md) / [`docs/test-report-m1-e.md`](docs/test-report-m1-e.md) / [`docs/test-report-m1-f.md`](docs/test-report-m1-f.md) / [`docs/test-report-m1-g.md`](docs/test-report-m1-g.md)
 
 ## Security model
 
@@ -190,9 +193,9 @@ Legacy版は比較・解析対象として保持し、Secure BaselineのRuntime�
 
 ## Current limitations / deferred modernization
 
-Secure Baseline以降も、現在のM1-F時点では次を残しています。
+Secure Baseline以降も、現在のM1-G時点では次を残しています。
 
-- Server-side cacheは固定TTL + ETag / Last-Modified対応。stale-if-errorは未対応
+- Server-side cacheは固定TTL + ETag / Last-Modified + 最大24時間のstale-if-error。状態表示UIは未対応
 - Feed提供元がValidatorを返さない場合はTTL経過後に通常のHTTP 200取得
 - Feed取得は表示時の同期処理
 - Foreign Key未導入
@@ -200,21 +203,21 @@ Secure Baseline以降も、現在のM1-F時点では次を残しています。
 - UI/UX / accessibilityの本格刷新は未実施
 - Source abstractionはFetcher / FeedSource / Parser dispatcher / RSS 2.0・RSS 1.0・Atom Adapter / Normalized Item / deterministic Item identity / cache-aware Feed serviceまで導入済み
 
-これらは段階的Modernizationの対象であり、M1-G以降またはM2へ意図的に分離しています。
+これらはM2以降へ意図的に分離しています。
 
 ## Roadmap
 
 ```text
 Secure Baseline SB-15 / R3
   ↓
-M1 Source / RSS Engine (current: M1-F)
+M1 Source / RSS Engine (M1-G complete)
   ↓
 M2 Frontend
   ↓
 Release / Portfolio
 ```
 
-M1ではRSS専用処理に固定しすぎず、将来のJSON Feed、REST API、HTML等も同じItemモデルへ正規化できるSource / Fetcher / Parser(Adapter)構成へ段階的に移行します。M1-AでFetcher / Parser分離と共通Itemモデル、M1-Bでowner-scoped contentからFeedSourceへの変換境界、M1-Cで形式別Adapterと共通Date normalizer、M1-DでFeed URL scope付きの決定的Item identity、M1-Eで正常Feed本文のServer-side cacheとURL単位の重複Fetch抑制、M1-FでETag / Last-Modified / HTTP 304による再確認まで完了しています。
+M1ではRSS専用処理に固定しすぎず、将来のJSON Feed、REST API、HTML等も同じItemモデルへ正規化できるSource / Fetcher / Parser(Adapter)構成へ段階的に移行します。M1-AでFetcher / Parser分離と共通Itemモデル、M1-Bでowner-scoped contentからFeedSourceへの変換境界、M1-Cで形式別Adapterと共通Date normalizer、M1-DでFeed URL scope付きの決定的Item identity、M1-Eで正常Feed本文のServer-side cacheとURL単位の重複Fetch抑制、M1-FでETag / Last-Modified / HTTP 304による再確認、M1-GでFetch state、Retry-After、Backoff、期限付きstale-if-errorまで完了しています。
 
 詳細: [`docs/roadmap.md`](docs/roadmap.md)
 
@@ -230,7 +233,7 @@ Gitへ入れないもの:
 - PHP session files
 - login throttle state
 - migration snapshots
-- runtime Feed cache / lock files
+- runtime Feed cache / lock / fetch state files
 - private keys / API keys
 
 Sanitizedされた `database/` のschema/audit/migration/fake fixtureだけを例外としてVersion管理します。

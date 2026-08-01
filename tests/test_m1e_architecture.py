@@ -49,8 +49,8 @@ check('writeSuccessfulFetch($source, $fetch)' in service, 'cache persistence occ
 write_pos = service.find('writeSuccessfulFetch($source, $fetch)')
 parse_pos = service.find('$feed = $this->parser->parse_start($body, $source->url)')
 check(parse_pos >= 0 and write_pos > parse_pos, 'parse validation precedes cache persistence')
-check('CACHE_BYPASS' in service and 'fetchAndParse($source, self::CACHE_BYPASS, false)' in service, 'lock/filesystem failure degrades to uncached safe transport without racing writes')
-check('return $stale' not in service.lower() and 'stale-if-error' not in service.lower(), 'expired cache is not returned when an upstream fetch fails')
+check('CACHE_BYPASS' in service and 'fetchAndParse($source, self::CACHE_BYPASS, false,' in service, 'lock/filesystem failure degrades to uncached safe transport without racing writes')
+check('private readonly bool $staleIfErrorEnabled = false' in service, 'M1-E constructor compatibility keeps stale-if-error disabled unless explicitly enabled')
 
 for token, default in [
     ('APP_FEED_CACHE_ENABLED', 'true'),

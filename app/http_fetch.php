@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/feed/feed_http_headers.php';
+require_once __DIR__ . '/feed/feed_retry.php';
 
 /**
  * SB-09 safe outbound HTTP fetcher.
@@ -28,7 +29,8 @@ function app_fetch_result(
     string $errorMessage = '',
     ?string $etag = null,
     ?string $lastModified = null,
-    bool $notModified = false
+    bool $notModified = false,
+    ?string $retryAfter = null
 ): array {
     return [
         'ok' => $ok,
@@ -38,6 +40,7 @@ function app_fetch_result(
         'etag' => $etag,
         'last_modified' => $lastModified,
         'not_modified' => $notModified,
+        'retry_after' => $retryAfter,
         'error_code' => $errorCode,
         'error_message' => $errorMessage,
     ];
@@ -374,6 +377,7 @@ function app_curl_single_hop(array $request): array
             'location' => null,
             'etag' => null,
             'last_modified' => null,
+            'retry_after' => null,
             'error_code' => 'curl_unavailable',
             'error_message' => 'cURL extension is unavailable.',
         ];
@@ -384,6 +388,7 @@ function app_curl_single_hop(array $request): array
     $location = null;
     $etag = null;
     $lastModified = null;
+    $retryAfter = null;
     $maxBytes = (int) $request['max_bytes'];
 
     $ch = curl_init();
@@ -395,6 +400,7 @@ function app_curl_single_hop(array $request): array
             'location' => null,
             'etag' => null,
             'last_modified' => null,
+            'retry_after' => null,
             'error_code' => 'curl_init_failed',
             'error_message' => 'HTTP client initialization failed.',
         ];
@@ -420,7 +426,7 @@ function app_curl_single_hop(array $request): array
         CURLOPT_SSL_VERIFYHOST => 2,
         CURLOPT_USERAGENT => $request['user_agent'],
         CURLOPT_HTTPHEADER => $httpHeaders,
-        CURLOPT_HEADERFUNCTION => static function ($curl, string $line) use (&$location, &$etag, &$lastModified): int {
+        CURLOPT_HEADERFUNCTION => static function ($curl, string $line) use (&$location, &$etag, &$lastModified, &$retryAfter): int {
             $length = strlen($line);
             $trimmed = trim($line);
             if ($trimmed === '') {
@@ -430,6 +436,7 @@ function app_curl_single_hop(array $request): array
                 $location = null;
                 $etag = null;
                 $lastModified = null;
+                $retryAfter = null;
                 return $length;
             }
 
@@ -445,6 +452,8 @@ function app_curl_single_hop(array $request): array
                 $etag = feed_clean_etag($value);
             } elseif ($name === 'last-modified') {
                 $lastModified = feed_clean_last_modified($value);
+            } elseif ($name === 'retry-after') {
+                $retryAfter = feed_clean_retry_after($value);
             }
             return $length;
         },
@@ -482,11 +491,24 @@ function app_curl_single_hop(array $request): array
             'location' => $location,
             'etag' => $etag,
             'last_modified' => $lastModified,
+            'retry_after' => $retryAfter,
             'error_code' => 'response_too_large',
             'error_message' => 'Feed response exceeded the configured size limit.',
         ];
     }
     if ($executed === false || $errorNo !== 0) {
+        $errorCode = 'transport_error';
+        if (defined('CURLE_OPERATION_TIMEDOUT') && $errorNo === CURLE_OPERATION_TIMEDOUT) {
+            $errorCode = 'timeout';
+        } elseif (defined('CURLE_COULDNT_RESOLVE_HOST') && $errorNo === CURLE_COULDNT_RESOLVE_HOST) {
+            $errorCode = 'dns_failed';
+        } elseif ((defined('CURLE_SSL_CONNECT_ERROR') && $errorNo === CURLE_SSL_CONNECT_ERROR)
+            || (defined('CURLE_PEER_FAILED_VERIFICATION') && $errorNo === CURLE_PEER_FAILED_VERIFICATION)
+            || (defined('CURLE_SSL_CACERT') && $errorNo === CURLE_SSL_CACERT)
+        ) {
+            $errorCode = 'tls_error';
+        }
+
         return [
             'ok' => false,
             'status' => $status,
@@ -494,7 +516,8 @@ function app_curl_single_hop(array $request): array
             'location' => $location,
             'etag' => $etag,
             'last_modified' => $lastModified,
-            'error_code' => 'transport_error',
+            'retry_after' => $retryAfter,
+            'error_code' => $errorCode,
             'error_message' => $errorMessage !== '' ? $errorMessage : 'Feed request failed.',
         ];
     }
@@ -506,6 +529,7 @@ function app_curl_single_hop(array $request): array
         'location' => $location,
         'etag' => $etag,
         'last_modified' => $lastModified,
+        'retry_after' => $retryAfter,
         'error_code' => '',
         'error_message' => '',
     ];
@@ -574,13 +598,18 @@ function app_safe_http_fetch(
                 (int) ($response['status'] ?? 0),
                 '',
                 (string) ($response['error_code'] ?? 'transport_error'),
-                (string) ($response['error_message'] ?? 'Feed request failed.')
+                (string) ($response['error_message'] ?? 'Feed request failed.'),
+                null,
+                null,
+                false,
+                feed_clean_retry_after($response['retry_after'] ?? null)
             );
         }
 
         $status = (int) ($response['status'] ?? 0);
         $etag = feed_clean_etag($response['etag'] ?? null);
         $lastModified = feed_clean_last_modified($response['last_modified'] ?? null);
+        $retryAfter = feed_clean_retry_after($response['retry_after'] ?? null);
 
         if (in_array($status, [301, 302, 303, 307, 308], true)) {
             if ($hop >= $maxRedirects) {
@@ -603,7 +632,7 @@ function app_safe_http_fetch(
         }
 
         if ($status < 200 || $status >= 300) {
-            return app_fetch_result(false, $requestUrl, $status, '', 'http_status', 'Feed server returned an unsuccessful HTTP status.');
+            return app_fetch_result(false, $requestUrl, $status, '', 'http_status', 'Feed server returned an unsuccessful HTTP status.', null, null, false, $retryAfter);
         }
 
         $body = isset($response['body']) && is_string($response['body']) ? $response['body'] : '';

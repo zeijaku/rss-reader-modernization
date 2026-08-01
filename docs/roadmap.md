@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `M1-F / R1`。Fetcher / Parser責務分離、Normalized Item、Feed Source、RSS 2.0 / RSS 1.0 / Atom Adapter、Date normalization、deterministic Item identity、Server-side cache、重複Fetch抑制、ETag / Last-Modified / HTTP 304まで完了しています。次はFetch state / error state / Retry strategy（M1-G）を扱います。
+現在は `M1-G / R1`。Fetcher / Parser責務分離、Normalized Item、Feed Source、RSS 2.0 / RSS 1.0 / Atom Adapter、Date normalization、deterministic Item identity、Server-side cache、重複Fetch抑制、ETag / Last-Modified / HTTP 304、Fetch state、Retry / stale-if-errorまで完了しています。現行M1計画は完了し、次はM2 Frontendを扱います。
 
 ## M1 — Source / RSS Engine
 
@@ -45,7 +45,7 @@ local/manual data
 - [x] M1-D Item identity
 - [x] M1-E Server-side cache + 重複Fetch抑制
 - [x] M1-F ETag / Last-Modified / HTTP 304
-- [ ] M1-G Fetch status / error state + Retry strategy
+- [x] M1-G Fetch status / error state + Retry strategy + stale-if-error
 
 ### Planned topics
 
@@ -100,3 +100,13 @@ Secure Baseline終了後からGit履歴を開始し、04/05の改修を1 commit 
 - AI支援を利用した場合の適切な説明
 
 Portfolioでは「古いコードが悪かった」だけでなく、Legacyの仕様を把握し、riskを分離しながら段階的に近代化した点を示します。
+
+## M1-G — Fetch state / Retry / stale-if-error
+
+- Feed URL hash単位で成功・失敗時刻、HTTP status、短いerror code、失敗回数、次回試行時刻をprivate JSONへ保存。
+- 一時障害は60秒、5分、15分、最大1時間の段階的Backoff。HTTP 429 / 503の有効なRetry-Afterを優先。
+- 最後の正常確認から24時間以内のCacheだけをtransient error時に利用。Security / permanent errorではstaleを使用しない。
+- 同一URLの同時障害はURL単位Lock内で1回だけFetch・state更新し、待機processはBackoffとstale Cacheを利用。
+- DB / Frontend / 公開API / Parser / Item identityは変更しない。
+
+詳細: [`m1-g-implementation.md`](m1-g-implementation.md)

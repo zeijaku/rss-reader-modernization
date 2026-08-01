@@ -253,6 +253,18 @@ SB-15ではproduct behaviorを変更しません。Visible version markerとdocu
 
 詳細: [`m1-f-implementation.md`](m1-f-implementation.md)
 
+## M1-G — Fetch state / Retry / stale-if-error
+
+- `feed_retry.php` の小さな関数群でRetry-After検証、失敗分類、Backoff計算を行う。
+- Fetch stateは `var/cache/feed/*.state.json` へ保存し、raw Feed URLやtransport messageは含めない。
+- transient errorは60秒→300秒→900秒→最大3600秒でBackoffする。
+- HTTP 429 / 503の有効なRetry-AfterはApplication側Backoffより優先する。
+- 最後の正常確認から `APP_FEED_STALE_MAX_AGE_SECONDS` 以内だけstale Cacheを利用する。
+- TLS、private address、invalid redirect、response size超過等のSecurity errorはstaleで隠さない。
+- DB / Frontend / Stock / Parser / Adapter / Item identityは変更しない。
+
+詳細: [`m1-g-implementation.md`](m1-g-implementation.md)
+
 ## Result
 
 Secure Baseline終了時点で、Legacy版の主要機能を維持しつつ、次のEngine/Frontend改修を安全に積み上げるための境界・DB・test・docsが揃いました。
