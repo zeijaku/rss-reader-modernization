@@ -2,6 +2,18 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## RSS Engine M1-B / R1 — 2026-08-01
+
+### Feed Source model
+
+- `FeedSource` を追加し、既存 `content_id` / `content_owner` / 検証済みURLをimmutableなFeed Engine modelとして表現。
+- `FeedSourceMapper` を追加し、owner-scoped active content rowを認証済みownerと再照合してmodel化。
+- Mapperはraw `content_value` を使用せず、`app_validate_feed_url()` 後のURLだけを受け取る構造に変更。
+- `FeedFetcher` は任意URL文字列ではなく `FeedSource` のみを受け取るinterfaceへ変更。
+- 不正・欠損DB rowはoutbound fetch前にfail-closedし、generic 500 responseとserver logへ分離。
+- DB schema、Frontend、API response shape、SSRF/XSS boundary、cache/ETag/Retryは変更なし。
+- M1-B専用のmodel/mapper/transport/API failure/static architecture testを追加。
+
 ## RSS Engine M1-A / R1 — 2026-08-01
 
 ### Fetcher / Parser responsibility split + Normalized Item

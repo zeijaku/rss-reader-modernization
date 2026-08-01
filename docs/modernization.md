@@ -190,6 +190,17 @@ SB-15ではproduct behaviorを変更しません。Visible version markerとdocu
 
 詳細: [`m1-a-implementation.md`](m1-a-implementation.md)
 
+## M1-B — Feed Source model
+
+- `FeedSource` を追加し、現在の `content_id` をsource identity、`content_owner` をowner identity、検証済み `content_value` をendpointとして表現。
+- `FeedSourceMapper` がowner-scoped active content rowを認証済みownerと再照合し、UI専用columnをFeed Engineへ持ち込まない。
+- URLはDB rowから直接model化せず、従来どおり `app_validate_feed_url()` を通過した値だけをMapperへ渡す。
+- `FeedFetcher` はstring URLではなく `FeedSource` を受け取り、SB-09 `app_safe_http_fetch()` へsource URLをdelegationする。
+- 欠損・不整合rowはoutbound fetch前にfail-closedする。
+- 新table、DB migration、duplicate source統合、cache、ETag、Retry、Frontend/API response変更はM1-Bのscope外。
+
+詳細: [`m1-b-implementation.md`](m1-b-implementation.md)
+
 ## Result
 
 Secure Baseline終了時点で、Legacy版の主要機能を維持しつつ、次のEngine/Frontend改修を安全に積み上げるための境界・DB・test・docsが揃いました。

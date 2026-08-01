@@ -1,10 +1,10 @@
 # RSS Reader Modernization
 
-**Current checkpoint:** `RSS Engine M1-A / R1`
+**Current checkpoint:** `RSS Engine M1-B / R1`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
-現在は **M1: Source / RSS Engine Modernization** を進めています。M1-Aでは既存のSecurity behaviorと公開API contractを維持したまま、Fetcher / Parserの責務を分離し、source-agnosticな `NormalizedItem` を導入しました。
+現在は **M1: Source / RSS Engine Modernization** を進めています。M1-AでFetcher / Parserの責務分離とsource-agnosticな `NormalizedItem` を導入し、M1-Bでは既存のowner-scoped `content` レコードをFeed Engine用のimmutableな `FeedSource` へ変換する境界を追加しました。
 
 ## 現在できること
 
@@ -48,14 +48,14 @@ Feed item本文はDBへ永続化せず、登録されたFeed URLから表示時�
 | Work unit | 内容 | 状態 |
 |---|---|---|
 | M1-A | Fetcher / Parser責務分離 + Normalized Item | 完了 |
-| M1-B | Feed Source model | 未着手 |
+| M1-B | Feed Source model | 完了 |
 | M1-C | RSS 2.0 / RSS 1.0 / Atom Adapter整理 + Date normalization | 未着手 |
 | M1-D | Item identity | 未着手 |
 | M1-E | Server-side cache + 重複Fetch抑制 | 未着手 |
 | M1-F | ETag / Last-Modified / HTTP 304 | 未着手 |
 | M1-G | Fetch state + Retry strategy | 未着手 |
 
-M1-Aの詳細は [`docs/m1-a-implementation.md`](docs/m1-a-implementation.md) を参照してください。
+M1-Aの詳細は [`docs/m1-a-implementation.md`](docs/m1-a-implementation.md)、M1-Bの詳細は [`docs/m1-b-implementation.md`](docs/m1-b-implementation.md) を参照してください。
 
 ## Runtime requirements
 
@@ -156,9 +156,9 @@ bash tests/run.sh
 
 SB-14の最終Matrixでは、Authentication、Authorization/IDOR、CSRF、SSRF、XSS、Parser、4タブ、DB integrity、table prefix、repository leak scan、PHP 8 runtimeを横断して検証しています。
 
-Build環境では `pdo_mysql` / cURL / SimpleXML / mbstringが揃わないため、実MySQL/cURL/SimpleXML E2Eはローカルでは完全実行できません。代替としてFake PDO/transport、fixture、static invariantを使用し、M1-AではFetcher境界・Normalized Item・API contract・Security orderingの専用testを追加しています。配置先ではMySQL 8のCRUDと実RSS/Atomを手動確認してください。
+Build環境では `pdo_mysql` / cURL / SimpleXML / mbstringが揃わないため、実MySQL/cURL/SimpleXML E2Eはローカルでは完全実行できません。代替としてFake PDO/transport、fixture、static invariantを使用し、M1-AではFetcher境界・Normalized Item・API contract・Security ordering、M1-BではFeedSource/Mapper、owner再検証、異常DB rowのfail-closed、SSRF継承の専用testを追加しています。配置先ではMySQL 8のCRUDと実RSS/Atomを手動確認してください。
 
-詳細: [`docs/test-report-sb14.md`](docs/test-report-sb14.md) / [`docs/test-report-sb15.md`](docs/test-report-sb15.md) / [`docs/test-report-m1-a.md`](docs/test-report-m1-a.md)
+詳細: [`docs/test-report-sb14.md`](docs/test-report-sb14.md) / [`docs/test-report-sb15.md`](docs/test-report-sb15.md) / [`docs/test-report-m1-a.md`](docs/test-report-m1-a.md) / [`docs/test-report-m1-b.md`](docs/test-report-m1-b.md)
 
 ## Security model
 
@@ -186,7 +186,7 @@ Legacy版は比較・解析対象として保持し、Secure BaselineのRuntime�
 
 ## Current limitations / deferred modernization
 
-Secure Baseline以降も、現在のM1-A時点では次を残しています。
+Secure Baseline以降も、現在のM1-B時点では次を残しています。
 
 - Feed itemのサーバーキャッシュなし
 - ETag / Last-Modified未対応
@@ -194,23 +194,23 @@ Secure Baseline以降も、現在のM1-A時点では次を残しています。
 - Foreign Key未導入
 - Legacy由来のBootstrap / jQuery / Drawer / Font Awesome assetsをまだ整理していない
 - UI/UX / accessibilityの本格刷新は未実施
-- Source abstractionはM1-AでFetcher / Parser / Normalized Itemまで導入済み。Feed Source modelはM1-Bで実施
+- Source abstractionはM1-AのFetcher / Parser / Normalized Itemと、M1-BのFeedSource / Mapperまで導入済み。形式別Adapter整理はM1-Cで実施
 
-これらは段階的Modernizationの対象であり、M1-B以降またはM2へ意図的に分離しています。
+これらは段階的Modernizationの対象であり、M1-C以降またはM2へ意図的に分離しています。
 
 ## Roadmap
 
 ```text
 Secure Baseline SB-15 / R3
   ↓
-M1 Source / RSS Engine (current: M1-A)
+M1 Source / RSS Engine (current: M1-B)
   ↓
 M2 Frontend
   ↓
 Release / Portfolio
 ```
 
-M1ではRSS専用処理に固定しすぎず、将来のJSON Feed、REST API、HTML等も同じItemモデルへ正規化できるSource / Fetcher / Parser(Adapter)構成へ段階的に移行します。M1-AではFetcher / Parser分離と共通Itemモデルまで完了しています。
+M1ではRSS専用処理に固定しすぎず、将来のJSON Feed、REST API、HTML等も同じItemモデルへ正規化できるSource / Fetcher / Parser(Adapter)構成へ段階的に移行します。M1-AでFetcher / Parser分離と共通Itemモデル、M1-Bでowner-scoped contentからFeedSourceへの変換境界まで完了しています。
 
 詳細: [`docs/roadmap.md`](docs/roadmap.md)
 

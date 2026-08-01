@@ -292,8 +292,19 @@ function api_feed_fetch(int $userId, array $input): array
         return api_error('upstream_blocked', 'Stored Feed URL is not allowed by the outbound policy.', 422);
     }
 
+    $sourceMapper = new FeedSourceMapper();
+    $source = $sourceMapper->fromOwnedContent($content, $userId, $url);
+    if ($source === null) {
+        error_log(sprintf(
+            'Feed source mapping rejected user_id=%d content_id=%d',
+            $userId,
+            $contentId
+        ));
+        return api_error('internal_error', 'Feed source could not be resolved.', 500);
+    }
+
     $fetcher = new FeedFetcher();
-    $fetch = $fetcher->fetch($url);
+    $fetch = $fetcher->fetch($source);
     if (($fetch['ok'] ?? false) !== true) {
         $code = (string) ($fetch['error_code'] ?? 'upstream_error');
         $blocked = in_array($code, ['invalid_url', 'port_not_allowed', 'dns_failed', 'non_public_address', 'invalid_redirect'], true);
@@ -305,7 +316,7 @@ function api_feed_fetch(int $userId, array $input): array
     }
 
     $feedBody = (string) ($fetch['body'] ?? '');
-    $effectiveUrl = (string) ($fetch['url'] ?? $url);
+    $effectiveUrl = (string) ($fetch['url'] ?? $source->url);
 
     // SB-11: every successful upstream response must parse as a supported
     // RSS/Atom document.  The Legacy "anything else is successful Text" path

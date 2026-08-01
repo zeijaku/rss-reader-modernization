@@ -83,3 +83,7 @@ python3 "$(dirname "$0")/test_version_marker.py"
 echo '== M1-A Source / RSS Engine checks =='
 php "$ROOT/tests/test_m1a_feed_engine.php"
 python3 "$ROOT/tests/test_m1a_architecture.py"
+
+echo '== M1-B Feed Source checks =='
+php "$ROOT/tests/test_m1b_feed_source.php"
+python3 "$ROOT/tests/test_m1b_architecture.py"

@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `M1-A / R1`。Fetcher / Parser責務分離とNormalized Item導入まで完了しています。次はFeed Source model（M1-B）を扱います。
+現在は `M1-B / R1`。Fetcher / Parser責務分離、Normalized Item、Feed Source model導入まで完了しています。次は形式別Adapter整理とDate normalization（M1-C）を扱います。
 
 ## M1 — Source / RSS Engine
 
@@ -40,7 +40,7 @@ local/manual data
 ### Progress
 
 - [x] M1-A Fetcher / Parser責務分離 + Normalized Item
-- [ ] M1-B Feed Source model
+- [x] M1-B Feed Source model
 - [ ] M1-C RSS 2.0 / RSS 1.0 / Atom Adapter整理 + Date normalization
 - [ ] M1-D Item identity
 - [ ] M1-E Server-side cache + 重複Fetch抑制

@@ -54,6 +54,7 @@ d8ea55345c4848843c05ffe9257e33c26bd2cf2637384d66e27db75735b66694         908  do
 e26877b2cbe9be79c44771fbe18ec2ea344921d6fe8d29667c18afc46cbc76e3        4161  docs/m1-b-implementation.md
 0be236ea93323662bfff39ac50347ec6ba81a0801b227eeb7ec1f3efec1f4146        7634  docs/modernization.md
 10620e85372221ba3ffc068b8912c4aa3f6f781e6b76c610182fee03e6348891       27246  docs/package-manifest-m1-a-r1.txt
+c7fcc52595fcc3129d03c8311aedd33ca484cb2bbfa70f8202b510d4aeb5b582       27894  docs/package-manifest.txt
 6a830c3be72ea963c4a6fb0e2c92a9cf5bed72845f6634518ef4688072b2ec08        2949  docs/roadmap.md
 e1e23ae281b9a7668ed24601365f6ae2300fbfb163f11a2cc6520445eae21036        1441  docs/sb00-02-implementation.md
 3ebdff4591ef3e9673e14e05ac702050d9accf5970036e9aa3591be74687e0c0        2617  docs/sb03-04-implementation.md

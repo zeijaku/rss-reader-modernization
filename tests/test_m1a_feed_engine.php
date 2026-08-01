@@ -9,6 +9,7 @@ putenv('APP_DEBUG=false');
 require_once $root . '/app/common/common_conf.php';
 require_once $root . '/app/validation.php';
 require_once $root . '/app/http_fetch.php';
+require_once $root . '/app/feed/feed_source.php';
 require_once $root . '/app/feed/feed_fetcher.php';
 require_once $root . '/app/feed/feed_parser.php';
 require_once $root . '/app/api.php';
@@ -89,7 +90,8 @@ $GLOBALS['app_http_fetch_test_transport'] = static function (array $request) use
 };
 
 $fetcher = new FeedFetcher();
-$fetched = $fetcher->fetch('https://feed.example.test/rss.xml');
+$publicSource = FeedSource::fromValidatedValues(101, 10, 'https://feed.example.test/rss.xml');
+$fetched = $fetcher->fetch($publicSource);
 m1a_check(($fetched['ok'] ?? false) === true, 'FeedFetcher returns successful hardened transport result');
 m1a_check(($fetched['status'] ?? null) === 200 && ($fetched['body'] ?? null) === '<rss>fixture</rss>', 'FeedFetcher preserves status/body from safe transport');
 m1a_check(($fetched['url'] ?? null) === 'https://feed.example.test/rss.xml', 'FeedFetcher preserves the effective validated URL');
@@ -113,7 +115,8 @@ $GLOBALS['app_http_fetch_test_transport'] = static function (array $request) use
         'error_message' => '',
     ];
 };
-$blocked = $fetcher->fetch('https://internal.example.test/feed.xml');
+$blockedSource = FeedSource::fromValidatedValues(102, 10, 'https://internal.example.test/feed.xml');
+$blocked = $fetcher->fetch($blockedSource);
 m1a_check(($blocked['ok'] ?? true) === false && ($blocked['error_code'] ?? '') === 'non_public_address', 'FeedFetcher preserves SSRF blocking for resolved loopback addresses');
 m1a_check($blockedTransportCalled === false, 'blocked Feed target never reaches transport through FeedFetcher');
 

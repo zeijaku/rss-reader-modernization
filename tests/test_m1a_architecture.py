@@ -5,6 +5,7 @@ ROOT = Path(__file__).resolve().parents[1]
 api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8')
 bootstrap = (ROOT / 'app' / 'bootstrap.php').read_text(encoding='utf-8')
 common = (ROOT / 'app' / 'common' / 'common_func.php').read_text(encoding='utf-8')
+source = (ROOT / 'app' / 'feed' / 'feed_source.php').read_text(encoding='utf-8')
 fetcher = (ROOT / 'app' / 'feed' / 'feed_fetcher.php').read_text(encoding='utf-8')
 parser = (ROOT / 'app' / 'feed' / 'feed_parser.php').read_text(encoding='utf-8')
 model = (ROOT / 'app' / 'feed' / 'normalized_item.php').read_text(encoding='utf-8')
@@ -22,14 +23,14 @@ check(bootstrap.index("/feed/feed_fetcher.php") < bootstrap.index("/common/commo
 check(bootstrap.index("/feed/feed_parser.php") < bootstrap.index("/common/common_func.php"), 'FeedParser loads before Legacy common compatibility helpers')
 check("require_once dirname(__DIR__) . '/feed/feed_parser.php';" in common, 'direct common_func consumers retain parser compatibility without bootstrap')
 check('class rss_parse' not in common and 'class FeedParser' not in common, 'parser implementation is removed from common_func')
-check('class FeedFetcher' in fetcher and 'app_safe_http_fetch($url)' in fetcher, 'FeedFetcher owns transport delegation while retaining SB-09 implementation')
+check('class FeedFetcher' in fetcher and 'app_safe_http_fetch($source->url)' in fetcher, 'FeedFetcher owns transport delegation while retaining SB-09 implementation')
 check('class FeedParser' in parser and 'class rss_parse extends FeedParser' in parser, 'FeedParser is explicit while Legacy parser name remains a compatibility alias')
 
 # API orchestration should use boundaries instead of implementation details.
 m = re.search(r'function api_feed_fetch\([^)]*\): array\s*\{(?P<body>.*?)(?=\n\})', api, re.S)
 body = m.group('body') if m else ''
 check(bool(m), 'feed.fetch handler exists')
-check('new FeedFetcher()' in body and '->fetch($url)' in body, 'feed.fetch uses FeedFetcher boundary')
+check('new FeedFetcher()' in body and '->fetch($source)' in body, 'feed.fetch uses FeedFetcher boundary')
 check('new FeedParser()' in body and '->parse_start($feedBody)' in body, 'feed.fetch uses FeedParser boundary')
 check('app_safe_http_fetch(' not in body, 'feed.fetch no longer calls HTTP transport implementation directly')
 check('new rss_parse()' not in body, 'feed.fetch no longer instantiates Legacy parser name')
@@ -37,8 +38,9 @@ check('new rss_parse()' not in body, 'feed.fetch no longer instantiates Legacy p
 # Security ordering from SB-06/SB-09 must stay intact.
 owned_pos = body.find('find_owned_active_content')
 validate_pos = body.find('app_validate_feed_url')
+source_pos = body.find('fromOwnedContent')
 fetch_pos = body.find('new FeedFetcher()')
-check(owned_pos >= 0 and validate_pos > owned_pos and fetch_pos > validate_pos, 'owner lookup and stored-URL validation still occur before outbound fetch')
+check(owned_pos >= 0 and validate_pos > owned_pos and source_pos > validate_pos and fetch_pos > source_pos, 'owner lookup, stored-URL validation, and FeedSource mapping still occur before outbound fetch')
 check("$input['url']" not in body and '$input["url"]' not in body, 'feed.fetch still does not accept a client-supplied Feed URL')
 check("['invalid_url', 'port_not_allowed', 'dns_failed', 'non_public_address', 'invalid_redirect']" in body, 'blocked outbound error classification is preserved')
 check("api_safe_feed_payload($resultFeed, $effectiveUrl)" in body, 'XSS-safe API payload boundary remains after parsing')

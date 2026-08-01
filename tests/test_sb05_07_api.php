@@ -16,6 +16,8 @@ require $root . '/app/common/common_conf.php';
 require $root . '/app/common/common_db.php';
 require $root . '/app/validation.php';
 require $root . '/app/http_fetch.php';
+require $root . '/app/feed/feed_source.php';
+require $root . '/app/feed/feed_source_mapper.php';
 require $root . '/app/feed/feed_fetcher.php';
 
 $GLOBALS['test_fetched_urls'] = [];
@@ -265,6 +267,14 @@ $GLOBALS['test_feed_parser_fail'] = true;
 $r = api_dispatch('feed.fetch', 10, ['content_id' => (string) $contentA]);
 api_check($r['status'] === 502 && ($r['body']['error']['code'] ?? '') === 'invalid_feed', 'non-feed upstream response is a structured failure, not Legacy text success');
 $GLOBALS['test_feed_parser_fail'] = false;
+
+$savedContentId = $pdo->contents[$contentA]['content_id'];
+unset($pdo->contents[$contentA]['content_id']);
+$fetchCountBeforeInvalidSource = count($GLOBALS['test_fetched_urls']);
+$r = api_dispatch('feed.fetch', 10, ['content_id' => (string) $contentA]);
+api_check($r['status'] === 500 && ($r['body']['error']['code'] ?? '') === 'internal_error', 'malformed owned DB row fails closed at FeedSource mapping boundary');
+api_check(count($GLOBALS['test_fetched_urls']) === $fetchCountBeforeInvalidSource, 'invalid FeedSource mapping performs no outbound fetch');
+$pdo->contents[$contentA]['content_id'] = $savedContentId;
 
 $r = api_dispatch('settings.update', 10, [
     'conf_style' => '../secret',
