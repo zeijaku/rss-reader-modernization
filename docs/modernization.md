@@ -178,6 +178,18 @@ SB-14では特殊用途CIDRのmatrixを拡張し、built-in filterだけでは�
 
 SB-15ではproduct behaviorを変更しません。Visible version markerとdocumentation/test gateのみを更新します。
 
+## M1-A — Fetcher / Parser responsibility split + Normalized Item
+
+- `app/feed/feed_fetcher.php` を追加し、Feed HTTP取得の責務を明示化。
+- Fetcherは新しいnetwork implementationを持たず、SB-09 `app_safe_http_fetch()` を唯一のhardened transportとして継続利用。
+- `app/feed/feed_parser.php` へRSS/Atom parser implementationを移し、`app/common/common_func.php` から解析責務を除去。
+- `NormalizedItem` を導入し、RSS 2.0 / RSS 1.0 / AtomのItemを共通shapeへ変換。
+- 既存 `rss_parse` 名と `parse_start()` array shapeはcompatibility boundaryとして維持。
+- `feed.fetch` のowner scope、stored URL validation、SSRF protection、XSS-safe payload contractは変更しない。
+- Cache、Feed Source、ETag、Retry、Frontend、DB schemaはM1-Aのscope外。
+
+詳細: [`m1-a-implementation.md`](m1-a-implementation.md)
+
 ## Result
 
 Secure Baseline終了時点で、Legacy版の主要機能を維持しつつ、次のEngine/Frontend改修を安全に積み上げるための境界・DB・test・docsが揃いました。

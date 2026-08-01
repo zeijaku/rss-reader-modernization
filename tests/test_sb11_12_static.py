@@ -6,6 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
 api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8')
 common_func = (ROOT / 'app' / 'common' / 'common_func.php').read_text(encoding='utf-8')
+feed_parser = (ROOT / 'app' / 'feed' / 'feed_parser.php').read_text(encoding='utf-8')
 common_db = (ROOT / 'app' / 'common' / 'common_db.php').read_text(encoding='utf-8')
 common_conf = (ROOT / 'app' / 'common' / 'common_conf.php').read_text(encoding='utf-8')
 bootstrap = (ROOT / 'app' / 'bootstrap.php').read_text(encoding='utf-8')
@@ -27,13 +28,13 @@ check("'conf_style_tabname' . ($tabParam + 1)" in index, 'navbar title uses the 
 check("value=\"<?php echo app_html(is_int($content_location) ? (string) $content_location : '0'); ?>\"" in index, 'RSS create hidden location uses current validated tab location')
 
 # SB-11-02/03: parser semantics and item bounds.
-check("$feedType = rss_check_string" not in api and "new rss_parse()" in api, 'API always parses fetched response instead of trusting Legacy feed-type hint')
+check("$feedType = rss_check_string" not in api and "new FeedParser()" in api, 'API always parses fetched response through the explicit parser boundary')
 check("'invalid_feed'" in api and 'supported RSS or Atom feed' in api, 'unsupported/malformed upstream response returns structured invalid_feed error')
 check("'title' => 'Text'" not in api and "'feed_type' => 'Text'" not in api, 'Legacy text-success fallback removed')
-check("$rootName === 'feed'" in common_func and "$rootName === 'rss'" in common_func and "$rootName === 'rdf'" in common_func, 'parser explicitly recognizes Atom, RSS2, and RSS1 roots')
-check('default_namespace_children' in common_func and "http://purl.org/rss/1.0/" in common_func, 'Atom/default-namespace and RSS1 namespace parsing are handled explicitly')
-check("'$1UTF-8$2'" in common_func and 'Feed XML declaration could not be normalized.' in common_func, 'converted Feed bytes keep XML encoding declaration aligned to UTF-8')
-check("'item' => []" in common_func and 'Zero-item feeds are valid' in common_func, 'zero-item feeds remain valid parser results')
+check("$rootName === 'feed'" in feed_parser and "$rootName === 'rss'" in feed_parser and "$rootName === 'rdf'" in feed_parser, 'parser explicitly recognizes Atom, RSS2, and RSS1 roots')
+check('default_namespace_children' in feed_parser and "http://purl.org/rss/1.0/" in feed_parser, 'Atom/default-namespace and RSS1 namespace parsing are handled explicitly')
+check("'$1UTF-8$2'" in feed_parser and 'Feed XML declaration could not be normalized.' in feed_parser, 'converted Feed bytes keep XML encoding declaration aligned to UTF-8')
+check("'item' => []" in feed_parser and 'Zero-item feeds are valid' in feed_parser, 'zero-item feeds remain valid parser results')
 check('Math.min(5, items.length)' in index, 'browser only renders available items up to five')
 
 # SB-11-04: close partial rows for Feed and Stock branches.
@@ -84,10 +85,10 @@ check("ini_set('display_errors', APP_DEBUG ? '1' : '0');" in bootstrap, 'display
 check("ini_set('display_startup_errors', APP_DEBUG ? '1' : '0');" in bootstrap, 'display_startup_errors follows APP_DEBUG')
 check("ini_set('html_errors', '0');" in bootstrap, 'HTML-formatted PHP errors are disabled')
 check('PHP_VERSION_ID < 80100' in common_conf, 'runtime health check enforces PHP 8.1+ used by the codebase')
-check('strtotime($date)' not in common_func, 'parser no longer passes nullable dates through strtotime/date')
-check('mb_internal_encoding(' not in common_func and 'mb_detect_order(' not in common_func and 'mb_language(' not in common_func, 'Feed parser no longer mutates global mbstring runtime settings')
-check(bool(re.search(r'mb_detect_encoding\([^;]+?true\s*\)', common_func, re.S)), 'Feed encoding detection uses strict failure-aware detection')
-check(bool(re.search(r"const APP_VERSION = 'SB-(?:1[2-9]|[2-9]\d+) R\d+';", version)) and 'Secure Baseline SB-' in version, 'visible release marker is SB-12 or later')
+check('strtotime($date)' not in feed_parser, 'parser no longer passes nullable dates through strtotime/date')
+check('mb_internal_encoding(' not in feed_parser and 'mb_detect_order(' not in feed_parser and 'mb_language(' not in feed_parser, 'Feed parser no longer mutates global mbstring runtime settings')
+check(bool(re.search(r'mb_detect_encoding\([^;]+?true\s*\)', feed_parser, re.S)), 'Feed encoding detection uses strict failure-aware detection')
+check(bool(re.search(r"const APP_VERSION = '(?:SB-(?:1[2-9]|[2-9]\d+)|M\d+-[A-Z]) R\d+';", version)), 'visible release marker is SB-12 or later / M-series')
 
 if not all(checks):
     sys.exit(1)

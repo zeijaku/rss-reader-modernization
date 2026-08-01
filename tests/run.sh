@@ -79,3 +79,7 @@ echo '== SB-15 documentation / Initial Commit gate =='
 python3 "$ROOT/tests/test_sb15_docs.py"
 
 python3 "$(dirname "$0")/test_version_marker.py"
+
+echo '== M1-A Source / RSS Engine checks =='
+php "$ROOT/tests/test_m1a_feed_engine.php"
+python3 "$ROOT/tests/test_m1a_architecture.py"

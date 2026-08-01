@@ -1,18 +1,20 @@
 # Changelog
 
-このChangelogはLegacy版そのもののリリース履歴ではなく、Modernization Projectで作成したSecure Baselineの変更記録です。
+このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
+
+## RSS Engine M1-A / R1 — 2026-08-01
+
+### Fetcher / Parser responsibility split + Normalized Item
+
+- `FeedFetcher` を追加し、`feed.fetch` のHTTP取得をSB-09 `app_safe_http_fetch()` 経由の明示的境界へ分離。
+- `FeedParser` を `app/feed/` へ分離し、RSS 2.0 / RSS 1.0 / Atomの既存解析behaviorを維持。
+- `NormalizedItem` を導入し、Parser内部では共通Item modelを生成。
+- `parse_start()` と `rss_parse` compatibility aliasを残し、既存API array contractを維持。
+- APIのowner lookup → stored URL validation → hardened fetch → parse → XSS-safe payloadの順序を維持。
+- M1-A専用の実行test / architecture static testを追加。
+- DB schema、Frontend、cache、ETag、retryは変更なし。
 
 ## Secure Baseline SB-15 / R3 — 2026-07-30
-
-### GitHub publication licensing prep
-
-- Project codeの公開ライセンスをMIT Licenseに決定し、ルート `LICENSE` を追加。
-- Vendored frontend assetsの `THIRD_PARTY_NOTICES.md` と `licenses/` を追加。
-- Third-party componentの既存license headerは維持し、project MIT licenseで再ライセンスしないことを明示。
-- Runtime機能変更なし。
-- READMEをPublic Repository向けに整理し、GitHub Initial Commitを現在地点としてRoadmapを更新。
-- `docs/README.md` を追加し、公開ドキュメントの入口を整理。
-- SB-00〜02の旧hotfix資料を `docs/history/` へ移し、現在CheckpointのR3との混同を解消。
 
 - PHP fallbackとDB schemaのUI defaultを統一。
 - schemaのNavbar URL defaultを明示的HTTPSへ統一。

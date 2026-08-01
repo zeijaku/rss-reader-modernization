@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 
 root = Path(__file__).resolve().parents[1]
-common = (root / 'app/common/common_func.php').read_text(encoding='utf-8')
+common = (root / 'app/feed/feed_parser.php').read_text(encoding='utf-8')
 api = (root / 'app/api.php').read_text(encoding='utf-8')
 index = (root / 'public/index.php').read_text(encoding='utf-8')
 version = (root / 'app/version.php').read_text(encoding='utf-8')
@@ -23,7 +23,7 @@ check("xpath('./*[local-name()=\"url\"]')" in body, 'dedicated <url> compatibili
 check("$view->link" not in body, 'R1 namespace-view link extraction path is no longer used')
 check("'link' => app_validate_external_link" in api, 'API still validates extracted external article links')
 check("if (itemLink !== '')" in index and ".attr('href', itemLink)" in index, 'frontend still creates anchors from non-empty API item links')
-check(bool(re.search(r"Secure Baseline SB-(?:1[2-9]|[2-9]\d+) / R\d+", version)), 'visible build marker remains SB-12 or later')
+check(bool(re.search(r"(?:Secure Baseline SB-(?:1[2-9]|[2-9]\d+)|RSS Engine M\d+-[A-Z]) / R\d+", version)), 'visible build marker remains SB-12 or later / M-series')
 
 failed = [m for ok, m in checks if not ok]
 if failed:

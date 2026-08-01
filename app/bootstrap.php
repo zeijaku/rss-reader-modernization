@@ -48,6 +48,8 @@ set_exception_handler(static function (Throwable $exception): void {
 require_once __DIR__ . '/common/common_db.php';
 require_once __DIR__ . '/validation.php';
 require_once __DIR__ . '/http_fetch.php';
+require_once __DIR__ . '/feed/feed_fetcher.php';
+require_once __DIR__ . '/feed/feed_parser.php';
 require_once __DIR__ . '/common/common_func.php';
 require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/login_throttle.php';

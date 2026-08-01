@@ -7,6 +7,7 @@ api_endpoint = (ROOT / 'public/api_v1.php').read_text(encoding='utf-8')
 logout = (ROOT / 'public/logout.php').read_text(encoding='utf-8')
 http_fetch = (ROOT / 'app/http_fetch.php').read_text(encoding='utf-8')
 common_func = (ROOT / 'app/common/common_func.php').read_text(encoding='utf-8')
+feed_parser = (ROOT / 'app/feed/feed_parser.php').read_text(encoding='utf-8')
 validation = (ROOT / 'app/validation.php').read_text(encoding='utf-8')
 
 def check(cond: bool, msg: str) -> None:
@@ -41,8 +42,8 @@ for cidr in ['100.64.0.0/10', '192.0.2.0/24', '198.18.0.0/15', '198.51.100.0/24'
 
 # Parser should make a single direct-link XPath query (R2 accidentally duplicated this harmless call).
 needle = "$links = $xml->xpath('./*[local-name()=\"link\"]');"
-check(common_func.count(needle) == 1, 'Atom link XPath is evaluated once per element')
-check('LIBXML_NONET' in common_func, 'parser forbids XML network access')
+check(feed_parser.count(needle) == 1, 'Atom link XPath is evaluated once per element')
+check('LIBXML_NONET' in feed_parser, 'parser forbids XML network access')
 check('Math.min(5, items.length)' in index, 'frontend safely caps rendered items to five')
 
 print('All SB-14 surface/static checks passed.')

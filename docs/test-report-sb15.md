@@ -72,7 +72,7 @@ Confirmed absent:
 A temporary Git repository was initialized from the R3 tree and `git add .` was simulated.
 
 ```text
-Staged files: 254
+Staged files: 243
 CHECKLIST_FOR_USER.md: not staged
 UPDATED_FILES_SB15.md: not staged
 config/local.php: ignored
@@ -89,7 +89,7 @@ No Auth/API/Session/Feed parser/SSRF/XSS behavior is changed. Existing DB record
 
 The Initial Commit gate remains PASS for the Secure Baseline, subject to the final package-manifest and ZIP re-extraction verification below.
 
-The Secure Baseline is now being prepared as the public Repository Initial Commit. License selection, third-party notices, README, and public documentation organization are publication-preparation work and do not change runtime behavior. Engine/Frontend modernization and the later v1.0 release remain separate work.
+This does not mean the public GitHub release phase is complete. License selection, third-party notices, Engine/Frontend modernization, and the later public-release review remain separate work.
 
 ## Candidate ZIP verification
 
@@ -105,8 +105,7 @@ Final verification result:
 
 ```text
 ZIP integrity: PASS
-License/third-party notice set: PASS
-Manifest entries: 262
+Manifest entries: 251
 Missing/unlisted files: 0 / 0
 Hash/size mismatches: 0 / 0
 Extracted PHP syntax: 41 files OK

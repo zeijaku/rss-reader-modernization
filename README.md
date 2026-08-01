@@ -1,66 +1,87 @@
 # RSS Reader Modernization
 
-**Current checkpoint:** `Secure Baseline SB-15 / R3`
+**Current checkpoint:** `RSS Engine M1-A / R1`
 
-約10年前に自作したPHP製RSSリーダーを題材に、Legacy版を解析資料として保持しながら、Security、PHP 8互換性、DB構造、テスト基盤を段階的に立て直しているModernization Projectです。
+約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
-現在は**Secure Baselineが完成し、ここをGit履歴の出発点として公開する段階**です。危険なLegacyコードや当時の秘密情報をGit履歴へ含めないため、Initial CommitはSecure Baselineから開始し、Legacyからの変更内容は公開ドキュメントで追跡できる構成にしています。完成版ではなく、今後はこのBaselineを壊さずにSource / RSS EngineとFrontendを近代化していきます。
+現在は **M1: Source / RSS Engine Modernization** を進めています。M1-Aでは既存のSecurity behaviorと公開API contractを維持したまま、Fetcher / Parserの責務を分離し、source-agnosticな `NormalizedItem` を導入しました。
 
-解析、セキュリティレビュー、テスト設計、ドキュメント整理にはAI支援も利用しています。最終的な実装判断と検証は、実ソースコード、DB定義、テスト結果を基準に確認しています。
-
-## Features
+## 現在できること
 
 - ユーザー登録 / ログイン / ログアウト
 - ユーザーごとのFeed URL登録・変更・論理削除
 - 4タブ（location 0〜3）へのFeed配置
-- RSS 2.0 / RSS 1.0 / Atom表示
+- RSS 2.0 / RSS 1.0 / Atomの表示
 - 記事リンクのStock保存と一覧表示
 - Bootstrapテーマ、Navbarリンク、タブ名のユーザー設定
-- MySQL / MariaDB対応
+- MySQL 8系での新規DB構築
 - configurable table prefix（例: `rss_`）
 
 Feed item本文はDBへ永続化せず、登録されたFeed URLから表示時に取得します。
 
-## Modernization highlights
+## Secure Baselineで完了した範囲
 
-Secure Baselineでは、Legacyの主要機能を維持しながら次の境界を先に整備しました。
+| Work unit | 内容 | 状態 |
+|---|---|---|
+| SB-00 | Legacy evidence freeze | 完了 |
+| SB-01 | Public/private boundary・秘密情報分離 | 完了 |
+| SB-02 | PDO / DB access foundation | 完了 |
+| SB-03 | Session foundation | 完了 |
+| SB-04 | Authentication / password | 完了 |
+| SB-05 | API contract / dispatcher | 完了 |
+| SB-06 | Authorization / ownership | 完了 |
+| SB-07 | CSRF | 完了 |
+| SB-08 | Validation | 完了 |
+| SB-09 | SSRF-safe outbound fetch / TLS | 完了 |
+| SB-10 | XSS-safe output | 完了 |
+| SB-11 | Legacy functional bug fixes | 完了 |
+| SB-12 | PHP 8 runtime stabilization / Atom link fix | 完了 |
+| SB-13 | Schema / integrity / table prefix | 完了 |
+| SB-14 | Final security / regression matrix | 完了 |
+| SB-15 | Documentation / Initial Commit gate | 完了 |
 
-- `public/` をWeb公開領域として分離
-- Session / Authentication / Authorizationの再構築
-- `password_hash()` / `password_verify()` への移行
-- APIのPOST + explicit action + CSRF化
-- PDO parameter binding
-- SSRF対策を含むFeed fetch境界
-- XSS-safe output
-- PHP 8.1+ runtime stabilization
-- sanitized schema / DB integrity / table prefix対応
-- security / regression test matrix
-- secrets / logs / sessions / production DB dumpのRepository除外
+詳細は [`docs/modernization.md`](docs/modernization.md) と [`docs/change-map.md`](docs/change-map.md) を参照してください。
 
-SB-00〜15の詳細は [`docs/modernization.md`](docs/modernization.md)、Legacyからの対応関係は [`docs/change-map.md`](docs/change-map.md) を参照してください。
 
-## Requirements
+## M1 progress
+
+| Work unit | 内容 | 状態 |
+|---|---|---|
+| M1-A | Fetcher / Parser責務分離 + Normalized Item | 完了 |
+| M1-B | Feed Source model | 未着手 |
+| M1-C | RSS 2.0 / RSS 1.0 / Atom Adapter整理 + Date normalization | 未着手 |
+| M1-D | Item identity | 未着手 |
+| M1-E | Server-side cache + 重複Fetch抑制 | 未着手 |
+| M1-F | ETag / Last-Modified / HTTP 304 | 未着手 |
+| M1-G | Fetch state + Retry strategy | 未着手 |
+
+M1-Aの詳細は [`docs/m1-a-implementation.md`](docs/m1-a-implementation.md) を参照してください。
+
+## Runtime requirements
 
 - PHP 8.1+
 - PDO + `pdo_mysql`
 - cURL
 - SimpleXML
 - mbstring
-- MySQL / MariaDB
+- MySQL / MariaDB（新規環境ではMySQL 8系で確認）
 - WebサーバーのDocumentRootを `public/` に設定できる構成
 
-## Installation
+`tools/healthcheck.php` はCLI専用です。コマンドを利用できない環境では、PHP拡張・DB接続・書込み権限はホスティング側の管理画面とアプリの実動作で確認してください。
 
-新規環境では、Legacy DBを直接ALTERするより**新しい空DBから開始する方法を推奨**します。
+## Installation — new empty database
 
-1. Repositoryを配置する。
-2. WebサーバーのDocumentRootを `public/` に設定する。
-3. `config/local.php.example` を参考に、Git管理外の `config/local.php` を作成する。
-4. MySQL / MariaDB側で空DBを作成する。
+データ保全が不要な新規環境では、Legacy DBをALTERするより新しい空DBを作る方法を推奨します。
+
+1. 配布物を配置する。
+2. WebサーバーのDocumentRootを `public/` にする。
+3. `config/local.php.example` を参考に、公開領域外の `config/local.php` を作成する。
+4. MySQL 8側で空DBを作成する。
 5. `DB_NAME` と `DB_TABLE_PREFIX` を設定する。
-6. `database/schema.sql` の `@table_prefix` を同じ値にする。
-7. `database/schema.sql` を実行する。
+6. `database/schema.sql` 冒頭の `@table_prefix` を同じ接頭辞にする。
+7. phpMyAdminで新DBを選択し `database/schema.sql` を実行する。
 8. アプリから新規ユーザー登録し、ログインして動作確認する。
+9. 必要なら `database/audit/postflight.sql` でSchemaを確認する。
 
 例:
 
@@ -80,28 +101,52 @@ return [
 ];
 ```
 
-`database/schema.sql`:
+`schema.sql`:
 
 ```sql
 SET @table_prefix = 'rss_';
 ```
 
-`DB_TABLE_PREFIX` と `@table_prefix` は同じ値にしてください。
+Prefix `rss_` の場合、次の4テーブルを作成します。
 
-既存Legacy DBを保持して移行する場合は、[`docs/README.md`](docs/README.md) からDB migration関連資料を参照してください。
+```text
+rss_user_info
+rss_user_conf
+rss_content
+rss_content_stock
+```
 
-## Production security
+SQLファイルはPHP設定を直接参照できないため、**`DB_TABLE_PREFIX` と `@table_prefix` は同じ値にしてください。**
+
+## Existing Legacy DB migration
+
+既存DBを保持して移行する場合だけ、次の順序を使用します。
+
+```text
+database/audit/preflight.sql
+→ 結果確認
+→ database/migrations/001_sb13_integrity.sql
+→ database/audit/postflight.sql
+```
+
+Migration前に必ずDB全体をバックアップしてください。Duplicate identityやorphan等を自動削除・統合する設計にはしていません。
+
+新DBから開始する場合、`preflight.sql` と `001_sb13_integrity.sql` は不要です。
+
+## Production configuration
 
 実環境では少なくとも次を確認してください。
 
 - `APP_DEBUG=false`
-- `APP_HASH_KEY` は十分に長いランダム値を使用する
-- `APP_HASH_KEY` はLogin identity生成に使うため、**運用開始後は安易に変更せず、安全にバックアップする**
-- `config/local.php` と実 `.env` はGit管理しない
-- `var/session/` と `var/security/login-throttle/` をDocumentRoot外で運用する
-- HTTPSを使用する
+- `APP_HASH_KEY` は十分に長いランダム値を使用し、運用開始後は安易に変更しない
+- `APP_HASH_KEY` は既存ユーザーのログインIdentity生成に必要なため、紛失しないよう安全にバックアップする
+- `config/local.php` はGit管理外・DocumentRoot外
+- `REGISTRATION_ENABLED` は運用方針に合わせて設定
+- `var/session/` と `var/security/login-throttle/` がPHPから書込み可能
+- `var/log/` を利用する場合もDocumentRoot外
+- HTTPSを使用
 
-設計と運用上の注意は [`docs/security.md`](docs/security.md) を参照してください。
+詳細: [`docs/security.md`](docs/security.md)
 
 ## Tests
 
@@ -109,66 +154,86 @@ SET @table_prefix = 'rss_';
 bash tests/run.sh
 ```
 
-Secure BaselineではAuthentication、Authorization / IDOR、CSRF、SSRF、XSS、Feed parser、4タブ、DB integrity、table prefix、repository leak scan、PHP 8 runtimeを横断して検証しています。
+SB-14の最終Matrixでは、Authentication、Authorization/IDOR、CSRF、SSRF、XSS、Parser、4タブ、DB integrity、table prefix、repository leak scan、PHP 8 runtimeを横断して検証しています。
 
-SB-15 R3の検証結果は **740 PASS / 0 FAIL / 3 SKIP** です。環境依存の実MySQL/cURL/SimpleXML E2Eについては、配置先での手動確認と代替testを併用しています。
+Build環境では `pdo_mysql` / cURL / SimpleXML / mbstringが揃わないため、実MySQL/cURL/SimpleXML E2Eはローカルでは完全実行できません。代替としてFake PDO/transport、fixture、static invariantを使用し、M1-AではFetcher境界・Normalized Item・API contract・Security orderingの専用testを追加しています。配置先ではMySQL 8のCRUDと実RSS/Atomを手動確認してください。
 
-詳細: [`docs/test-report-sb14.md`](docs/test-report-sb14.md) / [`docs/test-report-sb15.md`](docs/test-report-sb15.md)
+詳細: [`docs/test-report-sb14.md`](docs/test-report-sb14.md) / [`docs/test-report-sb15.md`](docs/test-report-sb15.md) / [`docs/test-report-m1-a.md`](docs/test-report-m1-a.md)
 
-## Legacy policy
+## Security model
 
-Legacy版は比較・解析対象として保持し、Secure BaselineのRuntimeへ混在させません。旧DB dumpには運用データやcredential情報が含まれていたため、Repositoryには含めません。
+主な境界は以下です。
 
-既存ユーザーcredentialの互換性は要件から外し、不明なLegacy形式を推測して移行しません。
+- 認証済みSessionの `user_id` を所有者の唯一の根拠にする
+- APIはPOST + explicit action + CSRF
+- SQLはPDO parameter binding
+- Passwordは `password_hash()` / `password_verify()`
+- Login throttle
+- Feed fetchはHTTP/HTTPSのみ、DNS/IP/redirect/TLS/size/timeoutを検証
+- Feed/DB由来データはvalidate/escapeして描画
+- Stock作成時に記事ページを再Fetchしない
+- Runtime/session/log/secrets/DB dumpを公開物から分離
+
+詳細: [`docs/security.md`](docs/security.md)
+
+## Legacy and data policy
+
+Legacy版は比較・解析対象として保持し、Secure BaselineのRuntimeへ混在させません。旧DB dumpには運用データやcredential情報が含まれていたため、GitHub対象から除外します。
+
+既存ユーザーcredentialの互換性は要件から外し、不明なLegacy形式を推測して移行しません。Secure Baselineでは新規 `password_hash()` 形式を基準とします。
 
 詳細: [`docs/legacy-analysis.md`](docs/legacy-analysis.md)
 
-## Current limitations
+## Current limitations / deferred modernization
 
-Secure Baselineでは次を意図的に後工程へ残しています。
+Secure Baseline以降も、現在のM1-A時点では次を残しています。
 
 - Feed itemのサーバーキャッシュなし
 - ETag / Last-Modified未対応
 - Feed取得は表示時の同期処理
 - Foreign Key未導入
-- Legacy由来のBootstrap / jQuery / Drawer / Font Awesome assets
-- FrontendのUI/UX / accessibility刷新
-- Source abstraction未実装
+- Legacy由来のBootstrap / jQuery / Drawer / Font Awesome assetsをまだ整理していない
+- UI/UX / accessibilityの本格刷新は未実施
+- Source abstractionはM1-AでFetcher / Parser / Normalized Itemまで導入済み。Feed Source modelはM1-Bで実施
 
-これらは今後のModernizationで段階的に対応します。
+これらは段階的Modernizationの対象であり、M1-B以降またはM2へ意図的に分離しています。
 
 ## Roadmap
 
 ```text
 Secure Baseline SB-15 / R3
   ↓
-GitHub Initial Commit / Repository publication  ← current
+M1 Source / RSS Engine (current: M1-A)
   ↓
-Source / RSS Engine modernization
+M2 Frontend
   ↓
-Frontend modernization
-  ↓
-v1.0 release
-  ↓
-Portfolio integration
+Release / Portfolio
 ```
+
+M1ではRSS専用処理に固定しすぎず、将来のJSON Feed、REST API、HTML等も同じItemモデルへ正規化できるSource / Fetcher / Parser(Adapter)構成へ段階的に移行します。M1-AではFetcher / Parser分離と共通Itemモデルまで完了しています。
 
 詳細: [`docs/roadmap.md`](docs/roadmap.md)
 
-## Documentation
+## Repository safety
 
-公開ドキュメントの入口は [`docs/README.md`](docs/README.md) です。
+Gitへ入れないもの:
 
-主要資料:
+- `config/local.php`
+- real `.env`
+- production DB dump / backup
+- Legacy `rss.sql`, `rss.zip`
+- logs
+- PHP session files
+- login throttle state
+- migration snapshots
+- private keys / API keys
 
-- [`docs/legacy-analysis.md`](docs/legacy-analysis.md) — Legacy解析
-- [`docs/modernization.md`](docs/modernization.md) — SB-00〜15の改修記録
-- [`docs/security.md`](docs/security.md) — Security model / deployment注意事項
-- [`docs/change-map.md`](docs/change-map.md) — Legacy issueと修正・testの対応
-- [`docs/roadmap.md`](docs/roadmap.md) — 今後のModernization計画
+Sanitizedされた `database/` のschema/audit/migration/fake fixtureだけを例外としてVersion管理します。
 
-## License
+詳細: [`docs/sensitive-data-manifest.md`](docs/sensitive-data-manifest.md)
 
-このRepositoryのオリジナルコードとModernization Projectで追加・修正したコードは [`LICENSE`](LICENSE) のMIT Licenseで公開します。
+## Initial Commit status
 
-同梱しているBootstrap、Bootswatch、jQuery、Popper.js、jquery-drawer、iScroll、Font Awesome Free等には、それぞれの上流ライセンスが適用されます。詳細は [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) と [`licenses/`](licenses/) を参照してください。
+SB-15のInitial Commit gateは合格と判定しています。根拠と公開前に残る作業は [`docs/initial-commit-gate.md`](docs/initial-commit-gate.md) を参照してください。
+
+**注意:** Initial Commit可能と「公開GitHub Release可能」は同義ではありません。公開前にはライセンス方針、Frontend依存整理の進捗、公開URL/スクリーンショット等を別途判断します。

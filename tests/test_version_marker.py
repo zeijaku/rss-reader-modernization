@@ -13,9 +13,9 @@ version_value = version_match.group(1) if version_match else ''
 label_value = label_match.group(1) if label_match else ''
 
 checks = {
-    "version constant format": bool(re.fullmatch(r"SB-\d+ R\d+", version_value)),
-    "version label format": bool(re.fullmatch(r"Secure Baseline SB-\d+ / R\d+", label_value)),
-    "version and label stages match": (version_value.replace(' ', ' / ', 1) == label_value.replace('Secure Baseline ', '')) if version_value and label_value else False,
+    "version constant format": bool(re.fullmatch(r"(?:SB-\d+|M\d+-[A-Z]) R\d+", version_value)),
+    "version label format": bool(re.fullmatch(r"(?:Secure Baseline SB-\d+|RSS Engine M\d+-[A-Z]) / R\d+", label_value)),
+    "version and label stages match": ((version_value.startswith('SB-') and version_value.replace(' ', ' / ', 1) == label_value.replace('Secure Baseline ', '')) or (version_value.startswith('M') and version_value.replace(' ', ' / ', 1) == label_value.replace('RSS Engine ', ''))) if version_value and label_value else False,
     "bootstrap loads version": "require_once __DIR__ . '/version.php';" in bootstrap,
     "login marker": login.count('data-app-version') >= 2,
     "login uses label": "APP_VERSION_LABEL" in login,

@@ -27,8 +27,9 @@ gate = (ROOT / 'docs' / 'initial-commit-gate.md').read_text(encoding='utf-8')
 change_map = (ROOT / 'docs' / 'change-map.md').read_text(encoding='utf-8')
 
 assert 'Secure Baseline SB-15 / R3' in readme
-assert "APP_VERSION = 'SB-15 R3'" in version
-assert "APP_VERSION_LABEL = 'Secure Baseline SB-15 / R3'" in version
+assert "APP_VERSION = 'M1-A R1'" in version
+assert "APP_VERSION_LABEL = 'RSS Engine M1-A / R1'" in version
+assert 'Secure Baseline SB-15 / R3' in readme
 assert 'PASS — Secure Baseline' in gate
 assert 'DB_TABLE_PREFIX' in readme and '@table_prefix' in readme
 assert 'APP_DEBUG=false' in readme

@@ -29,7 +29,7 @@ check('entry_content($userId' in api and 'info_dbsave($userId' in api, 'create o
 check('find_owned_active_content($userId, $contentId)' in api, 'resource access checks authenticated ownership')
 check("WHERE content_id = :content_id AND content_owner = :owner" in db, 'content lookup SQL scopes by resource id and owner')
 check("WHERE content_id = :content_id AND content_owner = :owner AND content_flag = 0" in db, 'content update/delete SQL contains owner predicate')
-check("$input['steal_content']" not in api and "app_safe_http_fetch($url)" in api, 'feed.fetch does not accept a client raw fetch URL')
+check("$input['steal_content']" not in api and "new FeedFetcher()" in api and "->fetch($url)" in api, 'feed.fetch does not accept a client raw fetch URL')
 check("'feed.fetch'" in index and "'content_id': content_id" in index, 'browser sends only content id for feed.fetch')
 check("$window_load[$i]['content_value']" not in index[index.find('/* WindowLoad時 実行 */'):], 'DB feed URL is not embedded into window-load JavaScript literal')
 check("'content_owner':" not in index and "'save_owner':" not in index and 'name="user_id"' not in index, 'browser no longer submits owner/user target fields')

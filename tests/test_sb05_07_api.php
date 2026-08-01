@@ -16,6 +16,7 @@ require $root . '/app/common/common_conf.php';
 require $root . '/app/common/common_db.php';
 require $root . '/app/validation.php';
 require $root . '/app/http_fetch.php';
+require $root . '/app/feed/feed_fetcher.php';
 
 $GLOBALS['test_fetched_urls'] = [];
 $GLOBALS['app_http_fetch_test_resolver'] = static fn(string $host): array => ['93.184.216.34'];
@@ -32,7 +33,7 @@ $GLOBALS['app_http_fetch_test_transport'] = static function (array $request): ar
 };
 function rss_check_string($element) { return 'rss'; }
 $GLOBALS['test_feed_parser_fail'] = false;
-class rss_parse {
+class FeedParser {
     public ?string $last_error = null;
     public function parse_start($contents): array {
         if (($GLOBALS['test_feed_parser_fail'] ?? false) === true) {

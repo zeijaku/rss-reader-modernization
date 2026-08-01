@@ -1,26 +1,14 @@
-# Modernization Roadmap
+# Roadmap after Secure Baseline
 
 ## Current milestone
 
-`Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、tests、documentationの土台まで完了しました。
+`Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-このSecure BaselineをGit履歴のInitial Commitとして公開し、以後の改修を段階的に積み上げます。
+現在は `M1-A / R1`。Fetcher / Parser責務分離とNormalized Item導入まで完了しています。次はFeed Source model（M1-B）を扱います。
 
-```text
-Secure Baseline SB-15 / R3
-  ↓
-GitHub Initial Commit / Repository publication  ← current
-  ↓
-Source / RSS Engine modernization
-  ↓
-Frontend modernization
-  ↓
-v1.0 release
-  ↓
-Portfolio integration
-```
+## M1 — Source / RSS Engine
 
-## Source / RSS Engine modernization
+### Goal
 
 現在のRSS/Atom処理を、将来RSS以外のsourceも扱える構造へ整理します。
 
@@ -36,7 +24,30 @@ Normalized Item[]
 UI / Stock
 ```
 
-主な検討項目:
+最初はRSS 2.0 / RSS 1.0 / Atomを対象としますが、内部の共通Item modelは将来のsource typeを想定します。
+
+候補:
+
+```text
+RSS / Atom
+JSON Feed
+REST API
+HTML source adapter
+local/manual data
+```
+
+
+### Progress
+
+- [x] M1-A Fetcher / Parser責務分離 + Normalized Item
+- [ ] M1-B Feed Source model
+- [ ] M1-C RSS 2.0 / RSS 1.0 / Atom Adapter整理 + Date normalization
+- [ ] M1-D Item identity
+- [ ] M1-E Server-side cache + 重複Fetch抑制
+- [ ] M1-F ETag / Last-Modified / HTTP 304
+- [ ] M1-G Fetch status / error state + Retry strategy
+
+### Planned topics
 
 - Fetcher / Parser責務分離
 - normalized item model
@@ -47,12 +58,13 @@ UI / Stock
 - fetch status / last fetched / error state
 - retry strategy
 - date normalization
-- item identity
+- item count policy
+- GUID/hash等のitem identity検討
 - per-source adapter設計
 
-最初はRSS 2.0 / RSS 1.0 / Atomを対象とし、JSON Feed、REST API、HTML source adapter等への拡張余地を残します。
+HTML scrapingはサイト構造変更の影響が大きいため、generic parserとして無制限に扱うのではなく、adapter単位のopt-inを前提に検討します。
 
-## Frontend modernization
+## M2 — Frontend
 
 - Bootstrap dependency刷新
 - jQuery削減/撤去検討
@@ -65,25 +77,26 @@ UI / Stock
 - HTML semantics
 - old LESS/SCSS/map/metadata等の配布資産整理
 
-Frontend刷新でもSecure BaselineのSecurity behaviorとregression testsを維持します。
+Frontend刷新はSecurity behaviorを変えないよう、SB-14 regressionを継続します。
 
-## v1.0 release
+## 06 — GitHub public release
 
-Engine / Frontendの主要Modernization後に、完成版としてのreleaseを検討します。
-
-- README / screenshot更新
-- production secret/data再scan
-- dependency / license再確認
-- release tag / version policy確定
+- repository history整理
+- license方針決定
+- README最終化
+- sample screenshot
 - public demoの有無判断
+- production secret/data再scan
+- release tag / version policy
 
-Repositoryの公開開始と、完成版`v1.0` Releaseは分けて扱います。
+Secure Baseline終了後からGit履歴を開始し、04/05の改修を1 commit = 1 purposeに近い形で積み上げる予定です。
 
-## Portfolio integration
+## 07 — Portfolio
 
-Git履歴を含め、Legacy → Secure Baseline → Engine → Frontendの改善過程を成果として整理します。
+- Legacy → Secure Baseline → Engine → Frontendの改善ストーリー
+- Security / PHP 8 / MySQL 8 / testingの技術要点
+- Before/After architecture
+- 課題発見と修正方針
+- AI支援を利用した場合の適切な説明
 
-- Security / PHP 8 / MySQL 8 / testing
-- Before / After architecture
-- Legacyのriskを分離しながら改修した経緯
-- 実装判断と検証方法
+Portfolioでは「古いコードが悪かった」だけでなく、Legacyの仕様を把握し、riskを分離しながら段階的に近代化した点を示します。
