@@ -218,3 +218,14 @@ SB-15ではproduct behaviorを変更しません。Visible version markerとdocu
 
 Secure Baseline終了時点で、Legacy版の主要機能を維持しつつ、次のEngine/Frontend改修を安全に積み上げるための境界・DB・test・docsが揃いました。
 
+
+
+## M1-D — Deterministic Item identity
+
+- RSS 2.0 `guid`、RSS 1.0 `rdf:about`、Atom `id` を各Adapterで内部 `sourceItemId` へ抽出。
+- `ItemIdentityResolver` が `source-id → link → fingerprint` の順で候補を選択。
+- 検証済みのconfigured Feed URLをscopeとして、versioned SHA-256 identityを生成。
+- `content_id` とowner IDはscopeへ含めず、同一Feedのduplicate registrationでもidentityを安定させる。
+- 生のsource ID、article URL、title、contentは公開identity値へ埋め込まない。
+- `parse_start()` とAPIの5項目array contractは維持し、identityはEngine内部だけに保持。
+- DB / Stock / Frontend / duplicate item removal / cache / ETag / RetryはM1-Dのscope外。

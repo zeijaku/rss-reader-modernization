@@ -322,7 +322,7 @@ function api_feed_fetch(int $userId, array $input): array
     // RSS/Atom document.  The Legacy "anything else is successful Text" path
     // masked HTML/error pages and originated from an assignment bug.
     $parser = new FeedParser();
-    $resultFeed = $parser->parse_start($feedBody);
+    $resultFeed = $parser->parse_start($feedBody, $source->url);
     if ($resultFeed === []) {
         $parseReason = preg_replace('/[\r\n]+/', ' ', (string) ($parser->last_error ?? 'unknown parse error'));
         error_log(sprintf(

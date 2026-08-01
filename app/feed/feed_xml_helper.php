@@ -30,6 +30,36 @@ final class FeedXmlHelper
         return isset($view->title) ? (string) $view->title : '';
     }
 
+    /** Return the first non-empty direct child text in the requested order. */
+    public static function firstText(SimpleXMLElement $xml, array $fieldNames): ?string
+    {
+        $view = self::defaultNamespaceChildren($xml);
+        foreach ($fieldNames as $name) {
+            if (!isset($view->{$name})) {
+                continue;
+            }
+
+            $value = trim((string) $view->{$name});
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /** Return a non-empty attribute from the unqualified or named namespace. */
+    public static function attribute(SimpleXMLElement $xml, string $name, ?string $namespace = null): ?string
+    {
+        $attributes = $namespace === null ? $xml->attributes() : $xml->attributes($namespace);
+        if (!$attributes instanceof SimpleXMLElement || !isset($attributes[$name])) {
+            return null;
+        }
+
+        $value = trim((string) $attributes[$name]);
+        return $value === '' ? null : $value;
+    }
+
     public static function link(SimpleXMLElement $xml): ?string
     {
         $candidates = [];

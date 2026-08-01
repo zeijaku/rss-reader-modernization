@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Atom identity</title>
+  <link rel="alternate" href="https://example.test/identity/atom" />
+  <entry>
+    <id>tag:example.test,2026:item-001</id>
+    <title>Atom native ID</title>
+    <link rel="alternate" href="https://example.test/articles/atom-native" />
+    <updated>2026-08-01T12:10:00+09:00</updated>
+  </entry>
+  <entry>
+    <id>   </id>
+    <title>Atom link fallback</title>
+    <link rel="alternate" href="https://example.test/articles/atom-link" />
+  </entry>
+  <entry>
+    <title>Atom fingerprint</title>
+    <summary>No id and no link.</summary>
+    <published>2026-08-01T12:12:00+09:00</published>
+  </entry>
+</feed>

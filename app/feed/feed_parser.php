@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/normalized_item.php';
+require_once __DIR__ . '/item_identity_resolver.php';
 require_once __DIR__ . '/feed_date_normalizer.php';
 require_once __DIR__ . '/feed_link_selector.php';
 require_once __DIR__ . '/feed_xml_helper.php';
@@ -24,11 +25,12 @@ class FeedParser
 
     /** @var list<FeedAdapterInterface> */
     private array $adapters;
+    private ItemIdentityResolver $identityResolver;
 
     /**
      * @param list<FeedAdapterInterface>|null $adapters
      */
-    public function __construct(?array $adapters = null)
+    public function __construct(?array $adapters = null, ?ItemIdentityResolver $identityResolver = null)
     {
         $adapters ??= [
             new AtomAdapter(),
@@ -43,6 +45,7 @@ class FeedParser
         }
 
         $this->adapters = array_values($adapters);
+        $this->identityResolver = $identityResolver ?? new ItemIdentityResolver();
     }
 
     /**
@@ -50,7 +53,7 @@ class FeedParser
      *
      * @return array{type:string,channel:array{title:string,link:?string,description:?string},item:list<NormalizedItem>}|array{}
      */
-    public function parse_normalized(mixed $contents): array
+    public function parse_normalized(mixed $contents, ?string $sourceUrl = null): array
     {
         $this->last_error = null;
         if (!is_string($contents) || trim($contents) === '') {
@@ -96,7 +99,8 @@ class FeedParser
                 }
 
                 try {
-                    return $adapter->parse($xml);
+                    $feed = $adapter->parse($xml);
+                    return $sourceUrl === null ? $feed : $this->attachIdentities($feed, $sourceUrl);
                 } catch (RuntimeException $exception) {
                     $this->last_error = $exception->getMessage();
                     return [];
@@ -116,9 +120,9 @@ class FeedParser
      *
      * @return array<string,mixed>
      */
-    public function parse_start(mixed $contents): array
+    public function parse_start(mixed $contents, ?string $sourceUrl = null): array
     {
-        $feed = $this->parse_normalized($contents);
+        $feed = $this->parse_normalized($contents, $sourceUrl);
         if ($feed === []) {
             return [];
         }
@@ -128,6 +132,20 @@ class FeedParser
             if ($item instanceof NormalizedItem) {
                 $items[] = $item->toArray();
             }
+        }
+        $feed['item'] = $items;
+        return $feed;
+    }
+
+    /**
+     * @param array{type:string,channel:array{title:string,link:?string,description:?string},item:list<NormalizedItem>} $feed
+     * @return array{type:string,channel:array{title:string,link:?string,description:?string},item:list<NormalizedItem>}
+     */
+    private function attachIdentities(array $feed, string $sourceUrl): array
+    {
+        $items = [];
+        foreach ($feed['item'] as $item) {
+            $items[] = $this->identityResolver->resolve($item, $sourceUrl);
         }
         $feed['item'] = $items;
         return $feed;

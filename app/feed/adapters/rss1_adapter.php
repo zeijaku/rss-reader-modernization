@@ -10,6 +10,7 @@ require_once dirname(__DIR__) . '/normalized_item.php';
 final class Rss1Adapter implements FeedAdapterInterface
 {
     private const RSS1_NAMESPACE = 'http://purl.org/rss/1.0/';
+    private const RDF_NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
     private const DESCRIPTION_FIELDS = ['summary', 'subtitle', 'tagline', 'description'];
     private const DATE_FIELDS = ['created', 'updated', 'modified', 'issued', 'pubDate', 'lastBuildDate'];
 
@@ -35,7 +36,8 @@ final class Rss1Adapter implements FeedAdapterInterface
                 FeedXmlHelper::link($item),
                 FeedXmlHelper::description($item, self::DESCRIPTION_FIELDS),
                 FeedXmlHelper::content($item),
-                FeedXmlHelper::date($item, self::DATE_FIELDS)
+                FeedXmlHelper::date($item, self::DATE_FIELDS),
+                FeedXmlHelper::attribute($item, 'about', self::RDF_NAMESPACE)
             );
         }
 

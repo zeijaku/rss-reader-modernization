@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>RSS2 identity</title>
+    <link>https://example.test/identity/rss2</link>
+    <description>Identity fixture</description>
+    <item>
+      <guid isPermaLink="false">article-001</guid>
+      <title>Native ID item</title>
+      <link>https://example.test/articles/native</link>
+      <pubDate>Sat, 01 Aug 2026 12:00:00 +0900</pubDate>
+    </item>
+    <item>
+      <guid>   </guid>
+      <title>Link fallback item</title>
+      <link>https://example.test/articles/link-fallback</link>
+    </item>
+    <item>
+      <title>Fingerprint item</title>
+      <description>Has no guid or link.</description>
+      <pubDate>Sat, 01 Aug 2026 12:02:00 +0900</pubDate>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://example.test/articles/permalink-guid</guid>
+      <title>Permalink guid remains opaque</title>
+      <link>https://example.test/articles/permalink-guid</link>
+    </item>
+  </channel>
+</rss>

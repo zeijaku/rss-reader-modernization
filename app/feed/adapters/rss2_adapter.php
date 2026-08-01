@@ -34,7 +34,8 @@ final class Rss2Adapter implements FeedAdapterInterface
                 FeedXmlHelper::link($item),
                 FeedXmlHelper::description($item, self::DESCRIPTION_FIELDS),
                 FeedXmlHelper::content($item),
-                FeedXmlHelper::date($item, self::DATE_FIELDS)
+                FeedXmlHelper::date($item, self::DATE_FIELDS),
+                FeedXmlHelper::firstText($item, ['guid'])
             );
         }
 

@@ -92,3 +92,9 @@ echo '== M1-C Feed Adapter / Date Normalization checks =='
 php "$ROOT/tests/test_m1c_feed_adapters.php"
 python3 "$ROOT/tests/test_m1c_architecture.py"
 python3 "$ROOT/tests/test_m1c_fixture_shapes.py"
+
+echo '== M1-D Item Identity checks =='
+php "$ROOT/tests/test_m1d_item_identity.php"
+python3 "$ROOT/tests/test_m1d_architecture.py"
+python3 "$ROOT/tests/test_m1d_fixture_shapes.py"
+

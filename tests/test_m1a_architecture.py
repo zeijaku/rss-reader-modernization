@@ -32,7 +32,7 @@ m = re.search(r'function api_feed_fetch\([^)]*\): array\s*\{(?P<body>.*?)(?=\n\}
 body = m.group('body') if m else ''
 check(bool(m), 'feed.fetch handler exists')
 check('new FeedFetcher()' in body and '->fetch($source)' in body, 'feed.fetch uses FeedFetcher boundary')
-check('new FeedParser()' in body and '->parse_start($feedBody)' in body, 'feed.fetch uses FeedParser boundary')
+check('new FeedParser()' in body and ('->parse_start($feedBody)' in body or '->parse_start($feedBody, $source->url)' in body), 'feed.fetch uses FeedParser boundary')
 check('app_safe_http_fetch(' not in body, 'feed.fetch no longer calls HTTP transport implementation directly')
 check('new rss_parse()' not in body, 'feed.fetch no longer instantiates Legacy parser name')
 

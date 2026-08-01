@@ -31,7 +31,8 @@ final class AtomAdapter implements FeedAdapterInterface
                 FeedXmlHelper::link($entry),
                 FeedXmlHelper::description($entry, self::DESCRIPTION_FIELDS),
                 FeedXmlHelper::content($entry),
-                FeedXmlHelper::date($entry, self::DATE_FIELDS)
+                FeedXmlHelper::date($entry, self::DATE_FIELDS),
+                FeedXmlHelper::firstText($entry, ['id'])
             );
         }
 

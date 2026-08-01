@@ -2,6 +2,19 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## RSS Engine M1-D / R1 — 2026-08-01
+
+### Deterministic Feed Item identity
+
+- RSS 2.0 `guid`、RSS 1.0 `rdf:about`、Atom `id` を形式別Adapterから内部 `sourceItemId` へ抽出。
+- `ItemIdentity` と `ItemIdentityResolver` を追加し、`source-id → link → fingerprint` の優先順位を明示。
+- configured Feed URLをscopeに含む `m1i:v1:` + SHA-256形式の不透明で決定的なidentityを導入。
+- `content_id` / owner IDをidentityから除外し、同一Feedの複数登録で同じItem identityを維持。
+- raw source ID / URL / title / contentをidentity値、公開API、Frontendへ露出しない。
+- `NormalizedItem::toArray()` と既存APIの5項目contract、DB、Stock、Frontend、Fetcher、SSRF/XSS境界を維持。
+- 重複Item削除、新着判定、永続化、cache、ETag、Retryは実装せず後続工程へ分離。
+- Identity priority / stability / scope / boundary / malformed input / fixture / architecture regression testを追加。
+
 ## RSS Engine M1-C / R1 — 2026-08-01
 
 ### RSS / Atom adapters and date normalization
