@@ -4,6 +4,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
+dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
+frontend = index + '\n' + dashboard
 api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8')
 feed_service = (ROOT / 'app' / 'feed' / 'feed_fetch_service.php').read_text(encoding='utf-8')
 common_func = (ROOT / 'app' / 'common' / 'common_func.php').read_text(encoding='utf-8')
@@ -41,7 +43,7 @@ check("getName()) === 'feed'" in atom_adapter and "getName()) !== 'rss'" in rss2
 check('defaultNamespaceChildren' in feed_helper and "http://purl.org/rss/1.0/" in rss1_adapter, 'Atom/default-namespace and RSS1 namespace parsing are handled explicitly')
 check("'$1UTF-8$2'" in feed_parser and 'Feed XML declaration could not be normalized.' in feed_parser, 'converted Feed bytes keep XML encoding declaration aligned to UTF-8')
 check('$items = [];' in rss2_adapter and '$items = [];' in rss1_adapter and '$items = [];' in atom_adapter, 'zero-item feeds remain valid adapter results')
-check('Math.min(5, items.length)' in index, 'browser only renders available items up to five')
+check('Math.min(5, items.length)' in dashboard, 'browser only renders available items up to five')
 
 # SB-11-04: close partial rows for Feed and Stock branches.
 check(index.count("if ($row_cnt > 0) {") >= 2, 'partial Feed/Stock grid rows are explicitly closed')
@@ -53,7 +55,7 @@ match = re.search(r'function api_tabs_update\([^)]*\): array\s*\{(?P<body>.*?)\n
 body = match.group('body') if match else ''
 check(bool(match), 'tabs.update handler exists')
 check('update_content' not in body and 'delete_content' not in body, 'tabs.update contains no stray content mutation logic')
-check("$('#tabsForm').on('submit'" in index and 'event.preventDefault();' in index[index.find("$('#tabsForm').on('submit'"):], 'tabs form uses AJAX submit with preventDefault')
+check(".on('submit' + eventNamespace, '#tabsForm'" in dashboard and 'event.preventDefault();' in dashboard, 'tabs form uses AJAX submit with preventDefault')
 check('type="submit" class="btn btn-primary submit_tab"' in index, 'tab button uses the single form submit path')
 
 # SB-11-07/08: settings persistence/current values.
@@ -61,12 +63,12 @@ check('$_SESSION' not in api, 'settings/tab API does not cache mutable UI settin
 check('function app_selected_attr' in validation and 'function app_checked_attr' in validation, 'selected/checked output helpers exist')
 check("app_selected_attr($ui['conf_style']" in index and "app_selected_attr($ui['conf_style_nav']" in index, 'theme and navbar selects render stored current values')
 check('app_checked_attr($ui[$iconKey]' in index, 'navbar icon radios render stored current values')
-check("$('#settingsForm').on('submit'" in index and 'type="submit" class="btn btn-primary submit_setting"' in index, 'settings form uses one AJAX submit path')
+check(".on('submit' + eventNamespace, '#settingsForm'" in dashboard and 'type="submit" class="btn btn-primary submit_setting"' in index, 'settings form uses one AJAX submit path')
 
 # Additional functional corrections found while auditing SB-11.
 check('content-edit-trigger' in index and 'data-content-style' in index, 'content edit modal carries the current style explicitly')
-check("$('.changeContentStyle').val(content_style);" in index, 'content edit modal restores current style instead of silently resetting it')
-check("$('.fa-edit').on('click'" not in index, 'generic FontAwesome edit icons no longer trigger content-edit behavior')
+check("$('.changeContentStyle').val(contentStyle);" in dashboard, 'content edit modal restores current style instead of silently resetting it')
+check("$('.fa-edit').on('click'" not in frontend, 'generic FontAwesome edit icons no longer trigger content-edit behavior')
 check('id="saveContent"' in index, 'Stock modal no longer duplicates the content-edit modal id')
 check('id="exampleModalCenterTitle"' not in index and 'aria-labelledby="changeContent"' not in index, 'modal title ids/aria references are unique instead of Legacy duplicates')
 check('class="nav-link disabled"' not in index, 'configured navbar links are no longer rendered disabled')

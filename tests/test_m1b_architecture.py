@@ -11,6 +11,8 @@ service = (ROOT / 'app' / 'feed' / 'feed_fetch_service.php').read_text(encoding=
 db = (ROOT / 'app' / 'common' / 'common_db.php').read_text(encoding='utf-8')
 schema = (ROOT / 'database' / 'schema.sql').read_text(encoding='utf-8')
 index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
+dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
+frontend = index + '\n' + dashboard
 
 checks = []
 def check(condition: bool, message: str) -> None:
@@ -54,7 +56,7 @@ check("api_safe_feed_payload($resultFeed, $effectiveUrl)" in body, 'SB-10 payloa
 check('CREATE TABLE' not in source and 'CREATE TABLE' not in mapper, 'FeedSource modules contain no schema ownership')
 check('feed_source' not in schema.lower(), 'M1-B adds no Feed Source database table')
 check('function find_owned_active_content' in db, 'existing owner-scoped content lookup remains the persistence boundary')
-check("'content_id': content_id" in index, 'browser still submits only content_id for feed.fetch')
+check("'content_id': content_id" in dashboard, 'browser still submits only content_id for feed.fetch')
 check('FeedSource' not in index, 'Frontend remains unaware of FeedSource model')
 check('ETag' not in fetcher and 'Last-Modified' not in fetcher, 'M1-B does not introduce cache/conditional HTTP scope')
 

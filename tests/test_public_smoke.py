@@ -57,6 +57,7 @@ try:
     else: raise RuntimeError('public smoke server failed to start')
 
     check('Sign in' in body and 'Register in' in body,'login and registration UI renders')
+    check('./css/dashboard.css' in body,'login page references the external dashboard stylesheet')
     check(bool(VERSION_LABEL) and VERSION_LABEL in body,'visible release marker renders on login page')
     cookie_header=headers.get('Set-Cookie','')
     cookie=cookie_header.split(';',1)[0]
@@ -67,6 +68,10 @@ try:
 
     s,_,_=req(p,'GET','/css/bootstrap.min.css')
     check(s==200,'Bootstrap stylesheet is served')
+    s,_,dashboard_css=req(p,'GET','/css/dashboard.css')
+    check(s==200 and '#page-top' in dashboard_css,'dashboard stylesheet is served')
+    s,_,dashboard_js=req(p,'GET','/js/dashboard.js')
+    check(s==200 and 'function initDashboard()' in dashboard_js,'dashboard JavaScript is served')
     s,_,_=req(p,'GET','/logout.php')
     check(s==405,'direct GET logout is rejected')
 

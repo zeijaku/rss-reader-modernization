@@ -88,7 +88,7 @@ for allowed in [
 ]:
     check(allowed in gitignore, f'gitignore explicitly allows curated artifact {allowed}')
 check('/var/db-migration/*' in gitignore and '!/var/db-migration/.gitkeep' in gitignore, 'private migration snapshots remain ignored')
-check(re.search(r"(?:Secure Baseline SB-(?:1[3-9]|[2-9][0-9])|RSS Engine M\d+-[A-Z]) / R[1-9][0-9]*", version) is not None, 'visible version marker is SB-13 or later / M-series')
+check(re.search(r"(?:Secure Baseline SB-(?:1[3-9]|[2-9][0-9])|(?:RSS Engine|Frontend) M\d+-[A-Z]) / R[1-9][0-9]*", version) is not None, 'visible version marker is SB-13 or later / M-series')
 
 if not all(checks):
     sys.exit(1)

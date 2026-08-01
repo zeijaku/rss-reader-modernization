@@ -6,6 +6,7 @@ helper = (root / 'app/feed/feed_xml_helper.php').read_text(encoding='utf-8')
 selector = (root / 'app/feed/feed_link_selector.php').read_text(encoding='utf-8')
 api = (root / 'app/api.php').read_text(encoding='utf-8')
 index = (root / 'public/index.php').read_text(encoding='utf-8')
+dashboard = (root / 'public/js/dashboard.js').read_text(encoding='utf-8')
 version = (root / 'app/version.php').read_text(encoding='utf-8')
 
 checks = []
@@ -24,8 +25,8 @@ check("xpath('./*[local-name()=\"url\"]')" in body, 'dedicated <url> compatibili
 check("$view->link" not in body, 'R1 namespace-view link extraction path is no longer used')
 check('function rss_select_link_candidate' in selector and 'return FeedLinkSelector::select($candidates);' in selector, 'Legacy link selector wrapper remains compatible')
 check("'link' => app_validate_external_link" in api, 'API still validates extracted external article links')
-check("if (itemLink !== '')" in index and ".attr('href', itemLink)" in index, 'frontend still creates anchors from non-empty API item links')
-check(bool(re.search(r"(?:Secure Baseline SB-(?:1[2-9]|[2-9]\d+)|RSS Engine M\d+-[A-Z]) / R\d+", version)), 'visible build marker remains SB-12 or later / M-series')
+check("if (itemLink !== '')" in dashboard and ".attr('href', itemLink)" in dashboard, 'frontend still creates anchors from non-empty API item links')
+check(bool(re.search(r"(?:Secure Baseline SB-(?:1[2-9]|[2-9]\d+)|(?:RSS Engine|Frontend) M\d+-[A-Z]) / R\d+", version)), 'visible build marker remains SB-12 or later / M-series')
 
 failed = [m for ok, m in checks if not ok]
 if failed:

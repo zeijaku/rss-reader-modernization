@@ -114,3 +114,7 @@ php "$ROOT/tests/test_m1g_http_retry.php"
 php "$ROOT/tests/test_m1g_fetch_resilience.php"
 python3 "$ROOT/tests/test_m1g_architecture.py"
 python3 "$ROOT/tests/test_m1g_concurrency.py"
+
+echo '== M2-A Frontend foundation checks =='
+python3 "$ROOT/tests/test_m2a_frontend_structure.py"
+node "$ROOT/tests/test_m2a_dashboard_runtime.js"

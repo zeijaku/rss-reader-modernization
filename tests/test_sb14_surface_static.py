@@ -3,6 +3,8 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
+frontend = index + '\n' + dashboard
 api_endpoint = (ROOT / 'public/api_v1.php').read_text(encoding='utf-8')
 logout = (ROOT / 'public/logout.php').read_text(encoding='utf-8')
 http_fetch = (ROOT / 'app/http_fetch.php').read_text(encoding='utf-8')
@@ -23,10 +25,10 @@ check(csrf_pos >= 0 and dispatch_pos > csrf_pos, 'API validates CSRF before disp
 check("($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST'" in api_endpoint, 'API rejects non-POST methods')
 check('app_csrf_is_valid($csrfToken)' in logout and "'POST'" in logout, 'logout is POST-only and CSRF protected')
 check("$token === 'login' || $token === 'regist'" in index and 'app_csrf_is_valid($submittedCsrf)' in index, 'login and registration share explicit CSRF validation')
-check("'csrf_token': appCsrfToken()" in index, 'AJAX helper injects CSRF token into every API request')
+check("'csrf_token': appCsrfToken()" in dashboard, 'AJAX helper injects CSRF token into every API request')
 
 for action in ['content.create', 'content.update', 'content.delete', 'stock.create', 'settings.update', 'tabs.update', 'feed.fetch']:
-    check(action in index or action in (ROOT / 'app/api.php').read_text(encoding='utf-8'), f'expected API action remains represented: {action}')
+    check(action in frontend or action in (ROOT / 'app/api.php').read_text(encoding='utf-8'), f'expected API action remains represented: {action}')
 
 # 4-tab regression mapping is generated from location 0..3.
 check('for ($tabLocation = 0; $tabLocation <= 3; $tabLocation++)' in index, 'drawer renders exactly locations 0 through 3')
@@ -45,6 +47,6 @@ for cidr in ['100.64.0.0/10', '192.0.2.0/24', '198.18.0.0/15', '198.51.100.0/24'
 needle = "$links = $xml->xpath('./*[local-name()=\"link\"]');"
 check(feed_helper.count(needle) == 1, 'Atom link XPath is evaluated once per element')
 check('LIBXML_NONET' in feed_parser, 'parser forbids XML network access')
-check('Math.min(5, items.length)' in index, 'frontend safely caps rendered items to five')
+check('Math.min(5, items.length)' in dashboard, 'frontend safely caps rendered items to five')
 
 print('All SB-14 surface/static checks passed.')

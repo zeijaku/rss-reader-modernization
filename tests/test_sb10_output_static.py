@@ -4,6 +4,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 index = (ROOT / 'public/index.php').read_text()
+dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
+frontend = index + '\n' + dashboard
 api = (ROOT / 'app/api.php').read_text()
 validation = (ROOT / 'app/validation.php').read_text()
 http_fetch = (ROOT / 'app/http_fetch.php').read_text()
@@ -25,15 +27,15 @@ check("app_validate_stock_url" in index and "app_html($stockTitle)" in index, 'S
 check("rel=\"noopener noreferrer\"" in index, 'external target=_blank links are hardened with rel')
 
 # Untrusted Feed data must not be concatenated into HTML strings.
-check("append('<a href=\"'" not in index, 'Feed channel title/link are not concatenated into HTML')
-check("var append_dom" not in index, 'Feed rows are no longer built as an HTML string')
-check(".text('　' + channelTitle)" in index, 'Feed channel title uses text insertion')
-check(".text(viewTitle)" in index, 'Feed item title uses text insertion')
-check(".attr('href', itemLink)" in index, 'validated Feed link is assigned as an attribute')
-check("data-stock-url" in index and "data-stock-title" in index, 'Stock modal receives data through explicit safe data attributes')
-check("'stock_title': stockTitle" in index, 'client sends Feed item title with Stock request')
-check('info_tweet' not in index and 'information_modal_tweet' not in index and 'twitter.com/intent/tweet' not in index, 'removed Tweet UI leaves no dead client-side Tweet handler')
-check("Math.min(5, items.length)" in index, 'Feed renderer bounds item access rather than blindly dereferencing five entries')
+check("append('<a href=\"'" not in frontend, 'Feed channel title/link are not concatenated into HTML')
+check("var append_dom" not in frontend, 'Feed rows are no longer built as an HTML string')
+check(".text('　' + channelTitle)" in dashboard, 'Feed channel title uses text insertion')
+check(".text(viewTitle)" in dashboard, 'Feed item title uses text insertion')
+check(".attr('href', itemLink)" in dashboard, 'validated Feed link is assigned as an attribute')
+check("data-stock-url" in dashboard and "data-stock-title" in dashboard, 'Stock modal receives data through explicit safe data attributes')
+check("'stock_title': stockTitle" in dashboard, 'client sends Feed item title with Stock request')
+check('info_tweet' not in frontend and 'information_modal_tweet' not in frontend and 'twitter.com/intent/tweet' not in frontend, 'removed Tweet UI leaves no dead client-side Tweet handler')
+check("Math.min(5, items.length)" in dashboard, 'Feed renderer bounds item access rather than blindly dereferencing five entries')
 
 # PHP-rendered DB values should not appear raw in common dangerous contexts.
 raw_ui_patterns = [

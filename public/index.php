@@ -84,36 +84,7 @@ $tabParam = app_tab_from_query($_GET['tab'] ?? null);
     <!-- Drawer -->
     <link rel="stylesheet" href="./css/drawer.min.css">
 
-    <style>
-
-    #page-top {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        font-size: 77%;
-    }
-    #page-top a {
-        background: rgb(0, 64, 96);
-        text-decoration: none;
-        color: #fff;
-        width: 70px;
-        padding: 5px 0;
-        text-align: center;
-        display: block;
-        border: 1px solid #ffffff;
-        border-radius: 5px;
-        -webkit-border-radius: 5px;
-        -moz-border-radius: 5px;
-    }
-    #page-top a:hover {
-        text-decoration: none;
-        background: rgb(23, 162, 184);
-    }
-
-    table tr:hover{
-        opacity: 0.7;
-    }
-    </style>
+    <link rel="stylesheet" href="./css/dashboard.css">
 
 </head>
 <body class="drawer drawer--right">
@@ -199,7 +170,6 @@ if (is_int($tabParam)) {
 /* rowポイントカウント初期化 */
 $row_cnt = 0;
 $result_content_cnt = 0;
-$window_load = [];
 
 /* ユーザー配下+対象tabのコンテンツ取得: SB-08 strict tab policy */
 $content_location = $tabParam;
@@ -215,11 +185,10 @@ if (is_int($content_location)) {
     /* コンテンツをカードに表示 */
     for( $i = 0; $i < $result_content_cnt; $i++ ) {
 
-        /* JavaScript WindowLoad用: URLはJSへ直埋めしない */
+        /* Feed取得用にはContent IDだけをdata属性へ渡す */
         $contentId = (int) ($result_content[$i]['content_id'] ?? 0);
         $contentValue = (string) ($result_content[$i]['content_value'] ?? '');
         $contentStyle = app_normalize_content_style($result_content[$i]['content_style'] ?? null) ?? 'success';
-        $window_load[$i]['content_id'] = $contentId;
 
         /* row開始 判定 */
         if (($i % 4) === 0) {
@@ -227,13 +196,13 @@ if (is_int($content_location)) {
         }
         echo '
         <!-- Card -->
-            <div class="col-sm " style="padding: 0px; margin: 2px;">
-                <input type="hidden" class="content_id_' . $contentId . '" value="' . app_html($contentValue) . '">
+            <div class="col-sm " data-feed-content-id="' . $contentId . '" style="padding: 0px; margin: 2px;">
+                <input type="hidden" class="content-value" value="' . app_html($contentValue) . '">
                 <table class="table table-hover">
                     <thead class="">
-                        <tr class=""><td colspan="2" class="bg-' . app_html($contentStyle) . '" style="padding: 4px;"><small><span class="content_title_' . $contentId . '"></span></small>　<div class="float-right" data-toggle="modal" data-target="#changeContent"><i class="fas fa-edit text-white content-edit-trigger" id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" style="margin-top: 2px;"></i></div></td></tr>
+                        <tr class=""><td colspan="2" class="bg-' . app_html($contentStyle) . '" style="padding: 4px;"><small><span class="content-title"></span></small>　<div class="float-right" data-toggle="modal" data-target="#changeContent"><i class="fas fa-edit text-white content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" style="margin-top: 2px;"></i></div></td></tr>
                     </thead>
-                    <tbody class="content_body_' . $contentId . '">
+                    <tbody class="content-body">
                         <!-- content_value挿入 -->
                     </tbody>
                 </table>
@@ -655,271 +624,7 @@ if ($result_content_cnt === 0) {
 <script src="./js/iscroll.js"></script>
 <script src="./js/drawer.min.js"></script>
 
-<!--  -->
-<script>
-
-/* Secure Baseline API helper */
-function appCsrfToken() {
-    return $('meta[name="csrf-token"]').attr('content') || '';
-}
-
-function apiErrorMessage(xhr) {
-    if (xhr && xhr.responseJSON && xhr.responseJSON.error && xhr.responseJSON.error.message) {
-        return xhr.responseJSON.error.message;
-    }
-    return 'Request failed.';
-}
-
-function apiRequest(action, data, timeout) {
-    var payload = $.extend({}, data || {}, {
-        'action': action,
-        'csrf_token': appCsrfToken()
-    });
-
-    return $.ajax({
-        url: './api_v1.php',
-        method: 'POST',
-        cache: false,
-        dataType: 'json',
-        timeout: timeout || 4000,
-        data: payload
-    });
-}
-
-/* Editボタン選択時に変更モーダルの値書き換え */
-$('.content-edit-trigger').on('click', function(){
-    var content_id = $(this).attr('id');
-    var content_value_catch = 'content_id_' + content_id;
-    var content_value = $('.' + content_value_catch).val();
-    var content_style = String($(this).attr('data-content-style') || 'success');
-    $('.changeContentId').val(content_id);
-    $('.changeContentValue').val(content_value);
-    $('.changeContentStyle').val(content_style);
-});
-
-/* Content変更 / 論理削除 */
-$('.change_content').on('click', function() {
-    var content_id = $('.changeContentId').val();
-    var content_value = $('.changeContentValue').val();
-    var content_style = $('.changeContentStyle').val();
-    var action = content_value === '' ? 'content.delete' : 'content.update';
-    var payload = {'content_id': content_id};
-    if (action === 'content.update') {
-        payload.content_value = content_value;
-        payload.content_style = content_style;
-    }
-
-    apiRequest(action, payload, 3000)
-        .done(function(data) {
-            if (data.ok === true) {
-                window.location.reload();
-            }
-        })
-        .fail(function(xhr) {
-            alert(apiErrorMessage(xhr));
-        });
-});
-
-/* Setting変更: form submitをAJAX 1経路へ統一 */
-$('#settingsForm').on('submit', function(event) {
-    event.preventDefault();
-    var payload = {
-        'conf_style': $('.conf_style').val(),
-        'conf_style_nav': $('.conf_style_nav').val(),
-        'conf_style_navlink1': $('.conf_style_navlink1').val(),
-        'conf_style_navlink_view1': $('.conf_style_navlink_view1').val(),
-        'conf_style_navlink_icon1': $('input[name="conf_style_navlink_icon1"]:checked').val() || '',
-        'conf_style_navlink2': $('.conf_style_navlink2').val(),
-        'conf_style_navlink_view2': $('.conf_style_navlink_view2').val(),
-        'conf_style_navlink_icon2': $('input[name="conf_style_navlink_icon2"]:checked').val() || '',
-        'conf_style_navlink3': $('.conf_style_navlink3').val(),
-        'conf_style_navlink_view3': $('.conf_style_navlink_view3').val(),
-        'conf_style_navlink_icon3': $('input[name="conf_style_navlink_icon3"]:checked').val() || '',
-        'conf_style_navlink4': $('.conf_style_navlink4').val(),
-        'conf_style_navlink_view4': $('.conf_style_navlink_view4').val(),
-        'conf_style_navlink_icon4': $('input[name="conf_style_navlink_icon4"]:checked').val() || ''
-    };
-
-    apiRequest('settings.update', payload, 3000)
-        .done(function(data) {
-            if (data.ok === true) {
-                window.location.reload();
-            }
-        })
-        .fail(function(xhr) {
-            alert(apiErrorMessage(xhr));
-        });
-});
-
-/* タブ名変更: native submitとAJAXの競合を防止 */
-$('#tabsForm').on('submit', function(event) {
-    event.preventDefault();
-    apiRequest('tabs.update', {
-        'conf_style_tabname1': $('.conf_style_tabname1').val(),
-        'conf_style_tabname2': $('.conf_style_tabname2').val(),
-        'conf_style_tabname3': $('.conf_style_tabname3').val(),
-        'conf_style_tabname4': $('.conf_style_tabname4').val()
-    }, 3000)
-        .done(function(data) {
-            if (data.ok === true) {
-                window.location.reload();
-            }
-        })
-        .fail(function(xhr) {
-            alert(apiErrorMessage(xhr));
-        });
-});
-
-/* Informationモーダルの値書き換え */
-$(document).on('click', '.infomation_modal_rewrite', function() {
-    var stockUrl = String($(this).attr('data-stock-url') || '');
-    var stockTitle = String($(this).attr('data-stock-title') || '');
-    $('.information_modal_dbsave')
-        .attr('data-stock-url', stockUrl)
-        .attr('data-stock-title', stockTitle);
-});
-
-/* Stock登録: SB-09では記事URLをserver-side再取得しない */
-$('.information_modal_dbsave').on('click', function() {
-    var stockData = String($(this).attr('data-stock-url') || '');
-    var stockTitle = String($(this).attr('data-stock-title') || '');
-    apiRequest('stock.create', {
-        'stock_data': stockData,
-        'stock_title': stockTitle
-    }, 3000)
-        .done(function(data) {
-            if (data.ok === true) {
-                alert('Stocked');
-            }
-        })
-        .fail(function(xhr) {
-            alert(apiErrorMessage(xhr));
-        });
-});
-
-/* Content追加 */
-$('.submit_content').on('click', function() {
-    apiRequest('content.create', {
-        'content_value': $('.registerContentValue').val(),
-        'content_style': $('.style_select').val(),
-        'content_location': $('.content_location').val()
-    }, 3000)
-        .done(function(data) {
-            if (data.ok === true) {
-                window.location.reload();
-            }
-        })
-        .fail(function(xhr) {
-            alert(apiErrorMessage(xhr));
-        });
-});
-
-/* WindowLoad時 実行 */
-$(document).ready(function(){
-    $('[data-toggle="popover"]').popover();
-
-    <?php
-    if ($content_location !== 'stock') {
-        for ($i = 0; $i < count($window_load); $i++) {
-            echo '    fetch_content(' . (int) $window_load[$i]['content_id'] . ");\n";
-        }
-    }
-    ?>
-});
-
-/*
- * 登録済みContent IDからFeedを取得。
- * SB-10: external Feed text is inserted with .text(), not HTML concatenation.
- */
-function fetch_content(content_id) {
-    apiRequest('feed.fetch', {'content_id': content_id}, 25000)
-        .done(function(data) {
-            if (data.ok !== true || !data.data || !data.data.result_feed) {
-                return;
-            }
-
-            var resultFeed = data.data.result_feed;
-            var channel = resultFeed.channel || {};
-            var channelTitle = String(channel.title || '');
-            var channelLink = String(channel.link || '');
-            var $title = $('.content_title_' + content_id).empty();
-            if (channelLink !== '') {
-                $('<a>')
-                    .addClass('text-white')
-                    .attr('href', channelLink)
-                    .attr('target', '_blank')
-                    .attr('rel', 'noopener noreferrer')
-                    .text('　' + channelTitle)
-                    .appendTo($title);
-            } else {
-                $('<span>').text('　' + channelTitle).appendTo($title);
-            }
-
-            var items = Array.isArray(resultFeed.item) ? resultFeed.item : [];
-            var limit = Math.min(5, items.length);
-            var $body = $('.content_body_' + content_id).empty();
-            for (var i = 0; i < limit; i++) {
-                var item = items[i] || {};
-                var itemTitle = String(item.title || '');
-                var itemLink = String(item.link || '');
-                var viewTitle = itemTitle.length > 64 ? itemTitle.substr(0, 64) + '...' : itemTitle;
-
-                var $row = $('<tr>');
-                var $stockCell = $('<td>').appendTo($row);
-                if (itemLink !== '') {
-                    $('<i>')
-                        .addClass('fas fa-bookmark fa-fw text-info infomation_modal_rewrite')
-                        .attr('data-stock-url', itemLink)
-                        .attr('data-stock-title', itemTitle)
-                        .attr('data-toggle', 'modal')
-                        .attr('data-target', '.save_modal')
-                        .appendTo($('<button type="button" class="btn btn-link p-0" aria-label="Stock this article"></button>').appendTo($stockCell));
-                }
-
-                var $linkCell = $('<td>').appendTo($row);
-                if (itemLink !== '') {
-                    $('<a>')
-                        .addClass('text-dark')
-                        .attr('href', itemLink)
-                        .attr('target', '_blank')
-                        .attr('rel', 'noopener noreferrer')
-                        .text(viewTitle)
-                        .appendTo($linkCell);
-                } else {
-                    $('<span>').text(viewTitle).appendTo($linkCell);
-                }
-                $row.appendTo($body);
-            }
-        })
-        .fail(function() {
-            $('.content_title_' + content_id).empty().text('コンテンツを取得出来ませんでした');
-        });
-}
-
-/* Drawer */
-$(function() {
-    $('.drawer').drawer();
-});
-
-/* Page Top Icon */
-var topBtn = $('#page-top');
-topBtn.hide();
-$(window).scroll(function () {
-    if ($(this).scrollTop() > 100) {
-        topBtn.fadeIn();
-    } else {
-        topBtn.fadeOut();
-    }
-});
-/* スクロールしてトップ */
-topBtn.click(function () {
-    $('body,html').animate({
-        scrollTop: 0
-    }, 500);
-    return false;
-});
-
-</script>
+<script src="./js/dashboard.js"></script>
 
 
 

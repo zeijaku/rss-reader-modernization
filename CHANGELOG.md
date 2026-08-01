@@ -2,6 +2,20 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## Frontend M2-A / R1 — 2026-08-01
+
+### Frontend script foundation
+
+- Dashboard固有のインラインJavaScriptを `public/js/dashboard.js` へ分離。
+- Dashboard固有のstyle blockを `public/css/dashboard.css` へ分離。
+- PHPが `fetch_content()` 呼出しを生成する方式を廃止し、Feed cardの `data-feed-content-id` から初期化。
+- API Request、error処理、Event登録を一つの外部JS内へ整理。
+- Event namespaceと初期化済み判定を追加し、二重Event登録を防止。
+- Content / Stock / Settings / Tabsの通信中はpending状態を保持し、連続送信を防止。
+- Feed描画は `.text()`、validated link、`noopener noreferrer`、最大5件を維持。
+- DB schema、公開API Response、M1 RSS Engine、Frontend library Version、画面構成は変更なし。
+- M2-A専用のFrontend structure testとNode runtime testを追加。
+
 ## RSS Engine M1-G / R1 — 2026-08-01
 
 ### Fetch state, Retry-After, Backoff and bounded stale-if-error

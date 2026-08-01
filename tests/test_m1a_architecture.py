@@ -14,6 +14,8 @@ selector = (ROOT / 'app' / 'feed' / 'feed_link_selector.php').read_text(encoding
 date_normalizer = (ROOT / 'app' / 'feed' / 'feed_date_normalizer.php').read_text(encoding='utf-8')
 adapters = ''.join((ROOT / 'app' / 'feed' / 'adapters' / name).read_text(encoding='utf-8') for name in ['rss2_adapter.php', 'rss1_adapter.php', 'atom_adapter.php'])
 index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
+dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
+frontend = index + '\n' + dashboard
 
 checks = []
 def check(condition: bool, message: str) -> None:
@@ -59,7 +61,7 @@ check("getName()) === 'feed'" in adapters and "getName()) !== 'rss'" in adapters
 check('FeedLinkSelector::select($candidates)' in helper and 'function rss_select_link_candidate' in selector, 'Atom/RSS link-selection behavior remains centralized with compatibility wrapper')
 check("return $date->format('Y-m-d H:i:s');" in date_normalizer and 'function rss_normalize_date' in date_normalizer, 'existing date-normalization output and compatibility wrapper remain unchanged')
 
-check("Math.min(5, items.length)" in index, 'existing frontend feed item cap remains unchanged')
+check("Math.min(5, items.length)" in dashboard, 'existing frontend feed item cap remains unchanged')
 check('api_safe_feed_payload($resultFeed, $effectiveUrl)' in body, 'later HTTP improvements do not bypass the M1-A public payload boundary')
 
 if not all(checks):
