@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `M2-C / R2`。M1-GまでのRSS EngineとM2-A / M2-BのFrontend処理を維持したまま、semantic HTML、Keyboard操作、Focus管理、Label / fieldset / ARIAを整理しました。
+現在は `M2-D / R2`。M1-GまでのRSS EngineとM2-A〜M2-Cを維持したまま、Responsive layout、長い文字列、Touch操作、明示的なRSS削除、Feed再読込、画面内通知を整理しました。
 
 ## M1 — Source / RSS Engine
 
@@ -71,12 +71,12 @@ HTML scrapingはサイト構造変更の影響が大きいため、generic parse
 - [x] M2-A Frontend基盤整理
 - [x] M2-B Feed表示処理整理
 - [x] M2-C HTML構造・Accessibility
-- [ ] M2-D Responsive・UI / UX
+- [x] M2-D Responsive・UI / UX
 - [ ] M2-E 不要Frontend Asset整理
 - [ ] M2-F Frontend依存関係更新
 - [ ] M2-G 最終回帰・Documentation
 
-M2-AではインラインJavaScript / CSSを外部Assetへ分離し、PHP生成JavaScriptをdata属性ベースへ変更しました。M2-BではFeed通信とDOM描画を分け、Loading、0件、取得失敗、不正Response、欠損タイトル、長いUnicodeタイトルを扱います。M2-Cではdoctype / lang / landmark、Form / Button、Keyboard、Focus、ARIAを改善しました。Bootstrap / jQuery / Drawer / iScroll / Font AwesomeのVersionは変更していません。
+M2-AではインラインJavaScript / CSSを外部Assetへ分離し、PHP生成JavaScriptをdata属性ベースへ変更しました。M2-BではFeed通信とDOM描画を分け、Loading、0件、取得失敗、不正Response、欠損タイトル、長いUnicodeタイトルを扱います。M2-Cではdoctype / lang / landmark、Form / Button、Keyboard、Focus、ARIAを改善しました。M2-DではMobile 1列、Tablet 2列、Desktop 4列のgrid、長い文字列の折返し、空画面、RSS削除、Feed再読込、画面内通知を改善しました。R2ではFeedのStock列を44pxへ固定し、Drawerを通常36px・coarse pointer 44pxへ調整しました。Bootstrap / jQuery / Drawer / iScroll / Font AwesomeのVersionは変更していません。
 
 Frontend刷新はSecurity behaviorを変えないよう、SB-14以降とM1のregressionを継続します。
 

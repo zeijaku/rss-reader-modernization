@@ -10,12 +10,33 @@
 
     function apiErrorMessage(xhr, textStatus) {
         if (textStatus === 'timeout') {
-            return 'Request timed out.';
+            return '通信がタイムアウトしました';
         }
         if (xhr && xhr.responseJSON && xhr.responseJSON.error && xhr.responseJSON.error.message) {
             return xhr.responseJSON.error.message;
         }
-        return 'Request failed.';
+        return '通信に失敗しました';
+    }
+
+    function showNotice(message, type) {
+        var noticeType = type === 'success' ? 'success' : (type === 'info' ? 'info' : 'danger');
+        var $notice = $('#app-notice');
+        if ($notice.length === 0) {
+            return;
+        }
+
+        $notice
+            .removeClass('alert-success alert-info alert-danger')
+            .addClass('alert-' + noticeType)
+            .attr('role', noticeType === 'danger' ? 'alert' : 'status')
+            .prop('hidden', false)
+            .text(String(message || '処理を完了出来ませんでした'));
+    }
+
+    function clearNotice() {
+        $('#app-notice')
+            .prop('hidden', true)
+            .empty();
     }
 
     function apiResponseOk(data) {
@@ -23,9 +44,9 @@
             return true;
         }
         if (data && data.error && data.error.message) {
-            alert(data.error.message);
+            showNotice(data.error.message, 'danger');
         } else {
-            alert('Request failed.');
+            showNotice('処理を完了出来ませんでした', 'danger');
         }
         return false;
     }
@@ -51,6 +72,7 @@
         if ($button.data('request-pending') === true) {
             return false;
         }
+        clearNotice();
         $button.data('request-pending', true).prop('disabled', true);
         return true;
     }
@@ -60,7 +82,7 @@
     }
 
     function requestFail(xhr, textStatus) {
-        alert(apiErrorMessage(xhr, textStatus));
+        showNotice(apiErrorMessage(xhr, textStatus), 'danger');
     }
 
     /* Editボタン選択時に変更モーダルの値書き換え */
@@ -85,14 +107,38 @@
         var contentId = $('.changeContentId').val();
         var contentValue = $('.changeContentValue').val();
         var contentStyle = $('.changeContentStyle').val();
-        var action = contentValue === '' ? 'content.delete' : 'content.update';
-        var payload = {'content_id': contentId};
-        if (action === 'content.update') {
-            payload.content_value = contentValue;
-            payload.content_style = contentStyle;
+
+        apiRequest('content.update', {
+            'content_id': contentId,
+            'content_value': contentValue,
+            'content_style': contentStyle
+        }, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
+    /* RSS削除は空欄更新ではなく、確認後に明示的なActionを送る */
+    function deleteContent($button) {
+        var contentId = String($('.changeContentId').val() || '');
+        if (!/^\d+$/.test(contentId)) {
+            showNotice('削除するRSSを確認出来ませんでした', 'danger');
+            return;
+        }
+        if (!window.confirm('このRSSを削除しますか？')) {
+            return;
+        }
+        if (!requestStart($button)) {
+            return;
         }
 
-        apiRequest(action, payload, 3000)
+        apiRequest('content.delete', {'content_id': contentId}, 3000)
             .done(function (data) {
                 if (apiResponseOk(data)) {
                     window.location.reload();
@@ -187,7 +233,8 @@
         }, 3000)
             .done(function (data) {
                 if (apiResponseOk(data)) {
-                    alert('Stocked');
+                    $('#saveContent').modal('hide');
+                    showNotice('Stockへ保存しました', 'success');
                 }
             })
             .fail(requestFail)
@@ -239,12 +286,13 @@
         $card
             .attr('data-feed-state', state)
             .attr('aria-busy', state === 'loading' ? 'true' : 'false');
-        $card.find('.content-title').empty().text('　' + title);
+        $card.find('.content-title').empty().text(title);
 
         var $body = $card.find('.content-body').empty();
         if (message !== '') {
             var $row = $('<tr>').addClass('content-state-row feed-state-' + state);
             $('<td>')
+                .addClass('feed-state-message')
                 .attr('colspan', '2')
                 .attr('role', state === 'error' ? 'alert' : 'status')
                 .text(message)
@@ -260,6 +308,7 @@
         var $body = $card.find('.content-body').empty();
         var $row = $('<tr>').addClass('content-state-row feed-state-' + state);
         $('<td>')
+            .addClass('feed-state-message')
             .attr('colspan', '2')
             .attr('role', state === 'error' ? 'alert' : 'status')
             .text(message)
@@ -273,6 +322,12 @@
 
     function renderFeedError($card, message) {
         renderFeedMessage($card, 'error', 'コンテンツを取得出来ませんでした', message || 'しばらくしてから再度お試しください');
+
+        var $cell = $card.find('.feed-state-message');
+        $('<button type="button">')
+            .addClass('btn btn-sm btn-outline-secondary feed-retry')
+            .text('再読み込み')
+            .appendTo($cell);
     }
 
     function renderFeedTitle($card, channel) {
@@ -287,10 +342,10 @@
                 .attr('href', channelLink)
                 .attr('target', '_blank')
                 .attr('rel', 'noopener noreferrer')
-                .text('　' + viewTitle)
+                .text(viewTitle)
                 .appendTo($title);
         } else {
-            $('<span>').text('　' + viewTitle).appendTo($title);
+            $('<span>').text(viewTitle).appendTo($title);
         }
     }
 
@@ -424,6 +479,10 @@
                 event.preventDefault();
                 changeContent($(this));
             })
+            .off('click' + eventNamespace, '.delete_content')
+            .on('click' + eventNamespace, '.delete_content', function () {
+                deleteContent($(this));
+            })
             .off('submit' + eventNamespace, '#settingsForm')
             .on('submit' + eventNamespace, '#settingsForm', function (event) {
                 event.preventDefault();
@@ -437,6 +496,10 @@
             .off('click' + eventNamespace, '.infomation_modal_rewrite')
             .on('click' + eventNamespace, '.infomation_modal_rewrite', function () {
                 rewriteInformationModal($(this));
+            })
+            .off('click' + eventNamespace, '.feed-retry')
+            .on('click' + eventNamespace, '.feed-retry', function () {
+                fetch_content($(this).closest('[data-feed-content-id]'));
             })
             .off('click' + eventNamespace, '.information_modal_dbsave')
             .on('click' + eventNamespace, '.information_modal_dbsave', function () {

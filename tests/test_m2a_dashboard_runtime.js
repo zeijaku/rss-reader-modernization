@@ -9,7 +9,6 @@ const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8'
 const handlers = new Map();
 const wrappers = new Map();
 const ajaxCalls = [];
-const alerts = [];
 let reloadCount = 0;
 
 function check(condition, message) {
@@ -50,12 +49,20 @@ class Wrapper {
         if (arguments.length === 1) return this.dataValues[key];
         this.dataValues[key] = value; return this;
     }
-    prop(key, value) { if (key === 'disabled') this.disabled = value; return this; }
+    prop(key, value) {
+        if (key === 'disabled') this.disabled = value;
+        if (key === 'hidden') this.hidden = value;
+        return this;
+    }
     attr(key, value) {
         if (arguments.length === 1) return this.attrValues[key];
         this.attrValues[key] = value; return this;
     }
     val(value) { if (arguments.length === 0) return this.value; this.value = value; return this; }
+    addClass() { return this; }
+    removeClass() { return this; }
+    empty() { this.textValue = ''; return this; }
+    text(value) { if (arguments.length === 0) return this.textValue || ''; this.textValue = String(value); return this; }
     find(selector) { return getWrapper(this.name + ' ' + selector); }
     closest() { return getWrapper('closest-card'); }
     each() { return this; }
@@ -110,7 +117,6 @@ $.ajax = (options) => {
 global.jQuery = $;
 global.window = windowObject;
 global.document = documentObject;
-global.alert = (message) => alerts.push(String(message));
 
 getWrapper('meta[name="csrf-token"]').attrValues.content = 'csrf-test-token';
 getWrapper('.registerContentValue').value = 'https://example.com/feed.xml';
@@ -121,7 +127,7 @@ vm.runInThisContext(source, { filename: 'dashboard.js' });
 const firstHandlerCount = handlers.size;
 vm.runInThisContext(source, { filename: 'dashboard-second-load.js' });
 
-check(firstHandlerCount === 15, 'dashboard registers the expected event set');
+check(firstHandlerCount === 17, 'dashboard registers the expected event set');
 check(handlers.size === firstHandlerCount, 'loading dashboard twice does not duplicate handlers');
 
 const addHandler = handlers.get('submit.iguguruDashboard|#registerContentForm');
@@ -141,7 +147,9 @@ check(ajaxCalls[0].options.data.content_location === '2', 'runtime request keeps
 
 ajaxCalls[0].deferred.reject({}, 'timeout');
 check(submitButton.disabled === false, 'failed request re-enables its control');
-check(alerts.includes('Request timed out.'), 'timeout receives a controlled error message');
+const notice = getWrapper('#app-notice');
+check(notice.hidden === false, 'timeout displays the shared notice');
+check(notice.textValue === '通信がタイムアウトしました', 'timeout receives a controlled error message');
 
 addHandler.call(rawForm, submitEvent);
 check(ajaxCalls.length === 2, 'control can submit again after request completion');

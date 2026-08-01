@@ -7,6 +7,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
 const ajaxCalls = [];
+const handlers = new Map();
 let failures = 0;
 
 function check(condition, message) {
@@ -146,8 +147,15 @@ class Wrapper {
     popover() { return this; }
     drawer() { return this; }
     scrollTop() { return 0; }
-    off() { return this; }
-    on() { return this; }
+    off(event, selector) {
+        if (selector) handlers.delete(event + '|' + selector);
+        return this;
+    }
+    on(event, selector, callback) {
+        if (typeof selector === 'function') { callback = selector; selector = ''; }
+        handlers.set(event + '|' + selector, callback);
+        return this;
+    }
 }
 
 function parseCreatedElement(sourceText) {
@@ -311,6 +319,23 @@ ajaxCalls[7].deferred.resolve({
 check(cards[7].attrs['data-feed-state'] === 'error', 'missing item array is rejected as an invalid response');
 check(aggregateText(cards[7]).includes('フィードの応答形式を確認出来ませんでした'), 'missing item array receives a controlled error message');
 check(cards.every((card) => card.dataValues['feed-request-pending'] === false), 'pending flag is released after every response path');
+
+const timeoutRetry = cards[3].children[1].children[0].children[0].children.find((child) => child.classes.has('feed-retry'));
+check(Boolean(timeoutRetry), 'Feed error includes a retry button');
+check(timeoutRetry && aggregateText(timeoutRetry) === '再読み込み', 'Feed retry button has a clear label');
+const retryHandler = handlers.get('click.iguguruDashboard|.feed-retry');
+check(typeof retryHandler === 'function', 'Feed retry handler is registered');
+if (timeoutRetry && retryHandler) {
+    retryHandler.call(timeoutRetry);
+    check(ajaxCalls.length === 9, 'Feed retry starts one new request');
+    check(ajaxCalls[8].options.data.content_id === '4', 'Feed retry keeps the failed card content_id');
+    check(cards[3].attrs['data-feed-state'] === 'loading', 'Feed retry returns the card to loading state');
+    ajaxCalls[8].deferred.resolve({
+        ok: true,
+        data: {result_feed: {channel: {title: 'Retry success', link: 'https://example.com/retry'}, item: [{title: 'Recovered', link: 'https://example.com/recovered'}]}}
+    });
+    check(cards[3].attrs['data-feed-state'] === 'ready', 'successful retry returns the card to ready state');
+}
 
 if (failures > 0) process.exit(1);
 console.log('All M2-B Feed runtime checks passed.');

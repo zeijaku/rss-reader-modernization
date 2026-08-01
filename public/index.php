@@ -131,6 +131,14 @@ if (is_int($tabParam)) {
 } elseif ($tabParam === 'stock') {
     $tab_name = ' - [ Stock ]';
 }
+
+/* Stock画面からRSSを追加した場合は、従来どおりタブ1へ登録する */
+$addTargetLocation = is_int($tabParam) ? $tabParam : 0;
+$addTargetKey = 'conf_style_tabname' . ($addTargetLocation + 1);
+$addTargetName = trim((string) ($ui[$addTargetKey] ?? ''));
+if ($addTargetName === '') {
+    $addTargetName = 'タブ' . ($addTargetLocation + 1);
+}
 ?>
 
 <!-- Navbar -->
@@ -168,12 +176,12 @@ if (is_int($tabParam)) {
 </nav><!--  /Navbar -->
 </header>
 
-<main id="main-content" class="igcontainer" tabindex="-1">
+<div id="app-notice" class="app-notice alert" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden></div>
+
+<main id="main-content" class="igcontainer container-fluid" tabindex="-1">
 <h1 class="sr-only">iGuguru RSS Reader</h1>
 <?php
 
-/* rowポイントカウント初期化 */
-$row_cnt = 0;
 $result_content_cnt = 0;
 
 /* ユーザー配下+対象tabのコンテンツ取得: SB-08 strict tab policy */
@@ -183,62 +191,56 @@ $content_location = $tabParam;
 if (is_int($content_location)) {
     /* RSSデータ表示 */
     $result_content = search_content($currentUserId, $content_location);
-
-    /* 取得コンテンツ数 */
     $result_content_cnt = count($result_content);
+
+    if ($result_content_cnt > 0) {
+        echo '<div class="row content-grid feed-grid">';
+    }
 
     /* コンテンツをカードに表示 */
     for( $i = 0; $i < $result_content_cnt; $i++ ) {
-
         /* Feed取得用にはContent IDだけをdata属性へ渡す */
         $contentId = (int) ($result_content[$i]['content_id'] ?? 0);
         $contentValue = (string) ($result_content[$i]['content_value'] ?? '');
         $contentStyle = app_normalize_content_style($result_content[$i]['content_style'] ?? null) ?? 'success';
 
-        /* row開始 判定 */
-        if (($i % 4) === 0) {
-            echo '<div class="row" style="margin-right: 0px; margin-left: 0px; padding: 2px;">';
-        }
         echo '
         <!-- Card -->
-            <section class="col-sm feed-card" data-feed-content-id="' . $contentId . '" data-feed-state="loading" role="region" aria-labelledby="feed-title-' . $contentId . '" aria-busy="true" style="padding: 0px; margin: 2px;">
-                <input type="hidden" class="content-value" value="' . app_html($contentValue) . '">
-                <table class="table table-hover">
-                    <thead>
-                        <tr><th colspan="2" scope="col" class="bg-' . app_html($contentStyle) . '" style="padding: 4px;"><small><span class="content-title" id="feed-title-' . $contentId . '">　読み込み中...</span></small><button type="button" class="btn btn-link float-right content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" data-toggle="modal" data-target="#changeContent" aria-label="このRSSを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button></th></tr>
-                    </thead>
-                    <tbody class="content-body" aria-live="polite" aria-relevant="all">
-                        <tr class="content-state-row feed-state-loading"><td colspan="2" role="status">フィードを読み込んでいます</td></tr>
-                    </tbody>
-                </table>
+            <section class="col-12 col-md-6 col-lg-3 feed-card" data-feed-content-id="' . $contentId . '" data-feed-state="loading" role="region" aria-labelledby="feed-title-' . $contentId . '" aria-busy="true">
+                <div class="feed-card-inner">
+                    <input type="hidden" class="content-value" value="' . app_html($contentValue) . '">
+                    <table class="table table-hover feed-table">
+                        <colgroup>
+                            <col class="feed-stock-column">
+                            <col>
+                        </colgroup>
+                        <thead>
+                            <tr><th colspan="2" scope="col" class="bg-' . app_html($contentStyle) . ' feed-card-header"><small><span class="content-title" id="feed-title-' . $contentId . '">読み込み中...</span></small><button type="button" class="btn btn-link float-right content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" data-toggle="modal" data-target="#changeContent" aria-label="このRSSを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button></th></tr>
+                        </thead>
+                        <tbody class="content-body" aria-live="polite" aria-relevant="all">
+                            <tr class="content-state-row feed-state-loading"><td colspan="2" role="status">フィードを読み込んでいます</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </section>
         ';
-
-        /* rowカウント */
-        $row_cnt++;
-
-        /* row終了 判定 */
-        if ($row_cnt === 4) {
-            echo '</div><!-- /row -->';
-            /* rowカウント初期化 */
-            $row_cnt = 0;
-        }
     }
 
-    if ($row_cnt > 0) {
-        echo '</div><!-- /row -->';
-        $row_cnt = 0;
+    if ($result_content_cnt > 0) {
+        echo '</div><!-- /feed-grid -->';
     }
 
 } elseif ($content_location === 'stock') {
     /* Stockデータ表示 */
     $result_stock = search_stock($currentUserId);
-
-    /* 取得コンテンツ数 */
     $result_content_cnt = count($result_stock);
+
+    if ($result_content_cnt > 0) {
+        echo '<div class="row content-grid stock-grid">';
+    }
+
     /* コンテンツをカードに表示 */
     for( $i = 0; $i < $result_content_cnt; $i++ ) {
-
         /* Stock表示値は既存DB行もuntrustedとして扱う */
         $stockUrl = app_validate_stock_url($result_stock[$i]['stock_data'] ?? null);
         $stockTitle = (string) ($result_stock[$i]['stock_title'] ?? '');
@@ -248,45 +250,34 @@ if (is_int($content_location)) {
         $select_color_val = array('secondary', 'primary', 'dark', 'success', 'info');
         $select_color = $select_color_val[mt_rand(0,4)];
 
-        /* row開始 判定 */
-        if (($i % 4) === 0) {
-            echo '<div class="row" style="margin-right: 0px; margin-left: 0px; padding: 2px;">';
-        }
         $stockDisplay = $stockUrl !== null
             ? '<a href="' . app_html($stockUrl) . '" target="_blank" rel="noopener noreferrer">' . app_html($stockTitle) . '</a>'
             : '<span>' . app_html($stockTitle) . '</span>';
         echo '
-        <!-- Card -->
-            <div class="col-sm " style="padding: 0px; margin: 2px;">
-                <ul class="list-group">
-                    <li class="list-group-item list-group-item-' . app_html($select_color) . ' justify-content-between align-items-center">
-                        <span class="badge badge-' . app_html($select_color) . '">' . app_html($stockDate) . '</span><br />
-                        <small>' . $stockDisplay . '</small>
+        <!-- Stock Card -->
+            <article class="col-12 col-md-6 col-lg-3 stock-card">
+                <ul class="list-group stock-card-inner">
+                    <li class="list-group-item list-group-item-' . app_html($select_color) . '">
+                        <span class="badge badge-' . app_html($select_color) . ' stock-date">' . app_html($stockDate) . '</span>
+                        <small class="stock-title">' . $stockDisplay . '</small>
                     </li>
                 </ul>
-            </div>
+            </article>
         ';
-
-        /* rowカウント */
-        $row_cnt++;
-
-        /* row終了 判定 */
-        if ($row_cnt === 4) {
-            echo '</div><!-- /row -->';
-            /* rowカウント初期化 */
-            $row_cnt = 0;
-        }
     }
 
-    if ($row_cnt > 0) {
-        echo '</div><!-- /row -->';
-        $row_cnt = 0;
+    if ($result_content_cnt > 0) {
+        echo '</div><!-- /stock-grid -->';
     }
 }
 
 /* 登録直後 or コンテンツ無し時 */
 if ($result_content_cnt === 0) {
-    echo '<div class="text-center" role="status">画面右上のメニューボタンを選択して<br>「RSS追加」から気になるアドレスを追加してみましょう！！</div>';
+    if ($content_location === 'stock') {
+        echo '<div class="empty-state text-center" role="status"><i class="far fa-bookmark fa-2x text-muted" aria-hidden="true"></i><p>Stockした記事はまだありません。</p><a class="btn btn-outline-secondary" href="./?tab=0">RSS一覧へ戻る</a></div>';
+    } else {
+        echo '<div class="empty-state text-center" role="status"><i class="fas fa-rss fa-2x text-muted" aria-hidden="true"></i><p>このタブにはRSSが登録されていません。</p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#registerContent">RSSを追加する</button></div>';
+    }
 }
 ?>
 </main><!-- /igcontainer -->
@@ -299,20 +290,20 @@ if ($result_content_cnt === 0) {
         <div class="modal-content">
             <form id="registerContentForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
-                <h5 class="modal-title" id="registerContentTitle">Adding Input Type Content</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <h5 class="modal-title" id="registerContentTitle">RSSを追加</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
                     <span aria-hidden="true" style="color: #ccc;">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
 
-                <label class="" for="registerContentValue"><small class="text-dark">コンテンツのアドレス入力</small></label>
+                <label for="registerContentValue"><small class="text-dark">RSSのアドレス</small></label>
                 <div class="input-group mb-2 mr-sm-2">
                 <div class="input-group-prepend">
                     <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
                 </div>
-                <input type="text" class="form-control registerContentValue" id="registerContentValue" name="registerContentValue" placeholder="Input Type Content">
-                <input type="hidden" id="content_location" class="content_location" value="<?php echo app_html(is_int($content_location) ? (string) $content_location : '0'); ?>">
+                <input type="url" class="form-control registerContentValue" id="registerContentValue" name="registerContentValue" placeholder="https://example.com/feed.xml" required inputmode="url">
+                <input type="hidden" id="content_location" class="content_location" value="<?php echo app_html((string) $addTargetLocation); ?>">
                 </div>
                 <hr>
                 <div class="form-group">
@@ -331,7 +322,8 @@ if ($result_content_cnt === 0) {
                         <option value="danger">danger</option>
                     </select>
                     </div>
-                    <small id="adddesignHelp" class="form-text text-muted">コンテンツのデザインを指定します</small>
+                    <small id="adddesignHelp" class="form-text text-muted">RSSカードの見出し色を指定します</small>
+                    <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
                 </div>
 
             </div>
@@ -350,22 +342,22 @@ if ($result_content_cnt === 0) {
         <div class="modal-content">
             <form id="changeContentForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
-                <h5 class="modal-title" id="changeContentTitle">Change Input Type Content</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <h5 class="modal-title" id="changeContentTitle">RSSを変更</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
                     <span aria-hidden="true" style="color: #ccc;">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
 
-                <label class="" for="changeContentValue"><small class="text-dark">コンテンツのアドレス入力</small></label>
+                <label for="changeContentValue"><small class="text-dark">RSSのアドレス</small></label>
                 <div class="input-group mb-2 mr-sm-2">
                     <div class="input-group-prepend">
                         <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
                     </div>
                     <input type="hidden" class="changeContentId" id="changeContentId" name="changeContentId">
-                    <input type="text" class="form-control changeContentValue" id="changeContentValue" name="changeContentValue" aria-describedby="changeContentHelp" placeholder="Input Type Content">
+                    <input type="url" class="form-control changeContentValue" id="changeContentValue" name="changeContentValue" aria-describedby="changeContentHelp" placeholder="https://example.com/feed.xml" required inputmode="url">
                 </div>
-                <small id="changeContentHelp" class="form-text text-muted">空白で変更することで削除出来ます</small>
+                <small id="changeContentHelp" class="form-text text-muted">アドレスまたは見出し色を変更できます</small>
                 <hr>
                 <div class="form-group">
                     <label for="changeContentStyle"><small class="text-dark">コンテンツデザイン指定</small></label>
@@ -383,12 +375,13 @@ if ($result_content_cnt === 0) {
                         <option value="danger">danger</option>
                     </select>
                     </div>
-                    <small id="designHelp" class="form-text text-muted">コンテンツのデザインを指定します</small>
+                    <small id="designHelp" class="form-text text-muted">RSSカードの見出し色を指定します</small>
                 </div>
 
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                <button type="button" class="btn btn-outline-danger delete_content">削除する</button>
                 <button type="submit" class="btn btn-primary change_content">変更する</button>
             </div>
             </form>
@@ -403,8 +396,8 @@ if ($result_content_cnt === 0) {
         <form id="settingsForm" method="post" action="./">
 
             <div class="modal-header" style="color: #fff; background-color: #666;">
-                <h5 class="modal-title" id="changeConfTitle">Change Setting Content</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <h5 class="modal-title" id="changeConfTitle">表示設定</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
                     <span aria-hidden="true" style="color: #ccc;">&times;</span>
                 </button>
             </div>
@@ -507,8 +500,8 @@ if ($result_content_cnt === 0) {
         <form id="tabsForm" method="post" action="./">
         <div class="modal-content">
             <div class="modal-header" style="color: #fff; background-color: #333;">
-                <h5 class="modal-title" id="tabContentTitle">Change Type TabName</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <h5 class="modal-title" id="tabContentTitle">タブ名を変更</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
                     <span aria-hidden="true" style="color: #ccc;">&times;</span>
                 </button>
             </div>
@@ -558,11 +551,11 @@ if ($result_content_cnt === 0) {
 
 <!-- 記録用スモールモーダル[Save] -->
 <div class="modal fade save_modal" id="saveContent" tabindex="-1" role="dialog" aria-labelledby="saveContentTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm" role="document" style="width: 240px;">
+    <div class="modal-dialog modal-dialog-centered modal-sm save-modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header" style="color: #fff; background-color: #333;">
-                <h5 class="modal-title" id="saveContentTitle"><i class="fas fa-receipt" aria-hidden="true"></i> How about this?</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <h5 class="modal-title" id="saveContentTitle"><i class="fas fa-bookmark" aria-hidden="true"></i> Stockへ保存</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
                     <span aria-hidden="true" style="color: #ccc;">&times;</span>
                 </button>
             </div>
@@ -571,8 +564,8 @@ if ($result_content_cnt === 0) {
                     <div class="text-center">
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item">
-                                <button type="button" class="btn btn-link text-dark information_modal_dbsave" data-dismiss="modal" aria-label="この記事をStockへ保存">
-                                    <i class="far fa-clone fa-fw fa-2x" aria-hidden="true"></i><br>Stock
+                                <button type="button" class="btn btn-primary information_modal_dbsave" aria-label="この記事をStockへ保存">
+                                    <i class="far fa-bookmark fa-fw" aria-hidden="true"></i> 保存する
                                 </button>
                             </li>
                         </ul>
@@ -587,7 +580,7 @@ if ($result_content_cnt === 0) {
 <p id="page-top">
     <a href="#main-content" aria-label="ページ先頭へ移動">
         <i class="fas fa-arrow-circle-up fa-2x" aria-hidden="true"></i><br>
-        Top Page
+        ページ上部
     </a>
 </p>
 
@@ -599,19 +592,19 @@ if ($result_content_cnt === 0) {
 <!-- Drawer -->
 <nav class="drawer-nav" id="drawerMenu" aria-label="RSS Readerメニュー" tabindex="-1">
     <ul class="drawer-menu">
-        <li style="margin-top: 4px; margin-bottom: 4px;">&nbsp;<i class="fas fa-rss-square text-primary" aria-hidden="true"></i><span class="text-muted"> <strong>iGuguru</strong></span>　</li>
+        <li class="drawer-brand">&nbsp;<i class="fas fa-rss-square text-primary" aria-hidden="true"></i><span class="text-muted"> <strong>iGuguru</strong></span>　</li>
         <!-- Tab -->
-        <li class="text-dark" style="background-color: #cccccc;">&nbsp;<i class="far fa-copy fa-fw" aria-hidden="true"></i> Tab List</li>
+        <li class="text-dark drawer-section-title">&nbsp;<i class="far fa-copy fa-fw" aria-hidden="true"></i> タブ</li>
         <?php for ($tabLocation = 0; $tabLocation <= 3; $tabLocation++): ?>
             <?php $tabLabelKey = 'conf_style_tabname' . ($tabLocation + 1); ?>
-            <li>　<a href="./?tab=<?php echo $tabLocation; ?>" class="text-muted"><i class="far fa-newspaper fa-fw" aria-hidden="true"></i> <?php echo app_html($ui[$tabLabelKey] ?? ''); ?></a><hr style="margin: 4px;"></li>
+            <li>　<a href="./?tab=<?php echo $tabLocation; ?>" class="text-muted"><i class="far fa-newspaper fa-fw" aria-hidden="true"></i> <?php echo app_html($ui[$tabLabelKey] ?? ''); ?></a><hr class="drawer-divider"></li>
         <?php endfor; ?>
-        <li>　<a href="?tab=stock" class="text-muted"><i class="fas fa-clipboard-list fa-fw" aria-hidden="true"></i> - Stock List</a><hr style="margin: 4px;"></li>
+        <li>　<a href="?tab=stock" class="text-muted"><i class="fas fa-clipboard-list fa-fw" aria-hidden="true"></i> Stock一覧</a><hr class="drawer-divider"></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#tabContent"><i class="fas fa-clone fa-fw" aria-hidden="true"></i>タブ表示変更</button></li>
-        <li class="text-dark" style="background-color: #cccccc;">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> RSS Link</li>
+        <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> RSS</li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerContent"><i class="fas fa-clone fa-fw" aria-hidden="true"></i>RSS追加</button></li>
         <!-- 定型リンク -->
-        <li class="text-dark" style="background-color: #cccccc;">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> Nabvar Link</li>
+        <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> Navbarリンク</li>
         <?php
             for ($navIndex = 1; $navIndex <= 4; $navIndex++) {
                 $link = (string) $ui['conf_style_navlink' . $navIndex];
@@ -620,18 +613,18 @@ if ($result_content_cnt === 0) {
                 }
                 $icon = (string) $ui['conf_style_navlink_icon' . $navIndex];
                 $view = (string) $ui['conf_style_navlink_view' . $navIndex];
-                echo '<li>　<a class="text-muted" href="' . app_html($link) . '" target="_blank" rel="noopener noreferrer"><i class="fas fa-' . app_html($icon) . ' fa-fw" aria-hidden="true"></i> - ' . app_html($view) . '</a><hr style="margin: 4px;"></li>';
+                echo '<li>　<a class="text-muted" href="' . app_html($link) . '" target="_blank" rel="noopener noreferrer"><i class="fas fa-' . app_html($icon) . ' fa-fw" aria-hidden="true"></i> - ' . app_html($view) . '</a><hr class="drawer-divider"></li>';
             }
         ?>
         <!-- Control Setting -->
-        <li class="text-dark" style="background-color: #cccccc;">&nbsp;<i class="fas fa-cogs fa-fw" aria-hidden="true"></i> Control Link</li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#changeConf"><i class="fas fa-cogs" aria-hidden="true"></i> - Setting</button><hr style="margin: 4px;"></li>
+        <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-cogs fa-fw" aria-hidden="true"></i> 設定</li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#changeConf"><i class="fas fa-cogs" aria-hidden="true"></i> 表示設定</button><hr class="drawer-divider"></li>
         <li>
-            <form method="post" action="./logout.php" style="display:inline;">
+            <form method="post" action="./logout.php" class="drawer-logout-form">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-                <button type="submit" class="btn btn-link text-muted p-0" style="text-decoration:none;"><i class="fas fa-sign-out-alt text-muted" aria-hidden="true"></i> - Logout</button>
+                <button type="submit" class="btn btn-link text-muted drawer-logout-button"><i class="fas fa-sign-out-alt text-muted" aria-hidden="true"></i> ログアウト</button>
             </form>
-            <hr style="margin: 4px;">
+            <hr class="drawer-divider">
         </li>
     </ul>
 </nav>

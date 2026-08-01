@@ -29,7 +29,7 @@ check("rel=\"noopener noreferrer\"" in index, 'external target=_blank links are 
 # Untrusted Feed data must not be concatenated into HTML strings.
 check("append('<a href=\"'" not in frontend, 'Feed channel title/link are not concatenated into HTML')
 check("var append_dom" not in frontend, 'Feed rows are no longer built as an HTML string')
-check(".text('　' + viewTitle)" in dashboard, 'Feed channel title uses text insertion')
+check('.text(viewTitle)' in dashboard, 'Feed channel title uses text insertion')
 check(".text(viewTitle)" in dashboard, 'Feed item title uses text insertion')
 check(".attr('href', itemLink)" in dashboard, 'validated Feed link is assigned as an attribute')
 check("data-stock-url" in dashboard and "data-stock-title" in dashboard, 'Stock modal receives data through explicit safe data attributes')

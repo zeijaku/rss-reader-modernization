@@ -128,3 +128,9 @@ python3 "$ROOT/tests/test_m2c_accessibility_structure.py"
 python3 "$ROOT/tests/test_m2c_login_layout.py"
 node "$ROOT/tests/test_m2c_accessibility_runtime.js"
 python3 "$ROOT/tests/test_m2c_dashboard_render.py"
+
+echo '== M2-D Responsive / UI checks =='
+python3 "$ROOT/tests/test_m2d_responsive_ui.py"
+python3 "$ROOT/tests/test_m2d_r2_layout_regression.py"
+node "$ROOT/tests/test_m2d_mutation_runtime.js"
+python3 "$ROOT/tests/test_m2d_dashboard_render.py"

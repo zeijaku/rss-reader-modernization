@@ -2,6 +2,32 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## Frontend M2-D / R2 — 2026-08-02
+
+### Feed column and Drawer density correction
+
+- fixed layout tableでStock操作列と記事列が均等幅になる回帰を修正。
+- Feed tableへ `colgroup` を追加し、Stock操作列を44px、記事列を残り幅へ固定。
+- Drawerの通常項目を36pxへ戻し、section見出しとpaddingをコンパクト化。
+- coarse pointer環境では44pxの操作領域を維持。
+- Responsive 1 / 2 / 4列、Keyboard / Focus / ARIA、Feed / Stock API、DB、M1 RSS Engineは変更なし。
+- M2-D R2専用のlayout regression testとFake PDO render確認を追加。
+
+## Frontend M2-D / R1 — 2026-08-01
+
+### Responsive layout and UI feedback
+
+- Feed / StockをMobile 1列、Tablet 2列、Desktop 4列のBootstrap gridへ変更。
+- PHP側の4件単位row生成を外し、長いタイトル・URLを折返す表示へ変更。
+- Feed cardの初期高さ、Navbarの長いタブ名、Modal、Page Top、Drawer、Touch targetを調整。
+- Feed / Stockそれぞれの空画面を分け、RSS追加先をModal内へ表示。
+- RSS削除を「URLを空欄」から確認付きの明示Buttonへ変更し、既存 `content.delete` APIを継続。
+- Feed取得失敗Cardへ再読込Buttonを追加。
+- `alert()`を画面内noticeへ置換し、Stock保存成功とMutation失敗を表示。
+- Modal / Drawerの主要文言と明らかな表記揺れを整理。
+- DB、公開API Response、Authentication / CSRF / SSRF / XSS、M1 RSS Engine、Frontend library Versionは変更なし。
+- Responsive / UI static test、Mutation runtime test、Feed retry runtime、Feed / Stock render testを追加。
+
 ## Frontend M2-C / R2 — 2026-08-01
 
 ### Login layout correction

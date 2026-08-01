@@ -54,7 +54,7 @@ check("renderFeedBodyMessage($card, 'empty', '記事はありません')" in js,
 check("text.match(/[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[\\s\\S]/g)" in js, 'title truncation does not split UTF-16 surrogate pairs')
 check("/^https?:\\/\\//i.test(link)" in js, 'client rendering accepts only http and https Feed links')
 check(".attr('rel', 'noopener noreferrer')" in js, 'external Feed links retain opener protection')
-check(".text(viewTitle)" in js and ".text('　' + viewTitle)" in js, 'Feed values remain inserted as text')
+check(js.count('.text(viewTitle)') >= 2 and '.text(title)' in js, 'Feed values remain inserted as text')
 
 for unsafe in ['.html(', 'innerHTML', 'insertAdjacentHTML', 'document.write(', 'eval(', 'new Function']:
     check(unsafe not in js, f'unsafe DOM/code operation remains absent: {unsafe}')

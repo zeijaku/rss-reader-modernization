@@ -33,7 +33,7 @@ check("for ($tabLocation = 0; $tabLocation <= 3; $tabLocation++)" in index, 'dra
 check("'conf_style_tabname' . ($tabLocation + 1)" in index, 'drawer maps location N to tab name N+1')
 check('href="./?tab=2"' not in index or "for ($tabLocation" in index, 'Legacy hard-coded 0,2,3,3 drawer mapping removed')
 check("'conf_style_tabname' . ($tabParam + 1)" in index, 'navbar title uses the same 0-based location to 1-based label mapping')
-check("value=\"<?php echo app_html(is_int($content_location) ? (string) $content_location : '0'); ?>\"" in index, 'RSS create hidden location uses current validated tab location')
+check('value="<?php echo app_html((string) $addTargetLocation); ?>"' in index and '$addTargetLocation = is_int($tabParam) ? $tabParam : 0;' in index, 'RSS create hidden location uses current validated tab location')
 
 # SB-11-02/03: parser semantics and item bounds.
 check("$feedType = rss_check_string" not in api and 'FeedFetchService::fromRuntimeConfiguration()' in api and '$this->parser->parse_start(' in feed_service, 'API always parses network/cache response through the explicit parser boundary')
@@ -46,8 +46,8 @@ check('$items = [];' in rss2_adapter and '$items = [];' in rss1_adapter and '$it
 check('rendered < 5' in dashboard and 'rendered++' in dashboard, 'browser only renders available items up to five')
 
 # SB-11-04: close partial rows for Feed and Stock branches.
-check(index.count("if ($row_cnt > 0) {") >= 2, 'partial Feed/Stock grid rows are explicitly closed')
-check("$row_cnt = 0;" in index and "$row_cnt = '0';" not in index, 'grid row counter uses integer state')
+check("echo '</div><!-- /feed-grid -->';" in index and "echo '</div><!-- /stock-grid -->';" in index, 'Feed/Stock responsive grid rows are explicitly closed')
+check('$row_cnt' not in index and 'row content-grid feed-grid' in index and 'row content-grid stock-grid' in index, 'legacy grid row counter is replaced by responsive grid wrapping')
 check('rsort($result_stock)' not in index, 'Stock order is not re-sorted incorrectly after ordered DB query')
 
 # SB-11-05/06: tab update is isolated and one request path.

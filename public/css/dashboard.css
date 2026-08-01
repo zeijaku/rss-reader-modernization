@@ -1,35 +1,119 @@
-#page-top {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    font-size: 77%;
+.igcontainer {
+    padding: 8px;
 }
 
-#page-top a {
-    background: rgb(0, 64, 96);
-    text-decoration: none;
-    color: #fff;
-    width: 70px;
-    padding: 5px 0;
+.content-grid {
+    margin-right: -4px;
+    margin-left: -4px;
+}
+
+.feed-card,
+.stock-card {
+    min-width: 0;
+    padding: 4px;
+}
+
+.feed-card-inner,
+.stock-card-inner {
+    height: 100%;
+}
+
+.feed-card-inner {
+    min-height: 13rem;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 4px;
+}
+
+.feed-table {
+    width: 100%;
+    margin-bottom: 0;
+    table-layout: fixed;
+}
+
+.feed-stock-column {
+    width: 44px;
+}
+
+.feed-card-header {
+    min-height: 44px;
+    padding: 0 4px 0 8px;
+    vertical-align: middle;
+}
+
+.content-title {
+    display: inline-block;
+    max-width: calc(100% - 48px);
+    padding: 11px 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.content-title a,
+.content-title span,
+.feed-table td,
+.stock-title,
+.stock-title a,
+.stock-title span {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.feed-table td:first-child {
+    width: 44px;
     text-align: center;
+    vertical-align: middle;
+}
+
+.feed-table td:last-child {
+    padding-left: 4px;
+}
+
+.stock-card-inner .list-group-item {
+    height: 100%;
+    min-height: 92px;
+}
+
+.stock-date,
+.stock-title {
     display: block;
-    border: 1px solid #ffffff;
-    border-radius: 5px;
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
 }
 
-#page-top a:hover {
-    text-decoration: none;
-    background: rgb(23, 162, 184);
+.stock-date {
+    width: fit-content;
+    margin-bottom: 8px;
 }
 
-table tr:hover {
-    opacity: 0.7;
+.empty-state {
+    max-width: 520px;
+    margin: 48px auto;
+    padding: 32px 20px;
+    border: 1px dashed #adb5bd;
+    border-radius: 6px;
+}
+
+.empty-state p {
+    margin: 12px 0 20px;
+}
+
+.app-notice {
+    position: fixed;
+    top: 72px;
+    left: 50%;
+    z-index: 1060;
+    width: 92%;
+    max-width: 560px;
+    margin: 0;
+    transform: translateX(-50%);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.app-notice[hidden] {
+    display: none !important;
 }
 
 .content-state-row td {
-    padding: 12px 8px;
+    padding: 16px 8px;
     text-align: center;
     color: #6c757d;
 }
@@ -38,6 +122,83 @@ table tr:hover {
     color: #721c24;
 }
 
+.feed-retry {
+    display: block;
+    min-height: 38px;
+    margin: 10px auto 0;
+}
+
+.content-edit-trigger,
+.infomation_modal_rewrite {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.content-edit-trigger {
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.infomation_modal_rewrite {
+    padding: 8px !important;
+}
+
+.modal-header {
+    overflow-wrap: anywhere;
+}
+
+.modal-footer {
+    flex-wrap: wrap;
+}
+
+.modal-footer .btn,
+.information_modal_dbsave {
+    min-height: 44px;
+}
+
+.save-modal-dialog {
+    width: calc(100% - 24px);
+    max-width: 320px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.add-target-note {
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+#page-top {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 1040;
+    margin: 0;
+    font-size: 77%;
+}
+
+#page-top a {
+    display: block;
+    width: 64px;
+    min-height: 56px;
+    padding: 5px 0;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    background: rgb(0, 64, 96);
+    border: 1px solid #ffffff;
+    border-radius: 5px;
+}
+
+#page-top a:hover,
+#page-top a:focus {
+    text-decoration: none;
+    background: rgb(23, 162, 184);
+}
+
+table tr:hover {
+    opacity: 0.7;
+}
 
 .skip-link {
     position: fixed;
@@ -45,8 +206,8 @@ table tr:hover {
     left: 0;
     z-index: 2000;
     padding: 8px 12px;
-    background: #ffffff;
     color: #212529;
+    background: #ffffff;
     border: 2px solid #212529;
     transform: translateY(-120%);
 }
@@ -70,20 +231,61 @@ select:focus,
     outline-offset: -3px;
 }
 
-.content-edit-trigger {
-    padding: 0 4px;
-    line-height: 1;
+.navbar-brand {
+    min-width: 0;
+    max-width: calc(100% - 64px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.drawer-menu-action {
+.drawer-brand {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.drawer-section-title {
+    padding: 5px 4px;
+    background-color: #cccccc;
+}
+
+.drawer-menu > li > a,
+.drawer-menu-action,
+.drawer-logout-button {
+    display: flex;
+    align-items: center;
     width: 100%;
+    min-height: 36px;
+    padding: 5px 10px;
     text-align: left;
     text-decoration: none;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+@media (pointer: coarse) {
+    .drawer-menu > li > a,
+    .drawer-menu-action,
+    .drawer-logout-button {
+        min-height: 44px;
+        padding: 8px 12px;
+    }
 }
 
 .drawer-menu-action:hover,
-.drawer-menu-action:focus {
+.drawer-menu-action:focus,
+.drawer-logout-button:hover,
+.drawer-logout-button:focus {
     text-decoration: none;
+}
+
+.drawer-divider {
+    margin: 0 4px;
+}
+
+.drawer-logout-form {
+    display: block;
+    width: 100%;
 }
 
 .navbar-link-setting,
@@ -95,11 +297,58 @@ select:focus,
 
 .navbar-icon-option {
     display: inline-block;
-    padding: 4px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px 8px;
 }
 
 .feed-card[aria-busy="true"] {
     cursor: progress;
+}
+
+@media (max-width: 767.98px) {
+    .igcontainer {
+        padding: 4px;
+    }
+
+    .feed-card,
+    .stock-card {
+        padding: 4px 0;
+    }
+
+    .content-grid {
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    .feed-card-inner {
+        min-height: 11rem;
+    }
+
+    .modal-dialog {
+        margin: 12px auto;
+    }
+
+    .modal-footer .btn {
+        flex: 1 1 100%;
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    .app-notice {
+        top: 60px;
+    }
+
+    #page-top a {
+        width: 56px;
+        min-height: 52px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .feed-card-inner {
+        min-height: 12rem;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

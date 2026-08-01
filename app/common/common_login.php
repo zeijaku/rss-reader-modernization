@@ -57,7 +57,7 @@ function view_login(?string $message = null, string $messageType = 'danger', boo
             <input type="hidden" name="token" value="login">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
             <i class="fas fa-rss text-center fa-fw fa-4x text-info" aria-hidden="true"></i>
-            <h1 class="h2 mb-3 font-weight-normal text-dark">iGugur RSS Reader</h1>
+            <h1 class="h2 mb-3 font-weight-normal text-dark">iGuguru RSS Reader</h1>
             <label for="loginEmail" class="sr-only">Email address</label>
             <input type="email" id="loginEmail" name="email" class="form-control" placeholder="Email address" required autofocus autocomplete="username">
             <label for="loginPassword" class="sr-only">Password</label>
@@ -69,7 +69,7 @@ function view_login(?string $message = null, string $messageType = 'danger', boo
             <?php endif; ?>
         </form>
         <div class="h5 mb-3 font-weight-normal text-dark">
-            <p>iGugur はiGoogleの代替サービスとして開発されました。</p>
+            <p>iGuguru はiGoogleの代替サービスとして開発されました。</p>
             <p>RSSを見ることだけに特化したサービスです</p>
         </div>
         <footer class="text-muted small mt-4" data-app-version><?php echo htmlspecialchars(APP_VERSION_LABEL, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?></footer>

@@ -44,9 +44,9 @@ change_map = (ROOT / 'docs' / 'change-map.md').read_text(encoding='utf-8')
 
 assert 'Secure Baseline SB-15 / R3' in readme
 assert 'RSS Engine M1-G / R1' in readme
-assert 'Frontend M2-C / R2' in readme
-assert "APP_VERSION = 'M2-C R2'" in version
-assert "APP_VERSION_LABEL = 'Frontend M2-C / R2'" in version
+assert 'Frontend M2-D / R2' in readme
+assert "APP_VERSION = 'M2-D R2'" in version
+assert "APP_VERSION_LABEL = 'Frontend M2-D / R2'" in version
 assert 'Secure Baseline SB-15 / R3' in readme
 assert 'PASS — Secure Baseline' in gate
 assert 'DB_TABLE_PREFIX' in readme and '@table_prefix' in readme
