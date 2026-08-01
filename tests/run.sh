@@ -134,3 +134,7 @@ python3 "$ROOT/tests/test_m2d_responsive_ui.py"
 python3 "$ROOT/tests/test_m2d_r2_layout_regression.py"
 node "$ROOT/tests/test_m2d_mutation_runtime.js"
 python3 "$ROOT/tests/test_m2d_dashboard_render.py"
+
+echo '== M2-E Frontend asset cleanup checks =='
+python3 "$ROOT/tests/test_m2e_asset_inventory.py"
+python3 "$ROOT/tests/test_m2e_cleanup_script.py"

@@ -76,8 +76,29 @@ try:
     s,_,favicon=req(p,'GET','/favicon.png')
     check(s==200 and len(favicon)>0,'favicon asset is served without a 404 redirect')
 
-    s,_,_=req(p,'GET','/css/bootstrap.min.css')
-    check(s==200,'Bootstrap stylesheet is served')
+    retained_http_assets = [
+        '/css/bootstrap.min.css',
+        '/css/bootstrap-yeti.min.css',
+        '/css/bootstrap-minty.min.css',
+        '/css/bootstrap-flatly.min.css',
+        '/css/bootstrap-journal.min.css',
+        '/css/bootstrap-sketchy.min.css',
+        '/css/bootstrap-solar.min.css',
+        '/css/bootstrap-slate.min.css',
+        '/css/all.css',
+        '/css/drawer.min.css',
+        '/js/jquery-3.3.1.min.js',
+        '/js/popper.min.js',
+        '/js/bootstrap.min.js',
+        '/js/iscroll.js',
+        '/js/drawer.min.js',
+        '/webfonts/fa-brands-400.woff2',
+        '/webfonts/fa-regular-400.woff2',
+        '/webfonts/fa-solid-900.woff2',
+    ]
+    for asset_path in retained_http_assets:
+        s,_,asset_body=req(p,'GET',asset_path)
+        check(s==200 and len(asset_body)>0,'retained asset is served: '+asset_path)
     s,_,dashboard_css=req(p,'GET','/css/dashboard.css')
     check(s==200 and '#page-top' in dashboard_css,'dashboard stylesheet is served')
     s,_,dashboard_js=req(p,'GET','/js/dashboard.js')

@@ -2,6 +2,29 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## Frontend M2-E / R2 — 2026-08-02
+
+### Windows PowerShell cleanup helper correction
+
+- `tools/apply_m2e_cleanup.ps1` がWindows PowerShell 5.1で文字化けし、Parser Errorになる問題を修正。
+- UTF-8 BOMなしの日本語messageを廃止し、Script本体をASCIIのみ・CRLFで保存。
+- 削除対象、`-WhatIf`、Git working tree確認、`public/index.php`確認、安全境界はR1から変更なし。
+- Parser Errorは削除処理開始前に発生するため、R1実行時にAssetは削除されない。
+- cleanup helperの文字コード回帰testと、配置文書内のPowerShell path表記を修正。
+
+## Frontend M2-E / R1 — 2026-08-02
+
+### Unused Frontend asset cleanup
+
+- PHP / HTML、Theme resolver、CSS `url()` から実際に参照されるAssetを一覧化。
+- Bootstrapの非圧縮版、bundle、grid / reboot単独版、未使用Source Mapを削除。
+- Font Awesomeの未使用JavaScript版、個別CSS、SCSS / LESS、metadata、SVG spriteを削除。
+- Drawerの非圧縮版を削除し、実行時に使用する圧縮版を維持。
+- Font AwesomeのWebFontは `all.css` の参照互換を優先し、全形式を維持。
+- 使用中vendor fileのLicense header、8テーマ、Frontend library Versionを維持。
+- 既存Git作業フォルダ向けに、安全確認付きPowerShell cleanup helperと完全削除一覧を追加。
+- DB、公開API、Authentication / CSRF / SSRF / XSS、M1 RSS Engine、M2-Dの表示と操作は変更なし。
+
 ## Frontend M2-D / R2 — 2026-08-02
 
 ### Feed column and Drawer density correction
