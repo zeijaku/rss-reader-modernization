@@ -26,6 +26,10 @@ echo "Session idle timeout: " . SESSION_IDLE_TIMEOUT . " seconds\n";
 echo "Session absolute timeout: " . SESSION_ABSOLUTE_TIMEOUT . " seconds\n";
 echo "Registration enabled: " . (REGISTRATION_ENABLED ? 'yes' : 'no') . "\n";
 echo "Password minimum: " . AUTH_PASSWORD_MIN_LENGTH . " characters\n";
+echo "Feed cache enabled: " . ($status['feed_cache_enabled'] ? 'yes' : 'no') . "\n";
+echo "Feed cache TTL: " . $status['feed_cache_ttl_seconds'] . " seconds\n";
+echo "Feed cache path: " . $status['feed_cache_dir'] . "\n";
+echo "Feed cache writable: " . (is_writable((string) $status['feed_cache_dir']) ? 'yes' : 'no') . "\n";
 
 $throttleDirectory = login_throttle_prepare_directory();
 echo "Login throttle storage: " . $throttleDirectory . "\n";

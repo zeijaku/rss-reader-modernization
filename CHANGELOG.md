@@ -2,6 +2,21 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## RSS Engine M1-E / R1 — 2026-08-01
+
+### Server-side Feed cache and duplicate Fetch suppression
+
+- `FeedFetchService` を追加し、owner-scoped `FeedSource` 後の安全Fetch・Parse・Cacheを一つのorchestration boundaryへ集約。
+- 正常なHTTP responseかつRSS 2.0 / RSS 1.0 / AtomとしてParse成功したFeed本文だけを `var/cache/feed/` へ保存。
+- Cache key / Lock keyはconfigured Feed URLのSHA-256とし、raw URLやquery tokenをファイル名へ露出しない。
+- Cache本文はversioned JSON、strict Base64、SHA-256 integrityで保持し、PHP serialize/unserializeを不使用。
+- TTL初期値60秒、Cache無効化、URL単位Lock timeoutをprivate configurationとして追加。
+- `flock()`によるdouble-checked lockingで、同一URLの同時Requestを1回のupstream Fetchへ抑制。
+- Cache破損、書込み不能、Lock timeoutではApplicationを停止せず、SB-09 hardened transportへfail-open。
+- Cache hitでもParser / Adapter / Item identityを毎回実行し、公開API、Frontend、DB、Stockのcontractを維持。
+- stale-if-error、ETag / Last-Modified / HTTP 304、Fetch state / Retryは後続工程へ分離。
+- Cache lifecycle / corruption / permission / symlink / concurrency / architecture / security regression testを追加。
+
 ## RSS Engine M1-D / R1 — 2026-08-01
 
 ### Deterministic Feed Item identity

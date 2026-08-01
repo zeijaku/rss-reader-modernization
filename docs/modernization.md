@@ -214,12 +214,6 @@ SB-15ではproduct behaviorを変更しません。Visible version markerとdocu
 
 詳細: [`m1-c-implementation.md`](m1-c-implementation.md)
 
-## Result
-
-Secure Baseline終了時点で、Legacy版の主要機能を維持しつつ、次のEngine/Frontend改修を安全に積み上げるための境界・DB・test・docsが揃いました。
-
-
-
 ## M1-D — Deterministic Item identity
 
 - RSS 2.0 `guid`、RSS 1.0 `rdf:about`、Atom `id` を各Adapterで内部 `sourceItemId` へ抽出。
@@ -229,3 +223,22 @@ Secure Baseline終了時点で、Legacy版の主要機能を維持しつつ、�
 - 生のsource ID、article URL、title、contentは公開identity値へ埋め込まない。
 - `parse_start()` とAPIの5項目array contractは維持し、identityはEngine内部だけに保持。
 - DB / Stock / Frontend / duplicate item removal / cache / ETag / RetryはM1-Dのscope外。
+
+詳細: [`m1-d-implementation.md`](m1-d-implementation.md)
+
+## M1-E — Server-side cache + duplicate Fetch suppression
+
+- `FeedFetchService` が `FeedSource → Cache → Lock → FeedFetcher → FeedParser` の順序を管理。
+- Cache keyとLock keyは検証済みconfigured Feed URLのSHA-256。`content_id` / owner ID / raw URLをファイル名へ含めない。
+- `var/cache/feed/` に正常Parse済みFeed本文だけをversioned JSON + strict Base64 + SHA-256で保存。
+- Cache hitでもParser / Adapter / Item identityを毎回通し、解析結果そのものは永続化しない。
+- TTL初期値60秒。Cache無効化とLock timeoutを環境変数 / `config/local.php` で設定可能。
+- 同一URLの同時RequestはURL単位 `flock()` とdouble-checkで1回のupstream Fetchへ抑制。異なるURLは別Lock。
+- Cache破損、directory作成失敗、Lock timeoutはcontrolled miss/bypassとしてSB-09 hardened Fetchへ戻す。
+- stale-if-error、ETag / Last-Modified / HTTP 304、Fetch status / Retry、DB / Frontend変更はM1-Eのscope外。
+
+詳細: [`m1-e-implementation.md`](m1-e-implementation.md)
+
+## Result
+
+Secure Baseline終了時点で、Legacy版の主要機能を維持しつつ、次のEngine/Frontend改修を安全に積み上げるための境界・DB・test・docsが揃いました。

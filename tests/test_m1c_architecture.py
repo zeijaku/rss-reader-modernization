@@ -14,6 +14,7 @@ atom = (FEED / 'adapters' / 'atom_adapter.php').read_text(encoding='utf-8')
 bootstrap = (ROOT / 'app' / 'bootstrap.php').read_text(encoding='utf-8')
 api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8')
 fetcher = (FEED / 'feed_fetcher.php').read_text(encoding='utf-8')
+service = (FEED / 'feed_fetch_service.php').read_text(encoding='utf-8')
 source = (FEED / 'feed_source.php').read_text(encoding='utf-8')
 index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
 schema = (ROOT / 'database' / 'schema.sql').read_text(encoding='utf-8')
@@ -69,7 +70,7 @@ check('ETag' not in parser_stack and 'Last-Modified' not in parser_stack, 'M1-C 
 
 m = re.search(r'function api_feed_fetch\([^)]*\): array\s*\{(?P<body>.*?)(?=\n\})', api, re.S)
 body = m.group('body') if m else ''
-check('new FeedParser()' in body and ('->parse_start($feedBody)' in body or '->parse_start($feedBody, $source->url)' in body), 'API keeps the FeedParser compatibility boundary')
+check('FeedFetchService::fromRuntimeConfiguration()' in body and '$this->parser->parse_start($body, $source->url)' in service and '$this->parser->parse_start($entry->body, $source->url)' in service, 'API keeps the FeedParser compatibility boundary through cache-aware service')
 check('api_safe_feed_payload($resultFeed, $effectiveUrl)' in body, 'API XSS-safe payload boundary remains unchanged')
 check("$input['url']" not in body and '$input["url"]' not in body, 'client cannot supply an outbound Feed URL')
 check('Math.min(5, items.length)' in index, 'frontend display cap remains unchanged')

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/feed_source.php';
+require_once __DIR__ . '/feed_transport_interface.php';
 
 /**
  * Feed transport boundary.
@@ -13,7 +14,7 @@ require_once __DIR__ . '/feed_source.php';
  * verification, timeout limits, and response-size limits implemented by
  * app_safe_http_fetch().
  */
-final class FeedFetcher
+final class FeedFetcher implements FeedTransportInterface
 {
     /**
      * @return array<string,mixed>

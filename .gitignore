@@ -13,6 +13,12 @@ config/.env.*
 !/var/.gitkeep
 !/var/log/
 !/var/log/.gitkeep
+!/var/cache/
+!/var/cache/.gitkeep
+!/var/cache/feed/
+!/var/cache/feed/.gitkeep
+/var/cache/feed/*
+!/var/cache/feed/.gitkeep
 !/var/session/
 !/var/session/.gitkeep
 /var/session/*

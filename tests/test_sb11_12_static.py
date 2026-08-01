@@ -5,6 +5,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
 api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8')
+feed_service = (ROOT / 'app' / 'feed' / 'feed_fetch_service.php').read_text(encoding='utf-8')
 common_func = (ROOT / 'app' / 'common' / 'common_func.php').read_text(encoding='utf-8')
 feed_parser = (ROOT / 'app' / 'feed' / 'feed_parser.php').read_text(encoding='utf-8')
 feed_helper = (ROOT / 'app' / 'feed' / 'feed_xml_helper.php').read_text(encoding='utf-8')
@@ -33,7 +34,7 @@ check("'conf_style_tabname' . ($tabParam + 1)" in index, 'navbar title uses the 
 check("value=\"<?php echo app_html(is_int($content_location) ? (string) $content_location : '0'); ?>\"" in index, 'RSS create hidden location uses current validated tab location')
 
 # SB-11-02/03: parser semantics and item bounds.
-check("$feedType = rss_check_string" not in api and "new FeedParser()" in api, 'API always parses fetched response through the explicit parser boundary')
+check("$feedType = rss_check_string" not in api and 'FeedFetchService::fromRuntimeConfiguration()' in api and '$this->parser->parse_start(' in feed_service, 'API always parses network/cache response through the explicit parser boundary')
 check("'invalid_feed'" in api and 'supported RSS or Atom feed' in api, 'unsupported/malformed upstream response returns structured invalid_feed error')
 check("'title' => 'Text'" not in api and "'feed_type' => 'Text'" not in api, 'Legacy text-success fallback removed')
 check("getName()) === 'feed'" in atom_adapter and "getName()) !== 'rss'" in rss2_adapter and "getName()) === 'rdf'" in rss1_adapter, 'dedicated adapters explicitly recognize Atom, RSS2, and RSS1 roots')

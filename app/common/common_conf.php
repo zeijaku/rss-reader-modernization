@@ -126,6 +126,19 @@ if (!defined('APP_HTTP_USER_AGENT')) {
     define('APP_HTTP_USER_AGENT', app_env('APP_HTTP_USER_AGENT', 'iGuguru-RSS/1.0 (+Secure-Baseline)'));
 }
 
+if (!defined('APP_FEED_CACHE_ENABLED')) {
+    define('APP_FEED_CACHE_ENABLED', app_env_bool('APP_FEED_CACHE_ENABLED', true));
+}
+if (!defined('APP_FEED_CACHE_TTL_SECONDS')) {
+    define('APP_FEED_CACHE_TTL_SECONDS', max(1, min(86400, (int) app_env('APP_FEED_CACHE_TTL_SECONDS', '60'))));
+}
+if (!defined('APP_FEED_CACHE_LOCK_TIMEOUT_MS')) {
+    define('APP_FEED_CACHE_LOCK_TIMEOUT_MS', max(0, min(30000, (int) app_env('APP_FEED_CACHE_LOCK_TIMEOUT_MS', '9000'))));
+}
+if (!defined('APP_FEED_CACHE_DIR')) {
+    define('APP_FEED_CACHE_DIR', dirname(__DIR__, 2) . '/var/cache/feed');
+}
+
 if (!defined('DB_DRIVER')) {
     define('DB_DRIVER', app_env('DB_DRIVER', 'mysql'));
 }
@@ -223,6 +236,16 @@ function app_runtime_status(): array
     if (SESSION_ABSOLUTE_TIMEOUT < SESSION_IDLE_TIMEOUT) {
         $issues[] = 'SESSION_ABSOLUTE_TIMEOUT must be greater than or equal to SESSION_IDLE_TIMEOUT.';
     }
+    if (APP_FEED_CACHE_ENABLED) {
+        if (!is_dir((string) APP_FEED_CACHE_DIR) || !is_writable((string) APP_FEED_CACHE_DIR)) {
+            $issues[] = 'Feed cache directory is missing or not writable: ' . (string) APP_FEED_CACHE_DIR;
+        }
+        $publicRoot = realpath(dirname(__DIR__, 2) . '/public');
+        $cacheRoot = realpath((string) APP_FEED_CACHE_DIR);
+        if (is_string($publicRoot) && is_string($cacheRoot) && str_starts_with($cacheRoot . DIRECTORY_SEPARATOR, $publicRoot . DIRECTORY_SEPARATOR)) {
+            $issues[] = 'Feed cache directory must remain outside public/.';
+        }
+    }
 
     if ($driver === 'mysql') {
         foreach ([
@@ -244,5 +267,8 @@ function app_runtime_status(): array
         'pdo_drivers' => $pdoDrivers,
         'issues' => $issues,
         'local_config_present' => is_file(dirname(__DIR__, 2) . '/config/local.php'),
+        'feed_cache_enabled' => (bool) APP_FEED_CACHE_ENABLED,
+        'feed_cache_ttl_seconds' => (int) APP_FEED_CACHE_TTL_SECONDS,
+        'feed_cache_dir' => (string) APP_FEED_CACHE_DIR,
     ];
 }

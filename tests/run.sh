@@ -61,7 +61,7 @@ python3 "$ROOT/tests/test_sb14_fixture_shapes.py"
 python3 "$ROOT/tests/test_sb14_surface_static.py"
 
 echo '== Runtime artifact cleanup before repository scan =='
-for d in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/security/login-throttle" "$ROOT/var/db-migration"; do
+for d in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/security/login-throttle" "$ROOT/var/db-migration" "$ROOT/var/cache/feed"; do
   if [ -d "$d" ]; then
     find "$d" -type f ! -name '.gitkeep' -delete
   fi
@@ -98,3 +98,7 @@ php "$ROOT/tests/test_m1d_item_identity.php"
 python3 "$ROOT/tests/test_m1d_architecture.py"
 python3 "$ROOT/tests/test_m1d_fixture_shapes.py"
 
+echo '== M1-E Server-side Cache / Duplicate Fetch checks =='
+php "$ROOT/tests/test_m1e_feed_cache.php"
+python3 "$ROOT/tests/test_m1e_architecture.py"
+python3 "$ROOT/tests/test_m1e_concurrency.py"

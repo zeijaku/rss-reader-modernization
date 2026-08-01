@@ -282,6 +282,8 @@ function api_feed_fetch(int $userId, array $input): array
         return api_validation_error('content_id must be a positive integer.');
     }
 
+    // Ownership remains ahead of cache lookup. A shared URL cache must never
+    // turn into a way to query another user's configured content record.
     $content = find_owned_active_content($userId, $contentId);
     if ($content === null) {
         return api_error('not_found', 'Content was not found.', 404);
@@ -303,28 +305,21 @@ function api_feed_fetch(int $userId, array $input): array
         return api_error('internal_error', 'Feed source could not be resolved.', 500);
     }
 
-    $fetcher = new FeedFetcher();
-    $fetch = $fetcher->fetch($source);
-    if (($fetch['ok'] ?? false) !== true) {
-        $code = (string) ($fetch['error_code'] ?? 'upstream_error');
-        $blocked = in_array($code, ['invalid_url', 'port_not_allowed', 'dns_failed', 'non_public_address', 'invalid_redirect'], true);
-        return api_error(
-            $blocked ? 'upstream_blocked' : 'upstream_error',
-            $blocked ? 'Feed URL was blocked by the outbound security policy.' : 'Feed could not be fetched.',
-            $blocked ? 422 : 502
-        );
-    }
+    $service = FeedFetchService::fromRuntimeConfiguration();
+    $loaded = $service->load($source);
+    if (($loaded['ok'] ?? false) !== true) {
+        if (($loaded['error_type'] ?? '') === 'fetch') {
+            $fetch = is_array($loaded['fetch'] ?? null) ? $loaded['fetch'] : [];
+            $code = (string) ($fetch['error_code'] ?? 'upstream_error');
+            $blocked = in_array($code, ['invalid_url', 'port_not_allowed', 'dns_failed', 'non_public_address', 'invalid_redirect'], true);
+            return api_error(
+                $blocked ? 'upstream_blocked' : 'upstream_error',
+                $blocked ? 'Feed URL was blocked by the outbound security policy.' : 'Feed could not be fetched.',
+                $blocked ? 422 : 502
+            );
+        }
 
-    $feedBody = (string) ($fetch['body'] ?? '');
-    $effectiveUrl = (string) ($fetch['url'] ?? $source->url);
-
-    // SB-11: every successful upstream response must parse as a supported
-    // RSS/Atom document.  The Legacy "anything else is successful Text" path
-    // masked HTML/error pages and originated from an assignment bug.
-    $parser = new FeedParser();
-    $resultFeed = $parser->parse_start($feedBody, $source->url);
-    if ($resultFeed === []) {
-        $parseReason = preg_replace('/[\r\n]+/', ' ', (string) ($parser->last_error ?? 'unknown parse error'));
+        $parseReason = preg_replace('/[\r\n]+/', ' ', (string) ($loaded['parse_error'] ?? 'unknown parse error'));
         error_log(sprintf(
             'Feed parse rejected user_id=%d content_id=%d reason=%s',
             $userId,
@@ -333,6 +328,9 @@ function api_feed_fetch(int $userId, array $input): array
         ));
         return api_error('invalid_feed', 'Upstream response is not a supported RSS or Atom feed.', 502);
     }
+
+    $resultFeed = is_array($loaded['result_feed'] ?? null) ? $loaded['result_feed'] : [];
+    $effectiveUrl = is_string($loaded['effective_url'] ?? null) ? $loaded['effective_url'] : $source->url;
 
     return api_success([
         'content_id' => $contentId,

@@ -13,7 +13,7 @@ def check(cond: bool, msg: str) -> None:
 for rel in ['config/local.php', '.env', 'rss.sql', 'rss.zip']:
     check(not (ROOT / rel).exists(), f'private/Legacy artifact is absent: {rel}')
 
-for runtime_dir in ['var/session', 'var/log', 'var/security/login-throttle', 'var/db-migration']:
+for runtime_dir in ['var/session', 'var/log', 'var/security/login-throttle', 'var/db-migration', 'var/cache/feed']:
     path = ROOT / runtime_dir
     if not path.exists():
         continue

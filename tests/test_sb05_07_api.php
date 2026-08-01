@@ -49,6 +49,33 @@ class FeedParser {
         ];
     }
 }
+class FeedFetchService {
+    public static function fromRuntimeConfiguration(): self { return new self(); }
+    public function load(FeedSource $source): array {
+        $fetch = (new FeedFetcher())->fetch($source);
+        if (($fetch['ok'] ?? false) !== true) {
+            return ['ok' => false, 'cache_status' => 'disabled', 'error_type' => 'fetch', 'fetch' => $fetch];
+        }
+        $parser = new FeedParser();
+        $feed = $parser->parse_start((string) ($fetch['body'] ?? ''), $source->url);
+        if ($feed === []) {
+            return [
+                'ok' => false,
+                'cache_status' => 'disabled',
+                'error_type' => 'parse',
+                'parse_error' => (string) ($parser->last_error ?? 'unknown'),
+                'fetch' => $fetch,
+            ];
+        }
+        return [
+            'ok' => true,
+            'cache_status' => 'disabled',
+            'result_feed' => $feed,
+            'effective_url' => (string) ($fetch['url'] ?? $source->url),
+            'fetch' => $fetch,
+        ];
+    }
+}
 require $root . '/app/api.php';
 
 final class ApiFakeStatement extends PDOStatement

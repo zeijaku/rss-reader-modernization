@@ -26,6 +26,11 @@ return [
     'APP_HTTP_MAX_BYTES' => '2097152',
     'APP_HTTP_USER_AGENT' => 'iGuguru-RSS/1.0 (+Secure-Baseline)',
 
+    // M1-E server-side Feed cache. Runtime files stay under var/cache/feed.
+    'APP_FEED_CACHE_ENABLED' => true,
+    'APP_FEED_CACHE_TTL_SECONDS' => '60',
+    'APP_FEED_CACHE_LOCK_TIMEOUT_MS' => '9000',
+
     'DB_DRIVER' => 'mysql',
     'DB_HOST' => 'replace-with-your-db-host',
     'DB_PORT' => '3306',

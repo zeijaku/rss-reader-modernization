@@ -12,7 +12,7 @@ Web公開領域は `public/` のみとします。
 public/   Web公開
 app/      private application code
 config/   private configuration
-var/      session/log/throttle/migration runtime state
+var/      session/log/throttle/cache/migration runtime state
 database/ sanitized schema/audit/migration/fake fixtures
 ```
 
@@ -168,6 +168,22 @@ DNS検証後はvalidated addressへconnectionをpinし、host nameはTLS SNI / c
 - response size limit
 - 2xx + non-empty responseのみ成功
 
+## Server-side Feed cache
+
+M1-EのCacheは `var/cache/feed/` に置き、`public/` 外かつGit管理外とします。Cache fileにはFeed本文、configured URL、redirect後のeffective URLが含まれるため、URL queryにtoken等がある場合もprivate runtime dataとして扱います。
+
+- Cache / Lock filenameはconfigured URLのSHA-256で、raw URLを露出しない
+- JSON + strict Base64 + body SHA-256
+- PHP `serialize()` / `unserialize()`不使用
+- successful safe Fetch + supported Feed Parse後だけ保存
+- best-effort directory `0700`、file `0600`
+- symlink targetを拒否
+- Cache hitでも`FeedParser` / Item identity / XSS-safe API boundaryを通す
+- ownership確認はCache lookupより前
+- runtime Cache / Lock fileをrepository scanで除外
+
+Cacheやfilesystemの失敗はSecurity boundaryを迂回せず、従来のSB-09 hardened Fetchへfallbackします。Cache自体を信頼して外部URLへ追加通信することはありません。
+
 ## XML
 
 SimpleXML parsingでは `LIBXML_NONET` を使用し、XML parser自身がsecondary network fetch pathにならないようにします。
@@ -218,6 +234,7 @@ Foreign Keyを入れないのはSecurity omissionではなく、Legacy orphan/us
 - sessions
 - throttle state
 - migration snapshots
+- runtime Feed cache / lock files
 - obvious private key/cloud key patterns
 
 Version管理するSQLはreview済みschema/audit/migration/fake fixtureだけです。
@@ -232,7 +249,7 @@ Version管理するSQLはreview済みschema/audit/migration/fake fixtureだけ�
 - `config/local.php` をprivateに保持。
 - DB accountへ必要最小限の権限を付与。
 - `REGISTRATION_ENABLED` を運用方針に合わせる。
-- Session/throttle directoriesのwrite permissionを確認。
+- Session/throttle/cache directoriesのwrite permissionを確認。
 - PHP / MySQL / dependenciesのsecurity updateを継続する。
 - Backup/restore手順を別途保持する。
 
@@ -242,6 +259,7 @@ Version管理するSQLはreview済みschema/audit/migration/fake fixtureだけ�
 - Application layerだけではreverse proxy/CDN/hosting network policyを保証できない。
 - Foreign Key未導入。
 - Legacy frontend dependenciesは後段で刷新予定。
-- Feed cache / conditional HTTP requestは未実装。
+- Feed cacheはsingle/shared filesystem前提。複数Web nodeでは共有storageまたは別cache backendが必要。
+- ETag / Last-Modified / HTTP 304、stale-if-errorは未実装。
 
 SecurityはSB-15で完了ではなく、今後のEngine/Frontend変更でも回帰testを維持する前提です。
