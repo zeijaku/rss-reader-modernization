@@ -219,7 +219,9 @@ check(ajaxCalls.length === 8, 'loading dashboard twice does not duplicate Feed r
 check(ajaxCalls.every((call, index) => call.options.data.action === 'feed.fetch' && call.options.data.content_id === String(index + 1)), 'Feed requests keep action and content_id mapping');
 check(ajaxCalls.every((call) => call.options.data.csrf_token === 'csrf-m2b-token'), 'all Feed requests include the CSRF token');
 check(cards.every((card) => card.attrs['data-feed-state'] === 'loading'), 'all cards enter loading state before response');
+check(cards.every((card) => card.attrs['aria-busy'] === 'true'), 'loading Feed cards expose aria-busy');
 check(cards.every((card) => aggregateText(card).includes('フィードを読み込んでいます')), 'loading state is visible in each card');
+check(cards.every((card) => card.children[1].children[0].children[0].attrs.role === 'status'), 'loading rows use status semantics');
 check(cards.every((card) => card.dataValues['feed-request-pending'] === true), 'Feed requests are marked pending while active');
 
 const longEmojiTitle = '😀'.repeat(65);
@@ -243,11 +245,15 @@ ajaxCalls[0].deferred.resolve({
 const firstTitle = cards[0].children[0];
 const firstBody = cards[0].children[1];
 check(cards[0].attrs['data-feed-state'] === 'ready', 'valid Feed enters ready state');
+check(cards[0].attrs['aria-busy'] === 'false', 'valid Feed clears aria-busy');
 check(firstTitle.children.length === 1 && firstTitle.children[0].tag === 'a', 'valid channel link renders as an anchor');
 check(firstTitle.children[0].attrs.href === 'https://example.com/feed', 'channel anchor keeps the validated URL');
 check(aggregateText(firstTitle).includes('<b>安全なタイトル</b>'), 'HTML-looking channel title remains literal text');
 check(firstBody.children.length === 5, 'only five valid items are rendered');
 check(aggregateText(firstBody.children[0]).includes('<script>alert(1)</script>'), 'HTML-looking item title remains literal text');
+const firstStockButton = firstBody.children[0].children[0].children[0];
+check(firstStockButton.tag === 'button', 'valid item Stock action is a real button');
+check(String(firstStockButton.attrs['aria-label'] || '').includes('<script>alert(1)</script>'), 'Stock button accessible name includes the article title as text');
 check(!aggregateText(firstBody.children[0]).includes('sixth must not render'), 'sixth item is not rendered');
 
 const unsafeRow = firstBody.children[1];
@@ -266,6 +272,7 @@ ajaxCalls[1].deferred.resolve({
     data: {result_feed: {channel: {title: 'Empty Feed', link: 'https://example.com/empty'}, item: []}}
 });
 check(cards[1].attrs['data-feed-state'] === 'empty', 'zero-item Feed enters empty state');
+check(cards[1].attrs['aria-busy'] === 'false', 'empty Feed clears aria-busy');
 check(aggregateText(cards[1]).includes('記事はありません'), 'zero-item Feed shows an explicit empty message');
 check(cards[1].children[0].children[0].tag === 'a', 'empty Feed keeps its channel link');
 
@@ -275,6 +282,8 @@ check(aggregateText(cards[2]).includes('フィードの応答形式を確認出�
 
 ajaxCalls[3].deferred.reject({status: 0}, 'timeout');
 check(cards[3].attrs['data-feed-state'] === 'error', 'timeout enters error state');
+check(cards[3].attrs['aria-busy'] === 'false', 'Feed error clears aria-busy');
+check(cards[3].children[1].children[0].children[0].attrs.role === 'alert', 'Feed error row uses alert semantics');
 check(aggregateText(cards[3]).includes('コンテンツの取得がタイムアウトしました'), 'timeout message is specific');
 
 ajaxCalls[4].deferred.reject({status: 404}, 'error');

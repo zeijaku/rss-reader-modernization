@@ -65,7 +65,8 @@ $ui = $currentUserId !== null ? user_ui_config($currentUserId) : app_safe_ui_con
 $tabParam = app_tab_from_query($_GET['tab'] ?? null);
 ?>
 
-<html>
+<!doctype html>
+<html lang="ja">
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -89,6 +90,7 @@ $tabParam = app_tab_from_query($_GET['tab'] ?? null);
 
 </head>
 <body class="drawer drawer--right">
+<a class="skip-link" href="#main-content">本文へ移動</a>
 
 <?php
 /* ログインしていれば login画面 表示 */
@@ -132,11 +134,12 @@ if (is_int($tabParam)) {
 ?>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-<?php echo app_html($ui['conf_style_nav']); ?> bg-<?php echo app_html($ui['conf_style_nav']); ?>">
-  <a class="navbar-brand" href="./"><i class="fas fa-rss-square"></i> iGuguru<?php echo app_html($tab_name); ?></a>
+<header>
+<nav class="navbar navbar-expand-lg navbar-<?php echo app_html($ui['conf_style_nav']); ?> bg-<?php echo app_html($ui['conf_style_nav']); ?>" aria-label="メインナビゲーション">
+  <a class="navbar-brand" href="./"><i class="fas fa-rss-square" aria-hidden="true"></i> iGuguru<?php echo app_html($tab_name); ?></a>
 
-  <button class="navbar-toggler drawer-toggle" type="button" data-toggle="" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
+  <button class="navbar-toggler drawer-toggle" type="button" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
+    <span class="navbar-toggler-icon" aria-hidden="true"></span>
   </button>
 
   <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -155,17 +158,18 @@ if (is_int($tabParam)) {
             $icon = (string) $ui['conf_style_navlink_icon' . $navIndex];
             $view = (string) $ui['conf_style_navlink_view' . $navIndex];
             echo '<li class="nav-item active">';
-            echo '<a class="nav-link" href="' . app_html($link) . '" target="_blank" rel="noopener noreferrer"><i class="fas fa-' . app_html($icon) . ' fa-fw"></i>' . app_html($view) . '</a>';
+            echo '<a class="nav-link" href="' . app_html($link) . '" target="_blank" rel="noopener noreferrer"><i class="fas fa-' . app_html($icon) . ' fa-fw" aria-hidden="true"></i>' . app_html($view) . '</a>';
             echo '</li>';
         }
     ?>
     </ul>
-    <button class="btn btn-outline-secondary my-2 my-sm-0 drawer-toggle"><i class="fas fa-sign-out-alt text-secondary"></i></button>
+    <button class="btn btn-outline-secondary my-2 my-sm-0 drawer-toggle" type="button" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く"><i class="fas fa-bars text-secondary" aria-hidden="true"></i></button>
   </div>
 </nav><!--  /Navbar -->
+</header>
 
-
-<div class="igcontainer" style="">
+<main id="main-content" class="igcontainer" tabindex="-1">
+<h1 class="sr-only">iGuguru RSS Reader</h1>
 <?php
 
 /* rowポイントカウント初期化 */
@@ -197,17 +201,17 @@ if (is_int($content_location)) {
         }
         echo '
         <!-- Card -->
-            <div class="col-sm " data-feed-content-id="' . $contentId . '" data-feed-state="loading" style="padding: 0px; margin: 2px;">
+            <section class="col-sm feed-card" data-feed-content-id="' . $contentId . '" data-feed-state="loading" role="region" aria-labelledby="feed-title-' . $contentId . '" aria-busy="true" style="padding: 0px; margin: 2px;">
                 <input type="hidden" class="content-value" value="' . app_html($contentValue) . '">
                 <table class="table table-hover">
-                    <thead class="">
-                        <tr class=""><td colspan="2" class="bg-' . app_html($contentStyle) . '" style="padding: 4px;"><small><span class="content-title">　読み込み中...</span></small>　<div class="float-right" data-toggle="modal" data-target="#changeContent"><i class="fas fa-edit text-white content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" style="margin-top: 2px;"></i></div></td></tr>
+                    <thead>
+                        <tr><th colspan="2" scope="col" class="bg-' . app_html($contentStyle) . '" style="padding: 4px;"><small><span class="content-title" id="feed-title-' . $contentId . '">　読み込み中...</span></small><button type="button" class="btn btn-link float-right content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" data-toggle="modal" data-target="#changeContent" aria-label="このRSSを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button></th></tr>
                     </thead>
-                    <tbody class="content-body">
-                        <tr class="content-state-row feed-state-loading"><td colspan="2">フィードを読み込んでいます</td></tr>
+                    <tbody class="content-body" aria-live="polite" aria-relevant="all">
+                        <tr class="content-state-row feed-state-loading"><td colspan="2" role="status">フィードを読み込んでいます</td></tr>
                     </tbody>
                 </table>
-            </div>
+            </section>
         ';
 
         /* rowカウント */
@@ -282,10 +286,10 @@ if (is_int($content_location)) {
 
 /* 登録直後 or コンテンツ無し時 */
 if ($result_content_cnt === 0) {
-    echo '<div class="text-center">画面右上 [<i class="fas fa-sign-out-alt text-secondary"></i>] を選択して<br />「RSS追加」から気になるアドレスを追加してみましょう！！</div>';
+    echo '<div class="text-center" role="status">画面右上のメニューボタンを選択して<br>「RSS追加」から気になるアドレスを追加してみましょう！！</div>';
 }
 ?>
-</div><!-- /igcontainer -->
+</main><!-- /igcontainer -->
 
 <!-- 追加モーダルボタン -->
 <!-- <button type="button" class="btn btn-info" data-toggle="modal" data-target="#registerContent"><i class="fas fa-edit fa-fw fa-2x" ></i></button> -->
@@ -293,6 +297,7 @@ if ($result_content_cnt === 0) {
 <div class="modal fade" id="registerContent" tabindex="-1" role="dialog" aria-labelledby="registerContentTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
+            <form id="registerContentForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="registerContentTitle">Adding Input Type Content</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -304,19 +309,19 @@ if ($result_content_cnt === 0) {
                 <label class="" for="registerContentValue"><small class="text-dark">コンテンツのアドレス入力</small></label>
                 <div class="input-group mb-2 mr-sm-2">
                 <div class="input-group-prepend">
-                    <div class="input-group-text"><i class="fas fa-file-import"></i></div>
+                    <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
                 </div>
                 <input type="text" class="form-control registerContentValue" id="registerContentValue" name="registerContentValue" placeholder="Input Type Content">
                 <input type="hidden" id="content_location" class="content_location" value="<?php echo app_html(is_int($content_location) ? (string) $content_location : '0'); ?>">
                 </div>
                 <hr>
                 <div class="form-group">
-                    <label for="changeContentStyle"><small class="text-dark">コンテンツデザイン指定</small></label>
+                    <label for="style_select"><small class="text-dark">コンテンツデザイン指定</small></label>
                     <div class="input-group mb-2 mr-sm-2">
                     <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="far fa-images"></i></div>
+                        <div class="input-group-text"><i class="far fa-images" aria-hidden="true"></i></div>
                     </div>
-                    <select class="form-control style_select" id="style_select" aria-describedby="adddesignHelp">
+                    <select class="form-control style_select" id="style_select" name="content_style" aria-describedby="adddesignHelp">
                         <option value="success">success</option>
                         <option value="primary">primary</option>
                         <option value="info">info</option>
@@ -332,8 +337,9 @@ if ($result_content_cnt === 0) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
-                <button type="button" class="btn btn-primary submit_content">このタブに追加する</button>
+                <button type="submit" class="btn btn-primary submit_content">このタブに追加する</button>
             </div>
+            </form>
         </div>
     </div>
 </div>
@@ -342,6 +348,7 @@ if ($result_content_cnt === 0) {
 <div class="modal fade bd-example-modal-lg" id="changeContent" tabindex="-1" role="dialog" aria-labelledby="changeContentTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
+            <form id="changeContentForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="changeContentTitle">Change Input Type Content</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -353,12 +360,12 @@ if ($result_content_cnt === 0) {
                 <label class="" for="changeContentValue"><small class="text-dark">コンテンツのアドレス入力</small></label>
                 <div class="input-group mb-2 mr-sm-2">
                     <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-import"></i></div>
+                        <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
                     </div>
                     <input type="hidden" class="changeContentId" id="changeContentId" name="changeContentId">
-                    <input type="text" class="form-control changeContentValue" id="changeContentValue" name="changeContentValue" aria-describedby="emailHelp" placeholder="Input Type Content">
+                    <input type="text" class="form-control changeContentValue" id="changeContentValue" name="changeContentValue" aria-describedby="changeContentHelp" placeholder="Input Type Content">
                 </div>
-                <small id="emailHelp" class="form-text text-muted">空白で変更することで削除出来ます</small>
+                <small id="changeContentHelp" class="form-text text-muted">空白で変更することで削除出来ます</small>
                 <hr>
                 <div class="form-group">
                     <label for="changeContentStyle"><small class="text-dark">コンテンツデザイン指定</small></label>
@@ -382,8 +389,9 @@ if ($result_content_cnt === 0) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
-                <button type="button" class="btn btn-primary change_content">変更する</button>
+                <button type="submit" class="btn btn-primary change_content">変更する</button>
             </div>
+            </form>
         </div>
     </div>
 </div>
@@ -392,7 +400,7 @@ if ($result_content_cnt === 0) {
 <div class="modal fade" id="changeConf" tabindex="-1" role="dialog" aria-labelledby="changeConfTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
-        <form id="settingsForm">
+        <form id="settingsForm" method="post" action="./">
 
             <div class="modal-header" style="color: #fff; background-color: #666;">
                 <h5 class="modal-title" id="changeConfTitle">Change Setting Content</h5>
@@ -406,7 +414,7 @@ if ($result_content_cnt === 0) {
                     <label for="conf_style"><small class="text-dark">全体デザイン指定</small></label>
                     <div class="input-group mb-2 mr-sm-2">
                     <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-signature"></i></div>
+                        <div class="input-group-text"><i class="fas fa-file-signature" aria-hidden="true"></i></div>
                     </div>
                     <select class="form-control conf_style" name="conf_style" id="conf_style" aria-describedby="conf_designHelp">
                         <?php
@@ -433,7 +441,7 @@ if ($result_content_cnt === 0) {
                     <label for="conf_style_nav"><small class="text-dark">Navbarデザイン指定</small></label>
                     <div class="input-group mb-2 mr-sm-2">
                     <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-signature"></i></div>
+                        <div class="input-group-text"><i class="fas fa-file-signature" aria-hidden="true"></i></div>
                     </div>
                     <select class="form-control conf_style_nav" name="conf_style_nav" id="conf_style_nav" aria-describedby="conf_navDesignHelp">
                         <?php foreach (['dark' => 'Dark', 'primary' => 'Primary', 'light' => 'Light'] as $navStyleValue => $navStyleLabel): ?>
@@ -450,28 +458,36 @@ if ($result_content_cnt === 0) {
                     $viewKey = 'conf_style_navlink_view' . $navIndex;
                     $iconKey = 'conf_style_navlink_icon' . $navIndex;
                     ?>
-                    <label for="<?php echo app_html($linkKey); ?>"><small class="text-dark">Navbarアイコンリンク[<?php echo $navIndex; ?>]</small></label>
-                    <div class="input-group mb-2 mr-sm-2">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text"><i class="fas fa-file-import"></i></div>
+                    <fieldset class="navbar-link-setting">
+                        <legend class="h6 text-dark">Navbarリンク[<?php echo $navIndex; ?>]</legend>
+                        <label for="<?php echo app_html($linkKey); ?>"><small class="text-dark">リンクURL</small></label>
+                        <div class="input-group mb-2 mr-sm-2">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
+                            </div>
+                            <input type="text" class="form-control <?php echo app_html($linkKey); ?>" id="<?php echo app_html($linkKey); ?>" name="<?php echo app_html($linkKey); ?>" value="<?php echo app_html($ui[$linkKey] ?? ''); ?>" placeholder="Input Type NavbarLink">
                         </div>
-                        <input type="text" class="form-control <?php echo app_html($linkKey); ?>" id="<?php echo app_html($linkKey); ?>" name="<?php echo app_html($linkKey); ?>" value="<?php echo app_html($ui[$linkKey] ?? ''); ?>" placeholder="Input Type NavbarLink">
-                    </div>
 
-                    <div class="input-group mb-2 mr-sm-2">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text"><i class="far fa-edit"></i></div>
+                        <label for="<?php echo app_html($viewKey); ?>"><small class="text-dark">表示名</small></label>
+                        <div class="input-group mb-2 mr-sm-2">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text"><i class="far fa-edit" aria-hidden="true"></i></div>
+                            </div>
+                            <input type="text" class="form-control <?php echo app_html($viewKey); ?>" id="<?php echo app_html($viewKey); ?>" name="<?php echo app_html($viewKey); ?>" value="<?php echo app_html($ui[$viewKey] ?? ''); ?>" placeholder="Input Type Nav Name">
                         </div>
-                        <input type="text" class="form-control <?php echo app_html($viewKey); ?>" id="<?php echo app_html($viewKey); ?>" name="<?php echo app_html($viewKey); ?>" value="<?php echo app_html($ui[$viewKey] ?? ''); ?>" placeholder="Input Type Nav Name">
-                    </div>
 
-                    <span class="text-dark">Please Select ICON[<?php echo $navIndex; ?>]</span>
-                    <?php foreach (app_allowed_nav_icons() as $iconOption): ?>
-                        <label>
-                            <input type="radio" name="<?php echo app_html($iconKey); ?>" value="<?php echo app_html($iconOption); ?>"<?php echo app_checked_attr($ui[$iconKey] ?? '', $iconOption); ?>>
-                            <i class="fas fa-<?php echo app_html($iconOption); ?> fa-fw"></i>
-                        </label>
-                    <?php endforeach; ?>
+                        <fieldset class="navbar-icon-setting">
+                            <legend class="small text-dark">アイコンを選択</legend>
+                            <?php foreach (app_allowed_nav_icons() as $iconOption): ?>
+                                <?php $radioId = $iconKey . '_' . $iconOption; ?>
+                                <label for="<?php echo app_html($radioId); ?>" class="navbar-icon-option">
+                                    <input id="<?php echo app_html($radioId); ?>" type="radio" name="<?php echo app_html($iconKey); ?>" value="<?php echo app_html($iconOption); ?>"<?php echo app_checked_attr($ui[$iconKey] ?? '', $iconOption); ?>>
+                                    <i class="fas fa-<?php echo app_html($iconOption); ?> fa-fw" aria-hidden="true"></i>
+                                    <span class="sr-only"><?php echo app_html($iconOption); ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </fieldset>
+                    </fieldset>
                     <?php if ($navIndex < 4): ?><hr><?php endif; ?>
                 <?php endfor; ?>
 
@@ -488,7 +504,7 @@ if ($result_content_cnt === 0) {
 <!-- タブ名変更モーダル -->
 <div class="modal fade" id="tabContent" tabindex="-1" role="dialog" aria-labelledby="tabContentTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
-        <form id="tabsForm">
+        <form id="tabsForm" method="post" action="./">
         <div class="modal-content">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="tabContentTitle">Change Type TabName</h5>
@@ -501,7 +517,7 @@ if ($result_content_cnt === 0) {
                 <label class="" for="conf_style_tabname1"><small class="text-dark">タブ名1入力</small></label>
                 <div class="input-group mb-2 mr-sm-2">
                     <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-import"></i></div>
+                        <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
                     </div>
                     <input type="text" class="form-control conf_style_tabname1" id="conf_style_tabname1" name="conf_style_tabname1" value="<?php echo app_html($ui['conf_style_tabname1']); ?>" placeholder="Input Type Tab Name1" required>
                 </div>
@@ -509,7 +525,7 @@ if ($result_content_cnt === 0) {
                 <label class="" for="conf_style_tabname2"><small class="text-dark">タブ名2入力</small></label>
                 <div class="input-group mb-2 mr-sm-2">
                     <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-import"></i></div>
+                        <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
                     </div>
                     <input type="text" class="form-control conf_style_tabname2" id="conf_style_tabname2" name="conf_style_tabname2" value="<?php echo app_html($ui['conf_style_tabname2']); ?>" placeholder="Input Type Tab Name2">
                 </div>
@@ -517,7 +533,7 @@ if ($result_content_cnt === 0) {
                 <label class="" for="conf_style_tabname3"><small class="text-dark">タブ名3入力</small></label>
                 <div class="input-group mb-2 mr-sm-2">
                     <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-import"></i></div>
+                        <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
                     </div>
                     <input type="text" class="form-control conf_style_tabname3" id="conf_style_tabname3" name="conf_style_tabname3" value="<?php echo app_html($ui['conf_style_tabname3']); ?>" placeholder="Input Type Tab Name3">
                 </div>
@@ -525,7 +541,7 @@ if ($result_content_cnt === 0) {
                 <label class="" for="conf_style_tabname4"><small class="text-dark">タブ名4入力</small></label>
                 <div class="input-group mb-2 mr-sm-2">
                     <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-import"></i></div>
+                        <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
                     </div>
                     <input type="text" class="form-control conf_style_tabname4" id="conf_style_tabname4" name="conf_style_tabname4" value="<?php echo app_html($ui['conf_style_tabname4']); ?>" placeholder="Input Type Tab Name4">
                 </div>
@@ -545,7 +561,7 @@ if ($result_content_cnt === 0) {
     <div class="modal-dialog modal-dialog-centered modal-sm" role="document" style="width: 240px;">
         <div class="modal-content">
             <div class="modal-header" style="color: #fff; background-color: #333;">
-                <h5 class="modal-title" id="saveContentTitle"><i class="fas fa-receipt"></i> How about this?</h5>
+                <h5 class="modal-title" id="saveContentTitle"><i class="fas fa-receipt" aria-hidden="true"></i> How about this?</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true" style="color: #ccc;">&times;</span>
                 </button>
@@ -555,7 +571,9 @@ if ($result_content_cnt === 0) {
                     <div class="text-center">
                         <ul class="list-group list-group-flush">
                             <li class="list-group-item">
-                                <i class="far fa-clone fa-fw fa-2x text-dark information_modal_dbsave" data-dismiss="modal" aria-label="Close" value=""></i><br />Stock
+                                <button type="button" class="btn btn-link text-dark information_modal_dbsave" data-dismiss="modal" aria-label="この記事をStockへ保存">
+                                    <i class="far fa-clone fa-fw fa-2x" aria-hidden="true"></i><br>Stock
+                                </button>
                             </li>
                         </ul>
                     </div>
@@ -567,32 +585,33 @@ if ($result_content_cnt === 0) {
 
 <!-- Top Page -->
 <p id="page-top">
-    <a href="#wrap">
-        <i class="fas fa-arrow-circle-up fa-2x"></i><br />
+    <a href="#main-content" aria-label="ページ先頭へ移動">
+        <i class="fas fa-arrow-circle-up fa-2x" aria-hidden="true"></i><br>
         Top Page
     </a>
 </p>
+
 
 <footer class="text-center text-muted small py-3" data-app-version>
     iGuguru &middot; <?php echo htmlspecialchars(APP_VERSION_LABEL, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>
 </footer>
 
 <!-- Drawer -->
-<nav class="drawer-nav">
+<nav class="drawer-nav" id="drawerMenu" aria-label="RSS Readerメニュー" tabindex="-1">
     <ul class="drawer-menu">
-        <li style="margin-top: 4px; margin-bottom: 4px;">&nbsp;<i class="fas fa-rss-square text-primary"></i><span class="text-muted"> <strong>iGuguru</strong></span>　</li>
+        <li style="margin-top: 4px; margin-bottom: 4px;">&nbsp;<i class="fas fa-rss-square text-primary" aria-hidden="true"></i><span class="text-muted"> <strong>iGuguru</strong></span>　</li>
         <!-- Tab -->
-        <li class="text-dark" style="background-color: #cccccc;">&nbsp;<i class="far fa-copy fa-fw"></i> Tab List</li>
+        <li class="text-dark" style="background-color: #cccccc;">&nbsp;<i class="far fa-copy fa-fw" aria-hidden="true"></i> Tab List</li>
         <?php for ($tabLocation = 0; $tabLocation <= 3; $tabLocation++): ?>
             <?php $tabLabelKey = 'conf_style_tabname' . ($tabLocation + 1); ?>
-            <li>　<a href="./?tab=<?php echo $tabLocation; ?>" class="text-muted"><i class="far fa-newspaper fa-fw"></i> <?php echo app_html($ui[$tabLabelKey] ?? ''); ?></a><hr style="margin: 4px;"></li>
+            <li>　<a href="./?tab=<?php echo $tabLocation; ?>" class="text-muted"><i class="far fa-newspaper fa-fw" aria-hidden="true"></i> <?php echo app_html($ui[$tabLabelKey] ?? ''); ?></a><hr style="margin: 4px;"></li>
         <?php endfor; ?>
-        <li>　<a href="?tab=stock" class="text-muted"><i class="fas fa-clipboard-list fa-fw"></i> - Stock List</a><hr style="margin: 4px;"></li>
-        <li data-toggle="modal" data-target="#tabContent">　<i class="fas fa-clone fa-fw text-muted"></i><span class="text-muted">タブ表示変更</span></li>
-        <li class="text-dark" style="background-color: #cccccc;">&nbsp;<i class="fas fa-paperclip fa-fw"></i> RSS Link</li>
-        <li data-toggle="modal" data-target="#registerContent">　<i class="fas fa-clone fa-fw text-muted"></i><span class="text-muted">RSS追加</span></li>
+        <li>　<a href="?tab=stock" class="text-muted"><i class="fas fa-clipboard-list fa-fw" aria-hidden="true"></i> - Stock List</a><hr style="margin: 4px;"></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#tabContent"><i class="fas fa-clone fa-fw" aria-hidden="true"></i>タブ表示変更</button></li>
+        <li class="text-dark" style="background-color: #cccccc;">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> RSS Link</li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerContent"><i class="fas fa-clone fa-fw" aria-hidden="true"></i>RSS追加</button></li>
         <!-- 定型リンク -->
-        <li class="text-dark" style="background-color: #cccccc;">&nbsp;<i class="fas fa-paperclip fa-fw"></i> Nabvar Link</li>
+        <li class="text-dark" style="background-color: #cccccc;">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> Nabvar Link</li>
         <?php
             for ($navIndex = 1; $navIndex <= 4; $navIndex++) {
                 $link = (string) $ui['conf_style_navlink' . $navIndex];
@@ -601,16 +620,16 @@ if ($result_content_cnt === 0) {
                 }
                 $icon = (string) $ui['conf_style_navlink_icon' . $navIndex];
                 $view = (string) $ui['conf_style_navlink_view' . $navIndex];
-                echo '<li>　<a class="text-muted" href="' . app_html($link) . '" target="_blank" rel="noopener noreferrer"><i class="fas fa-' . app_html($icon) . ' fa-fw"></i> - ' . app_html($view) . '</a><hr style="margin: 4px;"></li>';
+                echo '<li>　<a class="text-muted" href="' . app_html($link) . '" target="_blank" rel="noopener noreferrer"><i class="fas fa-' . app_html($icon) . ' fa-fw" aria-hidden="true"></i> - ' . app_html($view) . '</a><hr style="margin: 4px;"></li>';
             }
         ?>
         <!-- Control Setting -->
-        <li class="text-dark" style="background-color: #cccccc;">&nbsp;<i class="fas fa-cogs fa-fw"></i> Control Link</li>
-        <li data-toggle="modal" data-target="#changeConf">　<i class="fas fa-cogs text-muted"></i><span class="text-muted"> - Setting</span><hr style="margin: 4px;"></li>
+        <li class="text-dark" style="background-color: #cccccc;">&nbsp;<i class="fas fa-cogs fa-fw" aria-hidden="true"></i> Control Link</li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#changeConf"><i class="fas fa-cogs" aria-hidden="true"></i> - Setting</button><hr style="margin: 4px;"></li>
         <li>
             <form method="post" action="./logout.php" style="display:inline;">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-                <button type="submit" class="btn btn-link text-muted p-0" style="text-decoration:none;"><i class="fas fa-sign-out-alt text-muted"></i> - Logout</button>
+                <button type="submit" class="btn btn-link text-muted p-0" style="text-decoration:none;"><i class="fas fa-sign-out-alt text-muted" aria-hidden="true"></i> - Logout</button>
             </form>
             <hr style="margin: 4px;">
         </li>

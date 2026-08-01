@@ -1,0 +1,92 @@
+from pathlib import Path
+import re
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
+js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
+css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
+api = (ROOT / 'app/api.php').read_text(encoding='utf-8')
+
+checks = []
+def check(cond, msg):
+    checks.append(bool(cond))
+    print(('PASS' if cond else 'FAIL') + ': ' + msg)
+
+check('<!doctype html>' in index.lower(), 'HTML document declares a doctype')
+check('<html lang="ja">' in index, 'document language is Japanese')
+check('<a class="skip-link" href="#main-content">' in index, 'skip link targets the main content')
+check('<main id="main-content" class="igcontainer" tabindex="-1">' in index, 'dashboard has a focusable main landmark')
+check('<main id="main-content" class="login-main" tabindex="-1">' in login, 'login screen has the same main landmark')
+check('.login-main { width: 100%; }' in login, 'login main keeps Login and Register forms horizontally centered')
+check('<header>' in index and '</header>' in index, 'dashboard Navbar is inside a header landmark')
+check('aria-label="メインナビゲーション"' in index, 'main navigation has an accessible name')
+check('<footer class="text-center text-muted small py-3"' in index, 'dashboard release marker is in a footer')
+check('<footer class="text-muted small mt-4"' in login, 'login release marker is in a footer')
+check('<h1 class="sr-only">iGuguru RSS Reader</h1>' in index, 'dashboard has a page heading')
+check('<h5 class="h5 mb-3 font-weight-normal text-dark"><p>' not in login, 'login description no longer nests paragraphs in a heading')
+check('<h2 class="h3 mb-3 font-weight-normal text-dark">Please Register in</h2>' in login, 'registration heading follows the login page heading')
+check('role="alert" aria-live="assertive"' in login, 'authentication errors are announced')
+
+check(index.count('class="navbar-toggler drawer-toggle" type="button"') == 1, 'mobile Drawer trigger is a button')
+check(index.count('class="btn btn-outline-secondary my-2 my-sm-0 drawer-toggle" type="button"') == 1, 'desktop Drawer trigger is a button')
+check(index.count('aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く"') == 2, 'Drawer triggers expose initial ARIA state')
+check('id="drawerMenu" aria-label="RSS Readerメニュー" tabindex="-1"' in index, 'Drawer navigation is named and focusable')
+check('<li data-toggle="modal"' not in index, 'non-interactive list items no longer open modals')
+check(index.count('class="btn btn-link text-muted drawer-menu-action"') == 3, 'Drawer modal actions use buttons')
+check('type="button" class="btn btn-link float-right content-edit-trigger"' in index, 'Feed edit action uses a button')
+check('aria-label="このRSSを編集"' in index, 'Feed edit button has an accessible name')
+check('class="btn btn-link text-dark information_modal_dbsave"' in index, 'Stock confirmation uses a button')
+check('aria-label="この記事をStockへ保存"' in index, 'Stock confirmation button has an accessible name')
+check(".addClass('btn btn-link p-0 infomation_modal_rewrite')" in js, 'dynamic Stock action is created as a button')
+check(".attr('aria-label', 'Stockへ保存: ' + viewTitle)" in js, 'dynamic Stock button includes the article title in its name')
+
+check('<form id="registerContentForm"' in index, 'RSS add modal uses a form')
+check('<form id="changeContentForm"' in index, 'RSS change modal uses a form')
+check('type="submit" class="btn btn-primary submit_content"' in index, 'RSS add action is a submit button')
+check('type="submit" class="btn btn-primary change_content"' in index, 'RSS change action is a submit button')
+check("#registerContentForm" in js and "#changeContentForm" in js, 'RSS forms have submit handlers')
+check("event.preventDefault();\n                addContent($(this));" in js, 'RSS add submit stays on the AJAX path')
+check("event.preventDefault();\n                changeContent($(this));" in js, 'RSS change submit stays on the AJAX path')
+check('for="style_select"' in index and 'id="style_select" name="content_style"' in index, 'RSS style select has the correct label')
+check('for="conf_style_navlink_view' not in index, 'generated label markup is not hard-coded incorrectly')
+check('for="<?php echo app_html($viewKey); ?>"' in index, 'Navbar display-name inputs have labels')
+check('<fieldset class="navbar-link-setting">' in index, 'each Navbar link setting is grouped')
+check('<fieldset class="navbar-icon-setting">' in index, 'Navbar icon choices are grouped')
+check('<legend class="small text-dark">アイコンを選択</legend>' in index, 'Navbar radio group has a legend')
+check('id="<?php echo app_html($radioId); ?>" type="radio"' in index, 'Navbar radio buttons receive unique ids')
+
+check('role="region" aria-labelledby="feed-title-' in index, 'each Feed card is a named region')
+check('aria-busy="true"' in index, 'server-rendered Feed card starts busy')
+check('class="content-body" aria-live="polite" aria-relevant="all"' in index, 'Feed state changes are announced politely')
+check('role="status">フィードを読み込んでいます' in index, 'initial Feed loading message has status semantics')
+check(".attr('aria-busy', state === 'loading' ? 'true' : 'false')" in js, 'Feed busy state follows loading state')
+check(".attr('role', state === 'error' ? 'alert' : 'status')" in js, 'Feed errors and normal states use appropriate live roles')
+check(".attr('aria-busy', 'false')" in js, 'completed Feed states clear aria-busy')
+
+check('href="#main-content" aria-label="ページ先頭へ移動"' in index, 'Page Top has a valid target and accessible name')
+check("$('#main-content').focus();" in js, 'Page Top moves keyboard focus with the viewport')
+check('function updateDrawerState(opened)' in js, 'Drawer ARIA state is centralized')
+check("event.key === 'Escape' || event.keyCode === 27" in js, 'Escape closes the Drawer')
+check("event.key !== 'Tab' && event.keyCode !== 9" in js, 'Drawer handles Tab navigation')
+check('document.activeElement === first' in js and 'document.activeElement === last' in js, 'Drawer focus is contained at both ends')
+check(".on('drawer.opened' + eventNamespace" in js and ".on('drawer.closed' + eventNamespace" in js, 'Drawer open and close events update accessibility state')
+check("$lastTrigger.focus();" in js, 'Drawer returns focus to its trigger')
+check('function initModalFocus()' in js, 'modal focus return is initialized')
+check(".on('show.bs.modal' + eventNamespace" in js and ".on('hidden.bs.modal' + eventNamespace" in js, 'modal trigger is remembered and restored')
+
+check('.skip-link:focus' in css, 'skip link becomes visible on focus')
+check('a:focus' in css and 'button:focus' in css and 'outline: 3px solid' in css, 'interactive controls have a visible focus indicator')
+check('.drawer-menu-action' in css and 'text-align: left' in css, 'Drawer buttons retain menu-like presentation')
+check('@media (prefers-reduced-motion: reduce)' in css, 'reduced-motion preference is respected')
+check('tabindex="1"' not in index and 'tabindex="2"' not in index, 'positive tabindex is not introduced')
+check('.html(' not in js and 'innerHTML' not in js, 'accessibility changes do not weaken safe DOM rendering')
+check("url: './api_v1.php'" in js and "'csrf_token': appCsrfToken()" in js, 'API endpoint and CSRF path remain unchanged')
+for action in ['content.create', 'content.update', 'content.delete', 'stock.create', 'settings.update', 'tabs.update', 'feed.fetch']:
+    check(action in js or action in api, f'existing API action remains represented: {action}')
+check(not (ROOT / 'package.json').exists(), 'M2-C adds no npm or build dependency')
+
+if not all(checks):
+    sys.exit(1)
+print(f'All {len(checks)} M2-C accessibility structure checks passed.')

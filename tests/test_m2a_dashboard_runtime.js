@@ -121,16 +121,18 @@ vm.runInThisContext(source, { filename: 'dashboard.js' });
 const firstHandlerCount = handlers.size;
 vm.runInThisContext(source, { filename: 'dashboard-second-load.js' });
 
-check(firstHandlerCount === 9, 'dashboard registers the expected event set');
+check(firstHandlerCount === 15, 'dashboard registers the expected event set');
 check(handlers.size === firstHandlerCount, 'loading dashboard twice does not duplicate handlers');
 
-const addHandler = handlers.get('click.iguguruDashboard|.submit_content');
-const rawButton = {};
-addHandler.call(rawButton);
-addHandler.call(rawButton);
+const addHandler = handlers.get('submit.iguguruDashboard|#registerContentForm');
+const rawForm = {};
+const submitEvent = { preventDefault: () => {} };
+addHandler.call(rawForm, submitEvent);
+addHandler.call(rawForm, submitEvent);
+const submitButton = getWrapper('object button[type="submit"]');
 
-check(ajaxCalls.length === 1, 'double click starts one API request while pending');
-check(wrappers.get(rawButton).disabled === true, 'pending action disables its control');
+check(ajaxCalls.length === 1, 'double submit starts one API request while pending');
+check(submitButton.disabled === true, 'pending action disables its control');
 check(ajaxCalls[0].options.url === './api_v1.php', 'runtime request uses the existing API endpoint');
 check(ajaxCalls[0].options.method === 'POST', 'runtime request uses POST');
 check(ajaxCalls[0].options.data.action === 'content.create', 'runtime request keeps content.create action');
@@ -138,14 +140,14 @@ check(ajaxCalls[0].options.data.csrf_token === 'csrf-test-token', 'runtime reque
 check(ajaxCalls[0].options.data.content_location === '2', 'runtime request keeps selected tab location');
 
 ajaxCalls[0].deferred.reject({}, 'timeout');
-check(wrappers.get(rawButton).disabled === false, 'failed request re-enables its control');
+check(submitButton.disabled === false, 'failed request re-enables its control');
 check(alerts.includes('Request timed out.'), 'timeout receives a controlled error message');
 
-addHandler.call(rawButton);
+addHandler.call(rawForm, submitEvent);
 check(ajaxCalls.length === 2, 'control can submit again after request completion');
 ajaxCalls[1].deferred.resolve({ ok: true });
 check(reloadCount === 1, 'successful content change keeps the existing page reload behavior');
-check(wrappers.get(rawButton).disabled === false, 'successful request also releases pending state');
+check(submitButton.disabled === false, 'successful request also releases pending state');
 
 if (process.exitCode) process.exit(process.exitCode);
 console.log('All M2-A dashboard runtime checks passed.');

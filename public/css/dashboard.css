@@ -38,3 +38,77 @@ table tr:hover {
     color: #721c24;
 }
 
+
+.skip-link {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 2000;
+    padding: 8px 12px;
+    background: #ffffff;
+    color: #212529;
+    border: 2px solid #212529;
+    transform: translateY(-120%);
+}
+
+.skip-link:focus {
+    transform: translateY(0);
+}
+
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+[tabindex]:focus {
+    outline: 3px solid #005fcc;
+    outline-offset: 2px;
+}
+
+#main-content:focus,
+.drawer-nav:focus {
+    outline: 3px solid #005fcc;
+    outline-offset: -3px;
+}
+
+.content-edit-trigger {
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.drawer-menu-action {
+    width: 100%;
+    text-align: left;
+    text-decoration: none;
+}
+
+.drawer-menu-action:hover,
+.drawer-menu-action:focus {
+    text-decoration: none;
+}
+
+.navbar-link-setting,
+.navbar-icon-setting {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+}
+
+.navbar-icon-option {
+    display: inline-block;
+    padding: 4px;
+}
+
+.feed-card[aria-busy="true"] {
+    cursor: progress;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

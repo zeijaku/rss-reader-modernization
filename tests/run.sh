@@ -122,3 +122,9 @@ node "$ROOT/tests/test_m2a_dashboard_runtime.js"
 echo '== M2-B Feed rendering checks =='
 python3 "$ROOT/tests/test_m2b_feed_structure.py"
 node "$ROOT/tests/test_m2b_feed_runtime.js"
+
+echo '== M2-C Semantic HTML / Accessibility checks =='
+python3 "$ROOT/tests/test_m2c_accessibility_structure.py"
+python3 "$ROOT/tests/test_m2c_login_layout.py"
+node "$ROOT/tests/test_m2c_accessibility_runtime.js"
+python3 "$ROOT/tests/test_m2c_dashboard_render.py"

@@ -76,7 +76,8 @@
     }
 
     /* Content変更 / 論理削除 */
-    function changeContent($button) {
+    function changeContent($form) {
+        var $button = $form.find('button[type="submit"]');
         if (!requestStart($button)) {
             return;
         }
@@ -196,7 +197,8 @@
     }
 
     /* Content追加 */
-    function addContent($button) {
+    function addContent($form) {
+        var $button = $form.find('button[type="submit"]');
         if (!requestStart($button)) {
             return;
         }
@@ -234,7 +236,9 @@
     }
 
     function renderFeedMessage($card, state, title, message) {
-        $card.attr('data-feed-state', state);
+        $card
+            .attr('data-feed-state', state)
+            .attr('aria-busy', state === 'loading' ? 'true' : 'false');
         $card.find('.content-title').empty().text('　' + title);
 
         var $body = $card.find('.content-body').empty();
@@ -242,6 +246,7 @@
             var $row = $('<tr>').addClass('content-state-row feed-state-' + state);
             $('<td>')
                 .attr('colspan', '2')
+                .attr('role', state === 'error' ? 'alert' : 'status')
                 .text(message)
                 .appendTo($row);
             $row.appendTo($body);
@@ -249,11 +254,14 @@
     }
 
     function renderFeedBodyMessage($card, state, message) {
-        $card.attr('data-feed-state', state);
+        $card
+            .attr('data-feed-state', state)
+            .attr('aria-busy', 'false');
         var $body = $card.find('.content-body').empty();
         var $row = $('<tr>').addClass('content-state-row feed-state-' + state);
         $('<td>')
             .attr('colspan', '2')
+            .attr('role', state === 'error' ? 'alert' : 'status')
             .text(message)
             .appendTo($row);
         $row.appendTo($body);
@@ -304,13 +312,19 @@
             var $stockCell = $('<td>').appendTo($row);
 
             if (itemLink !== '') {
-                $('<i>')
-                    .addClass('fas fa-bookmark fa-fw text-info infomation_modal_rewrite')
+                var $stockButton = $('<button type="button">')
+                    .addClass('btn btn-link p-0 infomation_modal_rewrite')
+                    .attr('aria-label', 'Stockへ保存: ' + viewTitle)
                     .attr('data-stock-url', itemLink)
                     .attr('data-stock-title', itemTitle)
                     .attr('data-toggle', 'modal')
                     .attr('data-target', '.save_modal')
-                    .appendTo($('<button type="button" class="btn btn-link p-0" aria-label="Stock this article"></button>').appendTo($stockCell));
+                    .appendTo($stockCell);
+
+                $('<i>')
+                    .addClass('fas fa-bookmark fa-fw text-info')
+                    .attr('aria-hidden', 'true')
+                    .appendTo($stockButton);
             }
 
             var $linkCell = $('<td>').appendTo($row);
@@ -335,7 +349,9 @@
             return;
         }
 
-        $card.attr('data-feed-state', 'ready');
+        $card
+            .attr('data-feed-state', 'ready')
+            .attr('aria-busy', 'false');
     }
 
     function renderFeed($card, resultFeed) {
@@ -403,8 +419,9 @@
             .on('click' + eventNamespace, '.content-edit-trigger', function () {
                 editContent($(this));
             })
-            .off('click' + eventNamespace, '.change_content')
-            .on('click' + eventNamespace, '.change_content', function () {
+            .off('submit' + eventNamespace, '#changeContentForm')
+            .on('submit' + eventNamespace, '#changeContentForm', function (event) {
+                event.preventDefault();
                 changeContent($(this));
             })
             .off('submit' + eventNamespace, '#settingsForm')
@@ -425,8 +442,9 @@
             .on('click' + eventNamespace, '.information_modal_dbsave', function () {
                 saveStock($(this));
             })
-            .off('click' + eventNamespace, '.submit_content')
-            .on('click' + eventNamespace, '.submit_content', function () {
+            .off('submit' + eventNamespace, '#registerContentForm')
+            .on('submit' + eventNamespace, '#registerContentForm', function (event) {
+                event.preventDefault();
                 addContent($(this));
             });
     }
@@ -437,10 +455,101 @@
         });
     }
 
+    function drawerFocusableItems() {
+        return $('#drawerMenu').find('a[href], button:not([disabled]), input:not([type="hidden"]):not([disabled]), [tabindex]:not([tabindex="-1"])');
+    }
+
+    function updateDrawerState(opened) {
+        $('.drawer-toggle[aria-controls="drawerMenu"]')
+            .attr('aria-expanded', opened ? 'true' : 'false')
+            .attr('aria-label', opened ? 'メニューを閉じる' : 'メニューを開く');
+    }
+
     function initDrawer() {
-        if ($.fn.drawer) {
-            $('.drawer').drawer();
+        if (!$.fn.drawer) {
+            return;
         }
+
+        var $drawer = $('.drawer');
+        var $drawerMenu = $('#drawerMenu');
+        var $lastTrigger = $();
+
+        $(document)
+            .off('click' + eventNamespace, '.drawer-toggle[aria-controls="drawerMenu"]')
+            .on('click' + eventNamespace, '.drawer-toggle[aria-controls="drawerMenu"]', function () {
+                $lastTrigger = $(this);
+            })
+            .off('keydown' + eventNamespace + '.drawer')
+            .on('keydown' + eventNamespace + '.drawer', function (event) {
+                if (!$drawer.hasClass('drawer-open') || $('.modal.show').length > 0) {
+                    return;
+                }
+
+                if (event.key === 'Escape' || event.keyCode === 27) {
+                    event.preventDefault();
+                    $drawer.drawer('close');
+                    return;
+                }
+
+                if (event.key !== 'Tab' && event.keyCode !== 9) {
+                    return;
+                }
+
+                var $items = drawerFocusableItems();
+                if ($items.length === 0) {
+                    return;
+                }
+
+                var first = $items.get(0);
+                var last = $items.get($items.length - 1);
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                }
+            });
+
+        $drawer
+            .off('drawer.opened' + eventNamespace)
+            .on('drawer.opened' + eventNamespace, function () {
+                updateDrawerState(true);
+                var $items = drawerFocusableItems();
+                if ($items.length > 0) {
+                    $items.first().focus();
+                } else {
+                    $drawerMenu.focus();
+                }
+            })
+            .off('drawer.closed' + eventNamespace)
+            .on('drawer.closed' + eventNamespace, function () {
+                updateDrawerState(false);
+                if ($lastTrigger.length > 0 && $('.modal.show').length === 0) {
+                    $lastTrigger.focus();
+                }
+            })
+            .drawer();
+
+        updateDrawerState(false);
+    }
+
+    function initModalFocus() {
+        $(document)
+            .off('show.bs.modal' + eventNamespace, '.modal')
+            .on('show.bs.modal' + eventNamespace, '.modal', function (event) {
+                if (event.relatedTarget) {
+                    $(this).data('return-focus', event.relatedTarget);
+                }
+            })
+            .off('hidden.bs.modal' + eventNamespace, '.modal')
+            .on('hidden.bs.modal' + eventNamespace, '.modal', function () {
+                var returnFocus = $(this).data('return-focus');
+                if (returnFocus && typeof returnFocus.focus === 'function') {
+                    returnFocus.focus();
+                }
+                $(this).removeData('return-focus');
+            });
     }
 
     function initPageTop() {
@@ -459,11 +568,13 @@
 
         $topButton
             .off('click' + eventNamespace)
-            .on('click' + eventNamespace, function () {
+            .on('click' + eventNamespace, function (event) {
+                event.preventDefault();
+                var duration = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 500;
                 $('body,html').animate({
                     scrollTop: 0
-                }, 500);
-                return false;
+                }, duration);
+                $('#main-content').focus();
             });
     }
 
@@ -478,6 +589,7 @@
         bindEvents();
         initFeeds();
         initDrawer();
+        initModalFocus();
         initPageTop();
     }
 

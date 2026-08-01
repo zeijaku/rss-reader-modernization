@@ -2,6 +2,30 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## Frontend M2-C / R2 — 2026-08-01
+
+### Login layout correction
+
+- semantic `main` 追加後にLogin / Register formが左寄せになる回帰を修正。
+- Login用 `main.login-main` を画面幅へ広げ、既存の `.form-signin { margin: auto; }` による中央配置を復元。
+- Login / RegisterのForm、認証処理、CSRF、Collapse切替、M2-CのKeyboard / Focus / ARIA対応は変更なし。
+- 同じ回帰を防ぐLogin layout testを追加。
+
+## Frontend M2-C / R1 — 2026-08-01
+
+### Semantic HTML and accessibility
+
+- `<!doctype html>`、`lang="ja"`、`header`、`main`、`footer`、Skip link、page headingを追加。
+- Feed cardを名前付きregionとし、Loading中の `aria-busy`、状態messageのlive region、Errorのalert semanticsを追加。
+- Feed編集、Stock保存、Drawer内Modal起動をkeyboard操作可能なButtonへ変更。
+- RSS追加・変更ModalをForm化し、Enter submitと既存AJAX / pending guardを一つの経路へ統一。
+- SettingsのNavbar URL / 表示名へLabel、icon radio groupへfieldset / legend / unique idを追加。
+- Drawerの `aria-expanded` / label更新、Open時Focus、Escape Close、Tab循環、Close後Focus returnを追加。
+- Modal終了後は起動元へFocusを戻し、Page Topはscrollと同時にmainへFocusを移動。
+- visible focus indicatorと `prefers-reduced-motion` 対応を追加。
+- Feed API、DB schema、Authentication / CSRF / SSRF / XSS、M1 RSS Engine、Frontend library Version、基本画面構成は変更なし。
+- M2-C専用のsemantic / accessibility static testとNode runtime testを追加。
+
 ## Frontend M2-B / R1 — 2026-08-01
 
 ### Feed rendering and state handling

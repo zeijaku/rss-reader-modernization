@@ -57,6 +57,12 @@ try:
     else: raise RuntimeError('public smoke server failed to start')
 
     check('Sign in' in body and 'Register in' in body,'login and registration UI renders')
+    check(body.lstrip().lower().startswith('<!doctype html>'),'public login response declares HTML5 doctype')
+    check('<html lang="ja">' in body,'public login response declares Japanese language')
+    check('<a class="skip-link" href="#main-content">' in body,'public login response exposes a skip link')
+    check('<main id="main-content" class="login-main" tabindex="-1">' in body,'public login response has a focusable main landmark')
+    check('<h5 class="h5 mb-3 font-weight-normal text-dark"><p>' not in body,'public login response has valid description structure')
+    check('<footer class="text-muted small mt-4" data-app-version>' in body,'public login version marker uses a footer')
     check('./css/dashboard.css' in body,'login page references the external dashboard stylesheet')
     check('<link rel="icon" type="image/png" href="./favicon.png">' in body,'login page explicitly references the local favicon')
     check(bool(VERSION_LABEL) and VERSION_LABEL in body,'visible release marker renders on login page')

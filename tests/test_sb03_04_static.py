@@ -43,7 +43,7 @@ check('AUTH_PASSWORD_MIN_LENGTH' in auth and 'AUTH_PASSWORD_MAX_LENGTH' in auth,
 check('login_throttle_status' in index and 'login_throttle_record_failure' in index and 'login_throttle_record_success' in index, 'login flow uses rate limiting')
 check('flock(' in throttle and 'LOGIN_RATE_BLOCK_SECONDS' in throttle, 'rate limiter uses locked private state and temporary blocks')
 check("dirname(__DIR__) . '/var/security/login-throttle'" in throttle, 'rate limit state is outside DocumentRoot')
-check('FILTER_SANITIZE_SPECIAL_CHARS' not in index.split("<html>",1)[0], 'credentials are not HTML-sanitized before authentication')
+check('FILTER_SANITIZE_SPECIAL_CHARS' not in index.split("<!doctype html>",1)[0], 'credentials are not HTML-sanitized before authentication')
 check('autocomplete="current-password"' in login and 'autocomplete="new-password"' in login, 'auth forms use appropriate password autocomplete hints')
 
 if not all(checks):
