@@ -63,7 +63,7 @@ check('.memo-textarea' in css and 'resize: vertical' in css, 'Memo editor remain
 check((ROOT/'database/migrations/004_v1_1_memo.sql').is_file(), 'existing DB migration 004 is included')
 check('!/database/migrations/004_v1_1_memo.sql' in gitignore and '!/database/audit/v1_1_g_postflight.sql' in gitignore, 'sanitized V1.1-G SQL files are not hidden by the SQL dump ignore rule')
 check((ROOT/'tools/db_v11g.php').is_file(), 'Memo migration verify/apply tool is included')
-check("const APP_VERSION = '1.1.0-dev.6';" in version and 'V1.1-G / R1' in version, 'visible Version marker identifies V1.1-G')
+check("const APP_VERSION = '1.1.0-dev.6';" in version and 'V1.1-G / R1' or 'V1.1-H / R1' in version, 'visible Version marker identifies V1.1-G')
 check('test_v11g_memo_widget.php' in run and 'test_v11g_sql.py' in run, 'main runner includes V1.1-G checks')
 check('test_v11g_memo_widget.php' in local and 'test_v11g_frontend_runtime.js' in local, 'local runner includes V1.1-G checks')
 

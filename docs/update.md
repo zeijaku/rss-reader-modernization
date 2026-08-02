@@ -14,6 +14,31 @@ Releaseごとに次を確認します。
 - Runtime cache削除の要否
 - Release NotesとSHA-256
 
+## V1.1-G / R1からV1.1-H / R1
+
+V1.1-HはTask Widgetと`task`Tableを追加します。Codeだけ先に切り替えるとDashboard queryが`task`Tableを参照するため、Backup後にMigrationを同じMaintenance内で適用してください。
+
+```text
+DB Table                    taskを追加
+Column / Index              task Table内に追加
+Public API                  widget.task.create / update / delete
+                            task.item.create / update / toggle / delete
+必須設定                    追加なし
+Cache clear                 不要
+削除file                    なし
+```
+
+CLIを利用できる場合:
+
+```powershell
+php tools/db_v11h.php apply --backup-confirmed
+php tools/db_v11h.php verify
+```
+
+phpMyAdminを利用する場合は、RSS Readerの実Databaseを選択し、`database/migrations/005_v1_1_task.sql`冒頭の`@table_prefix`を`DB_TABLE_PREFIX`と同じ値へ変更してから実行します。その後、`database/audit/v1_1_h_postflight.sql`またはCLI verifyで確認します。
+
+Rollback時はCodeとDBを同じBackup時点へ戻します。V1.1-Hで作成したTaskを保持したままCodeだけV1.1-Gへ戻す運用は行いません。
+
 ## V1.1-F / R1からV1.1-G / R1
 
 V1.1-GはMemo Widgetと`memo`Tableを追加します。Codeだけ先に切り替えるとDashboard queryが`memo`Tableを参照するため、Backup後にMigrationを同じMaintenance内で適用してください。

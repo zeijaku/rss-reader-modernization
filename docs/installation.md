@@ -118,13 +118,17 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\schema.sql
 
 phpMyAdminを使用する場合は、対象の空Databaseを選択してから `database/schema.sql` をImportします。
 
-Prefixが `rss_` の場合、次の4 tableが作成されます。
+Prefixが `rss_` の場合、V1.1-Hでは次の8 tableが作成されます。
 
 ```text
 rss_user_info
 rss_user_conf
 rss_content
 rss_content_stock
+rss_feed_item_state
+rss_memo
+rss_task
+rss_dashboard_widget
 ```
 
 既存Databaseへ `schema.sql` を再実行しないでください。
@@ -164,6 +168,8 @@ CLIが使えないHostingでは、Control panelでPHP Version / Extensionを確�
 - Login / Logout
 - 4タブ
 - Feed追加、変更、削除、再読込
+- Clock、Memo、Taskの追加、変更、削除
+- Taskの完了切替、期限、優先度
 - RSS 2.0 / RSS 1.0 / Atom
 - Stock保存と一覧
 - Settings保存

@@ -141,6 +141,13 @@ function api_dispatch(string $action, int $userId, array $input): array
         'widget.memo.create' => api_widget_memo_create($userId, $input),
         'widget.memo.update' => api_widget_memo_update($userId, $input),
         'widget.memo.delete' => api_widget_memo_delete($userId, $input),
+        'widget.task.create' => api_widget_task_create($userId, $input),
+        'widget.task.update' => api_widget_task_update($userId, $input),
+        'widget.task.delete' => api_widget_task_delete($userId, $input),
+        'task.item.create' => api_task_item_create($userId, $input),
+        'task.item.update' => api_task_item_update($userId, $input),
+        'task.item.toggle' => api_task_item_toggle($userId, $input),
+        'task.item.delete' => api_task_item_delete($userId, $input),
         default => api_error('unknown_action', 'Unknown API action.', 400),
     };
 }
@@ -455,6 +462,163 @@ function api_widget_memo_delete(int $userId, array $input): array
     }
 
     return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_task_create(int $userId, array $input): array
+{
+    $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $config = dashboard_widget_task_config_from_input($input);
+    if ($location === null) {
+        return api_validation_error('widget_location must be 0, 1, 2, or 3.');
+    }
+    if ($style === null) {
+        return api_validation_error('widget_style is invalid.');
+    }
+    if ($width === null) {
+        return api_validation_error('widget_width must be 1, 2, 3, or 4.');
+    }
+    if ($config === null) {
+        return api_validation_error('Task Widget settings are invalid.');
+    }
+    try {
+        $widgetId = dashboard_widget_create_task_widget($userId, $location, $style, $width, $config);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Task Widget create failed: ' . $exception->getMessage());
+        return api_error('task_unavailable', 'Task migration is required.', 503);
+    }
+    return api_success(['widget_id' => $widgetId], 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_task_update(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $config = dashboard_widget_task_config_from_input($input);
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+    if ($style === null || $width === null || $config === null) {
+        return api_validation_error('Task Widget settings are invalid.');
+    }
+    try {
+        if (!dashboard_widget_update_task_widget($userId, $widgetId, $style, $width, $config)) {
+            return api_error('not_found', 'Task Widget was not found.', 404);
+        }
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Task Widget update failed: ' . $exception->getMessage());
+        return api_error('task_unavailable', 'Task Widget could not be updated.', 503);
+    }
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_task_delete(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+    try {
+        if (!dashboard_widget_delete_task_widget($userId, $widgetId)) {
+            return api_error('not_found', 'Task Widget was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Task Widget delete failed: ' . $exception->getMessage());
+        return api_error('task_unavailable', 'Task Widget could not be deleted.', 503);
+    }
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_task_item_create(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $title = dashboard_widget_validate_task_title($input['task_title'] ?? null);
+    $dueDate = dashboard_widget_validate_task_due_date($input['task_due_date'] ?? null);
+    $priority = dashboard_widget_validate_task_priority($input['task_priority'] ?? null);
+    if ($widgetId === null || $title === null || $dueDate === null || $priority === null) {
+        return api_validation_error('Task settings are invalid.');
+    }
+    try {
+        $created = dashboard_widget_create_task_item($userId, $widgetId, $title, $dueDate, $priority);
+    } catch (InvalidArgumentException|LengthException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Task item create failed: ' . $exception->getMessage());
+        return api_error('task_unavailable', 'Task could not be created.', 503);
+    } catch (RuntimeException $exception) {
+        return api_error('not_found', $exception->getMessage(), 404);
+    }
+    return api_success($created, 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_task_item_update(int $userId, array $input): array
+{
+    $taskId = api_positive_int($input, 'task_id');
+    $title = dashboard_widget_validate_task_title($input['task_title'] ?? null);
+    $dueDate = dashboard_widget_validate_task_due_date($input['task_due_date'] ?? null);
+    $priority = dashboard_widget_validate_task_priority($input['task_priority'] ?? null);
+    if ($taskId === null || $title === null || $dueDate === null || $priority === null) {
+        return api_validation_error('Task settings are invalid.');
+    }
+    try {
+        if (!dashboard_widget_update_task_item($userId, $taskId, $title, $dueDate, $priority)) {
+            return api_error('not_found', 'Task was not found.', 404);
+        }
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Task item update failed: ' . $exception->getMessage());
+        return api_error('task_unavailable', 'Task could not be updated.', 503);
+    }
+    return api_success(['task_id' => $taskId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_task_item_toggle(int $userId, array $input): array
+{
+    $taskId = api_positive_int($input, 'task_id');
+    $completed = dashboard_widget_validate_boolean($input['task_completed'] ?? null);
+    if ($taskId === null || $completed === null) {
+        return api_validation_error('task_id or task_completed is invalid.');
+    }
+    try {
+        if (!dashboard_widget_toggle_task_item($userId, $taskId, $completed)) {
+            return api_error('not_found', 'Task was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Task item toggle failed: ' . $exception->getMessage());
+        return api_error('task_unavailable', 'Task status could not be updated.', 503);
+    }
+    return api_success(['task_id' => $taskId, 'completed' => $completed]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_task_item_delete(int $userId, array $input): array
+{
+    $taskId = api_positive_int($input, 'task_id');
+    if ($taskId === null) {
+        return api_validation_error('task_id must be a positive integer.');
+    }
+    try {
+        if (!dashboard_widget_delete_task_item($userId, $taskId)) {
+            return api_error('not_found', 'Task was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Task item delete failed: ' . $exception->getMessage());
+        return api_error('task_unavailable', 'Task could not be deleted.', 503);
+    }
+    return api_success(['task_id' => $taskId]);
 }
 
 /** @return array{status:int,body:array<string,mixed>} */

@@ -26,7 +26,7 @@ check('dashboard_widget_validate_clock_title' in widget and '32' in widget, 'Clo
 check("['12', '24']" in widget, 'Clock hour format is restricted to 12 or 24 hours')
 check('dashboard_widget_validate_boolean' in widget, 'Clock checkbox values are normalized explicitly')
 check('dashboard_widget_clock_config_from_storage' in widget and 'dashboard_widget_decode_config' in widget, 'stored Clock config is decoded through the bounded Widget JSON helper')
-check("$type === 'clock'" in widget and 'dashboard_widget_clock_config_from_storage' in widget, 'Clock rows receive normalized config during DB row normalization')
+check(("$type === 'clock'" in widget or "'clock' => dashboard_widget_clock_config_from_storage" in widget) and 'dashboard_widget_clock_config_from_storage' in widget, 'Clock rows receive normalized config during DB row normalization')
 check('dashboard_widget_create_clock' in widget and 'dashboard_widget_update_clock' in widget and 'dashboard_widget_delete_clock' in widget, 'Clock CRUD is implemented in the Widget domain layer')
 check("widget_reference_id, widget_sort_order" in widget and "'clock', NULL" in widget, 'Clock uses the existing dashboard_widget table without another reference table')
 check('dashboard_widget_next_sort_order' in widget, 'new Clock appends after the current Widget order')
@@ -62,7 +62,7 @@ check('min-height: calc(13rem - 44px)' in css, 'Clock aligns with the existing F
 check('@media (max-width: 767.98px)' in css and 'clock-card-body' in css, 'Clock has a mobile layout rule')
 check('clock' not in ''.join((ROOT / 'database' / 'migrations' / name).read_text(encoding='utf-8').lower() for name in migrations.splitlines() if name.startswith('004_')), 'V1.1-F Clock remains independent from later Memo migration')
 check('`widget_config` TEXT NULL' in schema, 'new installs already contain the generic config storage used by Clock')
-check(re.search(r"const APP_VERSION = '1\.1\.0-dev\.[5-9][0-9]*';", version) is not None and ('V1.1-F / R1' in version or 'V1.1-G / R1' in version), 'visible Version marker is V1.1-F or a later V1.1 checkpoint')
+check(re.search(r"const APP_VERSION = '1\.1\.0-dev\.[5-9][0-9]*';", version) is not None and any(label in version for label in ['V1.1-F / R1','V1.1-G / R1','V1.1-H / R1']), 'visible Version marker is V1.1-F or a later V1.1 checkpoint')
 check('test_v11f_clock_widget.php' in run and 'test_v11f_frontend_runtime.js' in run, 'main regression runner includes V1.1-F checks')
 check('test_v11f_clock_widget.php' in local_run and 'test_v11f_frontend_runtime.js' in local_run, 'local V1.1-F runner includes focused checks')
 

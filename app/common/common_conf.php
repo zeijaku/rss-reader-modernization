@@ -200,7 +200,7 @@ if (!defined('DB_TABLE_PREFIX')) {
 /** Return the physical table name for a known logical table. */
 function db_table_name(string $logicalName): string
 {
-    static $allowed = ['user_info', 'user_conf', 'content', 'content_stock', 'feed_item_state', 'memo', 'dashboard_widget'];
+    static $allowed = ['user_info', 'user_conf', 'content', 'content_stock', 'feed_item_state', 'memo', 'task', 'dashboard_widget'];
     if (!in_array($logicalName, $allowed, true)) {
         throw new InvalidArgumentException('Unknown database table name.');
     }

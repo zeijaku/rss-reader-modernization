@@ -233,3 +233,13 @@ node "$ROOT/tests/test_v11g_frontend_runtime.js"
 python3 "$ROOT/tests/test_v11g_dashboard_render.py"
 python3 "$ROOT/tests/test_v11g_browser.py"
 php "$ROOT/tools/db_v11g.php" --help >/dev/null
+
+
+echo '== V1.1-H Task Widget checks =='
+php "$ROOT/tests/test_v11h_task_widget.php"
+python3 "$ROOT/tests/test_v11h_architecture.py"
+python3 "$ROOT/tests/test_v11h_sql.py"
+node "$ROOT/tests/test_v11h_frontend_runtime.js"
+python3 "$ROOT/tests/test_v11h_dashboard_render.py"
+python3 "$ROOT/tests/test_v11h_browser.py"
+php "$ROOT/tools/db_v11h.php" --help >/dev/null

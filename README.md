@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Current development checkpoint:** `RSS Reader Modernization V1.1-G / R1`  
+**Current development checkpoint:** `RSS Reader Modernization V1.1-H / R1`  
 Stable release: `RSS Reader Modernization 1.0.0`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
@@ -25,6 +25,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Dashboard WidgetのタイトルバーDrag & Drop／Keyboard並び替え
 - Clock Widgetの追加・変更・削除、12／24時間、日付・秒表示
 - Memo Widgetの追加・変更・削除、改行を保持した本文表示
+- Task Widgetの追加・変更・削除、完了切替、期限、優先度
 - 記事リンクのStock保存と一覧表示
 - Bootstrapテーマ、Navbarリンク、タブ名のユーザー設定
 - MySQL 8系での新規DB構築
@@ -32,7 +33,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 
 Feed item本文はDBへ永続化せず、登録されたFeed URLから表示時に取得します。
 
-Version 1.1開発では、記事URLのTracking Parameter除去、Item Identityを使った新着表示、Dashboard Widget配置基盤、タイトルバーからの並び替え、Clock Widget、Memo Widgetを追加しています。Feed本体は従来の`content`、Memo本文は`memo`を正本とし、各Widgetの配置・表示設定は`dashboard_widget`へ保存します。
+Version 1.1開発では、記事URLのTracking Parameter除去、Item Identityを使った新着表示、Dashboard Widget配置基盤、タイトルバーからの並び替え、Clock Widget、Memo Widget、Task Widgetを追加しています。Feed本体は従来の`content`、Memo本文は`memo`、Task項目は`task`を正本とし、各Widgetの配置・表示設定は`dashboard_widget`へ保存します。
 
 ## Version 1.1 progress
 
@@ -45,10 +46,10 @@ Version 1.1開発では、記事URLのTracking Parameter除去、Item Identity�
 | V1.1-E | タイトルバーのDrag & Drop・並び順保存 | 完了 |
 | V1.1-F | Clock Widget | 完了 |
 | V1.1-G | Memo Widget | 完了 |
-| V1.1-H | Task Widget | 未着手 |
+| V1.1-H | Task Widget | 完了 |
 | V1.1-I | Calendar Widget | 未着手 |
 
-V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.md)、V1.1-DのWidget基盤は[`docs/v1-1-d-implementation.md`](docs/v1-1-d-implementation.md)、Migrationは[`docs/v1-1-d-migration.md`](docs/v1-1-d-migration.md)、V1.1-Eの並び替えは[`docs/v1-1-e-implementation.md`](docs/v1-1-e-implementation.md)、V1.1-FのClockは[`docs/v1-1-f-implementation.md`](docs/v1-1-f-implementation.md)、V1.1-GのMemoは[`docs/v1-1-g-implementation.md`](docs/v1-1-g-implementation.md)、Migrationは[`docs/v1-1-g-migration.md`](docs/v1-1-g-migration.md)を参照してください。
+V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.md)、V1.1-DのWidget基盤は[`docs/v1-1-d-implementation.md`](docs/v1-1-d-implementation.md)、Migrationは[`docs/v1-1-d-migration.md`](docs/v1-1-d-migration.md)、V1.1-Eの並び替えは[`docs/v1-1-e-implementation.md`](docs/v1-1-e-implementation.md)、V1.1-FのClockは[`docs/v1-1-f-implementation.md`](docs/v1-1-f-implementation.md)、V1.1-GのMemoは[`docs/v1-1-g-implementation.md`](docs/v1-1-g-implementation.md)、Migrationは[`docs/v1-1-g-migration.md`](docs/v1-1-g-migration.md)、V1.1-HのTaskは[`docs/v1-1-h-implementation.md`](docs/v1-1-h-implementation.md)、Migrationは[`docs/v1-1-h-migration.md`](docs/v1-1-h-migration.md)を参照してください。
 
 ## Secure Baselineで完了した範囲
 
@@ -188,7 +189,7 @@ return [
 SET @table_prefix = 'rss_';
 ```
 
-Prefix `rss_` の場合、V1.1-G時点では次の7テーブルを作成します。
+Prefix `rss_` の場合、V1.1-H時点では次の8テーブルを作成します。
 
 ```text
 rss_user_info
@@ -197,10 +198,11 @@ rss_content
 rss_content_stock
 rss_feed_item_state
 rss_memo
+rss_task
 rss_dashboard_widget
 ```
 
-Clock専用Tableは作成せず、表示設定は`rss_dashboard_widget.widget_config`へ保存します。Memo本文は`rss_memo`、配置は`rss_dashboard_widget`へ分けて保存します。
+Clock専用Tableは作成せず、表示設定は`rss_dashboard_widget.widget_config`へ保存します。Memo本文は`rss_memo`、Task項目は`rss_task`、配置は`rss_dashboard_widget`へ分けて保存します。
 
 SQLファイルはPHP設定を直接参照できないため、**`DB_TABLE_PREFIX` と `@table_prefix` は同じ値にしてください。**
 
@@ -227,9 +229,11 @@ database/migrations/002_v1_1_feed_item_state.sql
 → php tools/db_v11d.php verify
 → database/migrations/004_v1_1_memo.sql
 → php tools/db_v11g.php verify
+→ database/migrations/005_v1_1_task.sql
+→ php tools/db_v11h.php verify
 ```
 
-V1.1-Gでは`memo`TableのMigrationが必要です。CLIを利用できる場合は、Backup確認後に`php tools/db_v11g.php apply --backup-confirmed`で作成できます。
+V1.1-Gでは`memo`Table、V1.1-Hでは`task`TableのMigrationが必要です。CLIを利用できる場合は、Backup確認後に`php tools/db_v11g.php apply --backup-confirmed`、続けて`php tools/db_v11h.php apply --backup-confirmed`で作成できます。
 
 Migration前に必ずDB全体をバックアップしてください。Duplicate identityやorphan等を自動削除・統合する設計にはしていません。
 

@@ -285,6 +285,72 @@ if (is_int($content_location)) {
                     </div>
                 </section>
             ';
+            continue;
+        }
+
+
+        if ($widgetType === 'task') {
+            $taskConfig = is_array($result_content[$i]['widget_config_data'] ?? null)
+                ? $result_content[$i]['widget_config_data']
+                : dashboard_widget_task_defaults();
+            $taskWidgetTitle = dashboard_widget_validate_task_widget_title($taskConfig['title'] ?? null) ?? 'Task';
+            $taskTitleId = 'task-title-' . $widgetId;
+            $taskItems = is_array($result_content[$i]['task_items'] ?? null) ? $result_content[$i]['task_items'] : [];
+
+            echo '
+            <!-- Task Widget -->
+                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget task-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="task" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-task-widget-title="' . app_html($taskWidgetTitle) . '" role="region" aria-labelledby="' . app_html($taskTitleId) . '">
+                    <div class="task-card-inner">
+                        <div class="bg-' . app_html($widgetStyle) . ' task-card-header">
+                            <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
+                            <small class="task-widget-title widget-title-text text-white" id="' . app_html($taskTitleId) . '" title="' . app_html($taskWidgetTitle) . '">' . app_html($taskWidgetTitle) . '</small>
+                            <button type="button" class="btn btn-link task-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-task-widget-title="' . app_html($taskWidgetTitle) . '" data-toggle="modal" data-target="#changeTaskWidget" aria-label="このTask Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="task-card-body">
+                            <ul class="task-list" aria-live="polite">';
+            if ($taskItems === []) {
+                echo '<li class="task-empty text-muted">Taskはまだありません。</li>';
+            } else {
+                foreach ($taskItems as $taskItem) {
+                    if (!is_array($taskItem)) {
+                        continue;
+                    }
+                    $taskId = (int) ($taskItem['task_id'] ?? 0);
+                    $taskTitle = dashboard_widget_validate_task_title($taskItem['task_title'] ?? null) ?? '';
+                    $taskDueDate = dashboard_widget_validate_task_due_date($taskItem['task_due_date'] ?? null) ?? '';
+                    $taskPriority = dashboard_widget_validate_task_priority($taskItem['task_priority'] ?? null) ?? 'normal';
+                    $taskPriorityLabel = dashboard_widget_task_priority_label($taskPriority);
+                    $taskCompleted = dashboard_widget_validate_boolean($taskItem['task_completed'] ?? null) ?? false;
+                    $taskItemClass = 'task-item task-priority-' . $taskPriority . ($taskCompleted ? ' task-completed' : '');
+                    echo '<li class="' . app_html($taskItemClass) . '" data-task-id="' . $taskId . '" data-task-completed="' . ($taskCompleted ? '1' : '0') . '">';
+                    echo '<button type="button" class="btn btn-link task-toggle" data-task-id="' . $taskId . '" data-task-completed="' . ($taskCompleted ? '1' : '0') . '" aria-label="' . ($taskCompleted ? '未完了に戻す: ' : '完了にする: ') . app_html($taskTitle) . '" title="' . ($taskCompleted ? '未完了に戻す' : '完了にする') . '"><i class="' . ($taskCompleted ? 'fas fa-check-circle text-success' : 'far fa-circle text-muted') . '" aria-hidden="true"></i></button>';
+                    echo '<div class="task-item-main"><div class="task-item-title">' . app_html($taskTitle) . '</div><div class="task-item-meta">';
+                    echo '<span class="task-priority-label task-priority-label-' . app_html($taskPriority) . '">優先度 ' . app_html($taskPriorityLabel) . '</span>';
+                    if ($taskDueDate !== '') {
+                        echo '<time class="task-due-date" datetime="' . app_html($taskDueDate) . '"><i class="far fa-calendar-alt" aria-hidden="true"></i> ' . app_html($taskDueDate) . '</time>';
+                    }
+                    echo '</div></div>';
+                    echo '<button type="button" class="btn btn-link task-item-edit-trigger" data-task-id="' . $taskId . '" data-task-title="' . app_html($taskTitle) . '" data-task-due-date="' . app_html($taskDueDate) . '" data-task-priority="' . app_html($taskPriority) . '" data-toggle="modal" data-target="#changeTaskItem" aria-label="このTaskを編集"><i class="fas fa-ellipsis-v" aria-hidden="true"></i></button>';
+                    echo '</li>';
+                }
+            }
+            echo '</ul>
+                            <form class="task-item-create-form" method="post" action="./" data-widget-id="' . $widgetId . '">
+                                <label class="sr-only" for="task-create-title-' . $widgetId . '">Task名</label>
+                                <input type="text" class="form-control task-create-title" id="task-create-title-' . $widgetId . '" maxlength="128" placeholder="Taskを入力" required>
+                                <div class="task-create-options">
+                                    <label class="sr-only" for="task-create-due-' . $widgetId . '">期限</label>
+                                    <input type="date" class="form-control task-create-due" id="task-create-due-' . $widgetId . '">
+                                    <label class="sr-only" for="task-create-priority-' . $widgetId . '">優先度</label>
+                                    <select class="form-control task-create-priority" id="task-create-priority-' . $widgetId . '"><option value="normal" selected>通常</option><option value="high">高</option><option value="low">低</option></select>
+                                    <button type="submit" class="btn btn-outline-primary task-create-submit"><i class="fas fa-plus" aria-hidden="true"></i><span class="sr-only">Taskを追加</span></button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            ';
+            continue;
         }
     }
 
@@ -338,7 +404,7 @@ if ($result_content_cnt === 0) {
     if ($content_location === 'stock') {
         echo '<div class="empty-state text-center" role="status"><i class="far fa-bookmark fa-2x text-muted" aria-hidden="true"></i><p>Stockした記事はまだありません。</p><a class="btn btn-outline-secondary" href="./?tab=0">RSS一覧へ戻る</a></div>';
     } else {
-        echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#registerClock">Clockを追加する</button><button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#registerMemo">Memoを追加する</button></div>';
+        echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#registerClock">Clockを追加する</button><button type="button" class="btn btn-outline-secondary mr-2" data-toggle="modal" data-target="#registerMemo">Memoを追加する</button><button type="button" class="btn btn-outline-dark" data-toggle="modal" data-target="#registerTaskWidget">Taskを追加する</button></div>';
     }
 }
 ?>
@@ -674,6 +740,86 @@ if ($result_content_cnt === 0) {
     </div>
 </div>
 
+<!-- Task Widget追加モーダル -->
+<div class="modal fade" id="registerTaskWidget" tabindex="-1" role="dialog" aria-labelledby="registerTaskWidgetTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form id="registerTaskWidgetForm" method="post" action="./">
+            <div class="modal-header" style="color: #fff; background-color: #333;">
+                <h5 class="modal-title" id="registerTaskWidgetTitle"><i class="fas fa-tasks" aria-hidden="true"></i> Taskを追加</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" class="registerTaskWidgetLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
+                <div class="form-group">
+                    <label for="registerTaskWidgetTitleValue"><small class="text-dark">見出し</small></label>
+                    <input type="text" class="form-control registerTaskWidgetTitleValue" id="registerTaskWidgetTitleValue" value="Task" maxlength="32" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="registerTaskWidgetWidth"><small class="text-dark">横幅</small></label>
+                        <select class="form-control registerTaskWidgetWidth" id="registerTaskWidgetWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="registerTaskWidgetStyle"><small class="text-dark">見出し色</small></label>
+                        <select class="form-control registerTaskWidgetStyle" id="registerTaskWidgetStyle"><option value="primary" selected>primary</option><option value="success">success</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select>
+                    </div>
+                </div>
+                <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">このタブに追加する</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Task Widget変更モーダル -->
+<div class="modal fade" id="changeTaskWidget" tabindex="-1" role="dialog" aria-labelledby="changeTaskWidgetTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form id="changeTaskWidgetForm" method="post" action="./">
+            <div class="modal-header" style="color: #fff; background-color: #333;">
+                <h5 class="modal-title" id="changeTaskWidgetTitle"><i class="fas fa-tasks" aria-hidden="true"></i> Task Widgetを変更</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" class="changeTaskWidgetId">
+                <div class="form-group"><label for="changeTaskWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeTaskWidgetTitleValue" id="changeTaskWidgetTitleValue" maxlength="32" required></div>
+                <div class="form-row">
+                    <div class="form-group col-6"><label for="changeTaskWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-control changeTaskWidgetWidth" id="changeTaskWidgetWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="form-group col-6"><label for="changeTaskWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeTaskWidgetStyle" id="changeTaskWidgetStyle"><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                </div>
+                <small class="form-text text-muted">Widgetを削除すると、このWidget内のTaskも論理削除されます。</small>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_task_widget">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Task項目変更モーダル -->
+<div class="modal fade" id="changeTaskItem" tabindex="-1" role="dialog" aria-labelledby="changeTaskItemTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form id="changeTaskItemForm" method="post" action="./">
+            <div class="modal-header" style="color: #fff; background-color: #333;">
+                <h5 class="modal-title" id="changeTaskItemTitle"><i class="fas fa-check-square" aria-hidden="true"></i> Taskを変更</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" class="changeTaskItemId">
+                <div class="form-group"><label for="changeTaskItemTitleValue"><small class="text-dark">Task</small></label><input type="text" class="form-control changeTaskItemTitleValue" id="changeTaskItemTitleValue" maxlength="128" required></div>
+                <div class="form-row">
+                    <div class="form-group col-7"><label for="changeTaskItemDueDate"><small class="text-dark">期限</small></label><input type="date" class="form-control changeTaskItemDueDate" id="changeTaskItemDueDate"></div>
+                    <div class="form-group col-5"><label for="changeTaskItemPriority"><small class="text-dark">優先度</small></label><select class="form-control changeTaskItemPriority" id="changeTaskItemPriority"><option value="normal">通常</option><option value="high">高</option><option value="low">低</option></select></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_task_item">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- 設定変更モーダル -->
 <div class="modal fade" id="changeConf" tabindex="-1" role="dialog" aria-labelledby="changeConfTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -891,6 +1037,7 @@ if ($result_content_cnt === 0) {
         <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-th-large fa-fw" aria-hidden="true"></i> Widget</li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerClock"><i class="far fa-clock fa-fw" aria-hidden="true"></i>Clock追加</button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerMemo"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i>Memo追加</button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerTaskWidget"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i>Task追加</button></li>
         <!-- 定型リンク -->
         <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> Navbarリンク</li>
         <?php

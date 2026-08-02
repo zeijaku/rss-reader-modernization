@@ -38,6 +38,7 @@
 - [ ] `php tools/healthcheck.php`
 - [ ] `php tools/db_sb13.php verify`
 - [ ] V1.1-Gでは`php tools/db_v11g.php verify`
+- [ ] V1.1-Hでは`php tools/db_v11h.php verify`
 - [ ] `bash tests/run.sh`
 - [ ] `node --check public/js/dashboard.js`
 
@@ -53,6 +54,8 @@
 - [ ] Feed追加 / 変更 / 削除 / 再読込
 - [ ] Clock追加 / 変更 / 削除
 - [ ] Memo追加 / 変更 / 削除 / 改行表示
+- [ ] Task Widget追加 / 変更 / 削除
+- [ ] Task追加 / 変更 / 完了切替 / 期限 / 優先度 / 削除
 - [ ] RSS 2.0 / RSS 1.0 / Atom
 - [ ] Stock保存 / 一覧
 - [ ] Settings / Navbar / Tab名

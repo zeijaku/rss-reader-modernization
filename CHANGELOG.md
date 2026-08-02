@@ -3,6 +3,17 @@
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
 
+## RSS Reader Modernization 1.1.0-dev.7 — V1.1-H
+
+- Task項目を保存する`task`Tableと、既存DB向けMigration `005_v1_1_task.sql`を追加。
+- 1つのTask Widget内に複数Taskを保持し、追加・変更・完了切替・論理削除へ対応。
+- Task名、任意の期限、優先度（低／通常／高）、完了状態、作成順を保存。
+- Task項目は`task`、Widgetの見出し・配置・幅・色・並び順は`dashboard_widget`へ分離して保存。
+- Task CRUDをowner scope、CSRF、Transaction、Row Lock、論理削除で保護し、他Userの操作を拒否。
+- Task名は1〜128文字、期限は厳密な`Y-m-d`、優先度はallowlist、1Widget最大100件へ制限。
+- Calendar工程で期限を利用できるよう、owner／完了状態／期限のIndexを追加。
+- 新規DB用`database/schema.sql`、CLI apply／verify、preflight／postflight、専用Regressionを追加・更新。
+
 ## RSS Reader Modernization 1.1.0-dev.6 — V1.1-G
 
 - Memo本文を保存する`memo`Tableと、既存DB向けMigration `004_v1_1_memo.sql`を追加。

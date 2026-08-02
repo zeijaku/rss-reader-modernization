@@ -15,6 +15,7 @@ SET @t_content = CONCAT('`', @table_prefix, 'content`');
 SET @t_content_stock = CONCAT('`', @table_prefix, 'content_stock`');
 SET @t_feed_item_state = CONCAT('`', @table_prefix, 'feed_item_state`');
 SET @t_memo = CONCAT('`', @table_prefix, 'memo`');
+SET @t_task = CONCAT('`', @table_prefix, 'task`');
 SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
 
 SET @sql = CONCAT(
@@ -122,6 +123,28 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Memo保管'''
 );
 PREPARE v11g_stmt FROM @sql; EXECUTE v11g_stmt; DEALLOCATE PREPARE v11g_stmt;
+
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_task, ' (',
+  '`task_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`task_date` DATETIME NOT NULL,',
+  '`task_updated_at` DATETIME NOT NULL,',
+  '`task_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:有効/1:無効'',',
+  '`task_owner` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`task_widget_id` BIGINT UNSIGNED NOT NULL COMMENT ''dashboard_widget.widget_id'',',
+  '`task_title` VARCHAR(256) NOT NULL,',
+  '`task_due_date` DATE NULL DEFAULT NULL,',
+  '`task_priority` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''normal'',',
+  '`task_completed` TINYINT UNSIGNED NOT NULL DEFAULT 0,',
+  '`task_completed_at` DATETIME NULL DEFAULT NULL,',
+  '`task_sort_order` INT UNSIGNED NOT NULL DEFAULT 0,',
+  'PRIMARY KEY (`task_id`),',
+  'KEY `idx_task_owner_widget_flag_order` (`task_owner`, `task_widget_id`, `task_flag`, `task_sort_order`, `task_id`),',
+  'KEY `idx_task_owner_due` (`task_owner`, `task_flag`, `task_completed`, `task_due_date`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Task保管'''
+);
+PREPARE v11h_stmt FROM @sql; EXECUTE v11h_stmt; DEALLOCATE PREPARE v11h_stmt;
 
 
 SET @sql = CONCAT(
