@@ -163,7 +163,7 @@ check(len([1 for _, attrs in parser.records if 'widget-drag-handle' in attrs.get
 check('&lt;Clock &amp; Test&gt;' in html and '<Clock & Test>' not in html, 'Clock title is escaped in raw HTML')
 check('id="registerClockForm"' in html and 'id="changeClockForm"' in html, 'Clock add and edit modals render')
 check('Clock追加' in ''.join(parser.text), 'Drawer contains the Clock add action')
-check('RSS Reader Modernization V1.1-F / R1' in ''.join(parser.text), 'Dashboard displays the V1.1-F Version marker')
+check('RSS Reader Modernization V1.1-' in ''.join(parser.text), 'Dashboard displays a V1.1 Version marker')
 
 ids = [attrs['id'] for _, attrs in parser.records if attrs.get('id')]
 check(len(ids) == len(set(ids)), 'mixed Dashboard render has no duplicate ids')

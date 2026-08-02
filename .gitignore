@@ -58,11 +58,18 @@ __pycache__/
 
 /config/local.php
 
-# Sanitized SB-13 database artifacts are intentionally versioned.
+# Sanitized database artifacts are intentionally versioned.
 !/database/schema.sql
 !/database/audit/preflight.sql
 !/database/audit/postflight.sql
+!/database/audit/v1_1_d_preflight.sql
+!/database/audit/v1_1_d_postflight.sql
+!/database/audit/v1_1_g_preflight.sql
+!/database/audit/v1_1_g_postflight.sql
 !/database/migrations/001_sb13_integrity.sql
+!/database/migrations/002_v1_1_feed_item_state.sql
+!/database/migrations/003_v1_1_dashboard_widget.sql
+!/database/migrations/004_v1_1_memo.sql
 !/database/fixtures/sample.sql
 
 # Keep only the private migration directory placeholder; JSON snapshots remain ignored.

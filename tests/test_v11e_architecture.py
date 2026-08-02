@@ -52,7 +52,7 @@ check('.feed-new-clear {' in css and 'background: transparent' in css and 'font-
 check('.widget-drag-handle .svg-inline--fa' in css and 'pointer-events: none' in css, 'the icon cannot narrow the Drag button target')
 check('.widget-dragging' in css and '.widget-drag-ghost' in css and '.widget-drop-horizontal' in css and '.widget-drop-vertical' in css, 'Drag state follows the pointer and shows an insertion line')
 check("const APP_VERSION = '1.1.0-dev." in version and 'RSS Reader Modernization V1.1-' in version, 'visible Version marker remains V1.1-E or a later development checkpoint')
-check('004_v1_1' not in '\n'.join(p.name for p in (ROOT / 'database/migrations').iterdir()), 'V1.1-E adds no database migration')
+check(not any('reorder' in p.read_text(encoding='utf-8').lower() for p in (ROOT / 'database/migrations').glob('004_*.sql')), 'V1.1-E reorder remains independent from later Memo migration')
 check("@database_name = DATABASE()" in postflight and "@database_is_application" in postflight, 'V1.1-D R2 postflight validates the selected database')
 check("NOT IN ('information_schema', 'mysql', 'performance_schema', 'sys')" in postflight, 'postflight refuses system database selection')
 check("'`.`'" in postflight and 'missing_feed_widgets' in postflight, 'postflight fully qualifies application table names')

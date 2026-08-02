@@ -14,6 +14,7 @@ SET @t_user_conf = CONCAT('`', @table_prefix, 'user_conf`');
 SET @t_content = CONCAT('`', @table_prefix, 'content`');
 SET @t_content_stock = CONCAT('`', @table_prefix, 'content_stock`');
 SET @t_feed_item_state = CONCAT('`', @table_prefix, 'feed_item_state`');
+SET @t_memo = CONCAT('`', @table_prefix, 'memo`');
 SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
 
 SET @sql = CONCAT(
@@ -105,6 +106,22 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Feed記事NEW状態'''
 );
 PREPARE v11c_stmt FROM @sql; EXECUTE v11c_stmt; DEALLOCATE PREPARE v11c_stmt;
+
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_memo, ' (',
+  '`memo_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`memo_date` DATETIME NOT NULL,',
+  '`memo_updated_at` DATETIME NOT NULL,',
+  '`memo_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:有効/1:無効'',',
+  '`memo_owner` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`memo_title` VARCHAR(128) NOT NULL,',
+  '`memo_body` TEXT NOT NULL,',
+  'PRIMARY KEY (`memo_id`),',
+  'KEY `idx_memo_owner_flag_id` (`memo_owner`, `memo_flag`, `memo_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Memo保管'''
+);
+PREPARE v11g_stmt FROM @sql; EXECUTE v11g_stmt; DEALLOCATE PREPARE v11g_stmt;
 
 
 SET @sql = CONCAT(

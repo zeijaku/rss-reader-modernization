@@ -124,6 +124,21 @@ function dashboard_widget_clock_config_from_storage(mixed $value): array
 }
 
 
+function dashboard_widget_validate_memo_title(mixed $value): ?string
+{
+    return app_validate_text($value, 32, false);
+}
+
+function dashboard_widget_validate_memo_body(mixed $value): ?string
+{
+    if (!is_string($value)) {
+        return null;
+    }
+    $value = str_replace(["\r\n", "\r"], "\n", $value);
+    return app_validate_text($value, 4000, false);
+}
+
+
 /** @return list<int>|null */
 function dashboard_widget_decode_order_list(mixed $value, int $maxItems = 200): ?array
 {
@@ -212,7 +227,7 @@ function dashboard_widget_normalize_row(array $row): ?array
     $referenceId = $row['widget_reference_id'] === null
         ? null
         : app_validate_positive_int($row['widget_reference_id'] ?? null);
-    if ($type === 'feed' && $referenceId === null) {
+    if (in_array($type, ['feed', 'memo'], true) && $referenceId === null) {
         return null;
     }
 
@@ -244,10 +259,13 @@ function search_dashboard_widgets(int $ownerId, int $location): array
         . 'w.widget_reference_id, w.widget_sort_order, w.widget_width, w.widget_style, '
         . 'w.widget_config, w.widget_flag, w.widget_created_at, w.widget_updated_at, '
         . 'c.content_id, c.content_date, c.content_flag, c.content_owner, c.content_location, '
-        . 'c.content_style, c.content_value '
+        . 'c.content_style, c.content_value, '
+        . 'm.memo_id, m.memo_date, m.memo_updated_at, m.memo_flag, m.memo_owner, m.memo_title, m.memo_body '
         . 'FROM ' . db_table_identifier('dashboard_widget') . ' w '
         . 'LEFT JOIN ' . db_table_identifier('content') . ' c '
         . "ON w.widget_type = 'feed' AND w.widget_reference_id = c.content_id AND w.widget_owner = c.content_owner "
+        . 'LEFT JOIN ' . db_table_identifier('memo') . ' m '
+        . "ON w.widget_type = 'memo' AND w.widget_reference_id = m.memo_id AND w.widget_owner = m.memo_owner "
         . 'WHERE w.widget_owner = :owner AND w.widget_location = :location AND w.widget_flag = 0 '
         . 'ORDER BY w.widget_sort_order ASC, w.widget_id ASC'
     );
@@ -267,6 +285,18 @@ function search_dashboard_widgets(int $ownerId, int $location): array
                 continue;
             }
         }
+        if ($normalized['widget_type'] === 'memo') {
+            $memoTitle = dashboard_widget_validate_memo_title($normalized['memo_title'] ?? null);
+            $memoBody = dashboard_widget_validate_memo_body($normalized['memo_body'] ?? null);
+            if ((int) ($normalized['memo_flag'] ?? 1) !== 0
+                || (int) ($normalized['memo_owner'] ?? 0) !== $ownerId
+                || $memoTitle === null
+                || $memoBody === null) {
+                continue;
+            }
+            $normalized['memo_title'] = $memoTitle;
+            $normalized['memo_body'] = $memoBody;
+        }
         $result[] = $normalized;
     }
 
@@ -278,7 +308,7 @@ function dashboard_widget_public_list(int $ownerId, int $location): array
 {
     $result = [];
     foreach (search_dashboard_widgets($ownerId, $location) as $row) {
-        $result[] = [
+        $public = [
             'widget_id' => $row['widget_id'],
             'widget_location' => $row['widget_location'],
             'widget_type' => $row['widget_type'],
@@ -288,6 +318,15 @@ function dashboard_widget_public_list(int $ownerId, int $location): array
             'widget_style' => $row['widget_style'],
             'widget_config' => $row['widget_config_data'],
         ];
+        if ($row['widget_type'] === 'memo') {
+            $public['memo'] = [
+                'memo_id' => $row['memo_id'],
+                'title' => $row['memo_title'],
+                'body' => $row['memo_body'],
+                'updated_at' => $row['memo_updated_at'],
+            ];
+        }
+        $result[] = $public;
     }
     return $result;
 }
@@ -649,6 +688,228 @@ function dashboard_widget_delete_clock(int $ownerId, int $widgetId): bool
             ':widget_id' => $widgetId,
             ':owner' => $ownerId,
         ]);
+        if ($started) {
+            $pdo->commit();
+        }
+        return true;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+/** @return array<string,mixed>|null */
+function dashboard_widget_lock_owned_memo(PDO $pdo, int $ownerId, int $memoId): ?array
+{
+    if ($ownerId <= 0 || $memoId <= 0) {
+        return null;
+    }
+
+    $sql = 'SELECT * FROM ' . db_table_identifier('memo') . ' '
+        . 'WHERE memo_id = :memo_id AND memo_owner = :owner AND memo_flag = 0';
+    if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+        $sql .= ' FOR UPDATE';
+    }
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':memo_id' => $memoId, ':owner' => $ownerId]);
+    $row = $stmt->fetch();
+    return is_array($row) ? $row : null;
+}
+
+function dashboard_widget_create_memo(
+    int $ownerId,
+    int $location,
+    string $style,
+    int $width,
+    string $title,
+    string $body
+): array {
+    $title = dashboard_widget_validate_memo_title($title);
+    $body = dashboard_widget_validate_memo_body($body);
+    if ($ownerId <= 0
+        || dashboard_widget_validate_location($location) === null
+        || app_normalize_content_style($style) === null
+        || dashboard_widget_validate_width($width) === null
+        || $title === null
+        || $body === null) {
+        throw new InvalidArgumentException('Memo Widget settings are invalid.');
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        $now = app_now();
+        $memoStmt = $pdo->prepare(
+            'INSERT INTO ' . db_table_identifier('memo') . ' '
+            . '(memo_date, memo_updated_at, memo_flag, memo_owner, memo_title, memo_body) '
+            . 'VALUES (:memo_date, :memo_updated_at, 0, :memo_owner, :memo_title, :memo_body)'
+        );
+        $memoStmt->execute([
+            ':memo_date' => $now,
+            ':memo_updated_at' => $now,
+            ':memo_owner' => $ownerId,
+            ':memo_title' => $title,
+            ':memo_body' => $body,
+        ]);
+        $memoId = (int) $pdo->lastInsertId();
+
+        $widgetStmt = $pdo->prepare(
+            'INSERT INTO ' . db_table_identifier('dashboard_widget') . ' '
+            . '(widget_owner, widget_location, widget_type, widget_reference_id, widget_sort_order, '
+            . 'widget_width, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
+            . "VALUES (:owner, :location, 'memo', :reference_id, :sort_order, :width, :style, NULL, 0, :created_at, :updated_at)"
+        );
+        $widgetStmt->execute([
+            ':owner' => $ownerId,
+            ':location' => $location,
+            ':reference_id' => $memoId,
+            ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
+            ':width' => $width,
+            ':style' => $style,
+            ':created_at' => $now,
+            ':updated_at' => $now,
+        ]);
+        $widgetId = (int) $pdo->lastInsertId();
+
+        if ($started) {
+            $pdo->commit();
+        }
+        return ['memo_id' => $memoId, 'widget_id' => $widgetId];
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+function dashboard_widget_update_memo(
+    int $ownerId,
+    int $widgetId,
+    string $style,
+    int $width,
+    string $title,
+    string $body
+): bool {
+    $title = dashboard_widget_validate_memo_title($title);
+    $body = dashboard_widget_validate_memo_body($body);
+    if ($ownerId <= 0
+        || $widgetId <= 0
+        || app_normalize_content_style($style) === null
+        || dashboard_widget_validate_width($width) === null
+        || $title === null
+        || $body === null) {
+        throw new InvalidArgumentException('Memo Widget settings are invalid.');
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        $widget = dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'memo');
+        $memoId = is_array($widget) ? app_validate_positive_int($widget['widget_reference_id'] ?? null) : null;
+        if ($memoId === null || dashboard_widget_lock_owned_memo($pdo, $ownerId, $memoId) === null) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+
+        $now = app_now();
+        $memoStmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('memo') . ' '
+            . 'SET memo_title = :memo_title, memo_body = :memo_body, memo_updated_at = :updated_at '
+            . 'WHERE memo_id = :memo_id AND memo_owner = :owner AND memo_flag = 0'
+        );
+        $memoStmt->execute([
+            ':memo_title' => $title,
+            ':memo_body' => $body,
+            ':updated_at' => $now,
+            ':memo_id' => $memoId,
+            ':owner' => $ownerId,
+        ]);
+
+        $widgetStmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_width = :width, widget_style = :style, widget_updated_at = :updated_at '
+            . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+            . "AND widget_type = 'memo' AND widget_flag = 0"
+        );
+        $widgetStmt->execute([
+            ':width' => $width,
+            ':style' => $style,
+            ':updated_at' => $now,
+            ':widget_id' => $widgetId,
+            ':owner' => $ownerId,
+        ]);
+
+        if ($started) {
+            $pdo->commit();
+        }
+        return true;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+function dashboard_widget_delete_memo(int $ownerId, int $widgetId): bool
+{
+    if ($ownerId <= 0 || $widgetId <= 0) {
+        return false;
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        $widget = dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'memo');
+        $memoId = is_array($widget) ? app_validate_positive_int($widget['widget_reference_id'] ?? null) : null;
+        if ($memoId === null || dashboard_widget_lock_owned_memo($pdo, $ownerId, $memoId) === null) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+
+        $now = app_now();
+        $memoStmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('memo') . ' '
+            . 'SET memo_flag = 1, memo_updated_at = :updated_at '
+            . 'WHERE memo_id = :memo_id AND memo_owner = :owner AND memo_flag = 0'
+        );
+        $memoStmt->execute([
+            ':updated_at' => $now,
+            ':memo_id' => $memoId,
+            ':owner' => $ownerId,
+        ]);
+
+        $widgetStmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_flag = 1, widget_updated_at = :updated_at '
+            . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+            . "AND widget_type = 'memo' AND widget_flag = 0"
+        );
+        $widgetStmt->execute([
+            ':updated_at' => $now,
+            ':widget_id' => $widgetId,
+            ':owner' => $ownerId,
+        ]);
+
         if ($started) {
             $pdo->commit();
         }

@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
@@ -59,9 +60,9 @@ check('.clock-card-inner' in css and '.clock-card-header' in css and '.clock-car
 check('font-variant-numeric: tabular-nums' in css, 'Clock digits use stable tabular spacing')
 check('min-height: calc(13rem - 44px)' in css, 'Clock aligns with the existing Feed card height')
 check('@media (max-width: 767.98px)' in css and 'clock-card-body' in css, 'Clock has a mobile layout rule')
-check('004_v1_1' not in migrations, 'V1.1-F adds no database migration')
+check('clock' not in ''.join((ROOT / 'database' / 'migrations' / name).read_text(encoding='utf-8').lower() for name in migrations.splitlines() if name.startswith('004_')), 'V1.1-F Clock remains independent from later Memo migration')
 check('`widget_config` TEXT NULL' in schema, 'new installs already contain the generic config storage used by Clock')
-check("const APP_VERSION = '1.1.0-dev.5';" in version and 'V1.1-F / R1' in version, 'visible Version marker identifies V1.1-F')
+check(re.search(r"const APP_VERSION = '1\.1\.0-dev\.[5-9][0-9]*';", version) is not None and ('V1.1-F / R1' in version or 'V1.1-G / R1' in version), 'visible Version marker is V1.1-F or a later V1.1 checkpoint')
 check('test_v11f_clock_widget.php' in run and 'test_v11f_frontend_runtime.js' in run, 'main regression runner includes V1.1-F checks')
 check('test_v11f_clock_widget.php' in local_run and 'test_v11f_frontend_runtime.js' in local_run, 'local V1.1-F runner includes focused checks')
 

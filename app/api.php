@@ -138,6 +138,9 @@ function api_dispatch(string $action, int $userId, array $input): array
         'widget.clock.create' => api_widget_clock_create($userId, $input),
         'widget.clock.update' => api_widget_clock_update($userId, $input),
         'widget.clock.delete' => api_widget_clock_delete($userId, $input),
+        'widget.memo.create' => api_widget_memo_create($userId, $input),
+        'widget.memo.update' => api_widget_memo_update($userId, $input),
+        'widget.memo.delete' => api_widget_memo_delete($userId, $input),
         default => api_error('unknown_action', 'Unknown API action.', 400),
     };
 }
@@ -359,6 +362,96 @@ function api_widget_clock_delete(int $userId, array $input): array
     } catch (PDOException $exception) {
         error_log('Clock Widget delete failed: ' . $exception->getMessage());
         return api_error('dashboard_widget_unavailable', 'Clock Widget could not be deleted.', 503);
+    }
+
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_memo_create(int $userId, array $input): array
+{
+    $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $title = dashboard_widget_validate_memo_title($input['memo_title'] ?? null);
+    $body = dashboard_widget_validate_memo_body($input['memo_body'] ?? null);
+
+    if ($location === null) {
+        return api_validation_error('widget_location must be 0, 1, 2, or 3.');
+    }
+    if ($style === null) {
+        return api_validation_error('widget_style is invalid.');
+    }
+    if ($width === null) {
+        return api_validation_error('widget_width must be 1, 2, 3, or 4.');
+    }
+    if ($title === null || $body === null) {
+        return api_validation_error('Memo title or body is invalid.');
+    }
+
+    try {
+        $created = dashboard_widget_create_memo($userId, $location, $style, $width, $title, $body);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Memo Widget create failed: ' . $exception->getMessage());
+        return api_error('memo_unavailable', 'Memo migration is required.', 503);
+    }
+
+    return api_success($created, 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_memo_update(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $title = dashboard_widget_validate_memo_title($input['memo_title'] ?? null);
+    $body = dashboard_widget_validate_memo_body($input['memo_body'] ?? null);
+
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+    if ($style === null) {
+        return api_validation_error('widget_style is invalid.');
+    }
+    if ($width === null) {
+        return api_validation_error('widget_width must be 1, 2, 3, or 4.');
+    }
+    if ($title === null || $body === null) {
+        return api_validation_error('Memo title or body is invalid.');
+    }
+
+    try {
+        if (!dashboard_widget_update_memo($userId, $widgetId, $style, $width, $title, $body)) {
+            return api_error('not_found', 'Memo Widget was not found.', 404);
+        }
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Memo Widget update failed: ' . $exception->getMessage());
+        return api_error('memo_unavailable', 'Memo could not be updated.', 503);
+    }
+
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_memo_delete(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+
+    try {
+        if (!dashboard_widget_delete_memo($userId, $widgetId)) {
+            return api_error('not_found', 'Memo Widget was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Memo Widget delete failed: ' . $exception->getMessage());
+        return api_error('memo_unavailable', 'Memo could not be deleted.', 503);
     }
 
     return api_success(['widget_id' => $widgetId]);

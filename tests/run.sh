@@ -224,3 +224,12 @@ python3 "$ROOT/tests/test_v11f_architecture.py"
 node "$ROOT/tests/test_v11f_frontend_runtime.js"
 python3 "$ROOT/tests/test_v11f_dashboard_render.py"
 python3 "$ROOT/tests/test_v11f_browser.py"
+
+echo '== V1.1-G Memo Widget checks =='
+php "$ROOT/tests/test_v11g_memo_widget.php"
+python3 "$ROOT/tests/test_v11g_architecture.py"
+python3 "$ROOT/tests/test_v11g_sql.py"
+node "$ROOT/tests/test_v11g_frontend_runtime.js"
+python3 "$ROOT/tests/test_v11g_dashboard_render.py"
+python3 "$ROOT/tests/test_v11g_browser.py"
+php "$ROOT/tools/db_v11g.php" --help >/dev/null

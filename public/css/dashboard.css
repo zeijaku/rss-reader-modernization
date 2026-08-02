@@ -9,6 +9,7 @@
 
 .feed-card,
 .clock-card,
+.memo-card,
 .stock-card {
     min-width: 0;
     padding: 4px;
@@ -16,6 +17,7 @@
 
 .feed-card-inner,
 .clock-card-inner,
+.memo-card-inner,
 .stock-card-inner {
     height: 100%;
 }
@@ -27,7 +29,8 @@
     border-radius: 4px;
 }
 
-.clock-card-inner {
+.clock-card-inner,
+.memo-card-inner {
     min-height: 13rem;
     overflow: hidden;
     background: #ffffff;
@@ -102,6 +105,58 @@
 
 .clock-zone {
     margin-top: 6px;
+}
+
+.memo-card-header {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 4px 0 8px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.memo-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-left: 3px;
+    overflow: hidden;
+    font-size: 80%;
+    font-weight: 400;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.memo-edit-trigger {
+    flex: 0 0 44px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.memo-card-body {
+    min-height: calc(13rem - 44px);
+    padding: 14px 12px;
+    background: #fffdf5;
+}
+
+.memo-body {
+    color: #343a40;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.memo-textarea {
+    min-height: 180px;
+    resize: vertical;
 }
 
 .feed-table {
@@ -410,6 +465,7 @@ select:focus,
 
     .feed-card,
     .clock-card,
+    .memo-card,
     .stock-card {
         padding: 4px 0;
     }
@@ -420,13 +476,19 @@ select:focus,
     }
 
     .feed-card-inner,
-    .clock-card-inner {
+    .clock-card-inner,
+    .memo-card-inner {
         min-height: 11rem;
     }
 
     .clock-card-body {
         min-height: calc(11rem - 44px);
         padding: 14px 10px;
+    }
+
+    .memo-card-body {
+        min-height: calc(11rem - 44px);
+        padding: 12px 10px;
     }
 
     .clock-time {
@@ -455,11 +517,16 @@ select:focus,
 
 @media (min-width: 768px) and (max-width: 991.98px) {
     .feed-card-inner,
-    .clock-card-inner {
+    .clock-card-inner,
+    .memo-card-inner {
         min-height: 12rem;
     }
 
     .clock-card-body {
+        min-height: calc(12rem - 44px);
+    }
+
+    .memo-card-body {
         min-height: calc(12rem - 44px);
     }
 }

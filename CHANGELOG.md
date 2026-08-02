@@ -3,6 +3,14 @@
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
 
+## RSS Reader Modernization 1.1.0-dev.6 — V1.1-G
+
+- Memo本文を保存する`memo`Tableと、既存DB向けMigration `004_v1_1_memo.sql`を追加。
+- Memo Widgetの追加・変更・論理削除、見出し、本文、見出し色、横幅1〜4へ対応。
+- Memo本文は`memo`、配置・幅・色・並び順は`dashboard_widget`へ分離して保存。
+- Memo CRUDをowner scope、CSRF、Transaction、論理削除で保護し、他UserのMemo操作を拒否。
+- 改行を保持しながらHTMLとして解釈しない出力、1〜32文字の見出し、1〜4,000文字の本文Validationを追加。
+- 新規DB用`database/schema.sql`、CLI apply／verify、preflight／postflight、専用Regressionを追加・更新。
 
 ## RSS Reader Modernization 1.1.0-dev.5 — V1.1-F
 

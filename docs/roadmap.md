@@ -14,7 +14,7 @@
 - [x] V1.1-D Dashboard Widget配置基盤・既存Feed移行
 - [x] V1.1-E タイトルバーのDrag & Drop・並び順保存
 - [x] V1.1-F Clock
-- [ ] V1.1-G Memo
+- [x] V1.1-G Memo
 - [ ] V1.1-H Task
 - [ ] V1.1-I Calendar
 - [ ] V1.1-J 統合回帰・Release

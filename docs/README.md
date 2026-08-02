@@ -23,6 +23,10 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`v1-1-f-implementation.md`](v1-1-f-implementation.md) — Clock Widget
 - [`v1-1-f-files.md`](v1-1-f-files.md) — V1.1-F変更File
 - [`test-report-v1-1-f.md`](test-report-v1-1-f.md) — V1.1-F Test結果
+- [`v1-1-g-implementation.md`](v1-1-g-implementation.md) — Memo Widget
+- [`v1-1-g-migration.md`](v1-1-g-migration.md) — `memo` Migration
+- [`v1-1-g-files.md`](v1-1-g-files.md) — V1.1-G変更File
+- [`test-report-v1-1-g.md`](test-report-v1-1-g.md) — V1.1-G Test結果
 
 ## M4 release preparation
 
@@ -105,6 +109,9 @@ Secure Baseline初期のdeployment / login / session / logout等のhotfix記録�
 - `database/audit/preflight.sql` — Legacy DB migration前確認
 - `database/migrations/001_sb13_integrity.sql` — SB-13 migration
 - `database/audit/postflight.sql` — migration後確認
+- `database/migrations/002_v1_1_feed_item_state.sql` — V1.1-C既存DB migration
+- `database/migrations/003_v1_1_dashboard_widget.sql` — V1.1-D既存DB migration
+- `database/migrations/004_v1_1_memo.sql` — V1.1-G既存DB migration
 
 新規環境では `database/schema.sql` を使用し、Legacy DBを保持して移行する場合だけpreflight → migration → postflightの順に使用します。
 

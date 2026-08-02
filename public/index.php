@@ -263,6 +263,28 @@ if (is_int($content_location)) {
                     </div>
                 </section>
             ';
+            continue;
+        }
+
+        if ($widgetType === 'memo') {
+            $memoId = (int) ($result_content[$i]['memo_id'] ?? 0);
+            $memoTitle = dashboard_widget_validate_memo_title($result_content[$i]['memo_title'] ?? null) ?? 'Memo';
+            $memoBody = dashboard_widget_validate_memo_body($result_content[$i]['memo_body'] ?? null) ?? '';
+            $memoTitleId = 'memo-title-' . $widgetId;
+
+            echo '
+            <!-- Memo Widget -->
+                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget memo-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="memo" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-memo-id="' . $memoId . '" role="region" aria-labelledby="' . app_html($memoTitleId) . '">
+                    <div class="memo-card-inner">
+                        <div class="bg-' . app_html($widgetStyle) . ' memo-card-header">
+                            <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
+                            <small class="memo-title widget-title-text text-white" id="' . app_html($memoTitleId) . '" title="' . app_html($memoTitle) . '">' . app_html($memoTitle) . '</small>
+                            <button type="button" class="btn btn-link memo-edit-trigger" data-widget-id="' . $widgetId . '" data-memo-id="' . $memoId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-toggle="modal" data-target="#changeMemo" aria-label="このMemoを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="memo-card-body"><div class="memo-body">' . app_html($memoBody) . '</div></div>
+                    </div>
+                </section>
+            ';
         }
     }
 
@@ -316,7 +338,7 @@ if ($result_content_cnt === 0) {
     if ($content_location === 'stock') {
         echo '<div class="empty-state text-center" role="status"><i class="far fa-bookmark fa-2x text-muted" aria-hidden="true"></i><p>Stockした記事はまだありません。</p><a class="btn btn-outline-secondary" href="./?tab=0">RSS一覧へ戻る</a></div>';
     } else {
-        echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#registerClock">Clockを追加する</button></div>';
+        echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#registerClock">Clockを追加する</button><button type="button" class="btn btn-outline-secondary" data-toggle="modal" data-target="#registerMemo">Memoを追加する</button></div>';
     }
 }
 ?>
@@ -562,6 +584,96 @@ if ($result_content_cnt === 0) {
     </div>
 </div>
 
+<!-- Memo追加モーダル -->
+<div class="modal fade" id="registerMemo" tabindex="-1" role="dialog" aria-labelledby="registerMemoTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form id="registerMemoForm" method="post" action="./">
+            <div class="modal-header" style="color: #fff; background-color: #333;">
+                <h5 class="modal-title" id="registerMemoTitle"><i class="far fa-sticky-note" aria-hidden="true"></i> Memoを追加</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" class="registerMemoLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
+                <div class="form-group">
+                    <label for="registerMemoTitleValue"><small class="text-dark">見出し</small></label>
+                    <input type="text" class="form-control registerMemoTitleValue" id="registerMemoTitleValue" value="Memo" maxlength="32" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerMemoBody"><small class="text-dark">本文</small></label>
+                    <textarea class="form-control memo-textarea registerMemoBody" id="registerMemoBody" maxlength="4000" rows="8" required></textarea>
+                    <small class="form-text text-muted">改行を含めて4,000文字まで保存できます。</small>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="registerMemoWidth"><small class="text-dark">横幅</small></label>
+                        <select class="form-control registerMemoWidth" id="registerMemoWidth">
+                            <option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="registerMemoStyle"><small class="text-dark">見出し色</small></label>
+                        <select class="form-control registerMemoStyle" id="registerMemoStyle">
+                            <option value="success" selected>success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option>
+                        </select>
+                    </div>
+                </div>
+                <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                <button type="submit" class="btn btn-primary">このタブに追加する</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Memo変更モーダル -->
+<div class="modal fade" id="changeMemo" tabindex="-1" role="dialog" aria-labelledby="changeMemoTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form id="changeMemoForm" method="post" action="./">
+            <div class="modal-header" style="color: #fff; background-color: #333;">
+                <h5 class="modal-title" id="changeMemoTitle"><i class="far fa-sticky-note" aria-hidden="true"></i> Memoを変更</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" class="changeMemoWidgetId">
+                <input type="hidden" class="changeMemoId">
+                <div class="form-group">
+                    <label for="changeMemoTitleValue"><small class="text-dark">見出し</small></label>
+                    <input type="text" class="form-control changeMemoTitleValue" id="changeMemoTitleValue" maxlength="32" required>
+                </div>
+                <div class="form-group">
+                    <label for="changeMemoBody"><small class="text-dark">本文</small></label>
+                    <textarea class="form-control memo-textarea changeMemoBody" id="changeMemoBody" maxlength="4000" rows="8" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="changeMemoWidth"><small class="text-dark">横幅</small></label>
+                        <select class="form-control changeMemoWidth" id="changeMemoWidth">
+                            <option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="changeMemoStyle"><small class="text-dark">見出し色</small></label>
+                        <select class="form-control changeMemoStyle" id="changeMemoStyle">
+                            <option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                <button type="button" class="btn btn-outline-danger delete_memo">削除する</button>
+                <button type="submit" class="btn btn-primary">変更する</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- 設定変更モーダル -->
 <div class="modal fade" id="changeConf" tabindex="-1" role="dialog" aria-labelledby="changeConfTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -778,6 +890,7 @@ if ($result_content_cnt === 0) {
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerContent"><i class="fas fa-clone fa-fw" aria-hidden="true"></i>RSS追加</button></li>
         <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-th-large fa-fw" aria-hidden="true"></i> Widget</li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerClock"><i class="far fa-clock fa-fw" aria-hidden="true"></i>Clock追加</button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerMemo"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i>Memo追加</button></li>
         <!-- 定型リンク -->
         <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> Navbarリンク</li>
         <?php
