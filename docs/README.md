@@ -8,6 +8,16 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`roadmap.md`](roadmap.md) — Secure Baseline後のModernization計画
 - [`change-map.md`](change-map.md) — Legacy issue → work unit → implementation → testの対応表
 
+
+## Version 1.1 development
+
+- [`v1-1-b-implementation.md`](v1-1-b-implementation.md) — Tracking Parameter除去
+- [`v1-1-c-implementation.md`](v1-1-c-implementation.md) — Feed item NEW状態
+- [`v1-1-c-migration.md`](v1-1-c-migration.md) — `feed_item_state` Migration
+- [`v1-1-d-implementation.md`](v1-1-d-implementation.md) — Dashboard Widget配置基盤
+- [`v1-1-d-migration.md`](v1-1-d-migration.md) — `dashboard_widget` Migration
+- [`test-report-v1-1-d.md`](test-report-v1-1-d.md) — V1.1-D Test結果
+
 ## M4 release preparation
 
 - [`m4-a-implementation.md`](m4-a-implementation.md) — Release Baseline、公開物、残課題

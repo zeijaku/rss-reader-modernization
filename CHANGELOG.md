@@ -3,6 +3,16 @@
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
 
+## RSS Reader Modernization 1.1.0-dev.3 — V1.1-D
+
+- `dashboard_widget`を追加し、Feed、Clock、Memo、Task、Calendarの共通配置基盤を追加。
+- 既存Feedを4タブ、Style、表示順を維持したFeed Widgetへ安全にBackfill。
+- Feed CRUDとWidget配置を同じTransactionで同期し、owner scopeとRollbackを維持。
+- `widget.list`API、Widget幅、TEXT保存の設定JSON、V1.1-E向けData Attributeを追加。
+- Drag & Dropは実装せずV1.1-Eへ分離。
+- Prefix、Migration再実行、M2 Dashboard render、V1.1-B/C Regressionを追加・更新。
+
+
 ## RSS Reader Modernization 1.1.0-dev.2 — V1.1-C
 
 - `feed_item_state`を追加し、既存Item Identityを使った新着NEW表示を追加。

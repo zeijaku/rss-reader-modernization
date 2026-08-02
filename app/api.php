@@ -133,6 +133,7 @@ function api_dispatch(string $action, int $userId, array $input): array
         'tabs.update' => api_tabs_update($userId, $input),
         'feed.fetch' => api_feed_fetch($userId, $input),
         'feed.new.clear' => api_feed_new_clear($userId, $input),
+        'widget.list' => api_widget_list($userId, $input),
         default => api_error('unknown_action', 'Unknown API action.', 400),
     };
 }
@@ -154,7 +155,12 @@ function api_content_create(int $userId, array $input): array
         return api_validation_error('content_location must be 0, 1, 2, or 3.');
     }
 
-    $contentId = entry_content($userId, $url, $style, $location);
+    try {
+        $contentId = dashboard_widget_create_feed($userId, $url, $style, $location);
+    } catch (PDOException $exception) {
+        error_log('Dashboard Widget create failed: ' . $exception->getMessage());
+        return api_error('dashboard_widget_unavailable', 'Dashboard Widget migration is required.', 503);
+    }
     return api_success(['content_id' => $contentId], 201);
 }
 
@@ -179,7 +185,14 @@ function api_content_update(int $userId, array $input): array
         return api_error('not_found', 'Content was not found.', 404);
     }
 
-    update_content_owned($userId, $contentId, $url, $style);
+    try {
+        if (!dashboard_widget_update_feed($userId, $contentId, $url, $style)) {
+            return api_error('not_found', 'Content was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Dashboard Widget update failed: ' . $exception->getMessage());
+        return api_error('dashboard_widget_unavailable', 'Dashboard Widget migration is required.', 503);
+    }
     return api_success(['content_id' => $contentId]);
 }
 
@@ -195,8 +208,31 @@ function api_content_delete(int $userId, array $input): array
         return api_error('not_found', 'Content was not found.', 404);
     }
 
-    delete_content_owned($userId, $contentId);
+    try {
+        if (!dashboard_widget_delete_feed($userId, $contentId)) {
+            return api_error('not_found', 'Content was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Dashboard Widget delete failed: ' . $exception->getMessage());
+        return api_error('dashboard_widget_unavailable', 'Dashboard Widget migration is required.', 503);
+    }
     return api_success(['content_id' => $contentId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_list(int $userId, array $input): array
+{
+    $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
+    if ($location === null) {
+        return api_validation_error('widget_location must be 0, 1, 2, or 3.');
+    }
+
+    try {
+        return api_success(['widgets' => dashboard_widget_public_list($userId, $location)]);
+    } catch (PDOException $exception) {
+        error_log('Dashboard Widget list failed: ' . $exception->getMessage());
+        return api_error('dashboard_widget_unavailable', 'Dashboard Widget migration is required.', 503);
+    }
 }
 
 /** @return array{status:int,body:array<string,mixed>} */

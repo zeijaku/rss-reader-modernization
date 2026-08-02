@@ -190,7 +190,7 @@ $content_location = $tabParam;
 /* 取得するデータを tab と stock で分岐 */
 if (is_int($content_location)) {
     /* RSSデータ表示 */
-    $result_content = search_content($currentUserId, $content_location);
+    $result_content = search_dashboard_widgets($currentUserId, $content_location);
     $result_content_cnt = count($result_content);
 
     if ($result_content_cnt > 0) {
@@ -200,13 +200,22 @@ if (is_int($content_location)) {
     /* コンテンツをカードに表示 */
     for( $i = 0; $i < $result_content_cnt; $i++ ) {
         /* Feed取得用にはContent IDだけをdata属性へ渡す */
+        $widgetId = (int) ($result_content[$i]['widget_id'] ?? 0);
+        $widgetType = (string) ($result_content[$i]['widget_type'] ?? '');
+        if ($widgetType !== 'feed') {
+            continue;
+        }
         $contentId = (int) ($result_content[$i]['content_id'] ?? 0);
         $contentValue = (string) ($result_content[$i]['content_value'] ?? '');
-        $contentStyle = app_normalize_content_style($result_content[$i]['content_style'] ?? null) ?? 'success';
+        $contentStyle = app_normalize_content_style($result_content[$i]['widget_style'] ?? null)
+            ?? app_normalize_content_style($result_content[$i]['content_style'] ?? null)
+            ?? 'success';
+        $widgetWidthClass = (string) ($result_content[$i]['widget_width_class'] ?? dashboard_widget_width_class(1));
+        $widgetSortOrder = (int) ($result_content[$i]['widget_sort_order'] ?? 0);
 
         echo '
         <!-- Card -->
-            <section class="col-12 col-md-6 col-lg-3 feed-card" data-feed-content-id="' . $contentId . '" data-feed-state="loading" role="region" aria-labelledby="feed-title-' . $contentId . '" aria-busy="true">
+            <section class="' . app_html($widgetWidthClass) . ' dashboard-widget feed-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="feed" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-feed-content-id="' . $contentId . '" data-feed-state="loading" role="region" aria-labelledby="feed-title-' . $contentId . '" aria-busy="true">
                 <div class="feed-card-inner">
                     <input type="hidden" class="content-value" value="' . app_html($contentValue) . '">
                     <table class="table table-hover feed-table">

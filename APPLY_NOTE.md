@@ -1,20 +1,21 @@
-# V1.1-C / R1 Overlay適用メモ
+# V1.1-D / R1 Overlay適用メモ
 
-このZIPは、V1.1-B / R1を適用済みのGitHub最新mainへ上書きする差分ZIPです。
+このZIPは、V1.1-C / R1を適用済みのGitHub最新mainへ上書きする差分ZIPです。
 Project folderを削除して置き換えず、ZIPにない既存File、M2/M4 Test、`.github`を残してください。
 
-V1.1-CはDB Migrationが必要です。Overlayを完全なProject作業Copyへ適用してMigration Toolを追加した後、更新CodeをBrowserから利用する前にDB Migrationを完了します。
+V1.1-Dは`dashboard_widget`TableのMigrationが必要です。更新Codeを本番Browserから利用する前にMigrationを完了します。
 
 ```text
-1. Git作業folder、config/local.php、APP_HASH_KEY、実DBをBackup
-2. Overlayを別folderへ展開し、V1.1-B適用済みProjectへ上書き
+1. Git作業Folder、config/local.php、APP_HASH_KEY、実DBをBackup
+2. Overlayを別Folderへ展開し、V1.1-C適用済みProjectへ上書き
 3. php tools/db_sb13.php verify
-4. php tools/db_v11c.php apply --backup-confirmed
-5. php tools/db_v11c.php verify
-6. bash tests/run.sh
-7. Updated Codeを配置／Browser確認
-8. Commit / Push / GitHub Actions確認
+4. php tools/db_v11c.php verify
+5. php tools/db_v11d.php apply --backup-confirmed
+6. php tools/db_v11d.php verify
+7. bash tests/run.sh
+8. Updated Codeを配置／Browser確認
+9. Commit / Push / GitHub Actions確認
 ```
 
-`db_sb13.php verify`がFAILする場合は、V1.1-C Migrationを先へ進めず、既存4TableとIndexの状態を確認してください。
-phpMyAdminで適用する場合は`docs/v1-1-c-migration.md`を参照してください。
+phpMyAdminで適用する場合は`docs/v1-1-d-migration.md`を参照してください。
+Migration前にCodeを公開するとDashboard Widget取得が失敗するため、適用順を入れ替えないでください。

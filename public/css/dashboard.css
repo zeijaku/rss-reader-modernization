@@ -385,3 +385,12 @@ select:focus,
     cursor: wait;
     opacity: 0.65;
 }
+
+/* V1.1-D: Feedも今後のMemo等も同じ配置単位として扱う */
+.dashboard-widget {
+    min-width: 0;
+}
+
+.dashboard-widget > .feed-card-inner {
+    height: 100%;
+}

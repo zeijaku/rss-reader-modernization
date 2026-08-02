@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Current development checkpoint:** `RSS Reader Modernization V1.1-C / R1`  
+**Current development checkpoint:** `RSS Reader Modernization V1.1-D / R1`  
 Stable release: `RSS Reader Modernization 1.0.0`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
@@ -27,7 +27,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 
 Feed item本文はDBへ永続化せず、登録されたFeed URLから表示時に取得します。
 
-Version 1.1開発では、記事URLのTracking Parameter除去と、Item Identityを使ったNEW表示を追加しています。NEW状態は記事本文ではなく専用Tableへ最小限の識別情報と時刻だけを保存します。
+Version 1.1開発では、記事URLのTracking Parameter除去、Item Identityを使ったNEW表示、Dashboard Widget配置基盤を追加しています。Feed本体は従来の`content`を正本とし、Widget Tableには4タブ上の配置情報だけを保存します。
 
 ## Version 1.1 progress
 
@@ -36,9 +36,10 @@ Version 1.1開発では、記事URLのTracking Parameter除去と、Item Identit
 | V1.1-A | Baseline・DB・工程分析 | 完了 |
 | V1.1-B | Tracking Parameter除去 | 完了 |
 | V1.1-C | 新着NEW表示・Feed item state | 完了 |
-| V1.1-D以降 | Widget基盤・Dashboard機能 | 未着手 |
+| V1.1-D | Dashboard Widget配置基盤・既存Feed移行 | 完了 |
+| V1.1-E以降 | Drag & Drop・各Widget | 未着手 |
 
-V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.md)、Migrationは[`docs/v1-1-c-migration.md`](docs/v1-1-c-migration.md)を参照してください。
+V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.md)、V1.1-DのWidget基盤は[`docs/v1-1-d-implementation.md`](docs/v1-1-d-implementation.md)、Migrationは[`docs/v1-1-d-migration.md`](docs/v1-1-d-migration.md)を参照してください。
 
 ## Secure Baselineで完了した範囲
 

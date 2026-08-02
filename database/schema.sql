@@ -14,6 +14,7 @@ SET @t_user_conf = CONCAT('`', @table_prefix, 'user_conf`');
 SET @t_content = CONCAT('`', @table_prefix, 'content`');
 SET @t_content_stock = CONCAT('`', @table_prefix, 'content_stock`');
 SET @t_feed_item_state = CONCAT('`', @table_prefix, 'feed_item_state`');
+SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
 
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_user_info, ' (',
@@ -104,6 +105,29 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Feed記事NEW状態'''
 );
 PREPARE v11c_stmt FROM @sql; EXECUTE v11c_stmt; DEALLOCATE PREPARE v11c_stmt;
+
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_dashboard_widget, ' (',
+  '`widget_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`widget_owner` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`widget_location` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''表示位置[0..3]'',',
+  '`widget_type` VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`widget_reference_id` INT UNSIGNED NULL DEFAULT NULL,',
+  '`widget_sort_order` INT UNSIGNED NOT NULL DEFAULT 0,',
+  '`widget_width` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT ''1..4'',',
+  '`widget_style` VARCHAR(16) NOT NULL DEFAULT ''success'',',
+  '`widget_config` TEXT NULL,',
+  '`widget_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:有効/1:無効'',',
+  '`widget_created_at` DATETIME NOT NULL,',
+  '`widget_updated_at` DATETIME NOT NULL,',
+  'PRIMARY KEY (`widget_id`),',
+  'UNIQUE KEY `uq_dashboard_widget_owner_type_reference` (`widget_owner`, `widget_type`, `widget_reference_id`),',
+  'KEY `idx_dashboard_widget_owner_location_order` (`widget_owner`, `widget_location`, `widget_flag`, `widget_sort_order`, `widget_id`),',
+  'KEY `idx_dashboard_widget_owner_type_flag` (`widget_owner`, `widget_type`, `widget_flag`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Dashboard Widget配置'''
+);
+PREPARE v11d_stmt FROM @sql; EXECUTE v11d_stmt; DEALLOCATE PREPARE v11d_stmt;
 
 -- Foreign keys are intentionally NOT added in SB-13.
 -- Legacy orphan data and the user deletion policy must be resolved first.

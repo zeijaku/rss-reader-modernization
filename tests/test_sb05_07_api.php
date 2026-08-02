@@ -15,6 +15,31 @@ putenv('DB_PASSWORD=test');
 require $root . '/app/common/common_conf.php';
 require $root . '/app/common/common_db.php';
 require $root . '/app/validation.php';
+
+// This historical API contract test uses a small in-memory PDO fake. V1.1-D
+// transaction behavior is covered by test_v11d_dashboard_widget.php; here the
+// wrappers keep the original API validation/authorization matrix focused.
+function dashboard_widget_create_feed(int $ownerId, string $url, string $style, int $location): int
+{
+    return entry_content($ownerId, $url, $style, $location);
+}
+function dashboard_widget_update_feed(int $ownerId, int $contentId, string $url, string $style): bool
+{
+    return update_content_owned($ownerId, $contentId, $url, $style) > 0;
+}
+function dashboard_widget_delete_feed(int $ownerId, int $contentId): bool
+{
+    return delete_content_owned($ownerId, $contentId) > 0;
+}
+function dashboard_widget_validate_location(mixed $value): ?int
+{
+    $location = app_validate_content_location($value);
+    return $location;
+}
+function dashboard_widget_public_list(int $ownerId, int $location): array
+{
+    return [];
+}
 require $root . '/app/http_fetch.php';
 require $root . '/app/feed/feed_source.php';
 require $root . '/app/feed/feed_source_mapper.php';

@@ -50,7 +50,7 @@ check("aria-label" in dashboard[dashboard.find('function renderFeedTitle'):dashb
 check("button:focus" in css and ".feed-new-clear" in css and ".feed-item-new" in css, 'NEW controls retain visible focus and touchable button styling')
 
 check("APP_FEED_ITEM_STATE_RETENTION_DAYS" in local_example and "APP_FEED_ITEM_STATE_RETENTION_DAYS=90" in env_example, 'optional retention setting is documented in both configuration examples')
-check("const APP_VERSION = '1.1.0-dev.2';" in version and "V1.1-C / R1" in version, 'visible Version marker identifies V1.1-C')
+check("const APP_VERSION = '1.1.0-dev." in version and "RSS Reader Modernization V1.1-" in version, 'visible Version marker remains a V1.1 development checkpoint')
 
 failed = [message for ok, message in zip(checks, [
     'new table uses the existing prefixed table-name resolver',
@@ -78,7 +78,7 @@ failed = [message for ok, message in zip(checks, [
     'NEW controls include accessible labels',
     'NEW controls retain visible focus and touchable button styling',
     'optional retention setting is documented in both configuration examples',
-    'visible Version marker identifies V1.1-C',
+    'visible Version marker remains a V1.1 development checkpoint',
 ]) if not ok]
 if failed:
     raise SystemExit(f'{len(failed)}/{len(checks)} V1.1-C architecture checks failed')

@@ -42,8 +42,8 @@ for name, text, expected_default in [
 
 for logical in ['user_info', 'user_conf', 'content', 'content_stock']:
     check(f"@table_prefix, '{logical}" in schema or f"@table_prefix, '{logical}')" in schema, f'schema constructs prefixed {logical} table identifier')
-check(schema.count('CREATE TABLE ') == 5, 'schema defines five CREATE TABLE statements through dynamic SQL')
-check(schema.count('DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci') == 5, 'all target tables are utf8mb4_unicode_ci')
+check(schema.count('CREATE TABLE ') >= 6, 'schema keeps the four Legacy tables and additive Version 1.1 tables')
+check(schema.count('DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci') == schema.count('CREATE TABLE '), 'all target tables are utf8mb4_unicode_ci')
 check('idx_user_identity_flag_id' in schema and '`user_email`(64)' in schema, 'schema has non-unique identity lookup index')
 check('UNIQUE KEY `uq_user_conf_user_id` (`user_id`)' in schema, 'schema enforces user_conf 1:1')
 check('idx_content_owner_location_flag_id' in schema, 'schema has content query index')

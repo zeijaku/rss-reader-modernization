@@ -27,7 +27,7 @@ for action in ['content.create','content.update','content.delete','stock.create'
     check(repr(action).replace('"', "'") in api or f"'{action}'" in api, f'explicit action exists: {action}')
 
 check("$input['content_owner']" not in api and "$input['save_owner']" not in api and "$input['user_id']" not in api, 'dispatcher never reads client-supplied owner/user id fields')
-check('entry_content($userId' in api and 'info_dbsave($userId' in api, 'create operations derive owner from authenticated user id')
+check(('entry_content($userId' in api or 'dashboard_widget_create_feed($userId' in api) and 'info_dbsave($userId' in api, 'create operations derive owner from authenticated user id')
 check('find_owned_active_content($userId, $contentId)' in api, 'resource access checks authenticated ownership')
 check("WHERE content_id = :content_id AND content_owner = :owner" in db, 'content lookup SQL scopes by resource id and owner')
 check("WHERE content_id = :content_id AND content_owner = :owner AND content_flag = 0" in db, 'content update/delete SQL contains owner predicate')
