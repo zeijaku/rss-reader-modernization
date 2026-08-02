@@ -2,6 +2,15 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## RSS Reader Modernization 1.1.0-dev.1 — V1.1-B
+
+- 記事URLから既知のTracking Parameterを除去。
+- Feed表示前、Stock保存前、Item Identity生成前へ適用。
+- 一般Query Parameterと登録済みFeed URLは維持。
+- DB schema、Migration、必須設定の変更なし。
+- V1.1-B専用Testと既存Regressionを追加・更新。
+
+
 ## RSS Reader Modernization 1.0.0 — 2026-08-02
 
 ### First stable release

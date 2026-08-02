@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/item_identity.php';
 require_once __DIR__ . '/normalized_item.php';
+require_once dirname(__DIR__) . '/url_normalizer.php';
 
 /** Build deterministic item identities without I/O or persistent state. */
 final class ItemIdentityResolver
@@ -38,12 +39,18 @@ final class ItemIdentityResolver
     {
         $sourceItemId = self::normalizeScalar($item->sourceItemId);
         if ($sourceItemId !== null) {
-            return [ItemIdentity::BASIS_SOURCE_ID, $sourceItemId];
+            return [
+                ItemIdentity::BASIS_SOURCE_ID,
+                app_remove_tracking_parameters($sourceItemId),
+            ];
         }
 
         $link = self::normalizeScalar($item->link);
         if ($link !== null) {
-            return [ItemIdentity::BASIS_LINK, $link];
+            return [
+                ItemIdentity::BASIS_LINK,
+                app_remove_tracking_parameters($link),
+            ];
         }
 
         $fingerprintPayload = json_encode(

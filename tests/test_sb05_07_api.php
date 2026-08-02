@@ -367,6 +367,19 @@ api_check((int) $pdo->stocks[$stockId]['stock_owner'] === 10, 'stock.create owne
 api_check($pdo->stocks[$stockId]['stock_title'] === 'Stock Title', 'stock title is stored from validated feed data without article refetch');
 api_check(count($GLOBALS['test_fetched_urls']) === $beforeFetchCount, 'successful Stock create still performs no outbound article request');
 
+$r = api_dispatch('stock.create', 10, [
+    'stock_data' => 'https://stock.example/item?id=42&utm_source=rss&fbclid=abc#saved',
+    'stock_title' => 'Tracked Stock',
+]);
+$trackedStockId = (int) ($r['body']['data']['stock_id'] ?? 0);
+api_check($r['status'] === 201 && $trackedStockId > 0, 'stock.create accepts a valid article URL with tracking parameters');
+api_check(
+    ($pdo->stocks[$trackedStockId]['stock_data'] ?? '') === 'https://stock.example/item?id=42#saved',
+    'stock.create removes tracking parameters before DB storage'
+);
+api_check((int) ($pdo->stocks[$trackedStockId]['stock_owner'] ?? 0) === 10, 'tracking cleanup does not change Stock owner scope');
+api_check(count($GLOBALS['test_fetched_urls']) === $beforeFetchCount, 'tracking cleanup performs no outbound article request');
+
 $r = api_dispatch('content.delete', 10, ['content_id' => (string) $contentA]);
 api_check($r['status'] === 200 && (int) $pdo->contents[$contentA]['content_flag'] === 1, 'owner can logically delete own content');
 $r = api_dispatch('feed.fetch', 10, ['content_id' => (string) $contentA]);

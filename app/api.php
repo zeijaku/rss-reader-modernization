@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/url_normalizer.php';
+
 /**
  * Secure Baseline API contract (SB-05..10).
  *
@@ -91,9 +93,10 @@ function api_safe_feed_payload(array $feed, string $sourceUrl): array
         if (!is_array($rawItem)) {
             continue;
         }
+        $itemLink = app_validate_external_link($rawItem['link'] ?? null, 2048);
         $items[] = [
             'title' => api_feed_text($rawItem['title'] ?? '', 512),
-            'link' => app_validate_external_link($rawItem['link'] ?? null, 2048) ?? '',
+            'link' => $itemLink === null ? '' : app_remove_tracking_parameters($itemLink),
             'description' => api_feed_text($rawItem['description'] ?? '', 2048),
             'content' => api_feed_text($rawItem['content'] ?? '', 4096),
             'date' => api_feed_text($rawItem['date'] ?? '', 64),
@@ -195,6 +198,9 @@ function api_content_delete(int $userId, array $input): array
 function api_stock_create(int $userId, array $input): array
 {
     $url = app_validate_stock_url($input['stock_data'] ?? null);
+    if ($url !== null) {
+        $url = app_remove_tracking_parameters($url);
+    }
     $title = app_validate_text($input['stock_title'] ?? null, 128, true);
     if ($url === null) {
         return api_validation_error('stock_data must be a valid http/https URL at most 512 characters.');
