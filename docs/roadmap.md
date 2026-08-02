@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `M2-G / R1`。M2-A〜Fの実装を基準に、Secure Baseline、M1、M2の全回帰、Frontend Asset、Documentation、配布物の整合を確認し、M2 Frontend Modernizationを完了しました。Bootstrap / Bootswatch、Popper、Drawer、iScrollは現在の画面構造との組合せを優先して据え置き、major migrationを混在させていません。
+現在は `M4-A / R1`。M2-GをRelease Baselineとして固定し、Version 1.0.0の公開物、残課題、Quality Gateを整理しました。M3成果物は確認できなかったため完了扱いにせず、Releaseに必要な運用・実環境確認をM4-D〜Fへ吸収します。Bootstrap / Bootswatch、Popper、Drawer、iScrollは現在の画面構造との組合せを優先して据え置き、major migrationを混在させていません。
 
 ## M1 — Source / RSS Engine
 
@@ -79,6 +79,20 @@ HTML scrapingはサイト構造変更の影響が大きいため、generic parse
 M2-AではインラインJavaScript / CSSを外部Assetへ分離し、PHP生成JavaScriptをdata属性ベースへ変更しました。M2-BではFeed通信とDOM描画を分け、Loading、0件、取得失敗、不正Response、欠損タイトル、長いUnicodeタイトルを扱います。M2-Cではdoctype / lang / landmark、Form / Button、Keyboard、Focus、ARIAを改善しました。M2-DではMobile 1列、Tablet 2列、Desktop 4列のgrid、長い文字列の折返し、空画面、RSS削除、Feed再読込、画面内通知を改善しました。M2-Eでは画面から参照されないCSS / JavaScript、SCSS / LESS、metadata、SVG spriteを削除しました。M2-FではjQuery 3.3.1を3.7.1、Font Awesome Free 5.3.1を6.7.2へ更新しました。M2-Gでは全工程の回帰、Asset allowlist、Documentation link、配布除外、手動確認Matrixを整理しました。Bootstrap / Bootswatch 4.1.3、Popper 1系、Drawer 3.2.2、iScroll 5.2.0-snapshotは、既存MarkupとThemeの組合せを壊さないため維持しています。
 
 Frontend刷新はSecurity behaviorを変えないよう、SB-14以降とM1のregressionを継続します。
+
+## M4 — Version 1.0.0 Release preparation
+
+### Progress
+
+- [x] M4-A Release基準・公開物・残課題の棚卸し
+- [ ] M4-B README・CHANGELOG・License・Third-party notice整理
+- [ ] M4-C 新規設置・更新・設定・Backup・復旧手順
+- [ ] M4-D GitHub公開状態・Repository構成・Portfolio説明
+- [ ] M4-E 配布ZIP・Release Notes・SHA-256・Tag / Release手順
+- [ ] M4-F Version 1.0.0候補版の全回帰・実環境確認
+- [ ] M4-G 最終Quality Gate・正式Release
+
+M4へ新機能、大規模Refactor、Bootstrap 5移行、npm / Composer等のbuild tool追加は混在させません。
 
 ## 06 — GitHub public release
 

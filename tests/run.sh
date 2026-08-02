@@ -147,3 +147,8 @@ python3 "$ROOT/tests/test_m2f_browser_smoke.py"
 echo '== M2-G Final regression / Documentation checks =='
 python3 "$ROOT/tests/test_m2g_final_regression.py"
 python3 "$ROOT/tests/test_m2g_documentation.py"
+
+echo '== M4-A Release baseline / inventory / gate checks =='
+python3 "$ROOT/tests/test_m4a_release_baseline.py"
+python3 "$ROOT/tests/test_m4a_release_inventory.py"
+python3 "$ROOT/tests/test_m4a_release_gate.py"

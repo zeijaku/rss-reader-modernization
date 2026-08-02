@@ -54,3 +54,13 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - `database/audit/postflight.sql` — migration後確認
 
 新規環境では `database/schema.sql` を使用し、Legacy DBを保持して移行する場合だけpreflight → migration → postflightの順に使用します。
+
+## M4 Release preparation
+
+- [`m4-a-implementation.md`](m4-a-implementation.md) — M4-A Baseline / inventory
+- [`m4-a-baseline.json`](m4-a-baseline.json) — M2-G critical file hash
+- [`m4-a-files.md`](m4-a-files.md) — 変更 / 新規 / 削除file
+- [`m4-plan.md`](m4-plan.md) — M4-A〜Gの正式工程
+- [`release-gate-v1.0.0.md`](release-gate-v1.0.0.md) — Version 1.0.0 Quality Gate
+- [`release-artifact-inventory-v1.0.0.md`](release-artifact-inventory-v1.0.0.md) — GitHub / ZIP inventory
+- [`test-report-m4-a.md`](test-report-m4-a.md) — M4-A test report

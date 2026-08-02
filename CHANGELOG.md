@@ -2,6 +2,18 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## Release M4-A / R1 — 2026-08-02
+
+### Version 1.0.0 release baseline and inventory
+
+- GitHub mainのM2-G commitと添付Checkpoint ZIPをM4のBaselineとして固定。
+- M3成果物が存在しないことを記録し、Releaseに必要な運用・実環境確認をM4-D〜Fへ吸収。
+- Version 1.0.0のQuality Gate、公開物、配布物、Release Blocker、手動確認項目を整理。
+- M2-Gから変更していない重要領域をSHA-256で固定するM4-A testを追加。
+- GitHub mainに存在していたLICENSE、Third-party notice、license copyをCheckpoint ZIPへ復元。
+- DB、Migration、公開API、Authentication、Authorization、Session、CSRF、SSRF、XSS、RSS Engine、Frontend動作は変更なし。
+
+
 ## Frontend M2-G / R1 — 2026-08-02
 
 ### M2 final regression and documentation
