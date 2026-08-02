@@ -19,3 +19,8 @@ Application実行に必要なfile、設定example、DB schema / Migration、設�
 ## M4-Aでの注意
 
 GitHub mainとM2-G引渡しZIPの構成が完全には同一でなかったため、M4-A ZIPにはGitHub mainの公開License fileを復元した。Third-party Version表記の更新はM4-Bで行う。
+
+
+## M4-Cで追加した運用資料
+
+配布ZIPへ `installation.md`、`update.md`、`configuration.md`、`backup-and-restore.md`、`rollback.md`、`deployment-checklist.md` を含める。実値のPrivate設定、DB dump、Backup archiveは含めない。

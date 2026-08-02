@@ -148,7 +148,7 @@ check(len([1 for tag, attrs, _ in feed_records if tag == 'col' and has_class(att
 check(any(tag == 'div' and attrs.get('id') == 'app-notice' and 'hidden' in attrs for tag, attrs, _ in feed_records), 'Dashboard renders the hidden shared notice')
 check(any(tag == 'button' and has_class(attrs, 'delete_content') and attrs.get('type') == 'button' for tag, attrs, _ in feed_records), 'RSS edit modal renders explicit delete button')
 check('追加先：' in feed_text and 'Base' in feed_text, 'RSS add modal displays the destination tab')
-check('Release M4-B / R1' in feed_text, 'Feed Dashboard displays current version')
+check('Release M4-C / R1' in feed_text, 'Feed Dashboard displays current version')
 
 stock, stock_html = render('stock')
 stock_records = stock.records
@@ -159,7 +159,7 @@ check(all(all(has_class(attrs, name) for name in ['col-12','col-md-6','col-lg-3'
 check(len([1 for tag, attrs, _ in stock_records if tag == 'div' and has_class(attrs, 'stock-grid')]) == 1, 'Stock cards share one grid row')
 check(len([1 for tag, attrs, _ in stock_records if tag == 'small' and has_class(attrs, 'stock-title')]) == 5, 'Stock titles use wrapping hook')
 check('追加先：' in stock_text and 'Base' in stock_text, 'Stock page makes tab-1 RSS destination visible')
-check('Release M4-B / R1' in stock_text, 'Stock Dashboard displays current version')
+check('Release M4-C / R1' in stock_text, 'Stock Dashboard displays current version')
 
 for parser, label in [(feed, 'Feed'), (stock, 'Stock')]:
     ids = [attrs['id'] for _, attrs, _ in parser.records if attrs.get('id')]

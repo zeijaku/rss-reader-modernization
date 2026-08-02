@@ -158,3 +158,8 @@ python3 "$ROOT/tests/test_m4b_license_inventory.py"
 python3 "$ROOT/tests/test_m4b_documentation.py"
 python3 "$ROOT/tests/test_m4b_cleanup_script.py"
 
+echo '== M4-C Installation / Update / Recovery checks =='
+python3 "$ROOT/tests/test_m4c_config_inventory.py"
+python3 "$ROOT/tests/test_m4c_operations_docs.py"
+python3 "$ROOT/tests/test_m4c_healthcheck_contract.py"
+

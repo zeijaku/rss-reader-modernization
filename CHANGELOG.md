@@ -2,6 +2,18 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## Release M4-C / R1 — 2026-08-02
+
+### Installation, update, backup and recovery procedures
+
+- 新規空DBへの設置、Legacy DB migration、Git / ZIP更新手順を整理。
+- Runtime設定の読込順、Default、制約を実コードへ合わせた。
+- `local.php.example` と `.env.example` を既存Runtime対応Keyへ同期。
+- Database、Private設定、APP_HASH_KEY、Code VersionのBackup / Restore drillを整理。
+- Code-only rollbackとDB migrationを含むrollbackを分離。
+- 配置ChecklistとM4-C専用testを追加。
+- DB、公開API、Authentication / Session / CSRF / SSRF / XSS、RSS Engine、Frontend Runtime Assetは変更なし。
+
 ## Release M4-B / R1 — 2026-08-02
 
 ### Documentation and third-party license alignment
