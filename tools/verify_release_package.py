@@ -84,6 +84,8 @@ def main() -> int:
         check(metadata.get('intended_tag') == 'v1.0.0', 'release build metadata targets v1.0.0')
         check(metadata.get('package_status') in {'PREVIEW', 'RELEASE_CANDIDATE', 'FINAL'}, 'release build status is recognized')
         check(metadata.get('publishable') in {'yes', 'no'}, 'release build publishable flag is explicit')
+        check(metadata.get('validation_scope') == 'automated-regression-and-package', 'release build validation scope is explicit')
+        check(metadata.get('manual_evidence') == 'not-recorded-in-distribution', 'release build manual evidence status is explicit')
 
         manifest_text = archive.read(relative['RELEASE_MANIFEST.sha256']).decode('utf-8')
         manifest: dict[str, str] = {}
@@ -117,6 +119,8 @@ def main() -> int:
         if metadata.get('package_status') == 'FINAL':
             check(metadata.get('publishable') == 'yes', 'final package is marked publishable')
             check("APP_VERSION = '1.0.0'" in version_text, 'final package has exact 1.0.0 version')
+            check('正式Releaseではありません' not in notes, 'final release notes contain no RC non-release warning')
+            check('Verification limits' in notes, 'final release notes disclose verification limits')
 
         secret_patterns = [
             re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),

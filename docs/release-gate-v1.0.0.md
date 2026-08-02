@@ -2,44 +2,52 @@
 
 ## 判定の使い方
 
-- PASS: 現在の証拠でRelease条件を満たす。
-- HOLD: 後続工程または実環境確認が必要。FAILではないが、正式Releaseはできない。
-- FAIL: 既知の不具合またはSecurity低下。修正するまで進めない。
+- PASS: Repository内の証拠で条件を満たす。
+- DISCLOSED: 配布物へ未収録のmanual evidenceに相当する実環境確認。未実施をPASSへ読み替えず、Release Notesへ明記する。
+- FAIL: 既知の不具合またはSecurity低下。修正するまで公開しない。
 
-## M4-F / Release Candidate RC1時点
+## M4-G / Version 1.0.0時点
 
 | Gate | 状態 | 内容 |
 |---|---|---|
 | Baseline identity | PASS | M2-G commit、ZIP、Manifest、重要file Hashを固定 |
-| Existing regression | PASS | Secure Baseline、M1、M2、M4-A〜E、M4-F専用testを継続実行 |
+| Existing regression | PASS | Secure Baseline、M1、M2、M4-A〜G testを継続実行 |
 | Security contract | PASS | M2-Gから重要Security fileのHash変更なし |
 | DB / API contract | PASS | schema、Migration、Public APIの変更なし |
 | Repository public files | PASS | LICENSE、notice、license copy、公開Documentationを収録 |
-| Third-party notice accuracy | PASS | jQuery 3.7.1、Font Awesome 6.7.2、配布Path、License copyを実Assetへ同期 |
-| Installation / Update / Recovery | PASS | 設置、設定、更新、Backup、Restore、Rollbackを実コードへ同期 |
+| Third-party notice accuracy | PASS | jQuery 3.7.1、Font Awesome 6.7.2、配布Path、License copyを同期 |
+| Installation / Update / Recovery | PASS | 設置、設定、更新、Backup、Restore、Rollback手順を整備 |
 | GitHub / Portfolio / CI definition | PASS | Workflow、Security、Contribution、Repository設定、Portfolio資料を確認 |
-| Release ZIP / Notes / SHA-256 | PASS | deterministic builder、内部Manifest、外部SHA-256、RC ZIP、Release Notes、Verifierを確認 |
-| RC Version boundary | PASS | `1.0.0-rc1`、`RELEASE_CANDIDATE`、`publishable=no`。Final modeは拒否 |
-| Environment probe / Evidence format | PASS | 必須Extension、Runtime directory、25項目Evidence、Secret混入、Gate exitを確認 |
-| GitHub hosted CI / Settings | HOLD | PHP 8.1 / 8.4 JobとRepository Settingsを利用者が画面確認 |
-| Real environment evidence | HOLD | 実MySQL、Browser、Feed、Backup / Restore、Rollbackの結果待ち |
-| Version / Tag / GitHub Release | HOLD | M4-Gで1.0.0、v1.0.0、正式Artifactを確定 |
+| Final Version boundary | PASS | `1.0.0`、`FINAL`、`publishable=yes`。RC / Preview modeは拒否 |
+| Release ZIP / Notes / SHA-256 | PASS | deterministic builder、内部Manifest、外部SHA-256、正式ZIPを確認 |
+| Secret / Runtime data exclusion | PASS | Private設定、実DB、Log、Session、Cache、Evidence、入れ子ZIPを除外 |
+| GitHub hosted CI result | DISCLOSED | Workflow定義は検査済み。PHP 8.1 / 8.4実Run結果は配布物へ未収録 |
+| Real environment evidence | DISCLOSED | 実MySQL、Feed、Browser、Backup / Restore、Rollback結果は配布物へ未収録 |
+| Version / Tag / GitHub Release | PASS / USER ACTION | VersionとArtifactは確定。Tag / GitHub Releaseは利用者がrelease commitへ作成 |
 
-`Release ZIP / Notes / SHA-256` のPASSは、M4-F RCでPackage構成と再現性を確認したことを意味します。RCの `RELEASE_BUILD.txt` は `package_status=RELEASE_CANDIDATE`、`publishable=no` であり、正式Release Artifactではありません。
+`publishable=yes`は正式Release用のVersionとPackage構成であることを示します。個別Hosting環境の動作を自動的に保証するものではありません。
 
-## Real environment evidence
+## Real environment / RC evidence
 
-Release gate category: `Real environment / RC`。
-
-実環境結果は `docs/m4-f-validation-template.json` をPrivateな `var/m4f-evidence/` へCopyして記録します。Credential、Cookie、Session ID、実Feed URL、個人情報はEvidenceへ入れません。
+M4-Fの`docs/m4-f-validation-template.json`はHOLD / PENDINGのまま残しています。未実施項目を架空のPASSへ変更していません。利用者環境では次を確認できます。
 
 ```powershell
+Copy-Item .\docs\m4-f-validation-template.json `
+  .ar\m4f-evidence\m4-f-result.json
 python tools/m4f_evidence_gate.py `
-  .\var\m4f-evidence\m4-f-result.json --require-pass
+  .ar\m4f-evidence\m4-f-result.json --require-pass
 ```
 
-Exit code `0`になったことをM4-Gの入力条件とします。PENDINGまたはBLOCKEDがある場合はHOLD、FAILがある場合は修正または再確認が必要です。
+Credential、Cookie、Session ID、実Feed URL、個人情報はEvidenceへ記録しません。Private EvidenceはRepositoryとRelease ZIPへ含めません。
 
-M4-E完了はVersion 1.0.0 Release可を意味しません。
+## Final decision
 
-M4-FのCheckpointをGitへpushしただけではReal environment evidenceはPASSになりません。M4-GではEvidence、GitHub hosted CI、Final Version、Tag、正式ZIPを同じRelease判断へ揃えます。
+```text
+Automated regression       PASS
+Final package              PASS
+Application runtime delta  Version / Release資料のみ
+Real environment evidence Not recorded in distribution
+APP_VERSION                1.0.0
+Intended Tag               v1.0.0
+GitHub Release             利用者作業
+```

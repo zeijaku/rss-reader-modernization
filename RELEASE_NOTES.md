@@ -1,12 +1,12 @@
 # RSS Reader Modernization 1.0.0 Release Notes
 
-> **M4-F release candidate:** この文書は`1.0.0-rc1`向けです。実環境EvidenceとM4-Gの最終Gateが終わるまで正式Releaseではありません。
+Release date: 2026-08-02
 
 ## Overview
 
 約10年前に作成したPHP製RSS Readerを、Legacy版の仕様とDataを確認しながら段階的に近代化しました。Secure BaselineではSecurityとPHP 8対応を優先し、その後RSS Engine、Frontend、設置・更新・復旧、GitHub公開資料を整理しています。
 
-新しいFrameworkへ全面移行するのではなく、既存の使い方、4タブ、Feed CRUD、Stock、Settings、公開API、MySQLのData構造を維持しながら更新したVersionです。
+新しいFrameworkへ全面移行するのではなく、既存の使い方、4タブ、Feed CRUD、Stock、Settings、公開API、MySQLのData構造を維持しながら更新した最初の安定版です。
 
 ## Main changes
 
@@ -42,8 +42,8 @@
 - Runtime設定36項目のDefaultと制約をDocument化。
 - Third-party noticeとLicense copyを実際の配布Assetへ同期。
 - GitHub ActionsのPHP 8.1 / 8.4 Regression、Security reporting、Contribution方針を追加。
-- Release ZIP、内部Manifest、外部SHA-256、Tag / GitHub Release手順をM4-Eで準備。
-- M4-Fで`1.0.0-rc1`、環境Probe、実環境Evidence Gateを追加。
+- deterministic Release ZIP、内部Manifest、外部SHA-256、Tag / GitHub Release手順を追加。
+- RC1から正式版への変更をVersion、Release資料、最終Packageへ限定。
 
 ## Compatibility
 
@@ -75,45 +75,49 @@ Font Awesome Free 6.7.2
 - Rollback: [`docs/rollback.md`](docs/rollback.md)
 - 配置確認: [`docs/deployment-checklist.md`](docs/deployment-checklist.md)
 
-`config/local.php`、`APP_HASH_KEY`、実DBをBackupしてから更新してください。既存DBへ `database/schema.sql` を再投入しません。
+`config/local.php`、`APP_HASH_KEY`、実DBをBackupしてから更新してください。既存DBへ`database/schema.sql`や`001_sb13_integrity.sql`を再投入しません。
 
 ## Distribution files
-
-M4-Fでは、次のRelease Candidateを確認します。
-
-```text
-rss-reader-modernization-1.0.0-rc1.zip
-rss-reader-modernization-1.0.0-rc1.zip.sha256
-```
-
-ZIP内部には `RELEASE_MANIFEST.sha256` と `RELEASE_BUILD.txt` を含めます。RCは次の状態であり、正式Releaseとして公開しません。
-
-```text
-package_status=RELEASE_CANDIDATE
-application_version=1.0.0-rc1
-publishable=no
-```
-
-M4-GではVersion marker、Tag、Release Notesを最終化し、正式な次の成果物を作り直します。
 
 ```text
 rss-reader-modernization-1.0.0.zip
 rss-reader-modernization-1.0.0.zip.sha256
 ```
 
-## Known verification limits at M4-F
+ZIP内部には`RELEASE_MANIFEST.sha256`と`RELEASE_BUILD.txt`を含めます。
 
-M4-FではSource全回帰、RC deterministic build、Manifest、SHA-256、Version guard、環境Probe、Evidence Gateを検証しています。このBuild環境では次を正式なPASSにできませんでした。
+```text
+package_status=FINAL
+application_version=1.0.0
+publishable=yes
+validation_scope=automated-regression-and-package
+manual_evidence=not-recorded-in-distribution
+```
 
-- 実Hosting上の`pdo_mysql`、cURL、SimpleXML、mbstring
-- 実MySQL接続とSchema verify
-- 実Feed URLを使ったRSS 2.0 / RSS 1.0 / Atom確認
-- 実Browserでの8テーマとResponsive確認
-- Backupから別DBへ戻すRestore drill
-- GitHub hosted CIのPHP 8.1 / 8.4成功確認
-- `APP_VERSION = 1.0.0` とTag `v1.0.0`
+`publishable=yes`はVersionとPackage構成が正式Release用であることを示します。個別Hosting環境のMySQL、Feed、Browser、Backup / Restore結果まで自動的に保証する意味ではありません。
 
-これらは[`docs/m4-f-validation.md`](docs/m4-f-validation.md)のEvidenceへ記録します。全必須項目PASSまではM4-Gへ進みません。
+## Verification performed for 1.0.0
+
+- Secure Baseline、M1、M2、M4-A〜Gの自動Regression。
+- PHP / JavaScript / Pythonの構文確認。
+- Checkpoint ZIPの再展開後Regression。
+- Final ZIPのdeterministic buildを2回行い、SHA-256一致を確認。
+- ZIP CRC、unsafe path、重複Entry、内部Manifest、外部SHA-256を確認。
+- `config/local.php`、実`.env`、実DB、Backup、Log、Session、Cache、Private Evidence、入れ子ZIP、主要Secret patternの除外。
+- M2-Gから固定したApplication / Security / DB / APIの重要file Hashを継続確認。
+
+## Verification limits
+
+この作業環境では次のPrivateな実環境Evidenceを収録していません。
+
+- 実Hosting上の`pdo_mysql`、cURL、SimpleXML、mbstring確認。
+- 実MySQL接続とSchema verify。
+- 実Feed URLを使ったRSS 2.0 / RSS 1.0 / Atom確認。
+- 実Browserでの8テーマとResponsive確認。
+- Backupから別DBへ戻すRestore drillとRollback確認。
+- GitHub hosted CIのPHP 8.1 / 8.4 Job結果。
+
+M4-Fの空TemplateはHOLD / PENDINGのままRepositoryへ残しており、未実施項目をPASSへ書き換えていません。利用環境では[`docs/m4-f-validation.md`](docs/m4-f-validation.md)と[`docs/deployment-checklist.md`](docs/deployment-checklist.md)に従って確認してください。
 
 ## Security notes
 
@@ -121,4 +125,4 @@ Security問題は公開IssueへCredential、個人情報、実Feed URL、Cookie�
 
 ## License
 
-Project本体はMIT Licenseです。Vendored frontend assetsは各上流Licenseに従います。詳細は `THIRD_PARTY_NOTICES.md` と `licenses/` を参照してください。
+Project本体はMIT Licenseです。Vendored frontend assetsは各上流Licenseに従います。詳細は`THIRD_PARTY_NOTICES.md`と`licenses/`を参照してください。

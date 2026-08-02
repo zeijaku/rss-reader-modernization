@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+from pathlib import Path
+import re,sys
+ROOT=Path(__file__).resolve().parents[1]; checks=[]
+def check(ok,msg): checks.append(bool(ok)); print(('PASS' if ok else 'FAIL')+': '+msg)
+tag=(ROOT/'docs/tag-and-github-release.md').read_text(encoding='utf-8')
+check('git tag -a v1.0.0' in tag,'annotated v1.0.0 command is documented')
+check('git push origin v1.0.0' in tag,'specific tag push is documented')
+check('git push --tags' in tag and '使用しません' in tag,'bulk tag push is explicitly rejected')
+check('git tag -f' not in tag,'force tag command is absent')
+check('Force push' in tag,'force push warning is documented')
+check('rss-reader-modernization-1.0.0.zip' in tag,'final ZIP attachment is documented')
+check('rss-reader-modernization-1.0.0.zip.sha256' in tag,'SHA sidecar attachment is documented')
+check('Verification limits' in tag,'release publication preserves verification limits')
+check('git status' in tag and 'git log -1' in tag,'release commit checks are documented')
+check('Get-FileHash' in tag and 'verify_release_package.py' in tag,'independent package verification is documented')
+check('公開済みTagを別Commitへ黙って移動しません' in tag,'published tag immutability is documented')
+check('v1.0.1' in tag,'post-release fixes use a new version')
+check('git reset --hard' not in tag,'unsafe hard reset command is absent')
+check('package_status=FINAL' in tag and 'publishable=yes' in tag,'post-release final metadata check is documented')
+notes=(ROOT/'RELEASE_NOTES.md').read_text(encoding='utf-8')
+check('rss-reader-modernization-1.0.0.zip' in notes,'release notes name final ZIP')
+check('manual_evidence=not-recorded-in-distribution' in notes,'release notes disclose manual evidence state')
+if not all(checks): sys.exit(1)
+print(f'All {len(checks)} M4-G release process checks passed.')

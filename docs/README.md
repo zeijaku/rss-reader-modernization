@@ -21,9 +21,11 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`m4-f-validation.md`](m4-f-validation.md) — MySQL / Feed / Browser / Restore確認
 - [`m4-f-validation-template.json`](m4-f-validation-template.json) — Private Evidence作成用Template
 - [`m4-f-files.md`](m4-f-files.md) — M4-F変更file一覧
+- [`m4-g-implementation.md`](m4-g-implementation.md) — Version 1.0.0最終Release
+- [`m4-g-files.md`](m4-g-files.md) — M4-G変更file一覧
 - [`release-package.md`](release-package.md) — Runtime Release ZIPのBuild / Verify
 - [`tag-and-github-release.md`](tag-and-github-release.md) — annotated TagとGitHub Release手順
-- [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.0.0 Release Notes準備版
+- [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.0.0 Release Notes
 - [`ci.md`](ci.md) — GitHub Actionsの範囲と初回確認
 - [`github-publication.md`](github-publication.md) — Repository設定Checklist
 - [`portfolio.md`](portfolio.md) — Portfolio掲載用メモ
@@ -38,6 +40,7 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`test-report-m4-d.md`](test-report-m4-d.md) — M4-D test結果
 - [`test-report-m4-e.md`](test-report-m4-e.md) — M4-E test結果
 - [`test-report-m4-f.md`](test-report-m4-f.md) — M4-F test結果
+- [`test-report-m4-g.md`](test-report-m4-g.md) — M4-G最終Release test結果
 - [`dependencies.md`](dependencies.md) — Frontend dependencyとLicense copyの対応
 - [`release-gate-v1.0.0.md`](release-gate-v1.0.0.md) — Version 1.0.0 Quality Gate
 - [`m4-plan.md`](m4-plan.md) — M4-A〜Gの工程

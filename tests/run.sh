@@ -180,3 +180,9 @@ python3 "$ROOT/tests/test_m4f_environment_probe.py"
 python3 "$ROOT/tests/test_m4f_evidence_gate.py"
 python3 "$ROOT/tests/test_m4f_documentation.py"
 
+
+
+echo '== M4-G Final Version / Release checks =='
+python3 "$ROOT/tests/test_m4g_final_release.py"
+python3 "$ROOT/tests/test_m4g_documentation.py"
+python3 "$ROOT/tests/test_m4g_release_process.py"

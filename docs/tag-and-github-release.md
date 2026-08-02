@@ -1,8 +1,8 @@
 # Git Tag / GitHub Release手順
 
-## M4-Eでの扱い
+## M4-Gでの扱い
 
-M4-Eでは手順を確定しますが、Tag `v1.0.0` とGitHub Releaseは作成しません。実MySQL / Browser / Feed / Restore確認はM4-F、Version確定はM4-Gです。
+Versionと正式ArtifactはM4-Gで確定します。Tag `v1.0.0` とGitHub Releaseは、利用者がM4-G commitをpushし、GitHub Actionsと公開内容を確認してから作成します。
 
 ## Tag作成前の必須条件
 
@@ -11,10 +11,10 @@ M4-Eでは手順を確定しますが、Tag `v1.0.0` とGitHub Releaseは作成�
 - `git status` がclean。
 - Local全RegressionがFAIL 0。
 - GitHub Actions PHP 8.1 / 8.4が成功。
-- 実MySQL、実Feed、実Browser、Restore drillが確認済み。
+- 実MySQL、実Feed、実Browser、Restore drillを確認するか、未収録範囲がRelease Notesに正しく記載されている。
 - 正式Release ZIPとSHA-256を再生成済み。
 - `tools/verify_release_package.py` がPASS。
-- Release NotesのM4-E preview警告を削除済み。
+- Release Notesが正式版で、Verification limitsを削除・誇張していない。
 
 ## Release commit確認
 

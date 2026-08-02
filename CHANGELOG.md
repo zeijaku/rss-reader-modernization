@@ -2,6 +2,19 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## RSS Reader Modernization 1.0.0 — 2026-08-02
+
+### First stable release
+
+- `APP_VERSION`を`1.0.0`、表示を`RSS Reader Modernization 1.0.0`へ確定。
+- M4-F RC1からApplication Runtime、DB schema、公開API、Security境界、Frontend Runtime Assetを変更せず正式版へ昇格。
+- deterministic builderの`final` modeで正式Release ZIPと外部SHA-256を生成。
+- Final Packageを`package_status=FINAL`、`publishable=yes`としてRC / Previewと分離。
+- Source全回帰、Checkpoint ZIP再展開、内部Manifest、外部SHA-256、秘密情報除外、Version整合を再確認。
+- 実MySQL、実Feed、実Browser、Restore drill、GitHub hosted CIのPrivate Evidenceはこの作業環境では未収録であることをRelease Notesへ明記。
+- `v1.0.0` TagとGitHub Releaseは、利用者がCommit / Push / CI確認後に作成する手順として確定。
+- 新機能追加、DB Migration、必須設定追加、Cache clear、旧file削除はなし。
+
 ## RSS Reader Modernization 1.0.0-RC1 — 2026-08-02
 
 ### Release Candidate and real-environment gate

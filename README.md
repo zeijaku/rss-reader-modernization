@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Current checkpoint:** `RSS Reader Modernization 1.0.0-RC1`
+**Current release:** `RSS Reader Modernization 1.0.0`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
@@ -82,7 +82,7 @@ M2-Aの詳細は [`docs/m2-a-implementation.md`](docs/m2-a-implementation.md)、
 
 ## M4 progress
 
-M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4-AではM2-GをRelease Baselineとして固定し、M4-BではREADME、CHANGELOG、Project License、Third-party noticeを実際の配布Assetへ合わせました。M4-Cでは新規設置、更新、設定、Backup、Restore、Rollbackを実コードと設定Defaultに合わせて整理しました。M4-DではGitHub Actionsの最小CI、Security reporting、Contribution方針、Repository設定Checklist、Portfolio掲載用メモを追加しました。M4-EではCheckpoint ZIPとRuntime Release ZIPを分離し、deterministic build、内部Manifest、外部SHA-256、Release Notes、Tag / GitHub Release手順を追加しました。Application機能、DB、公開API、Security境界、Frontend Runtime Assetは変更していません。M4-Fでは`1.0.0-rc1`を作成し、実MySQL、Feed、Browser、Restore結果をPrivate Evidenceへ記録するGateを追加しました。Application機能、DB、公開API、Security境界、Frontend Runtime Assetは変更していません。
+M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4-AではM2-GをRelease Baselineとして固定し、M4-BではREADME、CHANGELOG、Project License、Third-party noticeを実際の配布Assetへ合わせました。M4-Cでは新規設置、更新、設定、Backup、Restore、Rollbackを実コードと設定Defaultに合わせて整理しました。M4-DではGitHub Actionsの最小CI、Security reporting、Contribution方針、Repository設定Checklist、Portfolio掲載用メモを追加しました。M4-EではCheckpoint ZIPとRuntime Release ZIPを分離し、deterministic build、内部Manifest、外部SHA-256、Release Notes、Tag / GitHub Release手順を追加しました。Application機能、DB、公開API、Security境界、Frontend Runtime Assetは変更していません。M4-Fでは`1.0.0-rc1`を作成し、実MySQL、Feed、Browser、Restore結果をPrivate Evidenceへ記録するGateを追加しました。M4-GではRC1からApplication Runtimeを変更せず、Version、Release Notes、Final Package、Tag / GitHub Release手順を`1.0.0`へ確定しました。自動RegressionとPackage検証はPASSしていますが、Privateな実環境EvidenceはRepositoryへ収録していません。
 
 | Work unit | 内容 | 状態 |
 |---|---|---|
@@ -91,25 +91,25 @@ M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4
 | M4-C | 設置・更新・Backup・復旧手順 | 完了 |
 | M4-D | GitHub公開状態・Repository・Portfolio・最小CI | 完了 |
 | M4-E | 配布ZIP・Release Notes・SHA-256・Tag手順 | 完了 |
-| M4-F | Release Candidate全回帰・実環境確認 | RC作成済み / 実環境HOLD |
-| M4-G | 最終Quality Gate・Version 1.0.0確定 | 未着手 |
+| M4-F | Release Candidate全回帰・実環境確認 | RC作成・自動検証完了 / 実環境Evidence未収録 |
+| M4-G | 最終Quality Gate・Version 1.0.0確定 | 完了 |
 
 詳細は [`docs/m4-f-implementation.md`](docs/m4-f-implementation.md)、[`docs/m4-f-validation.md`](docs/m4-f-validation.md)、[`docs/m4-e-implementation.md`](docs/m4-e-implementation.md)、[`docs/release-package.md`](docs/release-package.md)、[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
 
-## Release Candidate package
+## Version 1.0.0 release package
 
-M4-Fでは、Repository作業用のCheckpoint ZIPとは別に`1.0.0-rc1`のRuntime Release Candidate ZIPを生成します。RCは正式版候補の検証用で、`publishable=no`です。
+正式配布用Runtime ZIPはRepository作業用Checkpoint ZIPと分けて生成します。
 
 ```bash
-python tools/build_release_package.py --mode rc --output-dir ../release-output
+python tools/build_release_package.py --mode final --output-dir ../release-output
 python tools/verify_release_package.py \
-  ../release-output/rss-reader-modernization-1.0.0-rc1.zip \
-  ../release-output/rss-reader-modernization-1.0.0-rc1.zip.sha256
+  ../release-output/rss-reader-modernization-1.0.0.zip \
+  ../release-output/rss-reader-modernization-1.0.0.zip.sha256
 ```
 
-実環境確認は[`docs/m4-f-validation.md`](docs/m4-f-validation.md)に従い、結果をGit対象外の`var/m4f-evidence/`へ記録します。全必須項目PASSまではM4-Gへ進みません。
+正式Packageは`package_status=FINAL`、`publishable=yes`です。`publishable=yes`はPackage構成とVersionが正式版であることを示し、利用者環境のMySQL、Feed、Browser、Restore結果を自動的に保証するものではありません。Verification limitsと未収録Evidenceは[`RELEASE_NOTES.md`](RELEASE_NOTES.md)と[`docs/test-report-m4-g.md`](docs/test-report-m4-g.md)に記録しています。
 
-Packageの範囲は [`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は [`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、準備版Release Notesは [`RELEASE_NOTES.md`](RELEASE_NOTES.md) を参照してください。
+Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)を参照してください。
 
 ## Runtime requirements
 

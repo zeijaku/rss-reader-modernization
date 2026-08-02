@@ -166,6 +166,8 @@ def build(mode: str, output_dir: Path) -> tuple[Path, Path]:
         f'intended_release={INTENDED_RELEASE}',
         f'intended_tag={INTENDED_TAG}',
         f'publishable={publishable}',
+        'validation_scope=automated-regression-and-package',
+        'manual_evidence=not-recorded-in-distribution',
         'manifest=RELEASE_MANIFEST.sha256',
         '',
     ]).encode('utf-8')

@@ -14,6 +14,21 @@ Releaseごとに次を確認します。
 - Runtime cache削除の要否
 - Release NotesとSHA-256
 
+## M4-F / R1からM4-G / R1
+
+M4-GはVersion、Release Notes、Final Package、Tag / GitHub Release手順の確定です。Application RuntimeはRC1から変更していません。
+
+```text
+DB schema / Migration       変更なし
+Public API                  変更なし
+必須設定                    追加なし
+Frontend Runtime Asset      変更なし
+Cache clear                 不要
+削除file                    なし
+```
+
+既存`config/local.php`と実DBはそのまま使用できます。`schema.sql`やMigrationは実行しません。
+
 ## M4-D / R1からM4-E / R1
 
 M4-EはRelease package builder、Verifier、Release Notes、Tag / GitHub Release手順、Version marker、Testの追加です。Application Runtimeは変更していません。

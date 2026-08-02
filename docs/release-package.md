@@ -14,27 +14,29 @@ Repository用Checkpoint ZIPと、利用者へ配布するRuntime Release ZIPを�
 | `rc` | `1.0.0-rcN` | M4-FのRelease Candidate | Pre-releaseとしてのみ |
 | `final` | `1.0.0` | M4-Gの正式成果物 | 最終Gate後のみ |
 
-M4-EではPreviewを生成しました。M4-Fでは次のRCを生成します。
+M4-EではPreview、M4-FではRCを生成しました。M4-Gでは次の正式Packageを生成します。
 
 ```powershell
-python tools/build_release_package.py --mode rc --output-dir ..\release-output
+python tools/build_release_package.py --mode final --output-dir ..\release-output
 ```
 
 出力:
 
 ```text
-rss-reader-modernization-1.0.0-rc1.zip
-rss-reader-modernization-1.0.0-rc1.zip.sha256
+rss-reader-modernization-1.0.0.zip
+rss-reader-modernization-1.0.0.zip.sha256
 ```
 
-RC ZIPの `RELEASE_BUILD.txt` は次を明示します。
+Final ZIPの`RELEASE_BUILD.txt`は次を明示します。
 
 ```text
-package_status=RELEASE_CANDIDATE
-application_version=1.0.0-rc1
-publishable=no
+package_status=FINAL
+application_version=1.0.0
+publishable=yes
 intended_release=1.0.0
 intended_tag=v1.0.0
+validation_scope=automated-regression-and-package
+manual_evidence=not-recorded-in-distribution
 ```
 
 ## Release ZIPへ含める
@@ -65,7 +67,7 @@ intended_tag=v1.0.0
 
 ## Deterministic build
 
-Builderはfile順、ZIP timestamp、permissionを固定します。同じSourceから同じmodeで2回BuildしたZIPは同じSHA-256になることをM4-E PreviewとM4-F RCの両方で確認します。
+Builderはfile順、ZIP timestamp、permissionを固定します。同じSourceから同じmodeで2回BuildしたZIPは同じSHA-256になることをM4-E Preview、M4-F RC、M4-G Finalで確認します。
 
 生成日時やLocal pathをZIP内部へ書かず、Build内容は `RELEASE_BUILD.txt` の固定項目で識別します。
 
@@ -76,16 +78,16 @@ Builderはfile順、ZIP timestamp、permissionを固定します。同じSource�
 外部 `.zip.sha256` はZIP全体を検証します。
 
 ```powershell
-Get-FileHash .\rss-reader-modernization-1.0.0-rc1.zip -Algorithm SHA256
-Get-Content .\rss-reader-modernization-1.0.0-rc1.zip.sha256
+Get-FileHash .\rss-reader-modernization-1.0.0.zip -Algorithm SHA256
+Get-Content .\rss-reader-modernization-1.0.0.zip.sha256
 ```
 
 Python verifier:
 
 ```powershell
 python tools/verify_release_package.py `
-  ..\release-output\rss-reader-modernization-1.0.0-rc1.zip `
-  ..\release-output\rss-reader-modernization-1.0.0-rc1.zip.sha256
+  ..\release-output\rss-reader-modernization-1.0.0.zip `
+  ..\release-output\rss-reader-modernization-1.0.0.zip.sha256
 ```
 
 ## 安全境界
@@ -93,3 +95,8 @@ python tools/verify_release_package.py `
 BuilderはallowlistからPackageを作り、unsafe path、symlink、Private設定、実DB系拡張子、入れ子ZIP、Runtime生成fileを検出した場合は停止します。
 
 `final` modeは `APP_VERSION = '1.0.0'` と `APP_VERSION_LABEL = 'RSS Reader Modernization 1.0.0'` が完全一致しない限り実行できません。M4-FのRC markerでもFinal Artifactを作れないため、M4-G前の誤生成を防ぎます。
+
+
+## M4-G validation scope
+
+Final Packageは自動Regression、Package safety、Manifest、SHA-256、Version boundaryを検査しています。実Hosting / MySQL / Feed / Browser / Restore / hosted CIのPrivate EvidenceはDistributionへ収録せず、`RELEASE_NOTES.md`へ未収録として明記します。

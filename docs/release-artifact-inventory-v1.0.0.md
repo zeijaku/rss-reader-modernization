@@ -70,3 +70,13 @@ rss-reader-modernization-1.0.0-rc1.zip.sha256
 ```
 
 RCは `package_status=RELEASE_CANDIDATE`、`publishable=no`。`docs/m4-f-validation-template.json` は空の安全なTemplateとしてRelease ZIPへ含める。実際のEvidenceは `var/m4f-evidence/` へ保存し、RepositoryとRelease ZIPへ含めない。
+
+
+## M4-G Final Release
+
+```text
+rss-reader-modernization-1.0.0.zip
+rss-reader-modernization-1.0.0.zip.sha256
+```
+
+Final ZIPは`package_status=FINAL`、`publishable=yes`。Repository用Checkpoint、RC ZIP、Preview ZIP、Private Evidenceを内部へ入れない。`publishable=yes`はPackageの正式版境界であり、実環境EvidenceはRelease NotesのVerification limitsで別に扱う。

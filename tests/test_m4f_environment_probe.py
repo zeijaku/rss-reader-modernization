@@ -28,8 +28,8 @@ except json.JSONDecodeError:
     parsed = False
 check(parsed, 'environment probe emits valid JSON')
 check(data.get('schema_version') == 1, 'environment probe schema version is 1')
-check(data.get('checkpoint') == '1.0.0-rc1', 'environment probe records RC checkpoint')
-check(data.get('label') == 'RSS Reader Modernization 1.0.0-RC1', 'environment probe records RC label')
+check(data.get('checkpoint') == '1.0.0', 'environment probe records final checkpoint')
+check(data.get('label') == 'RSS Reader Modernization 1.0.0', 'environment probe records final label')
 check(data.get('status') in {'PASS', 'HOLD'}, 'environment probe status is PASS or HOLD')
 php = data.get('php', {})
 check(isinstance(php.get('version'), str) and bool(php.get('version')), 'environment probe records PHP version')

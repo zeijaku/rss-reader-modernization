@@ -6,12 +6,12 @@ Deployment確認のため、各配布Checkpointには画面上のVersion表示�
 - 未ログイン: Sign in / Registration画面下部
 - ログイン後: メイン画面フッター
 - CLI: `tools/healthcheck.php`
-- Current: `RSS Reader Modernization 1.0.0-RC1`
+- Current: `RSS Reader Modernization 1.0.0`
+- Git Tag: `v1.0.0`（利用者がM4-G release commitへ作成）
 - M2 completion checkpoint: `Frontend M2-G / R1`
 - M1 completion checkpoint: `RSS Engine M1-G / R1`
 - Security baseline ancestry: `Secure Baseline SB-15 / R3`
 
-今後の配布版ではソース変更と同時にVersion定義を更新する。
-回帰testはversion marker機構をrelease-genericに検証し、対象checkpoint専用testで現在のexact versionを検証する。
+正式Releaseは`APP_VERSION = 1.0.0`、`APP_VERSION_LABEL = RSS Reader Modernization 1.0.0`、Git Tag `v1.0.0`を同じRelease commitへ揃える。
 
-M4-FのRelease Candidateは `APP_VERSION = 1.0.0-rc1`、`APP_VERSION_LABEL = RSS Reader Modernization 1.0.0-RC1` とする。RC Packageは `publishable=no`。正式Releaseでは `APP_VERSION = 1.0.0`、`APP_VERSION_LABEL = RSS Reader Modernization 1.0.0`、Git Tag `v1.0.0` を同じRelease commitへ揃える。M4-GまでRCと正式Releaseを分離する。
+回帰testはversion marker機構をrelease-genericに検証し、M4-G専用testでexact versionを検証する。次の修正版は同名TagやArtifactを上書きせず、`1.0.1`等の新しいVersionを使用する。
