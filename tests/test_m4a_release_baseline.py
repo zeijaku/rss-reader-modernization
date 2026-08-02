@@ -16,6 +16,6 @@ for rel,expected in data['critical_file_sha256'].items():
  actual=hashlib.sha256((ROOT/rel).read_bytes()).hexdigest()
  check(actual==expected,f'M2-G critical file unchanged: {rel}')
 version=(ROOT/'app/version.php').read_text(encoding='utf-8')
-check("APP_VERSION = 'M4-C R1'" in version,'current application version has progressed to M4-C')
-check("APP_VERSION_LABEL = 'Release M4-C / R1'" in version,'current visible label has progressed to M4-C')
+check("APP_VERSION = 'M4-D R1'" in version,'current application version has progressed to M4-D')
+check("APP_VERSION_LABEL = 'Release M4-D / R1'" in version,'current visible label has progressed to M4-D')
 print(f'All {checks} M4-A baseline checks passed.')

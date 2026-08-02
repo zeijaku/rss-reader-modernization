@@ -14,6 +14,23 @@ Releaseごとに次を確認します。
 - Runtime cache削除の要否
 - Release NotesとSHA-256
 
+## M4-C / R1からM4-D / R1
+
+M4-DはGitHub公開資料、Security / Contribution文書、Issue template、GitHub Actions CI、Version marker、Testの追加です。
+
+```text
+DB schema / Migration       変更なし
+Public API                  変更なし
+必須設定                    追加なし
+Frontend Runtime Asset      変更なし
+Cache clear                 不要
+削除file                    なし
+```
+
+既存 `config/local.php` と実DBはそのまま使用できます。M4-D適用時に `schema.sql` やMigrationを実行しません。
+
+GitHubへpushした後、ActionsのPHP 8.1 / 8.4 JobとRepository Settingsを確認します。
+
 ## M4-B / R1からM4-C / R1
 
 この更新では次の変更はありません。

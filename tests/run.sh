@@ -163,3 +163,8 @@ python3 "$ROOT/tests/test_m4c_config_inventory.py"
 python3 "$ROOT/tests/test_m4c_operations_docs.py"
 python3 "$ROOT/tests/test_m4c_healthcheck_contract.py"
 
+
+echo '== M4-D GitHub repository / Portfolio / CI checks =='
+python3 "$ROOT/tests/test_m4d_ci_workflow.py"
+python3 "$ROOT/tests/test_m4d_repository_docs.py"
+python3 "$ROOT/tests/test_m4d_public_surface.py"

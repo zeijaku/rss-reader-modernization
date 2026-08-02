@@ -13,6 +13,11 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`m4-a-implementation.md`](m4-a-implementation.md) — Release Baseline、公開物、残課題
 - [`m4-b-implementation.md`](m4-b-implementation.md) — README、CHANGELOG、License、Third-party notice
 - [`m4-c-implementation.md`](m4-c-implementation.md) — 新規設置、更新、設定、Backup、復旧
+- [`m4-d-implementation.md`](m4-d-implementation.md) — GitHub、Portfolio、最小CI
+- [`m4-d-files.md`](m4-d-files.md) — M4-D変更file一覧
+- [`ci.md`](ci.md) — GitHub Actionsの範囲と初回確認
+- [`github-publication.md`](github-publication.md) — Repository設定Checklist
+- [`portfolio.md`](portfolio.md) — Portfolio掲載用メモ
 - [`installation.md`](installation.md) — 新規空DBとLegacy DB移行
 - [`update.md`](update.md) — Git / ZIP更新
 - [`configuration.md`](configuration.md) — Runtime設定、Default、制約
@@ -21,6 +26,7 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`deployment-checklist.md`](deployment-checklist.md) — 配置前後の確認
 - [`test-report-m4-b.md`](test-report-m4-b.md) — M4-B test結果
 - [`test-report-m4-c.md`](test-report-m4-c.md) — M4-C test結果
+- [`test-report-m4-d.md`](test-report-m4-d.md) — M4-D test結果
 - [`dependencies.md`](dependencies.md) — Frontend dependencyとLicense copyの対応
 - [`release-gate-v1.0.0.md`](release-gate-v1.0.0.md) — Version 1.0.0 Quality Gate
 - [`m4-plan.md`](m4-plan.md) — M4-A〜Gの工程

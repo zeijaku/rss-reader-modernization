@@ -1,6 +1,8 @@
 # RSS Reader Modernization
 
-**Current checkpoint:** `Release M4-C / R1`
+[![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
+
+**Current checkpoint:** `Release M4-D / R1`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
@@ -80,19 +82,19 @@ M2-Aの詳細は [`docs/m2-a-implementation.md`](docs/m2-a-implementation.md)、
 
 ## M4 progress
 
-M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4-AではM2-GをRelease Baselineとして固定し、M4-BではREADME、CHANGELOG、Project License、Third-party noticeを実際の配布Assetへ合わせました。M4-Cでは新規設置、更新、設定、Backup、Restore、Rollbackを実コードと設定Defaultに合わせて整理しました。Application機能、DB、公開API、Security境界、Frontend Runtime Assetは変更していません。
+M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4-AではM2-GをRelease Baselineとして固定し、M4-BではREADME、CHANGELOG、Project License、Third-party noticeを実際の配布Assetへ合わせました。M4-Cでは新規設置、更新、設定、Backup、Restore、Rollbackを実コードと設定Defaultに合わせて整理しました。M4-DではGitHub Actionsの最小CI、Security reporting、Contribution方針、Repository設定Checklist、Portfolio掲載用メモを追加しました。Application機能、DB、公開API、Security境界、Frontend Runtime Assetは変更していません。
 
 | Work unit | 内容 | 状態 |
 |---|---|---|
 | M4-A | Release基準・公開物・残課題の棚卸し | 完了 |
 | M4-B | README・CHANGELOG・License・Third-party notice | 完了 |
 | M4-C | 設置・更新・Backup・復旧手順 | 完了 |
-| M4-D | GitHub公開状態・Repository・Portfolio | 未着手 |
+| M4-D | GitHub公開状態・Repository・Portfolio・最小CI | 完了 |
 | M4-E | 配布ZIP・Release Notes・SHA-256・Tag手順 | 未着手 |
 | M4-F | Release Candidate全回帰・実環境確認 | 未着手 |
 | M4-G | 最終Quality Gate・Version 1.0.0確定 | 未着手 |
 
-詳細は [`docs/m4-c-implementation.md`](docs/m4-c-implementation.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
+詳細は [`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
 
 ## Runtime requirements
 
@@ -202,6 +204,8 @@ Migration前に必ずDB全体をバックアップしてください。Duplicate
 bash tests/run.sh
 ```
 
+GitHub Actionsでも同じRunnerをPHP 8.1 / 8.4で実行します。CIの範囲と初回確認は [`docs/ci.md`](docs/ci.md) を参照してください。
+
 SB-14の最終Matrixでは、Authentication、Authorization/IDOR、CSRF、SSRF、XSS、Parser、4タブ、DB integrity、table prefix、repository leak scan、PHP 8 runtimeを横断して検証しています。
 
 Build環境では `pdo_mysql` / cURL / SimpleXML / mbstringが揃わないため、実MySQL/cURL/SimpleXML E2Eはローカルでは完全実行できません。代替としてFake PDO/transport、fixture、static invariantを使用し、M1-AではFetcher境界・Normalized Item・API contract・Security ordering、M1-BではFeedSource/Mapper、owner再検証、異常DB rowのfail-closed、SSRF継承、M1-CではAdapter dispatch、Date normalization、Atom `published` fallback、namespace/link/content/date fixture、XML network禁止、M1-DではGUID / `rdf:about` / Atom `id`抽出、link/fingerprint fallback、Feed URL scope、identity安定性・非公開API契約、M1-EではTTL境界、破損Cache復旧、atomic write、権限・symlink拒否、Cache無効化、5 process同時実行時の単一Fetchを確認し、M1-FではETag / Last-Modified検証、redirect時の非漏えい、HTTP 304本文再利用、schema 1互換、5 process同時revalidationを確認し、M1-GではRetry-After、エラー分類、Fetch state、Backoff境界、stale age境界、Security error非隠蔽、5 process同時障害時の単一Fetchと単一失敗記録を専用testで確認しています。M2-Cではdoctype / lang / landmark / Form / Button / Label / fieldset、Feedのaria-busy / live region、DrawerのEscape / Tab循環 / focus return、ModalとPage Topのfocus移動を確認しています。M2-Dではresponsive class、長いURL、Touch target、明示的な削除、画面内通知、Feed再読込、Feed / Stockの実描画をstatic test、Node runtime、Fake PDO renderで確認しています。M2-Eでは直接参照Asset、Theme、CSS内Font参照、Icon定義、削除対象、License header、HTTP 200を確認し、M2-FではjQuery full build、Bootstrap plugin互換、8テーマ、Font Awesome alias / WebFont、script読込順、旧Asset不存在を専用testで確認しています。M2-GではM2-A〜GのDocumentation、現在Version、Asset allowlist、主要Frontend invariant、Runtime公開面、配布手順を横断して再確認しています。headless browser smokeはharnessを用意していますが、Build環境ではruntime不足のためSKIPします。配置先ではMySQL 8のCRUDと実RSS/Atomを手動確認してください。
@@ -255,7 +259,7 @@ M1 Source / RSS Engine (M1-G complete)
   ↓
 M2 Frontend (M2-G complete)
   ↓
-M4 Release preparation (M4-C complete)
+M4 Release preparation (M4-D complete)
   ↓
 Version 1.0.0 / Portfolio
 ```
@@ -263,6 +267,18 @@ Version 1.0.0 / Portfolio
 M1ではRSS専用処理に固定しすぎず、将来のJSON Feed、REST API、HTML等も同じItemモデルへ正規化できるSource / Fetcher / Parser(Adapter)構成へ段階的に移行します。M1-AでFetcher / Parser分離と共通Itemモデル、M1-Bでowner-scoped contentからFeedSourceへの変換境界、M1-Cで形式別Adapterと共通Date normalizer、M1-DでFeed URL scope付きの決定的Item identity、M1-Eで正常Feed本文のServer-side cacheとURL単位の重複Fetch抑制、M1-FでETag / Last-Modified / HTTP 304による再確認、M1-GでFetch state、Retry-After、Backoff、期限付きstale-if-errorまで完了しています。
 
 詳細: [`docs/roadmap.md`](docs/roadmap.md)
+
+## GitHub repository / Portfolio
+
+公開Repositoryには、読取専用のGitHub Actions CI、Security reporting、Contribution方針、Bug report templateを収録しています。WorkflowはDeployやReleaseを行わず、`main`へのpush / Pull Requestで既存Regressionを実行します。
+
+- CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) / [`docs/ci.md`](docs/ci.md)
+- Security report: [`SECURITY.md`](SECURITY.md)
+- Contribution: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- GitHub設定: [`docs/github-publication.md`](docs/github-publication.md)
+- Portfolio掲載用メモ: [`docs/portfolio.md`](docs/portfolio.md)
+
+M4-Dをpushした後、GitHub hosted runnerのPHP 8.1 / 8.4 Job、Private vulnerability reporting、Repository Description / Topicsを画面で確認してください。CI Workflow定義のLocal検査と、GitHub上の初回Run成功は別の証拠として扱います。
 
 ## License and third-party components
 
@@ -293,4 +309,4 @@ Sanitizedされた `database/` のschema/audit/migration/fake fixtureだけを�
 
 SB-15のInitial Commit gateは合格と判定しています。根拠と公開前に残る作業は [`docs/initial-commit-gate.md`](docs/initial-commit-gate.md) を参照してください。
 
-**注意:** Initial Commit可能と「公開GitHub Release可能」は同義ではありません。公開前にはライセンス方針、Frontend依存整理の進捗、公開URL/スクリーンショット等を別途判断します。
+**注意:** Initial Commit可能と「公開GitHub Release可能」は同義ではありません。M4-DでRepository / Portfolio / CI定義までは整理しましたが、Release ZIP、Release Notes、実MySQL / Browser / Feed、Version 1.0.0とTagは後続工程です。

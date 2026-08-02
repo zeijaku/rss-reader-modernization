@@ -1,0 +1,50 @@
+name: Bug report
+description: 再現可能な不具合を報告します
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security問題、Credential、個人情報、実DB、非公開URLは公開Issueへ書かず、SECURITY.mdを確認してください。
+
+  - type: input
+    id: version
+    attributes:
+      label: Version / Commit
+      description: 画面FooterのVersionまたはCommit SHA
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 発生したこと
+      description: 期待した動作と実際の動作を記載してください
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: Secretや実データを含めない最小手順
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: PHP、MySQL / MariaDB、Web Server、Browser
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Public data check
+      options:
+        - label: Credential、個人情報、実DB、Session、Tokenを含めていません
+          required: true

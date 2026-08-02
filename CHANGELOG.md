@@ -2,6 +2,18 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## Release M4-D / R1 — 2026-08-02
+
+### GitHub repository, portfolio and minimum CI
+
+- GitHub ActionsへPHP 8.1 / 8.4の既存Regressionを追加。
+- Workflow permissionを`contents: read`へ限定し、Secret、Deploy、Release処理を持たせない。
+- SECURITY.md、CONTRIBUTING.md、Bug report templateを追加。
+- Repository Description / Topics / Settings / Ruleset / hosted CIの確認手順を整理。
+- Portfolio用の短文、長文、技術要点、Screenshot注意、AI支援説明例を追加。
+- CIで確認する範囲と、実MySQL / Browser / Feed / Restore drillをM4-Fへ残す範囲を分離。
+- DB、公開API、Authentication / Session / CSRF / SSRF / XSS、RSS Engine、Frontend Runtime Assetは変更なし。
+
 ## Release M4-C / R1 — 2026-08-02
 
 ### Installation, update, backup and recovery procedures

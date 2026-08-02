@@ -24,3 +24,8 @@ GitHub mainとM2-G引渡しZIPの構成が完全には同一でなかったた�
 ## M4-Cで追加した運用資料
 
 配布ZIPへ `installation.md`、`update.md`、`configuration.md`、`backup-and-restore.md`、`rollback.md`、`deployment-checklist.md` を含める。実値のPrivate設定、DB dump、Backup archiveは含めない。
+
+
+## M4-Dで追加した公開Repository資料
+
+GitHub Repositoryへ `.github/workflows/ci.yml`、Issue template、`SECURITY.md`、`CONTRIBUTING.md`、CI / Repository / Portfolio資料を含める。WorkflowはSecret、Deploy、Release artifactを扱わない。GitHub Settingsとhosted CI結果はZIPへ埋め込めないため、push後に画面確認する。

@@ -53,6 +53,8 @@ Thumbs.db
 *.tmp
 .phpunit.result.cache
 coverage/
+__pycache__/
+*.py[cod]
 
 /config/local.php
 
