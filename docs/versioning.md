@@ -6,7 +6,7 @@ Deployment確認のため、各配布Checkpointには画面上のVersion表示�
 - 未ログイン: Sign in / Registration画面下部
 - ログイン後: メイン画面フッター
 - CLI: `tools/healthcheck.php`
-- Current: `Release M4-A / R1`
+- Current: `Release M4-B / R1`
 - M2 completion checkpoint: `Frontend M2-G / R1`
 - M1 completion checkpoint: `RSS Engine M1-G / R1`
 - Security baseline ancestry: `Secure Baseline SB-15 / R3`

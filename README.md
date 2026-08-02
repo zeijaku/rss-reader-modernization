@@ -1,6 +1,6 @@
 # RSS Reader Modernization
 
-**Current checkpoint:** `Release M4-A / R1`
+**Current checkpoint:** `Release M4-B / R1`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
@@ -80,19 +80,19 @@ M2-Aの詳細は [`docs/m2-a-implementation.md`](docs/m2-a-implementation.md)、
 
 ## M4 progress
 
-M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4-AではM2-GをRelease Baselineとして固定し、公開物、残課題、Quality Gate、M3未実施範囲の扱いを整理しました。Application機能、DB、公開API、Security境界は変更していません。
+M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4-AではM2-GをRelease Baselineとして固定し、公開物、残課題、Quality Gate、M3未実施範囲の扱いを整理しました。M4-BではREADME、CHANGELOG、Project License、Third-party noticeを実際の配布Assetへ合わせました。Application機能、DB、公開API、Security境界、Frontend Runtime Assetは変更していません。
 
 | Work unit | 内容 | 状態 |
 |---|---|---|
 | M4-A | Release基準・公開物・残課題の棚卸し | 完了 |
-| M4-B | README・CHANGELOG・License・Third-party notice | 未着手 |
+| M4-B | README・CHANGELOG・License・Third-party notice | 完了 |
 | M4-C | 設置・更新・Backup・復旧手順 | 未着手 |
 | M4-D | GitHub公開状態・Repository・Portfolio | 未着手 |
 | M4-E | 配布ZIP・Release Notes・SHA-256・Tag手順 | 未着手 |
 | M4-F | Release Candidate全回帰・実環境確認 | 未着手 |
 | M4-G | 最終Quality Gate・Version 1.0.0確定 | 未着手 |
 
-詳細は [`docs/m4-a-implementation.md`](docs/m4-a-implementation.md) と [`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
+詳細は [`docs/m4-a-implementation.md`](docs/m4-a-implementation.md)、[`docs/m4-b-implementation.md`](docs/m4-b-implementation.md)、[`docs/test-report-m4-b.md`](docs/test-report-m4-b.md)、[`docs/dependencies.md`](docs/dependencies.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
 
 ## Runtime requirements
 
@@ -246,7 +246,7 @@ M1 Source / RSS Engine (M1-G complete)
   ↓
 M2 Frontend (M2-G complete)
   ↓
-M4 Release preparation (M4-A complete)
+M4 Release preparation (M4-B complete)
   ↓
 Version 1.0.0 / Portfolio
 ```
@@ -254,6 +254,12 @@ Version 1.0.0 / Portfolio
 M1ではRSS専用処理に固定しすぎず、将来のJSON Feed、REST API、HTML等も同じItemモデルへ正規化できるSource / Fetcher / Parser(Adapter)構成へ段階的に移行します。M1-AでFetcher / Parser分離と共通Itemモデル、M1-Bでowner-scoped contentからFeedSourceへの変換境界、M1-Cで形式別Adapterと共通Date normalizer、M1-DでFeed URL scope付きの決定的Item identity、M1-Eで正常Feed本文のServer-side cacheとURL単位の重複Fetch抑制、M1-FでETag / Last-Modified / HTTP 304による再確認、M1-GでFetch state、Retry-After、Backoff、期限付きstale-if-errorまで完了しています。
 
 詳細: [`docs/roadmap.md`](docs/roadmap.md)
+
+## License and third-party components
+
+Project独自codeとModernizationで追加・変更した部分は [`LICENSE`](LICENSE) のMIT Licenseで公開します。同梱するFrontend libraryには各上流Licenseが適用され、ProjectのMIT Licenseで再Licenseしません。
+
+現在の主な同梱VersionはjQuery 3.7.1、Font Awesome Free 6.7.2、Bootstrap / Bootswatch 4.1.3、jquery-drawer 3.2.2、iScroll 5.2.0-snapshotです。詳細は [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) と [`docs/dependencies.md`](docs/dependencies.md) を参照してください。
 
 ## Repository safety
 

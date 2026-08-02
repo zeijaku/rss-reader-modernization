@@ -2,6 +2,18 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## Release M4-B / R1 — 2026-08-02
+
+### Documentation and third-party license alignment
+
+- README、CHANGELOG、Documentation indexをM4-Bへ同期。
+- Third-party noticeを実Assetへ合わせ、jQuery 3.7.1とFont Awesome Free 6.7.2へ更新。
+- M2-Eで削除済みのFont Awesome配布PathをNoticeから除去。
+- jQuery License copyをOpenJS Foundation表記へ更新。
+- Font Awesome License copyを6.7.2の内容とfile名へ更新。
+- Dependency / License対応表とM4-B専用testを追加。
+- DB、公開API、Authentication / Session / CSRF / SSRF / XSS、RSS Engine、Frontend Runtime Assetは変更なし。
+
 ## Release M4-A / R1 — 2026-08-02
 
 ### Version 1.0.0 release baseline and inventory

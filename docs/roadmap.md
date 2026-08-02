@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `M4-A / R1`。M2-GをRelease Baselineとして固定し、Version 1.0.0の公開物、残課題、Quality Gateを整理しました。M3成果物は確認できなかったため完了扱いにせず、Releaseに必要な運用・実環境確認をM4-D〜Fへ吸収します。Bootstrap / Bootswatch、Popper、Drawer、iScrollは現在の画面構造との組合せを優先して据え置き、major migrationを混在させていません。
+現在は `M4-B / R1`。M2-GをRelease Baselineとして固定したうえで、README、CHANGELOG、Project License、Third-party noticeを実際の配布Assetへ合わせました。M3成果物は確認できなかったため完了扱いにせず、Releaseに必要な運用・実環境確認をM4-D〜Fへ吸収します。Bootstrap / Bootswatch、Popper、Drawer、iScrollは現在の画面構造との組合せを優先して据え置き、major migrationを混在させていません。
 
 ## M1 — Source / RSS Engine
 
@@ -85,7 +85,7 @@ Frontend刷新はSecurity behaviorを変えないよう、SB-14以降とM1のreg
 ### Progress
 
 - [x] M4-A Release基準・公開物・残課題の棚卸し
-- [ ] M4-B README・CHANGELOG・License・Third-party notice整理
+- [x] M4-B README・CHANGELOG・License・Third-party notice整理
 - [ ] M4-C 新規設置・更新・設定・Backup・復旧手順
 - [ ] M4-D GitHub公開状態・Repository構成・Portfolio説明
 - [ ] M4-E 配布ZIP・Release Notes・SHA-256・Tag / Release手順

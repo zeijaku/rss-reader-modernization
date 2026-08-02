@@ -8,6 +8,15 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`roadmap.md`](roadmap.md) — Secure Baseline後のModernization計画
 - [`change-map.md`](change-map.md) — Legacy issue → work unit → implementation → testの対応表
 
+## M4 release preparation
+
+- [`m4-a-implementation.md`](m4-a-implementation.md) — Release Baseline、公開物、残課題
+- [`m4-b-implementation.md`](m4-b-implementation.md) — README、CHANGELOG、License、Third-party notice
+- [`test-report-m4-b.md`](test-report-m4-b.md) — M4-B test結果
+- [`dependencies.md`](dependencies.md) — Frontend dependencyとLicense copyの対応
+- [`release-gate-v1.0.0.md`](release-gate-v1.0.0.md) — Version 1.0.0 Quality Gate
+- [`m4-plan.md`](m4-plan.md) — M4-A〜Gの工程
+
 ## Security / deployment
 
 - [`security.md`](security.md) — Security model、設定、運用上の注意
@@ -44,7 +53,7 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 
 ## Historical notes
 
-[`history/`](history/) はSecure Baseline初期に発生したdeployment / login / session / logout等のhotfix記録です。現在Checkpointの`R3`とは別系列のRevision番号だったため、公開時の混同を避けるためSB-00〜02の履歴として整理しています。
+Secure Baseline初期のdeployment / login / session / logout等のhotfix記録は `hotfix-r2.md`〜`hotfix-r6.md` として残しています。現在CheckpointのRevisionとは別系列の履歴です。
 
 ## Database migration
 

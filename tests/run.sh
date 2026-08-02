@@ -152,3 +152,9 @@ echo '== M4-A Release baseline / inventory / gate checks =='
 python3 "$ROOT/tests/test_m4a_release_baseline.py"
 python3 "$ROOT/tests/test_m4a_release_inventory.py"
 python3 "$ROOT/tests/test_m4a_release_gate.py"
+
+echo '== M4-B Documentation / third-party license checks =='
+python3 "$ROOT/tests/test_m4b_license_inventory.py"
+python3 "$ROOT/tests/test_m4b_documentation.py"
+python3 "$ROOT/tests/test_m4b_cleanup_script.py"
+
