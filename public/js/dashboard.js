@@ -2,6 +2,7 @@
     'use strict';
 
     var eventNamespace = '.iguguruDashboard';
+    var noticeTimer = null;
 
     /* Secure Baseline API helper */
     function appCsrfToken() {
@@ -18,11 +19,16 @@
         return '通信に失敗しました';
     }
 
-    function showNotice(message, type) {
+    function showNotice(message, type, autoCloseMs) {
         var noticeType = type === 'success' ? 'success' : (type === 'info' ? 'info' : 'danger');
         var $notice = $('#app-notice');
         if ($notice.length === 0) {
             return;
+        }
+
+        if (noticeTimer !== null) {
+            window.clearTimeout(noticeTimer);
+            noticeTimer = null;
         }
 
         $notice
@@ -31,9 +37,19 @@
             .attr('role', noticeType === 'danger' ? 'alert' : 'status')
             .prop('hidden', false)
             .text(String(message || '処理を完了出来ませんでした'));
+
+        if (Number(autoCloseMs) > 0) {
+            noticeTimer = window.setTimeout(function () {
+                clearNotice();
+            }, Number(autoCloseMs));
+        }
     }
 
     function clearNotice() {
+        if (noticeTimer !== null) {
+            window.clearTimeout(noticeTimer);
+            noticeTimer = null;
+        }
         $('#app-notice')
             .prop('hidden', true)
             .empty();
@@ -266,6 +282,133 @@
             });
     }
 
+    function clockFormPayload(prefix) {
+        return {
+            'clock_title': $('.' + prefix + 'ClockName').val(),
+            'clock_hour_format': $('.' + prefix + 'ClockHourFormat').val(),
+            'clock_show_seconds': $('.' + prefix + 'ClockShowSeconds').prop('checked') ? '1' : '0',
+            'clock_show_date': $('.' + prefix + 'ClockShowDate').prop('checked') ? '1' : '0',
+            'widget_style': $('.' + prefix + 'ClockStyle').val(),
+            'widget_width': $('.' + prefix + 'ClockWidth').val()
+        };
+    }
+
+    function addClock($form) {
+        var $button = $form.find('button[type="submit"]');
+        if (!requestStart($button)) {
+            return;
+        }
+
+        var payload = clockFormPayload('register');
+        payload.widget_location = $('.registerClockLocation').val();
+        apiRequest('widget.clock.create', payload, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
+    function editClock($trigger) {
+        $('.changeClockId').val(String($trigger.attr('data-widget-id') || ''));
+        $('.changeClockName').val(String($trigger.attr('data-clock-title') || 'Clock'));
+        $('.changeClockHourFormat').val(String($trigger.attr('data-clock-hour-format') || '24'));
+        $('.changeClockShowSeconds').prop('checked', String($trigger.attr('data-clock-show-seconds') || '0') === '1');
+        $('.changeClockShowDate').prop('checked', String($trigger.attr('data-clock-show-date') || '1') === '1');
+        $('.changeClockStyle').val(String($trigger.attr('data-widget-style') || 'primary'));
+        $('.changeClockWidth').val(String($trigger.attr('data-widget-width') || '1'));
+    }
+
+    function changeClock($form) {
+        var $button = $form.find('button[type="submit"]');
+        if (!requestStart($button)) {
+            return;
+        }
+
+        var payload = clockFormPayload('change');
+        payload.widget_id = $('.changeClockId').val();
+        apiRequest('widget.clock.update', payload, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
+    function deleteClock($button) {
+        var widgetId = String($('.changeClockId').val() || '');
+        if (!/^\d+$/.test(widgetId)) {
+            showNotice('削除するClockを確認出来ませんでした', 'danger');
+            return;
+        }
+        if (!window.confirm('このClockを削除しますか？')) {
+            return;
+        }
+        if (!requestStart($button)) {
+            return;
+        }
+
+        apiRequest('widget.clock.delete', {'widget_id': widgetId}, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
+    function renderClock($card, now) {
+        var hourFormat = String($card.attr('data-clock-hour-format') || '24');
+        var showSeconds = String($card.attr('data-clock-show-seconds') || '0') === '1';
+        var showDate = String($card.attr('data-clock-show-date') || '1') === '1';
+        var timeOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: showSeconds ? '2-digit' : undefined,
+            hour12: hourFormat === '12'
+        };
+        var timeText = new Intl.DateTimeFormat(undefined, timeOptions).format(now);
+        var dateText = new Intl.DateTimeFormat(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            weekday: 'short'
+        }).format(now);
+
+        $card.find('.clock-time')
+            .attr('datetime', now.toISOString())
+            .text(timeText);
+        $card.find('.clock-date')
+            .prop('hidden', !showDate)
+            .text(dateText);
+    }
+
+    function updateClocks() {
+        var now = new Date();
+        $('[data-dashboard-widget-type="clock"]').each(function () {
+            renderClock($(this), now);
+        });
+    }
+
+    function initClocks() {
+        if ($('[data-dashboard-widget-type="clock"]').length === 0) {
+            return;
+        }
+        updateClocks();
+        window.setInterval(updateClocks, 1000);
+    }
+
     /* Feed表示用の短い文字列を作る。絵文字の途中では切らない */
     function truncateFeedTitle(value, maxLength) {
         var text = String(value || '');
@@ -338,22 +481,37 @@
 
         if (channelLink !== '') {
             $('<a>')
-                .addClass('text-white')
+                .addClass('text-white feed-title-text')
                 .attr('href', channelLink)
                 .attr('target', '_blank')
                 .attr('rel', 'noopener noreferrer')
+                .attr('draggable', 'false')
+                .attr('title', viewTitle)
                 .text(viewTitle)
                 .appendTo($title);
         } else {
-            $('<span>').text(viewTitle).appendTo($title);
+            $('<span>')
+                .addClass('feed-title-text')
+                .attr('title', viewTitle)
+                .text(viewTitle)
+                .appendTo($title);
         }
 
         if (newCount > 0) {
-            $('<button type="button">')
-                .addClass('badge badge-warning feed-new-clear ml-2')
+            var $newButton = $('<button type="button">')
+                .addClass('feed-new-clear')
                 .attr('aria-label', 'このFeedの新着' + newCount + '件を解除')
-                .text('NEW ' + newCount)
+                .attr('title', '新着' + newCount + '件')
                 .appendTo($title);
+
+            $('<i>')
+                .addClass('fas fa-bell')
+                .attr('aria-hidden', 'true')
+                .appendTo($newButton);
+            $('<span>')
+                .addClass('feed-new-count')
+                .text(newCount)
+                .appendTo($newButton);
         }
     }
 
@@ -393,12 +551,17 @@
             var $linkCell = $('<td>').appendTo($row);
             var itemIdentity = String(item.item_identity || '');
             if (item.is_new === true && /^m1i:v1:[a-f0-9]{64}$/.test(itemIdentity)) {
-                $('<button type="button">')
-                    .addClass('badge badge-warning feed-item-new mr-2')
+                var $itemNewButton = $('<button type="button">')
+                    .addClass('feed-item-new mr-1')
                     .attr('data-item-identity', itemIdentity)
                     .attr('aria-label', '新着表示を解除: ' + viewTitle)
-                    .text('NEW')
+                    .attr('title', '新着記事')
                     .appendTo($linkCell);
+
+                $('<i>')
+                    .addClass('fas fa-bell')
+                    .attr('aria-hidden', 'true')
+                    .appendTo($itemNewButton);
             }
             if (itemLink !== '') {
                 $('<a>')
@@ -520,8 +683,313 @@
             });
     }
 
+    var widgetDragState = null;
+    var widgetOrderSaving = false;
+
+    function widgetGridIds($grid) {
+        var ids = [];
+        $grid.children('.dashboard-widget').each(function () {
+            var value = String($(this).attr('data-dashboard-widget-id') || '');
+            if (/^[1-9][0-9]*$/.test(value)) {
+                ids.push(value);
+            }
+        });
+        return ids;
+    }
+
+    function widgetIdsEqual(left, right) {
+        if (left.length !== right.length) {
+            return false;
+        }
+        for (var i = 0; i < left.length; i++) {
+            if (left[i] !== right[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function widgetRestoreOrder($grid, ids) {
+        var grid = $grid.get(0);
+        if (!grid) {
+            return;
+        }
+        for (var i = 0; i < ids.length; i++) {
+            var node = $grid.find('[data-dashboard-widget-id="' + ids[i] + '"]').get(0);
+            if (node) {
+                grid.appendChild(node);
+            }
+        }
+    }
+
+    function widgetRefreshOrder($grid, sortOrders) {
+        var total = $grid.children('.dashboard-widget').length;
+        $grid.children('.dashboard-widget').each(function (index) {
+            var $card = $(this);
+            var widgetId = String($card.attr('data-dashboard-widget-id') || '');
+            var sortOrder = sortOrders && Object.prototype.hasOwnProperty.call(sortOrders, widgetId)
+                ? Number(sortOrders[widgetId])
+                : (index + 1) * 10;
+            $card.attr('data-dashboard-widget-sort-order', String(sortOrder));
+            $card.find('.widget-drag-handle').attr(
+                'aria-label',
+                'このWidgetを並び替え（' + (index + 1) + '/' + total + '）。矢印キー、Home、Endキーを使用出来ます'
+            );
+        });
+    }
+
+    function widgetSaveOrder($grid, previousIds, focusWidgetId) {
+        var orderedIds = widgetGridIds($grid);
+        if (widgetIdsEqual(previousIds, orderedIds)) {
+            return;
+        }
+        if (widgetOrderSaving) {
+            widgetRestoreOrder($grid, previousIds);
+            showNotice('並び順を保存中です', 'info');
+            return;
+        }
+
+        var location = String($grid.attr('data-dashboard-widget-location') || '');
+        if (!/^[0-3]$/.test(location)) {
+            widgetRestoreOrder($grid, previousIds);
+            showNotice('Widgetの表示位置を確認出来ませんでした', 'danger');
+            return;
+        }
+
+        widgetOrderSaving = true;
+        clearNotice();
+        $grid.addClass('widget-sort-saving').attr('aria-busy', 'true');
+
+        apiRequest('widget.reorder', {
+            'widget_location': location,
+            'previous_widget_ids': JSON.stringify(previousIds),
+            'widget_ids': JSON.stringify(orderedIds)
+        }, 5000)
+            .done(function (data) {
+                if (!apiResponseOk(data)) {
+                    widgetRestoreOrder($grid, previousIds);
+                    return;
+                }
+                var result = data.data || {};
+                widgetRefreshOrder($grid, result.sort_orders || {});
+                showNotice('Widgetの並び順を保存しました', 'success', 2500);
+            })
+            .fail(function (xhr, textStatus) {
+                widgetRestoreOrder($grid, previousIds);
+                requestFail(xhr, textStatus);
+            })
+            .always(function () {
+                widgetOrderSaving = false;
+                $grid.removeClass('widget-sort-saving').attr('aria-busy', 'false');
+                if (focusWidgetId) {
+                    $grid.find('[data-dashboard-widget-id="' + focusWidgetId + '"] .widget-drag-handle').focus();
+                }
+            });
+    }
+
+    function widgetClearDropTarget($grid) {
+        $grid.find('.dashboard-widget').removeClass(
+            'widget-drop-target widget-drop-before widget-drop-after widget-drop-horizontal widget-drop-vertical'
+        );
+    }
+
+    function widgetPositionGhost(ghost, clientX, clientY) {
+        if (!ghost || !ghost.style) {
+            return;
+        }
+        ghost.style.transform = 'translate3d(' + (clientX + 14) + 'px, ' + (clientY + 14) + 'px, 0)';
+    }
+
+    function widgetCreateDragGhost($card, clientX, clientY) {
+        if (!document.createElement || !document.body) {
+            return null;
+        }
+        var card = $card.get(0);
+        if (!card) {
+            return null;
+        }
+        var rect = card.getBoundingClientRect();
+        var title = String($card.find('.widget-title-text').first().text() || 'Widget');
+        var ghost = document.createElement('div');
+        ghost.className = 'widget-drag-ghost';
+        ghost.setAttribute('aria-hidden', 'true');
+        ghost.textContent = title;
+        ghost.style.width = Math.max(140, Math.min(Number(rect.width || 0), 360)) + 'px';
+        document.body.appendChild(ghost);
+        widgetPositionGhost(ghost, clientX, clientY);
+        return ghost;
+    }
+
+    function widgetRemoveDragGhost(ghost) {
+        if (ghost && ghost.parentNode) {
+            ghost.parentNode.removeChild(ghost);
+        }
+    }
+
+    function widgetDropAxis(targetRect, sourceRect) {
+        var overlap = Math.min(targetRect.bottom, sourceRect.bottom) - Math.max(targetRect.top, sourceRect.top);
+        var minimumHeight = Math.min(targetRect.height, sourceRect.height);
+        return overlap > minimumHeight * 0.35 ? 'horizontal' : 'vertical';
+    }
+
+    function widgetMoveAtPointer($target, clientX, clientY) {
+        if (!widgetDragState) {
+            return;
+        }
+        widgetPositionGhost(widgetDragState.ghost, clientX, clientY);
+
+        var target = $target && $target.length > 0 ? $target.get(0) : null;
+        var card = widgetDragState.$card.get(0);
+        var grid = widgetDragState.$grid.get(0);
+        if (!target || !card || target === card || target.parentNode !== grid) {
+            if (widgetDragState.dropTarget) {
+                widgetClearDropTarget(widgetDragState.$grid);
+                widgetDragState.dropTarget = null;
+            }
+            return;
+        }
+
+        var rect = target.getBoundingClientRect();
+        var axis = widgetDropAxis(rect, widgetDragState.sourceRect);
+        var before = axis === 'horizontal'
+            ? clientX < rect.left + (rect.width / 2)
+            : clientY < rect.top + (rect.height / 2);
+
+        if (
+            widgetDragState.dropTarget === target &&
+            widgetDragState.dropBefore === before &&
+            widgetDragState.dropAxis === axis
+        ) {
+            return;
+        }
+
+        widgetClearDropTarget(widgetDragState.$grid);
+        widgetDragState.dropTarget = target;
+        widgetDragState.dropBefore = before;
+        widgetDragState.dropAxis = axis;
+        $target.addClass(
+            'widget-drop-target widget-drop-' + axis + ' widget-drop-' + (before ? 'before' : 'after')
+        );
+    }
+
+    function widgetApplyDrop(state) {
+        var target = state.dropTarget;
+        var card = state.$card.get(0);
+        var grid = state.$grid.get(0);
+        if (!target || !card || !grid || target === card || target.parentNode !== grid) {
+            return;
+        }
+        grid.insertBefore(card, state.dropBefore ? target : target.nextSibling);
+    }
+
+    function widgetBeginDrag($handle, clientX, clientY, pointerId) {
+        if (widgetOrderSaving || widgetDragState) {
+            return false;
+        }
+        var $card = $handle.closest('.dashboard-widget');
+        var $grid = $card.closest('.feed-grid');
+        var card = $card.get(0);
+        if (!card || $grid.length === 0) {
+            return false;
+        }
+        widgetDragState = {
+            $card: $card,
+            $grid: $grid,
+            $handle: $handle,
+            previousIds: widgetGridIds($grid),
+            widgetId: String($card.attr('data-dashboard-widget-id') || ''),
+            pointerId: pointerId,
+            sourceRect: card.getBoundingClientRect(),
+            ghost: widgetCreateDragGhost($card, clientX, clientY),
+            dropTarget: null,
+            dropBefore: false,
+            dropAxis: 'horizontal'
+        };
+        $grid.addClass('widget-drag-active');
+        $card.addClass('widget-dragging');
+        $handle.attr('aria-pressed', 'true');
+        return true;
+    }
+
+    function widgetFinishDrag(cancelled) {
+        if (!widgetDragState) {
+            return;
+        }
+        var state = widgetDragState;
+        widgetDragState = null;
+
+        if (!cancelled) {
+            widgetApplyDrop(state);
+        }
+        widgetClearDropTarget(state.$grid);
+        widgetRemoveDragGhost(state.ghost);
+        state.$grid.removeClass('widget-drag-active');
+        state.$card.removeClass('widget-dragging');
+        state.$handle.attr('aria-pressed', 'false');
+
+        if (cancelled) {
+            widgetRestoreOrder(state.$grid, state.previousIds);
+            return;
+        }
+        widgetSaveOrder(state.$grid, state.previousIds, state.widgetId);
+    }
+
+    function widgetKeyboardMove($handle, key) {
+        if (widgetOrderSaving) {
+            return;
+        }
+        var $card = $handle.closest('.dashboard-widget');
+        var $grid = $card.closest('.feed-grid');
+        var card = $card.get(0);
+        var grid = $grid.get(0);
+        if (!card || !grid) {
+            return;
+        }
+        var previousIds = widgetGridIds($grid);
+        if (key === 'ArrowLeft' || key === 'ArrowUp') {
+            if (card.previousElementSibling) {
+                grid.insertBefore(card, card.previousElementSibling);
+            }
+        } else if (key === 'ArrowRight' || key === 'ArrowDown') {
+            if (card.nextElementSibling) {
+                grid.insertBefore(card.nextElementSibling, card);
+            }
+        } else if (key === 'Home') {
+            grid.insertBefore(card, grid.firstElementChild);
+        } else if (key === 'End') {
+            grid.appendChild(card);
+        }
+        widgetSaveOrder($grid, previousIds, String($card.attr('data-dashboard-widget-id') || ''));
+    }
+
+    function widgetPointerTarget(clientX, clientY) {
+        if (!document.elementFromPoint) {
+            return $();
+        }
+        var element = document.elementFromPoint(clientX, clientY);
+        return element ? $(element).closest('.dashboard-widget') : $();
+    }
+
     function bindEvents() {
         $(document)
+            .off('submit' + eventNamespace, '#registerClockForm')
+            .on('submit' + eventNamespace, '#registerClockForm', function (event) {
+                event.preventDefault();
+                addClock($(this));
+            })
+            .off('click' + eventNamespace, '.clock-edit-trigger')
+            .on('click' + eventNamespace, '.clock-edit-trigger', function () {
+                editClock($(this));
+            })
+            .off('submit' + eventNamespace, '#changeClockForm')
+            .on('submit' + eventNamespace, '#changeClockForm', function (event) {
+                event.preventDefault();
+                changeClock($(this));
+            })
+            .off('click' + eventNamespace, '.delete_clock')
+            .on('click' + eventNamespace, '.delete_clock', function () {
+                deleteClock($(this));
+            })
             .off('click' + eventNamespace, '.content-edit-trigger')
             .on('click' + eventNamespace, '.content-edit-trigger', function () {
                 editContent($(this));
@@ -565,6 +1033,63 @@
             .on('submit' + eventNamespace, '#registerContentForm', function (event) {
                 event.preventDefault();
                 addContent($(this));
+            })
+            .off('click' + eventNamespace, '.widget-drag-handle')
+            .on('click' + eventNamespace, '.widget-drag-handle', function (event) {
+                event.preventDefault();
+            })
+            .off('keydown' + eventNamespace, '.widget-drag-handle')
+            .on('keydown' + eventNamespace, '.widget-drag-handle', function (event) {
+                var key = event.key || '';
+                if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].indexOf(key) === -1) {
+                    return;
+                }
+                event.preventDefault();
+                widgetKeyboardMove($(this), key);
+            })
+            .off('pointerdown' + eventNamespace, '.widget-drag-handle')
+            .on('pointerdown' + eventNamespace, '.widget-drag-handle', function (event) {
+                var original = event.originalEvent || event;
+                if (original.isPrimary === false) {
+                    return;
+                }
+                if (original.pointerType === 'mouse' && original.button !== 0) {
+                    return;
+                }
+                var clientX = Number(original.clientX || 0);
+                var clientY = Number(original.clientY || 0);
+                if (!widgetBeginDrag($(this), clientX, clientY, original.pointerId)) {
+                    return;
+                }
+                event.preventDefault();
+                if (this.setPointerCapture && original.pointerId !== undefined) {
+                    this.setPointerCapture(original.pointerId);
+                }
+            })
+            .off('pointermove' + eventNamespace, '.widget-drag-handle')
+            .on('pointermove' + eventNamespace, '.widget-drag-handle', function (event) {
+                if (!widgetDragState) {
+                    return;
+                }
+                var original = event.originalEvent || event;
+                event.preventDefault();
+                widgetMoveAtPointer(
+                    widgetPointerTarget(Number(original.clientX || 0), Number(original.clientY || 0)),
+                    Number(original.clientX || 0),
+                    Number(original.clientY || 0)
+                );
+            })
+            .off('pointerup' + eventNamespace, '.widget-drag-handle')
+            .on('pointerup' + eventNamespace, '.widget-drag-handle', function (event) {
+                if (!widgetDragState) {
+                    return;
+                }
+                event.preventDefault();
+                widgetFinishDrag(false);
+            })
+            .off('pointercancel' + eventNamespace, '.widget-drag-handle')
+            .on('pointercancel' + eventNamespace, '.widget-drag-handle', function () {
+                widgetFinishDrag(true);
             });
     }
 
@@ -707,6 +1232,7 @@
         $('[data-toggle="popover"]').popover();
         bindEvents();
         initFeeds();
+        initClocks();
         initDrawer();
         initModalFocus();
         initPageTop();

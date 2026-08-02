@@ -97,6 +97,19 @@ final class V11dFakeStatement extends PDOStatement
             return true;
         }
 
+        if (str_starts_with($sql, 'SELECT widget_sort_order FROM `ig_dashboard_widget`')) {
+            $owner = (int) ($params[':owner'] ?? 0);
+            $location = (int) ($params[':location'] ?? 0);
+            $orders = [];
+            foreach ($this->pdo->widgets as $widget) {
+                if ($widget['widget_owner'] === $owner && $widget['widget_location'] === $location && $widget['widget_flag'] === 0) {
+                    $orders[] = $widget['widget_sort_order'];
+                }
+            }
+            $this->column = $orders === [] ? false : max($orders);
+            return true;
+        }
+
         if (str_starts_with($sql, 'INSERT INTO `ig_dashboard_widget`')) {
             if ($this->pdo->failWidgetInsert) {
                 throw new PDOException('fixture widget insert failure');
@@ -265,7 +278,7 @@ $contentB = dashboard_widget_create_feed(10, 'https://example.com/feed-b', 'info
 dashboard_widget_create_feed(20, 'https://example.com/other', 'danger', 0);
 
 v11d_check(count($pdo->contents) === 3 && count($pdo->widgets) === 3, 'Feed creation writes content and Widget together');
-v11d_check($pdo->widgets[1]['widget_sort_order'] === $contentA, 'new Feed uses content_id as stable initial sort order');
+v11d_check($pdo->widgets[1]['widget_sort_order'] === 10 && $pdo->widgets[2]['widget_sort_order'] === 20, 'new Feed appends to the current Widget order');
 v11d_check($pdo->widgets[1]['widget_width'] === 1, 'new Feed Widget keeps existing width');
 
 $list = search_dashboard_widgets(10, 0);

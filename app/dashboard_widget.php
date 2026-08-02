@@ -45,6 +45,116 @@ function dashboard_widget_validate_width(mixed $value): ?int
     return $width !== null && $width <= 4 ? $width : null;
 }
 
+function dashboard_widget_validate_boolean(mixed $value): ?bool
+{
+    if (is_bool($value)) {
+        return $value;
+    }
+    if ($value === 1 || $value === '1' || $value === 'true') {
+        return true;
+    }
+    if ($value === 0 || $value === '0' || $value === 'false') {
+        return false;
+    }
+    return null;
+}
+
+/** @return array{schema:int,title:string,hour_format:string,show_seconds:bool,show_date:bool} */
+function dashboard_widget_clock_defaults(): array
+{
+    return [
+        'schema' => 1,
+        'title' => 'Clock',
+        'hour_format' => '24',
+        'show_seconds' => false,
+        'show_date' => true,
+    ];
+}
+
+function dashboard_widget_validate_clock_title(mixed $value): ?string
+{
+    return app_validate_text($value, 32, false);
+}
+
+function dashboard_widget_validate_clock_hour_format(mixed $value): ?string
+{
+    return is_string($value) && in_array($value, ['12', '24'], true) ? $value : null;
+}
+
+/**
+ * @return array{schema:int,title:string,hour_format:string,show_seconds:bool,show_date:bool}|null
+ */
+function dashboard_widget_clock_config_from_input(array $input): ?array
+{
+    $title = dashboard_widget_validate_clock_title($input['clock_title'] ?? null);
+    $hourFormat = dashboard_widget_validate_clock_hour_format($input['clock_hour_format'] ?? null);
+    $showSeconds = dashboard_widget_validate_boolean($input['clock_show_seconds'] ?? null);
+    $showDate = dashboard_widget_validate_boolean($input['clock_show_date'] ?? null);
+    if ($title === null || $hourFormat === null || $showSeconds === null || $showDate === null) {
+        return null;
+    }
+
+    return [
+        'schema' => 1,
+        'title' => $title,
+        'hour_format' => $hourFormat,
+        'show_seconds' => $showSeconds,
+        'show_date' => $showDate,
+    ];
+}
+
+/** @return array{schema:int,title:string,hour_format:string,show_seconds:bool,show_date:bool} */
+function dashboard_widget_clock_config_from_storage(mixed $value): array
+{
+    $defaults = dashboard_widget_clock_defaults();
+    $config = dashboard_widget_decode_config($value);
+
+    $title = dashboard_widget_validate_clock_title($config['title'] ?? null);
+    $hourFormat = dashboard_widget_validate_clock_hour_format($config['hour_format'] ?? null);
+    $showSeconds = dashboard_widget_validate_boolean($config['show_seconds'] ?? null);
+    $showDate = dashboard_widget_validate_boolean($config['show_date'] ?? null);
+
+    return [
+        'schema' => 1,
+        'title' => $title ?? $defaults['title'],
+        'hour_format' => $hourFormat ?? $defaults['hour_format'],
+        'show_seconds' => $showSeconds ?? $defaults['show_seconds'],
+        'show_date' => $showDate ?? $defaults['show_date'],
+    ];
+}
+
+
+/** @return list<int>|null */
+function dashboard_widget_decode_order_list(mixed $value, int $maxItems = 200): ?array
+{
+    if (!is_string($value) || $value === '' || strlen($value) > 4096 || $maxItems < 1) {
+        return null;
+    }
+
+    try {
+        $decoded = json_decode($value, true, 8, JSON_THROW_ON_ERROR);
+    } catch (JsonException) {
+        return null;
+    }
+
+    if (!is_array($decoded) || !array_is_list($decoded) || $decoded === [] || count($decoded) > $maxItems) {
+        return null;
+    }
+
+    $ids = [];
+    $seen = [];
+    foreach ($decoded as $valueId) {
+        $widgetId = app_validate_positive_int($valueId);
+        if ($widgetId === null || isset($seen[$widgetId])) {
+            return null;
+        }
+        $seen[$widgetId] = true;
+        $ids[] = $widgetId;
+    }
+
+    return $ids;
+}
+
 /** @return array<string,mixed> */
 function dashboard_widget_decode_config(mixed $value): array
 {
@@ -114,7 +224,9 @@ function dashboard_widget_normalize_row(array $row): ?array
     $row['widget_sort_order'] = $sortOrder;
     $row['widget_width'] = $width;
     $row['widget_style'] = $style;
-    $row['widget_config_data'] = dashboard_widget_decode_config($row['widget_config'] ?? null);
+    $row['widget_config_data'] = $type === 'clock'
+        ? dashboard_widget_clock_config_from_storage($row['widget_config'] ?? null)
+        : dashboard_widget_decode_config($row['widget_config'] ?? null);
     $row['widget_width_class'] = dashboard_widget_width_class($width);
 
     return $row;
@@ -194,6 +306,24 @@ function dashboard_widget_lock_owned_content(PDO $pdo, int $ownerId, int $conten
     return is_array($row) ? $row : null;
 }
 
+function dashboard_widget_next_sort_order(PDO $pdo, int $ownerId, int $location): int
+{
+    $sql = 'SELECT widget_sort_order FROM ' . db_table_identifier('dashboard_widget') . ' '
+        . 'WHERE widget_owner = :owner AND widget_location = :location AND widget_flag = 0 '
+        . 'ORDER BY widget_sort_order DESC, widget_id DESC LIMIT 1';
+    if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+        $sql .= ' FOR UPDATE';
+    }
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':owner' => $ownerId, ':location' => $location]);
+    $current = $stmt->fetchColumn();
+    $maxOrder = $current === false || $current === null ? 0 : (int) $current;
+    if ($maxOrder > 4294967285) {
+        throw new OverflowException('Dashboard Widget sort order is full.');
+    }
+    return $maxOrder + 10;
+}
+
 function dashboard_widget_insert_feed(PDO $pdo, int $ownerId, int $contentId, int $location, string $style, string $createdAt): int
 {
     $stmt = $pdo->prepare(
@@ -206,7 +336,7 @@ function dashboard_widget_insert_feed(PDO $pdo, int $ownerId, int $contentId, in
         ':owner' => $ownerId,
         ':location' => $location,
         ':reference_id' => $contentId,
-        ':sort_order' => $contentId,
+        ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
         ':style' => $style,
         ':created_at' => $createdAt,
         ':updated_at' => $createdAt,
@@ -346,3 +476,297 @@ function dashboard_widget_delete_feed(int $ownerId, int $contentId): bool
         throw $exception;
     }
 }
+
+/** @return array<string,mixed>|null */
+function dashboard_widget_lock_owned_widget(PDO $pdo, int $ownerId, int $widgetId, string $type): ?array
+{
+    if ($ownerId <= 0 || $widgetId <= 0 || dashboard_widget_validate_type($type) === null) {
+        return null;
+    }
+
+    $sql = 'SELECT * FROM ' . db_table_identifier('dashboard_widget') . ' '
+        . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+        . 'AND widget_type = :widget_type AND widget_flag = 0';
+    if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+        $sql .= ' FOR UPDATE';
+    }
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
+        ':widget_id' => $widgetId,
+        ':owner' => $ownerId,
+        ':widget_type' => $type,
+    ]);
+    $row = $stmt->fetch();
+    return is_array($row) ? $row : null;
+}
+
+/** @param array{schema:int,title:string,hour_format:string,show_seconds:bool,show_date:bool} $config */
+function dashboard_widget_create_clock(
+    int $ownerId,
+    int $location,
+    string $style,
+    int $width,
+    array $config
+): int {
+    if ($ownerId <= 0
+        || dashboard_widget_validate_location($location) === null
+        || app_normalize_content_style($style) === null
+        || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_clock_config_from_input([
+            'clock_title' => $config['title'] ?? null,
+            'clock_hour_format' => $config['hour_format'] ?? null,
+            'clock_show_seconds' => $config['show_seconds'] ?? null,
+            'clock_show_date' => $config['show_date'] ?? null,
+        ]) === null) {
+        throw new InvalidArgumentException('Clock Widget settings are invalid.');
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        $now = app_now();
+        $stmt = $pdo->prepare(
+            'INSERT INTO ' . db_table_identifier('dashboard_widget') . ' '
+            . '(widget_owner, widget_location, widget_type, widget_reference_id, widget_sort_order, '
+            . 'widget_width, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
+            . "VALUES (:owner, :location, 'clock', NULL, :sort_order, :width, :style, :config, 0, :created_at, :updated_at)"
+        );
+        $stmt->execute([
+            ':owner' => $ownerId,
+            ':location' => $location,
+            ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
+            ':width' => $width,
+            ':style' => $style,
+            ':config' => dashboard_widget_encode_config($config),
+            ':created_at' => $now,
+            ':updated_at' => $now,
+        ]);
+        $widgetId = (int) $pdo->lastInsertId();
+        if ($started) {
+            $pdo->commit();
+        }
+        return $widgetId;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+/** @param array{schema:int,title:string,hour_format:string,show_seconds:bool,show_date:bool} $config */
+function dashboard_widget_update_clock(
+    int $ownerId,
+    int $widgetId,
+    string $style,
+    int $width,
+    array $config
+): bool {
+    if ($ownerId <= 0
+        || $widgetId <= 0
+        || app_normalize_content_style($style) === null
+        || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_clock_config_from_input([
+            'clock_title' => $config['title'] ?? null,
+            'clock_hour_format' => $config['hour_format'] ?? null,
+            'clock_show_seconds' => $config['show_seconds'] ?? null,
+            'clock_show_date' => $config['show_date'] ?? null,
+        ]) === null) {
+        throw new InvalidArgumentException('Clock Widget settings are invalid.');
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        if (dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'clock') === null) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+        $stmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_width = :width, widget_style = :style, widget_config = :config, '
+            . 'widget_updated_at = :updated_at '
+            . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+            . "AND widget_type = 'clock' AND widget_flag = 0"
+        );
+        $stmt->execute([
+            ':width' => $width,
+            ':style' => $style,
+            ':config' => dashboard_widget_encode_config($config),
+            ':updated_at' => app_now(),
+            ':widget_id' => $widgetId,
+            ':owner' => $ownerId,
+        ]);
+        if ($started) {
+            $pdo->commit();
+        }
+        return true;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+function dashboard_widget_delete_clock(int $ownerId, int $widgetId): bool
+{
+    if ($ownerId <= 0 || $widgetId <= 0) {
+        return false;
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        if (dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'clock') === null) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+        $stmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_flag = 1, widget_updated_at = :updated_at '
+            . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+            . "AND widget_type = 'clock' AND widget_flag = 0"
+        );
+        $stmt->execute([
+            ':updated_at' => app_now(),
+            ':widget_id' => $widgetId,
+            ':owner' => $ownerId,
+        ]);
+        if ($started) {
+            $pdo->commit();
+        }
+        return true;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+/** @return list<int> */
+function dashboard_widget_lock_order(PDO $pdo, int $ownerId, int $location): array
+{
+    $sql = 'SELECT widget_id FROM ' . db_table_identifier('dashboard_widget') . ' '
+        . 'WHERE widget_owner = :owner AND widget_location = :location AND widget_flag = 0 '
+        . 'ORDER BY widget_sort_order ASC, widget_id ASC';
+    if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+        $sql .= ' FOR UPDATE';
+    }
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':owner' => $ownerId, ':location' => $location]);
+
+    $ids = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $value) {
+        $widgetId = app_validate_positive_int($value);
+        if ($widgetId !== null) {
+            $ids[] = $widgetId;
+        }
+    }
+    return $ids;
+}
+
+/**
+ * @param list<int> $previousIds
+ * @param list<int> $orderedIds
+ * @return array{updated:bool,conflict:bool,widget_ids:list<int>,sort_orders:array<int,int>}
+ */
+function dashboard_widget_reorder(int $ownerId, int $location, array $previousIds, array $orderedIds): array
+{
+    if ($ownerId <= 0 || dashboard_widget_validate_location($location) === null) {
+        throw new InvalidArgumentException('Dashboard Widget reorder scope is invalid.');
+    }
+    if ($previousIds === [] || count($previousIds) !== count($orderedIds)) {
+        throw new InvalidArgumentException('Dashboard Widget order is invalid.');
+    }
+
+    foreach (array_merge($previousIds, $orderedIds) as $widgetId) {
+        if (!is_int($widgetId) || $widgetId <= 0) {
+            throw new InvalidArgumentException('Dashboard Widget order contains an invalid ID.');
+        }
+    }
+
+    $previousSet = $previousIds;
+    $orderedSet = $orderedIds;
+    sort($previousSet, SORT_NUMERIC);
+    sort($orderedSet, SORT_NUMERIC);
+    if ($previousSet !== $orderedSet
+        || count(array_unique($previousIds)) !== count($previousIds)
+        || count(array_unique($orderedIds)) !== count($orderedIds)) {
+        throw new InvalidArgumentException('Dashboard Widget order does not contain the same Widgets.');
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        $currentIds = dashboard_widget_lock_order($pdo, $ownerId, $location);
+        if ($currentIds !== $previousIds) {
+            if ($started && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            return [
+                'updated' => false,
+                'conflict' => true,
+                'widget_ids' => $currentIds,
+                'sort_orders' => [],
+            ];
+        }
+
+        $update = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_sort_order = :sort_order, widget_updated_at = :updated_at '
+            . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+            . 'AND widget_location = :location AND widget_flag = 0'
+        );
+        $now = app_now();
+        $sortOrders = [];
+        foreach ($orderedIds as $index => $widgetId) {
+            $sortOrder = ($index + 1) * 10;
+            $update->execute([
+                ':sort_order' => $sortOrder,
+                ':updated_at' => $now,
+                ':widget_id' => $widgetId,
+                ':owner' => $ownerId,
+                ':location' => $location,
+            ]);
+            $sortOrders[$widgetId] = $sortOrder;
+        }
+
+        if ($started) {
+            $pdo->commit();
+        }
+        return [
+            'updated' => $orderedIds !== $previousIds,
+            'conflict' => false,
+            'widget_ids' => $orderedIds,
+            'sort_orders' => $sortOrders,
+        ];
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+

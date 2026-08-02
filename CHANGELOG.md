@@ -3,6 +3,27 @@
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
 
+
+## RSS Reader Modernization 1.1.0-dev.5 — V1.1-F
+
+- 既存の`dashboard_widget`へClock Widgetを追加。
+- Clockの追加・変更・論理削除、12／24時間、日付・秒表示、見出し色、横幅1〜4へ対応。
+- Browserの現在時刻を1本のTimerで更新し、時刻表示のための継続API通信は行わない。
+- ClockをFeedと同じ4タブへ配置し、V1.1-Eの並び替えに対応。
+- Clock設定は`widget_config`へ制限付きJSONとして保存し、owner scope、CSRF、Transactionを維持。
+- Clock専用Table、Column、Migration、必須設定の追加なし。
+
+## RSS Reader Modernization 1.1.0-dev.4 — V1.1-E
+
+- Feed Widgetのタイトルバーへ並び替えHandleを追加し、同一タブ内のDrag & Dropに対応。
+- Mouse、Touch／Pen、Keyboardの矢印・Home・End操作を用意。
+- `widget.reorder`APIでowner scope、CSRF、Transaction、重複ID拒否、古い画面との競合検出を追加。
+- 並び替え失敗時は画面順を戻し、再読み込みを案内。
+- 新規Feed Widgetは現在の並び順の末尾へ追加。
+- DB Table／Columnの追加なし。V1.1-D postflight R2修正を取り込み。
+- Follow-up R2〜R7でHandle、挿入位置表示、保存通知、見出し高さ、新着Bell表示を調整。
+
+
 ## RSS Reader Modernization 1.1.0-dev.3 — V1.1-D
 
 - `dashboard_widget`を追加し、Feed、Clock、Memo、Task、Calendarの共通配置基盤を追加。

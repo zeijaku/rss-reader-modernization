@@ -178,7 +178,7 @@ check('col-lg-3' in classes(feed_cards[1][1]), 'width=1 Widget retains the exist
 check('999' not in feed_html, 'another owner Widget is not rendered')
 check(all(attrs.get('role') == 'region' and attrs.get('aria-busy') == 'true' for _, attrs in feed_cards), 'Widget Feed cards retain region and loading semantics')
 check(all(name in ''.join(feed.text) for name in ['Base', 'Maint', 'IT', 'Observe']), 'all four existing tab labels remain visible')
-check('RSS Reader Modernization V1.1-D / R1' in ''.join(feed.text), 'Dashboard displays the V1.1-D marker')
+check('RSS Reader Modernization V1.1-' in ''.join(feed.text), 'Dashboard displays a Version 1.1 development marker')
 
 stock, stock_html = render('stock')
 stock_cards = [(tag, attrs) for tag, attrs in stock.records if tag == 'article' and 'stock-card' in classes(attrs)]

@@ -48,8 +48,8 @@ check('.dashboard-widget' in css and 'min-width: 0' in css, 'Widget base CSS pre
 
 check("CONCAT('`', @table_prefix, 'dashboard_widget`')" in schema, 'new-install schema uses the dynamic prefix for Dashboard Widget')
 check('content_location' in schema and 'widget_location' in schema, 'content location remains present for rollback compatibility')
-check("const APP_VERSION = '1.1.0-dev.3';" in version and 'V1.1-D / R1' in version, 'visible Version marker identifies V1.1-D')
-check('dragstart' not in (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8'), 'Drag and Drop is not prematurely mixed into the Widget foundation step')
+check("const APP_VERSION = '1.1.0-dev." in version and 'V1.1-' in version, 'visible Version marker remains in the Version 1.1 development line')
+check('data-dashboard-widget-sort-order' in index, 'V1.1-D Widget order hook remains available to later phases')
 
 if not all(checks):
     raise SystemExit(f'{checks.count(False)}/{len(checks)} V1.1-D architecture checks failed')

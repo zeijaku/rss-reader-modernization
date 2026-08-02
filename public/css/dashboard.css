@@ -8,12 +8,14 @@
 }
 
 .feed-card,
+.clock-card,
 .stock-card {
     min-width: 0;
     padding: 4px;
 }
 
 .feed-card-inner,
+.clock-card-inner,
 .stock-card-inner {
     height: 100%;
 }
@@ -23,6 +25,83 @@
     overflow: hidden;
     border: 1px solid rgba(0, 0, 0, 0.125);
     border-radius: 4px;
+}
+
+.clock-card-inner {
+    min-height: 13rem;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 4px;
+}
+
+.clock-card-header {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 4px 0 8px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.clock-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-left: 3px;
+    overflow: hidden;
+    font-size: 80%;
+    font-weight: 400;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.clock-edit-trigger {
+    flex: 0 0 44px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.clock-card-body {
+    display: flex;
+    min-height: calc(13rem - 44px);
+    padding: 18px 12px;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+.clock-time {
+    display: block;
+    color: #212529;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-variant-numeric: tabular-nums;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    line-height: 1.05;
+    white-space: nowrap;
+}
+
+.clock-date {
+    min-height: 1.5em;
+    margin-top: 10px;
+    color: #495057;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.clock-date[hidden] {
+    display: none !important;
+}
+
+.clock-zone {
+    margin-top: 6px;
 }
 
 .feed-table {
@@ -36,17 +115,35 @@
 }
 
 .feed-card-header {
+    height: 44px;
     min-height: 44px;
     padding: 0 4px 0 8px;
+    overflow: hidden;
     vertical-align: middle;
+    white-space: nowrap;
 }
 
 .content-title {
-    display: inline-block;
-    max-width: calc(100% - 48px);
-    padding: 11px 0;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    display: inline-flex;
+    align-items: center;
+    width: calc(100% - 82px);
+    max-width: calc(100% - 82px);
+    height: 44px;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.feed-title-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    overflow-wrap: normal;
+    word-break: normal;
+    white-space: nowrap;
 }
 
 .content-title a,
@@ -312,6 +409,7 @@ select:focus,
     }
 
     .feed-card,
+    .clock-card,
     .stock-card {
         padding: 4px 0;
     }
@@ -321,8 +419,18 @@ select:focus,
         margin-left: 0;
     }
 
-    .feed-card-inner {
+    .feed-card-inner,
+    .clock-card-inner {
         min-height: 11rem;
+    }
+
+    .clock-card-body {
+        min-height: calc(11rem - 44px);
+        padding: 14px 10px;
+    }
+
+    .clock-time {
+        font-size: clamp(2rem, 14vw, 3.25rem);
     }
 
     .modal-dialog {
@@ -346,8 +454,13 @@ select:focus,
 }
 
 @media (min-width: 768px) and (max-width: 991.98px) {
-    .feed-card-inner {
+    .feed-card-inner,
+    .clock-card-inner {
         min-height: 12rem;
+    }
+
+    .clock-card-body {
+        min-height: calc(12rem - 44px);
     }
 }
 
@@ -362,22 +475,65 @@ select:focus,
     }
 }
 
-/* V1.1-C: NEWは自動解除せず、Keyboardでも押せる小さなButtonとして表示する。 */
-.feed-new-clear,
+/* V1.1-C: 記事側の新着表示は、文字を使わず小さなBellだけで示す。 */
 .feed-item-new {
-    min-height: 28px;
-    padding: 4px 7px;
-    border: 1px solid rgba(0, 0, 0, 0.2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    min-width: 22px;
+    height: 22px;
+    min-height: 22px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: #c58a00;
+    font-size: 11px;
+    line-height: 1;
     cursor: pointer;
-}
-
-.feed-new-clear {
     vertical-align: middle;
 }
 
-.feed-item-new {
-    margin-top: 2px;
-    margin-bottom: 2px;
+.feed-item-new:hover,
+.feed-item-new:focus {
+    background: rgba(197, 138, 0, 0.12);
+    color: #8a6100;
+    text-decoration: none;
+}
+
+/* Feed見出し側は、文字Badgeではなく控えめなBellと件数だけを表示する。 */
+.feed-new-clear {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 24px;
+    margin-left: 4px;
+    padding: 2px 3px;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: #ffffff;
+    font-size: 11px;
+    line-height: 1;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.feed-new-clear .feed-new-count {
+    margin-left: 2px;
+    font-variant-numeric: tabular-nums;
+}
+
+.feed-new-clear:hover,
+.feed-new-clear:focus {
+    background: rgba(0, 0, 0, 0.2);
+    color: #ffffff;
+    text-decoration: none;
 }
 
 .feed-new-clear:disabled,
@@ -394,3 +550,147 @@ select:focus,
 .dashboard-widget > .feed-card-inner {
     height: 100%;
 }
+
+/* V1.1-E: 表示幅を抑えた「≡」Button全体を並び替えHandleにする。 */
+.widget-drag-handle {
+    float: left;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    min-width: 28px;
+    height: 32px;
+    min-height: 32px;
+    margin: 6px 4px 6px 0;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.18);
+    color: #ffffff;
+    font-size: 14px;
+    line-height: 1;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    position: relative;
+    z-index: 1;
+}
+
+/* Font AwesomeがSVGへ置換されても、Button全体でPointer操作を受ける。 */
+.widget-drag-handle > i,
+.widget-drag-handle > svg,
+.widget-drag-handle .svg-inline--fa {
+    pointer-events: none;
+}
+
+.widget-drag-handle:hover,
+.widget-drag-handle:focus {
+    border-color: #ffffff;
+    background: rgba(0, 0, 0, 0.32);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.widget-drag-handle:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+}
+
+.widget-drag-handle:active,
+.dashboard-widget.widget-dragging .widget-drag-handle,
+.feed-grid.widget-drag-active {
+    cursor: grabbing;
+}
+
+.dashboard-widget {
+    position: relative;
+}
+
+.dashboard-widget.widget-dragging {
+    z-index: 2;
+    opacity: 0.36;
+    pointer-events: none;
+}
+
+.widget-drag-ghost {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1080;
+    max-width: calc(100vw - 28px);
+    padding: 8px 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.88);
+    border-radius: 4px;
+    background: rgba(33, 37, 41, 0.9);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+    color: #ffffff;
+    font-size: 13px;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.9;
+    pointer-events: none;
+    will-change: transform;
+}
+
+.dashboard-widget.widget-drop-target::before,
+.dashboard-widget.widget-drop-target::after {
+    content: '';
+    position: absolute;
+    z-index: 8;
+    display: none;
+    border-radius: 3px;
+    background: #005fcc;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.92);
+    pointer-events: none;
+}
+
+.dashboard-widget.widget-drop-horizontal.widget-drop-before::before,
+.dashboard-widget.widget-drop-horizontal.widget-drop-after::after {
+    top: 4px;
+    bottom: 4px;
+    display: block;
+    width: 4px;
+}
+
+.dashboard-widget.widget-drop-horizontal.widget-drop-before::before {
+    left: -2px;
+}
+
+.dashboard-widget.widget-drop-horizontal.widget-drop-after::after {
+    right: -2px;
+}
+
+.dashboard-widget.widget-drop-vertical.widget-drop-before::before,
+.dashboard-widget.widget-drop-vertical.widget-drop-after::after {
+    right: 4px;
+    left: 4px;
+    display: block;
+    height: 4px;
+}
+
+.dashboard-widget.widget-drop-vertical.widget-drop-before::before {
+    top: -2px;
+}
+
+.dashboard-widget.widget-drop-vertical.widget-drop-after::after {
+    bottom: -2px;
+}
+
+.feed-grid.widget-sort-saving {
+    cursor: progress;
+}
+
+.feed-grid.widget-sort-saving .widget-drag-handle {
+    cursor: wait;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .dashboard-widget,
+    .widget-drag-ghost {
+        transition: opacity 120ms ease;
+    }
+}
+

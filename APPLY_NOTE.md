@@ -1,21 +1,18 @@
-# V1.1-D / R1 Overlay適用メモ
+# V1.1-F / R1 Overlay適用メモ
 
-このZIPは、V1.1-C / R1を適用済みのGitHub最新mainへ上書きする差分ZIPです。
-Project folderを削除して置き換えず、ZIPにない既存File、M2/M4 Test、`.github`を残してください。
-
-V1.1-Dは`dashboard_widget`TableのMigrationが必要です。更新Codeを本番Browserから利用する前にMigrationを完了します。
+このZIPはV1.1-E / R7適用済みProjectへ上書きする差分ZIPです。Clock Widgetを追加します。
 
 ```text
 1. Git作業Folder、config/local.php、APP_HASH_KEY、実DBをBackup
-2. Overlayを別Folderへ展開し、V1.1-C適用済みProjectへ上書き
+2. Overlayを別Folderへ展開し、V1.1-E / R7適用済みProjectへ上書き
 3. php tools/db_sb13.php verify
 4. php tools/db_v11c.php verify
-5. php tools/db_v11d.php apply --backup-confirmed
-6. php tools/db_v11d.php verify
-7. bash tests/run.sh
-8. Updated Codeを配置／Browser確認
-9. Commit / Push / GitHub Actions確認
+5. php tools/db_v11d.php verify
+6. bash tests/run.sh
+7. BrowserをCtrl + F5で更新
+8. Clock追加・変更・削除、12／24時間、日付・秒表示を確認
+9. FeedとClockの並び替え、4タブ、8テーマ、Mobile表示を確認
+10. Commit／Push／GitHub Actions確認
 ```
 
-phpMyAdminで適用する場合は`docs/v1-1-d-migration.md`を参照してください。
-Migration前にCodeを公開するとDashboard Widget取得が失敗するため、適用順を入れ替えないでください。
+V1.1-FではDB Table、Column、Migrationを追加しません。Clock設定は既存の`dashboard_widget.widget_config`へ保存します。

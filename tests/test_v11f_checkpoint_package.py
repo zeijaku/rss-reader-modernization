@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import hashlib
+import re
+import sys
+import zipfile
+from pathlib import Path, PurePosixPath
+
+if len(sys.argv) != 2:
+    raise SystemExit('usage: test_v11f_checkpoint_package.py <overlay.zip>')
+
+archive = Path(sys.argv[1]).resolve()
+assert archive.is_file(), f'ZIP not found: {archive}'
+root_name = 'rss-reader-modernization-v1.1-f-r1-overlay/'
+required = {
+    root_name + 'APPLY_NOTE.md',
+    root_name + 'app/api.php',
+    root_name + 'app/dashboard_widget.php',
+    root_name + 'app/version.php',
+    root_name + 'public/index.php',
+    root_name + 'public/js/dashboard.js',
+    root_name + 'public/css/dashboard.css',
+    root_name + 'tests/test_v11f_clock_widget.php',
+    root_name + 'tests/test_v11f_architecture.py',
+    root_name + 'tests/test_v11f_frontend_runtime.js',
+    root_name + 'tests/test_v11f_dashboard_render.py',
+    root_name + 'tests/test_v11f_browser.py',
+    root_name + 'tests/test_v11f_checkpoint_package.py',
+    root_name + 'docs/v1-1-f-implementation.md',
+    root_name + 'docs/test-report-v1-1-f.md',
+    root_name + 'docs/v1-1-f-overlay-manifest.txt',
+    root_name + 'CHECKLIST_FOR_USER.md',
+}
+forbidden_exact = {
+    root_name + 'config/local.php',
+    root_name + '.env',
+    root_name + 'rss.sql',
+    root_name + 'rss.zip',
+    root_name + '.github/workflows/ci.yml',
+}
+secret_patterns = [
+    re.compile(rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),
+    re.compile(rb'\bAKIA[0-9A-Z]{16}\b'),
+    re.compile(rb'\bsk-[A-Za-z0-9_-]{20,}\b'),
+]
+
+with zipfile.ZipFile(archive) as zf:
+    infos = zf.infolist()
+    names = [info.filename for info in infos]
+    assert zf.testzip() is None, 'ZIP CRC failed'
+    assert len(names) == len(set(names)), 'duplicate ZIP entry found'
+    assert all(name.startswith(root_name) for name in names), 'unexpected ZIP root'
+    for name in names:
+        path = PurePosixPath(name)
+        assert '\\' not in name, f'backslash ZIP path found: {name}'
+        assert not path.is_absolute(), f'absolute ZIP path found: {name}'
+        assert '..' not in path.parts, f'unsafe parent path found: {name}'
+    assert required.issubset(names), f'missing required entries: {sorted(required - set(names))}'
+    assert not forbidden_exact.intersection(names), f'private/repository file found: {sorted(forbidden_exact.intersection(names))}'
+
+    for info in infos:
+        name = info.filename
+        lower = name.lower().rstrip('/')
+        assert not lower.endswith(('.sqlite', '.sqlite3', '.db', '.sql.gz', '.log', '.session')), f'runtime/private data found: {name}'
+        assert not lower.endswith('.zip'), f'nested ZIP found: {name}'
+        if info.is_dir():
+            continue
+        data = zf.read(name)
+        for pattern in secret_patterns:
+            assert not pattern.search(data), f'potential secret pattern found: {name}'
+
+    manifest_name = root_name + 'docs/v1-1-f-overlay-manifest.txt'
+    manifest = [line.strip() for line in zf.read(manifest_name).decode('utf-8').splitlines() if line.strip() and not line.startswith('#')]
+    payload = sorted(name[len(root_name):] for name in names if not name.endswith('/') and name != manifest_name)
+    assert sorted(manifest) == payload, 'overlay manifest does not match ZIP payload'
+
+print(f'PASS: V1.1-F Overlay ZIP structure ({len(names)} entries)')
+print('PASS: required Runtime, Test and Documentation files')
+print('PASS: no Clock-specific Migration or private configuration')
+print('PASS: unsafe/private/runtime artifact exclusions')
+print('PASS: Overlay manifest matches payload')
+print('PASS: checkpoint secret-pattern scan')
+print('SHA-256:', hashlib.sha256(archive.read_bytes()).hexdigest())

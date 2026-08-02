@@ -17,6 +17,12 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`v1-1-d-implementation.md`](v1-1-d-implementation.md) — Dashboard Widget配置基盤
 - [`v1-1-d-migration.md`](v1-1-d-migration.md) — `dashboard_widget` Migration
 - [`test-report-v1-1-d.md`](test-report-v1-1-d.md) — V1.1-D Test結果
+- [`v1-1-e-implementation.md`](v1-1-e-implementation.md) — Dashboard Widget並び替え
+- [`v1-1-e-files.md`](v1-1-e-files.md) — V1.1-E変更File
+- [`test-report-v1-1-e.md`](test-report-v1-1-e.md) — V1.1-E Test結果
+- [`v1-1-f-implementation.md`](v1-1-f-implementation.md) — Clock Widget
+- [`v1-1-f-files.md`](v1-1-f-files.md) — V1.1-F変更File
+- [`test-report-v1-1-f.md`](test-report-v1-1-f.md) — V1.1-F Test結果
 
 ## M4 release preparation
 

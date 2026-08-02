@@ -211,3 +211,16 @@ python3 "$ROOT/tests/test_v11d_sql.py"
 python3 "$ROOT/tests/test_v11d_dashboard_render.py"
 python3 "$ROOT/tests/test_v11d_runner.py"
 php "$ROOT/tools/db_v11d.php" --help >/dev/null
+
+echo '== V1.1-E Dashboard Widget reorder checks =='
+php "$ROOT/tests/test_v11e_widget_reorder.php"
+python3 "$ROOT/tests/test_v11e_architecture.py"
+node "$ROOT/tests/test_v11e_frontend_runtime.js"
+
+
+echo '== V1.1-F Clock Widget checks =='
+php "$ROOT/tests/test_v11f_clock_widget.php"
+python3 "$ROOT/tests/test_v11f_architecture.py"
+node "$ROOT/tests/test_v11f_frontend_runtime.js"
+python3 "$ROOT/tests/test_v11f_dashboard_render.py"
+python3 "$ROOT/tests/test_v11f_browser.py"

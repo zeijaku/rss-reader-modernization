@@ -6,6 +6,20 @@
 
 現在は `RSS Reader Modernization 1.0.0`。M2-GをRelease Baselineとして固定し、License / Third-party notice、設置、更新、Backup、Restore、Rollback、GitHub Actions、Security reporting、Portfolio説明、Runtime Release ZIP、Manifest、SHA-256、Release Notes、Tag / GitHub Release手順まで整理しました。M4-GではRC1からApplication Runtimeを変更せず、正式VersionとFinal Packageを確定しました。自動RegressionとPackage検証はPASSしていますが、実Hosting / MySQL / Browser / Feed / RestoreのPrivate Evidenceは配布物へ収録していません。Bootstrap / Bootswatch、Popper、Drawer、iScrollは現在の画面構造との組合せを優先して据え置き、major migrationを混在させていません。
 
+## Version 1.1 — Dashboard機能追加
+
+- [x] V1.1-A Baseline・DB・工程分析
+- [x] V1.1-B Tracking Parameter除去
+- [x] V1.1-C 新着NEW表示・Feed item state
+- [x] V1.1-D Dashboard Widget配置基盤・既存Feed移行
+- [x] V1.1-E タイトルバーのDrag & Drop・並び順保存
+- [x] V1.1-F Clock
+- [ ] V1.1-G Memo
+- [ ] V1.1-H Task
+- [ ] V1.1-I Calendar
+- [ ] V1.1-J 統合回帰・Release
+
+
 ## M1 — Source / RSS Engine
 
 ### Goal

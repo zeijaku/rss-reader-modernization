@@ -180,6 +180,7 @@ if ($addTargetName === '') {
 
 <main id="main-content" class="igcontainer container-fluid" tabindex="-1">
 <h1 class="sr-only">iGuguru RSS Reader</h1>
+<p id="widget-sort-help" class="sr-only">Widgetのタイトルバーにある並び替えボタンをドラッグして順番を変更出来ます。キーボードでは矢印キー、Home、Endキーを使用します。</p>
 <?php
 
 $result_content_cnt = 0;
@@ -194,45 +195,75 @@ if (is_int($content_location)) {
     $result_content_cnt = count($result_content);
 
     if ($result_content_cnt > 0) {
-        echo '<div class="row content-grid feed-grid">';
+        echo '<div class="row content-grid feed-grid" data-dashboard-widget-location="' . (int) $content_location . '" aria-busy="false">';
     }
 
-    /* コンテンツをカードに表示 */
+    /* Widgetをカードに表示 */
     for( $i = 0; $i < $result_content_cnt; $i++ ) {
-        /* Feed取得用にはContent IDだけをdata属性へ渡す */
         $widgetId = (int) ($result_content[$i]['widget_id'] ?? 0);
         $widgetType = (string) ($result_content[$i]['widget_type'] ?? '');
-        if ($widgetType !== 'feed') {
-            continue;
-        }
-        $contentId = (int) ($result_content[$i]['content_id'] ?? 0);
-        $contentValue = (string) ($result_content[$i]['content_value'] ?? '');
-        $contentStyle = app_normalize_content_style($result_content[$i]['widget_style'] ?? null)
-            ?? app_normalize_content_style($result_content[$i]['content_style'] ?? null)
-            ?? 'success';
+        $widgetStyle = app_normalize_content_style($result_content[$i]['widget_style'] ?? null) ?? 'success';
         $widgetWidthClass = (string) ($result_content[$i]['widget_width_class'] ?? dashboard_widget_width_class(1));
         $widgetSortOrder = (int) ($result_content[$i]['widget_sort_order'] ?? 0);
+        $widgetWidth = dashboard_widget_validate_width($result_content[$i]['widget_width'] ?? null) ?? 1;
 
-        echo '
-        <!-- Card -->
-            <section class="' . app_html($widgetWidthClass) . ' dashboard-widget feed-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="feed" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-feed-content-id="' . $contentId . '" data-feed-state="loading" role="region" aria-labelledby="feed-title-' . $contentId . '" aria-busy="true">
-                <div class="feed-card-inner">
-                    <input type="hidden" class="content-value" value="' . app_html($contentValue) . '">
-                    <table class="table table-hover feed-table">
-                        <colgroup>
-                            <col class="feed-stock-column">
-                            <col>
-                        </colgroup>
-                        <thead>
-                            <tr><th colspan="2" scope="col" class="bg-' . app_html($contentStyle) . ' feed-card-header"><small><span class="content-title" id="feed-title-' . $contentId . '">読み込み中...</span></small><button type="button" class="btn btn-link float-right content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" data-toggle="modal" data-target="#changeContent" aria-label="このRSSを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button></th></tr>
-                        </thead>
-                        <tbody class="content-body" aria-live="polite" aria-relevant="all">
-                            <tr class="content-state-row feed-state-loading"><td colspan="2" role="status">フィードを読み込んでいます</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        ';
+        if ($widgetType === 'feed') {
+            /* Feed取得用にはContent IDだけをdata属性へ渡す */
+            $contentId = (int) ($result_content[$i]['content_id'] ?? 0);
+            $contentValue = (string) ($result_content[$i]['content_value'] ?? '');
+            $contentStyle = app_normalize_content_style($result_content[$i]['content_style'] ?? null) ?? $widgetStyle;
+
+            echo '
+            <!-- Feed Widget -->
+                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget feed-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="feed" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-feed-content-id="' . $contentId . '" data-feed-state="loading" role="region" aria-labelledby="feed-title-' . $contentId . '" aria-busy="true">
+                    <div class="feed-card-inner">
+                        <input type="hidden" class="content-value" value="' . app_html($contentValue) . '">
+                        <table class="table table-hover feed-table">
+                            <colgroup>
+                                <col class="feed-stock-column">
+                                <col>
+                            </colgroup>
+                            <thead>
+                                <tr><th colspan="2" scope="col" class="bg-' . app_html($contentStyle) . ' feed-card-header"><button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button><small><span class="content-title widget-title-text" id="feed-title-' . $contentId . '">読み込み中...</span></small><button type="button" class="btn btn-link float-right content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" data-toggle="modal" data-target="#changeContent" aria-label="このRSSを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button></th></tr>
+                            </thead>
+                            <tbody class="content-body" aria-live="polite" aria-relevant="all">
+                                <tr class="content-state-row feed-state-loading"><td colspan="2" role="status">フィードを読み込んでいます</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            ';
+            continue;
+        }
+
+        if ($widgetType === 'clock') {
+            $clockConfig = is_array($result_content[$i]['widget_config_data'] ?? null)
+                ? $result_content[$i]['widget_config_data']
+                : dashboard_widget_clock_defaults();
+            $clockTitle = dashboard_widget_validate_clock_title($clockConfig['title'] ?? null) ?? 'Clock';
+            $clockHourFormat = dashboard_widget_validate_clock_hour_format($clockConfig['hour_format'] ?? null) ?? '24';
+            $clockShowSeconds = dashboard_widget_validate_boolean($clockConfig['show_seconds'] ?? null) ?? false;
+            $clockShowDate = dashboard_widget_validate_boolean($clockConfig['show_date'] ?? null) ?? true;
+            $clockTitleId = 'clock-title-' . $widgetId;
+
+            echo '
+            <!-- Clock Widget -->
+                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget clock-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="clock" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-clock-title="' . app_html($clockTitle) . '" data-clock-hour-format="' . app_html($clockHourFormat) . '" data-clock-show-seconds="' . ($clockShowSeconds ? '1' : '0') . '" data-clock-show-date="' . ($clockShowDate ? '1' : '0') . '" role="region" aria-labelledby="' . app_html($clockTitleId) . '">
+                    <div class="clock-card-inner">
+                        <div class="bg-' . app_html($widgetStyle) . ' clock-card-header">
+                            <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
+                            <small class="clock-title widget-title-text text-white" id="' . app_html($clockTitleId) . '" title="' . app_html($clockTitle) . '">' . app_html($clockTitle) . '</small>
+                            <button type="button" class="btn btn-link clock-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-clock-title="' . app_html($clockTitle) . '" data-clock-hour-format="' . app_html($clockHourFormat) . '" data-clock-show-seconds="' . ($clockShowSeconds ? '1' : '0') . '" data-clock-show-date="' . ($clockShowDate ? '1' : '0') . '" data-toggle="modal" data-target="#changeClock" aria-label="このClockを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="clock-card-body">
+                            <time class="clock-time" datetime="">--:--</time>
+                            <div class="clock-date"' . ($clockShowDate ? '' : ' hidden') . '>----年--月--日</div>
+                            <div class="clock-zone text-muted small">端末の現在時刻</div>
+                        </div>
+                    </div>
+                </section>
+            ';
+        }
     }
 
     if ($result_content_cnt > 0) {
@@ -285,7 +316,7 @@ if ($result_content_cnt === 0) {
     if ($content_location === 'stock') {
         echo '<div class="empty-state text-center" role="status"><i class="far fa-bookmark fa-2x text-muted" aria-hidden="true"></i><p>Stockした記事はまだありません。</p><a class="btn btn-outline-secondary" href="./?tab=0">RSS一覧へ戻る</a></div>';
     } else {
-        echo '<div class="empty-state text-center" role="status"><i class="fas fa-rss fa-2x text-muted" aria-hidden="true"></i><p>このタブにはRSSが登録されていません。</p><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#registerContent">RSSを追加する</button></div>';
+        echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#registerClock">Clockを追加する</button></div>';
     }
 }
 ?>
@@ -392,6 +423,139 @@ if ($result_content_cnt === 0) {
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
                 <button type="button" class="btn btn-outline-danger delete_content">削除する</button>
                 <button type="submit" class="btn btn-primary change_content">変更する</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Clock追加モーダル -->
+<div class="modal fade" id="registerClock" tabindex="-1" role="dialog" aria-labelledby="registerClockTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form id="registerClockForm" method="post" action="./">
+            <div class="modal-header" style="color: #fff; background-color: #333;">
+                <h5 class="modal-title" id="registerClockTitle"><i class="far fa-clock" aria-hidden="true"></i> Clockを追加</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
+                    <span aria-hidden="true" style="color: #ccc;">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" class="registerClockLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
+                <div class="form-group">
+                    <label for="registerClockName"><small class="text-dark">見出し</small></label>
+                    <input type="text" class="form-control registerClockName" id="registerClockName" value="Clock" maxlength="32" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="registerClockHourFormat"><small class="text-dark">時刻表示</small></label>
+                        <select class="form-control registerClockHourFormat" id="registerClockHourFormat">
+                            <option value="24" selected>24時間</option>
+                            <option value="12">12時間</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="registerClockWidth"><small class="text-dark">横幅</small></label>
+                        <select class="form-control registerClockWidth" id="registerClockWidth">
+                            <option value="1" selected>1列</option>
+                            <option value="2">2列</option>
+                            <option value="3">3列</option>
+                            <option value="4">全幅</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="registerClockStyle"><small class="text-dark">見出し色</small></label>
+                    <select class="form-control registerClockStyle" id="registerClockStyle">
+                        <option value="success">success</option>
+                        <option value="primary" selected>primary</option>
+                        <option value="info">info</option>
+                        <option value="secondary">secondary</option>
+                        <option value="dark">dark</option>
+                        <option value="warning">warning</option>
+                        <option value="danger">danger</option>
+                    </select>
+                </div>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input registerClockShowDate" id="registerClockShowDate" checked>
+                    <label class="custom-control-label" for="registerClockShowDate">日付を表示する</label>
+                </div>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input registerClockShowSeconds" id="registerClockShowSeconds">
+                    <label class="custom-control-label" for="registerClockShowSeconds">秒を表示する</label>
+                </div>
+                <small class="form-text text-muted mt-3">時刻はBrowserを使用している端末の設定で表示します。</small>
+                <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                <button type="submit" class="btn btn-primary">このタブに追加する</button>
+            </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Clock変更モーダル -->
+<div class="modal fade" id="changeClock" tabindex="-1" role="dialog" aria-labelledby="changeClockTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form id="changeClockForm" method="post" action="./">
+            <div class="modal-header" style="color: #fff; background-color: #333;">
+                <h5 class="modal-title" id="changeClockTitle"><i class="far fa-clock" aria-hidden="true"></i> Clockを変更</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
+                    <span aria-hidden="true" style="color: #ccc;">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" class="changeClockId">
+                <div class="form-group">
+                    <label for="changeClockName"><small class="text-dark">見出し</small></label>
+                    <input type="text" class="form-control changeClockName" id="changeClockName" maxlength="32" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-6">
+                        <label for="changeClockHourFormat"><small class="text-dark">時刻表示</small></label>
+                        <select class="form-control changeClockHourFormat" id="changeClockHourFormat">
+                            <option value="24">24時間</option>
+                            <option value="12">12時間</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-6">
+                        <label for="changeClockWidth"><small class="text-dark">横幅</small></label>
+                        <select class="form-control changeClockWidth" id="changeClockWidth">
+                            <option value="1">1列</option>
+                            <option value="2">2列</option>
+                            <option value="3">3列</option>
+                            <option value="4">全幅</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="changeClockStyle"><small class="text-dark">見出し色</small></label>
+                    <select class="form-control changeClockStyle" id="changeClockStyle">
+                        <option value="success">success</option>
+                        <option value="primary">primary</option>
+                        <option value="info">info</option>
+                        <option value="secondary">secondary</option>
+                        <option value="dark">dark</option>
+                        <option value="warning">warning</option>
+                        <option value="danger">danger</option>
+                    </select>
+                </div>
+                <div class="custom-control custom-checkbox mb-2">
+                    <input type="checkbox" class="custom-control-input changeClockShowDate" id="changeClockShowDate">
+                    <label class="custom-control-label" for="changeClockShowDate">日付を表示する</label>
+                </div>
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input changeClockShowSeconds" id="changeClockShowSeconds">
+                    <label class="custom-control-label" for="changeClockShowSeconds">秒を表示する</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                <button type="button" class="btn btn-outline-danger delete_clock">削除する</button>
+                <button type="submit" class="btn btn-primary">変更する</button>
             </div>
             </form>
         </div>
@@ -612,6 +776,8 @@ if ($result_content_cnt === 0) {
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#tabContent"><i class="fas fa-clone fa-fw" aria-hidden="true"></i>タブ表示変更</button></li>
         <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> RSS</li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerContent"><i class="fas fa-clone fa-fw" aria-hidden="true"></i>RSS追加</button></li>
+        <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-th-large fa-fw" aria-hidden="true"></i> Widget</li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerClock"><i class="far fa-clock fa-fw" aria-hidden="true"></i>Clock追加</button></li>
         <!-- 定型リンク -->
         <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> Navbarリンク</li>
         <?php

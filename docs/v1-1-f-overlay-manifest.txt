@@ -1,0 +1,26 @@
+# V1.1-F / R1 Overlay payload (manifest file itself is excluded)
+APPLY_NOTE.md
+CHANGELOG.md
+CHECKLIST_FOR_USER.md
+README.md
+app/api.php
+app/dashboard_widget.php
+app/version.php
+docs/README.md
+docs/roadmap.md
+docs/test-report-v1-1-f.md
+docs/v1-1-f-files.md
+docs/v1-1-f-implementation.md
+docs/versioning.md
+public/css/dashboard.css
+public/index.php
+public/js/dashboard.js
+tests/run-local-v1-1-f.sh
+tests/run.sh
+tests/test_v11e_architecture.py
+tests/test_v11f_architecture.py
+tests/test_v11f_browser.py
+tests/test_v11f_checkpoint_package.py
+tests/test_v11f_clock_widget.php
+tests/test_v11f_dashboard_render.py
+tests/test_v11f_frontend_runtime.js

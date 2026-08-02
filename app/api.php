@@ -134,6 +134,10 @@ function api_dispatch(string $action, int $userId, array $input): array
         'feed.fetch' => api_feed_fetch($userId, $input),
         'feed.new.clear' => api_feed_new_clear($userId, $input),
         'widget.list' => api_widget_list($userId, $input),
+        'widget.reorder' => api_widget_reorder($userId, $input),
+        'widget.clock.create' => api_widget_clock_create($userId, $input),
+        'widget.clock.update' => api_widget_clock_update($userId, $input),
+        'widget.clock.delete' => api_widget_clock_delete($userId, $input),
         default => api_error('unknown_action', 'Unknown API action.', 400),
     };
 }
@@ -233,6 +237,131 @@ function api_widget_list(int $userId, array $input): array
         error_log('Dashboard Widget list failed: ' . $exception->getMessage());
         return api_error('dashboard_widget_unavailable', 'Dashboard Widget migration is required.', 503);
     }
+}
+
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_reorder(int $userId, array $input): array
+{
+    $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
+    $previousIds = dashboard_widget_decode_order_list($input['previous_widget_ids'] ?? null);
+    $orderedIds = dashboard_widget_decode_order_list($input['widget_ids'] ?? null);
+    if ($location === null) {
+        return api_validation_error('widget_location must be 0, 1, 2, or 3.');
+    }
+    if ($previousIds === null || $orderedIds === null) {
+        return api_validation_error('Widget order must be a JSON array of unique positive integer IDs.');
+    }
+
+    try {
+        $result = dashboard_widget_reorder($userId, $location, $previousIds, $orderedIds);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Dashboard Widget reorder failed: ' . $exception->getMessage());
+        return api_error('dashboard_widget_unavailable', 'Dashboard Widget order could not be saved.', 503);
+    } catch (RuntimeException $exception) {
+        error_log('Dashboard Widget reorder changed during update: ' . $exception->getMessage());
+        return api_error('widget_order_conflict', 'Widget order changed. Reload the page and try again.', 409);
+    }
+
+    if ($result['conflict']) {
+        return api_error('widget_order_conflict', 'Widget order changed. Reload the page and try again.', 409);
+    }
+
+    return api_success([
+        'widget_ids' => $result['widget_ids'],
+        'sort_orders' => $result['sort_orders'],
+        'updated' => $result['updated'],
+    ]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_clock_create(int $userId, array $input): array
+{
+    $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $config = dashboard_widget_clock_config_from_input($input);
+
+    if ($location === null) {
+        return api_validation_error('widget_location must be 0, 1, 2, or 3.');
+    }
+    if ($style === null) {
+        return api_validation_error('widget_style is invalid.');
+    }
+    if ($width === null) {
+        return api_validation_error('widget_width must be 1, 2, 3, or 4.');
+    }
+    if ($config === null) {
+        return api_validation_error('Clock Widget settings are invalid.');
+    }
+
+    try {
+        $widgetId = dashboard_widget_create_clock($userId, $location, $style, $width, $config);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Clock Widget create failed: ' . $exception->getMessage());
+        return api_error('dashboard_widget_unavailable', 'Clock Widget could not be created.', 503);
+    }
+
+    return api_success(['widget_id' => $widgetId], 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_clock_update(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $config = dashboard_widget_clock_config_from_input($input);
+
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+    if ($style === null) {
+        return api_validation_error('widget_style is invalid.');
+    }
+    if ($width === null) {
+        return api_validation_error('widget_width must be 1, 2, 3, or 4.');
+    }
+    if ($config === null) {
+        return api_validation_error('Clock Widget settings are invalid.');
+    }
+
+    try {
+        if (!dashboard_widget_update_clock($userId, $widgetId, $style, $width, $config)) {
+            return api_error('not_found', 'Clock Widget was not found.', 404);
+        }
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Clock Widget update failed: ' . $exception->getMessage());
+        return api_error('dashboard_widget_unavailable', 'Clock Widget could not be updated.', 503);
+    }
+
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_clock_delete(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+
+    try {
+        if (!dashboard_widget_delete_clock($userId, $widgetId)) {
+            return api_error('not_found', 'Clock Widget was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Clock Widget delete failed: ' . $exception->getMessage());
+        return api_error('dashboard_widget_unavailable', 'Clock Widget could not be deleted.', 503);
+    }
+
+    return api_success(['widget_id' => $widgetId]);
 }
 
 /** @return array{status:int,body:array<string,mixed>} */
