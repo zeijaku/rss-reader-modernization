@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Current checkpoint:** `Release M4-D / R1`
+**Current checkpoint:** `Release M4-E / R1`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
@@ -82,7 +82,7 @@ M2-Aの詳細は [`docs/m2-a-implementation.md`](docs/m2-a-implementation.md)、
 
 ## M4 progress
 
-M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4-AではM2-GをRelease Baselineとして固定し、M4-BではREADME、CHANGELOG、Project License、Third-party noticeを実際の配布Assetへ合わせました。M4-Cでは新規設置、更新、設定、Backup、Restore、Rollbackを実コードと設定Defaultに合わせて整理しました。M4-DではGitHub Actionsの最小CI、Security reporting、Contribution方針、Repository設定Checklist、Portfolio掲載用メモを追加しました。Application機能、DB、公開API、Security境界、Frontend Runtime Assetは変更していません。
+M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4-AではM2-GをRelease Baselineとして固定し、M4-BではREADME、CHANGELOG、Project License、Third-party noticeを実際の配布Assetへ合わせました。M4-Cでは新規設置、更新、設定、Backup、Restore、Rollbackを実コードと設定Defaultに合わせて整理しました。M4-DではGitHub Actionsの最小CI、Security reporting、Contribution方針、Repository設定Checklist、Portfolio掲載用メモを追加しました。M4-EではCheckpoint ZIPとRuntime Release ZIPを分離し、deterministic build、内部Manifest、外部SHA-256、Release Notes、Tag / GitHub Release手順を追加しました。Application機能、DB、公開API、Security境界、Frontend Runtime Assetは変更していません。
 
 | Work unit | 内容 | 状態 |
 |---|---|---|
@@ -90,11 +90,24 @@ M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4
 | M4-B | README・CHANGELOG・License・Third-party notice | 完了 |
 | M4-C | 設置・更新・Backup・復旧手順 | 完了 |
 | M4-D | GitHub公開状態・Repository・Portfolio・最小CI | 完了 |
-| M4-E | 配布ZIP・Release Notes・SHA-256・Tag手順 | 未着手 |
+| M4-E | 配布ZIP・Release Notes・SHA-256・Tag手順 | 完了 |
 | M4-F | Release Candidate全回帰・実環境確認 | 未着手 |
 | M4-G | 最終Quality Gate・Version 1.0.0確定 | 未着手 |
 
-詳細は [`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
+詳細は [`docs/m4-e-implementation.md`](docs/m4-e-implementation.md)、[`docs/release-package.md`](docs/release-package.md)、[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
+
+## Release package preview
+
+M4-Eでは、Repository作業用のCheckpoint ZIPとは別にRuntime Release ZIPを生成します。PreviewはPackage layoutの検証用で、GitHub Releaseへ公開しません。
+
+```bash
+python tools/build_release_package.py --mode preview --output-dir ../release-output
+python tools/verify_release_package.py \
+  ../release-output/rss-reader-modernization-1.0.0-preview-m4-e.zip \
+  ../release-output/rss-reader-modernization-1.0.0-preview-m4-e.zip.sha256
+```
+
+Packageの範囲は [`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は [`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、準備版Release Notesは [`RELEASE_NOTES.md`](RELEASE_NOTES.md) を参照してください。
 
 ## Runtime requirements
 
@@ -259,7 +272,7 @@ M1 Source / RSS Engine (M1-G complete)
   ↓
 M2 Frontend (M2-G complete)
   ↓
-M4 Release preparation (M4-D complete)
+M4 Release preparation (M4-E complete)
   ↓
 Version 1.0.0 / Portfolio
 ```
@@ -278,7 +291,7 @@ M1ではRSS専用処理に固定しすぎず、将来のJSON Feed、REST API、H
 - GitHub設定: [`docs/github-publication.md`](docs/github-publication.md)
 - Portfolio掲載用メモ: [`docs/portfolio.md`](docs/portfolio.md)
 
-M4-Dをpushした後、GitHub hosted runnerのPHP 8.1 / 8.4 Job、Private vulnerability reporting、Repository Description / Topicsを画面で確認してください。CI Workflow定義のLocal検査と、GitHub上の初回Run成功は別の証拠として扱います。
+M4-D以降のpush後、GitHub hosted runnerのPHP 8.1 / 8.4 Job、Private vulnerability reporting、Repository Description / Topicsを画面で確認してください。M4-E開始時点ではGitHub status / workflow runを確認できなかったため、CI Workflow定義のLocal検査とGitHub上の初回Run成功は別の証拠として扱います。
 
 ## License and third-party components
 
@@ -309,4 +322,4 @@ Sanitizedされた `database/` のschema/audit/migration/fake fixtureだけを�
 
 SB-15のInitial Commit gateは合格と判定しています。根拠と公開前に残る作業は [`docs/initial-commit-gate.md`](docs/initial-commit-gate.md) を参照してください。
 
-**注意:** Initial Commit可能と「公開GitHub Release可能」は同義ではありません。M4-DでRepository / Portfolio / CI定義までは整理しましたが、Release ZIP、Release Notes、実MySQL / Browser / Feed、Version 1.0.0とTagは後続工程です。
+**注意:** Initial Commit可能と「公開GitHub Release可能」は同義ではありません。M4-EでRelease ZIPの生成方法、Manifest、SHA-256、Release Notes、Tag手順までは整理しましたが、M4-EのPreview ZIPは正式Releaseではありません。実MySQL / Browser / Feed / Restore確認はM4-F、Version 1.0.0とTagはM4-Gです。

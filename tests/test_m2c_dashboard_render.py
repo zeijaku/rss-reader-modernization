@@ -199,7 +199,7 @@ check(bool(matching('a', **{'class':'skip-link', 'href':'#main-content'})), 'ren
 check(any(tag == 'nav' and attrs.get('aria-label') == 'メインナビゲーション' and has_ancestor(ancestors, 'header') for tag, attrs, ancestors in records), 'rendered Dashboard has named main navigation')
 check(bool(matching('main', id='main-content', tabindex='-1')), 'rendered Dashboard has focusable main content')
 check(any(tag == 'h1' and 'sr-only' in attrs.get('class','').split() and has_ancestor(ancestors, 'main', id='main-content') for tag, attrs, ancestors in records), 'rendered Dashboard has a page heading')
-check(bool(matching('footer', **{'data-app-version':''})) and 'Release M4-D / R1' in all_text, 'rendered Dashboard exposes the current version')
+check(bool(matching('footer', **{'data-app-version':''})) and 'Release M4-E / R1' in all_text, 'rendered Dashboard exposes the current version')
 
 ids = [attrs['id'] for _, attrs, _ in records if attrs.get('id')]
 check(len(ids) == len(set(ids)), 'rendered Dashboard contains no duplicate id attributes')

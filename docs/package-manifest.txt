@@ -1,4 +1,4 @@
-# Package manifest — Release M4-D / R1
+# Package manifest — Release M4-E / R1
 # docs/package-manifest.txt and checkpoint-specific manifest are excluded.
 # sha256  bytes  path
 e748bbf1e7a0c9fc216491ca0add106595cee559feffa5b17bbd29bd052393ee        1271  .github/ISSUE_TEMPLATE/bug_report.yml
@@ -6,11 +6,12 @@ e4f682931a25b7b046733faf1055b1cddc17001f578eb231d7349a2b280c0277         224  .g
 5e9467b4f928d70824efcffe4f04b6c95849b9a2553a9642c80d879129d10199        1202  .github/workflows/ci.yml
 bf5e0fb9123fc76019018b143723cab894b6675ab6bf52464ff95c04d3d8a648        1294  .gitignore
 da3fe40dc99d0b2791f23558d835d62b961e22d41bc405898a5972cf718fa370         239  .htaccess
-6f06c53806d0575e9f7df6a4ad45d7b639f50ddec05ff6c2a87f4d4c8a1897f2       23815  CHANGELOG.md
-59255b5522ca71e26bdda43a52dfb125d30fc26e718122eb73069e0890a323c9        3495  CHECKLIST_FOR_USER.md
+72fdfba818236ce45d1f40c5e3bc4e25e8b1cd360c48775acd848394ab6ddd0e       24669  CHANGELOG.md
+e4e8c59a115bf9e55d42820e45b6a58d0e8981ac97eae93ec33cebc607c84e02        3746  CHECKLIST_FOR_USER.md
 3b1957447a4eb4969684159520c229c4e4be30b3a77383211af4cd4a986daddb        1491  CONTRIBUTING.md
 bb8e78168600afd2dfaba857dfc18a3f31e864966682c2b89307705f29699ebb        1068  LICENSE
-313ff3a6f3d6ca842ebcb46dbeebefc244dabac9f44ae52d47527960c9d10226       20381  README.md
+85b9f80eb825a148d4a367dedcd9effb231377ff34925a89017052c09515d60b       21721  README.md
+7fd27bc79676939770b2ed76f72e7e787d3eddb0992e96f79eae563fa8c7f98c        4947  RELEASE_NOTES.md
 99cbacb5ee4f5b094cc959906330fed44f365760e2ea317788f2363a5e37f31c        2078  SECURITY.md
 1bec5154b7b5fcf9935dc465cd564317adad86adf4e0f05ab48274d489ef6a1f        2711  THIRD_PARTY_NOTICES.md
 a483bdfac27cb1f0165621abd2bd9e2f817b858d40653e7e816a08bd93401cc2        2015  UPDATED_FILES_SB08-10.md
@@ -55,7 +56,7 @@ a544e67fab966c368dab6bdefac470e6c77c4845b58b07541e671fa8c90160a9        1520  ap
 290a8299a6a777137c6066e915404c81e62a08d9efea4cfc83664fa6e62c3761        5339  app/session.php
 b7c6aeeac9fc91c4ad8c7c3b23270cf6d5303e9d7ab0a11541f2cf5b7310096b        1259  app/session_storage.php
 627fa19afb6e37152c8fa9e01095e86defe522847b7571d3c7b56e915846f9ca        9237  app/validation.php
-afff748cf3b7ec550d3ccb7369c77367bc52a74bd360708b3dbb23ed4f52fc38         237  app/version.php
+9e20904ac962fa57ea5aa6558ca2e53468b2dc092346c482498bba436c094a68         237  app/version.php
 3e1ff082fe3336e645962e6b32a4e401cc5c044833a3e34aa523cb0153c675f9        1301  config/.env.example
 cdfcfd20cc8dad55a9965599e90f5fc76f6c8d509ac46307b6a2de919cfe83aa        2078  config/local.php.example
 7db378e09d5b6e870a1a3ee563891db993a759fe2527fbe9c9a3718bcebdb37a        3983  database/audit/postflight.sql
@@ -63,7 +64,7 @@ cdfcfd20cc8dad55a9965599e90f5fc76f6c8d509ac46307b6a2de919cfe83aa        2078  co
 c8d21514099949642efcf82ebc5c0660266099cecc38965c1ba63ae287a55ff0        1938  database/fixtures/sample.sql
 100d05bbffb5cb0fe8f5d8a0e9dba8ffe2d3753d838bfaa0e3476a19923420c2        2851  database/migrations/001_sb13_integrity.sql
 17110d45b94f9b0eea7af12945d1c9f4e58ca76b848718b4c3a4e1459416e323        4944  database/schema.sql
-eb8007e82d380d9172fa344094de1b63426613b329a6c63b370f36a42d4c7176        4886  docs/README.md
+6487753cc9c838ae8bf41d9ae6a45d618adbf090fecb75fb1b488d83784c3398        5405  docs/README.md
 fa40dfa78a1c974d8057a9bb8b0ab600db9ac9b7c7907554849af55d8e557eff        4478  docs/backup-and-restore.md
 48e1fbd767fd307d691d152c699ebe1ea1042cb4d38f0dae2a215ce276e65429        6412  docs/change-map.md
 54724ac629072e6f4257e6e2b51fe16bf1a0f16ffa4ec98b40a8a78f1956d8f0        2278  docs/ci.md
@@ -109,6 +110,8 @@ e8480ddba8daa1d95536dbc74e5d11c19c055b04a63051190c91ad19d307ee2d         269  do
 e18d6af2a9c92c76b38a3cbc6a5d7494d852b3f7fd09541688192465fd69711c        2205  docs/m4-c-implementation.md
 544ef05ae4ee00bb14556e34082b1561ba503dba8892aad41fd3808333d66168        1387  docs/m4-d-files.md
 0bc41adbeb1b247b2ee75be0db28b4debf32585a38296c26dd9619bae21754d2        2054  docs/m4-d-implementation.md
+b0a9b4b328b5ed635971be9ec5fbca16c6a83d7811c2e0c3b6fd67a0adf0683e        1270  docs/m4-e-files.md
+399f931f8a41a4d25f7ec574defced611efc985087b30b868d66f376a22d7db4        2459  docs/m4-e-implementation.md
 28f1e064b1c0587f74e59ab51c9aa24249ee11014961bb06f1ff509869fd37a3         788  docs/m4-plan.md
 0c27ab4d06665150dac31cf778af1bfd469a85d7be1d450808660ee0fd9fd550       12344  docs/modernization.md
 10620e85372221ba3ffc068b8912c4aa3f6f781e6b76c610182fee03e6348891       27246  docs/package-manifest-m1-a-r1.txt
@@ -125,10 +128,12 @@ b37004a0d8839a9b5270f1d69f850e362a72905e1ec116464ed34a7b8c65ec37       25324  do
 086857c3c08335a71e8c1cba9cf3a19b7c3d41f715a3589496554a42af1d9b08       27944  docs/package-manifest-m4-a-r1.txt
 e93bc01cfec752a76193babb43bcb22f9a301edababb2dace7a08154319baa18       28981  docs/package-manifest-m4-b-r1.txt
 4fec08c7b3e2808f5af5df318987ccc7646dbced26c4ba8245fb60bafcb90c91       30276  docs/package-manifest-m4-c-r1.txt
+39db0dd2c420b9138f961a096d2d3541a6eda5a4abba2c41a3f8563dff559aa5       31742  docs/package-manifest-m4-d-r1.txt
 a1f9dc4b102fe570b9ef816ae5a9613847b330811ba24835b110d3afdbd41b49        3030  docs/portfolio.md
-c4c94b476db0e9c57dfc1ef9cfdf7e41630106f37a91745c289e04993b002fb8        1756  docs/release-artifact-inventory-v1.0.0.md
-f956ffe65d15d00b46a6e9fb438c76252f58043a7da41cb09bce21a4a23d7560        1990  docs/release-gate-v1.0.0.md
-98b0499c6be1fc00e1d6a9519dfcece096496f00b182bc18c9628e3fdc6765a8        5799  docs/roadmap.md
+3a72daea2b8eff0ba574923338e5c27e06e5ad12eeb89fd1e983556756f233cc        2761  docs/release-artifact-inventory-v1.0.0.md
+5676849fd00823623754e84eb0050e31d3cbbb10829d837b193c7fd63eb54fa1        2564  docs/release-gate-v1.0.0.md
+f7a35a7cf2500785386e66662753f5695e0ad478512877aa06438fbf13c7ec86        3321  docs/release-package.md
+86cf091dcddf16ca6a910714318b783ff53c923244d48cc0583cc032a1cdc867        5859  docs/roadmap.md
 f0ce7a8bd9e144367ea8f445f155998f85f3252082f5973389140f2f6c012f6f        2841  docs/rollback.md
 e1e23ae281b9a7668ed24601365f6ae2300fbfb163f11a2cc6520445eae21036        1441  docs/sb00-02-implementation.md
 3ebdff4591ef3e9673e14e05ac702050d9accf5970036e9aa3591be74687e0c0        2617  docs/sb03-04-implementation.md
@@ -140,6 +145,7 @@ e344eba823ca5d205a6c6d84971be02e1ae1e62f0d1ee094e56b532bba44ab31        2418  do
 8d45f412a800b7895b8db949facb26e20c9e27affd9e9fa53017a9790c252540        4114  docs/sb14-test-matrix.md
 6b3ffc56e943a381e30d17f530609ad6fc4b94a7f265798329d87d84dce8b779        8849  docs/security.md
 896800ee673351e7351362cab719759f0923a348cb7896f654d43396db2b126e        1148  docs/sensitive-data-manifest.md
+7309baa954c28afcfd4e3b189cc258d95294d09c67b7336b226c94d851c14c58        3697  docs/tag-and-github-release.md
 dc98e2ba2e263a1199461b9b09d9d03634d4e8ef6a236652e8afe257bc781837        2715  docs/test-report-m1-a.md
 2472cae2235b779c9092e782a07b875668fd480a154aa40a9d27d5eab5c0e10e        2887  docs/test-report-m1-b.md
 f8cdfe20175c3705a48782fb1a56f599acc6c77453f3cfb4c3b3ffd7bd7c8890        4731  docs/test-report-m1-c.md
@@ -158,6 +164,7 @@ e83d4da59a9fb8ba1053506267b27de2f79418728c144490e789a0fed3f7f2a1        1599  do
 c8282d5bf80c8c7f9e241739b1b66fe6978b755fd8db9da665c603b438c77db5        2028  docs/test-report-m4-b.md
 eb6677c6831dd38eec731a67ced3794e08db386db9898f02080d5c1b12ed83b7        2707  docs/test-report-m4-c.md
 4be4e770d5fa678e7c6a5264cc236bc9ec77f375c21266362cd866c338060906        3418  docs/test-report-m4-d.md
+8c266f623012818a01e8fa4d884c4a12b63ab2783026c65320d9d1ad52abd980        3315  docs/test-report-m4-e.md
 61ba38b6a62b1fdf91f898e7fcd18d17b9b8885b517cd30eaf3ac3ef46225650        3113  docs/test-report-sb03-04.md
 dabaa88baaddf9d7bfebea8070b87060046bbb12fb19c924007b18b43249273b        3424  docs/test-report-sb05-07.md
 7bfddc10a6c1020b6edc436d63ebb62d14a6fac678850e5f90c89dbf4263e1b4        4026  docs/test-report-sb08-10.md
@@ -167,8 +174,8 @@ cb60b9f4dae63ea1611dc813b1e402a85bd4732be222cc0e0f744dd9b60b6c21        3853  do
 d3e0ff253208d89dc8084d107929c6a7dd3a2e4e85a85ab4f6ff5f8adedcfc12        3570  docs/test-report-sb14.md
 e2d39c836e9847e98aafa089be02a5a6136f23cda809eba8c49aef07c8594b9a        4350  docs/test-report-sb15.md
 010c5a4850929a5f32b73c56451545095128d5d07758eb382a0a41c3460586b0        4666  docs/test-report.md
-c7fd7ac5659c8094fd3c744dddfb62a9f348d6b26a4a623543ff3e9dbb863c35        3863  docs/update.md
-13e626b14507bd4544593cc12674eec9464bf6ff56e5b90cbff37c18547824b7         900  docs/versioning.md
+27d6ce9d7bab669ac52e1fb8e0b35b121725a7323c6db77863cb3f562113cfc6        4623  docs/update.md
+ffe8b78a0a126b36e21b109a2abee03a25cc3da1048c186ddd6ca30d86ddc5de        1002  docs/versioning.md
 7bdab4494c73e3d7271a70d395947a9eb2a68f08d98740fc2308843e319298f9        1131  licenses/bootstrap-MIT.txt
 7de053335e5df7ff45a0ef9325c2b69e3a38123e40a26c6a21d7539bc267a044        1078  licenses/bootswatch-MIT.txt
 1d21bd3a20bc52acbb0499ab8e93fae2d94e767ac130510a6b3c03d6680a2db7        7421  licenses/fontawesome-6.7.2-LICENSE.txt
@@ -228,7 +235,7 @@ e768bb68efe257d446713ac8d50fd6166a546181b394f495b92a115ff8af3ec3         324  te
 536a2c8f05ddf13b80304ed5a39ef275a8a2dc7ace02ab49e5351d9000d21282         203  tests/fixtures/rss2_zero.xml
 00402de9ef2f1125ef47a2ee0df945a682648912c53e3ae3e5c3f098272e0249          86  tests/fixtures/unsupported_xml.xml
 2cba128295c5cb8fefe0d1f4169368410443ece71e45d09e39e778c9b70f9b28        7335  tests/run.php
-09fee8c7a34039016fdc39998a7aa5157b60c3ea63062e1d2be5e0d68a2369e4        6540  tests/run.sh
+75cb5ccea7efed70b37aa0808a11c3d2f0733712a66ceb790b5073e32a0286a7        6753  tests/run.sh
 fe6fd2d90fd301ef42c24cb32f0272e435ed0ba99a1325493807fc2c5d8ccbd4        1593  tests/session_http_router.php
 8055ff0c109c51d1840b3b963a5559319d74bd8ede39f0b1fc79d3230190d9f4        3390  tests/static_checks.py
 6432c5ce73c7c523a51b75c9bb227f619b7d637c29b945c80dfe49342748e268         418  tests/test_dashboard_js_syntax.py
@@ -259,9 +266,9 @@ c024c4ea5730e74da201abbeeda65d0c08e81e9c365451cf978ef00254a6af38       15426  te
 bbe6c7cb29fcb2d4e5585a9fe2f947b59b8c2a6ff103c8ab033b942e9a5d877f        4420  tests/test_m2b_feed_structure.py
 531534b4357334f790e96190aae1d9a3896598897e6ed35bc06c03b2e0b7e267        9288  tests/test_m2c_accessibility_runtime.js
 7b9ba91f1d377f486b609c13d3c081c242d09a9e079112d921fa96b1e86106cd        7956  tests/test_m2c_accessibility_structure.py
-73b00615d3029f0e96c7ac3069a20c3627674c6c176061562ecf82bee879a039       11546  tests/test_m2c_dashboard_render.py
+f72bf5bd8f90b613e63c67daaad3c06a12a627e280f8017aae86d83501e1bd55       11546  tests/test_m2c_dashboard_render.py
 e686ce4af87897869f39dca0a8a8013ab965b444694303bad673d556792bf9d3        1265  tests/test_m2c_login_layout.py
-5d78c8154974b6ee12e0ce4bcaa9d83da246104edddf3d32282b1bd5581ca12a        8826  tests/test_m2d_dashboard_render.py
+11658778414a024e8f7f988d5abf244e251b4cf5c867b1a256269118fddcd77b        8826  tests/test_m2d_dashboard_render.py
 7d00e0cea162f0d2ce06637d13afb6b56d7e8eb1bf98ba682cb0bb581ceb95bd        7169  tests/test_m2d_mutation_runtime.js
 8318fcefc685793bd186acbec56b1c0f479a25a6bb9b6233cb97d42451f2ff03        3016  tests/test_m2d_r2_layout_regression.py
 e0f8a97335d2afbcaae0ff201f596b5c4ea11d03ea7db605547560a8c2ef4958        5799  tests/test_m2d_responsive_ui.py
@@ -271,23 +278,27 @@ e0f8a97335d2afbcaae0ff201f596b5c4ea11d03ea7db605547560a8c2ef4958        5799  te
 47a14e269ebb1f4d7141a067cb205a797765f1964337be9fd8424fd68d2b7e18        2256  tests/test_m2f_cleanup_script.py
 95844fbb4c5b46bd794bfd68766494871294ed1e810eaf810bf2424f15e1c9fa        5157  tests/test_m2f_dependency_inventory.py
 b15ab3682b426071a701e71067d5b5d25353ddb45bc07e51edc61546e618ed1d        3799  tests/test_m2g_documentation.py
-ab15f9c61c7b6628d58537e0ae1cf70b43ac88185a9980b977b69ff3562afc9f        8528  tests/test_m2g_final_regression.py
+015b2a82b886326a0690320525d142656655f00be7750a24996243242dfa452e        8575  tests/test_m2g_final_regression.py
 cd764082f99783ad559997a8339f863d27225ccd68f8960a659ca1f55aa81cf2        3955  tests/test_m4a_package.py
-bf8d6c0017d7a0627449a2b5918cb1b281fb990dfb32c190f331e49c115be437        1160  tests/test_m4a_release_baseline.py
-a9a1642984da88739e4926dd1b9dedd64580c4eaedc47ee55f0b6919cd0b89e4        2063  tests/test_m4a_release_gate.py
+d6563f4aff02d75a73f0fdd980725b91049c6a0b250abef9982e1ffd29cd0530        1160  tests/test_m4a_release_baseline.py
+60a3e32591aafceff1cacddf8d5054bffaa3c7c61234f752697432d618e41975        2063  tests/test_m4a_release_gate.py
 1361df06cda0f758613c03dd8d7a659d9901605699c26fcf1c80d5b7f3b69001        2793  tests/test_m4a_release_inventory.py
 12578becaabd0402ce98a48430b3e03b0a2ac58e90419f3c69532607f7745115        1277  tests/test_m4b_cleanup_script.py
-778cfcf488061fb70dca7f6ee80b45dc96de662da5a5ef25f124c8b5e2901b8b        3513  tests/test_m4b_documentation.py
+144cc60bec4722fbd07e521b1912f6788e447f80dd1cee4214c204ef493f3d50        3597  tests/test_m4b_documentation.py
 e6e3ed4b5006b6b5a15d8f74c1998ce18b866ff87f38205e3b0e448658101c98        6065  tests/test_m4b_license_inventory.py
 b40d1b5e1430c4fbfc757362474b50e32223faf39941f22071bf4640afbbfd9a        3955  tests/test_m4b_package.py
 7166f0e992e1577cbcd4cf1030c5029580ef3b44aa9ac02e83129b50397b339b        5027  tests/test_m4c_config_inventory.py
-a713a10894f581130ccfda90ca3852d99316f81533692e7c44973115bb0008e0        2628  tests/test_m4c_healthcheck_contract.py
-5d73210ff9ddfd5c0b10fa380390486987c364f372e3ede4477fb8214cfdc9a3        5652  tests/test_m4c_operations_docs.py
+6bd959c6c44db8b02cc340a1b74f451b7cd02f6f0e802c00de8fb20499f77d47        2628  tests/test_m4c_healthcheck_contract.py
+3100b0fb558bd96fe7dfb65ca727e34d97c2a847c5903597639279963bcf578c        5652  tests/test_m4c_operations_docs.py
 fc8d929c9d75421a44f58e8cfcd7d10265f4dc050dcb74e472280e700485d292        4835  tests/test_m4c_package.py
 bc1611f85e8a04b4fe0b6807be3511ae7111fc2e20440bbb5335905a69d70611        2914  tests/test_m4d_ci_workflow.py
 afcbc1a9482f60df6877d5e04e9ecd141056847a3e838064640fa750d7f73679        4912  tests/test_m4d_package.py
 84fb048d29d2230ae60399f1a314d10f9d87b6450837040688e77aafa0f8337c        3568  tests/test_m4d_public_surface.py
-99632642cbd11d219fa58ea135fda32706d30a75d692582ff2da47b91afad56f        4927  tests/test_m4d_repository_docs.py
+b5863e38ac287bb2528d211108eee3d3126ef0482e5d94e2e732cca67aa94dea        4940  tests/test_m4d_repository_docs.py
+3e85495767e23de6acf31fa239391ffe6d3271efcfda2450bc278b07a892ddc4        5270  tests/test_m4e_checkpoint_package.py
+87b43e2708100babfd18fcf951f3244e31d361346390d1476b898bc8f9cf455f        5429  tests/test_m4e_release_builder.py
+591845ce0ad85e66d961213e23691fbb5da2d4bc571eeec684e187a584d72a85        4278  tests/test_m4e_release_docs.py
+1234d57c512a96fe440bbbb2f9fba006de22122b4bcf491eb25fab6d1af97167        3983  tests/test_m4e_release_process.py
 8f0545e24bc873a58d13365d5f68dd3a63938950ba59926dc61d399eabfdc956        6258  tests/test_public_smoke.py
 2af2aa3aec3265979914a51817932463a8bbae80b8d797f2e0918e3f04668ff6        1652  tests/test_r5_session_layout.py
 0ebe7531bf7f884f2318087853e72b16442164e4373d100f61a02816e0ed115c        1392  tests/test_r5_session_storage.php
@@ -323,14 +334,16 @@ e3ba94768965e4cbd9a281d5dd69156504b361d94734c2eef51a6828286dc945        6976  te
 e815dce555455329a60f4a464447915644167101cf556350b1fe127a8c27f3ba        3433  tests/test_sb14_ssrf_matrix.php
 8e20006876c3dca4d7ac287f48d1420e0345eb7dc64ba250d7f036e9c7b4a374        3709  tests/test_sb14_surface_static.py
 dfa5dfec9976e0c5a6a58b3a668334a8665e05ca73119b9a4538e65fd895f7c6        3012  tests/test_sb14_xss_matrix.php
-97b802f17420c94ce8bc69de6a61162f4867930f71f36d90a83c8e546f2972f1        5864  tests/test_sb15_docs.py
+ace0002982a74fb453c9ee698888e1372db0a9773fa1dcda7f60c493c51fd4f5        5864  tests/test_sb15_docs.py
 3bd676fe5ebf0100696d79eaf0b29a94179f82b6e81951f5aec79585b5a14d6a        3130  tests/test_sql_behavior.py
 fee39b3ea35f6d29b5cf82fb1e9a273c9680146be7e39f9ec50e4cdd0ce70dd7        1807  tests/test_version_marker.py
 099119369a4fefa297d29f5b15c80f95ac860468a809ac2a01cc7daf1bd85d95        2565  tools/apply_m2e_cleanup.ps1
 9cfbcdf4fbb06b1577b840dbfbe2b965c6ff468614a0523f44b04808311c6bc9        1289  tools/apply_m2f_cleanup.ps1
 36a943cf3186103ac1cdb72f2e3e879a6f3bf5ca17181e856e5a126d71a7cbf8        1300  tools/apply_m4b_cleanup.ps1
+e4b0145c8bbb5a4f026c57048cbdcc6fa2c190549169d27b5fc5427300d0d5e1        7192  tools/build_release_package.py
 de6fdd08adffe779a0b786884b134dfb5c4295cecc560f0a7f93412bbe932110       10930  tools/db_sb13.php
 fc1afae34b9a2b38fcb4568ffdfbe563c45141ee6223bfee5517f8605585fb0e        2703  tools/healthcheck.php
+6c66d0bd93860f0a7d10c334183a34a3863a0b21b16a0f527359cd42ab7b3167        7552  tools/verify_release_package.py
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855           0  var/.gitkeep
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855           0  var/cache/.gitkeep
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855           0  var/cache/feed/.gitkeep

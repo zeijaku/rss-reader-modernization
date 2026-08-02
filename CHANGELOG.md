@@ -2,6 +2,19 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## Release M4-E / R1 — 2026-08-02
+
+### Release package, manifest, notes and tag procedure
+
+- Checkpoint ZIPと利用者向けRuntime Release ZIPを分離。
+- preview / rc / finalを分けるdeterministic release package builderを追加。
+- ZIP entry順、timestamp、permissionを固定し、同一Sourceから同じSHA-256になるBuildを追加。
+- Package内部の`RELEASE_MANIFEST.sha256`と、ZIP全体の`.zip.sha256`を追加。
+- CRC、unsafe path、Private設定、実DB系file、Secret、Version markerを確認するVerifierを追加。
+- Version 1.0.0向けRelease Notes準備版と、annotated Tag / GitHub Release手順を追加。
+- M4-E Previewを`publishable=no`とし、M4-F / M4-G前の誤公開を防止。
+- DB、公開API、Authentication / Session / CSRF / SSRF / XSS、RSS Engine、Frontend Runtime Assetは変更なし。
+
 ## Release M4-D / R1 — 2026-08-02
 
 ### GitHub repository, portfolio and minimum CI

@@ -14,6 +14,23 @@ Releaseごとに次を確認します。
 - Runtime cache削除の要否
 - Release NotesとSHA-256
 
+## M4-D / R1からM4-E / R1
+
+M4-EはRelease package builder、Verifier、Release Notes、Tag / GitHub Release手順、Version marker、Testの追加です。Application Runtimeは変更していません。
+
+```text
+DB schema / Migration       変更なし
+Public API                  変更なし
+必須設定                    追加なし
+Frontend Runtime Asset      変更なし
+Cache clear                 不要
+削除file                    なし
+```
+
+既存 `config/local.php` と実DBはそのまま使用できます。M4-E適用時に `schema.sql` やMigrationを実行しません。
+
+M4-EのPreview Release ZIPはPackaging確認用です。本番更新やGitHub Release公開には使用せず、M4-F / M4-Gで作り直します。
+
 ## M4-C / R1からM4-D / R1
 
 M4-DはGitHub公開資料、Security / Contribution文書、Issue template、GitHub Actions CI、Version marker、Testの追加です。
@@ -100,7 +117,7 @@ node --check public/js/dashboard.js
 
 Browserでは次を確認します。
 
-- Footerが `Release M4-C / R1`
+- Footerが現在CheckpointのVersion label
 - Login / Logout / Session
 - Feed CRUD / Stock / Settings / 4タブ
 - RSS 2.0 / RSS 1.0 / Atom

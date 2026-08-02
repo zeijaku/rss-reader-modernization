@@ -168,3 +168,8 @@ echo '== M4-D GitHub repository / Portfolio / CI checks =='
 python3 "$ROOT/tests/test_m4d_ci_workflow.py"
 python3 "$ROOT/tests/test_m4d_repository_docs.py"
 python3 "$ROOT/tests/test_m4d_public_surface.py"
+
+echo '== M4-E Release package / Notes / Tag procedure checks =='
+python3 "$ROOT/tests/test_m4e_release_builder.py"
+python3 "$ROOT/tests/test_m4e_release_docs.py"
+python3 "$ROOT/tests/test_m4e_release_process.py"
