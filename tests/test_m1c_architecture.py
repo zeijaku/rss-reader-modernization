@@ -18,7 +18,6 @@ service = (FEED / 'feed_fetch_service.php').read_text(encoding='utf-8')
 source = (FEED / 'feed_source.php').read_text(encoding='utf-8')
 index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
-frontend = index + '\n' + dashboard
 schema = (ROOT / 'database' / 'schema.sql').read_text(encoding='utf-8')
 
 checks = []
@@ -72,7 +71,7 @@ check('ETag' not in parser_stack and 'Last-Modified' not in parser_stack, 'M1-C 
 
 m = re.search(r'function api_feed_fetch\([^)]*\): array\s*\{(?P<body>.*?)(?=\n\})', api, re.S)
 body = m.group('body') if m else ''
-check('FeedFetchService::fromRuntimeConfiguration()' in body and '$this->parser->parse_start($body, $source->url)' in service and '$this->parser->parse_start($entry->body, $source->url)' in service, 'API keeps the FeedParser compatibility boundary through cache-aware service')
+check('FeedFetchService::fromRuntimeConfiguration()' in body and '$this->parser->parse_start($body, $source->url, true)' in service and '$this->parser->parse_start($entry->body, $source->url, true)' in service, 'API keeps the FeedParser compatibility boundary through cache-aware service')
 check('api_safe_feed_payload($resultFeed, $effectiveUrl)' in body, 'API XSS-safe payload boundary remains unchanged')
 check("$input['url']" not in body and '$input["url"]' not in body, 'client cannot supply an outbound Feed URL')
 check('rendered < 5' in dashboard and 'rendered++' in dashboard, 'frontend display cap remains unchanged')

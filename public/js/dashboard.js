@@ -330,7 +330,7 @@
             .appendTo($cell);
     }
 
-    function renderFeedTitle($card, channel) {
+    function renderFeedTitle($card, channel, newCount) {
         var channelTitle = String(channel.title || '');
         var channelLink = safeFeedLink(channel.link);
         var viewTitle = channelTitle !== '' ? channelTitle : 'タイトルなし';
@@ -346,6 +346,14 @@
                 .appendTo($title);
         } else {
             $('<span>').text(viewTitle).appendTo($title);
+        }
+
+        if (newCount > 0) {
+            $('<button type="button">')
+                .addClass('badge badge-warning feed-new-clear ml-2')
+                .attr('aria-label', 'このFeedの新着' + newCount + '件を解除')
+                .text('NEW ' + newCount)
+                .appendTo($title);
         }
     }
 
@@ -383,6 +391,15 @@
             }
 
             var $linkCell = $('<td>').appendTo($row);
+            var itemIdentity = String(item.item_identity || '');
+            if (item.is_new === true && /^m1i:v1:[a-f0-9]{64}$/.test(itemIdentity)) {
+                $('<button type="button">')
+                    .addClass('badge badge-warning feed-item-new mr-2')
+                    .attr('data-item-identity', itemIdentity)
+                    .attr('aria-label', '新着表示を解除: ' + viewTitle)
+                    .text('NEW')
+                    .appendTo($linkCell);
+            }
             if (itemLink !== '') {
                 $('<a>')
                     .addClass('text-dark')
@@ -421,8 +438,43 @@
             return;
         }
 
-        renderFeedTitle($card, channel);
+        var newCount = Number(resultFeed.new_count || 0);
+        if (!Number.isFinite(newCount) || newCount < 0) {
+            newCount = 0;
+        }
+        renderFeedTitle($card, channel, Math.floor(newCount));
         renderFeedItems($card, resultFeed.item);
+    }
+
+    function clearFeedNew($button) {
+        var $card = $button.closest('[data-feed-content-id]');
+        var contentId = String($card.attr('data-feed-content-id') || '');
+        var itemIdentity = String($button.attr('data-item-identity') || '');
+        if (!/^\d+$/.test(contentId)) {
+            showNotice('コンテンツIDを確認出来ませんでした', 'danger');
+            return;
+        }
+        if (itemIdentity !== '' && !/^m1i:v1:[a-f0-9]{64}$/.test(itemIdentity)) {
+            showNotice('記事の識別情報を確認出来ませんでした', 'danger');
+            return;
+        }
+        if (!requestStart($button)) {
+            return;
+        }
+
+        apiRequest('feed.new.clear', {
+            'content_id': contentId,
+            'item_identity': itemIdentity
+        }, 4000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    fetch_content($card);
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
     }
 
     function feedRequestErrorMessage(xhr, textStatus) {
@@ -500,6 +552,10 @@
             .off('click' + eventNamespace, '.feed-retry')
             .on('click' + eventNamespace, '.feed-retry', function () {
                 fetch_content($(this).closest('[data-feed-content-id]'));
+            })
+            .off('click' + eventNamespace, '.feed-new-clear, .feed-item-new')
+            .on('click' + eventNamespace, '.feed-new-clear, .feed-item-new', function () {
+                clearFeedNew($(this));
             })
             .off('click' + eventNamespace, '.information_modal_dbsave')
             .on('click' + eventNamespace, '.information_modal_dbsave', function () {

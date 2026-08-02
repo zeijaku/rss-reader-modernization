@@ -27,7 +27,7 @@ check('app_csrf_is_valid($csrfToken)' in logout and "'POST'" in logout, 'logout 
 check("$token === 'login' || $token === 'regist'" in index and 'app_csrf_is_valid($submittedCsrf)' in index, 'login and registration share explicit CSRF validation')
 check("'csrf_token': appCsrfToken()" in dashboard, 'AJAX helper injects CSRF token into every API request')
 
-for action in ['content.create', 'content.update', 'content.delete', 'stock.create', 'settings.update', 'tabs.update', 'feed.fetch']:
+for action in ['content.create', 'content.update', 'content.delete', 'stock.create', 'settings.update', 'tabs.update', 'feed.fetch', 'feed.new.clear']:
     check(action in frontend or action in (ROOT / 'app/api.php').read_text(encoding='utf-8'), f'expected API action remains represented: {action}')
 
 # 4-tab regression mapping is generated from location 0..3.

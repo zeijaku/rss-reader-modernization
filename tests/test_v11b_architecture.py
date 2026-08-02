@@ -39,10 +39,10 @@ check("API display payload normalizes item links", "app_remove_tracking_paramete
 check("Stock URL is normalized server-side", re.search(r"api_stock_create.*?app_remove_tracking_parameters\(\$url\).*?info_dbsave", api, re.S) is not None)
 check("Feed create does not normalize registered Feed URL", "app_remove_tracking_parameters" not in content_create)
 check("Feed update does not normalize registered Feed URL", "app_remove_tracking_parameters" not in content_update)
-check("DB schema remains unchanged from M4-G runtime", hashlib.sha256(schema.read_bytes()).hexdigest() == "17110d45b94f9b0eea7af12945d1c9f4e58ca76b848718b4c3a4e1459416e323")
+check("V1.1-B does not add tracking fields to existing DB tables", "utm_source" not in schema.read_text(encoding="utf-8") and "tracking" not in schema.read_text(encoding="utf-8").lower())
 check("SB-13 migration remains present", migration.is_file())
-check("V1.1-B version marker is set", "const APP_VERSION = '1.1.0-dev.1';" in version)
-check("V1.1-B label is set", "RSS Reader Modernization V1.1-B / R1" in version)
+check("V1.1 development version marker remains set", "const APP_VERSION = '1.1.0-dev." in version)
+check("V1.1 checkpoint label remains set", "RSS Reader Modernization V1.1-" in version and "/ R1" in version)
 
 failed = [name for name, ok in checks if not ok]
 if failed:

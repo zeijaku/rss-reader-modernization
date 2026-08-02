@@ -80,6 +80,7 @@ TimeoutやSize上限を緩めても、private address拒否、redirect再検証�
 | `APP_FEED_RETRY_MAX_DELAY_SECONDS` | `3600` | 60〜86400秒 |
 | `APP_FEED_STALE_IF_ERROR_ENABLED` | `true` | 一時障害時だけ期限付きstaleを使用 |
 | `APP_FEED_STALE_MAX_AGE_SECONDS` | `86400` | TTL以上、最大604800秒 |
+| `APP_FEED_ITEM_STATE_RETENTION_DAYS` | `90` | 削除済みFeedのNEW状態を整理する日数。1〜3650日。有効Feedは対象外 |
 
 Cache / Lock / Fetch stateは `var/cache/feed/` に置きます。このPathはRuntimeで固定され、`public/` 外です。
 

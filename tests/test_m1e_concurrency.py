@@ -50,7 +50,7 @@ with tempfile.TemporaryDirectory(prefix='rss-m1e-concurrency-') as td:
         }}
     }}
     class ConcurrentParser extends FeedParser {{
-        public function parse_start(mixed $contents, ?string $sourceUrl = null): array {{
+        public function parse_start(mixed $contents, ?string $sourceUrl = null, bool $includeIdentity = false): array {{
             if ($contents !== 'VALID:concurrent') {{ $this->last_error='invalid'; return []; }}
             return ['type'=>'rss2','channel'=>['title'=>'Concurrent','link'=>$sourceUrl,'description'=>''], 'item'=>[]];
         }}

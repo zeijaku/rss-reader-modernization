@@ -38,8 +38,8 @@ change_map = (ROOT / 'docs' / 'change-map.md').read_text(encoding='utf-8')
 
 assert 'Secure Baseline SB-15 / R3' in readme
 assert 'RSS Engine M1-G / R1' in readme
-assert "APP_VERSION = '1.1.0-dev.1'" in version
-assert "APP_VERSION_LABEL = 'RSS Reader Modernization V1.1-B / R1'" in version
+assert re.search(r"APP_VERSION = '1\.1\.0-dev\.[1-9][0-9]*'", version)
+assert re.search(r"APP_VERSION_LABEL = 'RSS Reader Modernization V1\.1-[A-Z] / R[1-9][0-9]*'", version)
 assert 'Secure Baseline SB-15 / R3' in readme
 assert 'PASS — Secure Baseline' in gate
 assert 'DB_TABLE_PREFIX' in readme and '@table_prefix' in readme

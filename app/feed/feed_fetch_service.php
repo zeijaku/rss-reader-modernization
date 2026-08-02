@@ -117,7 +117,7 @@ final class FeedFetchService
             return null;
         }
 
-        $feed = $this->parser->parse_start($entry->body, $source->url);
+        $feed = $this->parser->parse_start($entry->body, $source->url, true);
         if ($feed === []) {
             $this->cache->delete($source);
             return null;
@@ -143,7 +143,7 @@ final class FeedFetchService
             return null;
         }
 
-        $feed = $this->parser->parse_start($entry->body, $source->url);
+        $feed = $this->parser->parse_start($entry->body, $source->url, true);
         if ($feed === []) {
             $this->cache->delete($source);
             return null;
@@ -268,7 +268,7 @@ final class FeedFetchService
 
         $body = is_string($fetch['body'] ?? null) ? $fetch['body'] : '';
         $effectiveUrl = is_string($fetch['url'] ?? null) ? $fetch['url'] : $source->url;
-        $feed = $this->parser->parse_start($body, $source->url);
+        $feed = $this->parser->parse_start($body, $source->url, true);
         if ($feed === []) {
             return $this->handleFailure($source, [
                 'ok' => false,

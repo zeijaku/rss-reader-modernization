@@ -80,7 +80,7 @@ class M1eFakeParser extends FeedParser
 {
     public int $calls = 0;
 
-    public function parse_start(mixed $contents, ?string $sourceUrl = null): array
+    public function parse_start(mixed $contents, ?string $sourceUrl = null, bool $includeIdentity = false): array
     {
         $this->calls++;
         if (!is_string($contents) || !str_starts_with($contents, 'VALID:')) {

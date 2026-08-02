@@ -12,7 +12,6 @@ db = (ROOT / 'app' / 'common' / 'common_db.php').read_text(encoding='utf-8')
 schema = (ROOT / 'database' / 'schema.sql').read_text(encoding='utf-8')
 index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
-frontend = index + '\n' + dashboard
 
 checks = []
 def check(condition: bool, message: str) -> None:
@@ -45,7 +44,7 @@ map_pos = body.find('fromOwnedContent')
 service_pos = body.find('FeedFetchService::fromRuntimeConfiguration()')
 load_pos = body.find('->load($source)')
 check(owned_pos >= 0 and validate_pos > owned_pos and map_pos > validate_pos and service_pos > map_pos and load_pos > service_pos, 'feed.fetch order is owner lookup → URL validation → source mapping → cache-aware service')
-check('$this->transport->fetch($source)' in service and '$this->parser->parse_start($body, $source->url)' in service, 'FeedFetchService preserves fetch → parse ordering on cache miss')
+check('$this->transport->fetch($source)' in service and '$this->parser->parse_start($body, $source->url, true)' in service, 'FeedFetchService preserves fetch → parse ordering on cache miss')
 check('new FeedSourceMapper()' in body and 'FeedFetchService::fromRuntimeConfiguration()' in body, 'API orchestrates FeedSource mapping and cache-aware loading boundaries')
 check('->fetch($url)' not in body and 'app_safe_http_fetch(' not in body, 'API cannot fetch a raw URL directly')
 check("$input['url']" not in body and '$input["url"]' not in body, 'client-supplied Feed URL remains unsupported')

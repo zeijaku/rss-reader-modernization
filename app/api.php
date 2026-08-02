@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/url_normalizer.php';
+require_once __DIR__ . '/feed/feed_item_state.php';
 
 /**
  * Secure Baseline API contract (SB-05..10).
@@ -94,12 +95,15 @@ function api_safe_feed_payload(array $feed, string $sourceUrl): array
             continue;
         }
         $itemLink = app_validate_external_link($rawItem['link'] ?? null, 2048);
+        $itemIdentity = feed_item_state_valid_identity($rawItem['item_identity'] ?? null);
         $items[] = [
             'title' => api_feed_text($rawItem['title'] ?? '', 512),
             'link' => $itemLink === null ? '' : app_remove_tracking_parameters($itemLink),
             'description' => api_feed_text($rawItem['description'] ?? '', 2048),
             'content' => api_feed_text($rawItem['content'] ?? '', 4096),
             'date' => api_feed_text($rawItem['date'] ?? '', 64),
+            'item_identity' => $itemIdentity ?? '',
+            'is_new' => $itemIdentity !== null && ($rawItem['is_new'] ?? false) === true,
         ];
     }
 
@@ -128,6 +132,7 @@ function api_dispatch(string $action, int $userId, array $input): array
         'settings.update' => api_settings_update($userId, $input),
         'tabs.update' => api_tabs_update($userId, $input),
         'feed.fetch' => api_feed_fetch($userId, $input),
+        'feed.new.clear' => api_feed_new_clear($userId, $input),
         default => api_error('unknown_action', 'Unknown API action.', 400),
     };
 }
@@ -338,8 +343,75 @@ function api_feed_fetch(int $userId, array $input): array
     $resultFeed = is_array($loaded['result_feed'] ?? null) ? $loaded['result_feed'] : [];
     $effectiveUrl = is_string($loaded['effective_url'] ?? null) ? $loaded['effective_url'] : $source->url;
 
+    try {
+        $state = feed_item_state_sync(
+            $userId,
+            $contentId,
+            isset($resultFeed['item']) && is_array($resultFeed['item']) ? $resultFeed['item'] : []
+        );
+    } catch (Throwable $exception) {
+        error_log(sprintf(
+            'Feed item state failed user_id=%d content_id=%d [%s]: %s',
+            $userId,
+            $contentId,
+            $exception::class,
+            $exception->getMessage()
+        ));
+        return api_error(
+            'feed_item_state_unavailable',
+            'Feed item state is unavailable. Apply the Version 1.1-C database migration and try again.',
+            503
+        );
+    }
+
+    $resultFeed['item'] = $state['items'];
+    $safeFeed = api_safe_feed_payload($resultFeed, $effectiveUrl);
+    $safeFeed['new_count'] = $state['new_count'];
+    $safeFeed['initial_baseline'] = $state['initial_baseline'];
+
     return api_success([
         'content_id' => $contentId,
-        'result_feed' => api_safe_feed_payload($resultFeed, $effectiveUrl),
+        'result_feed' => $safeFeed,
+    ]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_feed_new_clear(int $userId, array $input): array
+{
+    $contentId = api_positive_int($input, 'content_id');
+    if ($contentId === null) {
+        return api_validation_error('content_id must be a positive integer.');
+    }
+
+    if (find_owned_active_content($userId, $contentId) === null) {
+        return api_error('not_found', 'Content was not found.', 404);
+    }
+
+    $identityInput = $input['item_identity'] ?? null;
+    $itemIdentity = null;
+    if ($identityInput !== null && $identityInput !== '') {
+        $itemIdentity = feed_item_state_valid_identity($identityInput);
+        if ($itemIdentity === null) {
+            return api_validation_error('item_identity is invalid.');
+        }
+    }
+
+    try {
+        $cleared = feed_item_state_mark_seen($userId, $contentId, $itemIdentity);
+    } catch (Throwable $exception) {
+        error_log(sprintf(
+            'Feed NEW clear failed user_id=%d content_id=%d [%s]: %s',
+            $userId,
+            $contentId,
+            $exception::class,
+            $exception->getMessage()
+        ));
+        return api_error('feed_item_state_unavailable', 'Feed item state could not be updated.', 503);
+    }
+
+    return api_success([
+        'content_id' => $contentId,
+        'item_identity' => $itemIdentity ?? '',
+        'cleared_count' => $cleared,
     ]);
 }

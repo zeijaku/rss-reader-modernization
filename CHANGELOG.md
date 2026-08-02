@@ -2,6 +2,16 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+
+## RSS Reader Modernization 1.1.0-dev.2 — V1.1-C
+
+- `feed_item_state`を追加し、既存Item Identityを使った新着NEW表示を追加。
+- 初回成功取得はBaseline扱いとし、2回目以降に初めて現れた記事だけをNEWにする。
+- 記事単位とFeed単位の明示操作でNEWを解除し、画面表示だけでは自動解除しない。
+- Cache hit、HTTP 304、stale-if-errorを含むFeed経路で同じ状態判定を使用。
+- Table Prefix、owner scope、CSRF、Transaction、Migration再実行、Rollback手順を追加。
+
+
 ## RSS Reader Modernization 1.1.0-dev.1 — V1.1-B
 
 - 記事URLから既知のTracking Parameterを除去。

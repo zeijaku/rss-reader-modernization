@@ -15,7 +15,6 @@ date_normalizer = (ROOT / 'app' / 'feed' / 'feed_date_normalizer.php').read_text
 adapters = ''.join((ROOT / 'app' / 'feed' / 'adapters' / name).read_text(encoding='utf-8') for name in ['rss2_adapter.php', 'rss1_adapter.php', 'atom_adapter.php'])
 index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
-frontend = index + '\n' + dashboard
 
 checks = []
 def check(condition: bool, message: str) -> None:
@@ -35,7 +34,7 @@ m = re.search(r'function api_feed_fetch\([^)]*\): array\s*\{(?P<body>.*?)(?=\n\}
 body = m.group('body') if m else ''
 check(bool(m), 'feed.fetch handler exists')
 check('FeedFetchService::fromRuntimeConfiguration()' in body and '->load($source)' in body and '$this->transport->fetch($source)' in service, 'feed.fetch reaches the FeedFetcher transport boundary through FeedFetchService')
-check('$this->parser->parse_start($body, $source->url)' in service and '$this->parser->parse_start($entry->body, $source->url)' in service, 'feed.fetch reaches the FeedParser boundary for network and cache bodies')
+check('$this->parser->parse_start($body, $source->url, true)' in service and '$this->parser->parse_start($entry->body, $source->url, true)' in service, 'feed.fetch reaches the FeedParser boundary for network and cache bodies')
 check('app_safe_http_fetch(' not in body, 'feed.fetch no longer calls HTTP transport implementation directly')
 check('new rss_parse()' not in body, 'feed.fetch no longer instantiates Legacy parser name')
 
@@ -61,7 +60,7 @@ check("getName()) === 'feed'" in adapters and "getName()) !== 'rss'" in adapters
 check('FeedLinkSelector::select($candidates)' in helper and 'function rss_select_link_candidate' in selector, 'Atom/RSS link-selection behavior remains centralized with compatibility wrapper')
 check("return $date->format('Y-m-d H:i:s');" in date_normalizer and 'function rss_normalize_date' in date_normalizer, 'existing date-normalization output and compatibility wrapper remain unchanged')
 
-check("rendered < 5" in dashboard and "rendered++" in dashboard, 'existing frontend feed item cap remains unchanged')
+check('rendered < 5' in dashboard and 'rendered++' in dashboard, 'existing frontend feed item cap remains unchanged')
 check('api_safe_feed_payload($resultFeed, $effectiveUrl)' in body, 'later HTTP improvements do not bypass the M1-A public payload boundary')
 
 if not all(checks):

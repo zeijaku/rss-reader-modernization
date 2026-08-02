@@ -47,7 +47,7 @@ check('firstText(' in helper and 'attribute(' in helper, 'shared XML helper expo
 check('?string $sourceUrl = null' in parser, 'legacy parser calls remain compatible through optional source scope')
 check('attachIdentities($feed, $sourceUrl)' in parser, 'parser attaches identities only after adapter normalization')
 check('$this->identityResolver->resolve($item, $sourceUrl)' in parser, 'all normalized items use the centralized resolver')
-check('$this->parser->parse_start($body, $source->url)' in service and '$this->parser->parse_start($entry->body, $source->url)' in service, 'network and cached bodies use validated configured FeedSource URL as identity scope')
+check('$this->parser->parse_start($body, $source->url, true)' in service and '$this->parser->parse_start($entry->body, $source->url, true)' in service, 'network and cached bodies use validated configured FeedSource URL as identity scope')
 check('parse_start($body, $effectiveUrl)' not in service and 'parse_start($entry->body, $entry->effectiveUrl)' not in service, 'redirect effective URL is not used as identity scope')
 check("$input['url']" not in api and '$input["url"]' not in api, 'client cannot provide identity scope URL')
 
@@ -61,7 +61,10 @@ for forbidden in ['error_log(', 'syslog(', 'var_dump(', 'print_r(']:
     check(forbidden not in resolver and forbidden not in identity, f'identity implementation does not log raw candidate data: {forbidden}')
 
 check('sourceitemid' not in index.lower() and 'itemidentity' not in index.lower() and 'm1i:v1:' not in index.lower(), 'Frontend does not depend on internal item identity metadata')
-check('item_identity' not in stock_schema and 'source_item_id' not in stock_schema, 'database schema receives no item identity column in M1-D')
+stock_start = stock_schema.find("'CREATE TABLE ', @t_content_stock")
+state_start = stock_schema.find("'CREATE TABLE ', @t_feed_item_state")
+stock_table_block = stock_schema[stock_start:state_start] if stock_start >= 0 and state_start > stock_start else ''
+check('item_identity' not in stock_table_block and 'source_item_id' not in stock_table_block and 'feed_item_state' in stock_schema, 'existing Stock schema remains unchanged while V1.1 uses a dedicated item state table')
 check('content_stock' in stock_schema, 'existing Stock schema remains present')
 check('INSERT INTO' not in resolver and 'UPDATE ' not in resolver and 'DELETE ' not in resolver, 'identity resolver has no persistence side effects')
 check('array_unique' not in parser and 'unset($feed[' not in parser, 'M1-D does not remove duplicate items')

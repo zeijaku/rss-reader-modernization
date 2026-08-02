@@ -153,6 +153,9 @@ if (!defined('APP_FEED_STALE_MAX_AGE_SECONDS')) {
 if (!defined('APP_FEED_CACHE_DIR')) {
     define('APP_FEED_CACHE_DIR', dirname(__DIR__, 2) . '/var/cache/feed');
 }
+if (!defined('APP_FEED_ITEM_STATE_RETENTION_DAYS')) {
+    define('APP_FEED_ITEM_STATE_RETENTION_DAYS', max(1, min(3650, (int) app_env('APP_FEED_ITEM_STATE_RETENTION_DAYS', '90'))));
+}
 
 if (!defined('DB_DRIVER')) {
     define('DB_DRIVER', app_env('DB_DRIVER', 'mysql'));
@@ -197,7 +200,7 @@ if (!defined('DB_TABLE_PREFIX')) {
 /** Return the physical table name for a known logical table. */
 function db_table_name(string $logicalName): string
 {
-    static $allowed = ['user_info', 'user_conf', 'content', 'content_stock'];
+    static $allowed = ['user_info', 'user_conf', 'content', 'content_stock', 'feed_item_state'];
     if (!in_array($logicalName, $allowed, true)) {
         throw new InvalidArgumentException('Unknown database table name.');
     }

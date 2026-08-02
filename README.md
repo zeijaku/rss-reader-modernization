@@ -2,7 +2,8 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Current release:** `RSS Reader Modernization 1.0.0`
+**Current development checkpoint:** `RSS Reader Modernization V1.1-C / R1`  
+Stable release: `RSS Reader Modernization 1.0.0`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
@@ -25,6 +26,19 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - configurable table prefix（例: `rss_`）
 
 Feed item本文はDBへ永続化せず、登録されたFeed URLから表示時に取得します。
+
+Version 1.1開発では、記事URLのTracking Parameter除去と、Item Identityを使ったNEW表示を追加しています。NEW状態は記事本文ではなく専用Tableへ最小限の識別情報と時刻だけを保存します。
+
+## Version 1.1 progress
+
+| Work unit | 内容 | 状態 |
+|---|---|---|
+| V1.1-A | Baseline・DB・工程分析 | 完了 |
+| V1.1-B | Tracking Parameter除去 | 完了 |
+| V1.1-C | 新着NEW表示・Feed item state | 完了 |
+| V1.1-D以降 | Widget基盤・Dashboard機能 | 未着手 |
+
+V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.md)、Migrationは[`docs/v1-1-c-migration.md`](docs/v1-1-c-migration.md)を参照してください。
 
 ## Secure Baselineで完了した範囲
 

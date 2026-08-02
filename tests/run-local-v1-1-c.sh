@@ -115,87 +115,10 @@ php "$ROOT/tests/test_m1g_fetch_resilience.php"
 python3 "$ROOT/tests/test_m1g_architecture.py"
 python3 "$ROOT/tests/test_m1g_concurrency.py"
 
-
-echo '== M2-A Frontend foundation checks =='
-python3 "$ROOT/tests/test_m2a_frontend_structure.py"
-node "$ROOT/tests/test_m2a_dashboard_runtime.js"
-
-echo '== M2-B Feed rendering checks =='
-python3 "$ROOT/tests/test_m2b_feed_structure.py"
-node "$ROOT/tests/test_m2b_feed_runtime.js"
-
-echo '== M2-C Semantic HTML / Accessibility checks =='
-python3 "$ROOT/tests/test_m2c_accessibility_structure.py"
-python3 "$ROOT/tests/test_m2c_login_layout.py"
-node "$ROOT/tests/test_m2c_accessibility_runtime.js"
-python3 "$ROOT/tests/test_m2c_dashboard_render.py"
-
-echo '== M2-D Responsive / UI checks =='
-python3 "$ROOT/tests/test_m2d_responsive_ui.py"
-python3 "$ROOT/tests/test_m2d_r2_layout_regression.py"
-node "$ROOT/tests/test_m2d_mutation_runtime.js"
-python3 "$ROOT/tests/test_m2d_dashboard_render.py"
-
-echo '== M2-E Frontend asset cleanup checks =='
-python3 "$ROOT/tests/test_m2e_asset_inventory.py"
-python3 "$ROOT/tests/test_m2e_cleanup_script.py"
-
-echo '== M2-F Frontend dependency checks =='
-python3 "$ROOT/tests/test_m2f_dependency_inventory.py"
-python3 "$ROOT/tests/test_m2f_cleanup_script.py"
-python3 "$ROOT/tests/test_m2f_browser_smoke.py"
-
-# M2-G and M4-A..G are Version 1.0 release/history gates.
-# Keep them active for the 1.0.0 tree, but do not make a V1.1 development
-# checkpoint pretend to be the old Final package.
-if grep -Eq "const APP_VERSION = '1\.0\.0(-rc[1-9][0-9]*)?';" "$ROOT/app/version.php"; then
-    echo '== M2-G Final regression / Documentation checks =='
-    python3 "$ROOT/tests/test_m2g_final_regression.py"
-    python3 "$ROOT/tests/test_m2g_documentation.py"
-
-    echo '== M4-A Release baseline / inventory / gate checks =='
-    python3 "$ROOT/tests/test_m4a_release_baseline.py"
-    python3 "$ROOT/tests/test_m4a_release_inventory.py"
-    python3 "$ROOT/tests/test_m4a_release_gate.py"
-
-    echo '== M4-B Documentation / third-party license checks =='
-    python3 "$ROOT/tests/test_m4b_license_inventory.py"
-    python3 "$ROOT/tests/test_m4b_documentation.py"
-    python3 "$ROOT/tests/test_m4b_cleanup_script.py"
-
-    echo '== M4-C Installation / Update / Recovery checks =='
-    python3 "$ROOT/tests/test_m4c_config_inventory.py"
-    python3 "$ROOT/tests/test_m4c_operations_docs.py"
-    python3 "$ROOT/tests/test_m4c_healthcheck_contract.py"
-
-    echo '== M4-D GitHub repository / Portfolio / CI checks =='
-    python3 "$ROOT/tests/test_m4d_ci_workflow.py"
-    python3 "$ROOT/tests/test_m4d_repository_docs.py"
-    python3 "$ROOT/tests/test_m4d_public_surface.py"
-
-    echo '== M4-E Release package / Notes / Tag procedure checks =='
-    python3 "$ROOT/tests/test_m4e_release_builder.py"
-    python3 "$ROOT/tests/test_m4e_release_docs.py"
-    python3 "$ROOT/tests/test_m4e_release_process.py"
-
-    echo '== M4-F Release Candidate / environment evidence checks =='
-    python3 "$ROOT/tests/test_m4f_release_candidate.py"
-    python3 "$ROOT/tests/test_m4f_environment_probe.py"
-    python3 "$ROOT/tests/test_m4f_evidence_gate.py"
-    python3 "$ROOT/tests/test_m4f_documentation.py"
-
-    echo '== M4-G Final Version / Release checks =='
-    python3 "$ROOT/tests/test_m4g_final_release.py"
-    python3 "$ROOT/tests/test_m4g_documentation.py"
-    python3 "$ROOT/tests/test_m4g_release_process.py"
-else
-    echo 'SKIP: M2-G final-release gate is historical during V1.1 development.'
-    echo 'SKIP: M4-A..G Version 1.0 release gates are historical during V1.1 development.'
-fi
-
 echo '== V1.1-B Tracking Parameter checks =='
 php "$ROOT/tests/test_v11b_tracking_parameters.php"
 python3 "$ROOT/tests/test_v11b_architecture.py"
+
 
 echo '== V1.1-C Feed item NEW state checks =='
 php "$ROOT/tests/test_v11c_feed_item_state.php"

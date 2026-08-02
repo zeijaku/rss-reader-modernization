@@ -52,4 +52,13 @@ final class NormalizedItem
             'date' => $this->date,
         ];
     }
+
+    /** @return array{title:string,link:?string,description:?string,content:?string,date:?string,item_identity:?string,identity_basis:?string} */
+    public function toStateArray(): array
+    {
+        return $this->toArray() + [
+            'item_identity' => $this->identity?->value,
+            'identity_basis' => $this->identity?->basis,
+        ];
+    }
 }

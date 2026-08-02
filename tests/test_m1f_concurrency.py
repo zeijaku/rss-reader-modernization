@@ -79,7 +79,7 @@ with tempfile.TemporaryDirectory(prefix='rss-m1f-concurrency-') as td:
         }}
     }}
     class ConditionalConcurrentParser extends FeedParser {{
-        public function parse_start(mixed $contents, ?string $sourceUrl = null): array {{
+        public function parse_start(mixed $contents, ?string $sourceUrl = null, bool $includeIdentity = false): array {{
             if ($contents !== 'VALID:concurrent-304') {{ $this->last_error='invalid'; return []; }}
             return ['type'=>'rss2','channel'=>['title'=>'Concurrent','link'=>$sourceUrl,'description'=>''], 'item'=>[]];
         }}

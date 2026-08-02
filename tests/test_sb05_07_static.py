@@ -23,7 +23,7 @@ check('app_csrf_is_valid' in api_endpoint and 'csrf_invalid' in api_endpoint and
 check("$_POST['action']" in api_endpoint and 'api_dispatch($action' in api_endpoint, 'endpoint uses explicit action dispatcher')
 check("header('Location:" not in api_endpoint, 'API endpoint contains no browser redirect')
 check("'ok' => true" in api and "'ok' => false" in api and "'error' => [" in api, 'API success/error JSON contract is centralized')
-for action in ['content.create','content.update','content.delete','stock.create','settings.update','tabs.update','feed.fetch']:
+for action in ['content.create','content.update','content.delete','stock.create','settings.update','tabs.update','feed.fetch','feed.new.clear']:
     check(repr(action).replace('"', "'") in api or f"'{action}'" in api, f'explicit action exists: {action}')
 
 check("$input['content_owner']" not in api and "$input['save_owner']" not in api and "$input['user_id']" not in api, 'dispatcher never reads client-supplied owner/user id fields')

@@ -361,3 +361,27 @@ select:focus,
         animation-iteration-count: 1 !important;
     }
 }
+
+/* V1.1-C: NEWは自動解除せず、Keyboardでも押せる小さなButtonとして表示する。 */
+.feed-new-clear,
+.feed-item-new {
+    min-height: 28px;
+    padding: 4px 7px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+
+.feed-new-clear {
+    vertical-align: middle;
+}
+
+.feed-item-new {
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+.feed-new-clear:disabled,
+.feed-item-new:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}

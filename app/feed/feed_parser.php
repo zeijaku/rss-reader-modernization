@@ -120,7 +120,7 @@ class FeedParser
      *
      * @return array<string,mixed>
      */
-    public function parse_start(mixed $contents, ?string $sourceUrl = null): array
+    public function parse_start(mixed $contents, ?string $sourceUrl = null, bool $includeIdentity = false): array
     {
         $feed = $this->parse_normalized($contents, $sourceUrl);
         if ($feed === []) {
@@ -130,7 +130,7 @@ class FeedParser
         $items = [];
         foreach ($feed['item'] as $item) {
             if ($item instanceof NormalizedItem) {
-                $items[] = $item->toArray();
+                $items[] = $includeIdentity ? $item->toStateArray() : $item->toArray();
             }
         }
         $feed['item'] = $items;

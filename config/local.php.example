@@ -41,6 +41,8 @@ return [
     'APP_FEED_RETRY_MAX_DELAY_SECONDS' => '3600',
     'APP_FEED_STALE_IF_ERROR_ENABLED' => true,
     'APP_FEED_STALE_MAX_AGE_SECONDS' => '86400',
+    // V1.1-C: deleted Feed item state retention. Active Feed state is retained.
+    'APP_FEED_ITEM_STATE_RETENTION_DAYS' => '90',
 
     'DB_DRIVER' => 'mysql',
     'DB_HOST' => 'replace-with-your-db-host',

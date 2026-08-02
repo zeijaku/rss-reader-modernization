@@ -13,6 +13,7 @@ SET @t_user_info = CONCAT('`', @table_prefix, 'user_info`');
 SET @t_user_conf = CONCAT('`', @table_prefix, 'user_conf`');
 SET @t_content = CONCAT('`', @table_prefix, 'content`');
 SET @t_content_stock = CONCAT('`', @table_prefix, 'content_stock`');
+SET @t_feed_item_state = CONCAT('`', @table_prefix, 'feed_item_state`');
 
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_user_info, ' (',
@@ -84,6 +85,25 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''URLストック一覧'''
 );
 PREPARE sb13_stmt FROM @sql; EXECUTE sb13_stmt; DEALLOCATE PREPARE sb13_stmt;
+
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_feed_item_state, ' (',
+  '`state_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`owner_id` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`content_id` INT UNSIGNED NOT NULL COMMENT ''content.content_id'',',
+  '`item_identity` CHAR(71) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`first_seen_at` DATETIME NOT NULL,',
+  '`last_seen_at` DATETIME NOT NULL,',
+  '`seen_at` DATETIME NULL DEFAULT NULL,',
+  '`state_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:有効/1:無効'',',
+  'PRIMARY KEY (`state_id`),',
+  'UNIQUE KEY `uq_feed_item_state_owner_content_identity` (`owner_id`, `content_id`, `item_identity`),',
+  'KEY `idx_feed_item_state_owner_content_seen` (`owner_id`, `content_id`, `seen_at`, `state_flag`),',
+  'KEY `idx_feed_item_state_last_seen` (`last_seen_at`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Feed記事NEW状態'''
+);
+PREPARE v11c_stmt FROM @sql; EXECUTE v11c_stmt; DEALLOCATE PREPARE v11c_stmt;
 
 -- Foreign keys are intentionally NOT added in SB-13.
 -- Legacy orphan data and the user deletion policy must be resolved first.

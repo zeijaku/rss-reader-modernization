@@ -61,6 +61,7 @@ require_once __DIR__ . '/feed/feed_cache.php';
 require_once __DIR__ . '/feed/item_identity.php';
 require_once __DIR__ . '/feed/normalized_item.php';
 require_once __DIR__ . '/feed/item_identity_resolver.php';
+require_once __DIR__ . '/feed/feed_item_state.php';
 require_once __DIR__ . '/feed/feed_date_normalizer.php';
 require_once __DIR__ . '/feed/feed_link_selector.php';
 require_once __DIR__ . '/feed/feed_xml_helper.php';
