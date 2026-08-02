@@ -8,7 +8,7 @@ Application source、sanitized schema / Migration / fixture、test、README、CH
 
 Application実行に必要なfile、設定example、DB schema / Migration、公開Documentation一式、Security資料、LICENSE、THIRD_PARTY_NOTICES、license copy、Release Notes、Release build metadata、Package Manifest。
 
-M4-EのRuntime Release ZIP allowlistは `tools/build_release_package.py` と [`release-package.md`](release-package.md) で固定する。
+M4-E以降のRuntime Release ZIP allowlistは `tools/build_release_package.py` と [`release-package.md`](release-package.md) で固定する。
 
 ## Runtime Release ZIPへ含めない
 
@@ -61,3 +61,12 @@ rss-reader-modernization-1.0.0.zip.sha256
 ```
 
 正式ArtifactへCheckpoint ZIPやPreview ZIPを入れず、入れ子ZIPを作らない。
+
+## M4-F Release Candidate
+
+```text
+rss-reader-modernization-1.0.0-rc1.zip
+rss-reader-modernization-1.0.0-rc1.zip.sha256
+```
+
+RCは `package_status=RELEASE_CANDIDATE`、`publishable=no`。`docs/m4-f-validation-template.json` は空の安全なTemplateとしてRelease ZIPへ含める。実際のEvidenceは `var/m4f-evidence/` へ保存し、RepositoryとRelease ZIPへ含めない。

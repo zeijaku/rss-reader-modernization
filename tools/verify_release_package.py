@@ -75,6 +75,8 @@ def main() -> int:
         check(not any('/tests/' in '/' + rel or rel.startswith('tests/') for rel in relative), 'runtime release package excludes test suite')
         check(not any(rel.startswith('.github/') for rel in relative), 'runtime release package excludes GitHub metadata')
         check(not any(rel == 'CHECKLIST_FOR_USER.md' for rel in relative), 'runtime release package excludes checkpoint checklist')
+        evidence_payload = [rel for rel in relative if rel.startswith('var/m4f-evidence/') and PurePosixPath(rel).name != '.gitkeep']
+        check(not evidence_payload, 'release package excludes private M4-F evidence files')
 
         build = archive.read(relative['RELEASE_BUILD.txt']).decode('utf-8')
         metadata = dict(line.split('=', 1) for line in build.splitlines() if '=' in line)
@@ -108,6 +110,10 @@ def main() -> int:
         if metadata.get('package_status') == 'PREVIEW':
             check(metadata.get('publishable') == 'no', 'preview package is not publishable')
             check('M4-E preview' in notes and '正式Releaseではありません' in notes, 'preview release notes contain non-release warning')
+        if metadata.get('package_status') == 'RELEASE_CANDIDATE':
+            check(metadata.get('publishable') == 'no', 'release candidate package is not final-publishable')
+            check(bool(re.fullmatch(r'1\.0\.0-rc[1-9][0-9]*', metadata.get('application_version', ''))), 'release candidate version format is valid')
+            check('正式Releaseではありません' in notes, 'release candidate notes contain non-release warning')
         if metadata.get('package_status') == 'FINAL':
             check(metadata.get('publishable') == 'yes', 'final package is marked publishable')
             check("APP_VERSION = '1.0.0'" in version_text, 'final package has exact 1.0.0 version')

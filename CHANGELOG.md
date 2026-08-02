@@ -2,6 +2,19 @@
 
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
+## RSS Reader Modernization 1.0.0-RC1 — 2026-08-02
+
+### Release Candidate and real-environment gate
+
+- `APP_VERSION`を`1.0.0-rc1`、表示を`RSS Reader Modernization 1.0.0-RC1`へ変更。
+- deterministic builderの`rc` modeでRelease Candidate ZIPと外部SHA-256を生成。
+- RCを`package_status=RELEASE_CANDIDATE`、`publishable=no`として正式版と分離。
+- PHP Version、必須Extension、PDO driver、Runtime directoryを秘密情報なしで確認する環境Probeを追加。
+- 実MySQL、実Feed、実Browser、GitHub hosted CI、Backup / Restore、RollbackのEvidence Templateを追加。
+- Evidence形式、必須項目、Secret混入、PASS / HOLD / FAILを確認するGate Toolを追加。
+- Build環境にない`pdo_mysql`、cURL、SimpleXML、mbstring、MySQL Server、完走しないChromiumはPASSへ読み替えずHOLDを維持。
+- DB、公開API、Authentication / Session / CSRF / SSRF / XSS、RSS Engine、Frontend Runtime Assetは変更なし。
+
 ## Release M4-E / R1 — 2026-08-02
 
 ### Release package, manifest, notes and tag procedure

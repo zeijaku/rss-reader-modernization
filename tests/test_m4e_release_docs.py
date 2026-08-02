@@ -15,11 +15,11 @@ def check(condition: bool, message: str) -> None:
 
 
 required = {
-    'RELEASE_NOTES.md': ['M4-E preview', '正式Releaseではありません', 'Main changes', 'Known verification limits at M4-E', 'publishable=no'],
+    'RELEASE_NOTES.md': ['M4-F release candidate', '正式Releaseではありません', 'Main changes', 'Known verification limits at M4-F', 'publishable=no'],
     'docs/release-package.md': ['deterministic', 'RELEASE_MANIFEST.sha256', 'preview', 'rc', 'final', 'allowlist'],
     'docs/tag-and-github-release.md': ['Annotated Tag', 'git push origin v1.0.0', 'git push --tags', 'v1.0.1', 'Force push'],
     'docs/m4-e-implementation.md': ['Application機能', 'publishable=no', 'M4-F', 'M4-G', 'GitHub hosted CI'],
-    'docs/release-gate-v1.0.0.md': ['Release ZIP / Notes / SHA-256', 'Tag / GitHub Release procedure', 'PASS', 'Real environment / RC', 'HOLD'],
+    'docs/release-gate-v1.0.0.md': ['Release ZIP / Notes / SHA-256', 'RC Version boundary', 'PASS', 'Real environment evidence', 'HOLD'],
     'docs/release-artifact-inventory-v1.0.0.md': ['Runtime Release ZIP', 'Checkpoint ZIP', 'tests/', 'RELEASE_BUILD.txt', 'RELEASE_MANIFEST.sha256'],
 }
 texts: dict[str, str] = {}
@@ -36,17 +36,17 @@ change = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
 roadmap = (ROOT / 'docs/roadmap.md').read_text(encoding='utf-8')
 versioning = (ROOT / 'docs/versioning.md').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
-check('**Current checkpoint:** `Release M4-E / R1`' in readme, 'README checkpoint is M4-E')
+check('**Current checkpoint:** `RSS Reader Modernization 1.0.0-RC1`' in readme, 'README checkpoint has advanced beyond M4-E')
 check('| M4-E | 配布ZIP・Release Notes・SHA-256・Tag手順 | 完了 |' in readme, 'README marks M4-E complete')
-check('Release package preview' in readme, 'README explains preview package')
+check('Release Candidate package' in readme, 'README preserves release package flow at RC stage')
 check('- [x] M4-E 配布ZIP・Release Notes・SHA-256・Tag / Release手順' in roadmap, 'Roadmap marks M4-E complete')
 check('## Release M4-E / R1 — 2026-08-02' in change, 'CHANGELOG contains M4-E entry')
 check(change.find('## Release M4-E / R1') < change.find('## Release M4-D / R1'), 'M4-E changelog entry is before M4-D')
-check("APP_VERSION = 'M4-E R1'" in version, 'APP_VERSION is M4-E R1')
-check("APP_VERSION_LABEL = 'Release M4-E / R1'" in version, 'APP_VERSION_LABEL is M4-E R1')
-check('Current: `Release M4-E / R1`' in versioning, 'Version policy current marker is M4-E')
-check('M4-E完了はVersion 1.0.0 Release可を意味しない' in texts['docs/release-gate-v1.0.0.md'], 'Release gate does not claim final readiness')
-check("const APP_VERSION = '1.0.0';" not in texts['RELEASE_NOTES.md'], 'Preview notes do not falsely present final source assignment')
+check("APP_VERSION = '1.0.0-rc1'" in version, 'current APP_VERSION has advanced to RC1')
+check("APP_VERSION_LABEL = 'RSS Reader Modernization 1.0.0-RC1'" in version, 'current APP_VERSION_LABEL has advanced to RC1')
+check('Current: `RSS Reader Modernization 1.0.0-RC1`' in versioning, 'Version policy current marker has advanced to RC1')
+check('正式Release Artifactではありません' in texts['docs/release-gate-v1.0.0.md'], 'Release gate does not claim final readiness')
+check("const APP_VERSION = '1.0.0';" not in texts['RELEASE_NOTES.md'], 'RC notes do not falsely present final source assignment')
 
 # Local Markdown links in release-facing docs.
 link_re = re.compile(r'\[[^\]]+\]\(([^)]+)\)')

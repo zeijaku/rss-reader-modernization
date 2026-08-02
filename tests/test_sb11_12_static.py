@@ -96,7 +96,7 @@ check('PHP_VERSION_ID < 80100' in common_conf, 'runtime health check enforces PH
 check('strtotime($date)' not in feed_parser + feed_date, 'parser no longer passes nullable dates through strtotime/date')
 check('mb_internal_encoding(' not in feed_parser and 'mb_detect_order(' not in feed_parser and 'mb_language(' not in feed_parser, 'Feed parser no longer mutates global mbstring runtime settings')
 check(bool(re.search(r'mb_detect_encoding\([^;]+?true\s*\)', feed_parser, re.S)), 'Feed encoding detection uses strict failure-aware detection')
-check(bool(re.search(r"const APP_VERSION = '(?:SB-(?:1[2-9]|[2-9]\d+)|M\d+-[A-Z]) R\d+';", version)), 'visible release marker is SB-12 or later / M-series')
+check(bool(re.search(r"const APP_VERSION = '(?:(?:SB-(?:1[2-9]|[2-9]\d+)|M\d+-[A-Z]) R\d+|1\.0\.0(?:-rc\d+)?)';", version)), 'visible release marker is SB-12 or later / M-series')
 
 if not all(checks):
     sys.exit(1)

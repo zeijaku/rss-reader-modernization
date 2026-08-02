@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "checkpoint": "1.0.0-rc1",
+  "overall_status": "HOLD",
+  "tested_at_jst": "",
+  "tester": "",
+  "environment_summary": {
+    "php": "",
+    "database": "",
+    "web_server": "",
+    "browsers": "",
+    "notes": "Credential、Cookie、Session ID、実Feed URL、個人情報は記録しない。"
+  },
+  "checks": [
+    {
+      "id": "local_regression",
+      "category": "automated",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "`bash tests/run.sh` の最終summaryを記録"
+    },
+    {
+      "id": "rc_package_verify",
+      "category": "package",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "RC ZIPと外部SHA-256をverifierで確認"
+    },
+    {
+      "id": "github_ci_php81",
+      "category": "ci",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "GitHub ActionsのPHP 8.1 job URLまたはrun番号"
+    },
+    {
+      "id": "github_ci_php84",
+      "category": "ci",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "GitHub ActionsのPHP 8.4 job URLまたはrun番号"
+    },
+    {
+      "id": "healthcheck",
+      "category": "runtime",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "実Hostingまたは同等環境でhealthcheckを実行"
+    },
+    {
+      "id": "database_verify",
+      "category": "database",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "実MySQL/MariaDBへ接続しSchema verify"
+    },
+    {
+      "id": "install_or_update",
+      "category": "deployment",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "新規設置または既存環境更新を手順書どおり確認"
+    },
+    {
+      "id": "registration",
+      "category": "authentication",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "Test userの登録を確認"
+    },
+    {
+      "id": "login_logout_session",
+      "category": "authentication",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "Login、Session維持、Logoutを確認"
+    },
+    {
+      "id": "feed_crud",
+      "category": "application",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "Feed追加・変更・論理削除・再読込を確認"
+    },
+    {
+      "id": "rss2_live",
+      "category": "feed",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "管理下または低負荷Test FeedでRSS 2.0を確認"
+    },
+    {
+      "id": "rss1_live",
+      "category": "feed",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "管理下または低負荷Test FeedでRSS 1.0を確認"
+    },
+    {
+      "id": "atom_live",
+      "category": "feed",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "管理下または低負荷Test FeedでAtomを確認"
+    },
+    {
+      "id": "feed_failure_recovery",
+      "category": "feed",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "不正URL・一時失敗・再試行後の表示を確認"
+    },
+    {
+      "id": "cache_retry_conditional",
+      "category": "feed",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "Cache、304、Retry/Backoffまたは記録可能な範囲を確認"
+    },
+    {
+      "id": "stock",
+      "category": "application",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "Stock保存・一覧・削除を確認"
+    },
+    {
+      "id": "settings",
+      "category": "application",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "Theme、Navbar、Tab名等を確認"
+    },
+    {
+      "id": "browser_desktop",
+      "category": "browser",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "Desktop browserで主要操作を確認"
+    },
+    {
+      "id": "browser_mobile",
+      "category": "browser",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "320/375/768/992/1280pxの表示を確認"
+    },
+    {
+      "id": "keyboard_focus_aria",
+      "category": "accessibility",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "Keyboard、Focus、ARIA状態を確認"
+    },
+    {
+      "id": "themes",
+      "category": "browser",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "Normal/Yeti/Minty/Flatly/Journal/Sketchy/Solar/Slateを確認"
+    },
+    {
+      "id": "assets_console",
+      "category": "browser",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "CSS/JS/WebFont/favicon 200、Console errorなし"
+    },
+    {
+      "id": "backup_restore",
+      "category": "recovery",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "Backupを別DBへRestoreしてLogin/Feed/Stockを確認"
+    },
+    {
+      "id": "rollback",
+      "category": "recovery",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "Code rollback手順と必要時のDB復旧判断を確認"
+    },
+    {
+      "id": "public_secret_scan",
+      "category": "security",
+      "required": true,
+      "status": "PENDING",
+      "evidence": "",
+      "notes": "公開差分とRC ZIPにPrivate情報がないことを確認"
+    }
+  ]
+}

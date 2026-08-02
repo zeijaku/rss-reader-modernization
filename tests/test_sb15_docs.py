@@ -54,10 +54,10 @@ change_map = (ROOT / 'docs' / 'change-map.md').read_text(encoding='utf-8')
 
 assert 'Secure Baseline SB-15 / R3' in readme
 assert 'RSS Engine M1-G / R1' in readme
-assert 'Release M4-E / R1' in readme
+assert 'RSS Reader Modernization 1.0.0-RC1' in readme
 assert 'Secure Baseline SB-15 / R3' in readme
-assert "APP_VERSION = 'M4-E R1'" in version
-assert "APP_VERSION_LABEL = 'Release M4-E / R1'" in version
+assert "APP_VERSION = '1.0.0-rc1'" in version
+assert "APP_VERSION_LABEL = 'RSS Reader Modernization 1.0.0-RC1'" in version
 assert 'Secure Baseline SB-15 / R3' in readme
 assert 'PASS — Secure Baseline' in gate
 assert 'DB_TABLE_PREFIX' in readme and '@table_prefix' in readme

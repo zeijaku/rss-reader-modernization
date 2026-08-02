@@ -30,15 +30,15 @@ dashboard_js = (PUBLIC / 'js/dashboard.js').read_text(encoding='utf-8')
 api = (ROOT / 'app/api.php').read_text(encoding='utf-8')
 common_func = (ROOT / 'app/common/common_func.php').read_text(encoding='utf-8')
 
-check("APP_VERSION = 'M4-E R1'" in version, 'current application version has advanced beyond M2-G')
-check("APP_VERSION_LABEL = 'Release M4-E / R1'" in version, 'current visible label has advanced beyond M2-G')
-check('**Current checkpoint:** `Release M4-E / R1`' in readme, 'README current checkpoint advances without removing M2-G history')
+check("APP_VERSION = '1.0.0-rc1'" in version, 'current application version has advanced beyond M2-G')
+check("APP_VERSION_LABEL = 'RSS Reader Modernization 1.0.0-RC1'" in version, 'current visible label has advanced beyond M2-G')
+check('**Current checkpoint:** `RSS Reader Modernization 1.0.0-RC1`' in readme, 'README current checkpoint advances without removing M2-G history')
 check('| M2-G | 最終回帰・Documentation | 完了 |' in readme, 'README marks M2-G complete')
 check('- [x] M2-G 最終回帰・Documentation' in roadmap, 'Roadmap marks M2-G complete')
 check('M2 Frontend (M2-G complete)' in readme, 'README roadmap marks M2 complete')
-check('Current: `Release M4-E / R1`' in versioning, 'Version policy current marker advances beyond M2-G')
-check(checklist.startswith('# M4-E / R1'), 'User checklist targets current M4-E checkpoint')
-check(changelog.find('## Release M4-E / R1') < changelog.find('## Release M4-D / R1') < changelog.find('## Release M4-C / R1') < changelog.find('## Release M4-B / R1') < changelog.find('## Release M4-A / R1') < changelog.find('## Frontend M2-G / R1') < changelog.find('## Frontend M2-F / R1'), 'M2-G changelog history remains ordered below M4-E, M4-D, M4-C, M4-B and M4-A')
+check('Current: `RSS Reader Modernization 1.0.0-RC1`' in versioning, 'Version policy current marker advances beyond M2-G')
+check(checklist.startswith('# M4-F / R1'), 'User checklist targets current M4-F RC checkpoint')
+check(changelog.find('## RSS Reader Modernization 1.0.0-RC1') < changelog.find('## Release M4-E / R1') < changelog.find('## Release M4-D / R1') < changelog.find('## Release M4-C / R1') < changelog.find('## Release M4-B / R1') < changelog.find('## Release M4-A / R1') < changelog.find('## Frontend M2-G / R1') < changelog.find('## Frontend M2-F / R1'), 'M2-G changelog history remains ordered below M4-E, M4-D, M4-C, M4-B and M4-A')
 
 for phase in 'ABCDEFG':
     impl = ROOT / 'docs' / f'm2-{phase.lower()}-implementation.md'

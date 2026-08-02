@@ -47,6 +47,7 @@ RUNTIME_DIRS = (
     'var/cache/feed',
     'var/db-migration',
     'var/security/login-throttle',
+    'var/m4f-evidence',
 )
 
 

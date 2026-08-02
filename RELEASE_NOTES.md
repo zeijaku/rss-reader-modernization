@@ -1,6 +1,6 @@
 # RSS Reader Modernization 1.0.0 Release Notes
 
-> **M4-E preview:** この文書はVersion 1.0.0向けRelease Notesの準備版です。M4-Fの実環境確認とM4-Gの最終Gateが終わるまで正式Releaseではありません。
+> **M4-F release candidate:** この文書は`1.0.0-rc1`向けです。実環境EvidenceとM4-Gの最終Gateが終わるまで正式Releaseではありません。
 
 ## Overview
 
@@ -43,6 +43,7 @@
 - Third-party noticeとLicense copyを実際の配布Assetへ同期。
 - GitHub ActionsのPHP 8.1 / 8.4 Regression、Security reporting、Contribution方針を追加。
 - Release ZIP、内部Manifest、外部SHA-256、Tag / GitHub Release手順をM4-Eで準備。
+- M4-Fで`1.0.0-rc1`、環境Probe、実環境Evidence Gateを追加。
 
 ## Compatibility
 
@@ -78,14 +79,20 @@ Font Awesome Free 6.7.2
 
 ## Distribution files
 
-M4-E previewでは、次の形式を確認します。
+M4-Fでは、次のRelease Candidateを確認します。
 
 ```text
-rss-reader-modernization-1.0.0-preview-m4-e.zip
-rss-reader-modernization-1.0.0-preview-m4-e.zip.sha256
+rss-reader-modernization-1.0.0-rc1.zip
+rss-reader-modernization-1.0.0-rc1.zip.sha256
 ```
 
-ZIP内部には `RELEASE_MANIFEST.sha256` と `RELEASE_BUILD.txt` を含めます。Previewは `publishable=no` であり、GitHub Releaseへ公開する正式成果物ではありません。
+ZIP内部には `RELEASE_MANIFEST.sha256` と `RELEASE_BUILD.txt` を含めます。RCは次の状態であり、正式Releaseとして公開しません。
+
+```text
+package_status=RELEASE_CANDIDATE
+application_version=1.0.0-rc1
+publishable=no
+```
 
 M4-GではVersion marker、Tag、Release Notesを最終化し、正式な次の成果物を作り直します。
 
@@ -94,18 +101,19 @@ rss-reader-modernization-1.0.0.zip
 rss-reader-modernization-1.0.0.zip.sha256
 ```
 
-## Known verification limits at M4-E
+## Known verification limits at M4-F
 
-M4-EではPackage builder、Manifest、SHA-256、Release Notes、Tag手順を検証しています。次はまだ正式なPASSではありません。
+M4-FではSource全回帰、RC deterministic build、Manifest、SHA-256、Version guard、環境Probe、Evidence Gateを検証しています。このBuild環境では次を正式なPASSにできませんでした。
 
-- 実Hosting上のPHP / MySQL確認
+- 実Hosting上の`pdo_mysql`、cURL、SimpleXML、mbstring
+- 実MySQL接続とSchema verify
 - 実Feed URLを使ったRSS 2.0 / RSS 1.0 / Atom確認
 - 実Browserでの8テーマとResponsive確認
 - Backupから別DBへ戻すRestore drill
 - GitHub hosted CIのPHP 8.1 / 8.4成功確認
 - `APP_VERSION = 1.0.0` とTag `v1.0.0`
 
-これらはM4-FとM4-Gで確認します。
+これらは[`docs/m4-f-validation.md`](docs/m4-f-validation.md)のEvidenceへ記録します。全必須項目PASSまではM4-Gへ進みません。
 
 ## Security notes
 

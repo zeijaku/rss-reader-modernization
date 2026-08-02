@@ -14,23 +14,24 @@ Repository用Checkpoint ZIPと、利用者へ配布するRuntime Release ZIPを�
 | `rc` | `1.0.0-rcN` | M4-FのRelease Candidate | Pre-releaseとしてのみ |
 | `final` | `1.0.0` | M4-Gの正式成果物 | 最終Gate後のみ |
 
-M4-Eでは次を生成します。
+M4-EではPreviewを生成しました。M4-Fでは次のRCを生成します。
 
 ```powershell
-python tools/build_release_package.py --mode preview --output-dir ..\release-output
+python tools/build_release_package.py --mode rc --output-dir ..\release-output
 ```
 
 出力:
 
 ```text
-rss-reader-modernization-1.0.0-preview-m4-e.zip
-rss-reader-modernization-1.0.0-preview-m4-e.zip.sha256
+rss-reader-modernization-1.0.0-rc1.zip
+rss-reader-modernization-1.0.0-rc1.zip.sha256
 ```
 
-Preview ZIPの `RELEASE_BUILD.txt` は次を明示します。
+RC ZIPの `RELEASE_BUILD.txt` は次を明示します。
 
 ```text
-package_status=PREVIEW
+package_status=RELEASE_CANDIDATE
+application_version=1.0.0-rc1
 publishable=no
 intended_release=1.0.0
 intended_tag=v1.0.0
@@ -64,7 +65,7 @@ intended_tag=v1.0.0
 
 ## Deterministic build
 
-Builderはfile順、ZIP timestamp、permissionを固定します。同じSourceから同じmodeで2回BuildしたZIPは同じSHA-256になることをM4-E testで確認します。
+Builderはfile順、ZIP timestamp、permissionを固定します。同じSourceから同じmodeで2回BuildしたZIPは同じSHA-256になることをM4-E PreviewとM4-F RCの両方で確認します。
 
 生成日時やLocal pathをZIP内部へ書かず、Build内容は `RELEASE_BUILD.txt` の固定項目で識別します。
 
@@ -75,20 +76,20 @@ Builderはfile順、ZIP timestamp、permissionを固定します。同じSource�
 外部 `.zip.sha256` はZIP全体を検証します。
 
 ```powershell
-Get-FileHash .\rss-reader-modernization-1.0.0-preview-m4-e.zip -Algorithm SHA256
-Get-Content .\rss-reader-modernization-1.0.0-preview-m4-e.zip.sha256
+Get-FileHash .\rss-reader-modernization-1.0.0-rc1.zip -Algorithm SHA256
+Get-Content .\rss-reader-modernization-1.0.0-rc1.zip.sha256
 ```
 
 Python verifier:
 
 ```powershell
 python tools/verify_release_package.py `
-  ..\release-output\rss-reader-modernization-1.0.0-preview-m4-e.zip `
-  ..\release-output\rss-reader-modernization-1.0.0-preview-m4-e.zip.sha256
+  ..\release-output\rss-reader-modernization-1.0.0-rc1.zip `
+  ..\release-output\rss-reader-modernization-1.0.0-rc1.zip.sha256
 ```
 
 ## 安全境界
 
 BuilderはallowlistからPackageを作り、unsafe path、symlink、Private設定、実DB系拡張子、入れ子ZIP、Runtime生成fileを検出した場合は停止します。
 
-`final` modeは `APP_VERSION = '1.0.0'` と `APP_VERSION_LABEL = 'RSS Reader Modernization 1.0.0'` が完全一致しない限り実行できません。M4-Eで誤って正式Artifactを作らないための境界です。
+`final` modeは `APP_VERSION = '1.0.0'` と `APP_VERSION_LABEL = 'RSS Reader Modernization 1.0.0'` が完全一致しない限り実行できません。M4-FのRC markerでもFinal Artifactを作れないため、M4-G前の誤生成を防ぎます。

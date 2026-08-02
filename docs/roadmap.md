@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `M4-E / R1`。M2-GをRelease Baselineとして固定し、License / Third-party notice、設置、更新、Backup、Restore、Rollback、GitHub Actions、Security reporting、Portfolio説明を整理したうえで、Runtime Release ZIP、Manifest、SHA-256、Release Notes、Tag / GitHub Release手順を追加しました。M3成果物は確認できなかったため完了扱いにせず、実Hosting / MySQL / Browser / Feed / Restore確認をM4-Fへ残します。Bootstrap / Bootswatch、Popper、Drawer、iScrollは現在の画面構造との組合せを優先して据え置き、major migrationを混在させていません。
+現在は `RSS Reader Modernization 1.0.0-RC1`。M2-GをRelease Baselineとして固定し、License / Third-party notice、設置、更新、Backup、Restore、Rollback、GitHub Actions、Security reporting、Portfolio説明、Runtime Release ZIP、Manifest、SHA-256、Release Notes、Tag / GitHub Release手順まで整理しました。M4-FではRC Packageと実環境Evidence Gateを追加しました。実Hosting / MySQL / Browser / Feed / Restoreの結果は利用者環境で記録するため、全項目PASSまではHOLDです。Bootstrap / Bootswatch、Popper、Drawer、iScrollは現在の画面構造との組合せを優先して据え置き、major migrationを混在させていません。
 
 ## M1 — Source / RSS Engine
 
@@ -89,7 +89,7 @@ Frontend刷新はSecurity behaviorを変えないよう、SB-14以降とM1のreg
 - [x] M4-C 新規設置・更新・設定・Backup・復旧手順
 - [x] M4-D GitHub公開状態・Repository構成・Portfolio説明・最小CI
 - [x] M4-E 配布ZIP・Release Notes・SHA-256・Tag / Release手順
-- [ ] M4-F Version 1.0.0候補版の全回帰・実環境確認
+- [ ] M4-F Version 1.0.0候補版の全回帰・実環境確認（RC作成済み、実環境Evidence待ち）
 - [ ] M4-G 最終Quality Gate・正式Release
 
 M4へ新機能、大規模Refactor、Bootstrap 5移行、npm / Composer等のbuild tool追加は混在させません。

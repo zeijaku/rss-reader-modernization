@@ -50,7 +50,7 @@ proc = subprocess.run(
 )
 out = proc.stdout
 check(proc.returncode in (0, 1), 'healthcheck returns a documented readiness status')
-check('Build: Release M4-E / R1' in out, 'healthcheck reports current checkpoint')
+check('Build: RSS Reader Modernization 1.0.0-RC1' in out, 'healthcheck reports current checkpoint')
 check('DB driver: mysql' in out and 'DB table prefix: rss_' in out, 'healthcheck reports non-secret DB configuration')
 check('Required public assets: present' in out, 'healthcheck verifies required public assets')
 check('STATUS: CONFIGURATION READY' in out or 'STATUS: NOT READY' in out, 'healthcheck emits final status')

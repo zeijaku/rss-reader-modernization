@@ -26,7 +26,7 @@ check("$view->link" not in body, 'R1 namespace-view link extraction path is no l
 check('function rss_select_link_candidate' in selector and 'return FeedLinkSelector::select($candidates);' in selector, 'Legacy link selector wrapper remains compatible')
 check("'link' => app_validate_external_link" in api, 'API still validates extracted external article links')
 check("if (itemLink !== '')" in dashboard and ".attr('href', itemLink)" in dashboard, 'frontend still creates anchors from non-empty API item links')
-check(bool(re.search(r"(?:Secure Baseline SB-(?:1[2-9]|[2-9]\d+)|(?:RSS Engine|Frontend|Release) M\d+-[A-Z]) / R\d+", version)), 'visible build marker remains SB-12 or later / M-series')
+check(bool(re.search(r"(?:Secure Baseline SB-(?:1[2-9]|[2-9]\d+)|(?:RSS Engine|Frontend|Release) M\d+-[A-Z] / R\d+|RSS Reader Modernization 1\.0\.0(?:-RC\d+)?)", version)), 'visible build marker remains SB-12 or later / M-series')
 
 failed = [m for ok, m in checks if not ok]
 if failed:

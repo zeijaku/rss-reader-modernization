@@ -173,3 +173,10 @@ echo '== M4-E Release package / Notes / Tag procedure checks =='
 python3 "$ROOT/tests/test_m4e_release_builder.py"
 python3 "$ROOT/tests/test_m4e_release_docs.py"
 python3 "$ROOT/tests/test_m4e_release_process.py"
+
+echo '== M4-F Release Candidate / environment evidence checks =='
+python3 "$ROOT/tests/test_m4f_release_candidate.py"
+python3 "$ROOT/tests/test_m4f_environment_probe.py"
+python3 "$ROOT/tests/test_m4f_evidence_gate.py"
+python3 "$ROOT/tests/test_m4f_documentation.py"
+

@@ -71,6 +71,12 @@ __pycache__/
 /var/db-migration/*
 !/var/db-migration/.gitkeep
 
+# Keep only the private M4-F evidence directory placeholder.
+!/var/m4f-evidence/
+!/var/m4f-evidence/.gitkeep
+/var/m4f-evidence/*
+!/var/m4f-evidence/.gitkeep
+
 # Distribution/checkpoint handoff notes (kept in ZIP, not needed in repository history)
 /CHECKLIST_FOR_USER.md
 /UPDATED_FILES_SB*.md
