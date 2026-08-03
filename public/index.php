@@ -924,6 +924,40 @@ if ($result_content_cnt === 0) {
     </div></div>
 </div>
 
+<!-- アカウント設定モーダル -->
+<div class="modal fade" id="accountSettings" tabindex="-1" role="dialog" aria-labelledby="accountSettingsTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="color: #fff; background-color: #555;">
+                <h5 class="modal-title" id="accountSettingsTitle"><i class="fas fa-user-cog" aria-hidden="true"></i> アカウント設定</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <section aria-labelledby="accountEmailTitle">
+                    <h6 id="accountEmailTitle">メールアドレス変更</h6>
+                    <p class="small text-muted">現在のメールアドレスは画面には表示していません。変更後は新しいメールアドレスでLoginしてください。</p>
+                    <form id="accountEmailForm" method="post" action="./" autocomplete="on">
+                        <div class="form-group"><label for="accountNewEmail"><small class="text-dark">新しいメールアドレス</small></label><input type="email" class="form-control accountNewEmail" id="accountNewEmail" name="new_email" maxlength="254" autocomplete="email" required></div>
+                        <div class="form-group"><label for="accountCurrentPasswordEmail"><small class="text-dark">現在のパスワード</small></label><input type="password" class="form-control accountCurrentPasswordEmail" id="accountCurrentPasswordEmail" name="current_password" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="current-password" required></div>
+                        <div class="text-right"><button type="submit" class="btn btn-primary">メールアドレスを変更</button></div>
+                    </form>
+                </section>
+                <hr>
+                <section aria-labelledby="accountPasswordTitle">
+                    <h6 id="accountPasswordTitle">パスワード変更</h6>
+                    <form id="accountPasswordForm" method="post" action="./" autocomplete="on">
+                        <div class="form-group"><label for="accountCurrentPassword"><small class="text-dark">現在のパスワード</small></label><input type="password" class="form-control accountCurrentPassword" id="accountCurrentPassword" name="current_password" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="current-password" required></div>
+                        <div class="form-group"><label for="accountNewPassword"><small class="text-dark">新しいパスワード</small></label><input type="password" class="form-control accountNewPassword" id="accountNewPassword" name="new_password" minlength="<?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="new-password" aria-describedby="accountPasswordHelp" required><small id="accountPasswordHelp" class="form-text text-muted"><?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>文字以上<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>文字以下で入力してください。</small></div>
+                        <div class="form-group"><label for="accountNewPasswordConfirmation"><small class="text-dark">新しいパスワード（確認）</small></label><input type="password" class="form-control accountNewPasswordConfirmation" id="accountNewPasswordConfirmation" name="new_password_confirmation" minlength="<?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="new-password" required></div>
+                        <div class="text-right"><button type="submit" class="btn btn-primary">パスワードを変更</button></div>
+                    </form>
+                </section>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button></div>
+        </div>
+    </div>
+</div>
+
 <!-- 設定変更モーダル -->
 <div class="modal fade" id="changeConf" tabindex="-1" role="dialog" aria-labelledby="changeConfTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -1158,6 +1192,7 @@ if ($result_content_cnt === 0) {
         ?>
         <!-- Control Setting -->
         <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-cogs fa-fw" aria-hidden="true"></i> 設定</li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#accountSettings"><i class="fas fa-user-cog" aria-hidden="true"></i> アカウント設定</button><hr class="drawer-divider"></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#changeConf"><i class="fas fa-cogs" aria-hidden="true"></i> 表示設定</button><hr class="drawer-divider"></li>
         <li>
             <form method="post" action="./logout.php" class="drawer-logout-form">

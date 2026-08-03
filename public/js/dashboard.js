@@ -202,6 +202,72 @@
             });
     }
 
+    function accountRefreshCsrfToken(data) {
+        var token = data && data.data ? String(data.data.csrf_token || '') : '';
+        if (/^[a-f0-9]{64}$/.test(token)) {
+            $('meta[name="csrf-token"]').attr('content', token);
+        }
+    }
+
+    function accountResetForms() {
+        var emailForm = $('#accountEmailForm').get(0);
+        var passwordForm = $('#accountPasswordForm').get(0);
+        if (emailForm && typeof emailForm.reset === 'function') { emailForm.reset(); }
+        if (passwordForm && typeof passwordForm.reset === 'function') { passwordForm.reset(); }
+    }
+
+    function changeAccountEmail($form) {
+        var $button = $form.find('button[type="submit"]');
+        if (!requestStart($button)) { return; }
+        apiRequest('account.email.update', {
+            'new_email': $form.find('.accountNewEmail').val(),
+            'current_password': $form.find('.accountCurrentPasswordEmail').val()
+        }, 5000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    accountRefreshCsrfToken(data);
+                    accountResetForms();
+                    $('#accountSettings').modal('hide');
+                    showNotice('メールアドレスを変更しました', 'success', 2500);
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                $form.find('.accountCurrentPasswordEmail').val('');
+                requestEnd($button);
+            });
+    }
+
+    function changeAccountPassword($form) {
+        var $button = $form.find('button[type="submit"]');
+        if (!requestStart($button)) { return; }
+        var newPassword = String($form.find('.accountNewPassword').val() || '');
+        var confirmation = String($form.find('.accountNewPasswordConfirmation').val() || '');
+        if (newPassword !== confirmation) {
+            showNotice('新しいパスワードが一致していません', 'danger');
+            requestEnd($button);
+            return;
+        }
+        apiRequest('account.password.update', {
+            'current_password': $form.find('.accountCurrentPassword').val(),
+            'new_password': newPassword,
+            'new_password_confirmation': confirmation
+        }, 5000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    accountRefreshCsrfToken(data);
+                    accountResetForms();
+                    $('#accountSettings').modal('hide');
+                    showNotice('パスワードを変更しました', 'success', 2500);
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                $form.find('input[type="password"]').val('');
+                requestEnd($button);
+            });
+    }
+
     /* タブ名変更: native submitとAJAXの競合を防止 */
     function changeTabs($form) {
         var $button = $form.find('button[type="submit"]');
@@ -1332,6 +1398,20 @@
             .off('click' + eventNamespace, '.delete_content')
             .on('click' + eventNamespace, '.delete_content', function () {
                 deleteContent($(this));
+            })
+            .off('submit' + eventNamespace, '#accountEmailForm')
+            .on('submit' + eventNamespace, '#accountEmailForm', function (event) {
+                event.preventDefault();
+                changeAccountEmail($(this));
+            })
+            .off('submit' + eventNamespace, '#accountPasswordForm')
+            .on('submit' + eventNamespace, '#accountPasswordForm', function (event) {
+                event.preventDefault();
+                changeAccountPassword($(this));
+            })
+            .off('hidden.bs.modal' + eventNamespace, '#accountSettings')
+            .on('hidden.bs.modal' + eventNamespace, '#accountSettings', function () {
+                accountResetForms();
             })
             .off('submit' + eventNamespace, '#settingsForm')
             .on('submit' + eventNamespace, '#settingsForm', function (event) {

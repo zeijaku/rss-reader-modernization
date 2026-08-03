@@ -130,6 +130,8 @@ function api_dispatch(string $action, int $userId, array $input): array
         'content.delete' => api_content_delete($userId, $input),
         'stock.create' => api_stock_create($userId, $input),
         'settings.update' => api_settings_update($userId, $input),
+        'account.email.update' => api_account_email_update($userId, $input),
+        'account.password.update' => api_account_password_update($userId, $input),
         'tabs.update' => api_tabs_update($userId, $input),
         'feed.fetch' => api_feed_fetch($userId, $input),
         'feed.new.clear' => api_feed_new_clear($userId, $input),
@@ -794,6 +796,142 @@ function api_stock_create(int $userId, array $input): array
     // The title was already present in the authenticated user's fetched feed.
     $stockId = info_dbsave($userId, $url, $title);
     return api_success(['stock_id' => $stockId], 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_account_email_update(int $userId, array $input): array
+{
+    $newEmail = api_string($input, 'new_email');
+    $currentPassword = api_string($input, 'current_password');
+
+    if (!auth_email_is_valid($newEmail)) {
+        return api_validation_error('新しいメールアドレスを確認してください。');
+    }
+    if (!account_settings_current_password_is_valid($currentPassword)) {
+        return api_error('current_password_invalid', '現在のパスワードを確認してください。', 403);
+    }
+
+    $rate = api_account_settings_rate_status($userId);
+    if ($rate['blocked']) {
+        return api_error('account_settings_throttled', '試行回数が多いため、しばらく待ってから再度お試しください。', 429);
+    }
+
+    try {
+        $result = account_settings_change_email($userId, $newEmail, $currentPassword);
+    } catch (Throwable $exception) {
+        error_log('Account email update failed.');
+        return api_error('account_update_failed', 'メールアドレスを変更出来ませんでした。', 503);
+    }
+
+    $reason = (string) ($result['reason'] ?? '');
+    if (($result['ok'] ?? false) !== true) {
+        if ($reason === 'invalid_current_password') {
+            api_account_settings_record_failure($userId);
+            return api_error('current_password_invalid', '現在のパスワードを確認してください。', 403);
+        }
+        if ($reason === 'identity_exists') {
+            return api_error('email_in_use', 'このメールアドレスは使用出来ません。', 409);
+        }
+        if ($reason === 'email_unchanged') {
+            return api_validation_error('新しいメールアドレスを入力してください。');
+        }
+        if ($reason === 'invalid_email') {
+            return api_validation_error('新しいメールアドレスを確認してください。');
+        }
+        if ($reason === 'not_found') {
+            return api_error('not_found', 'Account was not found.', 404);
+        }
+        return api_error('account_update_failed', 'メールアドレスを変更出来ませんでした。', 409);
+    }
+
+    api_account_settings_record_success($userId);
+    $csrfToken = api_account_settings_rotate_session($userId);
+    return api_success(['csrf_token' => $csrfToken]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_account_password_update(int $userId, array $input): array
+{
+    $currentPassword = api_string($input, 'current_password');
+    $newPassword = api_string($input, 'new_password');
+    $newPasswordConfirmation = api_string($input, 'new_password_confirmation');
+
+    if (!account_settings_current_password_is_valid($currentPassword)) {
+        return api_error('current_password_invalid', '現在のパスワードを確認してください。', 403);
+    }
+    if (!auth_password_is_valid_for_registration($newPassword)) {
+        return api_validation_error('新しいパスワードは' . AUTH_PASSWORD_MIN_LENGTH . '文字以上' . AUTH_PASSWORD_MAX_LENGTH . '文字以下で入力してください。');
+    }
+    if (!hash_equals($newPassword, $newPasswordConfirmation)) {
+        return api_validation_error('新しいパスワードが一致していません。');
+    }
+
+    $rate = api_account_settings_rate_status($userId);
+    if ($rate['blocked']) {
+        return api_error('account_settings_throttled', '試行回数が多いため、しばらく待ってから再度お試しください。', 429);
+    }
+
+    try {
+        $result = account_settings_change_password($userId, $currentPassword, $newPassword, $newPasswordConfirmation);
+    } catch (Throwable $exception) {
+        error_log('Account password update failed.');
+        return api_error('account_update_failed', 'パスワードを変更出来ませんでした。', 503);
+    }
+
+    $reason = (string) ($result['reason'] ?? '');
+    if (($result['ok'] ?? false) !== true) {
+        if ($reason === 'invalid_current_password') {
+            api_account_settings_record_failure($userId);
+            return api_error('current_password_invalid', '現在のパスワードを確認してください。', 403);
+        }
+        if ($reason === 'password_mismatch') {
+            return api_validation_error('新しいパスワードが一致していません。');
+        }
+        if ($reason === 'password_unchanged') {
+            return api_validation_error('現在とは異なるパスワードを入力してください。');
+        }
+        if ($reason === 'invalid_password') {
+            return api_validation_error('新しいパスワードは' . AUTH_PASSWORD_MIN_LENGTH . '文字以上' . AUTH_PASSWORD_MAX_LENGTH . '文字以下で入力してください。');
+        }
+        if ($reason === 'not_found') {
+            return api_error('not_found', 'Account was not found.', 404);
+        }
+        return api_error('account_update_failed', 'パスワードを変更出来ませんでした。', 409);
+    }
+
+    api_account_settings_record_success($userId);
+    $csrfToken = api_account_settings_rotate_session($userId);
+    return api_success(['csrf_token' => $csrfToken]);
+}
+
+/** @return array{blocked:bool,retry_after:int} */
+function api_account_settings_rate_status(int $userId): array
+{
+    return login_throttle_status(account_settings_throttle_identity($userId), api_account_settings_remote_ip());
+}
+
+function api_account_settings_record_failure(int $userId): void
+{
+    login_throttle_record_failure(account_settings_throttle_identity($userId), api_account_settings_remote_ip());
+}
+
+function api_account_settings_record_success(int $userId): void
+{
+    login_throttle_record_success(account_settings_throttle_identity($userId), api_account_settings_remote_ip());
+}
+
+function api_account_settings_remote_ip(): string
+{
+    return substr((string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 0, 128);
+}
+
+function api_account_settings_rotate_session(int $userId): string
+{
+    if (session_status() === PHP_SESSION_ACTIVE && app_session_user_id() === $userId) {
+        app_session_login($userId);
+        return app_csrf_token();
+    }
+    return '';
 }
 
 /** @return array{status:int,body:array<string,mixed>} */

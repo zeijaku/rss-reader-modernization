@@ -1,11 +1,11 @@
-# V1.1-I / R2 適用メモ
+# V1.1-J / R1 Apply Note
 
-このZIPはV1.1-I / R1適用済みProjectへ上書きするFrontend Overlayです。
+V1.1-I / R3適用済みProjectへOverlayを上書きする。
 
-1. Codeと`config/local.php`をBackupする。
-2. ZIPを別Folderへ展開し、Projectへ上書きする。ZIPにないFileは削除しない。
-3. SQL、Migration、`schema.sql`は実行しない。
-4. `php tools/healthcheck.php`、`bash tests/run.sh`、Browser確認を行う。
-5. Browser Cacheを`Ctrl + F5`で更新する。
-6. スマートフォンで左右スワイプ、Calendar横Scroll、Widget並び替えを確認する。
-7. FeedとCalendarの読込中にSpinnerが表示され、成功・失敗後に消えることを確認する。
+- SQL／Migrationは実行しない。
+- `config/local.php`、実DB、Runtime Dataを上書きしない。
+- Browser Cacheを更新する。
+- Account Settingsでメールアドレスとパスワードを個別に確認する。
+- 現在のメールアドレスは画面へ表示しない仕様。
+
+推奨Commit: `V1.1-J: add Account Settings`

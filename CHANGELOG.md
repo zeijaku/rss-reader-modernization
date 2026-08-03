@@ -1,5 +1,16 @@
 # Changelog
 
+## V1.1-J / R1 — Account Settings
+
+- DrawerへAccount Settingsを追加。
+- 現在のパスワード確認後に、Login用メールアドレスを変更可能にした。
+- 現在のパスワード確認後に、新しいパスワードと確認入力でパスワードを変更可能にした。
+- メールアドレスは既存仕様どおりHMAC Identityとして保存し、画面へ現在値を表示しない。
+- 他UserとのIdentity重複、Active User、Transaction、MySQL Row Lock、CSRF、Throttleを維持した。
+- 成功後はSession IDとCSRF Tokenを再生成し、Login状態を維持する。
+- Account SettingsのTable／Column／Migration追加はない。
+
+
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
 

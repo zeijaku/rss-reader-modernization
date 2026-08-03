@@ -18,7 +18,11 @@
 - [x] V1.1-H Task
 - [x] V1.1-I Calendar
 - [x] V1.1-I / R2 Mobile swipe・Loading Spinner
-- [ ] V1.1-J 統合回帰・Release
+- [x] V1.1-I / R3 Mobile Task期限欄調整
+- [x] V1.1-J Account Settings
+- [ ] V1.1-K 統合回帰・Release
+
+V1.1-JではDB構造を変えず、既存のUser IdentityとPassword Hashを安全に更新するAccount Settingsを追加しました。Account削除、確認Mail、Password Resetは別工程とします。
 
 
 ## M1 — Source / RSS Engine

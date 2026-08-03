@@ -14,6 +14,23 @@ Releaseごとに次を確認します。
 - Runtime cache削除の要否
 - Release NotesとSHA-256
 
+
+## V1.1-I / R3からV1.1-J / R1
+
+V1.1-JはAccount Settingsを追加します。メールアドレスとパスワードは既存`user_info`のColumnを更新するため、DB構造変更はありません。
+
+```text
+DB schema / Migration       変更なし
+Public API                  account.email.update / account.password.update
+必須設定                    追加なし
+Browser Cache               Ctrl + F5を推奨
+削除file                    なし
+```
+
+Overlayを上書きした後、SQLやMigrationは実行しません。現在のパスワードを確認して変更し、成功後はSession IDとCSRF Tokenが自動的に更新されます。現在のメールアドレスはKeyed Identityで保存されているため画面へ表示しません。
+
+確認時は、メールアドレス変更後にLogoutして新しいメールアドレスでLoginし、パスワード変更後に旧パスワードが拒否され新パスワードでLoginできることを確認してください。
+
 ## V1.1-I / R1からV1.1-I / R2
 
 V1.1-I / R2はFrontendの操作性改善です。スマートフォン幅での左右スワイプによるタブ切り替えと、Feed／Calendar読込中のSpinnerを追加します。

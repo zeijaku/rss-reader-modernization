@@ -38,6 +38,9 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`v1-1-i-r2-implementation.md`](v1-1-i-r2-implementation.md) — Mobile swipe・Loading Spinner
 - [`v1-1-i-r2-files.md`](v1-1-i-r2-files.md) — V1.1-I / R2変更File
 - [`test-report-v1-1-i-r2.md`](test-report-v1-1-i-r2.md) — V1.1-I / R2 Test結果
+- [`v1-1-j-implementation.md`](v1-1-j-implementation.md) — Account Settings
+- [`v1-1-j-files.md`](v1-1-j-files.md) — V1.1-J変更File
+- [`test-report-v1-1-j.md`](test-report-v1-1-j.md) — V1.1-J Test結果
 
 ## M4 release preparation
 

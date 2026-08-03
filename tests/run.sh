@@ -259,3 +259,14 @@ python3 "$ROOT/tests/test_v11i_r2_architecture.py"
 node "$ROOT/tests/test_v11i_r2_frontend_runtime.js"
 python3 "$ROOT/tests/test_v11i_r2_loading_browser.py"
 
+
+echo '== V1.1-I R3 Mobile Task date layout checks =='
+python3 "$ROOT/tests/test_v11i_r3_task_mobile_layout.py"
+
+echo '== V1.1-J Account Settings checks =='
+php "$ROOT/tests/test_v11j_account_settings.php"
+php "$ROOT/tests/test_v11j_session.php"
+python3 "$ROOT/tests/test_v11j_architecture.py"
+node "$ROOT/tests/test_v11j_frontend_runtime.js"
+python3 "$ROOT/tests/test_v11j_dashboard_render.py"
+python3 "$ROOT/tests/test_v11j_browser.py"
