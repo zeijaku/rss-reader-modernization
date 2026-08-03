@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Current development checkpoint:** `RSS Reader Modernization V1.1-I / R1`  
+**Current development checkpoint:** `RSS Reader Modernization V1.1-I / R2`  
 Stable release: `RSS Reader Modernization 1.0.0`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
@@ -27,6 +27,8 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Memo Widgetの追加・変更・削除、改行を保持した本文表示
 - Task Widgetの追加・変更・削除、完了切替、期限、優先度
 - Calendar Widgetの月表示、通常予定、Task期限連動
+- スマートフォンでの左右スワイプによるタブ切り替え
+- Feed／Calendar読込中のSpinner表示
 - 記事リンクのStock保存と一覧表示
 - Bootstrapテーマ、Navbarリンク、タブ名のユーザー設定
 - MySQL 8系での新規DB構築
@@ -34,7 +36,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 
 Feed item本文はDBへ永続化せず、登録されたFeed URLから表示時に取得します。
 
-Version 1.1開発では、記事URLのTracking Parameter除去、Item Identityを使った新着表示、Dashboard Widget配置基盤、タイトルバーからの並び替え、Clock Widget、Memo Widget、Task Widget、Calendar Widgetを追加しています。Feed本体は従来の`content`、Memo本文は`memo`、Task項目は`task`、通常予定は`calendar_event`を正本とし、各Widgetの配置・表示設定は`dashboard_widget`へ保存します。Calendar上のTask期限は`task`を直接参照し、予定Tableへ複製しません。
+Version 1.1開発では、記事URLのTracking Parameter除去、Item Identityを使った新着表示、Dashboard Widget配置基盤、タイトルバーからの並び替え、Clock Widget、Memo Widget、Task Widget、Calendar Widgetを追加しています。Feed本体は従来の`content`、Memo本文は`memo`、Task項目は`task`、通常予定は`calendar_event`を正本とし、各Widgetの配置・表示設定は`dashboard_widget`へ保存します。Calendar上のTask期限は`task`を直接参照し、予定Tableへ複製しません。V1.1-I / R2ではスマートフォン幅に限って左右スワイプによるタブ切り替えを追加し、Calendar、入力欄、Button、Link、Modal、Drawer、Widget並び替えHandleでは誤操作を避けるため無効にしています。FeedとCalendarの読込中は文字に加えてSpinnerを表示します。
 
 ## Version 1.1 progress
 
@@ -48,9 +50,9 @@ Version 1.1開発では、記事URLのTracking Parameter除去、Item Identity�
 | V1.1-F | Clock Widget | 完了 |
 | V1.1-G | Memo Widget | 完了 |
 | V1.1-H | Task Widget | 完了 |
-| V1.1-I | Calendar Widget | 完了 |
+| V1.1-I | Calendar Widget／R2操作性改善 | 完了 |
 
-V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.md)、V1.1-DのWidget基盤は[`docs/v1-1-d-implementation.md`](docs/v1-1-d-implementation.md)、Migrationは[`docs/v1-1-d-migration.md`](docs/v1-1-d-migration.md)、V1.1-Eの並び替えは[`docs/v1-1-e-implementation.md`](docs/v1-1-e-implementation.md)、V1.1-FのClockは[`docs/v1-1-f-implementation.md`](docs/v1-1-f-implementation.md)、V1.1-GのMemoは[`docs/v1-1-g-implementation.md`](docs/v1-1-g-implementation.md)、Migrationは[`docs/v1-1-g-migration.md`](docs/v1-1-g-migration.md)、V1.1-HのTaskは[`docs/v1-1-h-implementation.md`](docs/v1-1-h-implementation.md)、Migrationは[`docs/v1-1-h-migration.md`](docs/v1-1-h-migration.md)、V1.1-IのCalendarは[`docs/v1-1-i-implementation.md`](docs/v1-1-i-implementation.md)、Migrationは[`docs/v1-1-i-migration.md`](docs/v1-1-i-migration.md)を参照してください。
+V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.md)、V1.1-DのWidget基盤は[`docs/v1-1-d-implementation.md`](docs/v1-1-d-implementation.md)、Migrationは[`docs/v1-1-d-migration.md`](docs/v1-1-d-migration.md)、V1.1-Eの並び替えは[`docs/v1-1-e-implementation.md`](docs/v1-1-e-implementation.md)、V1.1-FのClockは[`docs/v1-1-f-implementation.md`](docs/v1-1-f-implementation.md)、V1.1-GのMemoは[`docs/v1-1-g-implementation.md`](docs/v1-1-g-implementation.md)、Migrationは[`docs/v1-1-g-migration.md`](docs/v1-1-g-migration.md)、V1.1-HのTaskは[`docs/v1-1-h-implementation.md`](docs/v1-1-h-implementation.md)、Migrationは[`docs/v1-1-h-migration.md`](docs/v1-1-h-migration.md)、V1.1-IのCalendarは[`docs/v1-1-i-implementation.md`](docs/v1-1-i-implementation.md)、Migrationは[`docs/v1-1-i-migration.md`](docs/v1-1-i-migration.md)、R2のスワイプ／Spinnerは[`docs/v1-1-i-r2-implementation.md`](docs/v1-1-i-r2-implementation.md)を参照してください。
 
 ## Secure Baselineで完了した範囲
 

@@ -68,6 +68,16 @@
         $button.data('request-pending', false).prop('disabled', false);
     }
 
+    function appendLoadingText($target, message) {
+        $target.empty();
+        var $loading = $('<span>').addClass('loading-inline').appendTo($target);
+        $('<i>')
+            .addClass('fas fa-spinner fa-spin')
+            .attr('aria-hidden', 'true')
+            .appendTo($loading);
+        $('<span>').text(String(message || '読み込み中...')).appendTo($loading);
+    }
+
     function pad(value) {
         return String(value).padStart(2, '0');
     }
@@ -382,7 +392,9 @@
             return;
         }
         var $days = $card.find('.calendar-days');
-        $days.attr('aria-busy', 'true').empty().append($('<div>').addClass('calendar-loading').attr('role', 'status').text('Calendarを読み込んでいます'));
+        $days.attr('aria-busy', 'true').empty();
+        var $loading = $('<div>').addClass('calendar-loading').attr('role', 'status').appendTo($days);
+        appendLoadingText($loading, 'Calendarを読み込んでいます');
         apiRequest('calendar.month.list', {
             'widget_id': widgetId,
             'calendar_year': String(year),
@@ -392,6 +404,8 @@
                 var data = apiResponseData(response);
                 if (data !== null) {
                     renderCalendar($card, data);
+                } else {
+                    $days.attr('aria-busy', 'false').empty().append($('<div>').addClass('calendar-error').attr('role', 'alert').text('Calendarを読み込めませんでした'));
                 }
             })
             .fail(function (xhr, textStatus) {

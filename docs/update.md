@@ -14,6 +14,22 @@ Releaseごとに次を確認します。
 - Runtime cache削除の要否
 - Release NotesとSHA-256
 
+## V1.1-I / R1からV1.1-I / R2
+
+V1.1-I / R2はFrontendの操作性改善です。スマートフォン幅での左右スワイプによるタブ切り替えと、Feed／Calendar読込中のSpinnerを追加します。
+
+```text
+DB schema / Migration       変更なし
+Public API                  変更なし
+必須設定                    追加なし
+Cache clear                 Browser Cache更新のみ
+削除file                    なし
+```
+
+V1.1-I / R1適用済みProjectへOverlayを上書きし、Browserで`Ctrl + F5`を実行します。SQL、`db_v11i.php apply`、`schema.sql`の再実行は不要です。
+
+スワイプはスマートフォン幅だけで有効です。Calendar、入力欄、Button、Link、Modal、Drawer、Widget並び替えHandle、画面端から始まる操作では動作しません。
+
 ## V1.1-H / R1からV1.1-I / R1
 
 V1.1-IはCalendar Widgetと`calendar_event`Tableを追加します。Task期限は既存の`task`Tableを直接参照します。Codeだけ先に切り替えるとCalendar操作時に`calendar_event`Tableを参照するため、Backup後にMigrationを同じMaintenance内で適用してください。

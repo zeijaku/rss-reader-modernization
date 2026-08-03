@@ -3,6 +3,16 @@
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
 
+## RSS Reader Modernization 1.1.0-dev.8 — V1.1-I / R2
+
+- スマートフォン幅に限り、Dashboardの左右スワイプで4タブを切り替える操作を追加。
+- 左スワイプは次のタブ、右スワイプは前のタブへ移動し、最初・最後のタブでは循環しない。
+- Calendar、入力欄、Button、Link、Modal、Drawer、Widget並び替えHandle、画面端から始まる操作をスワイプ判定から除外。
+- 縦Scrollと競合しないよう、移動距離、横方向の優位性、操作時間を制限。
+- FeedとCalendarの読込中表示へFont Awesome Spinnerを追加し、成功・失敗後はbusy状態とSpinnerを解除。
+- `prefers-reduced-motion`ではSpinnerの回転を止める。
+- DB、Migration、API、必須設定は変更なし。
+
 ## RSS Reader Modernization 1.1.0-dev.8 — V1.1-I
 
 - Calendar Widgetを追加し、月表示、前月・翌月・今月への移動へ対応。

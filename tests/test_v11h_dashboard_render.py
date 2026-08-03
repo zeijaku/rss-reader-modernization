@@ -60,7 +60,7 @@ check('datetime="2026-08-31"' in html,'Task due date uses machine-readable time 
 check('優先度 高' in ''.join(p.text) and '優先度 低' in ''.join(p.text),'Task priority labels render')
 check('id="registerTaskWidgetForm"' in html and 'id="changeTaskWidgetForm"' in html and 'id="changeTaskItemForm"' in html,'Task add and edit modals render')
 check('Task追加' in ''.join(p.text),'Drawer contains Task add action')
-check(any(label in ''.join(p.text) for label in ['RSS Reader Modernization V1.1-H / R1','RSS Reader Modernization V1.1-I / R1']),'Dashboard displays V1.1-H or later marker')
+check(any(label in ''.join(p.text) for label in ['RSS Reader Modernization V1.1-H / R1','RSS Reader Modernization V1.1-I / R1','RSS Reader Modernization V1.1-I / R2']),'Dashboard displays V1.1-H or later marker')
 ids=[a['id'] for _,a in p.records if a.get('id')]
 check(len(ids)==len(set(ids)),'mixed Dashboard has no duplicate ids')
 if failures: raise SystemExit(1)

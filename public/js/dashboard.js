@@ -678,21 +678,40 @@
         return /^https?:\/\//i.test(link) ? link : '';
     }
 
+    function appendLoadingText($target, message) {
+        $target.empty();
+        var $loading = $('<span>').addClass('loading-inline').appendTo($target);
+        $('<i>')
+            .addClass('fas fa-spinner fa-spin')
+            .attr('aria-hidden', 'true')
+            .appendTo($loading);
+        $('<span>').text(String(message || '読み込み中...')).appendTo($loading);
+    }
+
     function renderFeedMessage($card, state, title, message) {
         $card
             .attr('data-feed-state', state)
             .attr('aria-busy', state === 'loading' ? 'true' : 'false');
-        $card.find('.content-title').empty().text(title);
+        var $title = $card.find('.content-title');
+        if (state === 'loading') {
+            appendLoadingText($title, title);
+        } else {
+            $title.empty().text(title);
+        }
 
         var $body = $card.find('.content-body').empty();
         if (message !== '') {
             var $row = $('<tr>').addClass('content-state-row feed-state-' + state);
-            $('<td>')
+            var $cell = $('<td>')
                 .addClass('feed-state-message')
                 .attr('colspan', '2')
                 .attr('role', state === 'error' ? 'alert' : 'status')
-                .text(message)
                 .appendTo($row);
+            if (state === 'loading') {
+                appendLoadingText($cell, message);
+            } else {
+                $cell.text(message);
+            }
             $row.appendTo($body);
         }
     }
@@ -1410,6 +1429,184 @@
         });
     }
 
+    var dashboardSwipeState = null;
+    var dashboardSwipeThreshold = 64;
+    var dashboardSwipeEdge = 24;
+
+    function dashboardSwipeIsMobile() {
+        if (window.matchMedia) {
+            return window.matchMedia('(max-width: 767.98px)').matches;
+        }
+        var width = Number(window.innerWidth || (document.documentElement && document.documentElement.clientWidth) || 0);
+        return width > 0 && width <= 768;
+    }
+
+    function dashboardSwipePoint(event, changed) {
+        var original = event.originalEvent || event;
+        var list = changed ? original.changedTouches : original.touches;
+        if (!list || list.length !== 1) {
+            return null;
+        }
+        return list[0];
+    }
+
+    function dashboardSwipeIgnoredTarget(target) {
+        if (!target) {
+            return true;
+        }
+        return $(target).closest([
+            'a',
+            'button',
+            'input',
+            'textarea',
+            'select',
+            'label',
+            '[contenteditable="true"]',
+            '.modal',
+            '.drawer-nav',
+            '.drawer-menu',
+            '.widget-drag-handle',
+            '[data-dashboard-widget-type="calendar"]',
+            '.table-responsive',
+            '[data-dashboard-swipe-ignore="true"]'
+        ].join(',')).length > 0;
+    }
+
+    function dashboardTabFromMain($main) {
+        var value = String($main.attr('data-dashboard-current-tab') || '');
+        return /^[0-3]$/.test(value) ? Number(value) : null;
+    }
+
+    function dashboardNavigateToTab(tab) {
+        var target = './?tab=' + String(tab);
+        if (window.location && typeof window.location.assign === 'function') {
+            window.location.assign(target);
+            return;
+        }
+        window.location.href = target;
+    }
+
+    function dashboardSwipeStart(event, $main) {
+        dashboardSwipeState = null;
+        if (!dashboardSwipeIsMobile() || dashboardTabFromMain($main) === null) {
+            return;
+        }
+        if ($('.modal.show').length > 0 || $('.drawer').hasClass('drawer-open') || widgetDragState !== null) {
+            return;
+        }
+        if (dashboardSwipeIgnoredTarget(event.target)) {
+            return;
+        }
+
+        var point = dashboardSwipePoint(event, false);
+        if (point === null) {
+            return;
+        }
+        var viewportWidth = Number(window.innerWidth || (document.documentElement && document.documentElement.clientWidth) || 0);
+        if (viewportWidth > 0 && (point.clientX <= dashboardSwipeEdge || point.clientX >= viewportWidth - dashboardSwipeEdge)) {
+            return;
+        }
+
+        dashboardSwipeState = {
+            startX: Number(point.clientX || 0),
+            startY: Number(point.clientY || 0),
+            lastX: Number(point.clientX || 0),
+            lastY: Number(point.clientY || 0),
+            startedAt: Date.now(),
+            horizontal: false
+        };
+    }
+
+    function dashboardSwipeMove(event) {
+        if (dashboardSwipeState === null) {
+            return;
+        }
+        var point = dashboardSwipePoint(event, false);
+        if (point === null) {
+            dashboardSwipeState = null;
+            return;
+        }
+
+        dashboardSwipeState.lastX = Number(point.clientX || 0);
+        dashboardSwipeState.lastY = Number(point.clientY || 0);
+        var distanceX = dashboardSwipeState.lastX - dashboardSwipeState.startX;
+        var distanceY = dashboardSwipeState.lastY - dashboardSwipeState.startY;
+        var absX = Math.abs(distanceX);
+        var absY = Math.abs(distanceY);
+
+        if (!dashboardSwipeState.horizontal) {
+            if (absY > 18 && absY > absX) {
+                dashboardSwipeState = null;
+                return;
+            }
+            if (absX > 14 && absX > absY * 1.25) {
+                dashboardSwipeState.horizontal = true;
+            }
+        }
+
+        if (dashboardSwipeState !== null && dashboardSwipeState.horizontal) {
+            event.preventDefault();
+        }
+    }
+
+    function dashboardSwipeEnd(event, $main) {
+        if (dashboardSwipeState === null) {
+            return;
+        }
+        var state = dashboardSwipeState;
+        dashboardSwipeState = null;
+        var point = dashboardSwipePoint(event, true);
+        if (point !== null) {
+            state.lastX = Number(point.clientX || state.lastX);
+            state.lastY = Number(point.clientY || state.lastY);
+        }
+
+        var distanceX = state.lastX - state.startX;
+        var distanceY = state.lastY - state.startY;
+        var elapsed = Date.now() - state.startedAt;
+        if (!state.horizontal || Math.abs(distanceX) < dashboardSwipeThreshold || Math.abs(distanceX) < Math.abs(distanceY) * 1.3 || elapsed > 1200) {
+            return;
+        }
+
+        var currentTab = dashboardTabFromMain($main);
+        if (currentTab === null) {
+            return;
+        }
+        var tabCount = Number($main.attr('data-dashboard-tab-count') || 4);
+        if (!Number.isInteger(tabCount) || tabCount < 1 || tabCount > 8) {
+            tabCount = 4;
+        }
+        var targetTab = distanceX < 0 ? currentTab + 1 : currentTab - 1;
+        if (targetTab < 0 || targetTab >= tabCount) {
+            return;
+        }
+        dashboardNavigateToTab(targetTab);
+    }
+
+    function initTabSwipe() {
+        var $main = $('#main-content');
+        if ($main.length === 0) {
+            return;
+        }
+        $main
+            .off('touchstart' + eventNamespace)
+            .on('touchstart' + eventNamespace, function (event) {
+                dashboardSwipeStart(event, $main);
+            })
+            .off('touchmove' + eventNamespace)
+            .on('touchmove' + eventNamespace, function (event) {
+                dashboardSwipeMove(event);
+            })
+            .off('touchend' + eventNamespace)
+            .on('touchend' + eventNamespace, function (event) {
+                dashboardSwipeEnd(event, $main);
+            })
+            .off('touchcancel' + eventNamespace)
+            .on('touchcancel' + eventNamespace, function () {
+                dashboardSwipeState = null;
+            });
+    }
+
     function drawerFocusableItems() {
         return $('#drawerMenu').find('a[href], button:not([disabled]), input:not([type="hidden"]):not([disabled]), [tabindex]:not([tabindex="-1"])');
     }
@@ -1544,6 +1741,7 @@
         bindEvents();
         initFeeds();
         initClocks();
+        initTabSwipe();
         initDrawer();
         initModalFocus();
         initPageTop();

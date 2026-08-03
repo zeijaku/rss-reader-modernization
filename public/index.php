@@ -178,7 +178,7 @@ if ($addTargetName === '') {
 
 <div id="app-notice" class="app-notice alert" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden></div>
 
-<main id="main-content" class="igcontainer container-fluid" tabindex="-1">
+<main id="main-content" class="igcontainer container-fluid" tabindex="-1" data-dashboard-current-tab="<?php echo is_int($tabParam) ? (int) $tabParam : ''; ?>" data-dashboard-tab-count="4">
 <h1 class="sr-only">iGuguru RSS Reader</h1>
 <p id="widget-sort-help" class="sr-only">Widgetのタイトルバーにある並び替えボタンをドラッグして順番を変更出来ます。キーボードでは矢印キー、Home、Endキーを使用します。</p>
 <?php
@@ -224,10 +224,10 @@ if (is_int($content_location)) {
                                 <col>
                             </colgroup>
                             <thead>
-                                <tr><th colspan="2" scope="col" class="bg-' . app_html($contentStyle) . ' feed-card-header"><button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button><small><span class="content-title widget-title-text" id="feed-title-' . $contentId . '">読み込み中...</span></small><button type="button" class="btn btn-link float-right content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" data-toggle="modal" data-target="#changeContent" aria-label="このRSSを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button></th></tr>
+                                <tr><th colspan="2" scope="col" class="bg-' . app_html($contentStyle) . ' feed-card-header"><button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button><small><span class="content-title widget-title-text" id="feed-title-' . $contentId . '"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>読み込み中...</span></span></span></small><button type="button" class="btn btn-link float-right content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" data-toggle="modal" data-target="#changeContent" aria-label="このRSSを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button></th></tr>
                             </thead>
                             <tbody class="content-body" aria-live="polite" aria-relevant="all">
-                                <tr class="content-state-row feed-state-loading"><td colspan="2" role="status">フィードを読み込んでいます</td></tr>
+                                <tr class="content-state-row feed-state-loading"><td colspan="2" role="status"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>フィードを読み込んでいます</span></span></td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -378,7 +378,7 @@ if (is_int($content_location)) {
                                 <button type="button" class="btn btn-sm btn-primary calendar-event-add-trigger" data-toggle="modal" data-target="#registerCalendarEvent"><i class="fas fa-plus" aria-hidden="true"></i><span class="sr-only">予定を追加</span></button>
                             </div>
                             <div class="calendar-weekdays" aria-hidden="true"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
-                            <div class="calendar-days" role="grid" aria-label="月間Calendar" aria-busy="true"><div class="calendar-loading" role="status">Calendarを読み込んでいます</div></div>
+                            <div class="calendar-days" role="grid" aria-label="月間Calendar" aria-busy="true"><div class="calendar-loading" role="status"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>Calendarを読み込んでいます</span></span></div></div>
                         </div>
                     </div>
                 </section>

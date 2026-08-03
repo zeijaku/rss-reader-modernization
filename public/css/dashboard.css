@@ -1120,3 +1120,34 @@ select:focus,
         min-width: 500px;
     }
 }
+
+/* V1.1-I / R2: Feed / Calendarの読み込み状態を文字とSpinnerで揃える */
+.loading-inline {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    vertical-align: middle;
+}
+
+.loading-inline > i {
+    flex: 0 0 auto;
+}
+
+.loading-inline > span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.feed-card-header .loading-inline {
+    color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loading-inline .fa-spin {
+        animation: none;
+    }
+}

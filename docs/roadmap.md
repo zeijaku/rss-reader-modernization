@@ -17,6 +17,7 @@
 - [x] V1.1-G Memo
 - [x] V1.1-H Task
 - [x] V1.1-I Calendar
+- [x] V1.1-I / R2 Mobile swipe・Loading Spinner
 - [ ] V1.1-J 統合回帰・Release
 
 

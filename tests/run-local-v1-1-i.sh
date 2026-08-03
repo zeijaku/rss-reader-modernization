@@ -61,3 +61,9 @@ python3 "$ROOT/tests/test_v11i_sql.py"
 node "$ROOT/tests/test_v11i_frontend_runtime.js"
 python3 "$ROOT/tests/test_v11i_dashboard_render.py"
 python3 "$ROOT/tests/test_v11i_browser.py"
+
+echo '== V1.1-I R2 Mobile Swipe / Loading checks =='
+python3 "$ROOT/tests/test_v11i_r2_architecture.py"
+node "$ROOT/tests/test_v11i_r2_frontend_runtime.js"
+python3 "$ROOT/tests/test_v11i_r2_loading_browser.py"
+
