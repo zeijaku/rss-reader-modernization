@@ -352,6 +352,39 @@ if (is_int($content_location)) {
             ';
             continue;
         }
+        if ($widgetType === 'calendar') {
+            $calendarConfig = is_array($result_content[$i]['widget_config_data'] ?? null)
+                ? $result_content[$i]['widget_config_data']
+                : calendar_widget_defaults();
+            $calendarTitle = calendar_widget_validate_title($calendarConfig['title'] ?? null) ?? 'Calendar';
+            $calendarShowCompleted = dashboard_widget_validate_boolean($calendarConfig['show_completed_tasks'] ?? null) ?? false;
+            $calendarTitleId = 'calendar-title-' . $widgetId;
+
+            echo '
+            <!-- Calendar Widget -->
+                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget calendar-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="calendar" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" role="region" aria-labelledby="' . app_html($calendarTitleId) . '">
+                    <div class="calendar-card-inner">
+                        <div class="bg-' . app_html($widgetStyle) . ' calendar-card-header">
+                            <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
+                            <small class="calendar-widget-title widget-title-text text-white" id="' . app_html($calendarTitleId) . '" title="' . app_html($calendarTitle) . '">' . app_html($calendarTitle) . '</small>
+                            <button type="button" class="btn btn-link calendar-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" data-toggle="modal" data-target="#changeCalendarWidget" aria-label="このCalendar Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                        </div>
+                        <div class="calendar-card-body">
+                            <div class="calendar-toolbar">
+                                <button type="button" class="btn btn-sm btn-outline-secondary calendar-prev-month" aria-label="前の月"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary calendar-today">今月</button>
+                                <strong class="calendar-month-label" aria-live="polite">----</strong>
+                                <button type="button" class="btn btn-sm btn-outline-secondary calendar-next-month" aria-label="次の月"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                                <button type="button" class="btn btn-sm btn-primary calendar-event-add-trigger" data-toggle="modal" data-target="#registerCalendarEvent"><i class="fas fa-plus" aria-hidden="true"></i><span class="sr-only">予定を追加</span></button>
+                            </div>
+                            <div class="calendar-weekdays" aria-hidden="true"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
+                            <div class="calendar-days" role="grid" aria-label="月間Calendar" aria-busy="true"><div class="calendar-loading" role="status">Calendarを読み込んでいます</div></div>
+                        </div>
+                    </div>
+                </section>
+            ';
+            continue;
+        }
     }
 
     if ($result_content_cnt > 0) {
@@ -404,7 +437,7 @@ if ($result_content_cnt === 0) {
     if ($content_location === 'stock') {
         echo '<div class="empty-state text-center" role="status"><i class="far fa-bookmark fa-2x text-muted" aria-hidden="true"></i><p>Stockした記事はまだありません。</p><a class="btn btn-outline-secondary" href="./?tab=0">RSS一覧へ戻る</a></div>';
     } else {
-        echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#registerClock">Clockを追加する</button><button type="button" class="btn btn-outline-secondary mr-2" data-toggle="modal" data-target="#registerMemo">Memoを追加する</button><button type="button" class="btn btn-outline-dark" data-toggle="modal" data-target="#registerTaskWidget">Taskを追加する</button></div>';
+        echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#registerClock">Clockを追加する</button><button type="button" class="btn btn-outline-secondary mr-2" data-toggle="modal" data-target="#registerMemo">Memoを追加する</button><button type="button" class="btn btn-outline-dark mr-2" data-toggle="modal" data-target="#registerTaskWidget">Taskを追加する</button><button type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#registerCalendarWidget">Calendarを追加する</button></div>';
     }
 }
 ?>
@@ -820,6 +853,77 @@ if ($result_content_cnt === 0) {
     </div>
 </div>
 
+<!-- Calendar Widget追加モーダル -->
+<div class="modal fade" id="registerCalendarWidget" tabindex="-1" role="dialog" aria-labelledby="registerCalendarWidgetTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
+        <form id="registerCalendarWidgetForm" method="post" action="./">
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerCalendarWidgetTitle"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendarを追加</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
+        <div class="modal-body">
+            <input type="hidden" class="registerCalendarWidgetLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
+            <div class="form-group"><label for="registerCalendarWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerCalendarWidgetTitleValue" id="registerCalendarWidgetTitleValue" value="Calendar" maxlength="32" required></div>
+            <div class="form-row">
+                <div class="form-group col-6"><label for="registerCalendarWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-control registerCalendarWidgetWidth" id="registerCalendarWidgetWidth"><option value="1">1列</option><option value="2" selected>2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                <div class="form-group col-6"><label for="registerCalendarWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-control registerCalendarWidgetStyle" id="registerCalendarWidgetStyle"><option value="info" selected>info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+            </div>
+            <div class="custom-control custom-checkbox"><input type="checkbox" class="custom-control-input registerCalendarShowCompletedTasks" id="registerCalendarShowCompletedTasks"><label class="custom-control-label" for="registerCalendarShowCompletedTasks">完了済みTaskも表示する</label></div>
+            <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">このタブに追加する</button></div>
+        </form>
+    </div></div>
+</div>
+
+<!-- Calendar Widget変更モーダル -->
+<div class="modal fade" id="changeCalendarWidget" tabindex="-1" role="dialog" aria-labelledby="changeCalendarWidgetTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
+        <form id="changeCalendarWidgetForm" method="post" action="./">
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeCalendarWidgetTitle"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendar Widgetを変更</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
+        <div class="modal-body">
+            <input type="hidden" class="changeCalendarWidgetId">
+            <div class="form-group"><label for="changeCalendarWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeCalendarWidgetTitleValue" id="changeCalendarWidgetTitleValue" maxlength="32" required></div>
+            <div class="form-row">
+                <div class="form-group col-6"><label for="changeCalendarWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-control changeCalendarWidgetWidth" id="changeCalendarWidgetWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                <div class="form-group col-6"><label for="changeCalendarWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeCalendarWidgetStyle" id="changeCalendarWidgetStyle"><option value="info">info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+            </div>
+            <div class="custom-control custom-checkbox"><input type="checkbox" class="custom-control-input changeCalendarShowCompletedTasks" id="changeCalendarShowCompletedTasks"><label class="custom-control-label" for="changeCalendarShowCompletedTasks">完了済みTaskも表示する</label></div>
+            <small class="form-text text-muted">Widgetを削除しても、登録済みの予定は残ります。</small>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_calendar_widget">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
+        </form>
+    </div></div>
+</div>
+
+<!-- Calendar予定追加モーダル -->
+<div class="modal fade" id="registerCalendarEvent" tabindex="-1" role="dialog" aria-labelledby="registerCalendarEventTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
+        <form id="registerCalendarEventForm" method="post" action="./">
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerCalendarEventTitle"><i class="fas fa-calendar-plus" aria-hidden="true"></i> 予定を追加</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
+        <div class="modal-body">
+            <div class="form-group"><label for="registerCalendarEventTitleValue"><small class="text-dark">予定</small></label><input type="text" class="form-control registerCalendarEventTitleValue" id="registerCalendarEventTitleValue" maxlength="128" required></div>
+            <div class="form-row"><div class="form-group col-6"><label for="registerCalendarEventStartDate"><small class="text-dark">開始日</small></label><input type="date" class="form-control registerCalendarEventStartDate" id="registerCalendarEventStartDate" required></div><div class="form-group col-6"><label for="registerCalendarEventEndDate"><small class="text-dark">終了日</small></label><input type="date" class="form-control registerCalendarEventEndDate" id="registerCalendarEventEndDate" required></div></div>
+            <div class="form-group"><label for="registerCalendarEventNote"><small class="text-dark">メモ</small></label><textarea class="form-control registerCalendarEventNote" id="registerCalendarEventNote" maxlength="2000" rows="4"></textarea></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加する</button></div>
+        </form>
+    </div></div>
+</div>
+
+<!-- Calendar予定変更モーダル -->
+<div class="modal fade" id="changeCalendarEvent" tabindex="-1" role="dialog" aria-labelledby="changeCalendarEventTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
+        <form id="changeCalendarEventForm" method="post" action="./">
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeCalendarEventTitle"><i class="far fa-calendar-check" aria-hidden="true"></i> 予定を変更</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
+        <div class="modal-body">
+            <input type="hidden" class="changeCalendarEventId">
+            <div class="form-group"><label for="changeCalendarEventTitleValue"><small class="text-dark">予定</small></label><input type="text" class="form-control changeCalendarEventTitleValue" id="changeCalendarEventTitleValue" maxlength="128" required></div>
+            <div class="form-row"><div class="form-group col-6"><label for="changeCalendarEventStartDate"><small class="text-dark">開始日</small></label><input type="date" class="form-control changeCalendarEventStartDate" id="changeCalendarEventStartDate" required></div><div class="form-group col-6"><label for="changeCalendarEventEndDate"><small class="text-dark">終了日</small></label><input type="date" class="form-control changeCalendarEventEndDate" id="changeCalendarEventEndDate" required></div></div>
+            <div class="form-group"><label for="changeCalendarEventNote"><small class="text-dark">メモ</small></label><textarea class="form-control changeCalendarEventNote" id="changeCalendarEventNote" maxlength="2000" rows="4"></textarea></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_calendar_event">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
+        </form>
+    </div></div>
+</div>
+
 <!-- 設定変更モーダル -->
 <div class="modal fade" id="changeConf" tabindex="-1" role="dialog" aria-labelledby="changeConfTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -1038,6 +1142,7 @@ if ($result_content_cnt === 0) {
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerClock"><i class="far fa-clock fa-fw" aria-hidden="true"></i>Clock追加</button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerMemo"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i>Memo追加</button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerTaskWidget"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i>Task追加</button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerCalendarWidget"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>Calendar追加</button></li>
         <!-- 定型リンク -->
         <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> Navbarリンク</li>
         <?php
@@ -1073,6 +1178,7 @@ if ($result_content_cnt === 0) {
 <script src="./js/drawer.min.js"></script>
 
 <script src="./js/dashboard.js"></script>
+<script src="./js/calendar.js"></script>
 
 
 

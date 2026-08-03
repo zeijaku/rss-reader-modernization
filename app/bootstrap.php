@@ -48,6 +48,7 @@ set_exception_handler(static function (Throwable $exception): void {
 require_once __DIR__ . '/common/common_db.php';
 require_once __DIR__ . '/validation.php';
 require_once __DIR__ . '/dashboard_widget.php';
+require_once __DIR__ . '/calendar.php';
 require_once __DIR__ . '/url_normalizer.php';
 require_once __DIR__ . '/feed/feed_retry.php';
 require_once __DIR__ . '/http_fetch.php';

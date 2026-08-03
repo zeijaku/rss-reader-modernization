@@ -148,6 +148,13 @@ function api_dispatch(string $action, int $userId, array $input): array
         'task.item.update' => api_task_item_update($userId, $input),
         'task.item.toggle' => api_task_item_toggle($userId, $input),
         'task.item.delete' => api_task_item_delete($userId, $input),
+        'widget.calendar.create' => api_widget_calendar_create($userId, $input),
+        'widget.calendar.update' => api_widget_calendar_update($userId, $input),
+        'widget.calendar.delete' => api_widget_calendar_delete($userId, $input),
+        'calendar.month.list' => api_calendar_month_list($userId, $input),
+        'calendar.event.create' => api_calendar_event_create($userId, $input),
+        'calendar.event.update' => api_calendar_event_update($userId, $input),
+        'calendar.event.delete' => api_calendar_event_delete($userId, $input),
         default => api_error('unknown_action', 'Unknown API action.', 400),
     };
 }
@@ -619,6 +626,153 @@ function api_task_item_delete(int $userId, array $input): array
         return api_error('task_unavailable', 'Task could not be deleted.', 503);
     }
     return api_success(['task_id' => $taskId]);
+}
+
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_calendar_create(int $userId, array $input): array
+{
+    $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $config = calendar_widget_config_from_input($input);
+    if ($location === null || $style === null || $width === null || $config === null) {
+        return api_validation_error('Calendar Widget settings are invalid.');
+    }
+    try {
+        $widgetId = dashboard_widget_create_calendar($userId, $location, $style, $width, $config);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Calendar Widget create failed: ' . $exception->getMessage());
+        return api_error('calendar_unavailable', 'Calendar migration is required.', 503);
+    }
+    return api_success(['widget_id' => $widgetId], 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_calendar_update(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $config = calendar_widget_config_from_input($input);
+    if ($widgetId === null || $style === null || $width === null || $config === null) {
+        return api_validation_error('Calendar Widget settings are invalid.');
+    }
+    try {
+        if (!dashboard_widget_update_calendar($userId, $widgetId, $style, $width, $config)) {
+            return api_error('not_found', 'Calendar Widget was not found.', 404);
+        }
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Calendar Widget update failed: ' . $exception->getMessage());
+        return api_error('calendar_unavailable', 'Calendar Widget could not be updated.', 503);
+    }
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_calendar_delete(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+    try {
+        if (!dashboard_widget_delete_calendar($userId, $widgetId)) {
+            return api_error('not_found', 'Calendar Widget was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Calendar Widget delete failed: ' . $exception->getMessage());
+        return api_error('calendar_unavailable', 'Calendar Widget could not be deleted.', 503);
+    }
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_calendar_month_list(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $year = calendar_validate_year($input['calendar_year'] ?? null);
+    $month = calendar_validate_month($input['calendar_month'] ?? null);
+    if ($widgetId === null || $year === null || $month === null) {
+        return api_validation_error('Calendar month request is invalid.');
+    }
+    try {
+        $config = calendar_owned_widget_config($userId, $widgetId);
+        if ($config === null) {
+            return api_error('not_found', 'Calendar Widget was not found.', 404);
+        }
+        return api_success(calendar_month_data($userId, $year, $month, $config['show_completed_tasks']));
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Calendar month load failed: ' . $exception->getMessage());
+        return api_error('calendar_unavailable', 'Calendar data could not be loaded.', 503);
+    }
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_calendar_event_create(int $userId, array $input): array
+{
+    $title = calendar_validate_event_title($input['calendar_event_title'] ?? null);
+    $note = calendar_validate_event_note($input['calendar_event_note'] ?? '');
+    $range = calendar_validate_event_range($input['calendar_event_start_date'] ?? null, $input['calendar_event_end_date'] ?? null);
+    if ($title === null || $note === null || $range === null) {
+        return api_validation_error('Calendar event settings are invalid.');
+    }
+    try {
+        $eventId = calendar_create_event($userId, $title, $range[0], $range[1], $note);
+    } catch (InvalidArgumentException|LengthException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Calendar event create failed: ' . $exception->getMessage());
+        return api_error('calendar_unavailable', 'Calendar event could not be created.', 503);
+    }
+    return api_success(['event_id' => $eventId], 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_calendar_event_update(int $userId, array $input): array
+{
+    $eventId = api_positive_int($input, 'event_id');
+    $title = calendar_validate_event_title($input['calendar_event_title'] ?? null);
+    $note = calendar_validate_event_note($input['calendar_event_note'] ?? '');
+    $range = calendar_validate_event_range($input['calendar_event_start_date'] ?? null, $input['calendar_event_end_date'] ?? null);
+    if ($eventId === null || $title === null || $note === null || $range === null) {
+        return api_validation_error('Calendar event settings are invalid.');
+    }
+    try {
+        if (!calendar_update_event($userId, $eventId, $title, $range[0], $range[1], $note)) {
+            return api_error('not_found', 'Calendar event was not found.', 404);
+        }
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Calendar event update failed: ' . $exception->getMessage());
+        return api_error('calendar_unavailable', 'Calendar event could not be updated.', 503);
+    }
+    return api_success(['event_id' => $eventId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_calendar_event_delete(int $userId, array $input): array
+{
+    $eventId = api_positive_int($input, 'event_id');
+    if ($eventId === null) {
+        return api_validation_error('event_id must be a positive integer.');
+    }
+    try {
+        if (!calendar_delete_event($userId, $eventId)) {
+            return api_error('not_found', 'Calendar event was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Calendar event delete failed: ' . $exception->getMessage());
+        return api_error('calendar_unavailable', 'Calendar event could not be deleted.', 503);
+    }
+    return api_success(['event_id' => $eventId]);
 }
 
 /** @return array{status:int,body:array<string,mixed>} */

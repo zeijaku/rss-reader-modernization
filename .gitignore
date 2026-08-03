@@ -71,10 +71,13 @@ __pycache__/
 !/database/migrations/003_v1_1_dashboard_widget.sql
 !/database/migrations/004_v1_1_memo.sql
 !/database/migrations/005_v1_1_task.sql
+!/database/migrations/006_v1_1_calendar_event.sql
 !/database/audit/v1_1_c_preflight.sql
 !/database/audit/v1_1_c_postflight.sql
 !/database/audit/v1_1_h_preflight.sql
 !/database/audit/v1_1_h_postflight.sql
+!/database/audit/v1_1_i_preflight.sql
+!/database/audit/v1_1_i_postflight.sql
 !/database/fixtures/sample.sql
 
 # Keep only the private migration directory placeholder; JSON snapshots remain ignored.

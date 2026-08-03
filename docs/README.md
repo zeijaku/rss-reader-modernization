@@ -31,6 +31,10 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`v1-1-h-migration.md`](v1-1-h-migration.md) — `task` Migration
 - [`v1-1-h-files.md`](v1-1-h-files.md) — V1.1-H変更File
 - [`test-report-v1-1-h.md`](test-report-v1-1-h.md) — V1.1-H Test結果
+- [`v1-1-i-implementation.md`](v1-1-i-implementation.md) — Calendar WidgetとTask期限連動
+- [`v1-1-i-migration.md`](v1-1-i-migration.md) — `calendar_event` Migration
+- [`v1-1-i-files.md`](v1-1-i-files.md) — V1.1-I変更File
+- [`test-report-v1-1-i.md`](test-report-v1-1-i.md) — V1.1-I Test結果
 
 ## M4 release preparation
 
@@ -117,6 +121,7 @@ Secure Baseline初期のdeployment / login / session / logout等のhotfix記録�
 - `database/migrations/003_v1_1_dashboard_widget.sql` — V1.1-D既存DB migration
 - `database/migrations/004_v1_1_memo.sql` — V1.1-G既存DB migration
 - `database/migrations/005_v1_1_task.sql` — V1.1-H既存DB migration
+- `database/migrations/006_v1_1_calendar_event.sql` — V1.1-I既存DB migration
 
 新規環境では `database/schema.sql` を使用し、Legacy DBを保持して移行する場合だけpreflight → migration → postflightの順に使用します。
 

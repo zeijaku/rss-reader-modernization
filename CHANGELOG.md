@@ -3,6 +3,16 @@
 このChangelogはLegacy版そのもののリリース履歴ではなく、RSS Reader Modernization Projectの変更記録です。
 
 
+## RSS Reader Modernization 1.1.0-dev.8 — V1.1-I
+
+- Calendar Widgetを追加し、月表示、前月・翌月・今月への移動へ対応。
+- 通常予定を保存する`calendar_event`Tableと既存DB向けMigration `006_v1_1_calendar_event.sql`を追加。
+- 通常予定の追加・変更・論理削除、複数日表示、最大500件・最大366日を追加。
+- Task期限は`task`Tableを直接参照し、Task名、期限、優先度、完了状態の変更をCalendarへ自動反映。
+- Calendar Widgetごとに完了Taskを表示するか選択可能。
+- Calendar API、CSRF、owner境界、日付Validation、XSS-safe DOM構築、Migration / Browser Testを追加。
+- Calendar Widget変更時のFrontend二重送信を実装中の回帰Testで検出し、1回送信へ修正。
+
 ## RSS Reader Modernization 1.1.0-dev.7 — V1.1-H
 
 - Task項目を保存する`task`Tableと、既存DB向けMigration `005_v1_1_task.sql`を追加。

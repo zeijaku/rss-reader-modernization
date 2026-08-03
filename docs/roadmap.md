@@ -16,7 +16,7 @@
 - [x] V1.1-F Clock
 - [x] V1.1-G Memo
 - [x] V1.1-H Task
-- [ ] V1.1-I Calendar
+- [x] V1.1-I Calendar
 - [ ] V1.1-J 統合回帰・Release
 
 

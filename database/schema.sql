@@ -16,6 +16,7 @@ SET @t_content_stock = CONCAT('`', @table_prefix, 'content_stock`');
 SET @t_feed_item_state = CONCAT('`', @table_prefix, 'feed_item_state`');
 SET @t_memo = CONCAT('`', @table_prefix, 'memo`');
 SET @t_task = CONCAT('`', @table_prefix, 'task`');
+SET @t_calendar_event = CONCAT('`', @table_prefix, 'calendar_event`');
 SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
 
 SET @sql = CONCAT(
@@ -123,6 +124,24 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Memo保管'''
 );
 PREPARE v11g_stmt FROM @sql; EXECUTE v11g_stmt; DEALLOCATE PREPARE v11g_stmt;
+
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_calendar_event, ' (',
+  '`calendar_event_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`calendar_event_date` DATETIME NOT NULL,',
+  '`calendar_event_updated_at` DATETIME NOT NULL,',
+  '`calendar_event_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:有効/1:無効'',',
+  '`calendar_event_owner` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`calendar_event_title` VARCHAR(256) NOT NULL,',
+  '`calendar_event_start_date` DATE NOT NULL,',
+  '`calendar_event_end_date` DATE NOT NULL,',
+  '`calendar_event_note` TEXT NOT NULL,',
+  'PRIMARY KEY (`calendar_event_id`),',
+  'KEY `idx_calendar_event_owner_range` (`calendar_event_owner`, `calendar_event_flag`, `calendar_event_start_date`, `calendar_event_end_date`, `calendar_event_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Calendar予定保管'''
+);
+PREPARE v11i_stmt FROM @sql; EXECUTE v11i_stmt; DEALLOCATE PREPARE v11i_stmt;
 
 
 SET @sql = CONCAT(

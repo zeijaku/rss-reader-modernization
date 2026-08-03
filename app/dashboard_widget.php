@@ -340,6 +340,7 @@ function dashboard_widget_normalize_row(array $row): ?array
     $row['widget_config_data'] = match ($type) {
         'clock' => dashboard_widget_clock_config_from_storage($row['widget_config'] ?? null),
         'task' => dashboard_widget_task_config_from_storage($row['widget_config'] ?? null),
+        'calendar' => calendar_widget_config_from_storage($row['widget_config'] ?? null),
         default => dashboard_widget_decode_config($row['widget_config'] ?? null),
     };
     $row['widget_width_class'] = dashboard_widget_width_class($width);
@@ -1461,6 +1462,158 @@ function dashboard_widget_delete_task_item(int $ownerId, int $taskId): bool
             . 'WHERE task_id = :task_id AND task_owner = :owner AND task_flag = 0'
         );
         $stmt->execute([':updated_at' => app_now(), ':task_id' => $taskId, ':owner' => $ownerId]);
+        if ($started) {
+            $pdo->commit();
+        }
+        return true;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+
+/** @param array{schema:int,title:string,show_completed_tasks:bool} $config */
+function dashboard_widget_create_calendar(
+    int $ownerId,
+    int $location,
+    string $style,
+    int $width,
+    array $config
+): int {
+    $config = calendar_widget_config_from_input([
+        'calendar_title' => $config['title'] ?? null,
+        'calendar_show_completed_tasks' => $config['show_completed_tasks'] ?? null,
+    ]);
+    if ($ownerId <= 0
+        || dashboard_widget_validate_location($location) === null
+        || app_normalize_content_style($style) === null
+        || dashboard_widget_validate_width($width) === null
+        || $config === null) {
+        throw new InvalidArgumentException('Calendar Widget settings are invalid.');
+    }
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+    try {
+        $now = app_now();
+        $stmt = $pdo->prepare(
+            'INSERT INTO ' . db_table_identifier('dashboard_widget') . ' '
+            . '(widget_owner, widget_location, widget_type, widget_reference_id, widget_sort_order, '
+            . 'widget_width, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
+            . "VALUES (:owner, :location, 'calendar', NULL, :sort_order, :width, :style, :config, 0, :created_at, :updated_at)"
+        );
+        $stmt->execute([
+            ':owner' => $ownerId,
+            ':location' => $location,
+            ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
+            ':width' => $width,
+            ':style' => $style,
+            ':config' => dashboard_widget_encode_config($config),
+            ':created_at' => $now,
+            ':updated_at' => $now,
+        ]);
+        $widgetId = (int) $pdo->lastInsertId();
+        if ($started) {
+            $pdo->commit();
+        }
+        return $widgetId;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+/** @param array{schema:int,title:string,show_completed_tasks:bool} $config */
+function dashboard_widget_update_calendar(
+    int $ownerId,
+    int $widgetId,
+    string $style,
+    int $width,
+    array $config
+): bool {
+    $config = calendar_widget_config_from_input([
+        'calendar_title' => $config['title'] ?? null,
+        'calendar_show_completed_tasks' => $config['show_completed_tasks'] ?? null,
+    ]);
+    if ($ownerId <= 0 || $widgetId <= 0
+        || app_normalize_content_style($style) === null
+        || dashboard_widget_validate_width($width) === null
+        || $config === null) {
+        throw new InvalidArgumentException('Calendar Widget settings are invalid.');
+    }
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+    try {
+        if (dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'calendar') === null) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+        $stmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_width = :width, widget_style = :style, widget_config = :config, widget_updated_at = :updated_at '
+            . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+            . "AND widget_type = 'calendar' AND widget_flag = 0"
+        );
+        $stmt->execute([
+            ':width' => $width,
+            ':style' => $style,
+            ':config' => dashboard_widget_encode_config($config),
+            ':updated_at' => app_now(),
+            ':widget_id' => $widgetId,
+            ':owner' => $ownerId,
+        ]);
+        if ($started) {
+            $pdo->commit();
+        }
+        return true;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+function dashboard_widget_delete_calendar(int $ownerId, int $widgetId): bool
+{
+    if ($ownerId <= 0 || $widgetId <= 0) {
+        return false;
+    }
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+    try {
+        if (dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'calendar') === null) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+        $stmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_flag = 1, widget_updated_at = :updated_at '
+            . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+            . "AND widget_type = 'calendar' AND widget_flag = 0"
+        );
+        $stmt->execute([
+            ':updated_at' => app_now(),
+            ':widget_id' => $widgetId,
+            ':owner' => $ownerId,
+        ]);
         if ($started) {
             $pdo->commit();
         }

@@ -243,3 +243,13 @@ node "$ROOT/tests/test_v11h_frontend_runtime.js"
 python3 "$ROOT/tests/test_v11h_dashboard_render.py"
 python3 "$ROOT/tests/test_v11h_browser.py"
 php "$ROOT/tools/db_v11h.php" --help >/dev/null
+
+
+echo '== V1.1-I Calendar Widget checks =='
+php "$ROOT/tests/test_v11i_calendar_widget.php"
+python3 "$ROOT/tests/test_v11i_architecture.py"
+python3 "$ROOT/tests/test_v11i_sql.py"
+node "$ROOT/tests/test_v11i_frontend_runtime.js"
+python3 "$ROOT/tests/test_v11i_dashboard_render.py"
+python3 "$ROOT/tests/test_v11i_browser.py"
+php "$ROOT/tools/db_v11i.php" --help >/dev/null

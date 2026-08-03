@@ -39,8 +39,10 @@
 - [ ] `php tools/db_sb13.php verify`
 - [ ] V1.1-Gでは`php tools/db_v11g.php verify`
 - [ ] V1.1-Hでは`php tools/db_v11h.php verify`
+- [ ] V1.1-Iでは`php tools/db_v11i.php verify`
 - [ ] `bash tests/run.sh`
 - [ ] `node --check public/js/dashboard.js`
+- [ ] `node --check public/js/calendar.js`
 
 `healthcheck.php`だけではDatabase接続を確認しないため、DB verifyまたは実動作確認も行います。
 
@@ -56,6 +58,9 @@
 - [ ] Memo追加 / 変更 / 削除 / 改行表示
 - [ ] Task Widget追加 / 変更 / 削除
 - [ ] Task追加 / 変更 / 完了切替 / 期限 / 優先度 / 削除
+- [ ] Calendar追加 / 変更 / 削除 / 月移動
+- [ ] 通常予定の追加 / 変更 / 削除 / 複数日表示
+- [ ] Task期限・優先度・完了状態のCalendar連動
 - [ ] RSS 2.0 / RSS 1.0 / Atom
 - [ ] Stock保存 / 一覧
 - [ ] Settings / Navbar / Tab名
