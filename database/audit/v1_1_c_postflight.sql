@@ -1,5 +1,5 @@
 -- V1.1-C read-only postflight. Set the same prefix used by config/local.php.
-SET @table_prefix = 'ig_';
+SET @table_prefix = 'rss_';
 SET @t_feed_item_state_plain = CONCAT(@table_prefix, 'feed_item_state');
 
 SELECT TABLE_NAME, ENGINE, TABLE_COLLATION

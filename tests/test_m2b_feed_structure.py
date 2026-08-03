@@ -61,7 +61,7 @@ for unsafe in ['.html(', 'innerHTML', 'insertAdjacentHTML', 'document.write(', '
 
 check('.content-state-row td' in css, 'Feed state rows have one local CSS rule')
 check('[data-feed-state="error"]' in css, 'Feed error state has a visible local style')
-check("'result_feed' => api_safe_feed_payload" in api, 'server-side Feed payload sanitation remains in place')
+check('$safeFeed = api_safe_feed_payload(' in api and "'result_feed' => $safeFeed" in api, 'server-side Feed payload sanitation remains in place')
 check('api_feed_fetch' in api and "api_error('invalid_feed'" in api, 'existing structured Feed error contract remains unchanged')
 check('package.json' not in [p.name for p in ROOT.iterdir()], 'M2-B adds no npm or build dependency')
 

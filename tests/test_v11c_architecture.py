@@ -43,14 +43,14 @@ check("feed_item_state_sync" in api and api.find('feed_item_state_sync') > api.f
 check("feed_item_state_valid_identity" in api and "'is_new'" in api and "'new_count'" in api, 'safe Feed payload exposes only validated identity and NEW metadata')
 check("feed_item_state_unavailable" in api and "503" in api, 'missing/failed migration returns a structured service-unavailable error')
 
-check(".text('NEW ' + newCount)" in dashboard and ".text('NEW')" in dashboard, 'NEW labels are created with text insertion, not HTML concatenation')
+check(dashboard.count("addClass('fas fa-bell')") >= 2 and ".text(newCount)" in dashboard and ".text('NEW')" not in dashboard, 'Feed and item NEW indicators use Bell icons without the NEW text label')
 check("feed-new-clear, .feed-item-new" in dashboard and "feed.new.clear" in dashboard, 'Feed-level and item-level NEW controls share the protected API action')
 check("/^m1i:v1:[a-f0-9]{64}$/" in dashboard, 'browser validates opaque identity shape before submitting')
 check("aria-label" in dashboard[dashboard.find('function renderFeedTitle'):dashboard.find('function feedRequestErrorMessage')], 'NEW controls include accessible labels')
-check("button:focus" in css and ".feed-new-clear" in css and ".feed-item-new" in css, 'NEW controls retain visible focus and touchable button styling')
+check("button:focus" in css and ".feed-new-clear" in css and ".feed-item-new" in css and "width: 22px" in css, 'NEW controls retain visible focus and compact Bell button styling')
 
 check("APP_FEED_ITEM_STATE_RETENTION_DAYS" in local_example and "APP_FEED_ITEM_STATE_RETENTION_DAYS=90" in env_example, 'optional retention setting is documented in both configuration examples')
-check("const APP_VERSION = '1.1.0-dev." in version and "RSS Reader Modernization V1.1-" in version, 'visible Version marker remains a V1.1 development checkpoint')
+check(("const APP_VERSION = '1.1.0-dev." in version and "RSS Reader Modernization V1.1-" in version) or ("const APP_VERSION = '1.1.0';" in version and "RSS Reader Modernization 1.1.0" in version), 'visible Version marker remains a V1.1 checkpoint or final release')
 
 failed = [message for ok, message in zip(checks, [
     'new table uses the existing prefixed table-name resolver',
@@ -72,11 +72,11 @@ failed = [message for ok, message in zip(checks, [
     'Feed ownership is checked before NEW state synchronization',
     'safe Feed payload exposes only validated identity and NEW metadata',
     'missing/failed migration returns a structured service-unavailable error',
-    'NEW labels are created with text insertion, not HTML concatenation',
+    'Feed and item NEW indicators use Bell icons without the NEW text label',
     'Feed-level and item-level NEW controls share the protected API action',
     'browser validates opaque identity shape before submitting',
     'NEW controls include accessible labels',
-    'NEW controls retain visible focus and touchable button styling',
+    'NEW controls retain visible focus and compact Bell button styling',
     'optional retention setting is documented in both configuration examples',
     'visible Version marker remains a V1.1 development checkpoint',
 ]) if not ok]

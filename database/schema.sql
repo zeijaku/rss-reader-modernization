@@ -1,4 +1,4 @@
--- RSS Reader Secure Baseline SB-15 / R3
+-- RSS Reader Modernization 1.1.0 new-install schema
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
 --

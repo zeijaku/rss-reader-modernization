@@ -11,8 +11,12 @@ function check(ok, message) { console.log((ok ? 'PASS' : 'FAIL') + ': ' + messag
 class Element {
     constructor(tag, attrs = {}) {
         this.tag = tag; this.attrs = Object.assign({}, attrs); this.classes = new Set(String(attrs.class || '').split(/\s+/).filter(Boolean));
-        this.children = []; this.parentNode = null; this.dataValues = {}; this.textValue = ''; this.hidden = false; this.disabled = false; this.focused = false;
+        this.children = []; this.parentNode = null; this.dataValues = {}; this.textValue = ''; this.textContent = ''; this.style = {}; this.hidden = false; this.disabled = false; this.focused = false; this.capturedPointerId = null;
     }
+    set className(value) { this.attrs.class=String(value); this.classes=new Set(String(value).split(/\s+/).filter(Boolean)); }
+    get className() { return Array.from(this.classes).join(' '); }
+    setAttribute(name,value) { this.attrs[name]=String(value); if(name==='class')this.className=value; }
+    getAttribute(name) { return this.attrs[name]; }
     appendChild(child) { if (child.parentNode) child.parentNode.removeChild(child); child.parentNode = this; this.children.push(child); return child; }
     removeChild(child) { const i = this.children.indexOf(child); if (i >= 0) this.children.splice(i, 1); child.parentNode = null; }
     insertBefore(child, reference) {
@@ -25,9 +29,11 @@ class Element {
     }
     get previousElementSibling() { if (!this.parentNode) return null; const i=this.parentNode.children.indexOf(this); return i>0?this.parentNode.children[i-1]:null; }
     get nextElementSibling() { if (!this.parentNode) return null; const i=this.parentNode.children.indexOf(this); return i>=0&&i<this.parentNode.children.length-1?this.parentNode.children[i+1]:null; }
+    get nextSibling() { return this.nextElementSibling; }
     get firstElementChild() { return this.children[0] || null; }
     getBoundingClientRect() { const i=this.parentNode?this.parentNode.children.indexOf(this):0; return {left:i*100,top:0,width:90,height:100,right:i*100+90,bottom:100}; }
     focus() { this.focused = true; documentObject.activeElement = this; }
+    setPointerCapture(pointerId) { this.capturedPointerId = pointerId; }
 }
 
 function matches(el, selector) {
@@ -90,8 +96,16 @@ const meta=new Element('meta',{content:'csrf-v11e'});
 const notice=new Element('div',{id:'app-notice'});
 const pageTop=new Element('div',{id:'page-top'});
 body.appendChild(notice);body.appendChild(pageTop);
-const documentObject=new Element('document'); documentObject.activeElement=null; documentObject.elementFromPoint=()=>grid.children[0];
-const windowObject={matchMedia:()=>({matches:false}),location:{reload:()=>{}}};
+const documentObject=new Element('document'); documentObject.activeElement=null; documentObject.body=body; documentObject.createElement=(tag)=>new Element(tag); let pointTarget=grid.children[0]; documentObject.elementFromPoint=()=>pointTarget;
+const scheduledTimers=[];
+const windowObject={
+    matchMedia:()=>({matches:false}),
+    location:{reload:()=>{}},
+    setTimeout:(fn,ms)=>{const id=scheduledTimers.length+1;scheduledTimers.push({id,fn,ms,cleared:false});return id;},
+    clearTimeout:(id)=>{const timer=scheduledTimers.find(entry=>entry.id===id);if(timer)timer.cleared=true;},
+    setInterval:()=>1,
+    clearInterval:()=>{}
+};
 
 function $(arg){
     if(typeof arg==='function'){arg();return new Wrapper();}
@@ -111,11 +125,43 @@ function $(arg){
 $.extend=(...args)=>Object.assign(...args); $.fn={};
 $.ajax=(options)=>{const d=new Deferred();ajaxCalls.push({options,deferred:d});return d;};
 
-const context={jQuery:$,window:windowObject,document:documentObject,console,JSON,Number,Object,Array,String,Math,RegExp,setTimeout,clearTimeout};
+const context={jQuery:$,window:windowObject,document:documentObject,console,JSON,Number,Object,Array,String,Math,RegExp,setTimeout:windowObject.setTimeout,clearTimeout:windowObject.clearTimeout};
 vm.runInNewContext(source,context,{filename:'dashboard.js'});
 
 const keyHandler=handlers.get('keydown.iguguruDashboard|.widget-drag-handle');
 check(typeof keyHandler==='function','Keyboard reorder handler is registered once');
+const pointerDownHandler=handlers.get('pointerdown.iguguruDashboard|.widget-drag-handle');
+const pointerMoveHandler=handlers.get('pointermove.iguguruDashboard|.widget-drag-handle');
+const pointerUpHandler=handlers.get('pointerup.iguguruDashboard|.widget-drag-handle');
+const pointerCancelHandler=handlers.get('pointercancel.iguguruDashboard|.widget-drag-handle');
+check(typeof pointerDownHandler==='function'&&typeof pointerMoveHandler==='function'&&typeof pointerUpHandler==='function'&&typeof pointerCancelHandler==='function','unified Pointer Drag handlers are registered');
+const pointerEvent={originalEvent:{pointerType:'mouse',button:0,isPrimary:true,pointerId:7,clientX:220,clientY:20},preventDefault(){this.prevented=true;}};
+pointerDownHandler.call(handles[2],pointerEvent);
+check(pointerEvent.prevented===true&&handles[2].capturedPointerId===7,'compact visible handle accepts the primary Mouse pointer');
+check(grid.children[2].classes.has('widget-dragging')&&grid.classes.has('widget-drag-active'),'Pointer down gives immediate Drag feedback');
+const ghost=body.children.find(child=>child.classes.has('widget-drag-ghost'));
+check(Boolean(ghost)&&String(ghost.style.transform).includes('234px'),'a lightweight Drag preview follows the pointer');
+pointTarget=grid.children[0];
+const moveEvent={originalEvent:{clientX:10,clientY:40},preventDefault(){this.prevented=true;}};
+pointerMoveHandler.call(handles[2],moveEvent);
+check(moveEvent.prevented===true,'Pointer movement suppresses browser selection');
+check(grid.children.map(e=>e.attrs['data-dashboard-widget-id']).join(',')==='1,2,3','Pointer movement does not repeatedly rewrite DOM order');
+check(grid.children[0].classes.has('widget-drop-target')&&grid.children[0].classes.has('widget-drop-before'),'the insertion line marks the live destination immediately');
+pointerUpHandler.call(handles[2],{preventDefault(){this.prevented=true;}});
+check(grid.children.map(e=>e.attrs['data-dashboard-widget-id']).join(',')==='3,1,2','Pointer release applies the marked destination once');
+check(!body.children.some(child=>child.classes.has('widget-drag-ghost')),'Drag preview is removed after release');
+check(ajaxCalls.length===1&&ajaxCalls[0].options.data.widget_ids==='["3","1","2"]','Pointer release saves the resulting order');
+ajaxCalls[0].deferred.resolve({ok:true,data:{widget_ids:[3,1,2],sort_orders:{'3':10,'1':20,'2':30},updated:true}});
+
+// Restore the fixture so Keyboard checks remain independent from Pointer checks.
+grid.appendChild(handles[0].parentNode); grid.appendChild(handles[1].parentNode); grid.appendChild(handles[2].parentNode);
+ajaxCalls.splice(0); scheduledTimers.splice(0); notice.textValue=''; notice.hidden=false; handles.forEach(handle=>handle.focused=false);
+
+const cancelEvent={originalEvent:{pointerType:'mouse',button:0,isPrimary:true,pointerId:8,clientX:220,clientY:20},preventDefault(){}};
+pointerDownHandler.call(handles[2],cancelEvent);
+pointerCancelHandler.call(handles[2],{});
+check(!grid.children[2].classes.has('widget-dragging')&&!grid.classes.has('widget-drag-active'),'Pointer cancel removes Drag feedback safely');
+
 const keyEvent={key:'ArrowRight',preventDefault(){this.prevented=true;}};
 keyHandler.call(handles[0],keyEvent);
 check(keyEvent.prevented===true,'Keyboard reorder prevents page scrolling');
@@ -128,6 +174,10 @@ ajaxCalls[0].deferred.resolve({ok:true,data:{widget_ids:[2,1,3],sort_orders:{'2'
 check(grid.attrs['aria-busy']==='false'&&!grid.classes.has('widget-sort-saving'),'successful save releases busy state');
 check(grid.children[0].attrs['data-dashboard-widget-sort-order']==='10'&&grid.children[1].attrs['data-dashboard-widget-sort-order']==='20','server sort orders update DOM metadata');
 check(notice.textValue==='Widgetの並び順を保存しました','successful save announces completion');
+check(scheduledTimers.some(timer=>timer.ms===2500&&!timer.cleared),'completion notice schedules a short auto close');
+const completionTimer=scheduledTimers.find(timer=>timer.ms===2500&&!timer.cleared);
+completionTimer.fn();
+check(notice.hidden===true&&notice.textValue==='','completion notice disappears automatically');
 check(handles[0].focused===true,'Keyboard focus returns to the moved handle');
 
 const secondEvent={key:'ArrowRight',preventDefault(){}};

@@ -78,3 +78,6 @@ python3 "$ROOT/tests/test_v11j_architecture.py"
 node "$ROOT/tests/test_v11j_frontend_runtime.js"
 python3 "$ROOT/tests/test_v11j_dashboard_render.py"
 python3 "$ROOT/tests/test_v11j_browser.py"
+
+echo '== V1.1-J R2 Feed title height checks =='
+python3 "$ROOT/tests/test_v11j_r2_feed_header_height.py"

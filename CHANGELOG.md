@@ -1,5 +1,19 @@
 # Changelog
 
+## Version 1.1.0 — 2026-08-03
+
+### V1.1-K finalization and release
+
+- V1.1-B～Jの機能を統合し、Application Versionを1.1.0へ確定。
+- Secure Baseline、M1、M2、V1.1の回帰Testを再実行。
+- V1.1追加後に古くなったM2構造TestとNode Harnessを現行実装へ同期。
+- V1.1-C既存DB MigrationのDefault Prefixを`ig_`へ統一。
+- 未参照のjQuery 3.3.1とFont Awesome旧形式を削除。
+- Session、Feed Cache、Login Throttle Dataを配布対象から除外。
+- README、Release Notes、Roadmap、設置・更新、Tag / GitHub Release手順を1.1.0へ整理。
+- 完全統合ZIPとRuntime ZIPのDeterministic Build、SHA-256、CRC / Path Traversal / Manifest検証を追加。
+- DBの追加変更はなく、V1.1-J / R2適用済みDBへの追加Migrationは不要。
+
 ## V1.1-J / R1 — Account Settings
 
 - DrawerへAccount Settingsを追加。

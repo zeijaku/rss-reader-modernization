@@ -286,6 +286,37 @@
     padding-left: 0;
 }
 
+/* V1.1-I / R3: SmartphoneではiOSの日付入力を1行分確保する。 */
+@media (max-width: 575.98px) {
+    .task-create-options {
+        grid-template-columns: minmax(0, 1fr) 52px;
+    }
+
+    .task-create-due {
+        grid-row: 1;
+        grid-column: 1 / -1;
+        display: block;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        min-inline-size: 0;
+        max-inline-size: 100%;
+        box-sizing: border-box;
+    }
+
+    .task-create-priority {
+        grid-row: 2;
+        grid-column: 1;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .task-create-submit {
+        grid-row: 2;
+        grid-column: 2;
+    }
+}
+
 .feed-table {
     width: 100%;
     margin-bottom: 0;
@@ -296,10 +327,15 @@
     width: 44px;
 }
 
-.feed-card-header {
+.feed-table thead .feed-card-header {
+    box-sizing: border-box;
     height: 44px;
     min-height: 44px;
+    max-height: 44px;
     padding: 0 4px 0 8px;
+    border-top: 0;
+    border-bottom: 0;
+    line-height: 1;
     overflow: hidden;
     vertical-align: middle;
     white-space: nowrap;

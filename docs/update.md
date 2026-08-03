@@ -15,6 +15,21 @@ Releaseごとに次を確認します。
 - Release NotesとSHA-256
 
 
+## Version 1.0系からVersion 1.1.0
+
+Version 1.1.0ではFeed item state、Dashboard Widget、Memo、Task、Calendar eventのTableを追加します。CodeとDBを同じMaintenance内で更新してください。
+
+1. Code、`config/local.php`、実DB、`var/`をBackupする。
+2. Migration 002～006の`@table_prefix`を実DBへ合わせる。
+3. preflightを確認し、Migrationを番号順に実行する。
+4. postflightまたは各`tools/db_v11*.php verify`を実行する。
+5. Codeを入れ替え、Browser Cacheを更新する。
+6. Login、Feed、NEW、Widget、Task / Calendar、Account Settingsを確認する。
+
+## V1.1-J / R2適用済み環境からVersion 1.1.0
+
+追加Migrationはありません。Code、Documentation、Version、Test、配布物だけを更新します。`config/local.php`、実DB、Session、Cache、Log、Throttle Dataを上書きしないでください。
+
 ## V1.1-I / R3からV1.1-J / R1
 
 V1.1-JはAccount Settingsを追加します。メールアドレスとパスワードは既存`user_info`のColumnを更新するため、DB構造変更はありません。

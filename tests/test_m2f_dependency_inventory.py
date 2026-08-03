@@ -29,7 +29,7 @@ check('jquery-3.3.1.min.js' not in index + login, 'old jQuery reference is absen
 healthcheck = (ROOT / 'tools/healthcheck.php').read_text(encoding='utf-8')
 check('js/jquery-3.7.1.min.js' in healthcheck and 'jquery-3.3.1.min.js' not in healthcheck, 'healthcheck requires the updated jQuery asset')
 
-order = ['./js/jquery-3.7.1.min.js', './js/popper.min.js', './js/bootstrap.min.js', './js/iscroll.js', './js/drawer.min.js', './js/dashboard.js']
+order = ['./js/jquery-3.7.1.min.js', './js/popper.min.js', './js/bootstrap.min.js', './js/iscroll.js', './js/drawer.min.js', './js/dashboard.js', './js/calendar.js']
 positions = [index.index(item) for item in order]
 check(positions == sorted(positions), 'Dashboard dependency order remains jQuery, Popper, Bootstrap, iScroll, Drawer, app')
 login_order = ['./js/jquery-3.7.1.min.js', './js/popper.min.js', './js/bootstrap.min.js']
@@ -63,7 +63,7 @@ for raw in re.findall(r'url\(([^)]+)\)', fa_css):
 check(refs == expected_fonts, 'Font Awesome CSS references exactly the retained eight webfonts')
 
 markup = index + login
-icons = sorted(icon for icon in set(re.findall(r'\bfa-([a-z0-9-]+)\b', markup)) if icon != 'fw' and not re.fullmatch(r'\d+x', icon))
+icons = sorted(icon for icon in set(re.findall(r'\bfa-([a-z0-9-]+)\b', markup)) if icon not in {'fw', 'spin'} and not re.fullmatch(r'\d+x', icon))
 for icon in icons:
     check(re.search(rf'\.fa-{re.escape(icon)}\s*\{{[^}}]*--fa:', fa_css, re.S) is not None, f'Font Awesome 6 alias exists for fa-{icon}')
 check(all(token in fa_css for token in ['.fas', '.far', '.fab']), 'Font Awesome style classes remain available')

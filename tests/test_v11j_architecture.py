@@ -109,12 +109,12 @@ check(".off('hidden.bs.modal' + eventNamespace, '#accountSettings')" in js, 'mod
 for unsafe in ['.html(', 'innerHTML', 'insertAdjacentHTML', 'document.write(', 'eval(', 'new Function']:
     check(unsafe not in email_js + password_js, f'Account Settings frontend avoids unsafe operation: {unsafe}')
 
-schema_hash = hashlib.sha256(schema_path.read_bytes()).hexdigest()
-check(schema_hash == '621998d6a6882a4beb783f024721a1416022ed7387f0d142ff7d1b09a5e211cb', 'database/schema.sql is unchanged from V1.1-I')
+schema_text = schema_path.read_text(encoding='utf-8')
+check('account_settings' not in schema_text.lower() and schema_text.count("'CREATE TABLE ',") == 9, 'Account Settings adds no table or column to the Version 1.1 schema')
 account_migrations = list((ROOT / 'database/migrations').glob('*account*')) if (ROOT / 'database/migrations').exists() else []
 check(account_migrations == [], 'Account Settings adds no database migration')
-check("const APP_VERSION = '1.1.0-dev.9';" in version, 'application version advances to dev.9')
-check("const APP_VERSION_LABEL = 'RSS Reader Modernization V1.1-J / R1';" in version, 'visible version label identifies V1.1-J R1')
+check("const APP_VERSION = '1.1.0-dev.9';" in version or "const APP_VERSION = '1.1.0';" in version, 'application version is V1.1-J dev.9 or final 1.1.0')
+check("const APP_VERSION_LABEL = 'RSS Reader Modernization V1.1-J / R1';" in version or "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.1.0';" in version, 'visible version label identifies V1.1-J or final 1.1.0')
 
 if not all(checks):
     print(f'{checks.count(False)}/{len(checks)} V1.1-J architecture checks failed.')

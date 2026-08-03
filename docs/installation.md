@@ -118,7 +118,7 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\schema.sql
 
 phpMyAdminを使用する場合は、対象の空Databaseを選択してから `database/schema.sql` をImportします。
 
-Prefixが `rss_` の場合、V1.1-Iでは次の9 tableが作成されます。
+Prefixが `rss_` の場合、Version 1.1.0では次の9 tableが作成されます。
 
 ```text
 rss_user_info

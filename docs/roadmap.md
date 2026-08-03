@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `RSS Reader Modernization 1.0.0`。M2-GをRelease Baselineとして固定し、License / Third-party notice、設置、更新、Backup、Restore、Rollback、GitHub Actions、Security reporting、Portfolio説明、Runtime Release ZIP、Manifest、SHA-256、Release Notes、Tag / GitHub Release手順まで整理しました。M4-GではRC1からApplication Runtimeを変更せず、正式VersionとFinal Packageを確定しました。自動RegressionとPackage検証はPASSしていますが、実Hosting / MySQL / Browser / Feed / RestoreのPrivate Evidenceは配布物へ収録していません。Bootstrap / Bootswatch、Popper、Drawer、iScrollは現在の画面構造との組合せを優先して据え置き、major migrationを混在させていません。
+現在は `RSS Reader Modernization 1.1.0`。Version 1.0.0のSecurity・RSS Engine・Frontend基盤を維持し、Tracking Parameter除去、NEW状態、Dashboard Widget、Clock、Memo、Task、Calendar、Swipe、Spinner、Account Settingsを追加しました。V1.1-Kで統合回帰、DB / Documentation整合、Version確定、完全統合ZIPとRuntime ZIPのRelease Gateを完了しています。
 
 ## Version 1.1 — Dashboard機能追加
 
@@ -20,7 +20,7 @@
 - [x] V1.1-I / R2 Mobile swipe・Loading Spinner
 - [x] V1.1-I / R3 Mobile Task期限欄調整
 - [x] V1.1-J Account Settings
-- [ ] V1.1-K 統合回帰・Release
+- [x] V1.1-K 統合回帰・Version 1.1.0 Release
 
 V1.1-JではDB構造を変えず、既存のUser IdentityとPassword Hashを安全に更新するAccount Settingsを追加しました。Account削除、確認Mail、Password Resetは別工程とします。
 

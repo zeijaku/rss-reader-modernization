@@ -48,7 +48,11 @@ const documentObject = new Element('document');
 documentObject.activeElement = null;
 const windowObject = {
     location: {reload: () => {}},
-    matchMedia: () => ({matches: false})
+    matchMedia: () => ({matches: false}),
+    setTimeout: () => 1,
+    clearTimeout: () => {},
+    setInterval: () => 1,
+    clearInterval: () => {}
 };
 
 menu.children.push(firstItem, lastItem);
@@ -142,7 +146,7 @@ function $(arg) {
     if (arg === '#main-content') return new Wrapper([main]);
     if (arg === '#page-top') return new Wrapper([pageTop]);
     if (arg === '.modal.show') return new Wrapper([]);
-    if (arg === '[data-feed-content-id]') return new Wrapper([]);
+    if (arg === '[data-feed-content-id]' || arg === '[data-dashboard-widget-type="clock"]') return new Wrapper([]);
     if (arg === 'meta[name="csrf-token"]') return new Wrapper([meta]);
     if (typeof arg === 'string' && arg.startsWith('<')) return new Wrapper([new Element('created')]);
     return new Wrapper([dummy]);

@@ -270,3 +270,15 @@ python3 "$ROOT/tests/test_v11j_architecture.py"
 node "$ROOT/tests/test_v11j_frontend_runtime.js"
 python3 "$ROOT/tests/test_v11j_dashboard_render.py"
 python3 "$ROOT/tests/test_v11j_browser.py"
+
+echo '== V1.1-J R2 Feed title height checks =='
+python3 "$ROOT/tests/test_v11j_r2_feed_header_height.py"
+
+if grep -Fq "const APP_VERSION = '1.1.0';" "$ROOT/app/version.php"; then
+    find "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache/feed" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence" -type f ! -name '.gitkeep' -delete
+    echo '== V1.1-K Version 1.1.0 release checks =='
+    python3 "$ROOT/tests/test_v11k_release.py"
+    python3 "$ROOT/tests/test_v11k_documentation.py"
+else
+    echo 'SKIP: V1.1-K final release gate requires APP_VERSION 1.1.0.'
+fi

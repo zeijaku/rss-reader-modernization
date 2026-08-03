@@ -3,3 +3,4 @@
 # Intentionally do NOT set session.save_path here; PHP configures a private
 # var/session directory before session_start().
 Options -Indexes -MultiViews
+

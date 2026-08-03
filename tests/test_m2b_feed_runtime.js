@@ -182,7 +182,14 @@ const body = new Element('body');
 const meta = new Element('meta', {content: 'csrf-m2b-token'});
 const cards = [1, 2, 3, 4, 5, 6, 7, 8].map(createFeedCard);
 const documentObject = new Element('document');
-const windowObject = {location: {reload: () => {}}};
+const windowObject = {
+    location: {reload: () => {}},
+    matchMedia: () => ({matches: false}),
+    setTimeout: () => 1,
+    clearTimeout: () => {},
+    setInterval: () => 1,
+    clearInterval: () => {}
+};
 const dummy = new Element('div');
 
 function $(arg) {

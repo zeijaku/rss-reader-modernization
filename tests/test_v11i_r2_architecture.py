@@ -46,7 +46,7 @@ check('@media (prefers-reduced-motion: reduce)' in css and '.loading-inline .fa-
 for unsafe in ['.html(', 'innerHTML', 'insertAdjacentHTML', 'document.write(', 'eval(', 'new Function']:
     check(unsafe not in dashboard and unsafe not in calendar, f'new Frontend behavior keeps unsafe operation absent: {unsafe}')
 
-check(re.search(r"const APP_VERSION = '1\.1\.0-dev\.[89][0-9]*';", version) is not None and any(label in version for label in ['V1.1-I / R2','V1.1-J / R1']), 'visible Version marker identifies V1.1-I R2 or later')
+check((re.search(r"const APP_VERSION = '1\.1\.0-dev\.[89][0-9]*';", version) is not None and any(label in version for label in ['V1.1-I / R2','V1.1-J / R1'])) or ("const APP_VERSION = '1.1.0';" in version and 'RSS Reader Modernization 1.1.0' in version), 'visible Version marker identifies V1.1-I R2 or later')
 check('test_v11i_r2_architecture.py' in run and 'test_v11i_r2_frontend_runtime.js' in run and 'test_v11i_r2_loading_browser.py' in run, 'main regression runner includes R2 checks')
 check('test_v11i_r2_architecture.py' in local_run and 'test_v11i_r2_frontend_runtime.js' in local_run and 'test_v11i_r2_loading_browser.py' in local_run, 'local V1.1 runner includes R2 checks')
 check(not (ROOT / 'database/migrations/007_v1_1_mobile_swipe.sql').exists(), 'R2 adds no DB migration')

@@ -2,8 +2,8 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Current development checkpoint:** `RSS Reader Modernization V1.1-J / R1`  
-Stable release: `RSS Reader Modernization 1.0.0`
+**Stable release:** `RSS Reader Modernization 1.1.0`  
+Release tag: `v1.1.0`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
@@ -37,7 +37,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 
 Feed item本文はDBへ永続化せず、登録されたFeed URLから表示時に取得します。
 
-Version 1.1開発では、記事URLのTracking Parameter除去、Item Identityを使った新着表示、Dashboard Widget配置基盤、タイトルバーからの並び替え、Clock Widget、Memo Widget、Task Widget、Calendar Widgetを追加しています。Feed本体は従来の`content`、Memo本文は`memo`、Task項目は`task`、通常予定は`calendar_event`を正本とし、各Widgetの配置・表示設定は`dashboard_widget`へ保存します。Calendar上のTask期限は`task`を直接参照し、予定Tableへ複製しません。V1.1-I / R2ではスマートフォン幅に限って左右スワイプによるタブ切り替えを追加し、Calendar、入力欄、Button、Link、Modal、Drawer、Widget並び替えHandleでは誤操作を避けるため無効にしています。FeedとCalendarの読込中は文字に加えてSpinnerを表示します。V1.1-I / R3ではスマートフォンのTask期限入力だけを2段配置へ調整しました。V1.1-JではAccount Settingsを追加し、現在のパスワード確認後にメールアドレスまたはパスワードを変更できます。
+Version 1.1.0では、記事URLのTracking Parameter除去、Item Identityを使った新着表示、Dashboard Widget配置基盤、タイトルバーからの並び替え、Clock Widget、Memo Widget、Task Widget、Calendar Widgetを追加しています。Feed本体は従来の`content`、Memo本文は`memo`、Task項目は`task`、通常予定は`calendar_event`を正本とし、各Widgetの配置・表示設定は`dashboard_widget`へ保存します。Calendar上のTask期限は`task`を直接参照し、予定Tableへ複製しません。V1.1-I / R2ではスマートフォン幅に限って左右スワイプによるタブ切り替えを追加し、Calendar、入力欄、Button、Link、Modal、Drawer、Widget並び替えHandleでは誤操作を避けるため無効にしています。FeedとCalendarの読込中は文字に加えてSpinnerを表示します。V1.1-I / R3ではスマートフォンのTask期限入力だけを2段配置へ調整しました。V1.1-JではAccount Settingsを追加し、現在のパスワード確認後にメールアドレスまたはパスワードを変更できます。
 
 ## Version 1.1 progress
 
@@ -53,8 +53,9 @@ Version 1.1開発では、記事URLのTracking Parameter除去、Item Identity�
 | V1.1-H | Task Widget | 完了 |
 | V1.1-I | Calendar Widget／R2操作性改善／R3 Task期限欄調整 | 完了 |
 | V1.1-J | Account Settings | 完了 |
+| V1.1-K | 統合回帰・Version 1.1.0 Release | 完了 |
 
-V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.md)、V1.1-DのWidget基盤は[`docs/v1-1-d-implementation.md`](docs/v1-1-d-implementation.md)、Migrationは[`docs/v1-1-d-migration.md`](docs/v1-1-d-migration.md)、V1.1-Eの並び替えは[`docs/v1-1-e-implementation.md`](docs/v1-1-e-implementation.md)、V1.1-FのClockは[`docs/v1-1-f-implementation.md`](docs/v1-1-f-implementation.md)、V1.1-GのMemoは[`docs/v1-1-g-implementation.md`](docs/v1-1-g-implementation.md)、Migrationは[`docs/v1-1-g-migration.md`](docs/v1-1-g-migration.md)、V1.1-HのTaskは[`docs/v1-1-h-implementation.md`](docs/v1-1-h-implementation.md)、Migrationは[`docs/v1-1-h-migration.md`](docs/v1-1-h-migration.md)、V1.1-IのCalendarは[`docs/v1-1-i-implementation.md`](docs/v1-1-i-implementation.md)、Migrationは[`docs/v1-1-i-migration.md`](docs/v1-1-i-migration.md)、R2のスワイプ／Spinnerは[`docs/v1-1-i-r2-implementation.md`](docs/v1-1-i-r2-implementation.md)、Account Settingsは[`docs/v1-1-j-implementation.md`](docs/v1-1-j-implementation.md)を参照してください。
+V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.md)、V1.1-DのWidget基盤は[`docs/v1-1-d-implementation.md`](docs/v1-1-d-implementation.md)、Migrationは[`docs/v1-1-d-migration.md`](docs/v1-1-d-migration.md)、V1.1-Eの並び替えは[`docs/v1-1-e-implementation.md`](docs/v1-1-e-implementation.md)、V1.1-FのClockは[`docs/v1-1-f-implementation.md`](docs/v1-1-f-implementation.md)、V1.1-GのMemoは[`docs/v1-1-g-implementation.md`](docs/v1-1-g-implementation.md)、Migrationは[`docs/v1-1-g-migration.md`](docs/v1-1-g-migration.md)、V1.1-HのTaskは[`docs/v1-1-h-implementation.md`](docs/v1-1-h-implementation.md)、Migrationは[`docs/v1-1-h-migration.md`](docs/v1-1-h-migration.md)、V1.1-IのCalendarは[`docs/v1-1-i-implementation.md`](docs/v1-1-i-implementation.md)、Migrationは[`docs/v1-1-i-migration.md`](docs/v1-1-i-migration.md)、R2のスワイプ／Spinnerは[`docs/v1-1-i-r2-implementation.md`](docs/v1-1-i-r2-implementation.md)、Account Settingsは[`docs/v1-1-j-implementation.md`](docs/v1-1-j-implementation.md)、Version 1.1.0最終化は[`docs/v1-1-k-implementation.md`](docs/v1-1-k-implementation.md)を参照してください。
 
 ## Secure Baselineで完了した範囲
 
@@ -126,20 +127,22 @@ M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4
 
 詳細は [`docs/m4-f-implementation.md`](docs/m4-f-implementation.md)、[`docs/m4-f-validation.md`](docs/m4-f-validation.md)、[`docs/m4-e-implementation.md`](docs/m4-e-implementation.md)、[`docs/release-package.md`](docs/release-package.md)、[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
 
-## Version 1.0.0 release package
+## Version 1.1.0 release package
 
-正式配布用Runtime ZIPはRepository作業用Checkpoint ZIPと分けて生成します。
+GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分けて生成します。
 
 ```bash
+python tools/build_complete_package.py --output-dir ../release-output
 python tools/build_release_package.py --mode final --output-dir ../release-output
+python tools/verify_complete_package.py \
+  ../release-output/rss-reader-modernization-1.1.0-complete.zip \
+  ../release-output/rss-reader-modernization-1.1.0-complete.zip.sha256
 python tools/verify_release_package.py \
-  ../release-output/rss-reader-modernization-1.0.0.zip \
-  ../release-output/rss-reader-modernization-1.0.0.zip.sha256
+  ../release-output/rss-reader-modernization-1.1.0.zip \
+  ../release-output/rss-reader-modernization-1.1.0.zip.sha256
 ```
 
-正式Packageは`package_status=FINAL`、`publishable=yes`です。`publishable=yes`はPackage構成とVersionが正式版であることを示し、利用者環境のMySQL、Feed、Browser、Restore結果を自動的に保証するものではありません。Verification limitsと未収録Evidenceは[`RELEASE_NOTES.md`](RELEASE_NOTES.md)と[`docs/test-report-m4-g.md`](docs/test-report-m4-g.md)に記録しています。
-
-Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)を参照してください。
+Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、検証限界は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)を参照してください。
 
 ## Runtime requirements
 

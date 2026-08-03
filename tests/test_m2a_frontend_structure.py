@@ -27,7 +27,7 @@ check('$window_load' not in index, 'PHP no longer builds a JavaScript Feed load 
 check('fetch_content(' not in index, 'PHP no longer emits Feed JavaScript calls')
 check('data-feed-content-id="' in index, 'Feed cards expose Content ID through a data hook')
 check('class="content-value"' in index, 'Feed edit value uses a local card hook')
-check('class="content-title"' in index, 'Feed title uses a local card hook')
+check(bool(re.search(r'class="[^"]*\bcontent-title\b[^"]*"', index)), 'Feed title uses a local card hook')
 check('class="content-body"' in index, 'Feed body uses a local card hook')
 check('content_id_' not in index and 'content_title_' not in index and 'content_body_' not in index, 'dynamic CSS class selectors are removed')
 check("'use strict';" in js and '(function ($, window, document)' in js, 'dashboard code keeps a small IIFE boundary')

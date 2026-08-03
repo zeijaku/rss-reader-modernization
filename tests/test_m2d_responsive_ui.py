@@ -8,6 +8,7 @@ login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 api = (ROOT / 'app/api.php').read_text(encoding='utf-8')
+widget = (ROOT / 'app/dashboard_widget.php').read_text(encoding='utf-8')
 
 checks: list[bool] = []
 def check(condition: bool, message: str) -> None:
@@ -15,7 +16,7 @@ def check(condition: bool, message: str) -> None:
     print(('PASS' if condition else 'FAIL') + ': ' + message)
 
 check('class="row content-grid feed-grid"' in index, 'Feed cards use one responsive grid')
-check('class="col-12 col-md-6 col-lg-3 feed-card"' in index, 'Feed grid defines Mobile 1 / Tablet 2 / Desktop 4 columns')
+check("default => 'col-12 col-md-6 col-lg-3'" in widget and "app_html($widgetWidthClass) . ' dashboard-widget feed-card" in index, 'Feed grid keeps Mobile 1 / Tablet 2 / Desktop 4 as the default width')
 check('class="row content-grid stock-grid"' in index, 'Stock cards use one responsive grid')
 check('class="col-12 col-md-6 col-lg-3 stock-card"' in index, 'Stock grid follows the same responsive columns')
 check('$row_cnt' not in index, 'legacy four-item PHP row counter is removed')
@@ -33,7 +34,7 @@ check('.navbar-brand' in css and 'text-overflow: ellipsis' in css, 'long current
 check('#page-top' in css and 'z-index: 1040' in css, 'Page Top stays usable without falling behind content')
 
 check('id="app-notice"' in index and 'aria-live="polite"' in index, 'shared UI notice region is present')
-check('function showNotice(message, type)' in js, 'mutation feedback uses one notice helper')
+check('function showNotice(message, type' in js, 'mutation feedback uses one notice helper')
 check('alert(' not in js, 'browser alert is no longer used for Dashboard feedback')
 check("showNotice('Stockへ保存しました', 'success')" in js, 'Stock success has visible page feedback')
 check("$('#saveContent').modal('hide')" in js, 'Stock modal closes only after successful save')
@@ -51,7 +52,7 @@ check(".addClass('btn btn-sm btn-outline-secondary feed-retry')" in js, 'Feed er
 check(".on('click' + eventNamespace, '.feed-retry'" in js, 'Feed retry uses delegated event handling')
 check("fetch_content($(this).closest('[data-feed-content-id]'))" in js, 'Feed retry remains scoped to its card')
 check('Stockした記事はまだありません。' in index, 'Stock has a specific empty state')
-check('このタブにはRSSが登録されていません。' in index, 'RSS tabs have a specific empty state')
+check('このタブにはWidgetが登録されていません。' in index, 'RSS tabs have a specific Widget-aware empty state')
 check('RSSを追加する' in index, 'empty RSS tab offers the existing add action')
 check('<h5 class="modal-title" id="registerContentTitle">RSSを追加</h5>' in index, 'RSS add modal has a direct title')
 check('<h5 class="modal-title" id="changeContentTitle">RSSを変更</h5>' in index, 'RSS edit modal has a direct title')

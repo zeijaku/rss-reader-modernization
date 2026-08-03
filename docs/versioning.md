@@ -1,20 +1,16 @@
 # Visible Version Marker
 
-Deployment確認のため、各配布Checkpointには画面上のVersion表示を付与する。
+Application Versionと画面表示Labelは`app/version.php`で管理します。
 
-- 定義: `app/version.php`
-- 未ログイン: Sign in / Registration画面下部
-- ログイン後: メイン画面フッター
-- CLI: `tools/healthcheck.php`
-- Current development: `RSS Reader Modernization V1.1-I / R1`
-- Stable release: `RSS Reader Modernization 1.0.0`
-- Git Tag: `v1.0.0`（利用者がM4-G release commitへ作成）
-- M2 completion checkpoint: `Frontend M2-G / R1`
-- M1 completion checkpoint: `RSS Engine M1-G / R1`
-- Security baseline ancestry: `Secure Baseline SB-15 / R3`
+```php
+const APP_VERSION = '1.1.0';
+const APP_VERSION_LABEL = 'RSS Reader Modernization 1.1.0';
+```
 
-V1.1-Iは`APP_VERSION = 1.1.0-dev.8`の開発Checkpointで、Git Tagは作成しない。
+- Stable release: `RSS Reader Modernization 1.1.0`
+- Git Tag: `v1.1.0`
+- Release commit: V1.1-Kの最終Commit
 
-正式Releaseは`APP_VERSION = 1.0.0`、`APP_VERSION_LABEL = RSS Reader Modernization 1.0.0`、Git Tag `v1.0.0`を同じRelease commitへ揃える。
+開発Checkpointでは`1.1.0-dev.N`と`V1.1-X / RN`を使用しました。正式Releaseでは開発中表記を残さず、Application Version、Label、Runtime ZIP、完全統合ZIP、Release Notes、Tagを同じ`1.1.0`へ揃えます。
 
-回帰testはversion marker機構をrelease-genericに検証し、M4-G専用testでexact versionを検証する。次の修正版は同名TagやArtifactを上書きせず、`1.0.1`等の新しいVersionを使用する。
+過去のSB、M1、M2、M4、V1.1-B～J表記は履歴Document内に残しますが、現在Versionを示す入口には使用しません。

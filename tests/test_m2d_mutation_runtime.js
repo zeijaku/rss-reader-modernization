@@ -75,7 +75,11 @@ const documentObject = {};
 const windowObject = {
     location: {reload: () => { reloadCount += 1; }},
     confirm: () => confirmResult,
-    matchMedia: () => ({matches: false})
+    matchMedia: () => ({matches: false}),
+    setTimeout: () => 1,
+    clearTimeout: () => {},
+    setInterval: () => 1,
+    clearInterval: () => {}
 };
 
 function $(arg) {
