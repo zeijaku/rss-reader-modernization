@@ -20,7 +20,7 @@ schema = (ROOT / 'database/schema.sql').read_text(encoding='utf-8')
 
 check("'dashboard_widget'" in conf and 'DB_TABLE_PREFIX' in conf, 'Dashboard Widget uses the existing prefixed table-name resolver')
 check("require_once __DIR__ . '/dashboard_widget.php';" in bootstrap, 'Dashboard Widget module loads through bootstrap')
-check("['feed', 'clock', 'memo', 'task', 'calendar']" in widget, 'Widget type allowlist covers the Version 1.1 plan only')
+check("['feed', 'search', 'clock', 'memo', 'task', 'calendar']" in widget, 'Widget type allowlist covers the Version 1.1 plan only')
 check('dashboard_widget_validate_location' in widget and '<= 3' in widget, 'Widget location remains limited to the four existing tabs')
 check('dashboard_widget_validate_width' in widget and '<= 4' in widget, 'Widget width is bounded')
 check('JSON_THROW_ON_ERROR' in widget and '4096' in widget, 'Widget JSON config is bounded and parsed strictly')
@@ -48,7 +48,7 @@ check('.dashboard-widget' in css and 'min-width: 0' in css, 'Widget base CSS pre
 
 check("CONCAT('`', @table_prefix, 'dashboard_widget`')" in schema, 'new-install schema uses the dynamic prefix for Dashboard Widget')
 check('content_location' in schema and 'widget_location' in schema, 'content location remains present for rollback compatibility')
-check(("const APP_VERSION = '1.1.0-dev." in version and 'V1.1-' in version) or ("const APP_VERSION = '1.1.0';" in version and 'RSS Reader Modernization 1.1.0' in version) or "const APP_VERSION = '1.2.0-dev.2';" in version, 'visible Version marker remains in the Version 1.1 line')
+check(("const APP_VERSION = '1.1.0-dev." in version and 'V1.1-' in version) or ("const APP_VERSION = '1.1.0';" in version and 'RSS Reader Modernization 1.1.0' in version) or "const APP_VERSION = '1.2.0-dev.3';" in version, 'visible Version marker remains in the Version 1.1 line')
 check('data-dashboard-widget-sort-order' in index, 'V1.1-D Widget order hook remains available to later phases')
 
 if not all(checks):

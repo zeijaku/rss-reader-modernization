@@ -58,7 +58,9 @@ if (is_dir($errorLogDirectory) && is_writable($errorLogDirectory)) {
 
 require_once __DIR__ . '/common/common_db.php';
 require_once __DIR__ . '/validation.php';
+require_once dirname(__DIR__) . '/config/common_feeds.php';
 require_once __DIR__ . '/dashboard_widget.php';
+require_once __DIR__ . '/search_feed.php';
 require_once __DIR__ . '/calendar.php';
 require_once __DIR__ . '/url_normalizer.php';
 require_once __DIR__ . '/feed/feed_retry.php';

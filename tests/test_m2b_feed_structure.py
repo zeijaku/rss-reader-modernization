@@ -45,7 +45,7 @@ check("state, 'loading'" not in js or "renderFeedMessage($card, 'loading'" in js
 for state in ['loading', 'ready', 'empty', 'error']:
     check(f"'{state}'" in render or f"'{state}'" in fetch, f'Feed state is represented: {state}')
 
-check("rendered < 5" in js, 'Feed display remains limited to five valid items')
+check("rendered < itemLimit" in js, 'Feed display remains limited to five valid items')
 check("typeof items[i] !== 'object'" in js and "Array.isArray(items[i])" in js, 'malformed item entries are skipped')
 check('function feedResultIsValid' in js and 'Array.isArray(resultFeed.item)' in js, 'missing or malformed item list is rejected as an invalid response')
 check("itemTitle !== '' ? itemTitle : 'タイトルなし'" in js, 'missing item title has a stable fallback')

@@ -60,7 +60,7 @@ check("getName()) === 'feed'" in adapters and "getName()) !== 'rss'" in adapters
 check('FeedLinkSelector::select($candidates)' in helper and 'function rss_select_link_candidate' in selector, 'Atom/RSS link-selection behavior remains centralized with compatibility wrapper')
 check("return $date->format('Y-m-d H:i:s');" in date_normalizer and 'function rss_normalize_date' in date_normalizer, 'existing date-normalization output and compatibility wrapper remain unchanged')
 
-check('rendered < 5' in dashboard and 'rendered++' in dashboard, 'existing frontend feed item cap remains unchanged')
+check('rendered < itemLimit' in dashboard and 'rendered++' in dashboard, 'existing frontend feed item cap remains unchanged')
 check('api_safe_feed_payload($resultFeed, $effectiveUrl)' in body, 'later HTTP improvements do not bypass the M1-A public payload boundary')
 
 if not all(checks):

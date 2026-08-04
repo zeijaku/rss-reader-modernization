@@ -137,6 +137,10 @@ function api_dispatch(string $action, int $userId, array $input): array
         'feed.new.clear' => api_feed_new_clear($userId, $input),
         'widget.list' => api_widget_list($userId, $input),
         'widget.reorder' => api_widget_reorder($userId, $input),
+        'widget.search.create' => api_widget_search_create($userId, $input),
+        'widget.search.update' => api_widget_search_update($userId, $input),
+        'widget.search.delete' => api_widget_search_delete($userId, $input),
+        'widget.search.fetch' => api_widget_search_fetch($userId, $input),
         'widget.clock.create' => api_widget_clock_create($userId, $input),
         'widget.clock.update' => api_widget_clock_update($userId, $input),
         'widget.clock.delete' => api_widget_clock_delete($userId, $input),
@@ -240,6 +244,29 @@ function api_content_delete(int $userId, array $input): array
         return api_error('dashboard_widget_unavailable', 'Dashboard Widget migration is required.', 503);
     }
     return api_success(['content_id' => $contentId]);
+}
+
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_search_create(int $userId,array $input): array
+{
+    $loc=dashboard_widget_validate_location($input['widget_location']??null);$style=app_normalize_content_style($input['widget_style']??null);$width=dashboard_widget_validate_width($input['widget_width']??null);$cfg=search_feed_config_from_input($input);
+    if($loc===null||$style===null||$width===null||$cfg===null)return api_validation_error('Search Feed settings are invalid.');
+    return api_success(['widget_id'=>search_feed_create($userId,$loc,$style,$width,$cfg)],201);
+}
+function api_widget_search_update(int $userId,array $input): array
+{
+    $id=api_positive_int($input,'widget_id');$style=app_normalize_content_style($input['widget_style']??null);$width=dashboard_widget_validate_width($input['widget_width']??null);$cfg=search_feed_config_from_input($input);
+    if($id===null||$style===null||$width===null||$cfg===null)return api_validation_error('Search Feed settings are invalid.');
+    if(!search_feed_update($userId,$id,$style,$width,$cfg))return api_error('not_found','Search Feed was not found.',404);return api_success(['widget_id'=>$id]);
+}
+function api_widget_search_delete(int $userId,array $input): array
+{
+    $id=api_positive_int($input,'widget_id');if($id===null)return api_validation_error('widget_id must be a positive integer.');if(!search_feed_delete($userId,$id))return api_error('not_found','Search Feed was not found.',404);return api_success(['widget_id'=>$id]);
+}
+function api_widget_search_fetch(int $userId,array $input): array
+{
+    $id=api_positive_int($input,'widget_id');if($id===null)return api_validation_error('widget_id must be a positive integer.');$r=search_feed_execute($userId,$id);if(($r['ok']??false)!==true)return api_error('not_found','Search Feed was not found.',404);return api_success(['search_result'=>$r]);
 }
 
 /** @return array{status:int,body:array<string,mixed>} */

@@ -1,5 +1,15 @@
 # Changelog
 
+## RSS Reader Modernization 1.2.0-dev.2 — V1.2-B / R3 — 2026-08-04
+
+### Article title and summary control display correction
+
+- 記事Titleを固定1行ではなく、内容に応じて1行または最大2行表示へ調整。
+- 1行Titleでは不要な2行分の高さを確保せず、Stock／NEW／概要Buttonとの縦位置を自然に揃えた。
+- 概要操作をUnicode `▽`からFont Awesomeの`plus-square`／`minus-square`へ変更。
+- 展開中はMinus Icon、閉じた状態はPlus Iconとして表示し、44pxの操作領域は維持。
+- API、DB、Cache、`.htaccess`、`config/local.php`、Version番号は変更なし。
+
 ## RSS Reader Modernization 1.2.0-dev.2 — V1.2-B / R2 — 2026-08-04
 
 ### R2 article action layout correction
@@ -583,3 +593,7 @@
 - SQL parameter bindingを導入。
 - user + user_conf作成をtransaction化。
 - 日時formatを `Y-m-d H:i:s` へ修正。
+
+
+## V1.2-C
+Search Feed（登録RSS横断検索、共通RSS、AND/OR、カード個別更新）を追加。DB Schema変更なし。

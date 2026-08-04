@@ -402,3 +402,7 @@ Sanitizedされた `database/` のschema/audit/migration/fake fixtureだけを�
 SB-15のInitial Commit gateは合格と判定しています。根拠と公開前に残る作業は [`docs/initial-commit-gate.md`](docs/initial-commit-gate.md) を参照してください。
 
 **注意:** Initial Commit可能と「公開GitHub Release可能」は同義ではありません。M4-Fで`1.0.0-rc1`と検証Gateを作成しましたが、RC ZIPは`publishable=no`です。実MySQL / Browser / Feed / RestoreのEvidenceが全項目PASSになった後、M4-GでVersion 1.0.0とTagを確定します。
+
+
+## V1.2-C
+Search Feed（登録RSS横断検索、共通RSS、AND/OR、カード個別更新）を追加。DB Schema変更なし。

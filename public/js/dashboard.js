@@ -856,8 +856,9 @@
     }
 
     function feedSummaryId($card, index) {
-        var contentId = String($card.attr('data-feed-content-id') || '0').replace(/[^0-9]/g, '');
-        return 'feed-summary-' + (contentId || '0') + '-' + String(index);
+        var contentId = String($card.attr('data-feed-content-id') || '').replace(/[^0-9]/g, '');
+        var widgetId = String($card.attr('data-dashboard-widget-id') || '').replace(/[^0-9]/g, '');
+        return 'feed-summary-' + (contentId || ('search-' + (widgetId || '0'))) + '-' + String(index);
     }
 
     function renderFeedItems($card, rawItems) {
@@ -865,9 +866,11 @@
         var $body = $card.find('.content-body').empty();
         var renderedItems = [];
         var rendered = 0;
+        var itemLimit = Number($card.attr('data-search-limit') || 5);
+        if (!Number.isFinite(itemLimit) || itemLimit < 1 || itemLimit > 30) { itemLimit = 5; }
 
         hideFeedTitleTooltip();
-        for (var i = 0; i < items.length && rendered < 5; i++) {
+        for (var i = 0; i < items.length && rendered < itemLimit; i++) {
             if (!items[i] || typeof items[i] !== 'object' || Array.isArray(items[i])) {
                 continue;
             }
@@ -945,10 +948,9 @@
                 .prop('disabled', summary === '')
                 .appendTo($summaryCell);
 
-            $('<span>')
-                .addClass('feed-item-summary-symbol')
+            $('<i>')
+                .addClass('fas fa-plus-square feed-item-summary-icon')
                 .attr('aria-hidden', 'true')
-                .text('▽')
                 .appendTo($summaryButton);
 
             renderedItems.push({
@@ -1122,6 +1124,13 @@
             });
     }
 
+    function setFeedSummaryExpanded($button, expanded) {
+        $button.attr('aria-expanded', expanded ? 'true' : 'false');
+        $button.find('.feed-item-summary-icon')
+            .toggleClass('fa-plus-square', !expanded)
+            .toggleClass('fa-minus-square', expanded);
+    }
+
     function toggleFeedSummary($button) {
         var $row = $button.closest('.feed-item-row');
         var $card = $button.closest('[data-feed-content-id]');
@@ -1137,7 +1146,7 @@
         var $existing = $card.find('#' + detailId);
         if ($button.attr('aria-expanded') === 'true') {
             $existing.remove();
-            $button.attr('aria-expanded', 'false');
+            setFeedSummaryExpanded($button, false);
             return;
         }
 
@@ -1166,14 +1175,18 @@
         }
 
         $detailRow.insertAfter($row);
-        $button.attr('aria-expanded', 'true');
+        setFeedSummaryExpanded($button, true);
     }
 
     var feedTitleTooltipTimer = null;
     var feedTitleTooltipTarget = null;
 
     function feedTitleIsTruncated(element) {
-        return Boolean(element && Number(element.scrollWidth || 0) > Number(element.clientWidth || 0) + 1);
+        if (!element) {
+            return false;
+        }
+        return Number(element.scrollWidth || 0) > Number(element.clientWidth || 0) + 1
+            || Number(element.scrollHeight || 0) > Number(element.clientHeight || 0) + 1;
     }
 
     function ensureFeedTitleTooltip() {
@@ -1546,6 +1559,18 @@
         return element ? $(element).closest('.dashboard-widget') : $();
     }
 
+    function searchPayload(prefix) {
+        return {search_query: $('.' + prefix + 'SearchQuery').val(), search_scope: $('.' + prefix + 'SearchScope').val(), search_condition: $('.' + prefix + 'SearchCondition').val(), search_limit: $('.' + prefix + 'SearchLimit').val(), search_category: $('.' + prefix + 'SearchCategory').val(), widget_width: $('.' + prefix + 'SearchWidth').val(), widget_style: $('.' + prefix + 'SearchStyle').val()};
+    }
+    function addSearchFeed($form) { var $b=$form.find('button[type="submit"]'); if(!requestStart($b))return; var p=searchPayload('register'); p.widget_location=$('.registerSearchLocation').val(); apiRequest('widget.search.create',p,10000).done(function(d){if(apiResponseOk(d))window.location.reload();}).fail(requestFail).always(function(){requestEnd($b);}); }
+    function editSearchFeed($t) { $('.changeSearchId').val($t.attr('data-widget-id')||''); $('.changeSearchQuery').val($t.attr('data-search-query')||''); $('.changeSearchScope').val($t.attr('data-search-scope')||'owned'); $('.changeSearchCondition').val($t.attr('data-search-condition')||'or'); $('.changeSearchLimit').val($t.attr('data-search-limit')||'10'); $('.changeSearchCategory').val($t.attr('data-search-category')||'all'); $('.changeSearchWidth').val($t.attr('data-widget-width')||'1'); $('.changeSearchStyle').val($t.attr('data-widget-style')||'warning'); }
+    function changeSearchFeed($form) { var $b=$form.find('button[type="submit"]'); if(!requestStart($b))return; var p=searchPayload('change'); p.widget_id=$('.changeSearchId').val(); apiRequest('widget.search.update',p,10000).done(function(d){if(apiResponseOk(d))window.location.reload();}).fail(requestFail).always(function(){requestEnd($b);}); }
+    function deleteSearchFeed($b) { var id=String($('.changeSearchId').val()||''); if(!/^\d+$/.test(id)||!window.confirm('このSearch Feedを削除しますか？'))return; if(!requestStart($b))return; apiRequest('widget.search.delete',{widget_id:id},5000).done(function(d){if(apiResponseOk(d))window.location.reload();}).fail(requestFail).always(function(){requestEnd($b);}); }
+    function fetchSearchFeed($card,preserve) {
+        var id=String($card.attr('data-dashboard-widget-id')||''),$b=$card.find('.search-feed-refresh'); if(!/^\d+$/.test(id)||$b.data('request-pending')===true)return; $b.data('request-pending',true).prop('disabled',true).addClass('is-refreshing'); $card.attr('aria-busy','true'); if(!preserve)renderFeedLoading($card);
+        apiRequest('widget.search.fetch',{widget_id:id},30000).done(function(d){ var r; if(!apiResponseOk(d))return; r=d.data&&d.data.search_result; if(!r||!Array.isArray(r.items)){if(!preserve)renderFeedError($card,'検索結果を確認出来ませんでした');return;} $card.attr('data-search-limit',String(r.limit||10)); renderFeedItems($card,r.items); if(r.items.length===0)renderFeedBodyMessage($card,'empty','一致する記事はありません'); if(Number(r.failed_count||0)>0)showNotice('一部のRSSを取得出来ませんでした','info',3000); }).fail(function(x,t){ if(!preserve)renderFeedError($card,apiErrorMessage(x,t)); else showNotice(apiErrorMessage(x,t),'danger'); }).always(function(){ $card.attr('aria-busy','false'); $b.data('request-pending',false).prop('disabled',false).removeClass('is-refreshing'); });
+    }
+
     function bindEvents() {
         $(document)
             .off('submit' + eventNamespace, '#registerTaskWidgetForm')
@@ -1675,6 +1700,11 @@
             .on('pointerdown' + eventNamespace, '.feed-refresh-trigger, .feed-item-action', function (event) {
                 event.stopPropagation();
             })
+            .off('submit' + eventNamespace, '#registerSearchFeedForm').on('submit' + eventNamespace, '#registerSearchFeedForm', function(e){e.preventDefault();addSearchFeed($(this));})
+            .off('submit' + eventNamespace, '#changeSearchFeedForm').on('submit' + eventNamespace, '#changeSearchFeedForm', function(e){e.preventDefault();changeSearchFeed($(this));})
+            .off('click' + eventNamespace, '.search-edit-trigger').on('click' + eventNamespace, '.search-edit-trigger', function(){editSearchFeed($(this));})
+            .off('click' + eventNamespace, '.delete-search-feed').on('click' + eventNamespace, '.delete-search-feed', function(){deleteSearchFeed($(this));})
+            .off('click' + eventNamespace, '.search-feed-refresh').on('click' + eventNamespace, '.search-feed-refresh', function(e){e.preventDefault();fetchSearchFeed($(this).closest('.search-feed-card'),true);})
             .off('click' + eventNamespace, '.feed-item-summary-toggle')
             .on('click' + eventNamespace, '.feed-item-summary-toggle', function (event) {
                 event.preventDefault();
@@ -1765,6 +1795,9 @@
     }
 
     function initFeeds() {
+        $('.search-feed-card').each(function () {
+            fetchSearchFeed($(this), false);
+        });
         $('[data-feed-content-id]').each(function () {
             fetch_content($(this));
         });

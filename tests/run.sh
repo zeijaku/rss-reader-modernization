@@ -294,3 +294,7 @@ echo '== V1.2-B Feed article / individual refresh checks =='
 php "$ROOT/tests/test_v12b_feed_payload.php"
 python3 "$ROOT/tests/test_v12b_architecture.py"
 python3 "$ROOT/tests/test_v12b_browser.py"
+
+echo '== V1.2-C Search Feed checks =='
+php "$ROOT/tests/test_v12c_search_feed.php"
+python3 "$ROOT/tests/test_v12c_architecture.py"

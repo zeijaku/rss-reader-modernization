@@ -49,7 +49,7 @@ feed = js[js.find('function fetch_content'):js.find('function bindEvents')]
 check("apiRequest('feed.fetch', {'content_id': content_id}" in feed, 'Feed request sends only Content ID')
 check('content_value' not in feed and 'data-feed-url' not in index, 'Feed fetch does not use a client-supplied URL')
 check("/^\\d+$/.test(content_id)" in feed, 'Feed Content ID is checked before request')
-check("rendered < 5" in js, 'Feed display remains capped at five items')
+check("rendered < itemLimit" in js, 'Feed display remains capped at five items')
 check(js.count('.text(viewTitle)') >= 2 and '.text(title)' in js, 'Feed text remains inserted with text()')
 check(".attr('href', itemLink)" in js and "noopener noreferrer" in js, 'Feed links retain hardened attributes')
 for unsafe in ['.html(', 'innerHTML', 'insertAdjacentHTML', 'document.write(', 'eval(', 'new Function']:

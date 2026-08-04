@@ -159,6 +159,23 @@ if ($addTargetName === '') {
 }
 ?>
 
+
+<?php
+function search_feed_form_fields(string $prefix): string
+{
+    $p = $prefix === 'change' ? 'change' : 'register';
+    $id = $p === 'change' ? 'Change' : 'Register';
+    $categories = '<option value="all">すべて</option>';
+    foreach (search_feed_common_categories() as $category) {
+        $categories .= '<option value="' . app_html($category) . '">' . app_html($category) . '</option>';
+    }
+    return '<div class="form-group"><label for="searchQuery' . $id . '">検索語句</label><input type="text" id="searchQuery' . $id . '" class="form-control ' . $p . 'SearchQuery" maxlength="128" required></div>'
+        . '<div class="form-row"><div class="form-group col-6"><label>検索範囲</label><select class="form-control ' . $p . 'SearchScope"><option value="owned">自分の登録RSS</option><option value="common">共通RSS</option><option value="both">両方</option></select></div><div class="form-group col-6"><label>検索条件</label><select class="form-control ' . $p . 'SearchCondition"><option value="or">いずれかを含む（OR）</option><option value="and">すべて含む（AND）</option></select></div></div>'
+        . '<div class="form-row"><div class="form-group col-6"><label>表示件数</label><select class="form-control ' . $p . 'SearchLimit"><option value="5">5件</option><option value="10" selected>10件</option><option value="20">20件</option><option value="30">30件</option></select></div><div class="form-group col-6"><label>共通RSSカテゴリー</label><select class="form-control ' . $p . 'SearchCategory">' . $categories . '</select></div></div>'
+        . '<div class="form-row"><div class="form-group col-6"><label>横幅</label><select class="form-control ' . $p . 'SearchWidth"><option value="1">1/4</option><option value="2">1/2</option><option value="3">3/4</option><option value="4">全幅</option></select></div><div class="form-group col-6"><label>見出し色</label><select class="form-control ' . $p . 'SearchStyle"><option value="secondary">Gray</option><option value="primary">Blue</option><option value="dark">Dark</option><option value="success">Green</option><option value="info">Cyan</option><option value="warning">Yellow</option></select></div></div>';
+}
+?>
+
 <!-- Navbar -->
 <header>
 <nav class="navbar navbar-expand-lg navbar-<?php echo app_html($ui['conf_style_nav']); ?> bg-<?php echo app_html($ui['conf_style_nav']); ?>" aria-label="メインナビゲーション">
@@ -252,6 +269,18 @@ if (is_int($content_location)) {
                     </div>
                 </section>
             ';
+            continue;
+        }
+
+        if ($widgetType === 'search') {
+            $searchConfig = is_array($result_content[$i]['widget_config_data'] ?? null) ? $result_content[$i]['widget_config_data'] : search_feed_defaults();
+            $searchQuery = search_feed_validate_query($searchConfig['query'] ?? null) ?? '';
+            $searchScope = search_feed_validate_scope($searchConfig['scope'] ?? null) ?? 'owned';
+            $searchCondition = search_feed_validate_condition($searchConfig['condition'] ?? null) ?? 'or';
+            $searchLimit = search_feed_validate_limit($searchConfig['limit'] ?? null) ?? 10;
+            $searchCategory = search_feed_validate_category($searchConfig['category'] ?? null) ?? 'all';
+            $searchTitleId = 'search-title-' . $widgetId;
+            echo '<section class="' . app_html($widgetWidthClass) . ' dashboard-widget feed-card search-feed-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="search" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-search-limit="' . $searchLimit . '" data-search-state="loading" role="region" aria-labelledby="' . app_html($searchTitleId) . '" aria-busy="true"><div class="feed-card-inner"><table class="table table-hover feed-table"><colgroup><col class="feed-stock-column"><col><col class="feed-summary-column"></colgroup><thead><tr class="bg-' . app_html($widgetStyle) . '"><th colspan="3" class="content-header"><div class="content-header-row"><button type="button" class="widget-drag-handle" aria-label="Search Feedを並び替え" aria-describedby="widget-sort-help">＝</button><span class="content-title" id="' . app_html($searchTitleId) . '"><span class="feed-title-text" title="' . app_html($searchQuery) . '">' . app_html($searchQuery) . '</span></span><span class="content-actions"><button type="button" class="btn btn-link search-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-search-query="' . app_html($searchQuery) . '" data-search-scope="' . app_html($searchScope) . '" data-search-condition="' . app_html($searchCondition) . '" data-search-limit="' . $searchLimit . '" data-search-category="' . app_html($searchCategory) . '" data-toggle="modal" data-target="#changeSearchFeed" aria-label="このSearch Feedを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button><button type="button" class="btn btn-link feed-refresh search-feed-refresh" aria-label="このSearch Feedを更新"><i class="fas fa-sync-alt text-white" aria-hidden="true"></i></button></span></div></th></tr></thead><tbody class="content-body"><tr class="content-state-row"><td colspan="3" class="feed-state-message"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>検索しています</span></span></td></tr></tbody></table></div></section>';
             continue;
         }
 
@@ -456,7 +485,7 @@ if ($result_content_cnt === 0) {
     if ($content_location === 'stock') {
         echo '<div class="empty-state text-center" role="status"><i class="far fa-bookmark fa-2x text-muted" aria-hidden="true"></i><p>Stockした記事はまだありません。</p><a class="btn btn-outline-secondary" href="./?tab=0">RSS一覧へ戻る</a></div>';
     } else {
-        echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#registerClock">Clockを追加する</button><button type="button" class="btn btn-outline-secondary mr-2" data-toggle="modal" data-target="#registerMemo">Memoを追加する</button><button type="button" class="btn btn-outline-dark mr-2" data-toggle="modal" data-target="#registerTaskWidget">Taskを追加する</button><button type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#registerCalendarWidget">Calendarを追加する</button></div>';
+        echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#registerClock">Clockを追加する</button><button type="button" class="btn btn-outline-secondary mr-2" data-toggle="modal" data-target="#registerMemo">Memoを追加する</button><button type="button" class="btn btn-outline-dark mr-2" data-toggle="modal" data-target="#registerTaskWidget">Taskを追加する</button><button type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#registerCalendarWidget">Calendarを追加する</button><button type="button" class="btn btn-outline-warning ml-2" data-toggle="modal" data-target="#registerSearchFeed">Search Feedを追加する</button></div>';
     }
 }
 ?>
@@ -568,6 +597,12 @@ if ($result_content_cnt === 0) {
         </div>
     </div>
 </div>
+
+
+<!-- Search Feed追加モーダル -->
+<div class="modal fade" id="registerSearchFeed" tabindex="-1" role="dialog" aria-labelledby="registerSearchFeedTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="registerSearchFeedForm"><div class="modal-header" style="color:#fff;background-color:#333;"><h5 class="modal-title" id="registerSearchFeedTitle"><i class="fas fa-search" aria-hidden="true"></i> Search Feedを追加</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color:#ccc;">&times;</span></button></div><div class="modal-body"><input type="hidden" class="registerSearchLocation" value="<?php echo app_html((string) $addTargetLocation); ?>"><?php echo search_feed_form_fields('register'); ?></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加</button></div></form></div></div></div>
+<!-- Search Feed変更モーダル -->
+<div class="modal fade" id="changeSearchFeed" tabindex="-1" role="dialog" aria-labelledby="changeSearchFeedTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="changeSearchFeedForm"><div class="modal-header" style="color:#fff;background-color:#333;"><h5 class="modal-title" id="changeSearchFeedTitle"><i class="fas fa-search" aria-hidden="true"></i> Search Feedを変更</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color:#ccc;">&times;</span></button></div><div class="modal-body"><input type="hidden" class="changeSearchId"><?php echo search_feed_form_fields('change'); ?></div><div class="modal-footer"><button type="button" class="btn btn-outline-danger mr-auto delete-search-feed">削除</button><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">変更</button></div></form></div></div></div>
 
 <!-- Clock追加モーダル -->
 <div class="modal fade" id="registerClock" tabindex="-1" role="dialog" aria-labelledby="registerClockTitle" aria-hidden="true">
@@ -1192,6 +1227,7 @@ if ($result_content_cnt === 0) {
         <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> RSS</li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerContent"><i class="fas fa-clone fa-fw" aria-hidden="true"></i>RSS追加</button></li>
         <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-th-large fa-fw" aria-hidden="true"></i> Widget</li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerSearchFeed"><i class="fas fa-search fa-fw" aria-hidden="true"></i>Search Feed追加</button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerClock"><i class="far fa-clock fa-fw" aria-hidden="true"></i>Clock追加</button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerMemo"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i>Memo追加</button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerTaskWidget"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i>Task追加</button></li>

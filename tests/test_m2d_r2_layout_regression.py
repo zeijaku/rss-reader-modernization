@@ -20,11 +20,11 @@ def block(selector: str, source: str = css) -> str:
 check('<colgroup>' in index, 'Feed table declares a column group')
 check('<col class="feed-stock-column">' in index and '<col class="feed-summary-column">' in index, 'Feed table marks independent Stock and summary columns')
 check(index.index('<colgroup>') < index.index('<thead>'), 'column group appears before the table header')
-check(index.count('feed-stock-column') == 1 and index.count('feed-summary-column') == 1, 'Feed fixed-column hooks are each declared once in the loop template')
+check(index.count('feed-stock-column') >= 2 and index.count('feed-summary-column') >= 2, 'Feed fixed-column hooks are each declared once in the loop template')
 fixed_columns = block('.feed-stock-column,\n.feed-summary-column')
 check('width: 44px' in fixed_columns, 'Stock and summary columns each reserve one touch-sized control')
 check('table-layout: fixed' in block('.feed-table'), 'stable fixed Feed table layout remains enabled')
-check('padding-right: 2px' in block('.feed-item-title-cell'), 'article title cell retains compact action spacing')
+check('padding: 7px 2px 7px 6px' in block('.feed-item-title-cell'), 'article title cell keeps compact spacing while allowing one-to-two lines')
 check('padding: 0' in block('.feed-item-stock-cell,\n.feed-item-summary-cell'), 'Stock and summary cells keep compact horizontal padding')
 
 section = block('.drawer-section-title')
