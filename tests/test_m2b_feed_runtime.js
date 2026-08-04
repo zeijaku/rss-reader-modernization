@@ -88,6 +88,16 @@ class Wrapper {
         });
         return this;
     }
+    toggleClass(name, state) {
+        this.elements.forEach((element) => {
+            if (state) element.classes.add(name); else element.classes.delete(name);
+        });
+        return this;
+    }
+    removeAttr(key) {
+        this.elements.forEach((element) => { delete element.attrs[key]; });
+        return this;
+    }
     text(value) {
         if (arguments.length === 0) return this.elements[0] ? aggregateText(this.elements[0]) : '';
         this.elements.forEach((element) => {
@@ -138,6 +148,7 @@ class Wrapper {
     }
     prop(key, value) {
         if (key === 'disabled') this.elements.forEach((element) => { element.disabled = value; });
+        if (key === 'hidden') this.elements.forEach((element) => { element.attrs.hidden = value; });
         return this;
     }
     hide() { return this; }
@@ -266,20 +277,21 @@ check(firstTitle.children[0].attrs.href === 'https://example.com/feed', 'channel
 check(aggregateText(firstTitle).includes('<b>安全なタイトル</b>'), 'HTML-looking channel title remains literal text');
 check(firstBody.children.length === 5, 'only five valid items are rendered');
 check(aggregateText(firstBody.children[0]).includes('<script>alert(1)</script>'), 'HTML-looking item title remains literal text');
-const firstStockButton = firstBody.children[0].children[0].children[0];
-check(firstStockButton.tag === 'button', 'valid item Stock action is a real button');
+const firstActions = firstBody.children[0].children[1];
+const firstStockButton = firstActions.children.find((child) => child.classes.has('infomation_modal_rewrite'));
+check(Boolean(firstStockButton) && firstStockButton.tag === 'button', 'valid item Stock action is a real button');
 check(String(firstStockButton.attrs['aria-label'] || '').includes('<script>alert(1)</script>'), 'Stock button accessible name includes the article title as text');
 check(!aggregateText(firstBody.children[0]).includes('sixth must not render'), 'sixth item is not rendered');
 
 const unsafeRow = firstBody.children[1];
-const unsafeStockCell = unsafeRow.children[0];
-const unsafeLinkCell = unsafeRow.children[1];
-check(unsafeStockCell.children.length === 0, 'unsafe item URL does not create a Stock button');
-check(unsafeLinkCell.children.length === 1 && unsafeLinkCell.children[0].tag === 'span', 'unsafe item URL renders non-clickable text');
+const unsafeTitleCell = unsafeRow.children[0];
+const unsafeActions = unsafeRow.children[1];
+check(unsafeActions.children.filter((child) => child.classes.has('infomation_modal_rewrite')).length === 0, 'unsafe item URL does not create a Stock button');
+check(unsafeTitleCell.children[0].children.some((child) => child.tag === 'span'), 'unsafe item URL renders non-clickable text');
 
 const emojiRowText = aggregateText(firstBody.children[2]);
-check(Array.from(emojiRowText).filter((char) => char === '😀').length === 64, 'emoji title is truncated at 64 complete code points');
-check(emojiRowText.endsWith('...'), 'truncated title receives an ellipsis');
+check(Array.from(emojiRowText).filter((char) => char === '😀').length === 65, 'full emoji title remains available for CSS overflow handling');
+check(!emojiRowText.endsWith('...'), 'JavaScript no longer cuts article titles at a fixed length');
 check(aggregateText(firstBody.children[3]).includes('タイトルなし'), 'missing item title receives a fallback');
 
 ajaxCalls[1].deferred.resolve({

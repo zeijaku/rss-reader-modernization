@@ -288,3 +288,9 @@ python3 "$ROOT/tests/test_v12a_architecture.py"
 python3 "$ROOT/tests/test_v12a_auth_http.py"
 python3 "$ROOT/tests/test_v12a_error_http.py"
 python3 "$ROOT/tests/test_v12a_browser.py"
+
+
+echo '== V1.2-B Feed article / individual refresh checks =='
+php "$ROOT/tests/test_v12b_feed_payload.php"
+python3 "$ROOT/tests/test_v12b_architecture.py"
+python3 "$ROOT/tests/test_v12b_browser.py"

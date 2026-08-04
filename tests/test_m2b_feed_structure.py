@@ -20,7 +20,7 @@ check('フィードを読み込んでいます' in index, 'server-rendered Feed 
 check('content-state-row feed-state-loading' in index, 'initial loading row uses the shared state hook')
 
 for name in [
-    'truncateFeedTitle', 'safeFeedLink', 'renderFeedMessage',
+    'safeFeedLink', 'renderFeedMessage',
     'renderFeedBodyMessage', 'renderFeedLoading', 'renderFeedError',
     'renderFeedTitle', 'renderFeedItems', 'renderFeed',
     'feedRequestErrorMessage', 'fetch_content'
@@ -47,11 +47,11 @@ for state in ['loading', 'ready', 'empty', 'error']:
 
 check("rendered < 5" in js, 'Feed display remains limited to five valid items')
 check("typeof items[i] !== 'object'" in js and "Array.isArray(items[i])" in js, 'malformed item entries are skipped')
-check("!Array.isArray(resultFeed.item)" in js, 'missing or malformed item list is rejected as an invalid response')
+check('function feedResultIsValid' in js and 'Array.isArray(resultFeed.item)' in js, 'missing or malformed item list is rejected as an invalid response')
 check("itemTitle !== '' ? itemTitle : 'タイトルなし'" in js, 'missing item title has a stable fallback')
 check("channelTitle !== '' ? channelTitle : 'タイトルなし'" in js, 'missing channel title has a stable fallback')
 check("renderFeedBodyMessage($card, 'empty', '記事はありません')" in js, 'zero-item Feed has an explicit empty state')
-check("text.match(/[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|[\\s\\S]/g)" in js, 'title truncation does not split UTF-16 surrogate pairs')
+check(".addClass('feed-item-title-text')" in js and ".text(viewTitle)" in js, 'full article title stays in the DOM and visual truncation is delegated to CSS')
 check("/^https?:\\/\\//i.test(link)" in js, 'client rendering accepts only http and https Feed links')
 check(".attr('rel', 'noopener noreferrer')" in js, 'external Feed links retain opener protection')
 check(js.count('.text(viewTitle)') >= 2 and '.text(title)' in js, 'Feed values remain inserted as text')

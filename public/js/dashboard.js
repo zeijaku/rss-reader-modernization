@@ -728,16 +728,6 @@
         window.setInterval(updateClocks, 1000);
     }
 
-    /* Feed表示用の短い文字列を作る。絵文字の途中では切らない */
-    function truncateFeedTitle(value, maxLength) {
-        var text = String(value || '');
-        var chars = text.match(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[\s\S]/g) || [];
-        if (chars.length <= maxLength) {
-            return text;
-        }
-        return chars.slice(0, maxLength).join('') + '...';
-    }
-
     /* APIから返った外部リンクはhttp / httpsだけ使用する */
     function safeFeedLink(value) {
         var link = String(value || '');
@@ -755,6 +745,7 @@
     }
 
     function renderFeedMessage($card, state, title, message) {
+        hideFeedTitleTooltip();
         $card
             .attr('data-feed-state', state)
             .attr('aria-busy', state === 'loading' ? 'true' : 'false');
@@ -766,6 +757,7 @@
         }
 
         var $body = $card.find('.content-body').empty();
+        $card.data('feed-render-items', []);
         if (message !== '') {
             var $row = $('<tr>').addClass('content-state-row feed-state-' + state);
             var $cell = $('<td>')
@@ -783,9 +775,11 @@
     }
 
     function renderFeedBodyMessage($card, state, message) {
+        hideFeedTitleTooltip();
         $card
             .attr('data-feed-state', state)
             .attr('aria-busy', 'false');
+        $card.data('feed-render-items', []);
         var $body = $card.find('.content-body').empty();
         var $row = $('<tr>').addClass('content-state-row feed-state-' + state);
         $('<td>')
@@ -853,11 +847,26 @@
         }
     }
 
+    function feedItemSummary(item) {
+        var content = String(item && item.content ? item.content : '').trim();
+        if (content !== '') {
+            return content;
+        }
+        return String(item && item.description ? item.description : '').trim();
+    }
+
+    function feedSummaryId($card, index) {
+        var contentId = String($card.attr('data-feed-content-id') || '0').replace(/[^0-9]/g, '');
+        return 'feed-summary-' + (contentId || '0') + '-' + String(index);
+    }
+
     function renderFeedItems($card, rawItems) {
         var items = Array.isArray(rawItems) ? rawItems : [];
         var $body = $card.find('.content-body').empty();
+        var renderedItems = [];
         var rendered = 0;
 
+        hideFeedTitleTooltip();
         for (var i = 0; i < items.length && rendered < 5; i++) {
             if (!items[i] || typeof items[i] !== 'object' || Array.isArray(items[i])) {
                 continue;
@@ -866,19 +875,72 @@
             var item = items[i];
             var itemTitle = String(item.title || '');
             var itemLink = safeFeedLink(item.link);
-            var viewTitle = truncateFeedTitle(itemTitle !== '' ? itemTitle : 'タイトルなし', 64);
-            var $row = $('<tr>');
-            var $stockCell = $('<td>').appendTo($row);
+            var viewTitle = itemTitle !== '' ? itemTitle : 'タイトルなし';
+            var summary = feedItemSummary(item);
+            var itemIndex = renderedItems.length;
+            var summaryId = feedSummaryId($card, itemIndex);
+            var $row = $('<tr>')
+                .addClass('feed-item-row')
+                .attr('data-feed-item-index', String(itemIndex));
+            var $titleCell = $('<td>').addClass('feed-item-title-cell').appendTo($row);
+            var $titleWrap = $('<div>').addClass('feed-item-title-wrap').appendTo($titleCell);
+            var itemIdentity = String(item.item_identity || '');
+
+            if (item.is_new === true && /^m1i:v1:[a-f0-9]{64}$/.test(itemIdentity)) {
+                var $itemNewButton = $('<button type="button">')
+                    .addClass('feed-item-new mr-1')
+                    .attr('data-item-identity', itemIdentity)
+                    .attr('aria-label', '新着表示を解除: ' + viewTitle)
+                    .attr('title', '新着記事')
+                    .appendTo($titleWrap);
+
+                $('<i>')
+                    .addClass('fas fa-bell')
+                    .attr('aria-hidden', 'true')
+                    .appendTo($itemNewButton);
+            }
+
+            if (itemLink !== '') {
+                $('<a>')
+                    .addClass('feed-item-title-text')
+                    .attr('href', itemLink)
+                    .attr('target', '_blank')
+                    .attr('rel', 'noopener noreferrer')
+                    .attr('data-full-title', viewTitle)
+                    .text(viewTitle)
+                    .appendTo($titleWrap);
+            } else {
+                $('<span>')
+                    .addClass('feed-item-title-text')
+                    .attr('tabindex', '0')
+                    .attr('data-full-title', viewTitle)
+                    .text(viewTitle)
+                    .appendTo($titleWrap);
+            }
+
+            var $actions = $('<td>').addClass('feed-item-actions').appendTo($row);
+            var $summaryButton = $('<button type="button">')
+                .addClass('feed-item-action feed-item-summary-toggle')
+                .attr('aria-label', summary !== '' ? 'RSS概要を表示: ' + viewTitle : 'RSS概要はありません: ' + viewTitle)
+                .attr('aria-expanded', 'false')
+                .attr('aria-controls', summaryId)
+                .prop('disabled', summary === '')
+                .appendTo($actions);
+
+            $('<i>')
+                .addClass('fas fa-chevron-down text-secondary')
+                .attr('aria-hidden', 'true')
+                .appendTo($summaryButton);
 
             if (itemLink !== '') {
                 var $stockButton = $('<button type="button">')
-                    .addClass('btn btn-link p-0 infomation_modal_rewrite')
+                    .addClass('feed-item-action infomation_modal_rewrite')
                     .attr('aria-label', 'Stockへ保存: ' + viewTitle)
                     .attr('data-stock-url', itemLink)
                     .attr('data-stock-title', itemTitle)
                     .attr('data-toggle', 'modal')
                     .attr('data-target', '.save_modal')
-                    .appendTo($stockCell);
+                    .appendTo($actions);
 
                 $('<i>')
                     .addClass('fas fa-bookmark fa-fw text-info')
@@ -886,37 +948,19 @@
                     .appendTo($stockButton);
             }
 
-            var $linkCell = $('<td>').appendTo($row);
-            var itemIdentity = String(item.item_identity || '');
-            if (item.is_new === true && /^m1i:v1:[a-f0-9]{64}$/.test(itemIdentity)) {
-                var $itemNewButton = $('<button type="button">')
-                    .addClass('feed-item-new mr-1')
-                    .attr('data-item-identity', itemIdentity)
-                    .attr('aria-label', '新着表示を解除: ' + viewTitle)
-                    .attr('title', '新着記事')
-                    .appendTo($linkCell);
-
-                $('<i>')
-                    .addClass('fas fa-bell')
-                    .attr('aria-hidden', 'true')
-                    .appendTo($itemNewButton);
-            }
-            if (itemLink !== '') {
-                $('<a>')
-                    .addClass('text-dark')
-                    .attr('href', itemLink)
-                    .attr('target', '_blank')
-                    .attr('rel', 'noopener noreferrer')
-                    .text(viewTitle)
-                    .appendTo($linkCell);
-            } else {
-                $('<span>').text(viewTitle).appendTo($linkCell);
-            }
-
+            renderedItems.push({
+                title: viewTitle,
+                link: itemLink,
+                description: String(item.description || ''),
+                content: String(item.content || ''),
+                summary: summary,
+                summary_id: summaryId
+            });
             $row.appendTo($body);
             rendered++;
         }
 
+        $card.data('feed-render-items', renderedItems);
         if (rendered === 0) {
             renderFeedBodyMessage($card, 'empty', '記事はありません');
             return;
@@ -925,26 +969,31 @@
         $card
             .attr('data-feed-state', 'ready')
             .attr('aria-busy', 'false');
+        scheduleFeedTitleOverflowRefresh($card);
+    }
+
+    function feedResultIsValid(resultFeed) {
+        if (!resultFeed || typeof resultFeed !== 'object' || Array.isArray(resultFeed)) {
+            return false;
+        }
+        var channel = resultFeed.channel;
+        return Boolean(channel && typeof channel === 'object' && !Array.isArray(channel) && Array.isArray(resultFeed.item));
     }
 
     function renderFeed($card, resultFeed) {
-        if (!resultFeed || typeof resultFeed !== 'object' || Array.isArray(resultFeed)) {
+        if (!feedResultIsValid(resultFeed)) {
             renderFeedError($card, 'フィードの応答形式を確認出来ませんでした');
-            return;
+            return false;
         }
 
         var channel = resultFeed.channel;
-        if (!channel || typeof channel !== 'object' || Array.isArray(channel) || !Array.isArray(resultFeed.item)) {
-            renderFeedError($card, 'フィードの応答形式を確認出来ませんでした');
-            return;
-        }
-
         var newCount = Number(resultFeed.new_count || 0);
         if (!Number.isFinite(newCount) || newCount < 0) {
             newCount = 0;
         }
         renderFeedTitle($card, channel, Math.floor(newCount));
         renderFeedItems($card, resultFeed.item);
+        return true;
     }
 
     function clearFeedNew($button) {
@@ -969,7 +1018,7 @@
         }, 4000)
             .done(function (data) {
                 if (apiResponseOk(data)) {
-                    fetch_content($card);
+                    fetch_content($card, {preserve: true});
                 }
             })
             .fail(requestFail)
@@ -988,11 +1037,29 @@
         return 'しばらくしてから再度お試しください';
     }
 
+    function setFeedRefreshPending($card, pending) {
+        var $button = $card.find('.feed-refresh-trigger');
+        var $icon = $button.find('i');
+        $button
+            .prop('disabled', pending)
+            .toggleClass('is-refreshing', pending)
+            .attr('aria-label', pending ? 'このRSSを更新中' : 'このRSSを更新');
+        $icon.toggleClass('fa-spin', pending);
+        $card.toggleClass('feed-refreshing', pending);
+    }
+
+    function keepFeedAfterRefreshError($card, message) {
+        $card.attr('aria-busy', 'false');
+        showNotice('RSSを更新出来ませんでした。' + String(message || 'しばらくしてから再度お試しください'), 'danger');
+    }
+
     /*
      * 登録済みContent IDからFeedを取得。
      * SB-10: external Feed text is inserted with .text(), not HTML concatenation.
+     * V1.2-B: 個別更新では現在の記事を残し、成功したCardだけ差し替える。
      */
-    function fetch_content($card) {
+    function fetch_content($card, options) {
+        var settings = options && typeof options === 'object' ? options : {};
         var content_id = String($card.attr('data-feed-content-id') || '');
         if (!/^\d+$/.test(content_id)) {
             renderFeedError($card, 'コンテンツIDを確認出来ませんでした');
@@ -1002,23 +1069,191 @@
             return;
         }
 
+        var currentState = String($card.attr('data-feed-state') || '');
+        var preserve = settings.preserve === true && (currentState === 'ready' || currentState === 'empty');
         $card.data('feed-request-pending', true);
-        renderFeedLoading($card);
+        setFeedRefreshPending($card, true);
+        if (preserve) {
+            $card.attr('aria-busy', 'true');
+        } else {
+            renderFeedLoading($card);
+        }
 
         apiRequest('feed.fetch', {'content_id': content_id}, 25000)
             .done(function (data) {
                 if (!data || data.ok !== true || !data.data || !data.data.result_feed) {
-                    renderFeedError($card, 'フィードの応答形式を確認出来ませんでした');
+                    if (preserve) {
+                        keepFeedAfterRefreshError($card, 'フィードの応答形式を確認出来ませんでした');
+                    } else {
+                        renderFeedError($card, 'フィードの応答形式を確認出来ませんでした');
+                    }
+                    return;
+                }
+                if (!feedResultIsValid(data.data.result_feed)) {
+                    if (preserve) {
+                        keepFeedAfterRefreshError($card, 'フィードの応答形式を確認出来ませんでした');
+                    } else {
+                        renderFeedError($card, 'フィードの応答形式を確認出来ませんでした');
+                    }
                     return;
                 }
                 renderFeed($card, data.data.result_feed);
+                if (settings.announce === true) {
+                    showNotice('RSSを更新しました', 'success', 2200);
+                }
             })
             .fail(function (xhr, textStatus) {
-                renderFeedError($card, feedRequestErrorMessage(xhr, textStatus));
+                var message = feedRequestErrorMessage(xhr, textStatus);
+                if (preserve) {
+                    keepFeedAfterRefreshError($card, message);
+                } else {
+                    renderFeedError($card, message);
+                }
             })
             .always(function () {
                 $card.data('feed-request-pending', false);
+                setFeedRefreshPending($card, false);
+                if (preserve && $card.attr('aria-busy') === 'true') {
+                    $card.attr('aria-busy', 'false');
+                }
             });
+    }
+
+    function toggleFeedSummary($button) {
+        var $row = $button.closest('.feed-item-row');
+        var $card = $button.closest('[data-feed-content-id]');
+        var index = Number($row.attr('data-feed-item-index'));
+        var items = $card.data('feed-render-items');
+        if (!Number.isInteger(index) || !Array.isArray(items) || !items[index]) {
+            showNotice('RSS概要を確認出来ませんでした', 'danger');
+            return;
+        }
+
+        var item = items[index];
+        var detailId = String(item.summary_id || feedSummaryId($card, index));
+        var $existing = $card.find('#' + detailId);
+        if ($button.attr('aria-expanded') === 'true') {
+            $existing.remove();
+            $button.attr('aria-expanded', 'false');
+            return;
+        }
+
+        if (String(item.summary || '') === '') {
+            return;
+        }
+
+        var $detailRow = $('<tr>')
+            .addClass('feed-item-detail-row')
+            .attr('id', detailId);
+        var $detailCell = $('<td>').attr('colspan', '2').appendTo($detailRow);
+        var $summary = $('<div>')
+            .addClass('feed-item-summary')
+            .attr('tabindex', '0')
+            .text(String(item.summary))
+            .appendTo($detailCell);
+
+        if (String(item.link || '') !== '') {
+            $('<a>')
+                .addClass('feed-item-summary-link')
+                .attr('href', String(item.link))
+                .attr('target', '_blank')
+                .attr('rel', 'noopener noreferrer')
+                .text('元記事を開く')
+                .appendTo($summary);
+        }
+
+        $detailRow.insertAfter($row);
+        $button.attr('aria-expanded', 'true');
+    }
+
+    var feedTitleTooltipTimer = null;
+    var feedTitleTooltipTarget = null;
+
+    function feedTitleIsTruncated(element) {
+        return Boolean(element && Number(element.scrollWidth || 0) > Number(element.clientWidth || 0) + 1);
+    }
+
+    function ensureFeedTitleTooltip() {
+        var $tooltip = $('#feed-title-tooltip');
+        if ($tooltip.length > 0) {
+            return $tooltip;
+        }
+        return $('<div>')
+            .attr('id', 'feed-title-tooltip')
+            .attr('role', 'tooltip')
+            .prop('hidden', true)
+            .addClass('feed-title-tooltip')
+            .appendTo('body');
+    }
+
+    function hideFeedTitleTooltip() {
+        if (feedTitleTooltipTimer !== null) {
+            window.clearTimeout(feedTitleTooltipTimer);
+            feedTitleTooltipTimer = null;
+        }
+        if (feedTitleTooltipTarget) {
+            $(feedTitleTooltipTarget).removeAttr('aria-describedby');
+            feedTitleTooltipTarget = null;
+        }
+        $('#feed-title-tooltip').prop('hidden', true).empty();
+    }
+
+    function positionFeedTitleTooltip($tooltip, element) {
+        if (!element || typeof element.getBoundingClientRect !== 'function') {
+            return;
+        }
+        var rect = element.getBoundingClientRect();
+        var viewportWidth = Number(window.innerWidth || document.documentElement.clientWidth || 0);
+        var viewportHeight = Number(window.innerHeight || document.documentElement.clientHeight || 0);
+        var width = Number($tooltip.outerWidth() || 0);
+        var height = Number($tooltip.outerHeight() || 0);
+        var left = Math.max(8, Math.min(Number(rect.left || 0), viewportWidth - width - 8));
+        var top = Number(rect.bottom || 0) + 7;
+        if (top + height > viewportHeight - 8) {
+            top = Math.max(8, Number(rect.top || 0) - height - 7);
+        }
+        $tooltip.css({left: left + 'px', top: top + 'px'});
+    }
+
+    function showFeedTitleTooltip(element) {
+        if (!feedTitleIsTruncated(element)) {
+            return;
+        }
+        var $target = $(element);
+        var fullTitle = String($target.attr('data-full-title') || $target.text() || '');
+        if (fullTitle === '') {
+            return;
+        }
+        var $tooltip = ensureFeedTitleTooltip();
+        feedTitleTooltipTarget = element;
+        $tooltip.text(fullTitle).prop('hidden', false);
+        $target.attr('aria-describedby', 'feed-title-tooltip');
+        positionFeedTitleTooltip($tooltip, element);
+    }
+
+    function scheduleFeedTitleTooltip(element) {
+        hideFeedTitleTooltip();
+        feedTitleTooltipTimer = window.setTimeout(function () {
+            feedTitleTooltipTimer = null;
+            showFeedTitleTooltip(element);
+        }, 240);
+    }
+
+    function refreshFeedTitleOverflow($scope) {
+        $scope.find('.feed-item-title-text').each(function () {
+            $(this).attr('data-feed-title-truncated', feedTitleIsTruncated(this) ? '1' : '0');
+        });
+    }
+
+    function scheduleFeedTitleOverflowRefresh($scope) {
+        var refresh = function () {
+            refreshFeedTitleOverflow($scope);
+        };
+        if (typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(refresh);
+        } else {
+            window.setTimeout(refresh, 0);
+        }
     }
 
     var widgetDragState = null;
@@ -1427,6 +1662,29 @@
             .on('click' + eventNamespace, '.infomation_modal_rewrite', function () {
                 rewriteInformationModal($(this));
             })
+            .off('click' + eventNamespace, '.feed-refresh-trigger')
+            .on('click' + eventNamespace, '.feed-refresh-trigger', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                fetch_content($(this).closest('[data-feed-content-id]'), {preserve: true, announce: true});
+            })
+            .off('pointerdown' + eventNamespace, '.feed-refresh-trigger, .feed-item-action')
+            .on('pointerdown' + eventNamespace, '.feed-refresh-trigger, .feed-item-action', function (event) {
+                event.stopPropagation();
+            })
+            .off('click' + eventNamespace, '.feed-item-summary-toggle')
+            .on('click' + eventNamespace, '.feed-item-summary-toggle', function (event) {
+                event.preventDefault();
+                toggleFeedSummary($(this));
+            })
+            .off('mouseenter' + eventNamespace + ' focusin' + eventNamespace, '.feed-item-title-text')
+            .on('mouseenter' + eventNamespace + ' focusin' + eventNamespace, '.feed-item-title-text', function () {
+                scheduleFeedTitleTooltip(this);
+            })
+            .off('mouseleave' + eventNamespace + ' focusout' + eventNamespace, '.feed-item-title-text')
+            .on('mouseleave' + eventNamespace + ' focusout' + eventNamespace, '.feed-item-title-text', function () {
+                hideFeedTitleTooltip();
+            })
             .off('click' + eventNamespace, '.feed-retry')
             .on('click' + eventNamespace, '.feed-retry', function () {
                 fetch_content($(this).closest('[data-feed-content-id]'));
@@ -1791,11 +2049,19 @@
         $(window)
             .off('scroll' + eventNamespace)
             .on('scroll' + eventNamespace, function () {
+                hideFeedTitleTooltip();
                 if ($(this).scrollTop() > 100) {
                     $topButton.fadeIn();
                 } else {
                     $topButton.fadeOut();
                 }
+            })
+            .off('resize' + eventNamespace)
+            .on('resize' + eventNamespace, function () {
+                hideFeedTitleTooltip();
+                $('[data-feed-content-id]').each(function () {
+                    refreshFeedTitleOverflow($(this));
+                });
             });
 
         $topButton

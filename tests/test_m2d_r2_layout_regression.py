@@ -18,14 +18,14 @@ def block(selector: str, source: str = css) -> str:
     return match.group(1) if match else ''
 
 check('<colgroup>' in index, 'Feed table declares a column group')
-check('<col class="feed-stock-column">' in index, 'Feed table marks the Stock action column')
+check('<col class="feed-actions-column">' in index, 'Feed table marks the article Actions column')
 check(index.index('<colgroup>') < index.index('<thead>'), 'column group appears before the table header')
-check(index.count('feed-stock-column') == 1, 'Feed column hook is declared once in the loop template')
-stock_col = block('.feed-stock-column')
-check('width: 44px' in stock_col, 'Stock action column is fixed to 44px')
+check(index.count('feed-actions-column') == 1, 'Feed Actions column hook is declared once in the loop template')
+actions_col = block('.feed-actions-column')
+check('width: 90px' in actions_col, 'article Actions column reserves two touch-sized controls')
 check('table-layout: fixed' in block('.feed-table'), 'stable fixed Feed table layout remains enabled')
-check('width: 44px' in block('.feed-table td:first-child'), 'Stock cell retains its 44px fallback width')
-check('padding-left: 4px' in block('.feed-table td:last-child'), 'article cell retains compact left padding')
+check('padding-right: 2px' in block('.feed-item-title-cell'), 'article title cell retains compact action spacing')
+check('padding-left: 2px' in block('.feed-item-actions') and 'padding-right: 4px' in block('.feed-item-actions'), 'article Actions cell keeps compact horizontal padding')
 
 section = block('.drawer-section-title')
 check('padding: 5px 4px' in section, 'Drawer section headings use compact vertical padding')

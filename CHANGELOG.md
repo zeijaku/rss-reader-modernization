@@ -1,5 +1,22 @@
 # Changelog
 
+## RSS Reader Modernization 1.2.0-dev.2 — V1.2-B — 2026-08-04
+
+### Feed article display / individual refresh
+
+- 記事Titleの固定64文字切り詰めを廃止し、CSS Ellipsisと実寸Overflow判定へ変更。
+- 実際に省略されたTitleだけ、240ms Delay後のHover／Keyboard Focusで全文Tooltipを表示。
+- 各記事へ概要Toggleを追加し、`content`を優先、空の場合は`description`を使用。
+- 概要は展開時だけDOMを生成し、`.text()`によるPlain Text表示、長文Scroll、元記事Linkを維持。
+- 画像、iframe、動画、Script等を概要として実行・生成しない。
+- Feed見出しを`＝ Title　✎ ⟳`へ整理し、編集位置を維持した個別更新Buttonを追加。
+- 個別更新は既存`feed.fetch`を再利用し、owner確認、CSRF、Cache、ETag、Last-Modified、Retry、Backoffを維持。
+- 更新中は現在の記事を残し、Button無効化と回転表示を行い、失敗時も旧記事を維持。
+- 成功後は対象Feedだけ記事、Title、NEW件数を差し替え、他Widgetとページ全体は更新しない。
+- Article行をTitle領域とAction領域へ整理し、既存Stockを維持しながら第3段／第4段で共通利用しやすい構造へ変更。
+- DB、Migration、SQL、`.htaccess`、`config/local.php`、外部依存、Build環境の追加はなし。
+- 分割した全RegressionでPASS 3,948／FAIL 0／SKIP 10。
+
 ## RSS Reader Modernization 1.2.0-dev.1 — V1.2-A — 2026-08-04
 
 ### Authentication / Notice / Common Error

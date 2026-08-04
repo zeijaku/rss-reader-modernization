@@ -36,11 +36,11 @@ check(index.count('aria-controls="drawerMenu" aria-expanded="false" aria-label="
 check('id="drawerMenu" aria-label="RSS Readerメニュー" tabindex="-1"' in index, 'Drawer navigation is named and focusable')
 check('<li data-toggle="modal"' not in index, 'non-interactive list items no longer open modals')
 check(index.count('class="btn btn-link text-muted drawer-menu-action"') >= 3, 'Drawer modal actions use buttons')
-check('type="button" class="btn btn-link float-right content-edit-trigger"' in index, 'Feed edit action uses a button')
+check('type="button" class="btn btn-link content-edit-trigger"' in index, 'Feed edit action uses a button')
 check('aria-label="このRSSを編集"' in index, 'Feed edit button has an accessible name')
 check('class="btn btn-primary information_modal_dbsave"' in index, 'Stock confirmation uses a button')
 check('aria-label="この記事をStockへ保存"' in index, 'Stock confirmation button has an accessible name')
-check(".addClass('btn btn-link p-0 infomation_modal_rewrite')" in js, 'dynamic Stock action is created as a button')
+check(".addClass('feed-item-action infomation_modal_rewrite')" in js, 'dynamic Stock action is created as a button')
 check(".attr('aria-label', 'Stockへ保存: ' + viewTitle)" in js, 'dynamic Stock button includes the article title in its name')
 
 check('<form id="registerContentForm"' in index, 'RSS add modal uses a form')
