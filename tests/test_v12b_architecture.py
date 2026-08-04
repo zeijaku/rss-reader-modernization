@@ -16,7 +16,7 @@ def check(condition, message):
 check('feed-refresh-trigger' in index and 'fa-sync-alt' in index, 'Feed header includes an individual refresh action')
 check(index.index('content-edit-trigger') < index.index('feed-refresh-trigger'), 'edit action remains before refresh action')
 check('widget-drag-handle' in index and 'feed-card-actions' in index, 'drag handle and right-side Feed actions remain separate')
-check('feed-actions-column' in index, 'article action column is explicit for future Actions')
+check('feed-stock-column' in index and 'feed-summary-column' in index, 'Stock and summary actions have independent fixed columns')
 check('data-feed-content-id' in index, 'Feed refresh remains bound to the owned Content ID')
 
 for name in [
@@ -54,13 +54,18 @@ check('.feed-item-title-text' in css and 'text-overflow: ellipsis' in css and 'w
 check('.feed-title-tooltip' in css and 'max-width: min(420px' in css, 'tooltip is bounded to the viewport')
 check('.feed-item-summary' in css and 'max-height: 14rem' in css and 'overflow: auto' in css, 'long RSS summary is bounded and scrollable')
 check('.feed-item-action' in css and 'width: 44px' in css and 'min-height: 44px' in css, 'article actions have touch-friendly targets')
-check('.feed-item-summary-toggle[aria-expanded="true"]' in css, 'expanded accordion has a visual direction state')
+check('.feed-item-stock-cell' in css and '.feed-item-summary-cell' in css, 'Stock stays left and summary stays right without sharing one crowded cell')
+check('.feed-item-summary-symbol' in css and 'color: #495057' in css and 'font-size: 1.05rem' in css, 'summary symbol has an explicit visible color and size')
+check('.feed-item-summary-toggle[aria-expanded="true"]' in css and '.feed-item-summary-symbol' in css, 'expanded accordion has a visual direction state')
 check('@media (prefers-reduced-motion: reduce)' in css, 'reduced-motion handling remains present')
 
 check("'description' => api_feed_text" in api and "'content' => api_feed_text" in api, 'safe API payload continues to include bounded description and content')
 check('strip_tags' in api, 'server-side Feed text still strips markup')
 check("'feed.fetch' => api_feed_fetch" in api, 'existing structured Feed API remains in use')
 check('1.2.0-dev.2' in version, 'Version marker identifies the V1.2-B checkpoint')
+check(".addClass('feed-item-stock-cell')" in js and ".addClass('feed-item-summary-cell')" in js, 'article DOM uses Stock-left and summary-right cells')
+check(".addClass('feed-item-summary-symbol')" in js and ".text('▽')" in js, 'summary control uses a font-independent visible symbol')
+check(js.index(".addClass('feed-item-stock-cell')") < js.index(".addClass('feed-item-title-cell')") < js.index(".addClass('feed-item-summary-cell')"), 'article cells are generated in Stock, title, summary order')
 check(not any((ROOT / 'database').glob('*v1_2_b*')), 'V1.2-B adds no database migration')
 check(not (ROOT / 'package.json').exists(), 'V1.2-B adds no npm/build dependency')
 

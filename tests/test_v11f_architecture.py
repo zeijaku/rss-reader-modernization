@@ -62,7 +62,7 @@ check('min-height: calc(13rem - 44px)' in css, 'Clock aligns with the existing F
 check('@media (max-width: 767.98px)' in css and 'clock-card-body' in css, 'Clock has a mobile layout rule')
 check('clock' not in ''.join((ROOT / 'database' / 'migrations' / name).read_text(encoding='utf-8').lower() for name in migrations.splitlines() if name.startswith('004_')), 'V1.1-F Clock remains independent from later Memo migration')
 check('`widget_config` TEXT NULL' in schema, 'new installs already contain the generic config storage used by Clock')
-check((re.search(r"const APP_VERSION = '1\.1\.0-dev\.[5-9][0-9]*';", version) is not None and any(label in version for label in ['V1.1-F / R1','V1.1-G / R1','V1.1-H / R1','V1.1-I / R1','V1.1-I / R2','V1.1-J / R1'])) or ("const APP_VERSION = '1.1.0';" in version and 'RSS Reader Modernization 1.1.0' in version) or "const APP_VERSION = '1.2.0-dev.1';" in version, 'visible Version marker is V1.1-F or later')
+check((re.search(r"const APP_VERSION = '1\.1\.0-dev\.[5-9][0-9]*';", version) is not None and any(label in version for label in ['V1.1-F / R1','V1.1-G / R1','V1.1-H / R1','V1.1-I / R1','V1.1-I / R2','V1.1-J / R1'])) or ("const APP_VERSION = '1.1.0';" in version and 'RSS Reader Modernization 1.1.0' in version) or "const APP_VERSION = '1.2.0-dev.2';" in version, 'visible Version marker is V1.1-F or later')
 check('test_v11f_clock_widget.php' in run and 'test_v11f_frontend_runtime.js' in run, 'main regression runner includes V1.1-F checks')
 check('test_v11f_clock_widget.php' in local_run and 'test_v11f_frontend_runtime.js' in local_run, 'local V1.1-F runner includes focused checks')
 

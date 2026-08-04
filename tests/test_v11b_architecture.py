@@ -41,8 +41,8 @@ check("Feed create does not normalize registered Feed URL", "app_remove_tracking
 check("Feed update does not normalize registered Feed URL", "app_remove_tracking_parameters" not in content_update)
 check("V1.1-B does not add tracking fields to existing DB tables", "utm_source" not in schema.read_text(encoding="utf-8") and "tracking" not in schema.read_text(encoding="utf-8").lower())
 check("SB-13 migration remains present", migration.is_file())
-check("V1.1 or later version marker remains set", "const APP_VERSION = '1.1.0-dev." in version or "const APP_VERSION = '1.1.0';" in version or "const APP_VERSION = '1.2.0-dev.1';" in version)
-check("V1.1 or later checkpoint label remains set", ("RSS Reader Modernization V1.1-" in version and ("/ R1" in version or "/ R2" in version)) or "RSS Reader Modernization 1.1.0" in version or "RSS Reader Modernization 1.2.0-dev.1" in version)
+check("V1.1 or later version marker remains set", "const APP_VERSION = '1.1.0-dev." in version or "const APP_VERSION = '1.1.0';" in version or "const APP_VERSION = '1.2.0-dev.2';" in version)
+check("V1.1 or later checkpoint label remains set", ("RSS Reader Modernization V1.1-" in version and ("/ R1" in version or "/ R2" in version)) or "RSS Reader Modernization 1.1.0" in version or "RSS Reader Modernization 1.2.0-dev.2" in version)
 
 failed = [name for name, ok in checks if not ok]
 if failed:

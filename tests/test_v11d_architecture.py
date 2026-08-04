@@ -48,7 +48,7 @@ check('.dashboard-widget' in css and 'min-width: 0' in css, 'Widget base CSS pre
 
 check("CONCAT('`', @table_prefix, 'dashboard_widget`')" in schema, 'new-install schema uses the dynamic prefix for Dashboard Widget')
 check('content_location' in schema and 'widget_location' in schema, 'content location remains present for rollback compatibility')
-check(("const APP_VERSION = '1.1.0-dev." in version and 'V1.1-' in version) or ("const APP_VERSION = '1.1.0';" in version and 'RSS Reader Modernization 1.1.0' in version) or "const APP_VERSION = '1.2.0-dev.1';" in version, 'visible Version marker remains in the Version 1.1 line')
+check(("const APP_VERSION = '1.1.0-dev." in version and 'V1.1-' in version) or ("const APP_VERSION = '1.1.0';" in version and 'RSS Reader Modernization 1.1.0' in version) or "const APP_VERSION = '1.2.0-dev.2';" in version, 'visible Version marker remains in the Version 1.1 line')
 check('data-dashboard-widget-sort-order' in index, 'V1.1-D Widget order hook remains available to later phases')
 
 if not all(checks):

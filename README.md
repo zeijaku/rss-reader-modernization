@@ -5,7 +5,7 @@
 **Stable release:** `RSS Reader Modernization 1.1.0`  
 Release tag: `v1.1.0`
 
-**Development checkpoint:** `RSS Reader Modernization 1.2.0-dev.2`（V1.2-B）  
+**Development checkpoint:** `RSS Reader Modernization 1.2.0-dev.2`（V1.2-B / R2）  
 Baseline: `main` / `31e9d9f3fc594f8080d1962f10ac30985bd07881`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
@@ -75,7 +75,7 @@ V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.m
 
 V1.2-Aでは既存の認証、CSRF、Login Throttle、Session ID再生成、Cookie、Registration Validationを維持したまま、Authentication専用UIへ更新しました。LogoutとSession timeoutはQuery Parameterを使わない1回限りのFlashで区別し、403／404／500／503はDBや通常Bootstrapへ依存しない共通画面を使用します。DB変更、SQL、`config/local.php`追加はありません。詳細は[`docs/v1-2-a-implementation.md`](docs/v1-2-a-implementation.md)、Test結果は[`docs/test-report-v1-2-a.md`](docs/test-report-v1-2-a.md)を参照してください。
 
-V1.2-Bでは記事Titleを固定文字数で切らず、実際の表示幅で省略された場合だけHover／Keyboard Focusで全文を確認できるようにしました。記事右側の`▽`はFeedから既に取得した`content`を優先し、なければ`description`をPlain Textとして展開します。Feed見出しの`⟳`は既存`feed.fetch`、owner確認、Cache、ETag、Last-Modified、Retry、Backoffを再利用し、更新中と失敗時も現在の記事を残します。DB、Migration、SQL、`.htaccess`、`config/local.php`の変更はありません。詳細は[`docs/v1-2-b-implementation.md`](docs/v1-2-b-implementation.md)、Test結果は[`docs/test-report-v1-2-b.md`](docs/test-report-v1-2-b.md)を参照してください。
+V1.2-Bでは記事Titleを固定文字数で切らず、実際の表示幅で省略された場合だけHover／Keyboard Focusで全文を確認できるようにしました。R2では記事行を`Stock｜Title｜▽`の3列へ調整し、Stockを従来どおり左側へ戻した上で、記事右側の`▽`へ独立した44px操作領域を確保しています。`▽`はFeedから既に取得した`content`を優先し、なければ`description`をPlain Textとして展開します。Feed見出しの`⟳`は既存`feed.fetch`、owner確認、Cache、ETag、Last-Modified、Retry、Backoffを再利用し、更新中と失敗時も現在の記事を残します。DB、Migration、SQL、`.htaccess`、`config/local.php`の変更はありません。詳細は[`docs/v1-2-b-implementation.md`](docs/v1-2-b-implementation.md)、Test結果は[`docs/test-report-v1-2-b.md`](docs/test-report-v1-2-b.md)を参照してください。
 
 ## Secure Baselineで完了した範囲
 

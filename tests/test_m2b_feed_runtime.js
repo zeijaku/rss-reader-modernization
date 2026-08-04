@@ -277,16 +277,19 @@ check(firstTitle.children[0].attrs.href === 'https://example.com/feed', 'channel
 check(aggregateText(firstTitle).includes('<b>安全なタイトル</b>'), 'HTML-looking channel title remains literal text');
 check(firstBody.children.length === 5, 'only five valid items are rendered');
 check(aggregateText(firstBody.children[0]).includes('<script>alert(1)</script>'), 'HTML-looking item title remains literal text');
-const firstActions = firstBody.children[0].children[1];
-const firstStockButton = firstActions.children.find((child) => child.classes.has('infomation_modal_rewrite'));
+const firstStockCell = firstBody.children[0].children[0];
+const firstTitleCell = firstBody.children[0].children[1];
+const firstSummaryCell = firstBody.children[0].children[2];
+const firstStockButton = firstStockCell.children.find((child) => child.classes.has('infomation_modal_rewrite'));
+check(firstTitleCell.classes.has('feed-item-title-cell') && firstSummaryCell.classes.has('feed-item-summary-cell'), 'valid item keeps the title center and summary action right');
 check(Boolean(firstStockButton) && firstStockButton.tag === 'button', 'valid item Stock action is a real button');
 check(String(firstStockButton.attrs['aria-label'] || '').includes('<script>alert(1)</script>'), 'Stock button accessible name includes the article title as text');
 check(!aggregateText(firstBody.children[0]).includes('sixth must not render'), 'sixth item is not rendered');
 
 const unsafeRow = firstBody.children[1];
-const unsafeTitleCell = unsafeRow.children[0];
-const unsafeActions = unsafeRow.children[1];
-check(unsafeActions.children.filter((child) => child.classes.has('infomation_modal_rewrite')).length === 0, 'unsafe item URL does not create a Stock button');
+const unsafeStockCell = unsafeRow.children[0];
+const unsafeTitleCell = unsafeRow.children[1];
+check(unsafeStockCell.children.filter((child) => child.classes.has('infomation_modal_rewrite')).length === 0, 'unsafe item URL does not create a Stock button');
 check(unsafeTitleCell.children[0].children.some((child) => child.tag === 'span'), 'unsafe item URL renders non-clickable text');
 
 const emojiRowText = aggregateText(firstBody.children[2]);

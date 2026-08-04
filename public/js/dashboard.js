@@ -762,7 +762,7 @@
             var $row = $('<tr>').addClass('content-state-row feed-state-' + state);
             var $cell = $('<td>')
                 .addClass('feed-state-message')
-                .attr('colspan', '2')
+                .attr('colspan', '3')
                 .attr('role', state === 'error' ? 'alert' : 'status')
                 .appendTo($row);
             if (state === 'loading') {
@@ -784,7 +784,7 @@
         var $row = $('<tr>').addClass('content-state-row feed-state-' + state);
         $('<td>')
             .addClass('feed-state-message')
-            .attr('colspan', '2')
+            .attr('colspan', '3')
             .attr('role', state === 'error' ? 'alert' : 'status')
             .text(message)
             .appendTo($row);
@@ -882,6 +882,24 @@
             var $row = $('<tr>')
                 .addClass('feed-item-row')
                 .attr('data-feed-item-index', String(itemIndex));
+            var $stockCell = $('<td>').addClass('feed-item-stock-cell').appendTo($row);
+
+            if (itemLink !== '') {
+                var $stockButton = $('<button type="button">')
+                    .addClass('feed-item-action infomation_modal_rewrite')
+                    .attr('aria-label', 'Stockへ保存: ' + viewTitle)
+                    .attr('data-stock-url', itemLink)
+                    .attr('data-stock-title', itemTitle)
+                    .attr('data-toggle', 'modal')
+                    .attr('data-target', '.save_modal')
+                    .appendTo($stockCell);
+
+                $('<i>')
+                    .addClass('fas fa-bookmark fa-fw text-info')
+                    .attr('aria-hidden', 'true')
+                    .appendTo($stockButton);
+            }
+
             var $titleCell = $('<td>').addClass('feed-item-title-cell').appendTo($row);
             var $titleWrap = $('<div>').addClass('feed-item-title-wrap').appendTo($titleCell);
             var itemIdentity = String(item.item_identity || '');
@@ -918,35 +936,20 @@
                     .appendTo($titleWrap);
             }
 
-            var $actions = $('<td>').addClass('feed-item-actions').appendTo($row);
+            var $summaryCell = $('<td>').addClass('feed-item-summary-cell').appendTo($row);
             var $summaryButton = $('<button type="button">')
                 .addClass('feed-item-action feed-item-summary-toggle')
                 .attr('aria-label', summary !== '' ? 'RSS概要を表示: ' + viewTitle : 'RSS概要はありません: ' + viewTitle)
                 .attr('aria-expanded', 'false')
                 .attr('aria-controls', summaryId)
                 .prop('disabled', summary === '')
-                .appendTo($actions);
+                .appendTo($summaryCell);
 
-            $('<i>')
-                .addClass('fas fa-chevron-down text-secondary')
+            $('<span>')
+                .addClass('feed-item-summary-symbol')
                 .attr('aria-hidden', 'true')
+                .text('▽')
                 .appendTo($summaryButton);
-
-            if (itemLink !== '') {
-                var $stockButton = $('<button type="button">')
-                    .addClass('feed-item-action infomation_modal_rewrite')
-                    .attr('aria-label', 'Stockへ保存: ' + viewTitle)
-                    .attr('data-stock-url', itemLink)
-                    .attr('data-stock-title', itemTitle)
-                    .attr('data-toggle', 'modal')
-                    .attr('data-target', '.save_modal')
-                    .appendTo($actions);
-
-                $('<i>')
-                    .addClass('fas fa-bookmark fa-fw text-info')
-                    .attr('aria-hidden', 'true')
-                    .appendTo($stockButton);
-            }
 
             renderedItems.push({
                 title: viewTitle,
@@ -1145,7 +1148,7 @@
         var $detailRow = $('<tr>')
             .addClass('feed-item-detail-row')
             .attr('id', detailId);
-        var $detailCell = $('<td>').attr('colspan', '2').appendTo($detailRow);
+        var $detailCell = $('<td>').attr('colspan', '3').appendTo($detailRow);
         var $summary = $('<div>')
             .addClass('feed-item-summary')
             .attr('tabindex', '0')

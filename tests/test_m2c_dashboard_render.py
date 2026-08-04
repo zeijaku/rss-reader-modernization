@@ -36,7 +36,7 @@ check('data-app-version' in index and 'APP_VERSION_LABEL' in index, 'Dashboard e
 check('role="region" aria-labelledby="feed-title-' in index, 'Feed Widgets remain named regions')
 check('aria-busy="true"' in index, 'Feed Widgets expose initial loading state')
 check('aria-live="polite" aria-relevant="all"' in index, 'Feed bodies remain polite live regions')
-check('scope="col"' in index and '<th colspan="2"' in index, 'Feed table headings use th and scope')
+check('scope="col"' in index and '<th colspan="3"' in index, 'Feed table headings use th and scope')
 check('aria-label="このRSSを編集"' in index, 'Feed edit controls remain named buttons')
 check('id="registerContentForm"' in index and 'id="changeContentForm"' in index, 'RSS add/change forms remain explicit')
 check('class="navbar-link-setting"' in index and 'class="navbar-icon-setting"' in index, 'Settings fieldset grouping remains')

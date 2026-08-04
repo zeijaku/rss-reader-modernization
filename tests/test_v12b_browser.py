@@ -28,13 +28,13 @@ html = '''<!doctype html><html lang="ja"><head>
 <main id="main-content" data-dashboard-current-tab="0" data-dashboard-tab-count="4">
 <section style="width:360px" class="dashboard-widget feed-card" data-dashboard-widget-id="11" data-dashboard-widget-type="feed" data-feed-content-id="7" data-feed-state="loading" aria-busy="true">
 <div class="feed-card-inner"><input type="hidden" class="content-value" value="https://example.com/feed.xml">
-<table class="table table-hover feed-table"><colgroup><col><col class="feed-actions-column"></colgroup>
-<thead><tr><th colspan="2" class="bg-success feed-card-header"><div class="feed-card-header-inner">
+<table class="table table-hover feed-table"><colgroup><col class="feed-stock-column"><col><col class="feed-summary-column"></colgroup>
+<thead><tr><th colspan="3" class="bg-success feed-card-header"><div class="feed-card-header-inner">
 <button type="button" class="btn btn-link widget-drag-handle"><i class="fas fa-grip-lines"></i></button>
 <small class="content-title widget-title-text"><span>読み込み中...</span></small>
 <span class="feed-card-actions"><button type="button" class="btn btn-link content-edit-trigger"><i class="fas fa-edit"></i></button><button type="button" class="btn btn-link feed-refresh-trigger"><i class="fas fa-sync-alt"></i></button></span>
 </div></th></tr></thead>
-<tbody class="content-body"><tr class="content-state-row feed-state-loading"><td colspan="2">フィードを読み込んでいます</td></tr></tbody></table></div></section>
+<tbody class="content-body"><tr class="content-state-row feed-state-loading"><td colspan="3">フィードを読み込んでいます</td></tr></tbody></table></div></section>
 <section id="other-widget">Clock unchanged</section>
 </main><div id="page-top"></div><nav id="drawerMenu"></nav>
 <div class="save_modal"><input class="informationData"><input class="informationTitle"><button class="information_modal_dbsave"></button></div>
@@ -44,6 +44,7 @@ with sync_playwright() as p:
     browser = p.chromium.launch(executable_path=chromium, headless=True, args=['--no-sandbox'])
     page = browser.new_page(viewport={"width": 420, "height": 900}, locale='ja-JP', timezone_id='Asia/Tokyo')
     page.set_content(html)
+    page.add_style_tag(path=str(ROOT / 'public/css/all.css'))
     page.add_style_tag(path=str(ROOT / 'public/css/dashboard.css'))
     page.add_script_tag(path=str(ROOT / 'public/js/jquery-3.7.1.min.js'))
     page.evaluate('''() => {
@@ -87,6 +88,19 @@ with sync_playwright() as p:
     page.wait_for_timeout(160)
 
     check(page.locator('.feed-item-row').count() == 4, 'Feed renders four article rows')
+    first_row_cells = page.locator('.feed-item-row').first.locator('td')
+    check(first_row_cells.count() == 3, 'article row has independent Stock, title and summary cells')
+    check('feed-item-stock-cell' in (first_row_cells.nth(0).get_attribute('class') or ''), 'Stock cell is restored to the left edge')
+    check('feed-item-title-cell' in (first_row_cells.nth(1).get_attribute('class') or ''), 'article title remains in the center cell')
+    check('feed-item-summary-cell' in (first_row_cells.nth(2).get_attribute('class') or ''), 'summary toggle has an independent right edge cell')
+    stock_box = page.locator('.infomation_modal_rewrite').first.bounding_box()
+    title_box = page.locator('.feed-item-title-text').first.bounding_box()
+    toggle_box = page.locator('.feed-item-summary-toggle').first.bounding_box()
+    check(stock_box is not None and title_box is not None and toggle_box is not None and stock_box['x'] < title_box['x'] < toggle_box['x'], 'mobile layout is visually ordered Stock, title, summary')
+    check(toggle_box is not None and toggle_box['width'] >= 43 and toggle_box['height'] >= 43, 'summary toggle remains a visible touch-sized control')
+    summary_symbol = page.locator('.feed-item-summary-toggle').first.locator('.feed-item-summary-symbol')
+    symbol_style = summary_symbol.evaluate("el=>({display:getComputedStyle(el).display,color:getComputedStyle(el).color,size:parseFloat(getComputedStyle(el).fontSize),opacity:parseFloat(getComputedStyle(el).opacity)})")
+    check(summary_symbol.inner_text() == '▽' and symbol_style['display'] != 'none' and symbol_style['size'] >= 16 and symbol_style['opacity'] > 0, 'summary symbol is visibly rendered on smartphone width without an icon font')
     check(not page.locator('.feed-refresh-trigger').is_disabled(), 'refresh button is restored after initial success')
     check(not page.locator('.feed-refresh-trigger i').evaluate("el=>el.classList.contains('fa-spin')"), 'refresh icon stops after success')
     check(page.locator('.feed-item-title-text').first.inner_text() == long_title, 'full article title remains in the DOM')
@@ -161,4 +175,4 @@ with sync_playwright() as p:
 
 if failures:
     raise SystemExit(1)
-print(f'All {len(failures) + 43} V1.2-B real Browser checks passed.')
+print(f'All {len(failures) + 50} V1.2-B real Browser checks passed.')

@@ -1,8 +1,9 @@
 package_type=development-checkpoint
 application_version=1.2.0-dev.2
 application_label=RSS Reader Modernization 1.2.0-dev.2
+package_revision=r2
 upstream_branch=main
 upstream_commit=31e9d9f3fc594f8080d1962f10ac30985bd07881
-direct_baseline=rss-reader-modernization-v1.2-a-r1.zip
+direct_baseline=rss-reader-modernization-v1.2-b-r1.zip
 runtime_data=excluded
 manifest=SOURCE_MANIFEST.sha256

@@ -323,8 +323,9 @@
     table-layout: fixed;
 }
 
-.feed-actions-column {
-    width: 90px;
+.feed-stock-column,
+.feed-summary-column {
+    width: 44px;
 }
 
 .feed-table thead .feed-card-header {
@@ -441,10 +442,11 @@
     outline-offset: 2px;
 }
 
-.feed-item-actions {
-    padding-right: 4px;
-    padding-left: 2px;
-    text-align: right;
+.feed-item-stock-cell,
+.feed-item-summary-cell {
+    width: 44px;
+    padding: 0;
+    text-align: center;
     vertical-align: middle;
     white-space: nowrap;
 }
@@ -478,15 +480,24 @@
 
 .feed-item-action:disabled {
     cursor: default;
-    opacity: 0.35;
+    opacity: 0.72;
 }
 
-.feed-item-summary-toggle[aria-expanded="true"] .fa-chevron-down {
+.feed-item-summary-toggle[aria-expanded="true"] .feed-item-summary-symbol {
     transform: rotate(180deg);
 }
 
-.feed-item-summary-toggle .fa-chevron-down {
+.feed-item-summary-symbol {
+    display: inline-block;
+    color: #495057;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1;
     transition: transform 0.16s ease;
+}
+
+.feed-item-summary-toggle:disabled .feed-item-summary-symbol {
+    color: #868e96;
 }
 
 .feed-item-detail-row td {

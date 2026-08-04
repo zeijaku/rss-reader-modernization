@@ -1,6 +1,15 @@
 # Changelog
 
-## RSS Reader Modernization 1.2.0-dev.2 — V1.2-B — 2026-08-04
+## RSS Reader Modernization 1.2.0-dev.2 — V1.2-B / R2 — 2026-08-04
+
+### R2 article action layout correction
+
+- Smartphone幅で概要`▽`が薄く見え、Stockが右側へ移動していた記事行Layoutを修正。
+- 記事行を`Stock｜Title｜▽`の3列へ戻し、Stockを従来位置の左側へ復帰。
+- 概要`▽`は右端の独立44px列へ配置し、Icon Fontへ依存しないUnicode `▽`とColor／Font Sizeを明示。
+- Loading／Empty／Error／Accordion detail rowの`colspan`を3列構成へ同期。
+- DB、API、Cache、`.htaccess`、`config/local.php`、Version番号は変更なし。
+- R2分割Regression: PASS 3,862／FAIL 0／SKIP 10。
 
 ### Feed article display / individual refresh
 

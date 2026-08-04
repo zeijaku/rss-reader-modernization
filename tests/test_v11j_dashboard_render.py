@@ -95,7 +95,7 @@ check('12文字以上72文字以下' in text,'password bounds are visible to the
 check('user_email' not in html,'stored keyed email field is not rendered')
 check('user_password' not in html,'stored password hash field is not rendered')
 check('CurrentPass123!' not in html and '$2y$' not in html and '$argon' not in html,'credential values and hashes are absent from HTML')
-check('RSS Reader Modernization V1.1-J / R1' in text or 'RSS Reader Modernization 1.1.0' in text or 'RSS Reader Modernization 1.2.0-dev.1' in text,'Dashboard displays V1.1-J or final 1.1.0 version marker')
+check('RSS Reader Modernization V1.1-J / R1' in text or 'RSS Reader Modernization 1.1.0' in text or 'RSS Reader Modernization 1.2.0-dev.2' in text,'Dashboard displays V1.1-J or final 1.1.0 version marker')
 check('method="post" action="./logout.php"' in html,'existing CSRF-protected logout remains present')
 check(len(ids)==len(set(ids)),'Dashboard output contains no duplicate IDs')
 
