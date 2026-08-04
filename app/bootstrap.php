@@ -3,19 +3,10 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/version.php';
-require_once __DIR__ . '/common/common_conf.php';
+require_once __DIR__ . '/error_response.php';
 
-error_reporting(E_ALL);
-ini_set('display_errors', APP_DEBUG ? '1' : '0');
-ini_set('display_startup_errors', APP_DEBUG ? '1' : '0');
-ini_set('html_errors', '0');
-ini_set('log_errors', '1');
-
-$errorLogDirectory = dirname((string) APP_ERROR_LOG_PATH);
-if (is_dir($errorLogDirectory) && is_writable($errorLogDirectory)) {
-    ini_set('error_log', (string) APP_ERROR_LOG_PATH);
-}
-
+// Register the minimal fallback before loading runtime configuration so a bad
+// private config file can still return the common 500 response.
 set_exception_handler(static function (Throwable $exception): void {
     try {
         $reference = bin2hex(random_bytes(6));
@@ -32,18 +23,38 @@ set_exception_handler(static function (Throwable $exception): void {
         $exception->getMessage()
     ));
 
-    if (!headers_sent()) {
-        http_response_code(500);
-        header('Content-Type: text/plain; charset=UTF-8');
-    }
-
-    if (APP_DEBUG) {
-        echo "Application error [{$reference}]: {$exception->getMessage()}";
+    $jsonResponse = defined('APP_RESPONSE_FORMAT') && APP_RESPONSE_FORMAT === 'json';
+    if ($jsonResponse) {
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: application/json; charset=UTF-8');
+            header('Cache-Control: no-store');
+        }
+        echo json_encode([
+            'ok' => false,
+            'error' => [
+                'code' => 'internal_error',
+                'message' => 'Internal server error. Reference: ' . $reference,
+            ],
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         return;
     }
 
-    echo "An internal application error occurred. Reference: {$reference}";
+    app_render_error_page(500, $reference);
 });
+
+require_once __DIR__ . '/common/common_conf.php';
+
+error_reporting(E_ALL);
+ini_set('display_errors', APP_DEBUG ? '1' : '0');
+ini_set('display_startup_errors', APP_DEBUG ? '1' : '0');
+ini_set('html_errors', '0');
+ini_set('log_errors', '1');
+
+$errorLogDirectory = dirname((string) APP_ERROR_LOG_PATH);
+if (is_dir($errorLogDirectory) && is_writable($errorLogDirectory)) {
+    ini_set('error_log', (string) APP_ERROR_LOG_PATH);
+}
 
 require_once __DIR__ . '/common/common_db.php';
 require_once __DIR__ . '/validation.php';

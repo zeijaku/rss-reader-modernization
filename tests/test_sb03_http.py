@@ -100,13 +100,38 @@ try:
 
     status, headers, _ = request(port, 'POST', '/logout.php', sid2, 'csrf_token=' + csrf)
     check(status == 303, 'valid logout returns 303 redirect')
-    expired_cookie = headers.get('Set-Cookie', '')
-    check('iguguru_session=deleted' in expired_cookie or 'iguguru_session=' in expired_cookie, 'valid logout expires the session cookie')
+    logout_cookie = headers.get('Set-Cookie', '')
+    sid3 = parse_sid(logout_cookie)
+    check(sid3 is not None and sid3 not in ('', 'deleted') and sid3 != sid2, 'valid logout creates a fresh anonymous session id')
 
     # Supplying the old id after session_destroy must not restore authentication.
     status, _, body = request(port, 'GET', '/__test/state', sid2)
     state4 = json.loads(body)
     check(status == 200 and state4['authenticated'] is False, 'destroyed session id cannot restore authentication')
+
+    status, _, body = request(port, 'GET', '/__test/flash', sid3)
+    logout_flash = json.loads(body)['notice']
+    check(logout_flash == {'message': 'ログアウトしました。', 'type': 'success'}, 'logout notice is stored in the fresh anonymous session')
+    status, _, body = request(port, 'GET', '/__test/flash', sid3)
+    check(json.loads(body)['notice'] is None, 'logout notice is consumed once')
+
+    status, headers, body = request(port, 'POST', '/__test/login', sid3, '')
+    sid4 = parse_sid(headers.get('Set-Cookie')) or sid3
+    state5 = json.loads(body)
+    check(status == 200 and state5['authenticated'] is True and sid4 != sid3, 'second login establishes another fresh authenticated session')
+
+    status, _, body = request(port, 'GET', '/__test/expire', sid4)
+    check(status == 200 and json.loads(body)['ok'] is True, 'test endpoint marks the authenticated session idle-expired')
+    status, headers, body = request(port, 'GET', '/__test/state', sid4)
+    expired_state = json.loads(body)
+    sid5 = parse_sid(headers.get('Set-Cookie')) or expired_state['session_id']
+    check(status == 200 and expired_state['authenticated'] is False, 'idle-expired session becomes anonymous')
+    check(sid5 != sid4, 'idle expiry rotates the session id')
+    status, _, body = request(port, 'GET', '/__test/flash', sid5)
+    expiry_flash = json.loads(body)['notice']
+    check(expiry_flash == {'message': 'セッションの有効期限が切れました。もう一度ログインしてください。', 'type': 'warning'}, 'session expiry has a distinct one-time notice')
+    status, _, body = request(port, 'GET', '/__test/flash', sid5)
+    check(json.loads(body)['notice'] is None, 'session expiry notice is consumed once')
 
     print('All SB-03 HTTP session checks passed.')
 finally:

@@ -11,8 +11,12 @@ access_log();
 $token = isset($_POST['token']) && is_string($_POST['token']) ? $_POST['token'] : null;
 $resultAuth = ['ok' => false];
 $authCsrfInvalid = false;
+$authTrapFilled = false;
 
 if ($token === 'login' || $token === 'regist') {
+    $trapValue = $_POST[AUTH_FORM_TRAP_FIELD] ?? null;
+    $authTrapFilled = auth_form_trap_is_filled($trapValue);
+
     $submittedCsrf = isset($_POST['csrf_token']) && is_string($_POST['csrf_token']) ? $_POST['csrf_token'] : null;
     if (!app_csrf_is_valid($submittedCsrf)) {
         $authCsrfInvalid = true;
@@ -28,7 +32,12 @@ if ($token === 'login' && !$authCsrfInvalid) {
     $throttle = login_throttle_status($throttleIdentity, $ipAddress);
 
     if (!$throttle['blocked']) {
-        $resultAuth = auth_authenticate($email, $password);
+        if ($authTrapFilled) {
+            auth_dummy_password_verify($password);
+            $resultAuth = ['ok' => false, 'reason' => 'invalid_credentials'];
+        } else {
+            $resultAuth = auth_authenticate($email, $password);
+        }
         if (($resultAuth['ok'] ?? false) === true) {
             login_throttle_record_success($throttleIdentity, $ipAddress);
             app_session_login((int) $resultAuth['user_id']);
@@ -42,7 +51,9 @@ if ($token === 'login' && !$authCsrfInvalid) {
 } elseif ($token === 'regist' && !$authCsrfInvalid) {
     $email = isset($_POST['email']) && is_string($_POST['email']) ? $_POST['email'] : '';
     $password = isset($_POST['password']) && is_string($_POST['password']) ? $_POST['password'] : '';
-    $registration = auth_register($email, $password);
+    $registration = $authTrapFilled
+        ? ['ok' => false, 'reason' => 'registration_failed']
+        : auth_register($email, $password);
 
     if (($registration['ok'] ?? false) === true) {
         header('Location: ./?result=regist', true, 303);
@@ -87,9 +98,12 @@ $tabParam = app_tab_from_query($_GET['tab'] ?? null);
     <link rel="stylesheet" href="./css/drawer.min.css">
 
     <link rel="stylesheet" href="./css/dashboard.css">
+    <?php if ($currentUserId === null): ?>
+    <link rel="stylesheet" href="./css/auth.css">
+    <?php endif; ?>
 
 </head>
-<body class="drawer drawer--right">
+<body class="drawer drawer--right<?php echo $currentUserId === null ? ' auth-page' : ''; ?>">
 <a class="skip-link" href="#main-content">本文へ移動</a>
 
 <?php
@@ -98,6 +112,7 @@ if ($currentUserId === null) {
     /* 未ログイン時 */
     $loginMessage = null;
     $loginMessageType = 'danger';
+    $authNotice = app_flash_take('auth_notice');
 
     if ($authCsrfInvalid) {
         $loginMessage = 'The form expired or could not be verified. Reload the page and try again.';
@@ -115,6 +130,9 @@ if ($currentUserId === null) {
         } elseif ($result === 'regist_disabled') {
             $loginMessage = 'New account registration is currently disabled.';
             $loginMessageType = 'info';
+        } elseif ($authNotice !== null) {
+            $loginMessage = $authNotice['message'];
+            $loginMessageType = $authNotice['type'];
         }
     }
 

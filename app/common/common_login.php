@@ -8,97 +8,98 @@ function view_login(?string $message = null, string $messageType = 'danger', boo
     if (!in_array($messageType, $allowedMessageTypes, true)) {
         $messageType = 'danger';
     }
+    $messageRole = in_array($messageType, ['danger', 'warning'], true) ? 'alert' : 'status';
     ?>
-    <style>
-    :root { --input-padding-x: .75rem; --input-padding-y: .75rem; }
-    html, body { height: 100%; }
-    body {
-        display: -ms-flexbox;
-        display: flex;
-        -ms-flex-align: center;
-        align-items: center;
-        padding-top: 40px;
-        padding-bottom: 40px;
-        background-color: #f5f5f5;
-    }
-    .login-main { width: 100%; }
-    .form-signin { width: 100%; max-width: 330px; padding: 15px; margin: auto; }
-    .form-signin .checkbox { font-weight: 400; }
-    .form-signin .form-control {
-        position: relative;
-        box-sizing: border-box;
-        height: auto;
-        padding: 10px;
-        font-size: 16px;
-    }
-    .form-signin .form-control:focus { z-index: 2; }
-    .form-signin input[type="email"] {
-        margin-bottom: -1px;
-        border-bottom-right-radius: 0;
-        border-bottom-left-radius: 0;
-    }
-    .form-signin input[type="password"] {
-        margin-bottom: 10px;
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
-    }
-    .multi-collapse:not(.show) { display: none; }
-    </style>
-
-    <main id="main-content" class="login-main" tabindex="-1">
-    <div class="collapse multi-collapse show form-signin text-center" id="multiCollapseExample1">
-        <?php if ($message !== null): ?>
-            <div class="alert alert-<?php echo htmlspecialchars($messageType, ENT_QUOTES, 'UTF-8'); ?>" role="alert" aria-live="assertive">
-                <?php echo htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>
-            </div>
-        <?php endif; ?>
-
-        <form method="post" action="./" class="form-signin text-center">
-            <input type="hidden" name="token" value="login">
-            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-            <i class="fas fa-rss text-center fa-fw fa-4x text-info" aria-hidden="true"></i>
-            <h1 class="h2 mb-3 font-weight-normal text-dark">iGuguru RSS Reader</h1>
-            <label for="loginEmail" class="sr-only">Email address</label>
-            <input type="email" id="loginEmail" name="email" class="form-control" placeholder="Email address" required autofocus autocomplete="username">
-            <label for="loginPassword" class="sr-only">Password</label>
-            <input type="password" id="loginPassword" name="password" class="form-control" placeholder="Password" required autocomplete="current-password">
-            <div class="checkbox mb-3"><label></label></div>
-            <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in <i class="fas fa-sign-in-alt" aria-hidden="true"></i></button>
-            <?php if ($registrationEnabled): ?>
-                <button class="btn btn-lg btn-info btn-block" type="button" data-toggle="collapse" data-target=".multi-collapse" aria-expanded="false" aria-controls="multiCollapseExample1 multiCollapseExample2">Register in <i class="fas fa-pencil-alt" aria-hidden="true"></i></button>
+    <main id="main-content" class="auth-shell" tabindex="-1">
+        <div class="auth-frame">
+            <?php if ($message !== null): ?>
+                <div class="auth-message auth-message--<?php echo htmlspecialchars($messageType, ENT_QUOTES, 'UTF-8'); ?>" role="<?php echo $messageRole; ?>" aria-live="polite">
+                    <?php echo htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>
+                </div>
             <?php endif; ?>
-        </form>
-        <div class="h5 mb-3 font-weight-normal text-dark">
-            <p>iGuguru はiGoogleの代替サービスとして開発されました。</p>
-            <p>RSSを見ることだけに特化したサービスです</p>
-        </div>
-        <footer class="text-muted small mt-4" data-app-version><?php echo htmlspecialchars(APP_VERSION_LABEL, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?></footer>
-    </div>
 
-    <?php if ($registrationEnabled): ?>
-    <div class="collapse multi-collapse form-signin text-center" id="multiCollapseExample2">
-        <form method="post" action="./" class="form-signin text-center">
-            <input type="hidden" name="token" value="regist">
-            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-            <i class="fas fa-rss text-center fa-fw fa-4x text-info" aria-hidden="true"></i>
-            <h2 class="h3 mb-3 font-weight-normal text-dark">Please Register in</h2>
-            <label for="registerEmail" class="sr-only">Email address</label>
-            <input type="email" id="registerEmail" name="email" class="form-control" placeholder="Email address" required autocomplete="username">
-            <label for="registerPassword" class="sr-only">Password</label>
-            <input type="password" id="registerPassword" name="password" class="form-control" placeholder="Password (<?php echo AUTH_PASSWORD_MIN_LENGTH; ?>+ characters)" minlength="<?php echo AUTH_PASSWORD_MIN_LENGTH; ?>" required autocomplete="new-password">
-            <div class="checkbox mb-3"><label></label></div>
-            <button class="btn btn-lg btn-info btn-block" type="submit">Register in <i class="fas fa-pencil-alt" aria-hidden="true"></i></button>
-            <button class="btn btn-lg btn-primary btn-block" type="button" data-toggle="collapse" data-target=".multi-collapse" aria-expanded="false" aria-controls="multiCollapseExample1 multiCollapseExample2">Sign in <i class="fas fa-sign-in-alt" aria-hidden="true"></i></button>
-        </form>
-        <footer class="text-muted small mt-4" data-app-version><?php echo htmlspecialchars(APP_VERSION_LABEL, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?></footer>
-    </div>
-    <?php endif; ?>
+            <section class="auth-card" data-auth-panel="login" aria-labelledby="loginTitle">
+                <div class="auth-brand">
+                    <span class="auth-brand-icon" aria-hidden="true"><i class="fas fa-rss"></i></span>
+                    <h1 class="auth-title" id="loginTitle">iGuguru RSS Reader</h1>
+                    <p class="auth-subtitle">登録したRSSを、いつもの画面ですばやく確認できます。</p>
+                </div>
+
+                <form method="post" action="./" data-auth-form>
+                    <input type="hidden" name="token" value="login">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
+                    <div class="auth-decoy" aria-hidden="true">
+                        <label for="loginContactReference">連絡先補足</label>
+                        <input type="text" id="loginContactReference" name="<?php echo AUTH_FORM_TRAP_FIELD; ?>" value="" tabindex="-1" autocomplete="off" aria-hidden="true" inputmode="none">
+                    </div>
+                    <div class="auth-field">
+                        <label class="auth-label" for="loginEmail">メールアドレス</label>
+                        <input type="email" id="loginEmail" name="email" class="auth-input" required autofocus autocomplete="username" maxlength="254">
+                    </div>
+                    <div class="auth-field">
+                        <label class="auth-label" for="loginPassword">パスワード</label>
+                        <div class="auth-input-wrap">
+                            <input type="password" id="loginPassword" name="password" class="auth-input auth-input--password" required autocomplete="current-password" maxlength="<?php echo AUTH_PASSWORD_MAX_LENGTH; ?>">
+                            <button class="auth-password-toggle" type="button" data-password-toggle aria-controls="loginPassword" aria-pressed="false" aria-label="パスワードを表示">
+                                <i class="fas fa-eye" data-password-icon aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="auth-button" type="submit"><span data-submit-label>ログイン</span><i class="fas fa-sign-in-alt" aria-hidden="true"></i></button>
+                </form>
+
+                <?php if ($registrationEnabled): ?>
+                    <p class="auth-switch-row">アカウントをお持ちでない場合は
+                        <button class="auth-switch" type="button" data-auth-switch="register">新規登録</button>
+                    </p>
+                <?php endif; ?>
+            </section>
+
+            <?php if ($registrationEnabled): ?>
+            <section class="auth-card" data-auth-panel="register" aria-labelledby="registerTitle" hidden>
+                <div class="auth-brand">
+                    <span class="auth-brand-icon" aria-hidden="true"><i class="fas fa-rss"></i></span>
+                    <h2 class="auth-title" id="registerTitle">新規アカウント登録</h2>
+                    <p class="auth-subtitle">メールアドレスとパスワードを入力してください。</p>
+                </div>
+
+                <form method="post" action="./" data-auth-form>
+                    <input type="hidden" name="token" value="regist">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
+                    <div class="auth-decoy" aria-hidden="true">
+                        <label for="registerContactReference">連絡先補足</label>
+                        <input type="text" id="registerContactReference" name="<?php echo AUTH_FORM_TRAP_FIELD; ?>" value="" tabindex="-1" autocomplete="off" aria-hidden="true" inputmode="none">
+                    </div>
+                    <div class="auth-field">
+                        <label class="auth-label" for="registerEmail">メールアドレス</label>
+                        <input type="email" id="registerEmail" name="email" class="auth-input" required autocomplete="username" maxlength="254">
+                    </div>
+                    <div class="auth-field">
+                        <label class="auth-label" for="registerPassword">パスワード</label>
+                        <div class="auth-input-wrap">
+                            <input type="password" id="registerPassword" name="password" class="auth-input auth-input--password" minlength="<?php echo AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo AUTH_PASSWORD_MAX_LENGTH; ?>" required autocomplete="new-password">
+                            <button class="auth-password-toggle" type="button" data-password-toggle aria-controls="registerPassword" aria-pressed="false" aria-label="パスワードを表示">
+                                <i class="fas fa-eye" data-password-icon aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <p class="auth-subtitle">パスワードは<?php echo AUTH_PASSWORD_MIN_LENGTH; ?>文字以上で設定してください。</p>
+                    </div>
+                    <button class="auth-button" type="submit"><span data-submit-label>登録する</span><i class="fas fa-user-plus" aria-hidden="true"></i></button>
+                </form>
+
+                <p class="auth-switch-row">すでにアカウントをお持ちの場合は
+                    <button class="auth-switch" type="button" data-auth-switch="login">ログインへ戻る</button>
+                </p>
+            </section>
+            <?php endif; ?>
+
+            <p class="auth-note">iGuguruはRSSの閲覧に特化したシンプルなReaderです。
+                <span class="auth-version" data-app-version><?php echo htmlspecialchars(APP_VERSION_LABEL, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?></span>
+            </p>
+        </div>
     </main>
 
-    <div class="row"></div>
-    <script src="./js/jquery-3.7.1.min.js"></script>
-    <script src="./js/popper.min.js"></script>
-    <script src="./js/bootstrap.min.js"></script>
+    <script src="./js/auth.js"></script>
     </body>
     </html>
     <?php

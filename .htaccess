@@ -4,3 +4,30 @@
 # var/session directory before session_start().
 Options -Indexes -MultiViews
 
+Options -Indexes
+
+RewriteEngine On
+
+# Common error page for the current server layout (application root -> public/ internal rewrite).
+# For a subdirectory install, prefix the path, for example: /rss/public/error.php
+ErrorDocument 403 /public/error.php
+ErrorDocument 404 /public/error.php
+ErrorDocument 500 /public/error.php
+ErrorDocument 503 /public/error.php
+
+# 非公開にしたいディレクトリへのアクセスを拒否
+RewriteRule ^(?:app|config|tools|var)(?:/|$) - [F,L,NC]
+
+# public配下へ内部転送済みの場合は再転送しない
+RewriteRule ^public(?:/|$) - [L]
+
+# public配下に実在するファイル・ディレクトリがある場合
+RewriteCond %{DOCUMENT_ROOT}/public/$1 -f [OR]
+RewriteCond %{DOCUMENT_ROOT}/public/$1 -d
+RewriteRule ^(.+)$ public/$1 [L]
+
+# トップページ
+RewriteRule ^$ public/index.php [L]
+
+# それ以外はpublic側へ転送
+RewriteRule ^(.+)$ public/$1 [L]

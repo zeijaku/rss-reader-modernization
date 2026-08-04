@@ -10,5 +10,22 @@ DirectoryIndex index.php
     Require all denied
 </FilesMatch>
 
-ErrorDocument 403 /error_403
-ErrorDocument 404 /error_404
+Options -Indexes
+
+RewriteEngine On
+
+# 実在するファイル・ディレクトリはそのまま返す
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# それ以外は共通404画面へ渡す
+RewriteRule ^ - [R=404,L]
+
+# Current rental-server layout keeps public/ below the visible application root.
+# If Apache DocumentRoot points directly to public/, change /public/error.php to /error.php.
+# For a subdirectory install, prefix the path, for example: /rss/public/error.php.
+ErrorDocument 403 /public/error.php
+ErrorDocument 404 /public/error.php
+ErrorDocument 500 /public/error.php
+ErrorDocument 503 /public/error.php

@@ -23,5 +23,7 @@ if (!app_csrf_is_valid($csrfToken)) {
 }
 
 app_session_logout();
+app_session_start();
+app_flash_set('auth_notice', 'ログアウトしました。', 'success');
 header('Location: ./', true, 303);
 exit;

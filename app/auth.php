@@ -2,6 +2,17 @@
 
 declare(strict_types=1);
 
+const AUTH_FORM_TRAP_FIELD = 'contact_reference';
+
+/** Treat a scalar value or malformed array as a filled form trap without logging its content. */
+function auth_form_trap_is_filled(mixed $value): bool
+{
+    if (is_array($value) || is_object($value)) {
+        return true;
+    }
+    return is_string($value) && trim($value) !== '';
+}
+
 /** Normalize the login identifier used by the Secure Baseline. */
 function auth_normalize_email(string $email): string
 {

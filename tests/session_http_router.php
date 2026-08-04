@@ -36,6 +36,25 @@ if ($path === '/__test/state') {
     return true;
 }
 
+if ($path === '/__test/expire') {
+    if (!app_session_is_authenticated()) {
+        http_response_code(401);
+        echo json_encode(['error' => 'not authenticated'], JSON_THROW_ON_ERROR);
+        return true;
+    }
+    $_SESSION['last_activity'] = time() - SESSION_IDLE_TIMEOUT - 5;
+    echo json_encode(['ok' => true, 'session_id' => session_id()], JSON_THROW_ON_ERROR);
+    return true;
+}
+
+if ($path === '/__test/flash') {
+    echo json_encode([
+        'notice' => app_flash_take('auth_notice'),
+        'session_id' => session_id(),
+    ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+    return true;
+}
+
 if ($path === '/__test/login') {
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
         http_response_code(405);

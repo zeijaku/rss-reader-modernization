@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+define('APP_RESPONSE_FORMAT', 'json');
+
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/api.php';
 

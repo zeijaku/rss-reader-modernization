@@ -16,7 +16,7 @@ is_old_checkpoint = bool(re.fullmatch(r"(?:SB-\d+|M\d+-[A-Z]) R\d+", version_val
 is_semver = bool(re.fullmatch(r"\d+\.\d+\.\d+(?:-(?:rc[1-9][0-9]*|dev\.[1-9][0-9]*))?", version_value))
 old_checkpoint_label = bool(re.fullmatch(r"(?:Secure Baseline SB-\d+|(?:RSS Engine|Frontend|Release) M\d+-[A-Z]) / R\d+", label_value))
 v11_checkpoint_label = bool(re.fullmatch(r"RSS Reader Modernization V1\.1-[A-Z] / R\d+", label_value))
-release_label = label_value == ("RSS Reader Modernization " + version_value.upper()) if is_semver else False
+release_label = label_value == ("RSS Reader Modernization " + version_value) if is_semver else False
 
 stage_match = False
 if version_value and label_value:
@@ -34,7 +34,7 @@ checks = {
     "version label format": old_checkpoint_label or v11_checkpoint_label or release_label,
     "version and label stages match": stage_match,
     "bootstrap loads version": "require_once __DIR__ . '/version.php';" in bootstrap,
-    "login marker": login.count("data-app-version") >= 2,
+    "login marker": login.count("data-app-version") >= 1,
     "login uses label": "APP_VERSION_LABEL" in login,
     "dashboard footer marker": 'footer class="text-center text-muted small py-3" data-app-version' in index,
     "dashboard uses label": "APP_VERSION_LABEL" in index,

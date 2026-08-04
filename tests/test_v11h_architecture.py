@@ -54,7 +54,7 @@ check('.task-card' in css and '.task-card-inner' in css and '.task-card-body' in
 check('.task-completed .task-item-title' in css and 'text-decoration: line-through' in css, 'completed Tasks have a restrained visual state')
 check('.task-create-options' in css and 'grid-template-columns' in css, 'Task inline form has a bounded responsive layout')
 check('@media (max-width: 767.98px)' in css and '.task-card-body' in css, 'Task has a mobile layout rule')
-check((re.search(r"const APP_VERSION = '1\.1\.0-dev\.[7-9][0-9]*';", version) is not None and any(label in version for label in ['V1.1-H / R1','V1.1-I / R1','V1.1-I / R2','V1.1-J / R1'])) or ("const APP_VERSION = '1.1.0';" in version and 'RSS Reader Modernization 1.1.0' in version), 'visible Version marker is V1.1-H or later')
+check((re.search(r"const APP_VERSION = '1\.1\.0-dev\.[7-9][0-9]*';", version) is not None and any(label in version for label in ['V1.1-H / R1','V1.1-I / R1','V1.1-I / R2','V1.1-J / R1'])) or ("const APP_VERSION = '1.1.0';" in version and 'RSS Reader Modernization 1.1.0' in version) or "const APP_VERSION = '1.2.0-dev.1';" in version, 'visible Version marker is V1.1-H or later')
 check('test_v11h_task_widget.php' in run and 'test_v11h_frontend_runtime.js' in run, 'main regression runner includes V1.1-H checks')
 if not all(checks):
     print(f'{sum(1 for x in checks if not x)}/{len(checks)} V1.1-H architecture checks failed')

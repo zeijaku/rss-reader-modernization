@@ -1,0 +1,39 @@
+# Root .htaccess
+--- before/.htaccess
++++ after/.htaccess
+@@ -8,6 +8,13 @@
+ 
+ RewriteEngine On
+ 
++# Common error page for the current server layout (application root -> public/ internal rewrite).
++# For a subdirectory install, prefix the path, for example: /rss/public/error.php
++ErrorDocument 403 /public/error.php
++ErrorDocument 404 /public/error.php
++ErrorDocument 500 /public/error.php
++ErrorDocument 503 /public/error.php
++
+ # 非公開にしたいディレクトリへのアクセスを拒否
+ RewriteRule ^(?:app|config|tools|var)(?:/|$) - [F,L,NC]
+ 
+
+# public/.htaccess
+--- before/public/.htaccess
++++ after/public/.htaccess
+@@ -19,8 +19,13 @@
+ RewriteCond %{REQUEST_FILENAME} -d
+ RewriteRule ^ - [L]
+ 
+-# それ以外はindex.phpで処理
+-RewriteRule ^ index.php [L,QSA]
++# それ以外は共通404画面へ渡す
++RewriteRule ^ - [R=404,L]
+ 
+-ErrorDocument 403 /error_403
+-ErrorDocument 404 /error_404
++# Current rental-server layout keeps public/ below the visible application root.
++# If Apache DocumentRoot points directly to public/, change /public/error.php to /error.php.
++# For a subdirectory install, prefix the path, for example: /rss/public/error.php.
++ErrorDocument 403 /public/error.php
++ErrorDocument 404 /public/error.php
++ErrorDocument 500 /public/error.php
++ErrorDocument 503 /public/error.php

@@ -60,7 +60,7 @@ check('id="registerCalendarWidgetForm"' in html and 'id="changeCalendarWidgetFor
 check('id="registerCalendarEventForm"' in html and 'id="changeCalendarEventForm"' in html,'Calendar event add and edit modals render')
 check('Calendar追加' in ''.join(p.text),'Drawer contains Calendar add action')
 check('<script src="./js/calendar.js"></script>' in html,'Calendar external JavaScript is loaded')
-check(any(label in ''.join(p.text) for label in ['RSS Reader Modernization V1.1-I / R2','RSS Reader Modernization V1.1-J / R1','RSS Reader Modernization 1.1.0']),'Dashboard displays V1.1-I R2 or later marker')
+check(any(label in ''.join(p.text) for label in ['RSS Reader Modernization V1.1-I / R2','RSS Reader Modernization V1.1-J / R1','RSS Reader Modernization 1.1.0']) or 'RSS Reader Modernization 1.2.0-dev.1' in ''.join(p.text),'Dashboard displays V1.1-I R2 or later marker')
 ids=[a['id'] for _,a in p.records if a.get('id')]
 check(len(ids)==len(set(ids)),'mixed Dashboard has no duplicate ids')
 if failures: raise SystemExit(1)

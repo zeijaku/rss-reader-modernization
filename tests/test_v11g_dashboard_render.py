@@ -50,7 +50,7 @@ check('&lt;script&gt;alert(1)&lt;/script&gt;' in html and '<script>alert(1)</scr
 check('一行目\n&lt;script&gt;' in html,'Memo line break remains text in raw output')
 check('id="registerMemoForm"' in html and 'id="changeMemoForm"' in html,'Memo add and edit modals render')
 check('Memo追加' in ''.join(p.text),'Drawer contains Memo add action')
-check(any(label in ''.join(p.text) for label in ['RSS Reader Modernization V1.1-G / R1','RSS Reader Modernization V1.1-H / R1','RSS Reader Modernization V1.1-I / R1','RSS Reader Modernization V1.1-I / R2','RSS Reader Modernization V1.1-J / R1','RSS Reader Modernization 1.1.0']),'Dashboard displays V1.1-G or later marker')
+check(any(label in ''.join(p.text) for label in ['RSS Reader Modernization V1.1-G / R1','RSS Reader Modernization V1.1-H / R1','RSS Reader Modernization V1.1-I / R1','RSS Reader Modernization V1.1-I / R2','RSS Reader Modernization V1.1-J / R1','RSS Reader Modernization 1.1.0']) or 'RSS Reader Modernization 1.2.0-dev.1' in ''.join(p.text),'Dashboard displays V1.1-G or later marker')
 ids=[a['id'] for _,a in p.records if a.get('id')]
 check(len(ids)==len(set(ids)),'mixed Dashboard has no duplicate ids')
 if failures: raise SystemExit(1)

@@ -24,7 +24,7 @@ check('jQuery v3.3.1' not in jquery[:200], 'old jQuery header is absent')
 check('ajax:function' in jquery or '.ajax=' in jquery or 'ajaxSettings' in jquery, 'jQuery full build contains AJAX implementation')
 check('slim' not in jquery[:200].lower(), 'jQuery slim build is not used')
 check(not (PUBLIC / 'js/jquery-3.3.1.min.js').exists(), 'old jQuery file is absent')
-check('./js/jquery-3.7.1.min.js' in index and './js/jquery-3.7.1.min.js' in login, 'Dashboard and authentication screens reference new jQuery')
+check('./js/jquery-3.7.1.min.js' in index and './js/jquery-3.7.1.min.js' not in login and './js/auth.js' in login, 'Dashboard keeps jQuery while the dedicated authentication screen uses dependency-free JavaScript')
 check('jquery-3.3.1.min.js' not in index + login, 'old jQuery reference is absent')
 healthcheck = (ROOT / 'tools/healthcheck.php').read_text(encoding='utf-8')
 check('js/jquery-3.7.1.min.js' in healthcheck and 'jquery-3.3.1.min.js' not in healthcheck, 'healthcheck requires the updated jQuery asset')
@@ -32,8 +32,7 @@ check('js/jquery-3.7.1.min.js' in healthcheck and 'jquery-3.3.1.min.js' not in h
 order = ['./js/jquery-3.7.1.min.js', './js/popper.min.js', './js/bootstrap.min.js', './js/iscroll.js', './js/drawer.min.js', './js/dashboard.js', './js/calendar.js']
 positions = [index.index(item) for item in order]
 check(positions == sorted(positions), 'Dashboard dependency order remains jQuery, Popper, Bootstrap, iScroll, Drawer, app')
-login_order = ['./js/jquery-3.7.1.min.js', './js/popper.min.js', './js/bootstrap.min.js']
-check([login.index(item) for item in login_order] == sorted(login.index(item) for item in login_order), 'authentication dependency order remains valid')
+check('./js/popper.min.js' not in login and './js/bootstrap.min.js' not in login and './js/auth.js' in login, 'authentication screen no longer loads unnecessary Popper or Bootstrap JavaScript')
 
 check('Bootstrap v4.1.3' in bootstrap_js[:500], 'Bootstrap JavaScript remains paired at 4.1.3')
 check('Bootstrap v4.1.3' in (PUBLIC / 'css/bootstrap.min.css').read_text(errors='replace')[:500], 'Bootstrap CSS remains paired at 4.1.3')

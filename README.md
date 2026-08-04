@@ -5,6 +5,9 @@
 **Stable release:** `RSS Reader Modernization 1.1.0`  
 Release tag: `v1.1.0`
 
+**Development checkpoint:** `RSS Reader Modernization 1.2.0-dev.1`（V1.2-A）  
+Baseline: `main` / `31e9d9f3fc594f8080d1962f10ac30985bd07881`
+
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
 M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Modernization** もM2-Gまで完了しました。M2-A〜M2-DでFrontend構造、Feed表示、Accessibility、Responsive、UI / UXを整理し、M2-Eで未使用Frontend配布物を削除、M2-FでjQueryを3.7.1、Font Awesome Freeを6.7.2へ更新しています。M2-GではSecure Baseline、M1、M2を横断する最終回帰、配布物・Asset・Documentationの整合確認を行いました。Bootstrap / Bootswatchは4.1.3の組合せ、Drawer 3.2.2、iScroll 5.2.0-snapshotを維持し、Bootstrap 5への移行は別のmajor migrationとして保留しています。Navbar、4タブ、Feed CRUD、Stock、Settings、公開API、DB、M1 RSS Engineの契約は維持しています。
@@ -56,6 +59,18 @@ Version 1.1.0では、記事URLのTracking Parameter除去、Item Identityを使
 | V1.1-K | 統合回帰・Version 1.1.0 Release | 完了 |
 
 V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.md)、V1.1-DのWidget基盤は[`docs/v1-1-d-implementation.md`](docs/v1-1-d-implementation.md)、Migrationは[`docs/v1-1-d-migration.md`](docs/v1-1-d-migration.md)、V1.1-Eの並び替えは[`docs/v1-1-e-implementation.md`](docs/v1-1-e-implementation.md)、V1.1-FのClockは[`docs/v1-1-f-implementation.md`](docs/v1-1-f-implementation.md)、V1.1-GのMemoは[`docs/v1-1-g-implementation.md`](docs/v1-1-g-implementation.md)、Migrationは[`docs/v1-1-g-migration.md`](docs/v1-1-g-migration.md)、V1.1-HのTaskは[`docs/v1-1-h-implementation.md`](docs/v1-1-h-implementation.md)、Migrationは[`docs/v1-1-h-migration.md`](docs/v1-1-h-migration.md)、V1.1-IのCalendarは[`docs/v1-1-i-implementation.md`](docs/v1-1-i-implementation.md)、Migrationは[`docs/v1-1-i-migration.md`](docs/v1-1-i-migration.md)、R2のスワイプ／Spinnerは[`docs/v1-1-i-r2-implementation.md`](docs/v1-1-i-r2-implementation.md)、Account Settingsは[`docs/v1-1-j-implementation.md`](docs/v1-1-j-implementation.md)、Version 1.1.0最終化は[`docs/v1-1-k-implementation.md`](docs/v1-1-k-implementation.md)を参照してください。
+
+
+## Version 1.2 progress
+
+| Stage | 内容 | 状態 |
+|---|---|---|
+| V1.2-A／第1段 | Login・Registration近代化、Honeypot、Logout／Session expiry通知、403／404／500／503共通Error | 完了・確認待ち |
+| 第2段 | RSS記事表示、概要Accordion、Feed Card個別更新 | 未着手 |
+| 第3段 | Search Feed | 未着手 |
+| 第4段 | 記事Actions、Stock関連拡張 | 未着手 |
+
+V1.2-Aでは既存の認証、CSRF、Login Throttle、Session ID再生成、Cookie、Registration Validationを維持したまま、Authentication専用UIへ更新しました。LogoutとSession timeoutはQuery Parameterを使わない1回限りのFlashで区別し、403／404／500／503はDBや通常Bootstrapへ依存しない共通画面を使用します。DB変更、SQL、`config/local.php`追加はありません。詳細は[`docs/v1-2-a-implementation.md`](docs/v1-2-a-implementation.md)、Test結果は[`docs/test-report-v1-2-a.md`](docs/test-report-v1-2-a.md)を参照してください。
 
 ## Secure Baselineで完了した範囲
 

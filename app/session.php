@@ -80,6 +80,7 @@ function app_session_start(): void
                 throw new RuntimeException('Unable to rotate an expired session identifier.');
             }
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            app_flash_set('auth_notice', 'セッションの有効期限が切れました。もう一度ログインしてください。', 'warning');
         } else {
             $_SESSION['last_activity'] = $now;
         }
@@ -160,6 +161,42 @@ function app_csrf_is_valid(?string $submittedToken): bool
     return is_string($sessionToken) && hash_equals($sessionToken, $submittedToken);
 }
 
+
+/** Store a one-time message in the current anonymous or authenticated session. */
+function app_flash_set(string $key, string $message, string $type = 'info'): void
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        throw new RuntimeException('An active session is required for a flash message.');
+    }
+    if (preg_match('/^[a-z0-9_.-]{1,64}$/', $key) !== 1) {
+        throw new InvalidArgumentException('A valid flash message key is required.');
+    }
+    if (!in_array($type, ['danger', 'success', 'info', 'warning'], true)) {
+        $type = 'info';
+    }
+    $_SESSION['flash'][$key] = [
+        'message' => $message,
+        'type' => $type,
+    ];
+}
+
+/** @return array{message:string,type:string}|null */
+function app_flash_take(string $key): ?array
+{
+    $flash = $_SESSION['flash'][$key] ?? null;
+    unset($_SESSION['flash'][$key]);
+    if (isset($_SESSION['flash']) && $_SESSION['flash'] === []) {
+        unset($_SESSION['flash']);
+    }
+    if (!is_array($flash) || !isset($flash['message'], $flash['type']) || !is_string($flash['message']) || !is_string($flash['type'])) {
+        return null;
+    }
+    return [
+        'message' => $flash['message'],
+        'type' => in_array($flash['type'], ['danger', 'success', 'info', 'warning'], true) ? $flash['type'] : 'info',
+    ];
+}
+
 /** Destroy the server session and expire the cookie with matching attributes. */
 function app_session_logout(): void
 {
@@ -167,6 +204,7 @@ function app_session_logout(): void
         return;
     }
 
+    $cookieName = session_name();
     $_SESSION = [];
 
     if (ini_get('session.use_cookies')) {
@@ -182,4 +220,8 @@ function app_session_logout(): void
     }
 
     session_destroy();
+    if ($cookieName !== '') {
+        unset($_COOKIE[$cookieName]);
+    }
+    session_id('');
 }

@@ -71,7 +71,7 @@ check('.calendar-card' in css and '.calendar-card-inner' in css and '.calendar-c
 check('.calendar-weekdays' in css and '.calendar-days' in css and 'grid-template-columns: repeat(7' in css, 'Calendar uses a seven-column grid')
 check('.calendar-day-today' in css and '.calendar-task-entry.task-completed' in css, 'today and completed Tasks have restrained visual states')
 check('@media (max-width: 767.98px)' in css and 'min-width: 500px' in css, 'Calendar has a deliberate narrow-screen fallback')
-check((re.search(r"const APP_VERSION = '1\.1\.0-dev\.[89][0-9]*';", version) is not None and any(label in version for label in ['V1.1-I / R1','V1.1-I / R2','V1.1-J / R1'])) or ("const APP_VERSION = '1.1.0';" in version and 'RSS Reader Modernization 1.1.0' in version), 'visible Version marker is V1.1-I or later')
+check((re.search(r"const APP_VERSION = '1\.1\.0-dev\.[89][0-9]*';", version) is not None and any(label in version for label in ['V1.1-I / R1','V1.1-I / R2','V1.1-J / R1'])) or ("const APP_VERSION = '1.1.0';" in version and 'RSS Reader Modernization 1.1.0' in version) or "const APP_VERSION = '1.2.0-dev.1';" in version, 'visible Version marker is V1.1-I or later')
 check('test_v11i_calendar_widget.php' in run and 'test_v11i_frontend_runtime.js' in run, 'main regression runner includes V1.1-I checks')
 if not all(checks):
     print(f'{sum(1 for x in checks if not x)}/{len(checks)} V1.1-I architecture checks failed')

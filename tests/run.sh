@@ -282,3 +282,9 @@ if grep -Fq "const APP_VERSION = '1.1.0';" "$ROOT/app/version.php"; then
 else
     echo 'SKIP: V1.1-K final release gate requires APP_VERSION 1.1.0.'
 fi
+
+echo '== V1.2-A Authentication / Notice / Common Error checks =='
+python3 "$ROOT/tests/test_v12a_architecture.py"
+python3 "$ROOT/tests/test_v12a_auth_http.py"
+python3 "$ROOT/tests/test_v12a_error_http.py"
+python3 "$ROOT/tests/test_v12a_browser.py"

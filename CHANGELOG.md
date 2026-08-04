@@ -1,5 +1,22 @@
 # Changelog
 
+## RSS Reader Modernization 1.2.0-dev.1 — V1.2-A — 2026-08-04
+
+### Authentication / Notice / Common Error
+
+- Login／RegistrationをBootstrap sample風Layoutから専用HTML・CSSへ更新。
+- PC／Smartphone、Keyboard Focus、Native Enter submit、Password表示切替、二重送信防止へ対応。
+- Login／Registrationへ中立名のHoneypotを追加し、Server側判定、汎用失敗Message、Login Throttle併用を実装。
+- Logout後は旧認証Sessionを破棄し、新しい匿名SessionのFlashで「ログアウトしました。」を1回だけ表示。
+- Session idle／absolute timeout時はSession IDを再生成し、Logoutとは別の期限切れMessageを1回だけ表示。
+- 403／404／500／503の共通Error画面を追加し、Status、noindex／nofollow、情報非表示、Reference IDを維持。
+- API Bootstrap／Configuration errorはHTMLへ変えず、Structured JSONを維持。
+- Server用Root `.htaccess`のRewrite／拒否設定を維持し、ErrorDocument 403／404／500／503を追加。
+- Unknown routeをDashboardの200へRewriteせず、正しい404へ変更。
+- GitHub main inventoryに合わせ、添付ZIPに残っていた未参照jQuery 3.3.1とFont Awesome旧Formatを除外。
+- DB、Migration、SQL、`config/local.php`追加、Feed Cache仕様変更はなし。
+- 分割した全RegressionでPASS 3,744／FAIL 0／SKIP 10。
+
 ## Version 1.1.0 — 2026-08-03
 
 ### V1.1-K finalization and release
