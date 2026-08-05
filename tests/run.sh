@@ -370,3 +370,10 @@ node "$ROOT/tests/test_v14c_game_runtime.js"
 python3 "$ROOT/tests/test_v14c_architecture.py"
 python3 "$ROOT/tests/test_v14c_dashboard_render.py"
 python3 "$ROOT/tests/test_v14c_browser.py"
+
+echo '== V1.4-D Icon Quest polish / recovery checks =='
+node "$ROOT/tests/test_v14d_game_runtime.js"
+python3 "$ROOT/tests/test_v14d_architecture.py"
+python3 "$ROOT/tests/test_v14d_dashboard_render.py"
+python3 "$ROOT/tests/test_v14d_browser.py"
+python3 "$ROOT/tests/test_v14d_theme_browser.py"

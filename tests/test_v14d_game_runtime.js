@@ -1,0 +1,37 @@
+'use strict';
+const fs=require('fs'),path=require('path'),vm=require('vm');
+const source=fs.readFileSync(path.resolve(__dirname,'../public/js/mini-game.js'),'utf8');
+let checks=0,failures=0;
+function check(ok,msg){checks++;if(!ok)failures++;console.log((ok?'PASS':'FAIL')+': '+msg)}
+function makeStorage(values, failWrite){return {getItem:k=>Object.prototype.hasOwnProperty.call(values,k)?values[k]:null,setItem:(k,v)=>{if(failWrite)throw new Error('quota');values[k]=String(v)},removeItem:k=>delete values[k]}}
+const localValues={},sessionValues={};
+const document={readyState:'complete',getElementById:()=>({getAttribute:()=> '77'}),querySelectorAll:()=>[],addEventListener(){},createElement(){return{}}};
+const window={document,localStorage:makeStorage(localValues,false),sessionStorage:makeStorage(sessionValues,false),confirm:()=>true,Number,JSON};
+vm.runInContext(source,vm.createContext({window,document,console,Number,JSON,Object,String,Error,Date,Math}));
+const g=window.RssMiniGame,key=g.storageKey('77','901');
+let state=g.defaultState();
+check(state.tutorialSeen===false,'new Widget starts with Tutorial unseen');
+state.tutorialSeen=true;state.moves=1;state.player=1;state.savedAt=1;
+localValues[key]=JSON.stringify(state);
+let result=g.loadStateResult('77','901');
+check(!result.recovered&&result.state.tutorialSeen===true,'Tutorial state restores');
+check(result.state.savedAt===1,'old saved state is restored without expiry');
+sessionValues[key]=JSON.stringify(state);localValues[key]='{broken';
+result=g.loadStateResult('77','901');
+check(result.recovered&&result.reason==='repaired-copy'&&result.state.moves===1,'broken JSON falls back to a valid Storage copy');
+check(!(key in localValues)&&(key in sessionValues),'recovery removes only the broken Storage copy');
+localValues[key]=JSON.stringify({...state,gameVersion:99});sessionValues[key]=JSON.stringify(state);
+result=g.loadStateResult('77','901');
+check(result.recovered&&result.reason==='repaired-copy'&&result.state.moves===1,'unknown Game version falls back to a valid copy');
+check(!(key in localValues)&&(key in sessionValues),'unknown version removes only the incompatible copy');
+localValues[key]='{broken';sessionValues[key]=JSON.stringify({...state,gameVersion:99});
+result=g.loadStateResult('77','901');
+check(result.recovered&&result.reason==='invalid-data'&&result.state.levelId==='iq-01','all-invalid copies safely reset to Level 1');
+check(!(key in localValues)&&!(key in sessionValues),'all-invalid copies are removed from every backend');
+state=g.defaultState();state.bestMoves['iq-01']=8;state.stats={wins:2,losses:3};
+check(g.saveState('77','901',state),'record state saves');
+sessionValues[key]=JSON.stringify(state);
+check(g.removeWidgetState('901'),'Widget storage reset succeeds');
+check(!(key in localValues)&&!(key in sessionValues),'Widget storage reset clears local and session copies');
+check(g.storageKey('x','901')===null&&g.storageKey('77','0')===null,'invalid User and Widget IDs remain rejected');
+if(failures)process.exitCode=1;else console.log(`All ${checks} V1.4-D storage and recovery checks passed.`);

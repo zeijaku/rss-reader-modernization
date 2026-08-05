@@ -2,6 +2,7 @@
     'use strict';
 
     var STORAGE_PREFIX = 'rssReader.miniGame.iconQuest.v1';
+    var STORAGE_SCHEMA = 1;
     var GAME_VERSION = 1;
     var BOARD_SIZE = 5;
     var MAX_STATS = 999999;
@@ -95,7 +96,7 @@
         var level = levelById(levelId) || LEVELS[0];
         var source = plainObject(previous) ? previous : {};
         return {
-            schema: 1, game: 'icon_quest', gameVersion: GAME_VERSION, levelId: level.id,
+            schema: STORAGE_SCHEMA, game: 'icon_quest', gameVersion: GAME_VERSION, levelId: level.id,
             player: level.player, enemy: level.enemy, treasureCollected: false, moves: 0, enemyPhase: 0,
             status: 'playing', resultReason: '', bestMoves: copyBestMoves(source.bestMoves), stats: copyStats(source.stats),
             tutorialSeen: source.tutorialSeen === true, savedAt: 0
@@ -107,7 +108,7 @@
     function statePositionIsValid(level, cellIndex) { return integerInRange(cellIndex, 0, 24) && !isWall(level, cellIndex); }
 
     function validateState(value) {
-        if (!plainObject(value) || value.schema !== 1 || value.game !== 'icon_quest' || value.gameVersion !== GAME_VERSION) return null;
+        if (!plainObject(value) || value.schema !== STORAGE_SCHEMA || value.game !== 'icon_quest' || value.gameVersion !== GAME_VERSION) return null;
         var level = levelById(value.levelId);
         if (level === null || !statePositionIsValid(level, value.player) || !statePositionIsValid(level, value.enemy)
             || typeof value.treasureCollected !== 'boolean' || !integerInRange(value.moves, 0, level.maxMoves)
@@ -123,7 +124,7 @@
             || (value.resultReason === 'enemy' && value.player !== value.enemy)
             || (value.resultReason === 'moves' && value.moves < level.maxMoves))) return null;
         return {
-            schema: 1, game: 'icon_quest', gameVersion: GAME_VERSION, levelId: level.id,
+            schema: STORAGE_SCHEMA, game: 'icon_quest', gameVersion: GAME_VERSION, levelId: level.id,
             player: value.player, enemy: value.enemy, treasureCollected: value.treasureCollected, moves: value.moves,
             enemyPhase: value.enemyPhase, status: value.status, resultReason: value.resultReason,
             bestMoves: bestMoves, stats: stats, tutorialSeen: value.tutorialSeen, savedAt: value.savedAt
@@ -196,17 +197,54 @@
         }
         delete memoryStorage[key];
     }
-    function loadState(userId, widgetId) {
-        var key = storageKey(userId, widgetId);
-        if (key === null) return defaultState();
-        var raw = readRaw(key);
-        if (raw === null || raw === '') return defaultState();
-        try {
-            var normalized = validateState(JSON.parse(raw));
-            if (normalized === null) { removeRaw(key); return defaultState(); }
-            return normalized;
-        } catch (error) { removeRaw(key); return defaultState(); }
+    function removeFromBrowserStorage(name, key) {
+        var candidate = browserStorage(name);
+        if (candidate === null) return;
+        try { candidate.removeItem(key); } catch (error) {}
     }
+    function removeEverywhere(key) {
+        removeFromBrowserStorage('localStorage', key);
+        removeFromBrowserStorage('sessionStorage', key);
+        delete memoryStorage[key];
+    }
+    function browserStorageRaw(name, key) {
+        var candidate = browserStorage(name);
+        if (candidate === null) return {name: name, raw: null, available: false};
+        try { return {name: name, raw: candidate.getItem(key), available: true}; }
+        catch (error) { return {name: name, raw: null, available: false}; }
+    }
+    function removeStorageCopy(name, key) {
+        if (name === 'memory') { delete memoryStorage[key]; return; }
+        removeFromBrowserStorage(name, key);
+    }
+    function loadStateResult(userId, widgetId) {
+        var key = storageKey(userId, widgetId);
+        if (key === null) return {state: defaultState(), recovered: false, reason: 'invalid-key'};
+        var candidates = [browserStorageRaw('localStorage', key), browserStorageRaw('sessionStorage', key)];
+        if (Object.prototype.hasOwnProperty.call(memoryStorage, key)) candidates.push({name: 'memory', raw: memoryStorage[key], available: true});
+        var valid = [], invalid = [], hasValue = false;
+        for (var index = 0; index < candidates.length; index++) {
+            var candidate = candidates[index];
+            if (!candidate.available || candidate.raw === null || candidate.raw === '') continue;
+            hasValue = true;
+            try {
+                var normalized = validateState(JSON.parse(candidate.raw));
+                if (normalized === null) invalid.push(candidate.name);
+                else valid.push({name: candidate.name, state: normalized});
+            } catch (error) { invalid.push(candidate.name); }
+        }
+        for (var invalidIndex = 0; invalidIndex < invalid.length; invalidIndex++) removeStorageCopy(invalid[invalidIndex], key);
+        if (valid.length > 0) {
+            valid.sort(function (left, right) {
+                if (right.state.savedAt !== left.state.savedAt) return right.state.savedAt - left.state.savedAt;
+                return left.name === 'localStorage' ? -1 : right.name === 'localStorage' ? 1 : 0;
+            });
+            return {state: valid[0].state, recovered: invalid.length > 0, reason: invalid.length > 0 ? 'repaired-copy' : 'restored'};
+        }
+        if (hasValue) return {state: defaultState(), recovered: true, reason: 'invalid-data'};
+        return {state: defaultState(), recovered: false, reason: 'empty'};
+    }
+    function loadState(userId, widgetId) { return loadStateResult(userId, widgetId).state; }
     function saveState(userId, widgetId, state) {
         var key = storageKey(userId, widgetId);
         if (key === null) return false;
@@ -223,7 +261,7 @@
         var main = document.getElementById('main-content');
         var key = storageKey(main ? main.getAttribute('data-dashboard-user-id') : '', widgetId);
         if (key === null) return false;
-        removeRaw(key); return true;
+        removeEverywhere(key); return true;
     }
 
     function adjacentCell(cellIndex, direction, level) {
@@ -284,6 +322,18 @@
         return {state: next, changed: true, event: event, enemyMoved: enemyMoved};
     }
 
+    function storageModeLabel() {
+        if (storageMode === 'localStorage') return 'localStorage';
+        if (storageMode === 'sessionStorage') return 'sessionStorage';
+        return '一時Memory';
+    }
+    function storageNote(recovered) {
+        if (recovered) return '保存データの異常なCopyを除去し、このWidgetを安全に復元しました（' + storageModeLabel() + '）';
+        if (storageMode === 'localStorage') return '進行状態はこのBrowserへ保存されます';
+        if (storageMode === 'sessionStorage') return '進行状態はこのTabのSessionへ保存されます';
+        return 'Storageを利用出来ないため、このPageを閉じると進行状態は失われます';
+    }
+
     function cellView(state, cellIndex) {
         var level = levelById(state.levelId) || LEVELS[0];
         var row = Math.floor(cellIndex / 5) + 1, column = cellIndex % 5 + 1, labels = [], classes = ['mini-game-cell'], icon = '';
@@ -316,6 +366,8 @@
         if (event === 'restored') return '保存した途中状態を復元しました';
         if (event === 'reset') return '現在のLevelを最初からやり直します';
         if (event === 'new-game') return '新しいLevelを開始しました';
+        if (event === 'storage-reset') return 'このWidgetの進行状態と記録を削除しました';
+        if (event === 'recovered') return '保存データを確認し、安全な状態へ復元しました';
         return 'Treasureを取り、敵を避けてGoalへ進んでください';
     }
     function renderCard(card, state, event, enemyMoved, focusPlayer) {
@@ -332,7 +384,16 @@
         setText(card, '.mini-game-best', state.bestMoves[level.id] ? String(state.bestMoves[level.id]) : '--');
         setText(card, '.mini-game-treasure-state', state.treasureCollected ? '取得済み' : '未取得');
         setText(card, '.mini-game-enemy-turn', state.status === 'playing' ? String(2 - state.enemyPhase) : '--');
+        setText(card, '.mini-game-wins', state.stats.wins); setText(card, '.mini-game-losses', state.stats.losses);
         setText(card, '.mini-game-status', statusMessage(state, event, enemyMoved));
+        var result = card.querySelector('.mini-game-result'), resultIcon = card.querySelector('.mini-game-result-icon');
+        if (result) {
+            result.hidden = state.status === 'playing';
+            result.setAttribute('aria-hidden', state.status === 'playing' ? 'true' : 'false');
+            result.setAttribute('class', 'mini-game-result' + (state.status === 'won' ? ' mini-game-result-won' : state.status === 'lost' ? ' mini-game-result-lost' : ''));
+            setText(card, '.mini-game-result-text', state.status === 'won' ? 'CLEAR' : state.status === 'lost' ? 'GAME OVER' : '');
+        }
+        if (resultIcon) resultIcon.setAttribute('class', 'mini-game-result-icon fas ' + (state.status === 'won' ? 'fa-flag-checkered' : 'fa-skull-crossbones'));
         var board = card.querySelector('.mini-game-board');
         if (board) { board.setAttribute('aria-label', 'Icon Quest 5×5盤面、' + level.name); board.setAttribute('data-mini-game-status', state.status); }
         var directions = card.querySelectorAll('.mini-game-direction');
@@ -340,15 +401,31 @@
         card.setAttribute('data-mini-game-level-id', level.id); card.setAttribute('data-mini-game-status', state.status);
     }
     function cardUserId() { var main = document.getElementById('main-content'); return main ? main.getAttribute('data-dashboard-user-id') : ''; }
-    function persistAndRender(card, state, event, enemyMoved, focusPlayer) {
+    function setTutorialOpen(card, open) {
+        var panel = card.querySelector('.mini-game-tutorial'), button = card.querySelector('.mini-game-tutorial-toggle');
+        if (panel) panel.hidden = !open;
+        if (button) button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    function markTutorialSeen(card, hidePanel) {
+        if (!card.__rssMiniGameState || card.__rssMiniGameState.tutorialSeen === true) {
+            if (hidePanel) setTutorialOpen(card, false);
+            return;
+        }
+        var state = cloneState(card.__rssMiniGameState); state.tutorialSeen = true;
+        saveState(cardUserId(), card.getAttribute('data-dashboard-widget-id'), state); card.__rssMiniGameState = state;
+        if (hidePanel) setTutorialOpen(card, false);
+    }
+    function persistAndRender(card, state, event, enemyMoved, focusPlayer, recovered) {
         saveState(cardUserId(), card.getAttribute('data-dashboard-widget-id'), state); card.__rssMiniGameState = state;
         renderCard(card, state, event, enemyMoved, focusPlayer);
-        setText(card, '.mini-game-storage-note', storageMode === 'memory' ? 'このPageを閉じると進行状態は失われます' : '進行状態はこのBrowserへ保存されます');
+        setText(card, '.mini-game-storage-note', storageNote(recovered === true));
     }
     function moveCard(card, direction, focusPlayer) {
         var result = applyMove(card.__rssMiniGameState, direction);
         if (!result.changed) { renderCard(card, result.state, result.event, result.enemyMoved, focusPlayer); return; }
-        persistAndRender(card, result.state, result.event, result.enemyMoved, focusPlayer);
+        if (result.state.tutorialSeen !== true) result.state.tutorialSeen = true;
+        setTutorialOpen(card, false);
+        persistAndRender(card, result.state, result.event, result.enemyMoved, focusPlayer, false);
     }
     function cardCellClick(card, cell) {
         if (!card.__rssMiniGameState || card.__rssMiniGameState.status !== 'playing') return;
@@ -359,10 +436,18 @@
     function initCard(card) {
         if (!card || card.getAttribute('data-mini-game-initialized') === '1') return;
         card.setAttribute('data-mini-game-initialized', '1');
-        var widgetId = card.getAttribute('data-dashboard-widget-id'), loaded = loadState(cardUserId(), widgetId);
+        var widgetId = card.getAttribute('data-dashboard-widget-id'), loadedResult = loadStateResult(cardUserId(), widgetId), loaded = loadedResult.state;
         var restored = loaded.moves > 0 || loaded.status !== 'playing' || loaded.levelId !== LEVELS[0].id;
-        card.__rssMiniGameState = loaded; persistAndRender(card, loaded, restored ? 'restored' : 'ready', false, false);
+        card.__rssMiniGameState = loaded;
+        persistAndRender(card, loaded, loadedResult.recovered ? 'recovered' : restored ? 'restored' : 'ready', false, false, loadedResult.recovered);
+        setTutorialOpen(card, loaded.tutorialSeen !== true);
         card.addEventListener('click', function (event) {
+            if (event.detail > 1) { event.preventDefault(); return; }
+            if (event.detail === 0) {
+                var now = Date.now();
+                if (card.__rssMiniGameKeyboardClickAt && now - card.__rssMiniGameKeyboardClickAt < 120) { event.preventDefault(); return; }
+                card.__rssMiniGameKeyboardClickAt = now;
+            }
             var target = event.target;
             var cell = target && typeof target.closest === 'function' ? target.closest('.mini-game-cell') : null;
             if (cell && card.contains(cell)) { cardCellClick(card, cell); return; }
@@ -372,7 +457,11 @@
         var board = card.querySelector('.mini-game-board');
         if (board) board.addEventListener('keydown', function (event) {
             var direction = KEY_DIRECTIONS[event.key];
-            if (direction) { event.preventDefault(); moveCard(card, direction, true); return; }
+            if (direction) {
+                event.preventDefault();
+                if (event.repeat) return;
+                moveCard(card, direction, true); return;
+            }
             if (event.key === 'Escape') {
                 var newGame = card.querySelector('.mini-game-new-game');
                 if (newGame && typeof newGame.focus === 'function') { event.preventDefault(); newGame.focus(); }
@@ -381,13 +470,27 @@
         var reset = card.querySelector('.mini-game-reset');
         if (reset) reset.addEventListener('click', function () {
             if (!window.confirm('現在のLevelを最初からやり直しますか？')) return;
-            persistAndRender(card, initialState(card.__rssMiniGameState.levelId, card.__rssMiniGameState), 'reset', false, false);
+            persistAndRender(card, initialState(card.__rssMiniGameState.levelId, card.__rssMiniGameState), 'reset', false, false, false);
         });
         var newGame = card.querySelector('.mini-game-new-game');
         if (newGame) newGame.addEventListener('click', function () {
             if (card.__rssMiniGameState.status === 'playing' && card.__rssMiniGameState.moves > 0
                 && !window.confirm('現在の進行を破棄して次のLevelを開始しますか？')) return;
-            persistAndRender(card, initialState(nextLevelId(card.__rssMiniGameState.levelId), card.__rssMiniGameState), 'new-game', false, false);
+            persistAndRender(card, initialState(nextLevelId(card.__rssMiniGameState.levelId), card.__rssMiniGameState), 'new-game', false, false, false);
+        });
+        var tutorial = card.querySelector('.mini-game-tutorial-toggle');
+        if (tutorial) tutorial.addEventListener('click', function () {
+            var open = tutorial.getAttribute('aria-expanded') !== 'true';
+            setTutorialOpen(card, open);
+            if (!open) markTutorialSeen(card, false);
+        });
+        var storageReset = card.querySelector('.mini-game-storage-reset');
+        if (storageReset) storageReset.addEventListener('click', function () {
+            if (!window.confirm('このWidgetの進行・Best・勝敗記録・Tutorial確認状態を削除しますか？')) return;
+            removeWidgetState(widgetId);
+            var state = defaultState();
+            persistAndRender(card, state, 'storage-reset', false, false, false);
+            setTutorialOpen(card, true);
         });
     }
     function init() {
@@ -398,9 +501,9 @@
 
     window.RssMiniGame = {
         levels: LEVELS, storageKey: storageKey, defaultState: defaultState, initialState: initialState,
-        validateState: validateState, loadState: loadState, saveState: saveState, removeWidgetState: removeWidgetState,
-        directionBetween: directionBetween, nextEnemyStep: nextEnemyStep, applyMove: applyMove, cellView: cellView,
-        storageMode: function () { return storageMode; }, init: init
+        validateState: validateState, loadState: loadState, loadStateResult: loadStateResult, saveState: saveState,
+        removeWidgetState: removeWidgetState, directionBetween: directionBetween, nextEnemyStep: nextEnemyStep,
+        applyMove: applyMove, cellView: cellView, storageMode: function () { return storageMode; }, init: init
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })(window, document);

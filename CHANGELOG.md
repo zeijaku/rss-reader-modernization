@@ -1,3 +1,27 @@
+## RSS Reader Modernization 1.4.0-dev.3 — V1.4-D / R2 — 2026-08-06
+
+### Mini Game Widget header spacing correction
+
+- Game Widgetを既存Widgetの共通Card余白Selectorへ追加。
+- Game Widget Headerの左余白を既存Widgetと同じ`0 4px 0 8px`へ統一。
+- Drag Handle、Title、編集Buttonの構造・機能、Game本体、Storage、DB処理は変更なし。
+- 対象CSSとHeader実表示だけをFocused Testし、Full回帰はV1.4-Eで実施予定。
+
+## RSS Reader Modernization 1.4.0-dev.3 — V1.4-D / R1 — 2026-08-06
+
+### Icon Quest polish, recovery and accessibility
+
+- 初回だけ開く簡易Tutorialと、Widget単位のTutorial確認状態保存を追加。
+- Clear／Game Overの専用表示と、勝利数／敗北数の表示・保存を追加。
+- 「記録を削除」で対象Widgetの進行、Best、勝敗、Tutorial状態を初期化出来るよう変更。
+- `localStorage`、`sessionStorage`、MemoryのCopyを個別検証し、正常な最新Copyを優先するRecoveryへ強化。
+- 壊れたCopyだけを削除し、すべて異常な場合は安全な初期状態へ戻す。
+- Key Repeat、二重Click、Keyboard連続Activation、Touch長押しの誤操作を抑止。
+- 短い状態Transitionと`prefers-reduced-motion`、44px操作領域、Atomic Live Regionを維持。
+- 全8 Theme、360／420／1024pxでGame WidgetのOverflow、Focus、Contrastを確認し、Solar／SlateをDark Surfaceへ調整。
+- DB、Table、Column、Migration、SQL、外部API、外部Libraryの追加はなし。
+- 分割RunnerとTheme MatrixでPASS 5,328、FAIL 0、SKIP 12を確認。
+
 ## RSS Reader Modernization 1.4.0-dev.2 — V1.4-C / R1 — 2026-08-05
 
 ### Icon Quest first playable Game
