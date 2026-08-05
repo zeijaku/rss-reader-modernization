@@ -59,6 +59,21 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`release-gate-v1.2.0.md`](release-gate-v1.2.0.md) — Version 1.2.0 Quality Gate
 - [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.2.0 Release Notes
 
+## Version 1.3
+
+- [`v1-3-b-implementation.md`](v1-3-b-implementation.md) — Drawer整理
+- [`test-report-v1-3-b.md`](test-report-v1-3-b.md) — V1.3-B Test結果
+- [`v1-3-c-implementation.md`](v1-3-c-implementation.md) — Header整理
+- [`test-report-v1-3-c.md`](test-report-v1-3-c.md) — V1.3-C Test結果
+- [`v1-3-d-implementation.md`](v1-3-d-implementation.md) — 共通余白とWidget見出し
+- [`test-report-v1-3-d.md`](test-report-v1-3-d.md) — V1.3-D Test結果
+- [`v1-3-release-implementation.md`](v1-3-release-implementation.md) — Version 1.3.0正式化
+- [`v1-3-release-files.md`](v1-3-release-files.md) — Version 1.3正式化の変更File
+- [`test-report-v1-3-release.md`](test-report-v1-3-release.md) — Version 1.3 Full回帰結果
+- [`release-gate-v1.3.0.md`](release-gate-v1.3.0.md) — Version 1.3.0 Quality Gate
+- [`release-artifact-inventory-v1.3.0.md`](release-artifact-inventory-v1.3.0.md) — Version 1.3.0 Artifact一覧
+- [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.3.0 Release Notes
+
 ## M4 release preparation
 
 - [`m4-a-implementation.md`](m4-a-implementation.md) — Release Baseline、公開物、残課題

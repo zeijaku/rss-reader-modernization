@@ -69,6 +69,10 @@
 - [ ] RSS 2.0 / RSS 1.0 / Atom
 - [ ] Stock保存 / 一覧
 - [ ] Settings / Navbar / Tab名
+- [ ] HeaderのBrand / 現在地 / 外部Link / Menu
+- [ ] Drawerの5区分 / 現在地 / Account / Logout
+- [ ] Widget見出しの高さ / Title位置 / Ellipsis
+- [ ] 記事Title / 三点リーダー / Touch操作領域
 - [ ] Drawer / Modal / Page Top
 - [ ] Keyboard / Focus / ARIA
 - [ ] 8テーマ

@@ -30,7 +30,7 @@ check('min-height: 13rem' in css and 'min-height: 11rem' in css, 'Feed card heig
 check('min-width: 44px' in css and 'min-height: 44px' in css, 'small icon actions receive touch-sized targets')
 check('.save-modal-dialog' in css and 'style="width: 240px;"' not in index, 'Stock modal no longer uses a fixed inline width')
 check('.modal-footer .btn' in css and 'flex: 1 1 100%' in css, 'Modal actions stack on narrow screens')
-check('.navbar-brand' in css and 'text-overflow: ellipsis' in css, 'long current-tab names do not break the Navbar')
+check('.app-navbar-current' in css and 'text-overflow: ellipsis' in css, 'long current-tab names do not break the Navbar')
 check('#page-top' in css and 'z-index: 1040' in css, 'Page Top stays usable without falling behind content')
 
 check('id="app-notice"' in index and 'aria-live="polite"' in index, 'shared UI notice region is present')

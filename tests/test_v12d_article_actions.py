@@ -12,7 +12,7 @@ def check(condition, message):
     checks.append(ok)
     print(('PASS' if ok else 'FAIL') + ': ' + message)
 
-check("APP_VERSION = '1.2.0-dev.4'" in version or "APP_VERSION = '1.2.0'" in version or "APP_VERSION = '1.3.0-dev.1'" in version or "APP_VERSION = '1.3.0-dev.2'" in version or "APP_VERSION = '1.3.0-dev.3'" in version, 'V1.2-D or a later Version marker is visible')
+check("APP_VERSION = '1.2.0-dev.4'" in version or "APP_VERSION = '1.2.0'" in version or "APP_VERSION = '1.3.0-dev.1'" in version or "APP_VERSION = '1.3.0-dev.2'" in version or "APP_VERSION = '1.3.0-dev.3'" in version or "APP_VERSION = '1.3.0'" in version, 'V1.2-D or a later Version marker is visible')
 check('id="articleActionsMenu"' in index and 'role="menu"' in index, 'one shared Article Actions menu exists')
 for label in ('Stockへ保存', 'URLをコピー', 'Xへ投稿', 'Taskへ追加'):
     check(label in index, f'Article Actions menu includes {label}')

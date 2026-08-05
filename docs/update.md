@@ -15,6 +15,26 @@ Releaseごとに次を確認します。
 - Release NotesとSHA-256
 
 
+## Version 1.2.0からVersion 1.3.0
+
+Version 1.3.0は共通UIの整理で、DB構造変更、Migration、SQL、API、必須設定追加はありません。
+
+1. Code、`config/local.php`、Server固有`.htaccess`、実DB、`var/`をBackupする。
+2. ZIPを別Folderへ展開し、SHA-256、Manifest、変更Fileを確認する。
+3. `config/local.php`、実DB、`var/`の生成Dataを上書きせずCodeを更新する。
+4. SQL、Migration、`schema.sql`は実行しない。
+5. BrowserをHard Reloadする。
+6. Header、Drawer、現在地、外部Link、Account、通常RSS、Search Feed、記事Actions、Widget見出しを確認する。
+
+```text
+DB schema / Migration       変更なし
+Public API                  変更なし
+必須設定                    追加なし
+Feed Cache削除              不要
+Browser Cache               Hard Reload推奨
+Server固有.htaccess         不用意に上書きしない
+```
+
 ## Version 1.1.0からVersion 1.2.0
 
 Version 1.2.0はCodeとFrontendの更新で、DB構造変更、Migration、SQL、必須設定追加はありません。

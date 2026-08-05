@@ -2,8 +2,8 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.2.0`  
-Release tag: `v1.2.0`
+**Stable release:** `RSS Reader Modernization 1.3.0`  
+Release tag: `v1.3.0`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
@@ -79,6 +79,20 @@ Search Feedは既存のDashboard Widget基盤とFeed取得経路を再利用し�
 
 Version 1.2ではDB Table／Column、Migration、SQL、必須設定、外部Library、Build環境の追加はありません。Version 1.1.0からの更新はCode差し替えとBrowser Cache更新が中心です。詳細は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/v1-2-release-implementation.md`](docs/v1-2-release-implementation.md)、[`docs/test-report-v1-2-release.md`](docs/test-report-v1-2-release.md)を参照してください。
 
+## Version 1.3 progress
+
+| Stage | 内容 | 状態 |
+|---|---|---|
+| V1.3-A | Header／Drawer／Widget見出し／記事操作部の現状調査と設計 | 完了 |
+| V1.3-B | Drawerを表示／Widget追加／カスタマイズ／リンク／Accountへ整理 | 完了 |
+| V1.3-C | HeaderをBrand／現在地／外部Link／Menuへ整理 | 完了 |
+| V1.3-D | title-wrap、三点リーダー、Widget見出しの共通余白調整 | 完了 |
+| V1.3-E | Full回帰、Documentation、Package、Version 1.3.0確定 | 完了 |
+
+Version 1.3.0は新しい大規模機能を追加せず、Version 1.1～1.2で増えた共通UIを整理したReleaseです。Drawerの情報設計、Headerの役割、現在地表示、PC／Smartphoneの導線、Hover／Focus／Keyboard、Widget見出し、記事TitleとActions周辺の余白を統一しました。
+
+DB Table／Column、Migration、SQL、API、RSS解析Engine、外部Library、Build環境の追加はありません。Version 1.2.0からの更新はCode差し替えとBrowser Cache更新が中心です。詳細は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/v1-3-release-implementation.md`](docs/v1-3-release-implementation.md)、[`docs/test-report-v1-3-release.md`](docs/test-report-v1-3-release.md)を参照してください。
+
 ## Secure Baselineで完了した範囲
 
 | Work unit | 内容 | 状態 |
@@ -149,7 +163,7 @@ M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4
 
 詳細は [`docs/m4-f-implementation.md`](docs/m4-f-implementation.md)、[`docs/m4-f-validation.md`](docs/m4-f-validation.md)、[`docs/m4-e-implementation.md`](docs/m4-e-implementation.md)、[`docs/release-package.md`](docs/release-package.md)、[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
 
-## Version 1.2.0 release package
+## Version 1.3.0 release package
 
 GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分けて生成します。
 
@@ -157,11 +171,11 @@ GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分
 python tools/build_complete_package.py --output-dir ../release-output
 python tools/build_release_package.py --mode final --output-dir ../release-output
 python tools/verify_complete_package.py \
-  ../release-output/rss-reader-modernization-1.2.0-complete.zip \
-  ../release-output/rss-reader-modernization-1.2.0-complete.zip.sha256
+  ../release-output/rss-reader-modernization-1.3.0-complete.zip \
+  ../release-output/rss-reader-modernization-1.3.0-complete.zip.sha256
 python tools/verify_release_package.py \
-  ../release-output/rss-reader-modernization-1.2.0.zip \
-  ../release-output/rss-reader-modernization-1.2.0.zip.sha256
+  ../release-output/rss-reader-modernization-1.3.0.zip \
+  ../release-output/rss-reader-modernization-1.3.0.zip.sha256
 ```
 
 Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、検証限界は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)を参照してください。

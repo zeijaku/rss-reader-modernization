@@ -345,3 +345,16 @@ python3 "$ROOT/tests/test_v13c_header_browser.py"
 echo '== V1.3-D Common spacing checks =='
 python3 "$ROOT/tests/test_v13d_spacing_structure.py"
 python3 "$ROOT/tests/test_v13d_spacing_browser.py"
+
+if grep -Fq "const APP_VERSION = '1.3.0';" "$ROOT/app/version.php"; then
+    for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache/feed" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
+        if [ -d "$runtime_dir" ]; then
+            find "$runtime_dir" -type f ! -name '.gitkeep' -delete
+        fi
+    done
+    echo '== Version 1.3.0 release checks =='
+    python3 "$ROOT/tests/test_v13e_release.py"
+    python3 "$ROOT/tests/test_v13e_release_documentation.py"
+else
+    echo 'SKIP: Version 1.3.0 release gate requires APP_VERSION 1.3.0.'
+fi

@@ -26,7 +26,7 @@ css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 
-check("const APP_VERSION = '1.3.0-dev.2';" in version or "const APP_VERSION = '1.3.0-dev.3';" in version, 'V1.3-C or later development version is visible')
+check("const APP_VERSION = '1.3.0-dev.2';" in version or "const APP_VERSION = '1.3.0-dev.3';" in version or "const APP_VERSION = '1.3.0';" in version, 'V1.3-C or later Version is visible')
 check('$currentViewName' in index and '$tab_name' not in index, 'Header current-page label is separated from the legacy concatenated brand text')
 check("$navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';" in index, 'Light uses navbar-light while dark and primary use navbar-dark')
 check('header class="app-header"' in index, 'Header has a dedicated application header class')

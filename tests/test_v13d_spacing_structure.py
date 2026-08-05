@@ -15,8 +15,8 @@ def check(condition, message):
     print(('PASS' if ok else 'FAIL') + ': ' + message)
 
 
-check("const APP_VERSION = '1.3.0-dev.3';" in VERSION, 'V1.3-D development Version is 1.3.0-dev.3')
-check("const APP_VERSION_LABEL = 'RSS Reader Modernization 1.3.0-dev.3';" in VERSION, 'V1.3-D Version label is visible')
+check("const APP_VERSION = '1.3.0-dev.3';" in VERSION or "const APP_VERSION = '1.3.0';" in VERSION, 'V1.3-D development or final Version is visible')
+check("const APP_VERSION_LABEL = 'RSS Reader Modernization 1.3.0-dev.3';" in VERSION or "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.3.0';" in VERSION, 'V1.3-D development or final label is visible')
 check('class="content-title widget-title-text" id="\' . app_html($searchTitleId)' in INDEX,
       'Search Feed uses the common Widget title hook')
 
