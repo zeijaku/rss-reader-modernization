@@ -157,6 +157,9 @@ function api_dispatch(string $action, int $userId, array $input): array
         'widget.calendar.create' => api_widget_calendar_create($userId, $input),
         'widget.calendar.update' => api_widget_calendar_update($userId, $input),
         'widget.calendar.delete' => api_widget_calendar_delete($userId, $input),
+        'widget.game.create' => api_widget_game_create($userId, $input),
+        'widget.game.update' => api_widget_game_update($userId, $input),
+        'widget.game.delete' => api_widget_game_delete($userId, $input),
         'calendar.month.list' => api_calendar_month_list($userId, $input),
         'calendar.event.create' => api_calendar_event_create($userId, $input),
         'calendar.event.update' => api_calendar_event_update($userId, $input),
@@ -716,6 +719,68 @@ function api_widget_calendar_delete(int $userId, array $input): array
     } catch (PDOException $exception) {
         error_log('Calendar Widget delete failed: ' . $exception->getMessage());
         return api_error('calendar_unavailable', 'Calendar Widget could not be deleted.', 503);
+    }
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_game_create(int $userId, array $input): array
+{
+    $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $config = mini_game_widget_config_from_input($input);
+    if ($location === null || $style === null || $width === null || $config === null) {
+        return api_validation_error('Game Widget settings are invalid.');
+    }
+    try {
+        $widgetId = mini_game_widget_create($userId, $location, $style, $width, $config);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Game Widget create failed: ' . $exception->getMessage());
+        return api_error('game_widget_unavailable', 'Game Widget could not be created.', 503);
+    }
+    return api_success(['widget_id' => $widgetId], 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_game_update(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $config = mini_game_widget_config_from_input($input);
+    if ($widgetId === null || $style === null || $width === null || $config === null) {
+        return api_validation_error('Game Widget settings are invalid.');
+    }
+    try {
+        if (!mini_game_widget_update($userId, $widgetId, $style, $width, $config)) {
+            return api_error('not_found', 'Game Widget was not found.', 404);
+        }
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Game Widget update failed: ' . $exception->getMessage());
+        return api_error('game_widget_unavailable', 'Game Widget could not be updated.', 503);
+    }
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_game_delete(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+    try {
+        if (!mini_game_widget_delete($userId, $widgetId)) {
+            return api_error('not_found', 'Game Widget was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Game Widget delete failed: ' . $exception->getMessage());
+        return api_error('game_widget_unavailable', 'Game Widget could not be deleted.', 503);
     }
     return api_success(['widget_id' => $widgetId]);
 }

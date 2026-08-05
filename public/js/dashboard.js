@@ -685,6 +685,88 @@
             });
     }
 
+    function gameFormPayload(prefix) {
+        return {
+            'game_title': $('.' + prefix + 'GameTitleValue').val(),
+            'game_type': $('.' + prefix + 'GameType').val(),
+            'widget_style': $('.' + prefix + 'GameStyle').val(),
+            'widget_width': $('.' + prefix + 'GameWidth').val()
+        };
+    }
+
+    function addGameWidget($form) {
+        var $button = $form.find('button[type="submit"]');
+        if (!requestStart($button)) {
+            return;
+        }
+        var payload = gameFormPayload('register');
+        payload.widget_location = $('.registerGameLocation').val();
+        apiRequest('widget.game.create', payload, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
+    function editGameWidget($trigger) {
+        $('.changeGameWidgetId').val(String($trigger.attr('data-widget-id') || ''));
+        $('.changeGameTitleValue').val(String($trigger.attr('data-game-title') || 'Icon Quest'));
+        $('.changeGameType').val(String($trigger.attr('data-game-type') || 'icon_quest'));
+        $('.changeGameStyle').val(String($trigger.attr('data-widget-style') || 'secondary'));
+        $('.changeGameWidth').val(String($trigger.attr('data-widget-width') || '1'));
+    }
+
+    function changeGameWidget($form) {
+        var $button = $form.find('button[type="submit"]');
+        if (!requestStart($button)) {
+            return;
+        }
+        var payload = gameFormPayload('change');
+        payload.widget_id = $('.changeGameWidgetId').val();
+        apiRequest('widget.game.update', payload, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
+    function deleteGameWidget($button) {
+        var widgetId = String($('.changeGameWidgetId').val() || '');
+        if (!/^\d+$/.test(widgetId)) {
+            showNotice('削除するGame Widgetを確認出来ませんでした', 'danger');
+            return;
+        }
+        if (!window.confirm('このGame Widgetを削除しますか？Browserに保存されたこのWidgetの状態も削除します。')) {
+            return;
+        }
+        if (!requestStart($button)) {
+            return;
+        }
+        apiRequest('widget.game.delete', {'widget_id': widgetId}, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    if (window.RssMiniGame && typeof window.RssMiniGame.removeWidgetState === 'function') {
+                        window.RssMiniGame.removeWidgetState(widgetId);
+                    }
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
     function memoFormPayload(prefix) {
         return {
             'memo_title': $('.' + prefix + 'MemoTitleValue').val(),
@@ -1898,6 +1980,24 @@
             .off('click' + eventNamespace, '.delete_memo')
             .on('click' + eventNamespace, '.delete_memo', function () {
                 deleteMemo($(this));
+            })
+            .off('submit' + eventNamespace, '#registerGameWidgetForm')
+            .on('submit' + eventNamespace, '#registerGameWidgetForm', function (event) {
+                event.preventDefault();
+                addGameWidget($(this));
+            })
+            .off('click' + eventNamespace, '.mini-game-edit-trigger')
+            .on('click' + eventNamespace, '.mini-game-edit-trigger', function () {
+                editGameWidget($(this));
+            })
+            .off('submit' + eventNamespace, '#changeGameWidgetForm')
+            .on('submit' + eventNamespace, '#changeGameWidgetForm', function (event) {
+                event.preventDefault();
+                changeGameWidget($(this));
+            })
+            .off('click' + eventNamespace, '.delete_game_widget')
+            .on('click' + eventNamespace, '.delete_game_widget', function () {
+                deleteGameWidget($(this));
             })
             .off('submit' + eventNamespace, '#registerClockForm')
             .on('submit' + eventNamespace, '#registerClockForm', function (event) {

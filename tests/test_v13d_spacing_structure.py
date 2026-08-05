@@ -15,8 +15,10 @@ def check(condition, message):
     print(('PASS' if ok else 'FAIL') + ': ' + message)
 
 
-check("const APP_VERSION = '1.3.0-dev.3';" in VERSION or "const APP_VERSION = '1.3.0';" in VERSION, 'V1.3-D development or final Version is visible')
-check("const APP_VERSION_LABEL = 'RSS Reader Modernization 1.3.0-dev.3';" in VERSION or "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.3.0';" in VERSION, 'V1.3-D development or final label is visible')
+version_match = re.search(r"const APP_VERSION = '([0-9]+)\.([0-9]+)\.([0-9]+)(?:-dev\.[0-9]+)?';", VERSION)
+version_tuple = tuple(int(part) for part in version_match.groups()) if version_match else (0, 0, 0)
+check(version_tuple >= (1, 3, 0), 'V1.3-D development or later Version is visible')
+check("const APP_VERSION_LABEL = 'RSS Reader Modernization " in VERSION, 'V1.3-D development or later label is visible')
 check('class="content-title widget-title-text" id="\' . app_html($searchTitleId)' in INDEX,
       'Search Feed uses the common Widget title hook')
 

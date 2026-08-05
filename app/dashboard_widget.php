@@ -10,7 +10,7 @@ declare(strict_types=1);
 /** @return list<string> */
 function dashboard_widget_types(): array
 {
-    return ['feed', 'search', 'clock', 'memo', 'task', 'calendar'];
+    return ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game'];
 }
 
 function dashboard_widget_validate_type(mixed $value): ?string
@@ -341,6 +341,7 @@ function dashboard_widget_normalize_row(array $row): ?array
         'clock' => dashboard_widget_clock_config_from_storage($row['widget_config'] ?? null),
         'task' => dashboard_widget_task_config_from_storage($row['widget_config'] ?? null),
         'calendar' => calendar_widget_config_from_storage($row['widget_config'] ?? null),
+        'game' => mini_game_widget_config_from_storage($row['widget_config'] ?? null),
         'search' => search_feed_config_from_storage($row['widget_config'] ?? null),
         default => dashboard_widget_decode_config($row['widget_config'] ?? null),
     };

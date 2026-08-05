@@ -1,3 +1,18 @@
+## RSS Reader Modernization 1.4.0-dev.1 — V1.4-B / R1 — 2026-08-05
+
+### Mini Game Widget foundation
+
+- 既存`dashboard_widget` Tableを利用したGame Widget登録・変更・論理削除を追加。
+- DrawerのWidget追加へ`Game追加`を追加し、既存Tab、横幅、見出し色、並べ替え処理へ統合。
+- 第一候補`Icon Quest`用の5×5 Mock盤面を、既存Font AwesomeとSemantic HTMLで表示。
+- Game進行状態をDBへ保存せず、User ID／Widget ID／Game Versionで分離するBrowser Storage Wrapperを追加。
+- `localStorage`、`sessionStorage`、Memoryの順にFallbackし、JSON Parse失敗、未知Schema、Storage利用不能を安全に処理。
+- 複数Game Widgetの状態分離、Reset、Widget削除成功後のStorage削除へ対応。
+- Game盤面でDashboardのTab Swipeが開始されないよう除外属性を追加。
+- V1.4-Bでは盤面移動、Enemy AI、勝敗、Scoreを実装せず、V1.4-Cの対象として維持。
+- DB Table／Column、Migration、SQL、外部API、外部Library、Build環境の追加はなし。
+- V1.4-B専用Test 109件、分割Full回帰 4,987件を実行し、FAIL 0を確認。
+
 ## RSS Reader Modernization 1.3.0 — 2026-08-05
 
 ### Version 1.3.0 finalization

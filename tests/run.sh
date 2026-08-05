@@ -358,3 +358,9 @@ if grep -Fq "const APP_VERSION = '1.3.0';" "$ROOT/app/version.php"; then
 else
     echo 'SKIP: Version 1.3.0 release gate requires APP_VERSION 1.3.0.'
 fi
+
+echo '== V1.4-B Mini Game Widget foundation checks =='
+php "$ROOT/tests/test_v14b_game_widget.php"
+python3 "$ROOT/tests/test_v14b_architecture.py"
+node "$ROOT/tests/test_v14b_storage_runtime.js"
+python3 "$ROOT/tests/test_v14b_dashboard_render.py"

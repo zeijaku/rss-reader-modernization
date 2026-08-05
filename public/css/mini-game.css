@@ -1,0 +1,135 @@
+.mini-game-card {
+    margin-bottom: 1rem;
+}
+
+.mini-game-card-inner {
+    min-width: 0;
+    overflow: hidden;
+    background: var(--white, #fff);
+    border: 1px solid rgba(0, 0, 0, .125);
+    border-radius: .25rem;
+}
+
+.mini-game-card-header {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    height: 44px;
+    padding: 0;
+}
+
+.mini-game-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mini-game-edit-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+}
+
+.mini-game-card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: calc(13rem - 44px);
+    padding: .75rem;
+}
+
+.mini-game-board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(44px, 1fr));
+    width: min(100%, 232px);
+    margin: 0 auto;
+    gap: 2px;
+}
+
+.mini-game-cell {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 1px solid rgba(0, 0, 0, .22);
+    border-radius: .2rem;
+    background: rgba(255, 255, 255, .92);
+    color: #343a40;
+    font-size: 1rem;
+}
+
+.mini-game-cell:focus,
+.mini-game-cell:focus-visible,
+.mini-game-reset:focus,
+.mini-game-reset:focus-visible {
+    outline: 3px solid #0b5ed7;
+    outline-offset: 2px;
+}
+
+.mini-game-cell-wall {
+    background: rgba(52, 58, 64, .18);
+}
+
+.mini-game-cell-player,
+.mini-game-cell-enemy,
+.mini-game-cell-treasure,
+.mini-game-cell-goal {
+    font-size: 1.15rem;
+}
+
+.mini-game-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: min(100%, 232px);
+    margin-top: .65rem;
+    gap: .5rem;
+}
+
+.mini-game-status {
+    min-width: 0;
+    margin: 0;
+    font-size: .8rem;
+}
+
+.mini-game-reset {
+    flex: 0 0 auto;
+    min-height: 44px;
+}
+
+@media (max-width: 359.98px) {
+    .mini-game-card-body {
+        padding-right: .5rem;
+        padding-left: .5rem;
+    }
+
+    .mini-game-board {
+        grid-template-columns: repeat(5, minmax(40px, 1fr));
+        width: min(100%, 212px);
+    }
+
+    .mini-game-cell {
+        min-width: 40px;
+        min-height: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mini-game-card *,
+    .mini-game-card *::before,
+    .mini-game-card *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
