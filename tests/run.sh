@@ -333,3 +333,15 @@ if grep -Fq "const APP_VERSION = '1.2.0';" "$ROOT/app/version.php"; then
 else
     echo 'SKIP: Version 1.2.0 release gate requires APP_VERSION 1.2.0.'
 fi
+
+echo '== V1.3-B Drawer organization checks =='
+python3 "$ROOT/tests/test_v13b_drawer_structure.py"
+python3 "$ROOT/tests/test_v13b_drawer_browser.py"
+
+echo '== V1.3-C Header organization checks =='
+python3 "$ROOT/tests/test_v13c_header_structure.py"
+python3 "$ROOT/tests/test_v13c_header_browser.py"
+
+echo '== V1.3-D Common spacing checks =='
+python3 "$ROOT/tests/test_v13d_spacing_structure.py"
+python3 "$ROOT/tests/test_v13d_spacing_browser.py"

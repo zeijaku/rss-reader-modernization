@@ -141,14 +141,20 @@ if ($currentUserId === null) {
 }
 
 
-/* Navbarに現在のタブ名表示: location 0..3 -> tab name 1..4 */
-$tab_name = '';
+/* Headerに表示する現在地: location 0..3 -> tab name 1..4 */
+$currentViewName = '';
 if (is_int($tabParam)) {
     $tabKey = 'conf_style_tabname' . ($tabParam + 1);
-    $tab_name = ' - [ ' . (string) ($ui[$tabKey] ?? '') . ' ]';
+    $currentViewName = trim((string) ($ui[$tabKey] ?? ''));
+    if ($currentViewName === '') {
+        $currentViewName = 'タブ' . ($tabParam + 1);
+    }
 } elseif ($tabParam === 'stock') {
-    $tab_name = ' - [ Stock ]';
+    $currentViewName = 'Stock';
 }
+
+$navbarBackground = (string) ($ui['conf_style_nav'] ?? 'dark');
+$navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
 
 /* Stock画面からRSSを追加した場合は、従来どおりタブ1へ登録する */
 $addTargetLocation = is_int($tabParam) ? $tabParam : 0;
@@ -177,21 +183,26 @@ function search_feed_form_fields(string $prefix): string
 ?>
 
 <!-- Navbar -->
-<header>
-<nav class="navbar navbar-expand-lg navbar-<?php echo app_html($ui['conf_style_nav']); ?> bg-<?php echo app_html($ui['conf_style_nav']); ?>" aria-label="メインナビゲーション">
-  <a class="navbar-brand" href="./"><i class="fas fa-rss-square" aria-hidden="true"></i> iGuguru<?php echo app_html($tab_name); ?></a>
+<header class="app-header">
+<nav class="navbar navbar-expand-lg navbar-<?php echo app_html($navbarScheme); ?> bg-<?php echo app_html($navbarBackground); ?> app-navbar" aria-label="メインナビゲーション">
+  <div class="app-navbar-identity">
+    <a class="navbar-brand app-navbar-brand" href="./" aria-label="iGuguru ホーム">
+      <i class="fas fa-rss-square app-navbar-brand-icon" aria-hidden="true"></i>
+      <span class="app-navbar-brand-label">iGuguru</span>
+    </a>
+    <span class="app-navbar-separator" aria-hidden="true"></span>
+    <span class="app-navbar-current">
+      <span class="sr-only">現在の表示：</span>
+      <span class="app-navbar-current-label"><?php echo app_html($currentViewName); ?></span>
+    </span>
+  </div>
 
-  <button class="navbar-toggler drawer-toggle" type="button" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
-    <span class="navbar-toggler-icon" aria-hidden="true"></span>
+  <button class="navbar-toggler drawer-toggle app-navbar-menu-button" type="button" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
+    <i class="fas fa-bars" aria-hidden="true"></i>
   </button>
 
-  <div class="collapse navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav mr-auto">
-      <!--
-      <li class="nav-item active">
-        <a class="nav-link" href="#"><i class="fas fa-home"></i> Home <span class="sr-only">(current)</span></a>
-      </li>
-      -->
+  <div class="collapse navbar-collapse app-navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav ml-auto app-navbar-links">
     <?php
         for ($navIndex = 1; $navIndex <= 4; $navIndex++) {
             $link = (string) $ui['conf_style_navlink' . $navIndex];
@@ -200,15 +211,17 @@ function search_feed_form_fields(string $prefix): string
             }
             $icon = (string) $ui['conf_style_navlink_icon' . $navIndex];
             $view = (string) $ui['conf_style_navlink_view' . $navIndex];
-            echo '<li class="nav-item active">';
-            echo '<a class="nav-link" href="' . app_html($link) . '" target="_blank" rel="noopener noreferrer"><i class="fas fa-' . app_html($icon) . ' fa-fw" aria-hidden="true"></i>' . app_html($view) . '</a>';
+            echo '<li class="nav-item">';
+            echo '<a class="nav-link app-navbar-link" href="' . app_html($link) . '" target="_blank" rel="noopener noreferrer"><i class="fas fa-' . app_html($icon) . ' fa-fw" aria-hidden="true"></i><span class="app-navbar-link-label">' . app_html($view) . '</span></a>';
             echo '</li>';
         }
     ?>
     </ul>
-    <button class="btn btn-outline-secondary my-2 my-sm-0 drawer-toggle" type="button" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く"><i class="fas fa-bars text-secondary" aria-hidden="true"></i></button>
+    <button class="btn drawer-toggle app-navbar-menu-button app-navbar-menu-button-desktop" type="button" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
+      <i class="fas fa-bars" aria-hidden="true"></i>
+    </button>
   </div>
-</nav><!--  /Navbar -->
+</nav><!-- /Navbar -->
 </header>
 
 <div id="app-notice" class="app-notice alert" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden></div>
@@ -296,7 +309,7 @@ if (is_int($content_location)) {
             $searchLimit = search_feed_validate_limit($searchConfig['limit'] ?? null) ?? 10;
             $searchCategory = search_feed_validate_category($searchConfig['category'] ?? null) ?? 'all';
             $searchTitleId = 'search-title-' . $widgetId;
-            echo '<section class="' . app_html($widgetWidthClass) . ' dashboard-widget feed-card search-feed-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="search" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-search-limit="' . $searchLimit . '" data-search-state="loading" role="region" aria-labelledby="' . app_html($searchTitleId) . '" aria-busy="true"><div class="feed-card-inner"><table class="table table-hover feed-table"><colgroup><col class="feed-stock-column"><col><col class="feed-summary-column"></colgroup><thead><tr class="bg-' . app_html($widgetStyle) . '"><th colspan="3" class="content-header feed-card-header"><div class="content-header-row feed-card-header-inner"><button type="button" class="widget-drag-handle" aria-label="Search Feedを並び替え" aria-describedby="widget-sort-help">＝</button><span class="content-title" id="' . app_html($searchTitleId) . '"><span class="feed-title-text text-white" title="' . app_html($searchQuery) . '">' . app_html($searchQuery) . '</span></span><span class="content-actions feed-card-actions"><button type="button" class="btn btn-link search-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-search-query="' . app_html($searchQuery) . '" data-search-scope="' . app_html($searchScope) . '" data-search-condition="' . app_html($searchCondition) . '" data-search-limit="' . $searchLimit . '" data-search-category="' . app_html($searchCategory) . '" data-toggle="modal" data-target="#changeSearchFeed" aria-label="このSearch Feedを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button><button type="button" class="btn btn-link feed-refresh search-feed-refresh" aria-label="このSearch Feedを更新"><i class="fas fa-sync-alt text-white" aria-hidden="true"></i></button></span></div></th></tr></thead><tbody class="content-body"><tr class="content-state-row"><td colspan="3" class="feed-state-message"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>検索しています</span></span></td></tr></tbody></table></div></section>';
+            echo '<section class="' . app_html($widgetWidthClass) . ' dashboard-widget feed-card search-feed-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="search" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-search-limit="' . $searchLimit . '" data-search-state="loading" role="region" aria-labelledby="' . app_html($searchTitleId) . '" aria-busy="true"><div class="feed-card-inner"><table class="table table-hover feed-table"><colgroup><col class="feed-stock-column"><col><col class="feed-summary-column"></colgroup><thead><tr class="bg-' . app_html($widgetStyle) . '"><th colspan="3" class="content-header feed-card-header"><div class="content-header-row feed-card-header-inner"><button type="button" class="widget-drag-handle" aria-label="Search Feedを並び替え" aria-describedby="widget-sort-help">＝</button><span class="content-title widget-title-text" id="' . app_html($searchTitleId) . '"><span class="feed-title-text text-white" title="' . app_html($searchQuery) . '">' . app_html($searchQuery) . '</span></span><span class="content-actions feed-card-actions"><button type="button" class="btn btn-link search-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-search-query="' . app_html($searchQuery) . '" data-search-scope="' . app_html($searchScope) . '" data-search-condition="' . app_html($searchCondition) . '" data-search-limit="' . $searchLimit . '" data-search-category="' . app_html($searchCategory) . '" data-toggle="modal" data-target="#changeSearchFeed" aria-label="このSearch Feedを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button><button type="button" class="btn btn-link feed-refresh search-feed-refresh" aria-label="このSearch Feedを更新"><i class="fas fa-sync-alt text-white" aria-hidden="true"></i></button></span></div></th></tr></thead><tbody class="content-body"><tr class="content-state-row"><td colspan="3" class="feed-state-message"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>検索しています</span></span></td></tr></tbody></table></div></section>';
             continue;
         }
 
@@ -1231,46 +1244,82 @@ if ($result_content_cnt === 0) {
 <!-- Drawer -->
 <nav class="drawer-nav" id="drawerMenu" aria-label="RSS Readerメニュー" tabindex="-1">
     <ul class="drawer-menu">
-        <li class="drawer-brand">&nbsp;<i class="fas fa-rss-square text-primary" aria-hidden="true"></i><span class="text-muted"> <strong>iGuguru</strong></span>　</li>
-        <!-- Tab -->
-        <li class="text-dark drawer-section-title">&nbsp;<i class="far fa-copy fa-fw" aria-hidden="true"></i> タブ</li>
+        <li class="drawer-brand">
+            <i class="fas fa-rss-square text-primary drawer-brand-icon" aria-hidden="true"></i>
+            <span class="drawer-brand-label"><strong>iGuguru</strong></span>
+        </li>
+
+        <!-- Display -->
+        <li class="drawer-section-title"><i class="far fa-copy fa-fw" aria-hidden="true"></i><span>表示</span></li>
         <?php for ($tabLocation = 0; $tabLocation <= 3; $tabLocation++): ?>
-            <?php $tabLabelKey = 'conf_style_tabname' . ($tabLocation + 1); ?>
-            <li>　<a href="./?tab=<?php echo $tabLocation; ?>" class="text-muted"><i class="far fa-newspaper fa-fw" aria-hidden="true"></i> <?php echo app_html($ui[$tabLabelKey] ?? ''); ?></a><hr class="drawer-divider"></li>
+            <?php
+                $tabLabelKey = 'conf_style_tabname' . ($tabLocation + 1);
+                $isCurrentTab = $tabParam === $tabLocation;
+            ?>
+            <li>
+                <a href="./?tab=<?php echo $tabLocation; ?>" class="text-muted drawer-item<?php echo $isCurrentTab ? ' drawer-item-current' : ''; ?>"<?php echo $isCurrentTab ? ' aria-current="page"' : ''; ?>>
+                    <span class="drawer-item-icon"><i class="far fa-newspaper fa-fw" aria-hidden="true"></i></span>
+                    <span class="drawer-item-label"><?php echo app_html($ui[$tabLabelKey] ?? ''); ?></span>
+                </a>
+            </li>
         <?php endfor; ?>
-        <li>　<a href="?tab=stock" class="text-muted"><i class="fas fa-clipboard-list fa-fw" aria-hidden="true"></i> Stock一覧</a><hr class="drawer-divider"></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#tabContent"><i class="fas fa-clone fa-fw" aria-hidden="true"></i>タブ表示変更</button></li>
-        <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> RSS</li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerContent"><i class="fas fa-clone fa-fw" aria-hidden="true"></i>RSS追加</button></li>
-        <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-th-large fa-fw" aria-hidden="true"></i> Widget</li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerSearchFeed"><i class="fas fa-search fa-fw" aria-hidden="true"></i>Search Feed追加</button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerClock"><i class="far fa-clock fa-fw" aria-hidden="true"></i>Clock追加</button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerMemo"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i>Memo追加</button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerTaskWidget"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i>Task追加</button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#registerCalendarWidget"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>Calendar追加</button></li>
-        <!-- 定型リンク -->
-        <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-paperclip fa-fw" aria-hidden="true"></i> Navbarリンク</li>
+        <?php $isCurrentStock = $tabParam === 'stock'; ?>
+        <li>
+            <a href="./?tab=stock" class="text-muted drawer-item<?php echo $isCurrentStock ? ' drawer-item-current' : ''; ?>"<?php echo $isCurrentStock ? ' aria-current="page"' : ''; ?>>
+                <span class="drawer-item-icon"><i class="fas fa-clipboard-list fa-fw" aria-hidden="true"></i></span>
+                <span class="drawer-item-label">Stock一覧</span>
+            </a>
+        </li>
+
+        <!-- Widget -->
+        <li class="drawer-section-title"><i class="fas fa-th-large fa-fw" aria-hidden="true"></i><span>Widget追加</span></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerContent"><span class="drawer-item-icon"><i class="fas fa-rss fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">RSS追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerSearchFeed"><span class="drawer-item-icon"><i class="fas fa-search fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Search Feed追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerTaskWidget"><span class="drawer-item-icon"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Task追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerCalendarWidget"><span class="drawer-item-icon"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Calendar追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerClock"><span class="drawer-item-icon"><i class="far fa-clock fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Clock追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerMemo"><span class="drawer-item-icon"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Memo追加</span></button></li>
+
+        <!-- Customize -->
+        <li class="drawer-section-title"><i class="fas fa-sliders-h fa-fw" aria-hidden="true"></i><span>カスタマイズ</span></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#tabContent"><span class="drawer-item-icon"><i class="fas fa-clone fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">タブ表示変更</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#changeConf"><span class="drawer-item-icon"><i class="fas fa-cogs fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">表示設定</span></button></li>
+
         <?php
+            $drawerNavbarLinks = [];
             for ($navIndex = 1; $navIndex <= 4; $navIndex++) {
                 $link = (string) $ui['conf_style_navlink' . $navIndex];
                 if ($link === '') {
                     continue;
                 }
-                $icon = (string) $ui['conf_style_navlink_icon' . $navIndex];
-                $view = (string) $ui['conf_style_navlink_view' . $navIndex];
-                echo '<li>　<a class="text-muted" href="' . app_html($link) . '" target="_blank" rel="noopener noreferrer"><i class="fas fa-' . app_html($icon) . ' fa-fw" aria-hidden="true"></i> - ' . app_html($view) . '</a><hr class="drawer-divider"></li>';
+                $drawerNavbarLinks[] = [
+                    'href' => $link,
+                    'icon' => (string) $ui['conf_style_navlink_icon' . $navIndex],
+                    'label' => (string) $ui['conf_style_navlink_view' . $navIndex],
+                ];
             }
         ?>
-        <!-- Control Setting -->
-        <li class="text-dark drawer-section-title">&nbsp;<i class="fas fa-cogs fa-fw" aria-hidden="true"></i> 設定</li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#accountSettings"><i class="fas fa-user-cog" aria-hidden="true"></i> アカウント設定</button><hr class="drawer-divider"></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action" data-toggle="modal" data-target="#changeConf"><i class="fas fa-cogs" aria-hidden="true"></i> 表示設定</button><hr class="drawer-divider"></li>
+        <?php if ($drawerNavbarLinks !== []): ?>
+            <!-- User links: Navbar displays these on PC, Drawer displays these below 992px -->
+            <li class="drawer-section-title drawer-mobile-links"><i class="fas fa-link fa-fw" aria-hidden="true"></i><span>リンク</span></li>
+            <?php foreach ($drawerNavbarLinks as $drawerNavbarLink): ?>
+                <li class="drawer-mobile-links">
+                    <a class="text-muted drawer-item" href="<?php echo app_html($drawerNavbarLink['href']); ?>" target="_blank" rel="noopener noreferrer">
+                        <span class="drawer-item-icon"><i class="fas fa-<?php echo app_html($drawerNavbarLink['icon']); ?> fa-fw" aria-hidden="true"></i></span>
+                        <span class="drawer-item-label"><?php echo app_html($drawerNavbarLink['label']); ?></span>
+                    </a>
+                </li>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
+        <!-- Account -->
+        <li class="drawer-section-title"><i class="fas fa-user fa-fw" aria-hidden="true"></i><span>Account</span></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#accountSettings"><span class="drawer-item-icon"><i class="fas fa-user-cog fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">アカウント設定</span></button></li>
         <li>
             <form method="post" action="./logout.php" class="drawer-logout-form">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
-                <button type="submit" class="btn btn-link text-muted drawer-logout-button"><i class="fas fa-sign-out-alt text-muted" aria-hidden="true"></i> ログアウト</button>
+                <button type="submit" class="btn btn-link text-muted drawer-logout-button drawer-item"><span class="drawer-item-icon"><i class="fas fa-sign-out-alt fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">ログアウト</span></button>
             </form>
-            <hr class="drawer-divider">
         </li>
     </ul>
 </nav>

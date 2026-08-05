@@ -1,4 +1,44 @@
+## RSS Reader Modernization 1.3.0-dev.3 — V1.3-D / R1 — 2026-08-05
+
+### Common spacing and detail alignment
+
+- BootstrapのTable Cell既定余白より強いSelectorへ変更し、記事Titleの`7px 2px 7px 6px`を実表示へ反映。
+- 三点リーダー列の余分なCell paddingを除去し、PCは36px、Touch端末は44pxの操作幅へ整理。
+- 通常RSS、Search Feed、Clock、Memo、Task、CalendarのWidget見出し開始位置・文字サイズ・Ellipsisを統一。
+- Search Feed見出しへ共通`widget-title-text` Hookを追加。
+- 新着Bell、記事Actions、RSS概要、Header、Drawerの既存挙動を維持。
+- DB、SQL、Migration、API、JavaScript、外部Libraryの変更なし。
+
 # Changelog
+
+## RSS Reader Modernization 1.3.0-dev.2 — V1.3-C / R1 — 2026-08-05
+
+### Header organization
+
+- Headerを「Brand／現在地／設定済み外部Link／Menu」の役割へ分離。
+- Brand Linkから現在のTab名を切り離し、現在地を独立した省略表示へ変更。
+- Header高をThemeに左右されない56pxへ統一し、Menu ButtonはPC／Smartphoneとも44pxを維持。
+- SmartphoneではBrand、現在地、Menuだけを表示し、長いTab名は1行Ellipsisで処理。
+- PCでは外部Linkを右側へまとめ、長い表示名はLink単位で省略し、Headerの横Overflowを防止。
+- Navbar背景`primary`はContrast Schemeを`dark`として扱い、Bootstrapに存在しない`navbar-primary`依存を解消。
+- Bootstrap既定のToggler画像をやめ、既存Font AwesomeのBars Iconへ統一。
+- Menu Buttonへ専用Focus Outlineを追加し、Bootstrapの`.btn:focus`による打ち消しを回避。
+- 全8 Theme、Dark／Primary／Light、360／420／1024pxでHeader実寸確認を実施。
+- DB、Table、Column、Migration、SQL、API、Session、RSS解析、JavaScript、外部Libraryの変更なし。
+
+## RSS Reader Modernization 1.3.0-dev.1 — V1.3-B / R1 — 2026-08-05
+
+### Drawer menu organization
+
+- Drawerを「表示／Widget追加／カスタマイズ／リンク／Account」の5区分へ整理。
+- タブ1～4とStockへ現在地表示を追加し、`aria-current=page`、左Border、控えめな背景色で選択中を明示。
+- Link、Modal Button、LogoutのIcon列、文字位置、Row高、Hover、Focusを共通化。
+- 通常Pointerは40px、Touch端末は44px以上の操作領域を維持。
+- Account SettingsとLogoutをAccount区分へまとめ、表示設定をカスタマイズ区分へ分離。
+- Navbar設定LinkはPCではHeader、991px以下ではDrawerに表示し、同一導線の重複を解消。
+- Header側の外部Linkから不適切な`active`指定を削除。
+- Esc、外側Click、Tab循環、Focus復帰は既存JavaScriptを変更せず維持。
+- DB、Table、Column、Migration、SQL、API、Session、RSS解析、外部Libraryの変更なし。
 
 ## RSS Reader Modernization 1.2.0 — 2026-08-05
 

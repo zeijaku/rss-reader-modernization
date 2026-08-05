@@ -409,7 +409,8 @@
     opacity: 0.72;
 }
 
-.feed-item-title-cell {
+/* V1.3-D: Bootstrapの.table tdより強いSelectorで記事Title余白を確実に適用する。 */
+.feed-table .feed-item-title-cell {
     min-width: 0;
     padding: 7px 2px 7px 6px;
     vertical-align: middle;
@@ -455,7 +456,8 @@
     outline-offset: 2px;
 }
 
-.feed-item-stock-cell {
+/* V1.3-D: 三点リーダー列はCell paddingを除去し、Buttonを列中央へ収める。 */
+.feed-table .feed-item-stock-cell {
     width: 36px;
     padding: 0;
     text-align: center;
@@ -463,7 +465,7 @@
     white-space: nowrap;
 }
 
-.feed-item-summary-cell {
+.feed-table .feed-item-summary-cell {
     width: 32px;
     padding: 0;
     text-align: center;
@@ -805,22 +807,203 @@ select:focus,
     outline-offset: -3px;
 }
 
-.navbar-brand {
+.app-header {
     min-width: 0;
-    max-width: calc(100% - 64px);
+}
+
+.app-navbar {
+    height: 56px;
+    min-height: 56px;
+    padding: 4px 12px;
+    flex-wrap: nowrap;
+}
+
+.app-navbar-identity {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.app-navbar-brand {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    margin-right: 0;
+    padding: 4px 0;
+    font-size: 1.1rem;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.app-navbar-brand-icon {
+    margin-right: 6px;
+}
+
+.app-navbar-separator {
+    flex: 0 0 1px;
+    width: 1px;
+    height: 20px;
+    margin: 0 12px;
+    background-color: currentColor;
+    opacity: 0.35;
+}
+
+.app-navbar-current {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.navbar-dark .app-navbar-current {
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.navbar-light .app-navbar-current {
+    color: rgba(0, 0, 0, 0.68);
+}
+
+.app-navbar-collapse {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.app-navbar-links {
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.app-navbar-links > .nav-item {
+    flex: 0 1 9rem;
+    min-width: 0;
+}
+
+.app-navbar-link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    max-width: 9rem;
+    padding: 8px 10px !important;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.app-navbar-link > i {
+    flex: 0 0 auto;
+    margin-right: 6px;
+}
+
+.app-navbar-link-label {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
+.app-navbar-menu-button {
+    display: inline-flex;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    margin-left: 8px;
+    padding: 0;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    background: transparent;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.navbar-dark .app-navbar-menu-button {
+    border-color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.navbar-light .app-navbar-menu-button {
+    border-color: rgba(0, 0, 0, 0.28);
+    color: rgba(0, 0, 0, 0.68);
+}
+
+.app-navbar-menu-button:hover,
+.app-navbar-menu-button:focus {
+    background-color: rgba(127, 127, 127, 0.16);
+    color: inherit;
+}
+
+.app-navbar-menu-button:focus,
+.app-navbar-menu-button:focus-visible {
+    outline: 3px solid #005fcc;
+    outline-offset: 2px;
+}
+
+.drawer-nav {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.drawer-menu {
+    padding-bottom: 16px;
+}
+
 .drawer-brand {
-    margin-top: 4px;
-    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    margin: 0;
+    padding: 0 14px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    font-size: 1.15rem;
+    line-height: 1.2;
+}
+
+.drawer-brand-icon {
+    flex: 0 0 1.5rem;
+    width: 1.5rem;
+    margin-right: 6px;
+    text-align: center;
+}
+
+.drawer-brand-label {
+    min-width: 0;
+    color: #6c757d;
 }
 
 .drawer-section-title {
-    padding: 5px 4px;
-    background-color: #cccccc;
+    display: flex;
+    align-items: center;
+    min-height: 32px;
+    margin-top: 8px;
+    padding: 6px 12px;
+    background-color: #dedede;
+    color: #343a40;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.drawer-brand + .drawer-section-title {
+    margin-top: 0;
+}
+
+.drawer-section-title > i {
+    margin-right: 6px;
 }
 
 .drawer-menu > li > a,
@@ -829,12 +1012,72 @@ select:focus,
     display: flex;
     align-items: center;
     width: 100%;
-    min-height: 36px;
-    padding: 5px 10px;
+    min-height: 40px;
+    margin: 0;
+    padding: 8px 12px;
+    border: 0;
+    border-left: 3px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: #6c757d !important;
+    line-height: 1.35;
     text-align: left;
     text-decoration: none;
     white-space: normal;
     overflow-wrap: anywhere;
+}
+
+.drawer-item-icon {
+    display: inline-flex;
+    flex: 0 0 1.5rem;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    margin-right: 8px;
+    text-align: center;
+}
+
+.drawer-item-label {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.drawer-menu > li > a:hover,
+.drawer-menu > li > a:focus,
+.drawer-menu-action:hover,
+.drawer-menu-action:focus,
+.drawer-logout-button:hover,
+.drawer-logout-button:focus {
+    background-color: rgba(0, 0, 0, 0.06);
+    color: #343a40 !important;
+    text-decoration: none;
+}
+
+.drawer-menu > li > a:focus-visible,
+.drawer-menu-action:focus-visible,
+.drawer-logout-button:focus-visible {
+    outline-offset: -3px;
+}
+
+.drawer-item-current,
+.drawer-item-current:hover,
+.drawer-item-current:focus {
+    border-left-color: #005fcc !important;
+    background-color: rgba(0, 95, 204, 0.1) !important;
+    color: #212529 !important;
+    font-weight: 600;
+}
+
+.drawer-logout-button:hover,
+.drawer-logout-button:focus {
+    background-color: rgba(176, 42, 55, 0.08);
+    color: #b02a37 !important;
+}
+
+.drawer-logout-form {
+    display: block;
+    width: 100%;
+    margin: 0;
 }
 
 @media (pointer: coarse) {
@@ -844,22 +1087,22 @@ select:focus,
         min-height: 44px;
         padding: 8px 12px;
     }
+
+    .feed-stock-column,
+    .feed-table .feed-item-stock-cell {
+        width: 44px;
+    }
+
+    .article-actions-trigger {
+        width: 44px;
+        min-width: 44px;
+    }
 }
 
-.drawer-menu-action:hover,
-.drawer-menu-action:focus,
-.drawer-logout-button:hover,
-.drawer-logout-button:focus {
-    text-decoration: none;
-}
-
-.drawer-divider {
-    margin: 0 4px;
-}
-
-.drawer-logout-form {
-    display: block;
-    width: 100%;
+@media (min-width: 992px) {
+    .drawer-mobile-links {
+        display: none;
+    }
 }
 
 .navbar-link-setting,
@@ -878,6 +1121,36 @@ select:focus,
 
 .feed-card[aria-busy="true"] {
     cursor: progress;
+}
+
+@media (max-width: 991.98px) {
+    .app-navbar-collapse {
+        display: none !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .app-navbar {
+        padding-right: 8px;
+        padding-left: 8px;
+    }
+
+    .app-navbar-brand {
+        font-size: 1rem;
+    }
+
+    .app-navbar-brand-icon {
+        margin-right: 5px;
+    }
+
+    .app-navbar-separator {
+        margin-right: 8px;
+        margin-left: 8px;
+    }
+
+    .app-navbar-current {
+        font-size: 0.82rem;
+    }
 }
 
 @media (max-width: 767.98px) {
@@ -1234,6 +1507,19 @@ select:focus,
     min-height: 44px;
     padding: 0 4px;
     line-height: 1;
+}
+
+/* V1.3-D: Widget見出しの文字位置と文字サイズを種類ごとに揃える。 */
+.widget-title-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-left: 0;
+    overflow: hidden;
+    font-size: 80%;
+    font-weight: 400;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .calendar-card-body {
