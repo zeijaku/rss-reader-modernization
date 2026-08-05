@@ -15,6 +15,28 @@ Releaseごとに次を確認します。
 - Release NotesとSHA-256
 
 
+
+## Version 1.3.0からVersion 1.4.0
+
+Version 1.4.0はMini Game Widgetを追加しますが、DB構造変更、Migration、SQL、必須設定追加はありません。Game Widgetの登録には既存`dashboard_widget` Tableを利用し、盤面やScoreはBrowser Storageへ保存します。
+
+1. Code、`config/local.php`、Server固有`.htaccess`、実DB、`var/`をBackupする。
+2. ZIPを別Folderへ展開し、SHA-256、Manifest、変更Fileを確認する。
+3. `config/local.php`、実DB、`var/`の生成Dataを上書きせずCodeを更新する。
+4. SQL、Migration、`schema.sql`は実行しない。
+5. BrowserをHard Reloadする。
+6. 既存機能と、Game Widget追加、Icon Quest操作、保存・復元、記録削除を確認する。
+
+```text
+DB schema / Migration       変更なし
+Public API                  Game Widget CRUDを既存Dispatcherへ追加済み
+必須設定                    追加なし
+Feed Cache削除              不要
+Browser Cache               Hard Reload推奨
+Browser Storage             User ID／Widget IDごとに保存
+Server固有.htaccess         不用意に上書きしない
+```
+
 ## Version 1.2.0からVersion 1.3.0
 
 Version 1.3.0は共通UIの整理で、DB構造変更、Migration、SQL、API、必須設定追加はありません。

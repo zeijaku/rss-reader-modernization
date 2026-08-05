@@ -64,6 +64,9 @@
 - [ ] Task Widget追加 / 変更 / 削除
 - [ ] Task追加 / 変更 / 完了切替 / 期限 / 優先度 / 削除
 - [ ] Calendar追加 / 変更 / 削除 / 月移動
+- [ ] Game Widget追加 / 変更 / 削除 / 並べ替え / 複数配置
+- [ ] Icon QuestのKeyboard / Tap操作、Clear / Game Over、New Game / Reset
+- [ ] Game進行、Best、勝敗の保存 / 復元 / 記録削除 / User・Widget分離
 - [ ] 通常予定の追加 / 変更 / 削除 / 複数日表示
 - [ ] Task期限・優先度・完了状態のCalendar連動
 - [ ] RSS 2.0 / RSS 1.0 / Atom
@@ -76,7 +79,7 @@
 - [ ] Drawer / Modal / Page Top
 - [ ] Keyboard / Focus / ARIA
 - [ ] 8テーマ
-- [ ] 320 / 375 / 768 / 992 / 1280px
+- [ ] 360 / 420 / 768 / 1024 / 1280px
 - [ ] JavaScript Console errorなし
 - [ ] CSS / JS / WebFont / faviconがHTTP 200
 

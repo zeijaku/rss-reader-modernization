@@ -1,11 +1,6 @@
-package_type=complete-source-checkpoint
-application_version=1.4.0-dev.3
-application_label=RSS Reader Modernization V1.4-D / R2
-checkpoint=V1.4-D / R2
-baseline=rss-reader-modernization-v1.4-d-r1.zip
-baseline_sha256=fa717fb42e50b0814935a4b9e038475eb54bd2392f414989e081f2600d4ac825
-intended_release=1.4.0
+package_type=complete-source
+application_version=1.4.0
+application_label=RSS Reader Modernization 1.4.0
 intended_tag=v1.4.0
-publishable=no
 runtime_data=excluded
 manifest=SOURCE_MANIFEST.sha256

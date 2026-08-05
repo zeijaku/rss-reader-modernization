@@ -12,7 +12,8 @@
 .memo-card,
 .task-card,
 .calendar-card,
-.stock-card {
+.stock-card,
+.mini-game-card {
     min-width: 0;
     padding: 4px;
 }
@@ -22,7 +23,8 @@
 .memo-card-inner,
 .task-card-inner,
 .calendar-card-inner,
-.stock-card-inner {
+.stock-card-inner,
+.mini-game-card-inner {
     height: 100%;
 }
 
@@ -1162,7 +1164,8 @@ select:focus,
     .clock-card,
     .memo-card,
     .task-card,
-    .stock-card {
+    .stock-card,
+    .mini-game-card {
         padding: 4px 0;
     }
 

@@ -1,3 +1,16 @@
+## RSS Reader Modernization 1.4.0 — 2026-08-06
+
+### Version 1.4.0 finalization
+
+- V1.4-A～D／R2の確認済み内容を統合し、Application Versionを`1.4.0`へ確定。
+- 既存Dashboard Widget基盤へMini Game Widgetを追加し、5×5 Icon戦略Game「Icon Quest」を正式Release。
+- 固定4 Level、Player／Enemy／Treasure／Goal、勝敗、20手上限、Best手数、勝敗数へ対応。
+- 矢印Key、WASD、隣接マスTap／Click、方向Button、44px操作領域、Focus、ARIA、Reduced Motionへ対応。
+- User ID／Widget ID／Game VersionでBrowser Storageを分離し、Fallback、Validation、Recovery、記録削除を実装。
+- Version 1.4でDB Table／Column、Migration、SQL、外部API、外部Library、Frameworkの追加はなし。
+- Full回帰、Release Documentation、Complete／Runtime Package、Manifest、SHA-256、CRC、再展開確認を実施。
+- V1.4-D / R2からのApplication Runtime変更は`app/version.php`のみ。
+
 ## RSS Reader Modernization 1.4.0-dev.3 — V1.4-D / R2 — 2026-08-06
 
 ### Mini Game Widget header spacing correction

@@ -74,6 +74,23 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`release-artifact-inventory-v1.3.0.md`](release-artifact-inventory-v1.3.0.md) — Version 1.3.0 Artifact一覧
 - [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.3.0 Release Notes
 
+
+## Version 1.4
+
+- [`v1-4-b-implementation.md`](v1-4-b-implementation.md) — Mini Game Widget基盤
+- [`test-report-v1-4-b.md`](test-report-v1-4-b.md) — V1.4-B Test結果
+- [`v1-4-c-implementation.md`](v1-4-c-implementation.md) — Icon Quest本体
+- [`test-report-v1-4-c.md`](test-report-v1-4-c.md) — V1.4-C Test結果
+- [`v1-4-d-implementation.md`](v1-4-d-implementation.md) — Tutorial、Storage Recovery、Theme調整
+- [`test-report-v1-4-d.md`](test-report-v1-4-d.md) — V1.4-D Test結果
+- [`test-report-v1-4-d-r2.md`](test-report-v1-4-d-r2.md) — Game Header余白修正Test
+- [`v1-4-release-implementation.md`](v1-4-release-implementation.md) — Version 1.4.0正式化
+- [`v1-4-release-files.md`](v1-4-release-files.md) — Version 1.4正式化の変更File
+- [`test-report-v1-4-release.md`](test-report-v1-4-release.md) — Version 1.4 Full回帰結果
+- [`release-gate-v1.4.0.md`](release-gate-v1.4.0.md) — Version 1.4.0 Quality Gate
+- [`release-artifact-inventory-v1.4.0.md`](release-artifact-inventory-v1.4.0.md) — Version 1.4.0 Artifact一覧
+- [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.4.0 Release Notes
+
 ## M4 release preparation
 
 - [`m4-a-implementation.md`](m4-a-implementation.md) — Release Baseline、公開物、残課題
