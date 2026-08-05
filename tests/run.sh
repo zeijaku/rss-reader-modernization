@@ -391,3 +391,9 @@ if grep -Fq "const APP_VERSION = '1.4.0';" "$ROOT/app/version.php"; then
 else
     echo 'SKIP: Version 1.4.0 release gate requires APP_VERSION 1.4.0.'
 fi
+
+echo '== V1.5-B Clock Timer checks =='
+node "$ROOT/tests/test_v15b_clock_timer_runtime.js"
+python3 "$ROOT/tests/test_v15b_architecture.py"
+python3 "$ROOT/tests/test_v15b_dashboard_render.py"
+python3 "$ROOT/tests/test_v15b_browser.py"

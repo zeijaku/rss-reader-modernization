@@ -99,6 +99,7 @@ $tabParam = app_tab_from_query($_GET['tab'] ?? null);
 
     <link rel="stylesheet" href="./css/dashboard.css">
     <link rel="stylesheet" href="./css/mini-game.css">
+    <link rel="stylesheet" href="./css/clock-timer.css">
     <?php if ($currentUserId === null): ?>
     <link rel="stylesheet" href="./css/auth.css">
     <?php endif; ?>
@@ -333,10 +334,38 @@ if (is_int($content_location)) {
                             <small class="clock-title widget-title-text text-white" id="' . app_html($clockTitleId) . '" title="' . app_html($clockTitle) . '">' . app_html($clockTitle) . '</small>
                             <button type="button" class="btn btn-link clock-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-clock-title="' . app_html($clockTitle) . '" data-clock-hour-format="' . app_html($clockHourFormat) . '" data-clock-show-seconds="' . ($clockShowSeconds ? '1' : '0') . '" data-clock-show-date="' . ($clockShowDate ? '1' : '0') . '" data-toggle="modal" data-target="#changeClock" aria-label="このClockを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
                         </div>
-                        <div class="clock-card-body">
-                            <time class="clock-time" datetime="">--:--</time>
-                            <div class="clock-date"' . ($clockShowDate ? '' : ' hidden') . '>----年--月--日</div>
-                            <div class="clock-zone text-muted small">端末の現在時刻</div>
+                        <div class="clock-card-body clock-timer-enabled" data-dashboard-swipe-ignore="true">
+                            <div class="btn-group clock-view-switch" role="group" aria-label="Clock表示切替">
+                                <button type="button" class="btn btn-sm btn-outline-secondary clock-view-toggle active" data-clock-view-trigger="clock" aria-controls="clock-view-' . $widgetId . '" aria-pressed="true"><i class="far fa-clock" aria-hidden="true"></i><span>時計</span></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary clock-view-toggle" data-clock-view-trigger="timer" aria-controls="clock-timer-view-' . $widgetId . '" aria-pressed="false"><i class="fas fa-hourglass-half" aria-hidden="true"></i><span>タイマー</span></button>
+                            </div>
+                            <div class="clock-view-panel clock-view-clock" id="clock-view-' . $widgetId . '" data-clock-view-panel="clock">
+                                <time class="clock-time" datetime="">--:--</time>
+                                <div class="clock-date"' . ($clockShowDate ? '' : ' hidden') . '>----年--月--日</div>
+                                <div class="clock-zone text-muted small">端末の現在時刻</div>
+                            </div>
+                            <div class="clock-view-panel clock-view-timer" id="clock-timer-view-' . $widgetId . '" data-clock-view-panel="timer" hidden>
+                                <time class="clock-timer-display" datetime="PT300S" aria-label="残り時間 00:05:00">00:05:00</time>
+                                <p class="clock-timer-status" aria-live="polite" aria-atomic="true">時間を選択して開始してください</p>
+                                <div class="clock-timer-presets" role="group" aria-label="タイマーのプリセット">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary clock-timer-preset clock-timer-duration-control" data-clock-timer-seconds="60" aria-pressed="false">1分</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary clock-timer-preset clock-timer-duration-control" data-clock-timer-seconds="180" aria-pressed="false">3分</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary clock-timer-preset clock-timer-duration-control active" data-clock-timer-seconds="300" aria-pressed="true">5分</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary clock-timer-preset clock-timer-duration-control" data-clock-timer-seconds="600" aria-pressed="false">10分</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary clock-timer-preset clock-timer-duration-control" data-clock-timer-seconds="1500" aria-pressed="false">25分</button>
+                                </div>
+                                <div class="clock-timer-custom">
+                                    <label class="sr-only" for="clock-timer-minutes-' . $widgetId . '">任意の分数</label>
+                                    <input type="number" class="form-control clock-timer-custom-minutes clock-timer-duration-control" id="clock-timer-minutes-' . $widgetId . '" min="1" max="1440" step="1" inputmode="numeric" value="5">
+                                    <span class="clock-timer-custom-unit" aria-hidden="true">分</span>
+                                    <button type="button" class="btn btn-outline-secondary clock-timer-custom-apply clock-timer-duration-control">設定</button>
+                                </div>
+                                <div class="clock-timer-actions" role="group" aria-label="タイマー操作">
+                                    <button type="button" class="btn btn-primary clock-timer-start">開始</button>
+                                    <button type="button" class="btn btn-outline-secondary clock-timer-pause" disabled>一時停止</button>
+                                    <button type="button" class="btn btn-outline-danger clock-timer-reset">Reset</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -1442,6 +1471,7 @@ if ($result_content_cnt === 0) {
 <script src="./js/drawer.min.js"></script>
 
 <script src="./js/mini-game.js"></script>
+<script src="./js/clock-timer.js"></script>
 <script src="./js/dashboard.js"></script>
 <script src="./js/calendar.js"></script>
 

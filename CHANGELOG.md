@@ -1,3 +1,18 @@
+## RSS Reader Modernization 1.5.0-dev.1 — V1.5-B / R1 — 2026-08-06
+
+### Clock Timer
+
+- 既存Clock Widgetへ「時計／タイマー」切替を追加。
+- 1／3／5／10／25分Presetと、1～1440分の任意設定へ対応。
+- 開始、一時停止、再開、Reset、終了判定を追加。
+- 単純減算ではなく終了予定日時`endAt`から残り時間を再計算し、Reload後も復元。
+- User ID／Widget ID／Storage VersionでTimer状態を分離。
+- `localStorage`、`sessionStorage`、MemoryのFallbackと保存値Validationを追加。
+- Clock Widget削除成功後に対象Timer状態だけを削除。
+- 44px操作領域、Keyboard、ARIA Live Region、Reduced Motion、360px表示へ対応。
+- 終了音、Browser通知、Server保存、DB Table／Column、Migration、SQL、外部Libraryは追加なし。
+- Feature回帰PASS 889、FAIL 0、SKIP 0を確認。
+
 ## RSS Reader Modernization 1.4.0 — 2026-08-06
 
 ### Version 1.4.0 finalization

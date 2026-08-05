@@ -1,0 +1,179 @@
+.clock-card-body.clock-timer-enabled {
+    min-height: calc(13rem - 44px);
+    padding: 10px 12px 12px;
+    justify-content: flex-start;
+}
+
+.clock-view-switch {
+    display: flex;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.clock-view-toggle {
+    min-width: 44px;
+    min-height: 44px;
+    flex: 1 1 50%;
+}
+
+.clock-view-toggle[aria-pressed="true"] {
+    font-weight: 600;
+}
+
+.clock-view-panel {
+    width: 100%;
+}
+
+.clock-view-panel[hidden] {
+    display: none !important;
+}
+
+.clock-view-clock {
+    display: flex;
+    min-height: 7.5rem;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.clock-view-timer {
+    text-align: center;
+}
+
+.clock-timer-display {
+    display: block;
+    margin: 2px 0 4px;
+    color: #212529;
+    font-size: clamp(2rem, 5vw, 3.15rem);
+    font-variant-numeric: tabular-nums;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    line-height: 1.05;
+    white-space: nowrap;
+}
+
+.clock-timer-status {
+    min-height: 1.5em;
+    margin: 0 0 10px;
+    color: #495057;
+    font-size: 0.85rem;
+    line-height: 1.35;
+}
+
+.clock-timer-presets {
+    display: flex;
+    margin: -2px -2px 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.clock-timer-preset {
+    min-width: 44px;
+    min-height: 44px;
+    margin: 2px;
+    flex: 1 1 44px;
+    white-space: nowrap;
+}
+
+.clock-timer-preset[aria-pressed="true"] {
+    font-weight: 600;
+}
+
+.clock-timer-custom {
+    display: flex;
+    width: 100%;
+    margin-bottom: 8px;
+    align-items: stretch;
+}
+
+.clock-timer-custom-minutes {
+    min-width: 0;
+    min-height: 44px;
+    flex: 1 1 auto;
+    text-align: right;
+}
+
+.clock-timer-custom-unit {
+    display: inline-flex;
+    min-height: 44px;
+    padding: 0 10px;
+    align-items: center;
+    border: 1px solid #ced4da;
+    border-right: 0;
+    border-left: 0;
+    background: #f8f9fa;
+    color: #495057;
+}
+
+.clock-timer-custom-apply {
+    min-width: 58px;
+    min-height: 44px;
+}
+
+.clock-timer-actions {
+    display: flex;
+    margin: -2px;
+    flex-wrap: wrap;
+}
+
+.clock-timer-actions .btn {
+    min-width: 64px;
+    min-height: 44px;
+    margin: 2px;
+    flex: 1 1 64px;
+}
+
+.clock-timer-completed .clock-timer-display {
+    font-weight: 500;
+}
+
+.clock-timer-completed .clock-timer-status {
+    font-weight: 600;
+}
+
+#main-content[data-dashboard-theme="bootstrap-solar"] .clock-card-inner,
+#main-content[data-dashboard-theme="bootstrap-slate"] .clock-card-inner {
+    background: #2b3035;
+    color: #f8f9fa;
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+#main-content[data-dashboard-theme="bootstrap-solar"] .clock-time,
+#main-content[data-dashboard-theme="bootstrap-slate"] .clock-time,
+#main-content[data-dashboard-theme="bootstrap-solar"] .clock-timer-display,
+#main-content[data-dashboard-theme="bootstrap-slate"] .clock-timer-display {
+    color: #f8f9fa;
+}
+
+#main-content[data-dashboard-theme="bootstrap-solar"] .clock-date,
+#main-content[data-dashboard-theme="bootstrap-slate"] .clock-date,
+#main-content[data-dashboard-theme="bootstrap-solar"] .clock-timer-status,
+#main-content[data-dashboard-theme="bootstrap-slate"] .clock-timer-status {
+    color: #ced4da;
+}
+
+#main-content[data-dashboard-theme="bootstrap-solar"] .clock-timer-custom-unit,
+#main-content[data-dashboard-theme="bootstrap-slate"] .clock-timer-custom-unit {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8f9fa;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 767.98px) {
+    .clock-card-body.clock-timer-enabled {
+        min-height: calc(11rem - 44px);
+        padding: 10px;
+    }
+
+    .clock-timer-display {
+        font-size: clamp(2rem, 13vw, 3rem);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .clock-view-panel,
+    .clock-timer-display,
+    .clock-timer-status {
+        transition: none !important;
+    }
+}

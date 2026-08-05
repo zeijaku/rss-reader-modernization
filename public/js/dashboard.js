@@ -666,7 +666,7 @@
             showNotice('削除するClockを確認出来ませんでした', 'danger');
             return;
         }
-        if (!window.confirm('このClockを削除しますか？')) {
+        if (!window.confirm('このClockを削除しますか？Browserに保存されたTimer状態も削除します。')) {
             return;
         }
         if (!requestStart($button)) {
@@ -676,6 +676,9 @@
         apiRequest('widget.clock.delete', {'widget_id': widgetId}, 3000)
             .done(function (data) {
                 if (apiResponseOk(data)) {
+                    if (window.RssClockTimer && typeof window.RssClockTimer.removeWidgetState === 'function') {
+                        window.RssClockTimer.removeWidgetState(widgetId);
+                    }
                     window.location.reload();
                 }
             })

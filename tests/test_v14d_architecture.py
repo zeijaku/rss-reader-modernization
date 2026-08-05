@@ -2,8 +2,8 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]; failures=[]
 def check(ok,msg): print(('PASS' if ok else 'FAIL')+': '+msg); failures.append(msg) if not ok else None
 version=(ROOT/'app/version.php').read_text(); index=(ROOT/'public/index.php').read_text(); js=(ROOT/'public/js/mini-game.js').read_text(); css=(ROOT/'public/css/mini-game.css').read_text(); run=(ROOT/'tests/run.sh').read_text()
-check("const APP_VERSION = '1.4.0-dev.3';" in version or "const APP_VERSION = '1.4.0';" in version,'Application version is V1.4-D or final 1.4.0')
-check('V1.4-D / R1' in version or 'V1.4-D / R2' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.4.0'" in version,'Application label identifies V1.4-D or final release')
+check("const APP_VERSION = '1.4.0-dev.3';" in version or "const APP_VERSION = '1.4.0';" in version or "const APP_VERSION = '1.5.0-dev.1';" in version,'Application version retains V1.4-D behavior in V1.4 or later')
+check('V1.4-D / R1' in version or 'V1.4-D / R2' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.4.0'" in version or 'RSS Reader Modernization V1.5-' in version,'Application label identifies V1.4-D or later')
 check('mini-game-tutorial-toggle' in index and 'mini-game-tutorial' in index,'Tutorial UI is rendered')
 check('mini-game-storage-reset' in index and '記録を削除' in index,'Widget-scoped record reset is rendered')
 check('mini-game-result' in index and 'mini-game-wins' in index and 'mini-game-losses' in index,'result and win/loss display are rendered')
