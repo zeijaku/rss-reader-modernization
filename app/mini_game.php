@@ -73,11 +73,12 @@ function mini_game_widget_config_from_storage(mixed $value): array
 }
 
 /**
- * V1.4-BではGame本体を実装せず、固定のMock盤面だけを表示する。
+ * Icon Quest Level 1の初期盤面。
+ * Game進行中の盤面はJavaScriptで描画する。
  *
  * @return list<string>
  */
-function mini_game_icon_quest_mock_board(): array
+function mini_game_icon_quest_initial_board(): array
 {
     return [
         'player', 'floor', 'wall', 'floor', 'enemy',

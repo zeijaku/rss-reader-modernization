@@ -1,3 +1,16 @@
+## RSS Reader Modernization 1.4.0-dev.2 — V1.4-C / R1 — 2026-08-05
+
+### Icon Quest first playable Game
+
+- 5×5 Icon戦略Game「Icon Quest」を固定4 Levelで実装。
+- Player移動、Treasure取得、Goal、Enemy追跡、Clear／Game Over、20手上限を追加。
+- EnemyはPlayerの有効移動2回ごとに、固定順の最短経路で1マス移動。
+- 矢印Key、WASD、隣接マスTap／Click、方向Buttonへ対応。
+- Moves、Level別Best、勝敗数、途中状態をBrowser Storageへ保存し、再表示時に復元。
+- Storage値はGame Version、Level、位置、型、範囲、統計を検証し、異常時は安全に初期化。
+- Font Awesome Icon、文字Label、Grid ARIA、Roving Focus、Esc、44px操作領域へ対応。
+- DB、Table、Column、Migration、SQL、外部API、外部Libraryの追加はなし。
+
 ## RSS Reader Modernization 1.4.0-dev.1 — V1.4-B / R1 — 2026-08-05
 
 ### Mini Game Widget foundation

@@ -42,12 +42,12 @@ v14b_check(mini_game_widget_config_from_input(['game_title' => 'Game', 'game_typ
 v14b_check(mini_game_widget_config_from_storage('{broken') === $defaults, 'broken stored config falls back safely');
 v14b_check(mini_game_widget_config_from_storage('{"schema":2,"title":"Old","game":"icon_quest"}') === $defaults, 'unknown config schema falls back safely');
 
-$board = mini_game_icon_quest_mock_board();
-v14b_check(count($board) === 25, 'Mock board is exactly 5x5');
-v14b_check(count(array_filter($board, static fn(string $cell): bool => $cell === 'player')) === 1, 'Mock board has one Player');
-v14b_check(count(array_filter($board, static fn(string $cell): bool => $cell === 'enemy')) === 1, 'Mock board has one Enemy');
-v14b_check(count(array_filter($board, static fn(string $cell): bool => $cell === 'treasure')) === 1, 'Mock board has one Treasure');
-v14b_check(count(array_filter($board, static fn(string $cell): bool => $cell === 'goal')) === 1, 'Mock board has one Goal');
+$board = mini_game_icon_quest_initial_board();
+v14b_check(count($board) === 25, 'initial board is exactly 5x5');
+v14b_check(count(array_filter($board, static fn(string $cell): bool => $cell === 'player')) === 1, 'initial board has one Player');
+v14b_check(count(array_filter($board, static fn(string $cell): bool => $cell === 'enemy')) === 1, 'initial board has one Enemy');
+v14b_check(count(array_filter($board, static fn(string $cell): bool => $cell === 'treasure')) === 1, 'initial board has one Treasure');
+v14b_check(count(array_filter($board, static fn(string $cell): bool => $cell === 'goal')) === 1, 'initial board has one Goal');
 
 $row = dashboard_widget_normalize_row([
     'widget_id' => '8',

@@ -364,3 +364,9 @@ php "$ROOT/tests/test_v14b_game_widget.php"
 python3 "$ROOT/tests/test_v14b_architecture.py"
 node "$ROOT/tests/test_v14b_storage_runtime.js"
 python3 "$ROOT/tests/test_v14b_dashboard_render.py"
+
+echo '== V1.4-C Icon Quest Game checks =='
+node "$ROOT/tests/test_v14c_game_runtime.js"
+python3 "$ROOT/tests/test_v14c_architecture.py"
+python3 "$ROOT/tests/test_v14c_dashboard_render.py"
+python3 "$ROOT/tests/test_v14c_browser.py"

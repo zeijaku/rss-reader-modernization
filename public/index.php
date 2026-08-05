@@ -352,7 +352,7 @@ if (is_int($content_location)) {
             $gameType = mini_game_widget_validate_type($gameConfig['game'] ?? null) ?? 'icon_quest';
             $gameTitleId = 'mini-game-title-' . $widgetId;
             $gameBoardId = 'mini-game-board-' . $widgetId;
-            $gameBoard = mini_game_icon_quest_mock_board();
+            $gameBoard = mini_game_icon_quest_initial_board();
             $gameCellMeta = [
                 'player' => ['Player', 'fas fa-user-shield', 'mini-game-cell-player'],
                 'enemy' => ['Enemy', 'fas fa-skull-crossbones', 'mini-game-cell-enemy'],
@@ -371,13 +371,13 @@ if (is_int($content_location)) {
             echo '<button type="button" class="btn btn-link mini-game-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-game-title="' . app_html($gameTitle) . '" data-game-type="' . app_html($gameType) . '" data-toggle="modal" data-target="#changeGameWidget" aria-label="このGame Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>';
             echo '</div>';
             echo '<div class="mini-game-card-body">';
-            echo '<div class="mini-game-board" id="' . app_html($gameBoardId) . '" role="grid" aria-label="Icon Quest 5×5 Mock盤面">';
+            echo '<div class="mini-game-board" id="' . app_html($gameBoardId) . '" role="grid" aria-label="Icon Quest 5×5盤面、Level 1">';
             foreach ($gameBoard as $gameCellIndex => $gameCellType) {
                 $gameCell = $gameCellMeta[$gameCellType] ?? $gameCellMeta['floor'];
                 $gameRow = intdiv($gameCellIndex, 5) + 1;
                 $gameColumn = ($gameCellIndex % 5) + 1;
                 $gameLabel = $gameRow . '行' . $gameColumn . '列、' . $gameCell[0];
-                echo '<button type="button" class="mini-game-cell ' . app_html($gameCell[2]) . '" role="gridcell" aria-rowindex="' . $gameRow . '" aria-colindex="' . $gameColumn . '" aria-label="' . app_html($gameLabel) . '" tabindex="' . ($gameCellType === 'player' ? '0' : '-1') . '" aria-disabled="true">';
+                echo '<button type="button" class="mini-game-cell ' . app_html($gameCell[2]) . '" role="gridcell" aria-rowindex="' . $gameRow . '" aria-colindex="' . $gameColumn . '" aria-label="' . app_html($gameLabel) . '" data-mini-game-cell-index="' . $gameCellIndex . '" tabindex="' . ($gameCellType === 'player' ? '0' : '-1') . '" aria-disabled="' . ($gameCellType === 'wall' ? 'true' : 'false') . '">';
                 if ($gameCell[1] !== '') {
                     echo '<i class="' . app_html($gameCell[1]) . '" aria-hidden="true"></i>';
                 } else {
@@ -386,8 +386,21 @@ if (is_int($content_location)) {
                 echo '</button>';
             }
             echo '</div>';
-            echo '<div class="mini-game-status-row"><p class="mini-game-status text-muted" aria-live="polite">準備中...</p><button type="button" class="btn btn-sm btn-outline-secondary mini-game-reset">Reset</button></div>';
-            echo '<p class="sr-only">V1.4-BではGame Widget基盤とMock盤面のみを提供します。盤面操作はV1.4-Cで実装します。</p>';
+            echo '<div class="mini-game-summary" aria-label="Game状況">';
+            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Level</span><strong class="mini-game-level">Level 1</strong></div>';
+            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Moves</span><strong class="mini-game-moves">0 / 20</strong></div>';
+            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Best</span><strong class="mini-game-best">--</strong></div>';
+            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Treasure</span><strong class="mini-game-treasure-state">未取得</strong></div>';
+            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Enemy</span><strong><span class="mini-game-enemy-turn">2</span>手後</strong></div></div>';
+            echo '<div class="mini-game-status-row"><p class="mini-game-status text-muted" id="mini-game-status-' . $widgetId . '" aria-live="polite">準備中...</p></div>';
+            echo '<div class="mini-game-controls"><div class="mini-game-action-buttons"><button type="button" class="btn btn-sm btn-outline-primary mini-game-new-game">New Game</button><button type="button" class="btn btn-sm btn-outline-secondary mini-game-reset">Reset</button></div>';
+            echo '<div class="mini-game-dpad" role="group" aria-label="Player移動">';
+            echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-up" data-mini-game-direction="up" aria-label="上へ移動"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>';
+            echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-left" data-mini-game-direction="left" aria-label="左へ移動"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>';
+            echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-down" data-mini-game-direction="down" aria-label="下へ移動"><i class="fas fa-chevron-down" aria-hidden="true"></i></button>';
+            echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-right" data-mini-game-direction="right" aria-label="右へ移動"><i class="fas fa-chevron-right" aria-hidden="true"></i></button></div></div>';
+            echo '<p class="mini-game-storage-note text-muted">進行状態を確認しています...</p>';
+            echo '<p class="sr-only">矢印KeyまたはWASD、隣接マス、方向ButtonでPlayerを移動出来ます。Treasureを取得してからGoalへ進んでください。</p>';
             echo '</div></div></section>';
             continue;
         }
