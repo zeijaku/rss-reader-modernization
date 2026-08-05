@@ -54,6 +54,11 @@
 - [ ] Login / Logout / Session
 - [ ] 4タブ
 - [ ] Feed追加 / 変更 / 削除 / 再読込
+- [ ] 記事Titleの1～2行表示 / 全文Tooltip / RSS概要開閉
+- [ ] Feed Card個別更新
+- [ ] Search Feed追加 / 変更 / 削除 / 検索 / 個別更新
+- [ ] 新着Bellの個別解除 / Feed単位解除
+- [ ] 記事ActionsのStock / URL Copy / X / Task追加
 - [ ] Clock追加 / 変更 / 削除
 - [ ] Memo追加 / 変更 / 削除 / 改行表示
 - [ ] Task Widget追加 / 変更 / 削除

@@ -2,11 +2,8 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.1.0`  
-Release tag: `v1.1.0`
-
-**Development checkpoint:** `RSS Reader Modernization 1.2.0-dev.2`（V1.2-B / R2）  
-Baseline: `main` / `31e9d9f3fc594f8080d1962f10ac30985bd07881`
+**Stable release:** `RSS Reader Modernization 1.2.0`  
+Release tag: `v1.2.0`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
@@ -22,6 +19,8 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - 省略された記事タイトルのHover／Keyboard Focus全文表示
 - RSS内の`content`／`description`を記事単位で安全に展開
 - Feedカード単位の個別更新（現在の記事を保持、既存Cache／Retry経路を再利用）
+- Search Feed Widgetによる検索語句ベースの記事表示
+- 記事ActionsからStock保存、URL Copy、X投稿画面、Task追加
 - 正常Feed本文の短時間Server-side cache（初期TTL 60秒）
 - 同一Feed URLへの同時Fetch抑制
 - ETag / Last-Modified / HTTP 304による本文再送抑制
@@ -68,14 +67,17 @@ V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.m
 
 | Stage | 内容 | 状態 |
 |---|---|---|
-| V1.2-A／第1段 | Login・Registration近代化、Honeypot、Logout／Session expiry通知、403／404／500／503共通Error | 完了・動作確認済み |
-| V1.2-B／第2段 | 省略Title全文表示、RSS概要Accordion、Feed Card個別更新、記事Action配置整理 | 完了・確認待ち |
-| 第3段 | Search Feed | 未着手 |
-| 第4段 | 記事Actions、Stock関連拡張 | 未着手 |
+| V1.2-A／第1段 | Login・Registration近代化、Honeypot、Logout／Session expiry通知、403／404／500／503共通Error | 完了 |
+| V1.2-B／第2段 | 記事Title表示、全文Tooltip、RSS概要Accordion、Feed Card個別更新 | 完了 |
+| V1.2-C／第3段 | Search Feed、見出し・概要・通知の調整 | 完了 |
+| V1.2-D／第4段 | 共通記事Actions、Stock、URL Copy、X投稿、Task追加、操作領域調整 | 完了 |
+| Version 1.2 Release | 統合回帰、Documentation、Package、Version 1.2.0確定 | 完了 |
 
-V1.2-Aでは既存の認証、CSRF、Login Throttle、Session ID再生成、Cookie、Registration Validationを維持したまま、Authentication専用UIへ更新しました。LogoutとSession timeoutはQuery Parameterを使わない1回限りのFlashで区別し、403／404／500／503はDBや通常Bootstrapへ依存しない共通画面を使用します。DB変更、SQL、`config/local.php`追加はありません。詳細は[`docs/v1-2-a-implementation.md`](docs/v1-2-a-implementation.md)、Test結果は[`docs/test-report-v1-2-a.md`](docs/test-report-v1-2-a.md)を参照してください。
+Version 1.2.0では、認証画面を専用UIへ更新し、Honeypot、Logout／Session expiry通知、403／404／500／503の共通Error画面を追加しました。記事表示では、最大2行Title、全文Tooltip、Plain Textの概要Accordion、Feed Card単位の個別更新を追加しています。
 
-V1.2-Bでは記事Titleを固定文字数で切らず、実際の表示幅で省略された場合だけHover／Keyboard Focusで全文を確認できるようにしました。R2では記事行を`Stock｜Title｜▽`の3列へ調整し、Stockを従来どおり左側へ戻した上で、記事右側の`▽`へ独立した44px操作領域を確保しています。`▽`はFeedから既に取得した`content`を優先し、なければ`description`をPlain Textとして展開します。Feed見出しの`⟳`は既存`feed.fetch`、owner確認、Cache、ETag、Last-Modified、Retry、Backoffを再利用し、更新中と失敗時も現在の記事を残します。DB、Migration、SQL、`.htaccess`、`config/local.php`の変更はありません。詳細は[`docs/v1-2-b-implementation.md`](docs/v1-2-b-implementation.md)、Test結果は[`docs/test-report-v1-2-b.md`](docs/test-report-v1-2-b.md)を参照してください。
+Search Feedは既存のDashboard Widget基盤とFeed取得経路を再利用し、通常RSSと共通の記事描画を使用します。記事Actionsは画面内で1つの共通Menuを使い、Stock保存、記事URLのCopy、X投稿画面、記事TitleのみのTask追加へ対応しました。三点リーダー、概要「＋」、新着Bellの操作性を維持しながら、記事Titleの表示領域も調整しています。
+
+Version 1.2ではDB Table／Column、Migration、SQL、必須設定、外部Library、Build環境の追加はありません。Version 1.1.0からの更新はCode差し替えとBrowser Cache更新が中心です。詳細は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/v1-2-release-implementation.md`](docs/v1-2-release-implementation.md)、[`docs/test-report-v1-2-release.md`](docs/test-report-v1-2-release.md)を参照してください。
 
 ## Secure Baselineで完了した範囲
 
@@ -147,7 +149,7 @@ M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4
 
 詳細は [`docs/m4-f-implementation.md`](docs/m4-f-implementation.md)、[`docs/m4-f-validation.md`](docs/m4-f-validation.md)、[`docs/m4-e-implementation.md`](docs/m4-e-implementation.md)、[`docs/release-package.md`](docs/release-package.md)、[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
 
-## Version 1.1.0 release package
+## Version 1.2.0 release package
 
 GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分けて生成します。
 
@@ -155,11 +157,11 @@ GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分
 python tools/build_complete_package.py --output-dir ../release-output
 python tools/build_release_package.py --mode final --output-dir ../release-output
 python tools/verify_complete_package.py \
-  ../release-output/rss-reader-modernization-1.1.0-complete.zip \
-  ../release-output/rss-reader-modernization-1.1.0-complete.zip.sha256
+  ../release-output/rss-reader-modernization-1.2.0-complete.zip \
+  ../release-output/rss-reader-modernization-1.2.0-complete.zip.sha256
 python tools/verify_release_package.py \
-  ../release-output/rss-reader-modernization-1.1.0.zip \
-  ../release-output/rss-reader-modernization-1.1.0.zip.sha256
+  ../release-output/rss-reader-modernization-1.2.0.zip \
+  ../release-output/rss-reader-modernization-1.2.0.zip.sha256
 ```
 
 Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、検証限界は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)を参照してください。

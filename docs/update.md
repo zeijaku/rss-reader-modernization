@@ -15,6 +15,26 @@ Releaseごとに次を確認します。
 - Release NotesとSHA-256
 
 
+## Version 1.1.0からVersion 1.2.0
+
+Version 1.2.0はCodeとFrontendの更新で、DB構造変更、Migration、SQL、必須設定追加はありません。
+
+1. Code、`config/local.php`、実DB、`var/`をBackupする。
+2. ZIPを別Folderへ展開し、SHA-256と変更Fileを確認する。
+3. `config/local.php`、実DB、`var/`の生成Dataを上書きせずCodeを更新する。
+4. SQL、Migration、`schema.sql`は実行しない。
+5. Browser Cacheを更新する。
+6. Login、通常RSS、Search Feed、概要、個別更新、新着Bell、記事Actionsを確認する。
+
+```text
+DB schema / Migration       変更なし
+Public API                  Search Feed／記事Actionsで既存DispatcherへAction追加済み
+必須設定                    追加なし
+Feed Cache削除              不要
+Browser Cache               Hard Reload推奨
+削除file                    Release Notesの変更一覧を参照
+```
+
 ## Version 1.0系からVersion 1.1.0
 
 Version 1.1.0ではFeed item state、Dashboard Widget、Memo、Task、Calendar eventのTableを追加します。CodeとDBを同じMaintenance内で更新してください。

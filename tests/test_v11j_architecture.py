@@ -113,8 +113,8 @@ schema_text = schema_path.read_text(encoding='utf-8')
 check('account_settings' not in schema_text.lower() and schema_text.count("'CREATE TABLE ',") == 9, 'Account Settings adds no table or column to the Version 1.1 schema')
 account_migrations = list((ROOT / 'database/migrations').glob('*account*')) if (ROOT / 'database/migrations').exists() else []
 check(account_migrations == [], 'Account Settings adds no database migration')
-check("const APP_VERSION = '1.1.0-dev.9';" in version or "const APP_VERSION = '1.1.0';" in version or "const APP_VERSION = '1.2.0-dev.3';" in version, 'application version is V1.1-J dev.9 or final 1.1.0')
-check("const APP_VERSION_LABEL = 'RSS Reader Modernization V1.1-J / R1';" in version or "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.1.0';" in version or "const APP_VERSION = '1.2.0-dev.3';" in version or "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.2.0-dev.3';" in version, 'visible version label identifies V1.1-J or final 1.1.0')
+check("const APP_VERSION = '1.1.0-dev.9';" in version or "const APP_VERSION = '1.1.0';" in version or "const APP_VERSION = '1.2.0-dev.3';" or "const APP_VERSION = '1.2.0-dev.4';" in version, 'application version is V1.1-J dev.9 or final 1.1.0')
+check("const APP_VERSION_LABEL = 'RSS Reader Modernization V1.1-J / R1';" in version or "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.1.0';" in version or "const APP_VERSION = '1.2.0-dev.3';" or "const APP_VERSION = '1.2.0-dev.4';" in version or "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.2.0-dev.3';" in version, 'visible version label identifies V1.1-J or final 1.1.0')
 
 if not all(checks):
     print(f'{checks.count(False)}/{len(checks)} V1.1-J architecture checks failed.')

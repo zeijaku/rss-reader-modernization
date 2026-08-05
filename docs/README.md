@@ -47,6 +47,18 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`release-gate-v1.1.0.md`](release-gate-v1.1.0.md) — Version 1.1.0 Quality Gate
 - [`release-artifact-inventory-v1.1.0.md`](release-artifact-inventory-v1.1.0.md) — Version 1.1.0 Artifact一覧
 
+## Version 1.2
+
+- [`v1-2-a-implementation.md`](v1-2-a-implementation.md) — Authentication／Notice／Common Error
+- [`test-report-v1-2-a.md`](test-report-v1-2-a.md) — V1.2-A Test結果
+- [`v1-2-b-implementation.md`](v1-2-b-implementation.md) — 記事表示／概要／個別更新
+- [`test-report-v1-2-b.md`](test-report-v1-2-b.md) — V1.2-B Test結果
+- [`v1-2-release-implementation.md`](v1-2-release-implementation.md) — Version 1.2.0正式化
+- [`v1-2-release-files.md`](v1-2-release-files.md) — Version 1.2正式化の変更File
+- [`test-report-v1-2-release.md`](test-report-v1-2-release.md) — Version 1.2統合Test結果
+- [`release-gate-v1.2.0.md`](release-gate-v1.2.0.md) — Version 1.2.0 Quality Gate
+- [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.2.0 Release Notes
+
 ## M4 release preparation
 
 - [`m4-a-implementation.md`](m4-a-implementation.md) — Release Baseline、公開物、残課題
@@ -64,7 +76,7 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`m4-g-files.md`](m4-g-files.md) — M4-G変更file一覧
 - [`release-package.md`](release-package.md) — Runtime Release ZIPのBuild / Verify
 - [`tag-and-github-release.md`](tag-and-github-release.md) — annotated TagとGitHub Release手順
-- [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.1.0 Release Notes
+- [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Current Release Notes
 - [`ci.md`](ci.md) — GitHub Actionsの範囲と初回確認
 - [`github-publication.md`](github-publication.md) — Repository設定Checklist
 - [`portfolio.md`](portfolio.md) — Portfolio掲載用メモ

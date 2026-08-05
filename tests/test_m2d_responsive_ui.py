@@ -36,7 +36,7 @@ check('#page-top' in css and 'z-index: 1040' in css, 'Page Top stays usable with
 check('id="app-notice"' in index and 'aria-live="polite"' in index, 'shared UI notice region is present')
 check('function showNotice(message, type' in js, 'mutation feedback uses one notice helper')
 check('alert(' not in js, 'browser alert is no longer used for Dashboard feedback')
-check("showNotice('Stockへ保存しました', 'success')" in js, 'Stock success has visible page feedback')
+check("showNotice('Stockへ保存しました', 'success', 2500)" in js, 'Stock success has visible page feedback')
 check("$('#saveContent').modal('hide')" in js, 'Stock modal closes only after successful save')
 check('type="button" class="btn btn-outline-danger delete_content"' in index, 'RSS deletion has an explicit button')
 check("window.confirm('このRSSを削除しますか？')" in js, 'RSS deletion asks for confirmation')

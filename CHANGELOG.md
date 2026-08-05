@@ -1,5 +1,82 @@
 # Changelog
 
+## RSS Reader Modernization 1.2.0 — 2026-08-05
+
+### Version 1.2.0 finalization
+
+- V1.2-A～DとR2～R5の確認済み内容を統合し、Application Versionを`1.2.0`へ確定。
+- 認証画面・通知・共通Error、記事表示・概要開閉・個別更新、Search Feed、記事Actionsを正式Release範囲として整理。
+- 記事ActionsはStock保存、URL Copy、X投稿画面、記事TitleのみのTask追加へ対応。
+- 三点リーダー、概要「＋」、新着Bellの操作性と記事Title表示領域の調整を含む。
+- Version 1.2でDB Table／Column、Migration、SQL、必須設定の追加はなし。
+- README、Release Notes、配置手順、Package Builder／Verifier、Version 1.2 Release Gateを更新。
+- Application Runtimeの機能修正は行わず、R5からのApplication変更は`app/version.php`のみ。
+
+## RSS Reader Modernization 1.2.0-dev.4 — V1.2-D / R5 — 2026-08-05
+
+### New Bell title layout correction
+
+- 記事側の新着BellをTitleの通常Flex幅から外し、Title左上へ固定。
+- Bell分の余白をTitleの1行目だけに限定し、2行目は左端から表示出来るよう調整。
+- Bellの22px表示、解除操作、Keyboard Focus、通常RSS／Search Feedの共通描画を維持。
+- 三点リーダー、RSS概要「＋」、記事Actions、DB、SQL、設定ファイル、Version番号は変更なし。
+
+## RSS Reader Modernization 1.2.0-dev.4 — V1.2-D / R1 — 2026-08-05
+
+### Article Actions menu
+
+- 通常RSSとSearch Feedの記事左端をBookmarkから三点リーダーへ変更し、1つの共通記事Actionsメニューを追加。
+- 既存Stock保存処理、URLコピー、X Web Intent、記事タイトルのみのTask追加へ対応。
+- Clipboard APIが利用出来ない場合は、従来Copy処理へFallback。
+- X投稿用タイトルは長すぎる場合に200文字以内へ調整し、記事URLとともにURL Encode。
+- Taskは現在のタブに表示される先頭のTask Widgetへ、期限なし・通常優先度で追加。記事URLは保存しない。
+- 他メニューを開いた時、外側Click、Esc、Scroll、Resize、記事再描画時にActionsメニューを閉じる。
+- PC／Smartphoneの44px操作領域、Keyboard操作、aria属性、カード内へ収める位置調整を追加。
+- DB、Table、Column、Migration、SQL、外部Library、`.htaccess`、`config/local.php`の変更はなし。
+
+## RSS Reader Modernization 1.2.0-dev.3 — V1.2-C / R5 — 2026-08-05
+
+### Search Feed title color correction
+
+- Search Feedの初期タイトル文字色を、既存カードと同じ`text-white`へ統一。
+- 初回検索および個別更新後にJavaScriptで復元されるタイトルにも`text-white`を維持。
+- `dark`を含む色付き見出しで、黒いタイトルが背景と同化する問題を修正。
+- 背景に応じた文字色の動的切替は、全カード共通の将来課題として今回は実施しない。
+- DB、API、Cache、CSS、`.htaccess`、`config/local.php`、Version番号は変更なし。
+
+## RSS Reader Modernization 1.2.0-dev.3 — V1.2-C / R4 — 2026-08-05
+
+### Search Feed summary and transient notice correction
+
+- 「Stockへ保存しました」に2.5秒の自動消去を追加。
+- 通常Feed専用だった概要Buttonのカード参照を、Search Feedにも対応。
+- Search Feedの有効な`＋`からRSS概要を正常に開閉できるよう修正。
+- 「RSS概要を確認出来ませんでした」に4秒の自動消去を追加。
+- 空概要の`＋`は従来どおり表示したままdisabledを維持。
+- Memoの`sessionStorage`対応は今回の対象外。
+- DB、API、Cache、CSS、HTML、`.htaccess`、`config/local.php`、Version番号は変更なし。
+
+## RSS Reader Modernization 1.2.0-dev.3 — V1.2-C / R3 — 2026-08-05
+
+### Search Feed header layout correction
+
+- Search Feedの見出しを通常RSSカードと同じ1段Layoutへ統一。
+- `＝ / 検索語句 / 編集 / 再読み込み`を44px高の同一行へ配置。
+- 長い検索語句は折り返して操作Buttonを2段目へ送らず、省略表示を維持。
+- 編集・再読み込みButtonの44px操作領域とKeyboard Focus表示を維持。
+- 検索処理、API、DB、Cache、記事表示、`.htaccess`、`config/local.php`、Version番号は変更なし。
+
+## RSS Reader Modernization 1.2.0-dev.3 — V1.2-C / R2 — 2026-08-05
+
+### Search Feed UI correction
+
+- 初回検索成功後も見出しが「読み込み中...」のまま残る表示復元漏れを修正。
+- 検索結果0件の場合も、Search Feed見出しを保存済み検索語句へ戻すよう修正。
+- Structured API error時に初回見出しがLoading状態のまま残らないようError表示へ移行。
+- Search Feedの見出し色を既存Widgetと同じ`success / primary / info / secondary / dark / warning / danger`表記へ統一。
+- Search Feedの横幅表記を既存Widgetと同じ`1列 / 2列 / 3列 / 全幅`へ統一。
+- DB、API、Cache、`.htaccess`、`config/local.php`、Version番号は変更なし。
+
 ## RSS Reader Modernization 1.2.0-dev.2 — V1.2-B / R3 — 2026-08-04
 
 ### Article title and summary control display correction

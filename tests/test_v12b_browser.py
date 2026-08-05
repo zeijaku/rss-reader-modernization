@@ -25,6 +25,12 @@ html = '''<!doctype html><html lang="ja"><head>
 <meta charset="utf-8"><meta name="csrf-token" content="''' + ('a' * 64) + '''">
 </head><body class="drawer">
 <div id="app-notice" class="alert app-notice" hidden></div>
+<div id="articleActionsMenu" class="article-actions-menu" role="menu" aria-label="記事Actions" hidden>
+<button type="button" class="article-actions-item article-action-stock" role="menuitem"><i class="far fa-bookmark fa-fw"></i><span>Stockへ保存</span></button>
+<button type="button" class="article-actions-item article-action-copy" role="menuitem"><i class="far fa-copy fa-fw"></i><span>URLをコピー</span></button>
+<button type="button" class="article-actions-item article-action-x" role="menuitem"><i class="fab fa-x-twitter fa-fw"></i><span>Xへ投稿</span></button>
+<button type="button" class="article-actions-item article-action-task" role="menuitem"><i class="fas fa-tasks fa-fw"></i><span>Taskへ追加</span></button>
+</div>
 <main id="main-content" data-dashboard-current-tab="0" data-dashboard-tab-count="4">
 <section style="width:360px" class="dashboard-widget feed-card" data-dashboard-widget-id="11" data-dashboard-widget-type="feed" data-feed-content-id="7" data-feed-state="loading" aria-busy="true">
 <div class="feed-card-inner"><input type="hidden" class="content-value" value="https://example.com/feed.xml">
@@ -89,14 +95,14 @@ with sync_playwright() as p:
 
     check(page.locator('.feed-item-row').count() == 4, 'Feed renders four article rows')
     first_row_cells = page.locator('.feed-item-row').first.locator('td')
-    check(first_row_cells.count() == 3, 'article row has independent Stock, title and summary cells')
-    check('feed-item-stock-cell' in (first_row_cells.nth(0).get_attribute('class') or ''), 'Stock cell is restored to the left edge')
+    check(first_row_cells.count() == 3, 'article row has independent Actions, title and summary cells')
+    check('feed-item-stock-cell' in (first_row_cells.nth(0).get_attribute('class') or ''), 'Actions cell remains at the left edge')
     check('feed-item-title-cell' in (first_row_cells.nth(1).get_attribute('class') or ''), 'article title remains in the center cell')
     check('feed-item-summary-cell' in (first_row_cells.nth(2).get_attribute('class') or ''), 'summary toggle has an independent right edge cell')
-    stock_box = page.locator('.infomation_modal_rewrite').first.bounding_box()
+    stock_box = page.locator('.article-actions-trigger').first.bounding_box()
     title_box = page.locator('.feed-item-title-text').first.bounding_box()
     toggle_box = page.locator('.feed-item-summary-toggle').first.bounding_box()
-    check(stock_box is not None and title_box is not None and toggle_box is not None and stock_box['x'] < title_box['x'] < toggle_box['x'], 'mobile layout is visually ordered Stock, title, summary')
+    check(stock_box is not None and title_box is not None and toggle_box is not None and stock_box['x'] < title_box['x'] < toggle_box['x'], 'mobile layout is visually ordered Actions, title, summary')
     check(toggle_box is not None and toggle_box['width'] >= 43 and toggle_box['height'] >= 43, 'summary toggle remains a visible touch-sized control')
     summary_icon = page.locator('.feed-item-summary-toggle').first.locator('.feed-item-summary-icon')
     icon_style = summary_icon.evaluate("el=>({display:getComputedStyle(el).display,color:getComputedStyle(el).color,size:parseFloat(getComputedStyle(el).fontSize),opacity:parseFloat(getComputedStyle(el).opacity)})")
@@ -111,7 +117,7 @@ with sync_playwright() as p:
     check(short_metrics['mark'] == '0' and short_metrics['height'] <= short_metrics['lineHeight'] * 1.2, 'short title remains a natural single line instead of reserving two lines')
     short_stock_box = page.locator('.feed-item-row').nth(1).locator('.feed-item-action').first.bounding_box()
     short_title_box = page.locator('.feed-item-title-text').nth(1).bounding_box()
-    check(short_stock_box is not None and short_title_box is not None and abs((short_stock_box['y'] + short_stock_box['height'] / 2) - (short_title_box['y'] + short_title_box['height'] / 2)) <= 2.5, 'Stock icon and a one-line title share a natural vertical center')
+    check(short_stock_box is not None and short_title_box is not None and abs((short_stock_box['y'] + short_stock_box['height'] / 2) - (short_title_box['y'] + short_title_box['height'] / 2)) <= 2.5, 'Actions icon and a one-line title share a natural vertical center')
 
     page.locator('.feed-item-title-text').first.hover()
     page.wait_for_timeout(300)
@@ -145,9 +151,9 @@ with sync_playwright() as p:
     check(page.locator('.feed-item-summary-toggle').nth(2).is_disabled(), 'summary button is disabled when both content and description are empty')
     check(page.locator('.feed-item-title-text').nth(3).get_attribute('tabindex') == '0', 'non-link article title remains keyboard focusable')
 
-    stock = page.locator('.infomation_modal_rewrite').first
-    check(stock.get_attribute('data-stock-url') == 'https://example.com/long', 'existing Stock action keeps the validated article URL')
-    check(stock.get_attribute('data-stock-title') == long_title, 'existing Stock action keeps the full article title')
+    stock = page.locator('.article-actions-trigger').first
+    check(stock.get_attribute('data-article-url') == 'https://example.com/long', 'Article Actions trigger keeps the validated article URL')
+    check(stock.get_attribute('data-article-title') == long_title, 'Article Actions trigger keeps the full article title')
 
     before_rows = page.locator('.content-body').inner_text()
     other_before = page.locator('#other-widget').inner_text()

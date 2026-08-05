@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `RSS Reader Modernization 1.1.0`。Version 1.0.0のSecurity・RSS Engine・Frontend基盤を維持し、Tracking Parameter除去、NEW状態、Dashboard Widget、Clock、Memo、Task、Calendar、Swipe、Spinner、Account Settingsを追加しました。V1.1-Kで統合回帰、DB / Documentation整合、Version確定、完全統合ZIPとRuntime ZIPのRelease Gateを完了しています。
+現在は `RSS Reader Modernization 1.2.0`。Version 1.1.0のDashboard機能とDB構造を維持したまま、認証画面、記事表示、Search Feed、記事Actionsを追加しました。Version 1.2 Releaseで統合回帰、Documentation整合、Version確定、完全統合ZIPとRuntime ZIPのRelease Gateを完了しています。
 
 ## Version 1.1 — Dashboard機能追加
 
@@ -24,6 +24,17 @@
 
 V1.1-JではDB構造を変えず、既存のUser IdentityとPassword Hashを安全に更新するAccount Settingsを追加しました。Account削除、確認Mail、Password Resetは別工程とします。
 
+
+## Version 1.2 — Authentication / Feed UX / Search / Actions
+
+- [x] V1.2-A Login・Registration、Honeypot、Logout／Session expiry通知、共通Error
+- [x] V1.2-B 記事Title、全文Tooltip、RSS概要、Feed Card個別更新
+- [x] V1.2-C Search Feed
+- [x] V1.2-D 記事Actions、Stock、URL Copy、X、Task追加
+- [x] V1.2-D / R2～R5 操作領域と記事Title表示幅の調整
+- [x] Version 1.2統合回帰・Version 1.2.0 Release
+
+Version 1.2ではDB Table／Column、Migration、SQL、必須設定の追加はありません。ヘッダーやDrawerの追加改善はVersion 1.2へ混在させず、次Versionの候補として扱います。
 
 ## M1 — Source / RSS Engine
 

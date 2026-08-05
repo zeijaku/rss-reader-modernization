@@ -298,3 +298,38 @@ python3 "$ROOT/tests/test_v12b_browser.py"
 echo '== V1.2-C Search Feed checks =='
 php "$ROOT/tests/test_v12c_search_feed.php"
 python3 "$ROOT/tests/test_v12c_architecture.py"
+
+echo '== V1.2-C R2 Search Feed UI corrections =='
+python3 "$ROOT/tests/test_v12c_r2_ui.py"
+python3 "$ROOT/tests/test_v12c_r2_browser.py"
+
+echo '== V1.2-C R3 Search Feed one-row header =='
+python3 "$ROOT/tests/test_v12c_r3_header_layout.py"
+
+echo '== V1.2-C / R4 small fixes == '
+python3 "$ROOT/tests/test_v12c_r4_small_fixes.py"
+
+echo '== V1.2-C / R5 Search Feed fixed white title =='
+python3 "$ROOT/tests/test_v12c_r5_title_color.py"
+
+echo '== V1.2-D Shared Article Actions checks =='
+python3 "$ROOT/tests/test_v12d_article_actions.py"
+python3 "$ROOT/tests/test_v12d_article_actions_browser.py"
+
+
+echo '== V1.2-D / R5 New Bell layout checks =='
+python3 "$ROOT/tests/test_v12d_r5_new_bell_layout.py"
+
+
+if grep -Fq "const APP_VERSION = '1.2.0';" "$ROOT/app/version.php"; then
+    for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache/feed" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
+        if [ -d "$runtime_dir" ]; then
+            find "$runtime_dir" -type f ! -name '.gitkeep' -delete
+        fi
+    done
+    echo '== Version 1.2.0 release checks =='
+    python3 "$ROOT/tests/test_v12_release.py"
+    python3 "$ROOT/tests/test_v12_release_documentation.py"
+else
+    echo 'SKIP: Version 1.2.0 release gate requires APP_VERSION 1.2.0.'
+fi

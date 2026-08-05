@@ -40,8 +40,8 @@ check('type="button" class="btn btn-link content-edit-trigger"' in index, 'Feed 
 check('aria-label="このRSSを編集"' in index, 'Feed edit button has an accessible name')
 check('class="btn btn-primary information_modal_dbsave"' in index, 'Stock confirmation uses a button')
 check('aria-label="この記事をStockへ保存"' in index, 'Stock confirmation button has an accessible name')
-check(".addClass('feed-item-action infomation_modal_rewrite')" in js, 'dynamic Stock action is created as a button')
-check(".attr('aria-label', 'Stockへ保存: ' + viewTitle)" in js, 'dynamic Stock button includes the article title in its name')
+check(".addClass('feed-item-action article-actions-trigger')" in js, 'dynamic Article Actions trigger is created as a button')
+check(".attr('aria-label', '記事Actionsを開く: ' + viewTitle)" in js, 'dynamic Article Actions button includes the article title in its name')
 
 check('<form id="registerContentForm"' in index, 'RSS add modal uses a form')
 check('<form id="changeContentForm"' in index, 'RSS change modal uses a form')

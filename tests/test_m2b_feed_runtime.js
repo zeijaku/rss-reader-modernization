@@ -98,6 +98,10 @@ class Wrapper {
         this.elements.forEach((element) => { delete element.attrs[key]; });
         return this;
     }
+    removeData(key) {
+        this.elements.forEach((element) => { delete element.dataValues[key]; });
+        return this;
+    }
     text(value) {
         if (arguments.length === 0) return this.elements[0] ? aggregateText(this.elements[0]) : '';
         this.elements.forEach((element) => {
@@ -280,16 +284,17 @@ check(aggregateText(firstBody.children[0]).includes('<script>alert(1)</script>')
 const firstStockCell = firstBody.children[0].children[0];
 const firstTitleCell = firstBody.children[0].children[1];
 const firstSummaryCell = firstBody.children[0].children[2];
-const firstStockButton = firstStockCell.children.find((child) => child.classes.has('infomation_modal_rewrite'));
+const firstStockButton = firstStockCell.children.find((child) => child.classes.has('article-actions-trigger'));
 check(firstTitleCell.classes.has('feed-item-title-cell') && firstSummaryCell.classes.has('feed-item-summary-cell'), 'valid item keeps the title center and summary action right');
-check(Boolean(firstStockButton) && firstStockButton.tag === 'button', 'valid item Stock action is a real button');
-check(String(firstStockButton.attrs['aria-label'] || '').includes('<script>alert(1)</script>'), 'Stock button accessible name includes the article title as text');
+check(Boolean(firstStockButton) && firstStockButton.tag === 'button', 'valid item Article Actions trigger is a real button');
+check(String(firstStockButton.attrs['aria-label'] || '').includes('<script>alert(1)</script>'), 'Article Actions trigger accessible name includes the article title as text');
 check(!aggregateText(firstBody.children[0]).includes('sixth must not render'), 'sixth item is not rendered');
 
 const unsafeRow = firstBody.children[1];
 const unsafeStockCell = unsafeRow.children[0];
 const unsafeTitleCell = unsafeRow.children[1];
-check(unsafeStockCell.children.filter((child) => child.classes.has('infomation_modal_rewrite')).length === 0, 'unsafe item URL does not create a Stock button');
+const unsafeActions = unsafeStockCell.children.find((child) => child.classes.has('article-actions-trigger'));
+check(Boolean(unsafeActions) && (unsafeActions.attrs['data-article-url'] || '') === '', 'unsafe item URL creates Actions with no usable URL');
 check(unsafeTitleCell.children[0].children.some((child) => child.tag === 'span'), 'unsafe item URL renders non-clickable text');
 
 const emojiRowText = aggregateText(firstBody.children[2]);

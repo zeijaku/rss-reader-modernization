@@ -3,6 +3,7 @@
 
     var eventNamespace = '.iguguruDashboard';
     var noticeTimer = null;
+    var articleActionsTrigger = null;
 
     /* Secure Baseline API helper */
     function appCsrfToken() {
@@ -316,7 +317,257 @@
             .done(function (data) {
                 if (apiResponseOk(data)) {
                     $('#saveContent').modal('hide');
-                    showNotice('Stockへ保存しました', 'success');
+                    showNotice('Stockへ保存しました', 'success', 2500);
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
+    function articleActionValue($source, name) {
+        return String($source.attr('data-article-' + name) || '');
+    }
+
+    function articleActionTitle($source) {
+        var title = articleActionValue($source, 'title').trim();
+        return title !== '' ? title : 'タイトルなし';
+    }
+
+    function closeArticleActionsMenu(returnFocus) {
+        var $menu = $('#articleActionsMenu');
+        var trigger = articleActionsTrigger;
+        if ($menu.length > 0) {
+            $menu.prop('hidden', true).attr('style', '').data('article-url', '').data('article-title', '').data('stock-title', '');
+        }
+        $('.article-actions-trigger[aria-expanded="true"]').attr('aria-expanded', 'false');
+        articleActionsTrigger = null;
+        if (returnFocus === true && trigger && document.documentElement.contains(trigger) && !trigger.disabled) {
+            trigger.focus();
+        }
+    }
+
+    function positionArticleActionsMenu($menu, $trigger) {
+        var trigger = $trigger.get(0);
+        var card = $trigger.closest('.feed-card').get(0);
+        if (!trigger || !card) {
+            return false;
+        }
+
+        var triggerRect = trigger.getBoundingClientRect();
+        var cardRect = card.getBoundingClientRect();
+        var viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+        var viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+        var availableWidth = Math.max(168, Math.floor(cardRect.width - 8));
+        $menu
+            .css({
+                left: '0px',
+                top: '0px',
+                maxWidth: Math.min(224, availableWidth) + 'px',
+                visibility: 'hidden'
+            })
+            .prop('hidden', false);
+
+        var menuWidth = $menu.outerWidth();
+        var menuHeight = $menu.outerHeight();
+        var cardLeft = Math.max(4, cardRect.left + 4);
+        var cardRight = Math.min(viewportWidth - 4, cardRect.right - 4);
+        var cardTop = Math.max(4, cardRect.top);
+        var cardBottom = Math.min(viewportHeight - 4, cardRect.bottom);
+        var left = triggerRect.right + 4;
+        var top = triggerRect.top;
+
+        if (left + menuWidth > cardRight) {
+            left = triggerRect.left - menuWidth - 4;
+        }
+        if (left < cardLeft) {
+            left = Math.max(cardLeft, cardRight - menuWidth);
+        }
+        if (top + menuHeight > cardBottom) {
+            top = cardBottom - menuHeight;
+        }
+        if (top < cardTop) {
+            top = cardTop;
+        }
+
+        $menu.css({
+            left: Math.round(left) + 'px',
+            top: Math.round(top) + 'px',
+            visibility: 'visible'
+        });
+        return true;
+    }
+
+    function openArticleActionsMenu($trigger, focusLast) {
+        var $menu = $('#articleActionsMenu');
+        if ($menu.length === 0) {
+            showNotice('記事Actionsを開けませんでした', 'danger');
+            return;
+        }
+
+        if (articleActionsTrigger === $trigger.get(0) && !$menu.prop('hidden')) {
+            closeArticleActionsMenu(true);
+            return;
+        }
+
+        closeArticleActionsMenu(false);
+        articleActionsTrigger = $trigger.get(0);
+        var articleUrl = articleActionValue($trigger, 'url');
+        var articleTitle = articleActionTitle($trigger);
+        $menu
+            .data('article-url', articleUrl)
+            .data('article-title', articleTitle)
+            .data('stock-title', articleActionValue($trigger, 'title'));
+        $menu.find('.article-action-stock, .article-action-copy, .article-action-x')
+            .prop('disabled', articleUrl === '')
+            .attr('aria-disabled', articleUrl === '' ? 'true' : 'false');
+        $trigger.attr('aria-expanded', 'true');
+
+        if (!positionArticleActionsMenu($menu, $trigger)) {
+            closeArticleActionsMenu(false);
+            showNotice('記事Actionsを開けませんでした', 'danger');
+            return;
+        }
+
+        var $items = $menu.find('.article-actions-item:not(:disabled)');
+        if ($items.length > 0) {
+            (focusLast === true ? $items.last() : $items.first()).focus();
+        }
+    }
+
+    function legacyCopyText(text) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.setAttribute('readonly', 'readonly');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.style.top = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+        var copied = false;
+        try {
+            copied = typeof document.execCommand === 'function' && document.execCommand('copy') === true;
+        } catch (ignore) {
+            copied = false;
+        }
+        document.body.removeChild(textarea);
+        return copied;
+    }
+
+    function copyArticleUrl($button) {
+        var articleUrl = String($('#articleActionsMenu').data('article-url') || '');
+        closeArticleActionsMenu(true);
+        if (articleUrl === '') {
+            showNotice('コピーする記事URLを確認出来ませんでした', 'danger');
+            return;
+        }
+
+        function copied() {
+            showNotice('記事URLをコピーしました', 'success', 2500);
+        }
+        function fallback() {
+            if (legacyCopyText(articleUrl)) {
+                copied();
+            } else {
+                showNotice('記事URLをコピー出来ませんでした', 'danger');
+            }
+        }
+
+        if (window.isSecureContext && window.navigator.clipboard && typeof window.navigator.clipboard.writeText === 'function') {
+            try {
+                window.navigator.clipboard.writeText(articleUrl).then(copied, fallback);
+                return;
+            } catch (ignore) {
+                fallback();
+                return;
+            }
+        }
+        fallback();
+    }
+
+    function articleShareTitle(title) {
+        var characters = Array.from(String(title || '').trim());
+        if (characters.length <= 200) {
+            return characters.join('');
+        }
+        return characters.slice(0, 199).join('') + '…';
+    }
+
+    function openArticleOnX() {
+        var $menu = $('#articleActionsMenu');
+        var articleUrl = String($menu.data('article-url') || '');
+        var articleTitle = articleShareTitle(String($menu.data('article-title') || ''));
+        closeArticleActionsMenu(true);
+        if (articleUrl === '') {
+            showNotice('Xへ投稿する記事URLを確認出来ませんでした', 'danger');
+            return;
+        }
+
+        var intentUrl = 'https://x.com/intent/post?text=' + encodeURIComponent(articleTitle) + '&url=' + encodeURIComponent(articleUrl);
+        var popup = null;
+        try {
+            popup = window.open('', '_blank');
+            if (popup) {
+                popup.opener = null;
+                popup.location.href = intentUrl;
+            }
+        } catch (ignore) {
+            popup = null;
+        }
+        if (!popup) {
+            showNotice('Xの投稿画面を開けませんでした。ポップアップ設定を確認してください', 'danger');
+            return;
+        }
+        showNotice('Xの投稿画面を開きました', 'success', 2500);
+    }
+
+    function articleTaskTarget() {
+        var $target = $('#main-content .task-card[data-dashboard-widget-id]').first();
+        if ($target.length === 0) {
+            return null;
+        }
+        var widgetId = String($target.attr('data-dashboard-widget-id') || '');
+        if (!/^\d+$/.test(widgetId)) {
+            return null;
+        }
+        return {
+            widgetId: widgetId,
+            title: String($target.attr('data-task-widget-title') || 'Task')
+        };
+    }
+
+    function addArticleToTask($button) {
+        var $menu = $('#articleActionsMenu');
+        var title = String($menu.data('article-title') || '').trim();
+        if (title === '') { title = 'タイトルなし'; }
+        var target = articleTaskTarget();
+        if (target === null) {
+            closeArticleActionsMenu(true);
+            showNotice('このタブにTask Widgetがありません', 'danger');
+            return;
+        }
+        title = Array.from(title).slice(0, 128).join('').trim();
+        if (title === '') {
+            closeArticleActionsMenu(true);
+            showNotice('Taskへ追加する記事タイトルを確認出来ませんでした', 'danger');
+            return;
+        }
+        if (!requestStart($button)) {
+            return;
+        }
+        closeArticleActionsMenu(true);
+        apiRequest('task.item.create', {
+            'widget_id': target.widgetId,
+            'task_title': title,
+            'task_due_date': '',
+            'task_priority': 'normal'
+        }, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    window.location.reload();
                 }
             })
             .fail(requestFail)
@@ -745,6 +996,7 @@
     }
 
     function renderFeedMessage($card, state, title, message) {
+        closeArticleActionsMenu(false);
         hideFeedTitleTooltip();
         $card
             .attr('data-feed-state', state)
@@ -775,6 +1027,7 @@
     }
 
     function renderFeedBodyMessage($card, state, message) {
+        closeArticleActionsMenu(false);
         hideFeedTitleTooltip();
         $card
             .attr('data-feed-state', state)
@@ -862,6 +1115,7 @@
     }
 
     function renderFeedItems($card, rawItems) {
+        closeArticleActionsMenu(false);
         var items = Array.isArray(rawItems) ? rawItems : [];
         var $body = $card.find('.content-body').empty();
         var renderedItems = [];
@@ -886,30 +1140,29 @@
                 .addClass('feed-item-row')
                 .attr('data-feed-item-index', String(itemIndex));
             var $stockCell = $('<td>').addClass('feed-item-stock-cell').appendTo($row);
+            var $actionsButton = $('<button type="button">')
+                .addClass('feed-item-action article-actions-trigger')
+                .attr('aria-label', '記事Actionsを開く: ' + viewTitle)
+                .attr('aria-haspopup', 'menu')
+                .attr('aria-expanded', 'false')
+                .attr('aria-controls', 'articleActionsMenu')
+                .attr('data-article-url', itemLink)
+                .attr('data-article-title', itemTitle)
+                .appendTo($stockCell);
 
-            if (itemLink !== '') {
-                var $stockButton = $('<button type="button">')
-                    .addClass('feed-item-action infomation_modal_rewrite')
-                    .attr('aria-label', 'Stockへ保存: ' + viewTitle)
-                    .attr('data-stock-url', itemLink)
-                    .attr('data-stock-title', itemTitle)
-                    .attr('data-toggle', 'modal')
-                    .attr('data-target', '.save_modal')
-                    .appendTo($stockCell);
-
-                $('<i>')
-                    .addClass('fas fa-bookmark fa-fw text-info')
-                    .attr('aria-hidden', 'true')
-                    .appendTo($stockButton);
-            }
+            $('<i>')
+                .addClass('fas fa-ellipsis-h fa-fw text-info')
+                .attr('aria-hidden', 'true')
+                .appendTo($actionsButton);
 
             var $titleCell = $('<td>').addClass('feed-item-title-cell').appendTo($row);
             var $titleWrap = $('<div>').addClass('feed-item-title-wrap').appendTo($titleCell);
             var itemIdentity = String(item.item_identity || '');
 
             if (item.is_new === true && /^m1i:v1:[a-f0-9]{64}$/.test(itemIdentity)) {
+                $titleWrap.addClass('has-feed-item-new');
                 var $itemNewButton = $('<button type="button">')
-                    .addClass('feed-item-new mr-1')
+                    .addClass('feed-item-new')
                     .attr('data-item-identity', itemIdentity)
                     .attr('aria-label', '新着表示を解除: ' + viewTitle)
                     .attr('title', '新着記事')
@@ -1064,6 +1317,7 @@
      * V1.2-B: 個別更新では現在の記事を残し、成功したCardだけ差し替える。
      */
     function fetch_content($card, options) {
+        closeArticleActionsMenu(false);
         var settings = options && typeof options === 'object' ? options : {};
         var content_id = String($card.attr('data-feed-content-id') || '');
         if (!/^\d+$/.test(content_id)) {
@@ -1133,11 +1387,11 @@
 
     function toggleFeedSummary($button) {
         var $row = $button.closest('.feed-item-row');
-        var $card = $button.closest('[data-feed-content-id]');
+        var $card = $button.closest('[data-feed-content-id], .search-feed-card');
         var index = Number($row.attr('data-feed-item-index'));
         var items = $card.data('feed-render-items');
         if (!Number.isInteger(index) || !Array.isArray(items) || !items[index]) {
-            showNotice('RSS概要を確認出来ませんでした', 'danger');
+            showNotice('RSS概要を確認出来ませんでした', 'danger', 4000);
             return;
         }
 
@@ -1566,9 +1820,23 @@
     function editSearchFeed($t) { $('.changeSearchId').val($t.attr('data-widget-id')||''); $('.changeSearchQuery').val($t.attr('data-search-query')||''); $('.changeSearchScope').val($t.attr('data-search-scope')||'owned'); $('.changeSearchCondition').val($t.attr('data-search-condition')||'or'); $('.changeSearchLimit').val($t.attr('data-search-limit')||'10'); $('.changeSearchCategory').val($t.attr('data-search-category')||'all'); $('.changeSearchWidth').val($t.attr('data-widget-width')||'1'); $('.changeSearchStyle').val($t.attr('data-widget-style')||'warning'); }
     function changeSearchFeed($form) { var $b=$form.find('button[type="submit"]'); if(!requestStart($b))return; var p=searchPayload('change'); p.widget_id=$('.changeSearchId').val(); apiRequest('widget.search.update',p,10000).done(function(d){if(apiResponseOk(d))window.location.reload();}).fail(requestFail).always(function(){requestEnd($b);}); }
     function deleteSearchFeed($b) { var id=String($('.changeSearchId').val()||''); if(!/^\d+$/.test(id)||!window.confirm('このSearch Feedを削除しますか？'))return; if(!requestStart($b))return; apiRequest('widget.search.delete',{widget_id:id},5000).done(function(d){if(apiResponseOk(d))window.location.reload();}).fail(requestFail).always(function(){requestEnd($b);}); }
+    function renderSearchFeedTitle($card) {
+        var searchQuery = String($card.find('.search-edit-trigger').attr('data-search-query') || '').trim();
+        var viewTitle = searchQuery !== '' ? searchQuery : 'Search Feed';
+        $card.find('.content-title')
+            .empty()
+            .append(
+                $('<span>')
+                    .addClass('feed-title-text text-white')
+                    .attr('title', viewTitle)
+                    .text(viewTitle)
+            );
+    }
+
     function fetchSearchFeed($card,preserve) {
+        closeArticleActionsMenu(false);
         var id=String($card.attr('data-dashboard-widget-id')||''),$b=$card.find('.search-feed-refresh'); if(!/^\d+$/.test(id)||$b.data('request-pending')===true)return; $b.data('request-pending',true).prop('disabled',true).addClass('is-refreshing'); $card.attr('aria-busy','true'); if(!preserve)renderFeedLoading($card);
-        apiRequest('widget.search.fetch',{widget_id:id},30000).done(function(d){ var r; if(!apiResponseOk(d))return; r=d.data&&d.data.search_result; if(!r||!Array.isArray(r.items)){if(!preserve)renderFeedError($card,'検索結果を確認出来ませんでした');return;} $card.attr('data-search-limit',String(r.limit||10)); renderFeedItems($card,r.items); if(r.items.length===0)renderFeedBodyMessage($card,'empty','一致する記事はありません'); if(Number(r.failed_count||0)>0)showNotice('一部のRSSを取得出来ませんでした','info',3000); }).fail(function(x,t){ if(!preserve)renderFeedError($card,apiErrorMessage(x,t)); else showNotice(apiErrorMessage(x,t),'danger'); }).always(function(){ $card.attr('aria-busy','false'); $b.data('request-pending',false).prop('disabled',false).removeClass('is-refreshing'); });
+        apiRequest('widget.search.fetch',{widget_id:id},30000).done(function(d){ var r; if(!apiResponseOk(d)){if(!preserve)renderFeedError($card,'検索結果を取得出来ませんでした');return;} r=d.data&&d.data.search_result; if(!r||!Array.isArray(r.items)){if(!preserve)renderFeedError($card,'検索結果を確認出来ませんでした');return;} $card.attr('data-search-limit',String(r.limit||10)); renderSearchFeedTitle($card); renderFeedItems($card,r.items); if(r.items.length===0)renderFeedBodyMessage($card,'empty','一致する記事はありません'); if(Number(r.failed_count||0)>0)showNotice('一部のRSSを取得出来ませんでした','info',3000); }).fail(function(x,t){ if(!preserve)renderFeedError($card,apiErrorMessage(x,t)); else showNotice(apiErrorMessage(x,t),'danger'); }).always(function(){ $card.attr('aria-busy','false'); $b.data('request-pending',false).prop('disabled',false).removeClass('is-refreshing'); });
     }
 
     function bindEvents() {
@@ -1685,6 +1953,88 @@
             .on('submit' + eventNamespace, '#tabsForm', function (event) {
                 event.preventDefault();
                 changeTabs($(this));
+            })
+            .off('click' + eventNamespace, '.article-actions-trigger')
+            .on('click' + eventNamespace, '.article-actions-trigger', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                openArticleActionsMenu($(this), false);
+            })
+            .off('keydown' + eventNamespace, '.article-actions-trigger')
+            .on('keydown' + eventNamespace, '.article-actions-trigger', function (event) {
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    openArticleActionsMenu($(this), event.key === 'ArrowUp');
+                }
+            })
+            .off('click' + eventNamespace, '.article-action-stock')
+            .on('click' + eventNamespace, '.article-action-stock', function (event) {
+                event.preventDefault();
+                var $menu = $('#articleActionsMenu');
+                var trigger = articleActionsTrigger;
+                $(this)
+                    .attr('data-stock-url', String($menu.data('article-url') || ''))
+                    .attr('data-stock-title', String($menu.data('stock-title') || ''));
+                rewriteInformationModal($(this));
+                closeArticleActionsMenu(false);
+                if (trigger) {
+                    $('#saveContent').data('return-focus', trigger);
+                }
+                $('#saveContent').modal('show');
+            })
+            .off('click' + eventNamespace, '.article-action-copy')
+            .on('click' + eventNamespace, '.article-action-copy', function (event) {
+                event.preventDefault();
+                copyArticleUrl($(this));
+            })
+            .off('click' + eventNamespace, '.article-action-x')
+            .on('click' + eventNamespace, '.article-action-x', function (event) {
+                event.preventDefault();
+                openArticleOnX();
+            })
+            .off('click' + eventNamespace, '.article-action-task')
+            .on('click' + eventNamespace, '.article-action-task', function (event) {
+                event.preventDefault();
+                addArticleToTask($(this));
+            })
+            .off('keydown' + eventNamespace, '#articleActionsMenu')
+            .on('keydown' + eventNamespace, '#articleActionsMenu', function (event) {
+                var $items = $(this).find('.article-actions-item:not(:disabled)');
+                var index = $items.index(document.activeElement);
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    closeArticleActionsMenu(true);
+                    return;
+                }
+                if (event.key === 'Tab') {
+                    closeArticleActionsMenu(false);
+                    return;
+                }
+                if (['ArrowDown', 'ArrowUp', 'Home', 'End'].indexOf(event.key) === -1 || $items.length === 0) {
+                    return;
+                }
+                event.preventDefault();
+                if (event.key === 'Home') {
+                    index = 0;
+                } else if (event.key === 'End') {
+                    index = $items.length - 1;
+                } else if (event.key === 'ArrowDown') {
+                    index = (index + 1 + $items.length) % $items.length;
+                } else {
+                    index = (index - 1 + $items.length) % $items.length;
+                }
+                $items.eq(index).focus();
+            })
+            .off('click' + eventNamespace, '#articleActionsMenu')
+            .on('click' + eventNamespace, '#articleActionsMenu', function (event) {
+                event.stopPropagation();
+            })
+            .off('click' + eventNamespace + 'ArticleActions')
+            .on('click' + eventNamespace + 'ArticleActions', function (event) {
+                if ($(event.target).closest('#articleActionsMenu, .article-actions-trigger').length === 0) {
+                    closeArticleActionsMenu(false);
+                }
             })
             .off('click' + eventNamespace, '.infomation_modal_rewrite')
             .on('click' + eventNamespace, '.infomation_modal_rewrite', function () {
@@ -2086,6 +2436,7 @@
             .off('scroll' + eventNamespace)
             .on('scroll' + eventNamespace, function () {
                 hideFeedTitleTooltip();
+                closeArticleActionsMenu(false);
                 if ($(this).scrollTop() > 100) {
                     $topButton.fadeIn();
                 } else {
@@ -2095,6 +2446,7 @@
             .off('resize' + eventNamespace)
             .on('resize' + eventNamespace, function () {
                 hideFeedTitleTooltip();
+                closeArticleActionsMenu(false);
                 $('[data-feed-content-id]').each(function () {
                     refreshFeedTitleOverflow($(this));
                 });
