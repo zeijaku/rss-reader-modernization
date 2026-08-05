@@ -27,7 +27,7 @@ function v11d_check(bool $condition, string $message): void
     }
 }
 
-v11d_check(dashboard_widget_types() === ['feed', 'search', 'clock', 'memo', 'task', 'calendar'], 'Widget type allowlist is exact');
+v11d_check(dashboard_widget_types() === ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game'], 'Widget type allowlist is exact');
 v11d_check(dashboard_widget_validate_type('feed') === 'feed', 'feed Widget type is accepted');
 v11d_check(dashboard_widget_validate_type('iframe') === null, 'unknown Widget type is rejected');
 v11d_check(dashboard_widget_validate_location('0') === 0 && dashboard_widget_validate_location(3) === 3, 'four tab locations 0..3 are accepted');

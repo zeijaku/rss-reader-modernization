@@ -98,6 +98,7 @@ $tabParam = app_tab_from_query($_GET['tab'] ?? null);
     <link rel="stylesheet" href="./css/drawer.min.css">
 
     <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="./css/mini-game.css">
     <?php if ($currentUserId === null): ?>
     <link rel="stylesheet" href="./css/auth.css">
     <?php endif; ?>
@@ -242,7 +243,7 @@ function search_feed_form_fields(string $prefix): string
     </button>
 </div>
 
-<main id="main-content" class="igcontainer container-fluid" tabindex="-1" data-dashboard-current-tab="<?php echo is_int($tabParam) ? (int) $tabParam : ''; ?>" data-dashboard-tab-count="4">
+<main id="main-content" class="igcontainer container-fluid" tabindex="-1" data-dashboard-current-tab="<?php echo is_int($tabParam) ? (int) $tabParam : ''; ?>" data-dashboard-tab-count="4" data-dashboard-user-id="<?php echo (int) $currentUserId; ?>" data-dashboard-theme="<?php echo app_html((string) ($ui['conf_style'] ?? 'bootstrap')); ?>">
 <h1 class="sr-only">iGuguru RSS Reader</h1>
 <p id="widget-sort-help" class="sr-only">Widgetのタイトルバーにある並び替えボタンをドラッグして順番を変更出来ます。キーボードでは矢印キー、Home、Endキーを使用します。</p>
 <?php
@@ -340,6 +341,72 @@ if (is_int($content_location)) {
                     </div>
                 </section>
             ';
+            continue;
+        }
+
+        if ($widgetType === 'game') {
+            $gameConfig = is_array($result_content[$i]['widget_config_data'] ?? null)
+                ? $result_content[$i]['widget_config_data']
+                : mini_game_widget_defaults();
+            $gameTitle = mini_game_widget_validate_title($gameConfig['title'] ?? null) ?? 'Icon Quest';
+            $gameType = mini_game_widget_validate_type($gameConfig['game'] ?? null) ?? 'icon_quest';
+            $gameTitleId = 'mini-game-title-' . $widgetId;
+            $gameBoardId = 'mini-game-board-' . $widgetId;
+            $gameTutorialId = 'mini-game-tutorial-' . $widgetId;
+            $gameBoard = mini_game_icon_quest_initial_board();
+            $gameCellMeta = [
+                'player' => ['Player', 'fas fa-user-shield', 'mini-game-cell-player'],
+                'enemy' => ['Enemy', 'fas fa-skull-crossbones', 'mini-game-cell-enemy'],
+                'treasure' => ['Treasure', 'fas fa-gem', 'mini-game-cell-treasure'],
+                'goal' => ['Goal', 'fas fa-door-open', 'mini-game-cell-goal'],
+                'wall' => ['Wall', 'fas fa-cube', 'mini-game-cell-wall'],
+                'floor' => ['空きマス', '', 'mini-game-cell-floor'],
+            ];
+
+            echo '<!-- Mini Game Widget -->';
+            echo '<section class="' . app_html($widgetWidthClass) . ' dashboard-widget mini-game-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="game" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-mini-game-type="' . app_html($gameType) . '" data-dashboard-swipe-ignore="true" role="region" aria-labelledby="' . app_html($gameTitleId) . '">';
+            echo '<div class="mini-game-card-inner">';
+            echo '<div class="bg-' . app_html($widgetStyle) . ' mini-game-card-header">';
+            echo '<button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>';
+            echo '<small class="mini-game-title widget-title-text text-white" id="' . app_html($gameTitleId) . '" title="' . app_html($gameTitle) . '">' . app_html($gameTitle) . '</small>';
+            echo '<button type="button" class="btn btn-link mini-game-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-game-title="' . app_html($gameTitle) . '" data-game-type="' . app_html($gameType) . '" data-toggle="modal" data-target="#changeGameWidget" aria-label="このGame Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>';
+            echo '</div>';
+            echo '<div class="mini-game-card-body">';
+            echo '<div class="mini-game-board" id="' . app_html($gameBoardId) . '" role="grid" aria-label="Icon Quest 5×5盤面、Level 1">';
+            foreach ($gameBoard as $gameCellIndex => $gameCellType) {
+                $gameCell = $gameCellMeta[$gameCellType] ?? $gameCellMeta['floor'];
+                $gameRow = intdiv($gameCellIndex, 5) + 1;
+                $gameColumn = ($gameCellIndex % 5) + 1;
+                $gameLabel = $gameRow . '行' . $gameColumn . '列、' . $gameCell[0];
+                echo '<button type="button" class="mini-game-cell ' . app_html($gameCell[2]) . '" role="gridcell" aria-rowindex="' . $gameRow . '" aria-colindex="' . $gameColumn . '" aria-label="' . app_html($gameLabel) . '" data-mini-game-cell-index="' . $gameCellIndex . '" tabindex="' . ($gameCellType === 'player' ? '0' : '-1') . '" aria-disabled="' . ($gameCellType === 'wall' ? 'true' : 'false') . '">';
+                if ($gameCell[1] !== '') {
+                    echo '<i class="' . app_html($gameCell[1]) . '" aria-hidden="true"></i>';
+                } else {
+                    echo '<span aria-hidden="true">&middot;</span>';
+                }
+                echo '</button>';
+            }
+            echo '</div>';
+            echo '<div class="mini-game-summary" aria-label="Game状況">';
+            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Level</span><strong class="mini-game-level">Level 1</strong></div>';
+            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Moves</span><strong class="mini-game-moves">0 / 20</strong></div>';
+            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Best</span><strong class="mini-game-best">--</strong></div>';
+            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Treasure</span><strong class="mini-game-treasure-state">未取得</strong></div>';
+            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Enemy</span><strong><span class="mini-game-enemy-turn">2</span>手後</strong></div>';
+            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Record</span><strong><span class="mini-game-wins">0</span>勝 / <span class="mini-game-losses">0</span>敗</strong></div></div>';
+            echo '<div class="mini-game-result" hidden aria-hidden="true"><i class="mini-game-result-icon fas fa-flag-checkered" aria-hidden="true"></i><strong class="mini-game-result-text"></strong></div>';
+            echo '<div class="mini-game-status-row"><p class="mini-game-status text-muted" id="mini-game-status-' . $widgetId . '" aria-live="polite" aria-atomic="true">準備中...</p></div>';
+            echo '<div class="mini-game-controls"><div class="mini-game-action-buttons"><button type="button" class="btn btn-sm btn-outline-primary mini-game-new-game">New Game</button><button type="button" class="btn btn-sm btn-outline-secondary mini-game-reset">Reset</button></div>';
+            echo '<div class="mini-game-dpad" role="group" aria-label="Player移動">';
+            echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-up" data-mini-game-direction="up" aria-label="上へ移動"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>';
+            echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-left" data-mini-game-direction="left" aria-label="左へ移動"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>';
+            echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-down" data-mini-game-direction="down" aria-label="下へ移動"><i class="fas fa-chevron-down" aria-hidden="true"></i></button>';
+            echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-right" data-mini-game-direction="right" aria-label="右へ移動"><i class="fas fa-chevron-right" aria-hidden="true"></i></button></div></div>';
+            echo '<div class="mini-game-tools"><button type="button" class="btn btn-sm btn-outline-info mini-game-tutorial-toggle" aria-expanded="false" aria-controls="' . app_html($gameTutorialId) . '"><i class="fas fa-question-circle" aria-hidden="true"></i><span>遊び方</span></button><button type="button" class="btn btn-sm btn-outline-danger mini-game-storage-reset"><i class="fas fa-trash-alt" aria-hidden="true"></i><span>記録を削除</span></button></div>';
+            echo '<div class="mini-game-tutorial" id="' . app_html($gameTutorialId) . '" hidden><p><strong>Icon Quest</strong>は、Treasureを取ってからGoalへ進む5×5の短時間Gameです。</p><ul><li>矢印Key・WASD・方向Button・隣接マスTapで移動</li><li>敵は有効移動2回ごとに1マス接近</li><li>敵に捕まるか20手に達するとGame Over</li></ul><p class="mb-0">Resetは現在Levelだけ、記録を削除はこのWidgetの進行・Best・勝敗を初期化します。</p></div>';
+            echo '<p class="mini-game-storage-note text-muted">進行状態を確認しています...</p>';
+            echo '<p class="sr-only">矢印KeyまたはWASD、隣接マス、方向ButtonでPlayerを移動出来ます。Treasureを取得してからGoalへ進んでください。</p>';
+            echo '</div></div></section>';
             continue;
         }
 
@@ -936,6 +1003,47 @@ if ($result_content_cnt === 0) {
     </div>
 </div>
 
+<!-- Game Widget追加モーダル -->
+<div class="modal fade" id="registerGameWidget" tabindex="-1" role="dialog" aria-labelledby="registerGameWidgetTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
+        <form id="registerGameWidgetForm" method="post" action="./">
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Gameを追加</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
+        <div class="modal-body">
+            <div class="form-group"><label for="registerGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerGameTitleValue" id="registerGameTitleValue" maxlength="32" value="Icon Quest" required></div>
+            <div class="form-group"><label for="registerGameType"><small class="text-dark">Game</small></label><select class="form-control registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option></select></div>
+            <input type="hidden" class="registerGameLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
+            <div class="form-row">
+                <div class="form-group col-6"><label for="registerGameWidth"><small class="text-dark">横幅</small></label><select class="form-control registerGameWidth" id="registerGameWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                <div class="form-group col-6"><label for="registerGameStyle"><small class="text-dark">見出し色</small></label><select class="form-control registerGameStyle" id="registerGameStyle"><option value="secondary" selected>secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+            </div>
+            <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
+            <small class="form-text text-muted">Gameの進行状態はこのBrowserへ保存され、ServerやDBには保存されません。</small>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">このタブに追加する</button></div>
+        </form>
+    </div></div>
+</div>
+
+<!-- Game Widget変更モーダル -->
+<div class="modal fade" id="changeGameWidget" tabindex="-1" role="dialog" aria-labelledby="changeGameWidgetTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
+        <form id="changeGameWidgetForm" method="post" action="./">
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Game Widgetを変更</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
+        <div class="modal-body">
+            <input type="hidden" class="changeGameWidgetId">
+            <div class="form-group"><label for="changeGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeGameTitleValue" id="changeGameTitleValue" maxlength="32" required></div>
+            <div class="form-group"><label for="changeGameType"><small class="text-dark">Game</small></label><select class="form-control changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option></select></div>
+            <div class="form-row">
+                <div class="form-group col-6"><label for="changeGameWidth"><small class="text-dark">横幅</small></label><select class="form-control changeGameWidth" id="changeGameWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                <div class="form-group col-6"><label for="changeGameStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeGameStyle" id="changeGameStyle"><option value="secondary">secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+            </div>
+            <small class="form-text text-muted">Widget削除時は、このWidgetのBrowser保存状態も削除します。</small>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_game_widget">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
+        </form>
+    </div></div>
+</div>
+
 <!-- Calendar Widget追加モーダル -->
 <div class="modal fade" id="registerCalendarWidget" tabindex="-1" role="dialog" aria-labelledby="registerCalendarWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
@@ -1277,6 +1385,7 @@ if ($result_content_cnt === 0) {
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerSearchFeed"><span class="drawer-item-icon"><i class="fas fa-search fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Search Feed追加</span></button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerTaskWidget"><span class="drawer-item-icon"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Task追加</span></button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerCalendarWidget"><span class="drawer-item-icon"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Calendar追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerGameWidget"><span class="drawer-item-icon"><i class="fas fa-chess-knight fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Game追加</span></button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerClock"><span class="drawer-item-icon"><i class="far fa-clock fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Clock追加</span></button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerMemo"><span class="drawer-item-icon"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Memo追加</span></button></li>
 
@@ -1332,6 +1441,7 @@ if ($result_content_cnt === 0) {
 <script src="./js/iscroll.js"></script>
 <script src="./js/drawer.min.js"></script>
 
+<script src="./js/mini-game.js"></script>
 <script src="./js/dashboard.js"></script>
 <script src="./js/calendar.js"></script>
 

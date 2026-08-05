@@ -28,6 +28,7 @@ expected_css = {
     'drawer.min.css',
     'dashboard.css',
     'auth.css',
+    'mini-game.css',
 }
 expected_js = {
     'jquery-3.7.1.min.js',
@@ -39,6 +40,7 @@ expected_js = {
     'dashboard.js',
     'calendar.js',
     'auth.js',
+    'mini-game.js',
 }
 expected_fonts = {
     f'fa-{family}-{weight}.{extension}'
@@ -64,9 +66,9 @@ all_php = '\n'.join(p.read_text(encoding='utf-8', errors='replace') for p in [PU
 
 static_refs = {ref for ref in re.findall(r'(?:href|src)="\./((?:css|js)/[^"]+|favicon\.png)"', all_php) if '<?php' not in ref}
 expected_static_refs = {
-    'css/all.css', 'css/drawer.min.css', 'css/dashboard.css', 'css/auth.css',
+    'css/all.css', 'css/drawer.min.css', 'css/dashboard.css', 'css/auth.css', 'css/mini-game.css',
     'js/jquery-3.7.1.min.js', 'js/popper.min.js', 'js/bootstrap.min.js',
-    'js/iscroll.js', 'js/drawer.min.js', 'js/dashboard.js', 'js/calendar.js', 'js/auth.js', 'favicon.png',
+    'js/iscroll.js', 'js/drawer.min.js', 'js/dashboard.js', 'js/calendar.js', 'js/auth.js', 'js/mini-game.js', 'favicon.png',
 }
 check(static_refs == expected_static_refs, 'static HTML/PHP asset references match the retained inventory')
 for ref in static_refs:
@@ -130,7 +132,7 @@ for path, marker in license_markers.items():
 
 public_files = [p for p in PUBLIC.rglob('*') if p.is_file()]
 public_size = sum(p.stat().st_size for p in public_files)
-check(len(public_files) == 36, 'public inventory contains the 36 retained V1.2-A files')
+check(len(public_files) == 38, 'public inventory contains the retained files plus the V1.4-B Mini Game assets')
 check(public_size < 4_000_000, 'public inventory is below 4 MB without removing runtime dependencies')
 check(not (ROOT / 'package.json').exists(), 'asset cleanup adds no npm dependency')
 check(not (ROOT / 'node_modules').exists(), 'asset cleanup adds no node_modules directory')

@@ -2,8 +2,8 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.3.0`  
-Release tag: `v1.3.0`
+**Stable release:** `RSS Reader Modernization 1.4.0`  
+Release tag: `v1.4.0`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
@@ -33,6 +33,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Memo Widgetの追加・変更・削除、改行を保持した本文表示
 - Task Widgetの追加・変更・削除、完了切替、期限、優先度
 - Calendar Widgetの月表示、通常予定、Task期限連動
+- Mini Game Widget「Icon Quest」の5×5盤面、4 Level、Keyboard／Tap操作、途中保存
 - スマートフォンでの左右スワイプによるタブ切り替え
 - Feed／Calendar読込中のSpinner表示
 - 記事リンクのStock保存と一覧表示
@@ -92,6 +93,21 @@ Version 1.2ではDB Table／Column、Migration、SQL、必須設定、外部Libr
 Version 1.3.0は新しい大規模機能を追加せず、Version 1.1～1.2で増えた共通UIを整理したReleaseです。Drawerの情報設計、Headerの役割、現在地表示、PC／Smartphoneの導線、Hover／Focus／Keyboard、Widget見出し、記事TitleとActions周辺の余白を統一しました。
 
 DB Table／Column、Migration、SQL、API、RSS解析Engine、外部Library、Build環境の追加はありません。Version 1.2.0からの更新はCode差し替えとBrowser Cache更新が中心です。詳細は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/v1-3-release-implementation.md`](docs/v1-3-release-implementation.md)、[`docs/test-report-v1-3-release.md`](docs/test-report-v1-3-release.md)を参照してください。
+
+
+## Version 1.4 progress
+
+| Stage | 内容 | 状態 |
+|---|---|---|
+| V1.4-A | 現行Widget／Storage調査、第一ゲーム仕様決定 | 完了 |
+| V1.4-B | Game Widget登録基盤、Storage Wrapper、Mock盤面 | 完了 |
+| V1.4-C | Icon Quest本体、4 Level、勝敗、保存・復元 | 完了 |
+| V1.4-D | Tutorial、記録削除、Recovery、Theme、操作性調整／R2 Header余白 | 完了 |
+| V1.4-E | Full回帰、Documentation、Package、Version 1.4.0確定 | 完了 |
+
+Version 1.4.0では、既存Dashboard Widget基盤へMini Game Widgetを追加し、第一ゲームとして5×5 Icon戦略Game「Icon Quest」を実装しました。Game Widgetは既存Tab、並べ替え、横幅、Header色、Themeを利用し、盤面状態、Best手数、勝敗数はBrowser Storageへ保存します。
+
+DB Table／Column、Migration、SQL、外部API、外部Library、Framework、Build環境の追加はありません。詳細は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/v1-4-release-implementation.md`](docs/v1-4-release-implementation.md)、[`docs/test-report-v1-4-release.md`](docs/test-report-v1-4-release.md)を参照してください。
 
 ## Secure Baselineで完了した範囲
 

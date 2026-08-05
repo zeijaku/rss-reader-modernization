@@ -1,0 +1,64 @@
+.mini-game-card { margin-bottom: 1rem; }
+.mini-game-card-inner { min-width: 0; overflow: hidden; background: var(--white, #fff); color: #343a40; border: 1px solid rgba(0,0,0,.125); border-radius: .25rem; }
+.mini-game-card-header { display: flex; align-items: center; min-width: 0; height: 44px; min-height: 44px; padding: 0 4px 0 8px; overflow: hidden; white-space: nowrap; }
+.mini-game-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mini-game-edit-trigger { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 44px; width: 44px; height: 44px; margin: 0; padding: 0; }
+.mini-game-card-body { display: flex; flex-direction: column; align-items: center; min-height: calc(13rem - 44px); padding: .75rem; }
+.mini-game-summary { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); width: min(100%,232px); margin-bottom: .55rem; gap: .2rem .55rem; font-size: .75rem; }
+.mini-game-summary-item { display: flex; justify-content: space-between; min-width: 0; gap: .35rem; }
+.mini-game-summary-label { color: #6c757d; }
+.mini-game-board { display: grid; grid-template-columns: repeat(5,minmax(44px,1fr)); width: min(100%,232px); margin: 0 auto; gap: 2px; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.mini-game-cell { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0; border: 1px solid rgba(0,0,0,.22); border-radius: .2rem; background: rgba(255,255,255,.92); color: #343a40; font-size: 1rem; line-height: 1; cursor: pointer; transition: background-color .12s ease,box-shadow .12s ease,color .12s ease,transform .12s ease; }
+.mini-game-cell:active { transform: scale(.96); }
+.mini-game-cell[aria-disabled="true"] { cursor: default; }
+.mini-game-cell:focus,.mini-game-cell:focus-visible,.mini-game-reset:focus,.mini-game-reset:focus-visible,.mini-game-new-game:focus,.mini-game-new-game:focus-visible,.mini-game-direction:focus,.mini-game-direction:focus-visible,.mini-game-tutorial-toggle:focus,.mini-game-tutorial-toggle:focus-visible,.mini-game-storage-reset:focus,.mini-game-storage-reset:focus-visible { outline: 3px solid #0b5ed7; outline-offset: 2px; }
+.mini-game-cell-wall { background: rgba(52,58,64,.22); color: #495057; }
+.mini-game-cell-player { box-shadow: inset 0 0 0 2px rgba(13,110,253,.55); color: #0b5ed7; }
+.mini-game-cell-enemy { box-shadow: inset 0 0 0 2px rgba(220,53,69,.55); color: #b02a37; }
+.mini-game-cell-treasure { background: rgba(255,193,7,.18); color: #8a6d00; }
+.mini-game-cell-goal { background: rgba(25,135,84,.14); color: #146c43; }
+.mini-game-cell-player,.mini-game-cell-enemy,.mini-game-cell-treasure,.mini-game-cell-goal { font-size: 1.15rem; }
+.mini-game-result { display: flex; align-items: center; justify-content: center; width: min(100%,232px); min-height: 36px; margin: 0 0 .35rem; border: 1px solid currentColor; border-radius: .25rem; gap: .4rem; font-size: .82rem; letter-spacing: .04em; }
+.mini-game-result[hidden] { display: none; }
+.mini-game-result-won { background: rgba(25,135,84,.12); color: #146c43; }
+.mini-game-result-lost { background: rgba(220,53,69,.1); color: #b02a37; }
+.mini-game-status-row { display: flex; align-items: center; width: min(100%,232px); min-height: 2.2rem; margin-top: .4rem; }
+.mini-game-status { min-width: 0; margin: 0; font-size: .8rem; }
+.mini-game-controls { display: flex; align-items: center; justify-content: space-between; width: min(100%,232px); margin-top: .45rem; gap: .45rem; }
+.mini-game-action-buttons { display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; gap: .35rem; }
+.mini-game-new-game,.mini-game-reset { min-height: 44px; white-space: nowrap; }
+.mini-game-dpad { display: grid; grid-template-columns: repeat(3,44px); grid-template-rows: repeat(2,44px); flex: 0 0 auto; gap: 2px; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.mini-game-direction { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; touch-action: manipulation; }
+.mini-game-direction-up { grid-column: 2; grid-row: 1; }.mini-game-direction-left { grid-column: 1; grid-row: 2; }.mini-game-direction-down { grid-column: 2; grid-row: 2; }.mini-game-direction-right { grid-column: 3; grid-row: 2; }
+.mini-game-tools { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); width: min(100%,232px); margin-top: .55rem; gap: .4rem; }
+.mini-game-tutorial-toggle,.mini-game-storage-reset { min-height: 44px; }
+.mini-game-tools .btn { display: inline-flex; align-items: center; justify-content: center; min-width: 0; min-height: 44px; gap: .35rem; white-space: nowrap; }
+.mini-game-tutorial { width: min(100%,232px); margin-top: .45rem; padding: .55rem .65rem; border: 1px solid rgba(0,0,0,.15); border-radius: .25rem; background: rgba(0,0,0,.035); font-size: .74rem; line-height: 1.45; }
+.mini-game-tutorial[hidden] { display: none; }
+.mini-game-tutorial p { margin: 0 0 .35rem; }
+.mini-game-tutorial ul { margin: 0 0 .35rem; padding-left: 1.25rem; }
+.mini-game-storage-note { width: min(100%,232px); margin: .4rem 0 0; font-size: .7rem; }
+.mini-game-card[data-mini-game-status="won"] .mini-game-status { font-weight: 700; color: #146c43 !important; }
+.mini-game-card[data-mini-game-status="lost"] .mini-game-status { font-weight: 700; color: #b02a37 !important; }
+#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-card-inner,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-card-inner { background: #2b3035; color: #f8f9fa; border-color: rgba(255,255,255,.18); }
+#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-summary-label,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-summary-label,#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-storage-note,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-storage-note { color: #ced4da !important; }
+#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-cell,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-cell { background: rgba(255,255,255,.1); color: #f8f9fa; border-color: rgba(255,255,255,.3); }
+#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-cell-wall,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-cell-wall { background: rgba(0,0,0,.35); color: #dee2e6; }
+#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-cell-player,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-cell-player { color: #6ea8fe; }
+#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-cell-enemy,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-cell-enemy { color: #ea868f; }
+#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-cell-treasure,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-cell-treasure { color: #ffda6a; }
+#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-cell-goal,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-cell-goal { color: #75b798; }
+#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-tutorial,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-tutorial { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.2); }
+@media (max-width:359.98px) {
+ .mini-game-card-body { padding-right: .5rem; padding-left: .5rem; }
+ .mini-game-board,.mini-game-summary,.mini-game-result,.mini-game-status-row,.mini-game-controls,.mini-game-tools,.mini-game-tutorial,.mini-game-storage-note { width: min(100%,222px); }
+ .mini-game-board { grid-template-columns: repeat(5,minmax(42px,1fr)); }
+ .mini-game-cell { min-width: 42px; min-height: 44px; }
+ .mini-game-dpad { grid-template-columns: repeat(3,42px); }
+ .mini-game-direction { width: 42px; }
+ .mini-game-tools .btn { font-size: .72rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+ .mini-game-card *,.mini-game-card *::before,.mini-game-card *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+ .mini-game-cell:active { transform: none; }
+}

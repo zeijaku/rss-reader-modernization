@@ -1,6 +1,6 @@
 package_type=complete-source
-application_version=1.3.0
-application_label=RSS Reader Modernization 1.3.0
-intended_tag=v1.3.0
+application_version=1.4.0
+application_label=RSS Reader Modernization 1.4.0
+intended_tag=v1.4.0
 runtime_data=excluded
 manifest=SOURCE_MANIFEST.sha256

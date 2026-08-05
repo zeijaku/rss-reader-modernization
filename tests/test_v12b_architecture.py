@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -62,7 +63,7 @@ check('@media (prefers-reduced-motion: reduce)' in css, 'reduced-motion handling
 check("'description' => api_feed_text" in api and "'content' => api_feed_text" in api, 'safe API payload continues to include bounded description and content')
 check('strip_tags' in api, 'server-side Feed text still strips markup')
 check("'feed.fetch' => api_feed_fetch" in api, 'existing structured Feed API remains in use')
-check('1.2.0-dev.3' in version or "APP_VERSION = '1.2.0'" in version or "APP_VERSION = '1.3.0-dev.1'" in version or "APP_VERSION = '1.3.0-dev.2'" in version or "APP_VERSION = '1.3.0-dev.3'" in version or "APP_VERSION = '1.3.0'" in version, 'Version marker identifies V1.2-B or a later checkpoint')
+check(re.search(r"const APP_VERSION = '(?:1\.2\.0-dev\.[3-9][0-9]*|1\.[2-9][0-9]*\.\d+(?:-dev\.\d+)?)';", version) is not None, 'Version marker identifies V1.2-B or a later checkpoint')
 check(".addClass('feed-item-stock-cell')" in js and ".addClass('feed-item-summary-cell')" in js, 'article DOM uses Stock-left and summary-right cells')
 check(".addClass('fas fa-plus-square feed-item-summary-icon')" in js and ".toggleClass('fa-minus-square', expanded)" in js, 'summary control uses compact Font Awesome plus/minus icons')
 check(js.index(".addClass('feed-item-stock-cell')") < js.index(".addClass('feed-item-title-cell')") < js.index(".addClass('feed-item-summary-cell')"), 'article cells are generated in Stock, title, summary order')

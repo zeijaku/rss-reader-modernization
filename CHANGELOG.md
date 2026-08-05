@@ -1,3 +1,68 @@
+## RSS Reader Modernization 1.4.0 — 2026-08-06
+
+### Version 1.4.0 finalization
+
+- V1.4-A～D／R2の確認済み内容を統合し、Application Versionを`1.4.0`へ確定。
+- 既存Dashboard Widget基盤へMini Game Widgetを追加し、5×5 Icon戦略Game「Icon Quest」を正式Release。
+- 固定4 Level、Player／Enemy／Treasure／Goal、勝敗、20手上限、Best手数、勝敗数へ対応。
+- 矢印Key、WASD、隣接マスTap／Click、方向Button、44px操作領域、Focus、ARIA、Reduced Motionへ対応。
+- User ID／Widget ID／Game VersionでBrowser Storageを分離し、Fallback、Validation、Recovery、記録削除を実装。
+- Version 1.4でDB Table／Column、Migration、SQL、外部API、外部Library、Frameworkの追加はなし。
+- Full回帰、Release Documentation、Complete／Runtime Package、Manifest、SHA-256、CRC、再展開確認を実施。
+- V1.4-D / R2からのApplication Runtime変更は`app/version.php`のみ。
+
+## RSS Reader Modernization 1.4.0-dev.3 — V1.4-D / R2 — 2026-08-06
+
+### Mini Game Widget header spacing correction
+
+- Game Widgetを既存Widgetの共通Card余白Selectorへ追加。
+- Game Widget Headerの左余白を既存Widgetと同じ`0 4px 0 8px`へ統一。
+- Drag Handle、Title、編集Buttonの構造・機能、Game本体、Storage、DB処理は変更なし。
+- 対象CSSとHeader実表示だけをFocused Testし、Full回帰はV1.4-Eで実施予定。
+
+## RSS Reader Modernization 1.4.0-dev.3 — V1.4-D / R1 — 2026-08-06
+
+### Icon Quest polish, recovery and accessibility
+
+- 初回だけ開く簡易Tutorialと、Widget単位のTutorial確認状態保存を追加。
+- Clear／Game Overの専用表示と、勝利数／敗北数の表示・保存を追加。
+- 「記録を削除」で対象Widgetの進行、Best、勝敗、Tutorial状態を初期化出来るよう変更。
+- `localStorage`、`sessionStorage`、MemoryのCopyを個別検証し、正常な最新Copyを優先するRecoveryへ強化。
+- 壊れたCopyだけを削除し、すべて異常な場合は安全な初期状態へ戻す。
+- Key Repeat、二重Click、Keyboard連続Activation、Touch長押しの誤操作を抑止。
+- 短い状態Transitionと`prefers-reduced-motion`、44px操作領域、Atomic Live Regionを維持。
+- 全8 Theme、360／420／1024pxでGame WidgetのOverflow、Focus、Contrastを確認し、Solar／SlateをDark Surfaceへ調整。
+- DB、Table、Column、Migration、SQL、外部API、外部Libraryの追加はなし。
+- 分割RunnerとTheme MatrixでPASS 5,328、FAIL 0、SKIP 12を確認。
+
+## RSS Reader Modernization 1.4.0-dev.2 — V1.4-C / R1 — 2026-08-05
+
+### Icon Quest first playable Game
+
+- 5×5 Icon戦略Game「Icon Quest」を固定4 Levelで実装。
+- Player移動、Treasure取得、Goal、Enemy追跡、Clear／Game Over、20手上限を追加。
+- EnemyはPlayerの有効移動2回ごとに、固定順の最短経路で1マス移動。
+- 矢印Key、WASD、隣接マスTap／Click、方向Buttonへ対応。
+- Moves、Level別Best、勝敗数、途中状態をBrowser Storageへ保存し、再表示時に復元。
+- Storage値はGame Version、Level、位置、型、範囲、統計を検証し、異常時は安全に初期化。
+- Font Awesome Icon、文字Label、Grid ARIA、Roving Focus、Esc、44px操作領域へ対応。
+- DB、Table、Column、Migration、SQL、外部API、外部Libraryの追加はなし。
+
+## RSS Reader Modernization 1.4.0-dev.1 — V1.4-B / R1 — 2026-08-05
+
+### Mini Game Widget foundation
+
+- 既存`dashboard_widget` Tableを利用したGame Widget登録・変更・論理削除を追加。
+- DrawerのWidget追加へ`Game追加`を追加し、既存Tab、横幅、見出し色、並べ替え処理へ統合。
+- 第一候補`Icon Quest`用の5×5 Mock盤面を、既存Font AwesomeとSemantic HTMLで表示。
+- Game進行状態をDBへ保存せず、User ID／Widget ID／Game Versionで分離するBrowser Storage Wrapperを追加。
+- `localStorage`、`sessionStorage`、Memoryの順にFallbackし、JSON Parse失敗、未知Schema、Storage利用不能を安全に処理。
+- 複数Game Widgetの状態分離、Reset、Widget削除成功後のStorage削除へ対応。
+- Game盤面でDashboardのTab Swipeが開始されないよう除外属性を追加。
+- V1.4-Bでは盤面移動、Enemy AI、勝敗、Scoreを実装せず、V1.4-Cの対象として維持。
+- DB Table／Column、Migration、SQL、外部API、外部Library、Build環境の追加はなし。
+- V1.4-B専用Test 109件、分割Full回帰 4,987件を実行し、FAIL 0を確認。
+
 ## RSS Reader Modernization 1.3.0 — 2026-08-05
 
 ### Version 1.3.0 finalization

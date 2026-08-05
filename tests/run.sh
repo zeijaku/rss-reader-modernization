@@ -358,3 +358,36 @@ if grep -Fq "const APP_VERSION = '1.3.0';" "$ROOT/app/version.php"; then
 else
     echo 'SKIP: Version 1.3.0 release gate requires APP_VERSION 1.3.0.'
 fi
+
+echo '== V1.4-B Mini Game Widget foundation checks =='
+php "$ROOT/tests/test_v14b_game_widget.php"
+python3 "$ROOT/tests/test_v14b_architecture.py"
+node "$ROOT/tests/test_v14b_storage_runtime.js"
+python3 "$ROOT/tests/test_v14b_dashboard_render.py"
+
+echo '== V1.4-C Icon Quest Game checks =='
+node "$ROOT/tests/test_v14c_game_runtime.js"
+python3 "$ROOT/tests/test_v14c_architecture.py"
+python3 "$ROOT/tests/test_v14c_dashboard_render.py"
+python3 "$ROOT/tests/test_v14c_browser.py"
+
+echo '== V1.4-D Icon Quest polish / recovery checks =='
+node "$ROOT/tests/test_v14d_game_runtime.js"
+python3 "$ROOT/tests/test_v14d_architecture.py"
+python3 "$ROOT/tests/test_v14d_dashboard_render.py"
+python3 "$ROOT/tests/test_v14d_browser.py"
+python3 "$ROOT/tests/test_v14d_theme_browser.py"
+python3 "$ROOT/tests/test_v14d_r2_game_header.py"
+
+if grep -Fq "const APP_VERSION = '1.4.0';" "$ROOT/app/version.php"; then
+    for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache/feed" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
+        if [ -d "$runtime_dir" ]; then
+            find "$runtime_dir" -type f ! -name '.gitkeep' -delete
+        fi
+    done
+    echo '== Version 1.4.0 release checks =='
+    python3 "$ROOT/tests/test_v14e_release.py"
+    python3 "$ROOT/tests/test_v14e_release_documentation.py"
+else
+    echo 'SKIP: Version 1.4.0 release gate requires APP_VERSION 1.4.0.'
+fi

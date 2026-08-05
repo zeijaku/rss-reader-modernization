@@ -16,8 +16,10 @@ def check(condition, message):
     checks.append(ok)
     print(('PASS' if ok else 'FAIL') + ': ' + message)
 
-check("APP_VERSION = '1.3.0-dev.1'" in version or "APP_VERSION = '1.3.0-dev.2'" in version or "APP_VERSION = '1.3.0-dev.3'" in version or "APP_VERSION = '1.3.0'" in version, 'V1.3-B or later Version is visible')
-check("APP_VERSION_LABEL = 'RSS Reader Modernization 1.3.0-dev.1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.3.0-dev.2'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.3.0-dev.3'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.3.0'" in version, 'V1.3-B or later label is visible')
+version_match = re.search(r"APP_VERSION = '([0-9]+)\.([0-9]+)\.([0-9]+)(?:-dev\.[0-9]+)?'", version)
+version_tuple = tuple(int(part) for part in version_match.groups()) if version_match else (0, 0, 0)
+check(version_tuple >= (1, 3, 0), 'V1.3-B or later Version is visible')
+check("APP_VERSION_LABEL = 'RSS Reader Modernization " in version, 'V1.3-B or later label is visible')
 
 headings = ['表示', 'Widget追加', 'カスタマイズ', 'リンク', 'Account']
 positions = [drawer.index('>' + label + '<') for label in headings]

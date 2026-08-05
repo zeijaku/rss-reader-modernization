@@ -46,6 +46,18 @@ Version 1.2ではDB Table／Column、Migration、SQL、必須設定の追加は�
 
 Version 1.3ではDB Table／Column、Migration、SQL、API、RSS解析Engine、外部Libraryを追加していません。ゲーム性のあるWidgetはVersion 1.4以降の別工程とします。
 
+
+## Version 1.4 — Mini Game Widget
+
+- [x] V1.4-A Widget／Storage調査、第一ゲーム仕様決定
+- [x] V1.4-B Mini Game Widget基盤
+- [x] V1.4-C Icon Quest本体実装
+- [x] V1.4-D 操作性、保存Recovery、Tutorial、Theme調整
+- [x] V1.4-D / R2 Game Header余白修正
+- [x] V1.4-E Full回帰・Version 1.4.0 Release
+
+Version 1.4は既存`dashboard_widget` Tableだけを利用し、Game進行状態はBrowser Storageへ保存します。新しいTable／Column、Migration、SQL、外部API、外部Libraryは追加していません。
+
 ## M1 — Source / RSS Engine
 
 ### Goal
