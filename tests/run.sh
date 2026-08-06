@@ -397,3 +397,25 @@ node "$ROOT/tests/test_v15b_clock_timer_runtime.js"
 python3 "$ROOT/tests/test_v15b_architecture.py"
 python3 "$ROOT/tests/test_v15b_dashboard_render.py"
 python3 "$ROOT/tests/test_v15b_browser.py"
+
+echo '== V1.5-C Clock Timer recovery / synchronization checks =='
+node "$ROOT/tests/test_v15c_clock_timer_runtime.js"
+python3 "$ROOT/tests/test_v15c_architecture.py"
+python3 "$ROOT/tests/test_v15c_dashboard_render.py"
+python3 "$ROOT/tests/test_v15c_browser.py"
+python3 "$ROOT/tests/test_v15c_theme_browser.py"
+python3 "$ROOT/tests/test_v15c_r2_mobile_feed_overflow.py"
+python3 "$ROOT/tests/test_v15c_r3_mobile_summary_icon.py"
+
+if grep -Fq "const APP_VERSION = '1.5.0';" "$ROOT/app/version.php"; then
+    for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache/feed" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
+        if [ -d "$runtime_dir" ]; then
+            find "$runtime_dir" -type f ! -name '.gitkeep' -delete
+        fi
+    done
+    echo '== Version 1.5.0 release checks =='
+    python3 "$ROOT/tests/test_v15d_release.py"
+    python3 "$ROOT/tests/test_v15d_release_documentation.py"
+else
+    echo 'SKIP: Version 1.5.0 release gate requires APP_VERSION 1.5.0.'
+fi

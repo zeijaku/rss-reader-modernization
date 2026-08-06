@@ -97,7 +97,7 @@ $tabParam = app_tab_from_query($_GET['tab'] ?? null);
     <!-- Drawer -->
     <link rel="stylesheet" href="./css/drawer.min.css">
 
-    <link rel="stylesheet" href="./css/dashboard.css">
+    <link rel="stylesheet" href="./css/dashboard.css?v=1.5-c-r3">
     <link rel="stylesheet" href="./css/mini-game.css">
     <link rel="stylesheet" href="./css/clock-timer.css">
     <?php if ($currentUserId === null): ?>
@@ -1472,7 +1472,7 @@ if ($result_content_cnt === 0) {
 
 <script src="./js/mini-game.js"></script>
 <script src="./js/clock-timer.js"></script>
-<script src="./js/dashboard.js"></script>
+<script src="./js/dashboard.js?v=1.5-c-r4"></script>
 <script src="./js/calendar.js"></script>
 
 

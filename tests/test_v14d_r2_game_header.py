@@ -37,8 +37,8 @@ if header is not None:
     for token in ['height: 44px', 'min-height: 44px', 'padding: 0 4px 0 8px', 'overflow: hidden', 'white-space: nowrap']:
         check(token in body, f'Game Widget header includes {token}')
 
-check("const APP_VERSION = '1.4.0-dev.3';" in version or "const APP_VERSION = '1.4.0';" in version or "const APP_VERSION = '1.5.0-dev.1';" in version, 'Application Version retains V1.4-D header in V1.4 or later')
-check("const APP_VERSION_LABEL = 'RSS Reader Modernization V1.4-D / R2';" in version or "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.4.0';" in version or 'RSS Reader Modernization V1.5-' in version,
+check("const APP_VERSION = '1.4.0-dev.3';" in version or "const APP_VERSION = '1.4.0';" in version or re.search(r"const APP_VERSION = '1\.5\.0(?:-dev\.[1-9][0-9]*)?';", version) is not None, 'Application Version retains V1.4-D header in V1.4 or later')
+check("const APP_VERSION_LABEL = 'RSS Reader Modernization V1.4-D / R2';" in version or "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.4.0';" in version or ('RSS Reader Modernization V1.5-' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.5.0'" in version),
       'Label is V1.4-D / R2 or later')
 
 try:

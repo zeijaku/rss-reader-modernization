@@ -16,6 +16,27 @@ Releaseごとに次を確認します。
 
 
 
+## Version 1.4.0からVersion 1.5.0
+
+Version 1.5.0は既存Clock WidgetへCountdown Timerを追加します。DB構造変更、Migration、SQL、必須設定追加はありません。Timer状態はBrowser Storageへ保存します。
+
+1. Code、`config/local.php`、Server固有`.htaccess`、実DB、`var/`をBackupする。
+2. ZIPを別Folderへ展開し、SHA-256、Manifest、変更Fileを確認する。
+3. `config/local.php`、実DB、`var/`の生成Dataを上書きせずCodeを更新する。
+4. SQL、Migration、`schema.sql`は実行しない。
+5. Browserを再読み込みする。
+6. 既存Clock、Timer、Reload後の復元、Background補正、終了表示、Smartphone Feedを確認する。
+
+```text
+DB schema / Migration       変更なし
+Public API                  変更なし
+必須設定                    追加なし
+Feed Cache削除              不要
+Browser Cache               再読み込み推奨
+Browser Storage             User ID／Widget IDごとにTimer状態を保存
+Server固有.htaccess         不用意に上書きしない
+```
+
 ## Version 1.3.0からVersion 1.4.0
 
 Version 1.4.0はMini Game Widgetを追加しますが、DB構造変更、Migration、SQL、必須設定追加はありません。Game Widgetの登録には既存`dashboard_widget` Tableを利用し、盤面やScoreはBrowser Storageへ保存します。

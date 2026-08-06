@@ -1,3 +1,43 @@
+## RSS Reader Modernization 1.5.0 — 2026-08-06
+
+### Version 1.5.0 finalization
+
+- V1.5-B～C／R5の確認済み内容を統合し、Application Versionを`1.5.0`へ確定。
+- 既存Clock Widgetへ、時計／Timer切替、Preset、任意時間、開始／一時停止／再開／Resetを追加。
+- 終了予定時刻`endAt`を基準に残り時間を再計算し、Reload、Sleep、Background復帰後も補正。
+- User／Widget単位のBrowser Storage、Fallback、Validation、Recovery、複数Tab同期へ対応。
+- Timer終了時に短い「終了」表示と視覚強調を追加し、Reduced MotionとDark Themeへ対応。
+- Smartphone Feedの横Overflow、概要［＋］表示、古い`dashboard.js` Cacheの実機問題を修正。
+- Version 1.5でDB Table／Column、Migration、SQL、必須設定、外部Library、音、Browser通知は追加なし。
+- Full回帰、Release Documentation、Complete／Runtime Package、Manifest、SHA-256、CRC、再展開確認を実施。
+- V1.5-C / R5からのApplication Runtime変更は`app/version.php`のみ。
+
+## RSS Reader Modernization 1.5.0-dev.2 — V1.5-C / R2 — 2026-08-06
+
+### Smartphone Feed horizontal overflow correction
+
+- iOS SafariでFeed内のTable／Flexが親幅を押し広げる可能性があるため、スマートフォン幅で`width`、`min-width`、`max-width`を明示。
+- Feed見出しのFlex要素を`flex-basis: 0`で縮小可能にし、長いFeed名でも編集／更新ButtonをCard内へ維持。
+- Smartphone幅の概要列と概要Buttonを44pxへ統一し、負の左Offsetを解除。
+- `dashboard.css`だけ古いCacheが残る場合を避けるため、同CSSの読込みURLへR2 Queryを追加。
+- Timer、Clock、Game、Feed処理、JavaScript、API、DB、Migrationは変更なし。
+- iPhone相当375pxと既存Feed Header／記事ActionsをFocused Testし、PASS 173、FAIL 0、SKIP 0を確認。
+
+## RSS Reader Modernization 1.5.0-dev.2 — V1.5-C / R1 — 2026-08-06
+
+### Clock Timer recovery, synchronization and polish
+
+- `localStorage`、`sessionStorage`、Memoryの保存Copyを個別検証し、`savedAt`が新しい正常Copyを優先するRecoveryへ強化。
+- 壊れたJSON、未知Schema、異常値のCopyだけを除去し、すべて異常な場合は安全な初期状態へ戻す。
+- `storage` Eventで同じUser／WidgetのTimerを複数Browser Tab間で同期。
+- `focus`、`pageshow`、`visibilitychange`で終了予定時刻から即時再計算し、Sleep／長時間Background後の遅延を補正。
+- Key Repeatと同一操作の短時間連続Activationを抑止。
+- Timer完了時に短い視覚強調を追加し、`prefers-reduced-motion`ではAnimationを無効化。
+- Focus表示とDark Themeの完了Message Contrastを調整。
+- 全8 Theme、360／420／1024px、複数Tab同期、Storage異常Recoveryを専用Testで確認。
+- 終了音、Browser通知、DB Table／Column、Migration、SQL、外部Libraryは追加なし。
+- Feature横断回帰PASS 1,075、FAIL 0、SKIP 0を確認。
+
 ## RSS Reader Modernization 1.5.0-dev.1 — V1.5-B / R1 — 2026-08-06
 
 ### Clock Timer

@@ -60,6 +60,8 @@
 - [ ] 新着Bellの個別解除 / Feed単位解除
 - [ ] 記事ActionsのStock / URL Copy / X / Task追加
 - [ ] Clock追加 / 変更 / 削除
+- [ ] TimerのPreset / 任意時間 / 開始 / 一時停止 / 再開 / Reset / 終了表示
+- [ ] TimerのReload復元 / Background補正 / 複数Tab同期
 - [ ] Memo追加 / 変更 / 削除 / 改行表示
 - [ ] Task Widget追加 / 変更 / 削除
 - [ ] Task追加 / 変更 / 完了切替 / 期限 / 優先度 / 削除

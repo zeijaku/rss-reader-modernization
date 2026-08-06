@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `RSS Reader Modernization 1.3.0`。Version 1.2.0の機能とDB構造を維持したまま、Header、Drawer、Widget見出し、記事操作部分の共通UIを整理しました。Version 1.3 ReleaseでFull回帰、Documentation整合、Version確定、完全統合ZIPとRuntime ZIPのRelease Gateを完了しています。
+現在は `RSS Reader Modernization 1.5.0`。Version 1.4.0のIcon Questを維持したまま、既存Clock WidgetへCountdown Timerを追加しました。Version 1.5 ReleaseでFull回帰、Documentation整合、Version確定、完全統合ZIPとRuntime ZIPのRelease Gateを完了しています。
 
 ## Version 1.1 — Dashboard機能追加
 
@@ -57,6 +57,18 @@ Version 1.3ではDB Table／Column、Migration、SQL、API、RSS解析Engine、�
 - [x] V1.4-E Full回帰・Version 1.4.0 Release
 
 Version 1.4は既存`dashboard_widget` Tableだけを利用し、Game進行状態はBrowser Storageへ保存します。新しいTable／Column、Migration、SQL、外部API、外部Libraryは追加していません。
+
+## Version 1.5 — Clock Timer
+
+- [x] V1.5-A Clock Timer調査・工程設計
+- [x] V1.5-B Timer基本実装
+- [x] V1.5-C Storage Recovery・複数Tab同期・Theme・操作性
+- [x] V1.5-C / R2～R5 Smartphone表示・Cache切り分け・終了表示調整
+- [x] V1.5-D Full回帰・Version 1.5.0 Release
+
+Version 1.5は既存Clock Widgetと`dashboard_widget` Tableを利用し、Timer実行状態はBrowser Storageへ保存します。新しいTable／Column、Migration、SQL、必須設定、外部Library、音、Browser通知は追加していません。
+
+次Version候補は、SmartphoneタブSwipeの方向表示と、5×5 Lights Out Widgetです。Asset Cache Bustingの一元化、パスキー認証は別の保守・認証工程として保留します。
 
 ## M1 — Source / RSS Engine
 

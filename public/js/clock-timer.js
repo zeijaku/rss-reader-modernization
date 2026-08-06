@@ -11,6 +11,9 @@
     var storageMode = 'memory';
     var instances = Object.create(null);
     var timerInterval = null;
+    var globalListenersBound = false;
+    var ACTION_GUARD_MS = 250;
+    var COMPLETION_HIGHLIGHT_MS = 1800;
 
     function plainObject(value) {
         return value && Object.prototype.toString.call(value) === '[object Object]';
@@ -157,6 +160,26 @@
         return Object.prototype.hasOwnProperty.call(memoryStorage, key) ? memoryStorage[key] : null;
     }
 
+    function browserStorageRaw(name, key) {
+        var candidate = browserStorage(name);
+        if (candidate === null) {
+            return {name: name, raw: null, available: false};
+        }
+        try {
+            return {name: name, raw: candidate.getItem(key), available: true};
+        } catch (error) {
+            return {name: name, raw: null, available: false};
+        }
+    }
+
+    function removeStorageCopy(name, key) {
+        if (name === 'memory') {
+            delete memoryStorage[key];
+            return;
+        }
+        removeFromBrowserStorage(name, key);
+    }
+
     function writeRaw(key, value) {
         if (storage !== null) {
             try {
@@ -196,24 +219,73 @@
         delete memoryStorage[key];
     }
 
-    function loadState(userId, widgetId) {
+    function loadStateResult(userId, widgetId) {
         var key = storageKey(userId, widgetId);
         if (key === null) {
-            return defaultState();
+            return {state: defaultState(), recovered: false, reason: 'invalid-key'};
         }
-        var raw = readRaw(key);
-        if (raw === null || raw === '') {
-            return defaultState();
+
+        var candidates = [
+            browserStorageRaw('localStorage', key),
+            browserStorageRaw('sessionStorage', key)
+        ];
+        if (Object.prototype.hasOwnProperty.call(memoryStorage, key)) {
+            candidates.push({name: 'memory', raw: memoryStorage[key], available: true});
         }
-        try {
-            var normalized = validateState(JSON.parse(raw));
-            if (normalized !== null) {
-                return normalized;
+
+        var valid = [];
+        var invalid = [];
+        var hasValue = false;
+        for (var index = 0; index < candidates.length; index++) {
+            var candidate = candidates[index];
+            if (!candidate.available || candidate.raw === null || candidate.raw === '') {
+                continue;
             }
-        } catch (error) {
+            hasValue = true;
+            try {
+                var normalized = validateState(JSON.parse(candidate.raw));
+                if (normalized === null) {
+                    invalid.push(candidate.name);
+                } else {
+                    valid.push({name: candidate.name, state: normalized});
+                }
+            } catch (error) {
+                invalid.push(candidate.name);
+            }
         }
-        removeEverywhere(key);
-        return defaultState();
+
+        for (var invalidIndex = 0; invalidIndex < invalid.length; invalidIndex++) {
+            removeStorageCopy(invalid[invalidIndex], key);
+        }
+
+        if (valid.length > 0) {
+            valid.sort(function (left, right) {
+                if (right.state.savedAt !== left.state.savedAt) {
+                    return right.state.savedAt - left.state.savedAt;
+                }
+                if (left.name === 'localStorage') {
+                    return -1;
+                }
+                if (right.name === 'localStorage') {
+                    return 1;
+                }
+                return 0;
+            });
+            return {
+                state: valid[0].state,
+                recovered: invalid.length > 0,
+                reason: invalid.length > 0 ? 'repaired-copy' : 'restored'
+            };
+        }
+
+        if (hasValue) {
+            return {state: defaultState(), recovered: true, reason: 'invalid-data'};
+        }
+        return {state: defaultState(), recovered: false, reason: 'empty'};
+    }
+
+    function loadState(userId, widgetId) {
+        return loadStateResult(userId, widgetId).state;
     }
 
     function saveState(userId, widgetId, state) {
@@ -362,6 +434,12 @@
         if (eventName === 'duration') {
             return Math.floor(state.durationSeconds / 60) + '分に設定しました';
         }
+        if (eventName === 'recovered') {
+            return '保存データを確認し、安全な状態へ復元しました';
+        }
+        if (eventName === 'synced') {
+            return '別のTabの変更を反映しました';
+        }
         if (eventName === 'completed' || state.status === 'completed') {
             return 'タイマーが終了しました';
         }
@@ -438,6 +516,41 @@
         refreshInterval();
     }
 
+    function actionAllowed(instance, actionName) {
+        var now = Date.now();
+        if (instance.lastActionName === actionName && now - instance.lastActionAt < ACTION_GUARD_MS) {
+            return false;
+        }
+        instance.lastActionName = actionName;
+        instance.lastActionAt = now;
+        return true;
+    }
+
+    function highlightCompletion(instance) {
+        if (!instance || !instance.card) {
+            return;
+        }
+        var display = instance.card.querySelector('.clock-timer-display');
+        instance.card.classList.remove('clock-timer-completed-recent');
+        void instance.card.offsetWidth;
+        instance.card.classList.add('clock-timer-completed-recent');
+        if (display) {
+            display.textContent = '終了';
+            display.setAttribute('datetime', 'PT0S');
+            display.setAttribute('aria-label', 'タイマー終了');
+        }
+        if (instance.completionTimeout !== null && typeof window.clearTimeout === 'function') {
+            window.clearTimeout(instance.completionTimeout);
+        }
+        if (typeof window.setTimeout === 'function') {
+            instance.completionTimeout = window.setTimeout(function () {
+                instance.card.classList.remove('clock-timer-completed-recent');
+                instance.completionTimeout = null;
+                renderCard(instance, 'completed');
+            }, COMPLETION_HIGHLIGHT_MS);
+        }
+    }
+
     function setView(instance, view) {
         if (['clock', 'timer'].indexOf(view) === -1 || instance.state.view === view) {
             return;
@@ -478,14 +591,20 @@
         var viewButtons = card.querySelectorAll('[data-clock-view-trigger]');
         for (var viewIndex = 0; viewIndex < viewButtons.length; viewIndex++) {
             viewButtons[viewIndex].addEventListener('click', function () {
-                setView(instance, this.getAttribute('data-clock-view-trigger'));
+                var view = this.getAttribute('data-clock-view-trigger');
+                if (actionAllowed(instance, 'view-' + view)) {
+                    setView(instance, view);
+                }
             });
         }
 
         var presets = card.querySelectorAll('.clock-timer-preset');
         for (var presetIndex = 0; presetIndex < presets.length; presetIndex++) {
             presets[presetIndex].addEventListener('click', function () {
-                setDuration(instance, Number(this.getAttribute('data-clock-timer-seconds')));
+                var seconds = Number(this.getAttribute('data-clock-timer-seconds'));
+                if (actionAllowed(instance, 'preset-' + seconds)) {
+                    setDuration(instance, seconds);
+                }
             });
         }
 
@@ -507,7 +626,11 @@
             setDuration(instance, minutes * 60);
         }
         if (apply) {
-            apply.addEventListener('click', applyCustomMinutes);
+            apply.addEventListener('click', function () {
+                if (actionAllowed(instance, 'custom-duration')) {
+                    applyCustomMinutes();
+                }
+            });
         }
         if (input) {
             input.addEventListener('input', function () {
@@ -516,7 +639,9 @@
             input.addEventListener('keydown', function (event) {
                 if (event.key === 'Enter') {
                     event.preventDefault();
-                    applyCustomMinutes();
+                    if (!event.repeat && actionAllowed(instance, 'custom-duration')) {
+                        applyCustomMinutes();
+                    }
                 }
             });
         }
@@ -526,17 +651,23 @@
         var resetButton = card.querySelector('.clock-timer-reset');
         if (start) {
             start.addEventListener('click', function () {
-                begin(instance);
+                if (actionAllowed(instance, 'start')) {
+                    begin(instance);
+                }
             });
         }
         if (pauseButton) {
             pauseButton.addEventListener('click', function () {
-                pause(instance);
+                if (actionAllowed(instance, 'pause')) {
+                    pause(instance);
+                }
             });
         }
         if (resetButton) {
             resetButton.addEventListener('click', function () {
-                reset(instance);
+                if (actionAllowed(instance, 'reset')) {
+                    reset(instance);
+                }
             });
         }
     }
@@ -564,6 +695,7 @@
             if (result.completed) {
                 saveState(instance.userId, instance.widgetId, instance.state);
                 renderCard(instance, 'completed');
+                highlightCompletion(instance);
             } else {
                 renderCard(instance, 'tick');
             }
@@ -584,6 +716,84 @@
         }
     }
 
+    function syncInstance(instance, eventName, force) {
+        if (!instance) {
+            return;
+        }
+        var loadedResult = loadStateResult(instance.userId, instance.widgetId);
+        var loaded = loadedResult.state;
+        var tick = tickState(loaded, Date.now());
+        loaded = tick.state;
+        if (tick.completed) {
+            saveState(instance.userId, instance.widgetId, loaded);
+        }
+        if (!force && loaded.savedAt < instance.state.savedAt) {
+            return;
+        }
+        var changed = JSON.stringify(loaded) !== JSON.stringify(instance.state);
+        if (!changed && !loadedResult.recovered && !tick.completed) {
+            return;
+        }
+        instance.state = loaded;
+        renderCard(instance, loadedResult.recovered ? 'recovered' : eventName);
+        if (tick.completed) {
+            highlightCompletion(instance);
+        }
+    }
+
+    function syncAllInstances(eventName) {
+        var keys = Object.keys(instances);
+        for (var index = 0; index < keys.length; index++) {
+            syncInstance(instances[keys[index]], eventName, false);
+        }
+        updateRunningTimers();
+    }
+
+    function handleStorageEvent(event) {
+        if (!event || typeof event.key !== 'string' || event.key.indexOf(STORAGE_PREFIX + '.user.') !== 0) {
+            return;
+        }
+        var keys = Object.keys(instances);
+        for (var index = 0; index < keys.length; index++) {
+            var instance = instances[keys[index]];
+            if (storageKey(instance.userId, instance.widgetId) === event.key) {
+                if (event.newValue === null) {
+                    removeStorageCopy('sessionStorage', event.key);
+                    removeStorageCopy('memory', event.key);
+                    instance.state = defaultState();
+                    renderCard(instance, 'synced');
+                } else {
+                    syncInstance(instance, 'synced', false);
+                }
+                refreshInterval();
+                return;
+            }
+        }
+    }
+
+    function handlePageResume() {
+        syncAllInstances('restored');
+    }
+
+    function bindGlobalListeners() {
+        if (globalListenersBound) {
+            return;
+        }
+        globalListenersBound = true;
+        if (typeof window.addEventListener === 'function') {
+            window.addEventListener('storage', handleStorageEvent);
+            window.addEventListener('focus', handlePageResume);
+            window.addEventListener('pageshow', handlePageResume);
+        }
+        if (typeof document.addEventListener === 'function') {
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) {
+                    handlePageResume();
+                }
+            });
+        }
+    }
+
     function initCard(card) {
         if (!card || card.getAttribute('data-clock-timer-initialized') === '1') {
             return;
@@ -595,7 +805,8 @@
             return;
         }
 
-        var state = loadState(userId, widgetId);
+        var loadedResult = loadStateResult(userId, widgetId);
+        var state = loadedResult.state;
         var tick = tickState(state, Date.now());
         state = tick.state;
         if (tick.completed) {
@@ -606,16 +817,23 @@
             card: card,
             userId: userId,
             widgetId: widgetId,
-            state: state
+            state: state,
+            lastActionName: '',
+            lastActionAt: 0,
+            completionTimeout: null
         };
         instances[widgetId] = instance;
         card.setAttribute('data-clock-timer-initialized', '1');
         bindCard(instance);
-        renderCard(instance, tick.completed ? 'completed' : 'restored');
+        renderCard(instance, loadedResult.recovered ? 'recovered' : tick.completed ? 'completed' : 'restored');
+        if (tick.completed) {
+            highlightCompletion(instance);
+        }
     }
 
     function init() {
         selectStorage();
+        bindGlobalListeners();
         var cards = document.querySelectorAll('[data-dashboard-widget-type="clock"]');
         for (var index = 0; index < cards.length; index++) {
             initCard(cards[index]);
@@ -628,6 +846,7 @@
         defaultState: defaultState,
         validateState: validateState,
         loadState: loadState,
+        loadStateResult: loadStateResult,
         saveState: saveState,
         removeWidgetState: removeWidgetState,
         remainingAt: remainingAt,
@@ -637,6 +856,7 @@
         resetState: resetState,
         tickState: tickState,
         formatDuration: formatDuration,
+        syncAllInstances: syncAllInstances,
         storageMode: function () { return storageMode; },
         init: init
     };

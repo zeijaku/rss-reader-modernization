@@ -321,6 +321,8 @@
 
 .feed-table {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     margin-bottom: 0;
     table-layout: fixed;
 }
@@ -1174,6 +1176,52 @@ select:focus,
         margin-left: 0;
     }
 
+    /* V1.5-C / R2: iOS SafariでもFeed内のFlex/Tableが親幅を押し広げないようにする。 */
+    .feed-card,
+    .feed-card-inner,
+    .feed-table,
+    .feed-card-header-inner {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .feed-summary-column,
+    .feed-table .feed-item-summary-cell {
+        width: 44px;
+    }
+
+    .feed-item-summary-toggle {
+        left: 0;
+        display: inline-flex;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    /* V1.5-C / R3: iOSを含むスマートフォンでも概要の＋／－を常に表示する。 */
+    .feed-item-summary-icon,
+    .feed-item-summary-icon::before {
+        display: inline-block;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .feed-item-summary-icon {
+        color: #6c757d;
+        -webkit-text-fill-color: #6c757d;
+        font-size: 1rem;
+    }
+
+    .feed-item-summary-toggle:disabled {
+        opacity: 1;
+    }
+
+    .feed-item-summary-toggle:disabled .feed-item-summary-icon {
+        color: #adb5bd;
+        -webkit-text-fill-color: #adb5bd;
+        opacity: 1;
+    }
+
     .feed-card-inner,
     .clock-card-inner,
     .memo-card-inner,
@@ -1523,6 +1571,14 @@ select:focus,
     line-height: 1.2;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    .feed-card .content-title {
+        width: 0;
+        max-width: 100%;
+        flex: 1 1 0;
+    }
 }
 
 .calendar-card-body {

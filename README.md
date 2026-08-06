@@ -2,8 +2,8 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.4.0`  
-Release tag: `v1.4.0`
+**Stable release:** `RSS Reader Modernization 1.5.0`  
+Release tag: `v1.5.0`
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
@@ -30,6 +30,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - 2回目以降に検出した記事のNEW表示と手動解除
 - Dashboard WidgetのタイトルバーDrag & Drop／Keyboard並び替え
 - Clock Widgetの追加・変更・削除、12／24時間、日付・秒表示
+- Clock Widget内のTimer、Preset、任意時間、開始／一時停止／再開／Reset、状態復元
 - Memo Widgetの追加・変更・削除、改行を保持した本文表示
 - Task Widgetの追加・変更・削除、完了切替、期限、優先度
 - Calendar Widgetの月表示、通常予定、Task期限連動
@@ -107,7 +108,23 @@ DB Table／Column、Migration、SQL、API、RSS解析Engine、外部Library、Bu
 
 Version 1.4.0では、既存Dashboard Widget基盤へMini Game Widgetを追加し、第一ゲームとして5×5 Icon戦略Game「Icon Quest」を実装しました。Game Widgetは既存Tab、並べ替え、横幅、Header色、Themeを利用し、盤面状態、Best手数、勝敗数はBrowser Storageへ保存します。
 
-DB Table／Column、Migration、SQL、外部API、外部Library、Framework、Build環境の追加はありません。詳細は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/v1-4-release-implementation.md`](docs/v1-4-release-implementation.md)、[`docs/test-report-v1-4-release.md`](docs/test-report-v1-4-release.md)を参照してください。
+DB Table／Column、Migration、SQL、外部API、外部Library、Framework、Build環境の追加はありません。詳細は[`docs/v1-4-release-implementation.md`](docs/v1-4-release-implementation.md)、[`docs/test-report-v1-4-release.md`](docs/test-report-v1-4-release.md)を参照してください。
+
+## Version 1.5 progress
+
+| Stage | 内容 | 状態 |
+|---|---|---|
+| V1.5-A | Clock Timerの現状調査、保存方式、UI、工程設計 | 完了 |
+| V1.5-B | Clock Widget内Timer、Preset、任意時間、保存・復元 | 完了 |
+| V1.5-C | Storage Recovery、複数Tab同期、復帰補正、Theme・操作性調整 | 完了 |
+| V1.5-C / R2～R5 | Smartphone Feed表示、概要Icon、Cache切り分け、終了表示調整 | 完了 |
+| V1.5-D | Full回帰、Documentation、Package、Version 1.5.0確定 | 完了 |
+
+Version 1.5.0では、既存Clock Widgetへ小型のCountdown Timerを追加しました。TimerはServerやDBへ状態を保存せず、User IDとWidget IDで分離したBrowser Storageを使用します。`endAt`から残り時間を再計算するため、Reload、Background、Sleep後も現在時刻へ補正されます。
+
+`localStorage`、`sessionStorage`、MemoryのFallbackとRecovery、複数Browser Tab同期、Keyboard、44px操作領域、全8 Theme、Reduced Motion、終了時の短い視覚表示へ対応しています。音、Browser通知、Vibrationは追加していません。V1.5-C / R2～R4ではSmartphone Feedの横Overflow、概要［＋］表示、Asset Cacheの実機切り分けも行いました。
+
+DB Table／Column、Migration、SQL、必須設定、外部Library、Framework、Build環境の追加はありません。詳細は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/v1-5-release-implementation.md`](docs/v1-5-release-implementation.md)、[`docs/test-report-v1-5-release.md`](docs/test-report-v1-5-release.md)を参照してください。
 
 ## Secure Baselineで完了した範囲
 
@@ -179,7 +196,7 @@ M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4
 
 詳細は [`docs/m4-f-implementation.md`](docs/m4-f-implementation.md)、[`docs/m4-f-validation.md`](docs/m4-f-validation.md)、[`docs/m4-e-implementation.md`](docs/m4-e-implementation.md)、[`docs/release-package.md`](docs/release-package.md)、[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
 
-## Version 1.3.0 release package
+## Version 1.5.0 release package
 
 GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分けて生成します。
 
@@ -187,11 +204,11 @@ GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分
 python tools/build_complete_package.py --output-dir ../release-output
 python tools/build_release_package.py --mode final --output-dir ../release-output
 python tools/verify_complete_package.py \
-  ../release-output/rss-reader-modernization-1.3.0-complete.zip \
-  ../release-output/rss-reader-modernization-1.3.0-complete.zip.sha256
+  ../release-output/rss-reader-modernization-1.5.0-complete.zip \
+  ../release-output/rss-reader-modernization-1.5.0-complete.zip.sha256
 python tools/verify_release_package.py \
-  ../release-output/rss-reader-modernization-1.3.0.zip \
-  ../release-output/rss-reader-modernization-1.3.0.zip.sha256
+  ../release-output/rss-reader-modernization-1.5.0.zip \
+  ../release-output/rss-reader-modernization-1.5.0.zip.sha256
 ```
 
 Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、検証限界は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)を参照してください。

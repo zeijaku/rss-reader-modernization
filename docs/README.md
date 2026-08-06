@@ -91,6 +91,20 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`release-artifact-inventory-v1.4.0.md`](release-artifact-inventory-v1.4.0.md) — Version 1.4.0 Artifact一覧
 - [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.4.0 Release Notes
 
+## Version 1.5
+
+- [`v1-5-b-implementation.md`](v1-5-b-implementation.md) — Clock Timer基本実装
+- [`test-report-v1-5-b.md`](test-report-v1-5-b.md) — V1.5-B Test結果
+- [`v1-5-c-implementation.md`](v1-5-c-implementation.md) — Recovery、複数Tab同期、復帰補正
+- [`test-report-v1-5-c.md`](test-report-v1-5-c.md) — V1.5-C Test結果
+- [`test-report-v1-5-c-r2.md`](test-report-v1-5-c-r2.md) — Smartphone Feed横Overflow修正Test
+- [`v1-5-release-implementation.md`](v1-5-release-implementation.md) — Version 1.5.0正式化
+- [`v1-5-release-files.md`](v1-5-release-files.md) — Version 1.5正式化の変更File
+- [`test-report-v1-5-release.md`](test-report-v1-5-release.md) — Version 1.5 Full回帰結果
+- [`release-gate-v1.5.0.md`](release-gate-v1.5.0.md) — Version 1.5.0 Quality Gate
+- [`release-artifact-inventory-v1.5.0.md`](release-artifact-inventory-v1.5.0.md) — Version 1.5.0 Artifact一覧
+- [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.5.0 Release Notes
+
 ## M4 release preparation
 
 - [`m4-a-implementation.md`](m4-a-implementation.md) — Release Baseline、公開物、残課題

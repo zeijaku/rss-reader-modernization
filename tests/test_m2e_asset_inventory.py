@@ -66,7 +66,7 @@ login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
 func = (ROOT / 'app/common/common_func.php').read_text(encoding='utf-8')
 all_php = '\n'.join(p.read_text(encoding='utf-8', errors='replace') for p in [PUBLIC / 'index.php', ROOT / 'app/common/common_login.php'])
 
-static_refs = {ref for ref in re.findall(r'(?:href|src)="\./((?:css|js)/[^"]+|favicon\.png)"', all_php) if '<?php' not in ref}
+static_refs = {ref.split('?', 1)[0].split('#', 1)[0] for ref in re.findall(r'(?:href|src)="\./((?:css|js)/[^"]+|favicon\.png)"', all_php) if '<?php' not in ref}
 expected_static_refs = {
     'css/all.css', 'css/drawer.min.css', 'css/dashboard.css', 'css/auth.css', 'css/mini-game.css', 'css/clock-timer.css',
     'js/jquery-3.7.1.min.js', 'js/popper.min.js', 'js/bootstrap.min.js',

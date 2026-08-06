@@ -157,7 +157,7 @@ statuses = [attrs for tag, attrs in parser.records if tag == 'p' and 'clock-time
 check(len(statuses) == 2 and all(attrs.get('aria-live') == 'polite' and attrs.get('aria-atomic') == 'true' for attrs in statuses), 'Timer status uses one atomic live region per Widget')
 check(all(attrs.get('data-dashboard-swipe-ignore') == 'true' for _, attrs in parser.records if 'clock-timer-enabled' in attrs.get('class', '').split()), 'Timer body opts out of Dashboard swipe')
 check('./css/clock-timer.css' in html and './js/clock-timer.js' in html, 'separate Clock Timer assets are included')
-check('RSS Reader Modernization V1.5-B / R1' in ''.join(parser.text), 'Dashboard displays the V1.5-B marker')
+check('RSS Reader Modernization V1.5-' in ''.join(parser.text) or 'RSS Reader Modernization 1.5.0' in ''.join(parser.text), 'Dashboard displays a Version 1.5 marker')
 
 ids = [attrs['id'] for _, attrs in parser.records if attrs.get('id')]
 check(len(ids) == len(set(ids)), 'multiple Clock Timer Widgets have no duplicate IDs')

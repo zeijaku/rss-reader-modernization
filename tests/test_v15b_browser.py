@@ -126,8 +126,11 @@ with sync_playwright() as p:
     page.add_script_tag(path=str(JS))
     page.wait_for_function("document.querySelector('[data-clock-timer-status=\"completed\"]') !== null")
     completed = page.locator('.clock-card').first
-    check(completed.locator('.clock-timer-display').inner_text() == '00:00:00', 'expired Timer restores as completed')
+    restored_text = completed.locator('.clock-timer-display').inner_text()
+    check(restored_text in {'終了', '00:00:00'}, 'expired Timer restores as completed')
     check('終了' in completed.locator('.clock-timer-status').inner_text(), 'completed Timer displays an end message')
+    page.wait_for_timeout(2000)
+    check(completed.locator('.clock-timer-display').inner_text() == '00:00:00', 'completion emphasis returns to the zero display')
 
     boxes = page.locator('.clock-timer-actions .btn, .clock-view-toggle').all()
     check(all((box.bounding_box() or {}).get('height', 0) >= 44 for box in boxes), 'Timer action and view controls keep 44px targets')
