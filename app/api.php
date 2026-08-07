@@ -161,6 +161,7 @@ function api_dispatch(string $action, int $userId, array $input): array
         'widget.game.update' => api_widget_game_update($userId, $input),
         'widget.game.delete' => api_widget_game_delete($userId, $input),
         'calendar.month.list' => api_calendar_month_list($userId, $input),
+        'calendar.holiday.refresh' => api_calendar_holiday_refresh($userId, $input),
         'calendar.event.create' => api_calendar_event_create($userId, $input),
         'calendar.event.update' => api_calendar_event_update($userId, $input),
         'calendar.event.delete' => api_calendar_event_delete($userId, $input),
@@ -174,6 +175,9 @@ function api_content_create(int $userId, array $input): array
     $url = app_validate_feed_url($input['content_value'] ?? null);
     $style = app_normalize_content_style($input['content_style'] ?? null);
     $location = app_validate_content_location($input['content_location'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? '1');
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? '1');
+    $itemLimit = dashboard_widget_validate_feed_item_limit($input['feed_item_limit'] ?? null);
 
     if ($url === null) {
         return api_validation_error('Feed URL must be an absolute http/https URL without userinfo or fragment and at most 1024 characters.');
@@ -184,9 +188,15 @@ function api_content_create(int $userId, array $input): array
     if ($location === null) {
         return api_validation_error('content_location must be 0, 1, 2, or 3.');
     }
+    if ($width === null || $height === null) {
+        return api_validation_error('Widget size is invalid.');
+    }
+    if ($itemLimit === null) {
+        return api_validation_error('feed_item_limit must be auto/blank or an integer from 1 to 30.');
+    }
 
     try {
-        $contentId = dashboard_widget_create_feed($userId, $url, $style, $location);
+        $contentId = dashboard_widget_create_feed($userId, $url, $style, $location, $width, $height, $itemLimit);
     } catch (PDOException $exception) {
         error_log('Dashboard Widget create failed: ' . $exception->getMessage());
         return api_error('dashboard_widget_unavailable', 'Dashboard Widget migration is required.', 503);
@@ -200,6 +210,9 @@ function api_content_update(int $userId, array $input): array
     $contentId = api_positive_int($input, 'content_id');
     $url = app_validate_feed_url($input['content_value'] ?? null);
     $style = app_normalize_content_style($input['content_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? '1');
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? '1');
+    $itemLimit = dashboard_widget_validate_feed_item_limit($input['feed_item_limit'] ?? null);
 
     if ($contentId === null) {
         return api_validation_error('content_id must be a positive integer.');
@@ -210,13 +223,19 @@ function api_content_update(int $userId, array $input): array
     if ($style === null) {
         return api_validation_error('content_style is invalid.');
     }
+    if ($width === null || $height === null) {
+        return api_validation_error('Widget size is invalid.');
+    }
+    if ($itemLimit === null) {
+        return api_validation_error('feed_item_limit must be auto/blank or an integer from 1 to 30.');
+    }
 
     if (find_owned_active_content($userId, $contentId) === null) {
         return api_error('not_found', 'Content was not found.', 404);
     }
 
     try {
-        if (!dashboard_widget_update_feed($userId, $contentId, $url, $style)) {
+        if (!dashboard_widget_update_feed($userId, $contentId, $url, $style, $width, $height, $itemLimit)) {
             return api_error('not_found', 'Content was not found.', 404);
         }
     } catch (PDOException $exception) {
@@ -253,15 +272,15 @@ function api_content_delete(int $userId, array $input): array
 /** @return array{status:int,body:array<string,mixed>} */
 function api_widget_search_create(int $userId,array $input): array
 {
-    $loc=dashboard_widget_validate_location($input['widget_location']??null);$style=app_normalize_content_style($input['widget_style']??null);$width=dashboard_widget_validate_width($input['widget_width']??null);$cfg=search_feed_config_from_input($input);
-    if($loc===null||$style===null||$width===null||$cfg===null)return api_validation_error('Search Feed settings are invalid.');
-    return api_success(['widget_id'=>search_feed_create($userId,$loc,$style,$width,$cfg)],201);
+    $loc=dashboard_widget_validate_location($input['widget_location']??null);$style=app_normalize_content_style($input['widget_style']??null);$width=dashboard_widget_validate_width($input['widget_width']??null);$height=dashboard_widget_validate_height($input['widget_height']??null);$cfg=search_feed_config_from_input($input);
+    if($loc===null||$style===null||$width===null||$height===null||$cfg===null)return api_validation_error('Search Feed settings are invalid.');
+    return api_success(['widget_id'=>search_feed_create($userId,$loc,$style,$width,$cfg,$height)],201);
 }
 function api_widget_search_update(int $userId,array $input): array
 {
-    $id=api_positive_int($input,'widget_id');$style=app_normalize_content_style($input['widget_style']??null);$width=dashboard_widget_validate_width($input['widget_width']??null);$cfg=search_feed_config_from_input($input);
-    if($id===null||$style===null||$width===null||$cfg===null)return api_validation_error('Search Feed settings are invalid.');
-    if(!search_feed_update($userId,$id,$style,$width,$cfg))return api_error('not_found','Search Feed was not found.',404);return api_success(['widget_id'=>$id]);
+    $id=api_positive_int($input,'widget_id');$style=app_normalize_content_style($input['widget_style']??null);$width=dashboard_widget_validate_width($input['widget_width']??null);$height=dashboard_widget_validate_height($input['widget_height']??null);$cfg=search_feed_config_from_input($input);
+    if($id===null||$style===null||$width===null||$height===null||$cfg===null)return api_validation_error('Search Feed settings are invalid.');
+    if(!search_feed_update($userId,$id,$style,$width,$cfg,$height))return api_error('not_found','Search Feed was not found.',404);return api_success(['widget_id'=>$id]);
 }
 function api_widget_search_delete(int $userId,array $input): array
 {
@@ -331,6 +350,7 @@ function api_widget_clock_create(int $userId, array $input): array
     $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
     $style = app_normalize_content_style($input['widget_style'] ?? null);
     $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $config = dashboard_widget_clock_config_from_input($input);
 
     if ($location === null) {
@@ -342,12 +362,15 @@ function api_widget_clock_create(int $userId, array $input): array
     if ($width === null) {
         return api_validation_error('widget_width must be 1, 2, 3, or 4.');
     }
+    if ($height === null) {
+        return api_validation_error('widget_height must be 1 or 2.');
+    }
     if ($config === null) {
         return api_validation_error('Clock Widget settings are invalid.');
     }
 
     try {
-        $widgetId = dashboard_widget_create_clock($userId, $location, $style, $width, $config);
+        $widgetId = dashboard_widget_create_clock($userId, $location, $style, $width, $config, $height);
     } catch (InvalidArgumentException $exception) {
         return api_validation_error($exception->getMessage());
     } catch (PDOException $exception) {
@@ -364,6 +387,7 @@ function api_widget_clock_update(int $userId, array $input): array
     $widgetId = api_positive_int($input, 'widget_id');
     $style = app_normalize_content_style($input['widget_style'] ?? null);
     $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $config = dashboard_widget_clock_config_from_input($input);
 
     if ($widgetId === null) {
@@ -375,12 +399,15 @@ function api_widget_clock_update(int $userId, array $input): array
     if ($width === null) {
         return api_validation_error('widget_width must be 1, 2, 3, or 4.');
     }
+    if ($height === null) {
+        return api_validation_error('widget_height must be 1 or 2.');
+    }
     if ($config === null) {
         return api_validation_error('Clock Widget settings are invalid.');
     }
 
     try {
-        if (!dashboard_widget_update_clock($userId, $widgetId, $style, $width, $config)) {
+        if (!dashboard_widget_update_clock($userId, $widgetId, $style, $width, $config, $height)) {
             return api_error('not_found', 'Clock Widget was not found.', 404);
         }
     } catch (InvalidArgumentException $exception) {
@@ -419,6 +446,7 @@ function api_widget_memo_create(int $userId, array $input): array
     $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
     $style = app_normalize_content_style($input['widget_style'] ?? null);
     $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $title = dashboard_widget_validate_memo_title($input['memo_title'] ?? null);
     $body = dashboard_widget_validate_memo_body($input['memo_body'] ?? null);
 
@@ -431,12 +459,15 @@ function api_widget_memo_create(int $userId, array $input): array
     if ($width === null) {
         return api_validation_error('widget_width must be 1, 2, 3, or 4.');
     }
+    if ($height === null) {
+        return api_validation_error('widget_height must be 1 or 2.');
+    }
     if ($title === null || $body === null) {
         return api_validation_error('Memo title or body is invalid.');
     }
 
     try {
-        $created = dashboard_widget_create_memo($userId, $location, $style, $width, $title, $body);
+        $created = dashboard_widget_create_memo($userId, $location, $style, $width, $title, $body, $height);
     } catch (InvalidArgumentException $exception) {
         return api_validation_error($exception->getMessage());
     } catch (PDOException $exception) {
@@ -453,6 +484,7 @@ function api_widget_memo_update(int $userId, array $input): array
     $widgetId = api_positive_int($input, 'widget_id');
     $style = app_normalize_content_style($input['widget_style'] ?? null);
     $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $title = dashboard_widget_validate_memo_title($input['memo_title'] ?? null);
     $body = dashboard_widget_validate_memo_body($input['memo_body'] ?? null);
 
@@ -465,12 +497,15 @@ function api_widget_memo_update(int $userId, array $input): array
     if ($width === null) {
         return api_validation_error('widget_width must be 1, 2, 3, or 4.');
     }
+    if ($height === null) {
+        return api_validation_error('widget_height must be 1 or 2.');
+    }
     if ($title === null || $body === null) {
         return api_validation_error('Memo title or body is invalid.');
     }
 
     try {
-        if (!dashboard_widget_update_memo($userId, $widgetId, $style, $width, $title, $body)) {
+        if (!dashboard_widget_update_memo($userId, $widgetId, $style, $width, $title, $body, $height)) {
             return api_error('not_found', 'Memo Widget was not found.', 404);
         }
     } catch (InvalidArgumentException $exception) {
@@ -509,6 +544,7 @@ function api_widget_task_create(int $userId, array $input): array
     $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
     $style = app_normalize_content_style($input['widget_style'] ?? null);
     $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $config = dashboard_widget_task_config_from_input($input);
     if ($location === null) {
         return api_validation_error('widget_location must be 0, 1, 2, or 3.');
@@ -519,11 +555,14 @@ function api_widget_task_create(int $userId, array $input): array
     if ($width === null) {
         return api_validation_error('widget_width must be 1, 2, 3, or 4.');
     }
+    if ($height === null) {
+        return api_validation_error('widget_height must be 1 or 2.');
+    }
     if ($config === null) {
         return api_validation_error('Task Widget settings are invalid.');
     }
     try {
-        $widgetId = dashboard_widget_create_task_widget($userId, $location, $style, $width, $config);
+        $widgetId = dashboard_widget_create_task_widget($userId, $location, $style, $width, $config, $height);
     } catch (InvalidArgumentException $exception) {
         return api_validation_error($exception->getMessage());
     } catch (PDOException $exception) {
@@ -539,15 +578,16 @@ function api_widget_task_update(int $userId, array $input): array
     $widgetId = api_positive_int($input, 'widget_id');
     $style = app_normalize_content_style($input['widget_style'] ?? null);
     $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $config = dashboard_widget_task_config_from_input($input);
     if ($widgetId === null) {
         return api_validation_error('widget_id must be a positive integer.');
     }
-    if ($style === null || $width === null || $config === null) {
+    if ($style === null || $width === null || $height === null || $config === null) {
         return api_validation_error('Task Widget settings are invalid.');
     }
     try {
-        if (!dashboard_widget_update_task_widget($userId, $widgetId, $style, $width, $config)) {
+        if (!dashboard_widget_update_task_widget($userId, $widgetId, $style, $width, $config, $height)) {
             return api_error('not_found', 'Task Widget was not found.', 404);
         }
     } catch (InvalidArgumentException $exception) {
@@ -667,12 +707,13 @@ function api_widget_calendar_create(int $userId, array $input): array
     $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
     $style = app_normalize_content_style($input['widget_style'] ?? null);
     $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $config = calendar_widget_config_from_input($input);
-    if ($location === null || $style === null || $width === null || $config === null) {
+    if ($location === null || $style === null || $width === null || $height === null || $config === null) {
         return api_validation_error('Calendar Widget settings are invalid.');
     }
     try {
-        $widgetId = dashboard_widget_create_calendar($userId, $location, $style, $width, $config);
+        $widgetId = dashboard_widget_create_calendar($userId, $location, $style, $width, $config, $height);
     } catch (InvalidArgumentException $exception) {
         return api_validation_error($exception->getMessage());
     } catch (PDOException $exception) {
@@ -688,12 +729,13 @@ function api_widget_calendar_update(int $userId, array $input): array
     $widgetId = api_positive_int($input, 'widget_id');
     $style = app_normalize_content_style($input['widget_style'] ?? null);
     $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $config = calendar_widget_config_from_input($input);
-    if ($widgetId === null || $style === null || $width === null || $config === null) {
+    if ($widgetId === null || $style === null || $width === null || $height === null || $config === null) {
         return api_validation_error('Calendar Widget settings are invalid.');
     }
     try {
-        if (!dashboard_widget_update_calendar($userId, $widgetId, $style, $width, $config)) {
+        if (!dashboard_widget_update_calendar($userId, $widgetId, $style, $width, $config, $height)) {
             return api_error('not_found', 'Calendar Widget was not found.', 404);
         }
     } catch (InvalidArgumentException $exception) {
@@ -729,12 +771,13 @@ function api_widget_game_create(int $userId, array $input): array
     $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
     $style = app_normalize_content_style($input['widget_style'] ?? null);
     $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $config = mini_game_widget_config_from_input($input);
-    if ($location === null || $style === null || $width === null || $config === null) {
+    if ($location === null || $style === null || $width === null || $height === null || $config === null) {
         return api_validation_error('Game Widget settings are invalid.');
     }
     try {
-        $widgetId = mini_game_widget_create($userId, $location, $style, $width, $config);
+        $widgetId = mini_game_widget_create($userId, $location, $style, $width, $config, $height);
     } catch (InvalidArgumentException $exception) {
         return api_validation_error($exception->getMessage());
     } catch (PDOException $exception) {
@@ -750,12 +793,13 @@ function api_widget_game_update(int $userId, array $input): array
     $widgetId = api_positive_int($input, 'widget_id');
     $style = app_normalize_content_style($input['widget_style'] ?? null);
     $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $config = mini_game_widget_config_from_input($input);
-    if ($widgetId === null || $style === null || $width === null || $config === null) {
+    if ($widgetId === null || $style === null || $width === null || $height === null || $config === null) {
         return api_validation_error('Game Widget settings are invalid.');
     }
     try {
-        if (!mini_game_widget_update($userId, $widgetId, $style, $width, $config)) {
+        if (!mini_game_widget_update($userId, $widgetId, $style, $width, $config, $height)) {
             return api_error('not_found', 'Game Widget was not found.', 404);
         }
     } catch (InvalidArgumentException $exception) {
@@ -805,6 +849,24 @@ function api_calendar_month_list(int $userId, array $input): array
     } catch (PDOException $exception) {
         error_log('Calendar month load failed: ' . $exception->getMessage());
         return api_error('calendar_unavailable', 'Calendar data could not be loaded.', 503);
+    }
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_calendar_holiday_refresh(int $userId, array $input): array
+{
+    if ($userId <= 0) {
+        return api_error('unauthenticated', 'Authentication is required.', 401);
+    }
+    try {
+        $result = japanese_holiday_refresh();
+        return api_success([
+            'refreshed' => (bool) ($result['refreshed'] ?? false),
+            'count' => max(0, (int) ($result['count'] ?? 0)),
+        ]);
+    } catch (Throwable $exception) {
+        error_log('Holiday refresh failed: ' . $exception->getMessage());
+        return api_success(['refreshed' => false, 'count' => 0]);
     }
 }
 
@@ -992,6 +1054,7 @@ function api_account_password_update(int $userId, array $input): array
     }
 
     api_account_settings_record_success($userId);
+    persistent_login_clear_cookie();
     $csrfToken = api_account_settings_rotate_session($userId);
     return api_success(['csrf_token' => $csrfToken]);
 }

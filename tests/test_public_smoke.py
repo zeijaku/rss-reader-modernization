@@ -64,7 +64,7 @@ try:
     check('<h5 class="h5 mb-3 font-weight-normal text-dark"><p>' not in body,'public login response has valid description structure')
     check('<span class="auth-version" data-app-version>' in body,'public login version marker is visible')
     check('./css/dashboard.css' in body and './css/auth.css' in body,'login page references dashboard and dedicated authentication stylesheets')
-    check('<link rel="icon" type="image/png" href="./favicon.png">' in body,'login page explicitly references the local favicon')
+    check(re.search(r'<link rel="icon" type="image/png" href="\./favicon\.png\?v=[^"]+">', body) is not None,'login page explicitly references the versioned local favicon')
     check(bool(VERSION_LABEL) and VERSION_LABEL in body,'visible release marker renders on login page')
     cookie_header=headers.get('Set-Cookie','')
     cookie=cookie_header.split(';',1)[0]

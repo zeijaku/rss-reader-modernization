@@ -157,6 +157,28 @@ if (!defined('APP_FEED_ITEM_STATE_RETENTION_DAYS')) {
     define('APP_FEED_ITEM_STATE_RETENTION_DAYS', max(1, min(3650, (int) app_env('APP_FEED_ITEM_STATE_RETENTION_DAYS', '90'))));
 }
 
+if (!defined('APP_HOLIDAY_CSV_URL')) {
+    define('APP_HOLIDAY_CSV_URL', app_env('APP_HOLIDAY_CSV_URL', 'https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv'));
+}
+if (!defined('APP_HOLIDAY_CACHE_DAYS')) {
+    define('APP_HOLIDAY_CACHE_DAYS', max(1, min(365, (int) app_env('APP_HOLIDAY_CACHE_DAYS', '60'))));
+}
+if (!defined('APP_HOLIDAY_TIMEOUT_MS')) {
+    define('APP_HOLIDAY_TIMEOUT_MS', max(1000, min(10000, (int) app_env('APP_HOLIDAY_TIMEOUT_MS', '5000'))));
+}
+if (!defined('APP_HOLIDAY_CSV_MAX_BYTES')) {
+    define('APP_HOLIDAY_CSV_MAX_BYTES', 524288);
+}
+if (!defined('APP_HOLIDAY_CACHE_MAX_BYTES')) {
+    define('APP_HOLIDAY_CACHE_MAX_BYTES', 1048576);
+}
+if (!defined('APP_HOLIDAY_CACHE_PATH')) {
+    define('APP_HOLIDAY_CACHE_PATH', dirname(__DIR__, 2) . '/var/cache/japanese_holidays.json');
+}
+if (!defined('APP_HOLIDAY_LOCK_PATH')) {
+    define('APP_HOLIDAY_LOCK_PATH', dirname(__DIR__, 2) . '/var/cache/japanese_holidays.lock');
+}
+
 if (!defined('DB_DRIVER')) {
     define('DB_DRIVER', app_env('DB_DRIVER', 'mysql'));
 }
@@ -200,7 +222,7 @@ if (!defined('DB_TABLE_PREFIX')) {
 /** Return the physical table name for a known logical table. */
 function db_table_name(string $logicalName): string
 {
-    static $allowed = ['user_info', 'user_conf', 'content', 'content_stock', 'feed_item_state', 'memo', 'task', 'calendar_event', 'dashboard_widget'];
+    static $allowed = ['user_info', 'user_conf', 'content', 'content_stock', 'feed_item_state', 'memo', 'task', 'calendar_event', 'dashboard_widget', 'remember_token'];
     if (!in_array($logicalName, $allowed, true)) {
         throw new InvalidArgumentException('Unknown database table name.');
     }

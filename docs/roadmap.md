@@ -4,7 +4,7 @@
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `RSS Reader Modernization 1.3.0`。Version 1.2.0の機能とDB構造を維持したまま、Header、Drawer、Widget見出し、記事操作部分の共通UIを整理しました。Version 1.3 ReleaseでFull回帰、Documentation整合、Version確定、完全統合ZIPとRuntime ZIPのRelease Gateを完了しています。
+正式版は `RSS Reader Modernization 1.7.0`です。Version 1.7ではAsset／HTTP Cache、Security Header、固定30日のRemember Token、Widget縦2段、RSS表示件数、日本の祝日表示まで正式化しました。
 
 ## Version 1.1 — Dashboard機能追加
 
@@ -57,6 +57,43 @@ Version 1.3ではDB Table／Column、Migration、SQL、API、RSS解析Engine、�
 - [x] V1.4-E Full回帰・Version 1.4.0 Release
 
 Version 1.4は既存`dashboard_widget` Tableだけを利用し、Game進行状態はBrowser Storageへ保存します。新しいTable／Column、Migration、SQL、外部API、外部Libraryは追加していません。
+
+## Version 1.5 — Clock Timer
+
+- [x] V1.5-A Clock Timer調査・工程設計
+- [x] V1.5-B Timer基本実装
+- [x] V1.5-C Storage Recovery・複数Tab同期・Theme・操作性
+- [x] V1.5-C / R2～R5 Smartphone表示・Cache切り分け・終了表示調整
+- [x] V1.5-D Full回帰・Version 1.5.0 Release
+
+Version 1.5は既存Clock Widgetと`dashboard_widget` Tableを利用し、Timer実行状態はBrowser Storageへ保存します。新しいTable／Column、Migration、SQL、必須設定、外部Library、音、Browser通知は追加していません。
+
+## Version 1.6 — Swipe表示／Lights Out
+
+- [x] V1.6-A Baseline・Swipe・Game Widget・Storage調査
+- [x] V1.6-B Smartphone Tab Swipe方向Indicator
+- [x] V1.6-C Lights Out基本実装
+- [x] V1.6-D Lights Out状態保持・品質調整
+- [x] V1.6-E Full回帰・Version 1.6.0 Release
+
+V1.6-Bは既存Swipe判定と操作除外を維持し、表示だけを追加しました。V1.6-Cは既存Game Widget subtypeとしてLights Outを追加し、V1.6-Dで状態保持、Storage Recovery、Keyboard／Focus品質を追加しました。V1.6全体は原則DB変更なしで進め、Asset Cache Bustingの一元化、Remember Token、Passkey、Timer音／通知は別工程として保留します。
+
+## Version 1.7 — Cache／Login persistence／Widget Grid／Security Header
+
+- [x] V1.7-A 総合事前調査・設計
+- [x] V1.7-B GitHub開発再開Baseline
+- [x] V1.7-C Asset Cache Busting一元化
+- [x] V1.7-D HTTP Cache／Security Header
+- [x] V1.7-E Remember Token DB・Backend
+- [x] V1.7-F 30日間ログインUI／Session統合
+- [x] V1.7-G Widget Grid Prototype
+- [x] V1.7-H Widget縦幅正式実装
+- [x] V1.7-H / R2 Scrollbar・RSS表示件数・Migration互換調整
+- [x] V1.7-H / R3 標準Row・RSS件数・Clock／Game高さ1互換調整
+- [x] V1.7-H / R4 Calendar日本祝日・60日Cache・Fallback
+- [x] V1.7-I Full回帰・Version 1.7.0 Release／GitHub main反映準備
+
+V1.7-BはVersion 1.6.0 Complete版を正として`1.7.0-dev.1`へ進め、GitHubの`feature/v1.7-modernization`を作成しました。V1.7-CではLocal Asset URLを`APP_VERSION`ベースのHelperへ一元化し、V1.7-DでStatic Asset Cache、動的Response no-store、限定的なSecurity Headerを追加しました。V1.7-Eでは固定30日期限のRemember Token TableとToken Domain処理を追加し、V1.7-FでLogin Checkbox、Cookie、Session自動復元、Logout／Password変更時失効へ接続しました。V1.7-GではDB・APIを変更せず、4列／2列／1列、縦2段、Drag／Keyboard、全8 ThemeをFixtureで比較しました。V1.7-HではMigration 008、全Widget CRUD、追加／編集画面、固定Rowを正式実装し、Smartphoneは自動高を維持しました。R2では実機確認を受けて一律Scrollを撤去し、RSSの自動／1～30件表示と`information_schema`非依存SQLへ調整しました。R3では標準Rowを320px下限へ引き上げ、RSS自動表示を5件／10件へ単純化し、Clock／Gameは高さ1でも従来どおり主要操作を切らない自然拡張へ戻しました。R4ではCalendarへ日本の祝日表示を追加し、内閣府CSVを設定可能URLから60日間隔でBackground更新、取得失敗時は既存Cache／SnapshotへFallbackします。V1.5／V1.6の機能はV1.7へ統合しますが、V1.6 TagやV1.5／V1.6 GitHub Releaseを追加しません。
 
 ## M1 — Source / RSS Engine
 

@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/version.php';
+require_once __DIR__ . '/asset.php';
+require_once __DIR__ . '/response_cache.php';
 require_once __DIR__ . '/error_response.php';
 
 // Register the minimal fallback before loading runtime configuration so a bad
@@ -28,7 +30,7 @@ set_exception_handler(static function (Throwable $exception): void {
         if (!headers_sent()) {
             http_response_code(500);
             header('Content-Type: application/json; charset=UTF-8');
-            header('Cache-Control: no-store');
+            app_send_no_store_headers();
         }
         echo json_encode([
             'ok' => false,
@@ -66,6 +68,7 @@ require_once __DIR__ . '/calendar.php';
 require_once __DIR__ . '/url_normalizer.php';
 require_once __DIR__ . '/feed/feed_retry.php';
 require_once __DIR__ . '/http_fetch.php';
+require_once __DIR__ . '/holiday.php';
 require_once __DIR__ . '/feed/feed_source.php';
 require_once __DIR__ . '/feed/feed_http_headers.php';
 require_once __DIR__ . '/feed/feed_source_mapper.php';
@@ -91,4 +94,6 @@ require_once __DIR__ . '/common/common_func.php';
 require_once __DIR__ . '/session.php';
 require_once __DIR__ . '/login_throttle.php';
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/remember_token.php';
+require_once __DIR__ . '/persistent_login.php';
 require_once __DIR__ . '/account_settings.php';

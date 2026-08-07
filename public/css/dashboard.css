@@ -321,6 +321,8 @@
 
 .feed-table {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     margin-bottom: 0;
     table-layout: fixed;
 }
@@ -599,7 +601,8 @@
 .feed-item-summary {
     max-height: 14rem;
     padding: 10px 11px;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     border-left: 3px solid rgba(23, 162, 184, 0.48);
     border-radius: 2px;
     background: #ffffff;
@@ -1155,7 +1158,55 @@ select:focus,
     }
 }
 
+/* V1.6-B: Smartphone Tab Swipeの方向を画面端で短く示す。 */
+.dashboard-swipe-indicator {
+    display: none;
+    position: fixed;
+    top: 50%;
+    z-index: 1020;
+    width: 38px;
+    height: 72px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 20px;
+    background: rgba(24, 32, 40, 0.82);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate3d(var(--dashboard-swipe-shift, 0), -50%, 0);
+    transition: opacity 180ms ease, transform 180ms ease, background-color 180ms ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.dashboard-swipe-indicator.is-left {
+    left: max(8px, env(safe-area-inset-left));
+}
+
+.dashboard-swipe-indicator.is-right {
+    right: max(8px, env(safe-area-inset-right));
+}
+
+.dashboard-swipe-indicator.is-complete {
+    border-color: #ffffff;
+    background: rgba(0, 95, 204, 0.94);
+    box-shadow: 0 4px 16px rgba(0, 95, 204, 0.48);
+}
+
+.dashboard-swipe-indicator.is-hiding {
+    transition-duration: 220ms;
+}
+
 @media (max-width: 767.98px) {
+    .dashboard-swipe-indicator.is-visible {
+        display: flex;
+    }
+
     .igcontainer {
         padding: 4px;
     }
@@ -1172,6 +1223,52 @@ select:focus,
     .content-grid {
         margin-right: 0;
         margin-left: 0;
+    }
+
+    /* V1.5-C / R2: iOS SafariでもFeed内のFlex/Tableが親幅を押し広げないようにする。 */
+    .feed-card,
+    .feed-card-inner,
+    .feed-table,
+    .feed-card-header-inner {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .feed-summary-column,
+    .feed-table .feed-item-summary-cell {
+        width: 44px;
+    }
+
+    .feed-item-summary-toggle {
+        left: 0;
+        display: inline-flex;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    /* V1.5-C / R3: iOSを含むスマートフォンでも概要の＋／－を常に表示する。 */
+    .feed-item-summary-icon,
+    .feed-item-summary-icon::before {
+        display: inline-block;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .feed-item-summary-icon {
+        color: #6c757d;
+        -webkit-text-fill-color: #6c757d;
+        font-size: 1rem;
+    }
+
+    .feed-item-summary-toggle:disabled {
+        opacity: 1;
+    }
+
+    .feed-item-summary-toggle:disabled .feed-item-summary-icon {
+        color: #adb5bd;
+        -webkit-text-fill-color: #adb5bd;
+        opacity: 1;
     }
 
     .feed-card-inner,
@@ -1249,6 +1346,10 @@ select:focus,
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
+    }
+
+    .dashboard-swipe-indicator {
+        transform: translate3d(0, -50%, 0) !important;
     }
 }
 
@@ -1525,6 +1626,14 @@ select:focus,
     white-space: nowrap;
 }
 
+@media (max-width: 767.98px) {
+    .feed-card .content-title {
+        width: 0;
+        max-width: 100%;
+        flex: 1 1 0;
+    }
+}
+
 .calendar-card-body {
     min-height: calc(13rem - 44px);
     padding: 8px;
@@ -1578,6 +1687,12 @@ select:focus,
 .calendar-weekdays span:last-child,
 .calendar-day:nth-child(7n) .calendar-day-number {
     color: #0056b3;
+}
+
+/* V1.7-H/R4: Japanese national holidays override weekday / Saturday colors. */
+.calendar-day.calendar-day-holiday .calendar-day-number {
+    color: #bd2130;
+    font-weight: 700;
 }
 
 .calendar-day {
@@ -1766,3 +1881,158 @@ select:focus,
     outline-offset:-5px;
 }
 .search-feed-card .search-feed-refresh.is-refreshing i{animation:feed-refresh-spin .8s linear infinite;}
+
+/* V1.7-H / R3: Widget width / height grid.
+ * 標準Rowは320pxを下限とし、Clock / Gameは縦2導入前と同様に
+ * 必要な場合だけRow自体が自然に伸びる。DOM順を正本としてdense配置は使用しない。 */
+.dashboard-grid {
+    display: grid;
+    margin-right: 0;
+    margin-left: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: minmax(320px, auto);
+    grid-auto-flow: row;
+    gap: 8px;
+}
+
+.dashboard-grid > .dashboard-widget {
+    width: auto;
+    max-width: none;
+    min-height: 0;
+    padding: 0;
+    flex: none;
+    grid-column: span 1;
+    grid-row: span 1;
+}
+
+.dashboard-grid > .dashboard-widget[data-widget-width="2"] { grid-column: span 2; }
+.dashboard-grid > .dashboard-widget[data-widget-width="3"] { grid-column: span 3; }
+.dashboard-grid > .dashboard-widget[data-widget-width="4"] { grid-column: span 4; }
+.dashboard-grid > .dashboard-widget[data-widget-height="2"] { grid-row: span 2; }
+
+.dashboard-grid .feed-card-inner,
+.dashboard-grid .clock-card-inner,
+.dashboard-grid .memo-card-inner,
+.dashboard-grid .task-card-inner,
+.dashboard-grid .calendar-card-inner,
+.dashboard-grid .mini-game-card-inner {
+    min-height: 0;
+}
+
+.dashboard-grid .clock-card-inner,
+.dashboard-grid .memo-card-inner,
+.dashboard-grid .task-card-inner,
+.dashboard-grid .calendar-card-inner,
+.dashboard-grid .mini-game-card-inner {
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-grid .feed-card-inner,
+.dashboard-grid .clock-card-body,
+.dashboard-grid .memo-card-body,
+.dashboard-grid .task-card-body,
+.dashboard-grid .calendar-card-body,
+.dashboard-grid .mini-game-card-body {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    overflow-x: hidden;
+}
+
+/* V1.7-H / R3: Feedの自動表示は高さ1=5件、高さ2=10件を基準にする。
+ * 指定件数が収まらない場合と概要展開時だけ縦Scrollを許可する。 */
+.dashboard-grid .feed-card-inner {
+    overflow-y: hidden;
+}
+
+.dashboard-grid .feed-card-inner.is-scrollable-y {
+    overflow-y: auto;
+}
+
+/* V1.7-H / R3: Clock / Gameは高さ1でも主要機能を切らない。
+ * 標準320pxを超える場合はScrollbarで隠さず、従来と同様にRowを自然に伸ばす。 */
+.dashboard-grid > .clock-card[data-widget-height="1"] .clock-card-inner,
+.dashboard-grid > .mini-game-card[data-widget-height="1"] .mini-game-card-inner {
+    height: auto;
+    min-height: 320px;
+}
+
+.dashboard-grid > .clock-card[data-widget-height="1"] .clock-card-body,
+.dashboard-grid > .mini-game-card[data-widget-height="1"] .mini-game-card-body {
+    flex: 0 0 auto;
+    min-height: calc(320px - 44px);
+    overflow-y: visible;
+}
+
+/* 高さ2はGridの2段分を使う。内容が少ない場合もCard全体を領域へ伸ばす。 */
+.dashboard-grid > .clock-card[data-widget-height="2"] .clock-card-inner,
+.dashboard-grid > .mini-game-card[data-widget-height="2"] .mini-game-card-inner {
+    height: 100%;
+}
+
+.dashboard-grid > .clock-card[data-widget-height="2"] .clock-card-body,
+.dashboard-grid > .mini-game-card[data-widget-height="2"] .mini-game-card-body {
+    overflow-y: visible;
+}
+
+/* 内容量がユーザー操作で増えるWidgetだけ、必要時に縦Scrollを許可する。 */
+.dashboard-grid .memo-card-body,
+.dashboard-grid .task-card-body,
+.dashboard-grid .calendar-card-body {
+    overflow-y: auto;
+}
+
+.dashboard-grid .memo-card-body,
+.dashboard-grid .task-card-body,
+.dashboard-grid .calendar-card-body {
+    flex: 1 1 auto;
+}
+
+.dashboard-grid > .clock-card[data-widget-height="2"] .clock-card-body,
+.dashboard-grid > .mini-game-card[data-widget-height="2"] .mini-game-card-body {
+    flex: 1 1 auto;
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: minmax(320px, auto);
+    }
+
+    .dashboard-grid > .dashboard-widget[data-widget-width="2"],
+    .dashboard-grid > .dashboard-widget[data-widget-width="3"],
+    .dashboard-grid > .dashboard-widget[data-widget-width="4"] {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        grid-auto-rows: auto;
+        gap: 8px;
+    }
+
+    .dashboard-grid > .dashboard-widget,
+    .dashboard-grid > .dashboard-widget[data-widget-width="2"],
+    .dashboard-grid > .dashboard-widget[data-widget-width="3"],
+    .dashboard-grid > .dashboard-widget[data-widget-width="4"],
+    .dashboard-grid > .dashboard-widget[data-widget-height="2"] {
+        grid-column: span 1;
+        grid-row: auto;
+        height: auto;
+    }
+
+    .dashboard-grid .feed-card-inner,
+    .dashboard-grid .clock-card-inner,
+    .dashboard-grid .memo-card-inner,
+    .dashboard-grid .task-card-inner,
+    .dashboard-grid .calendar-card-inner,
+    .dashboard-grid .mini-game-card-inner {
+        height: auto;
+        min-height: 11rem;
+    }
+}

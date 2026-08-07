@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/response_cache.php';
+
 /**
  * Common HTML error page. This file intentionally has no DB or Session dependency.
  *
@@ -53,7 +55,7 @@ function app_render_error_page(int $status, ?string $reference = null): void
     if (!headers_sent()) {
         http_response_code($status);
         header('Content-Type: text/html; charset=UTF-8');
-        header('Cache-Control: no-store');
+        app_send_no_store_headers();
         header('X-Robots-Tag: noindex, nofollow', true);
     }
 

@@ -1,3 +1,32 @@
+## Version 1.7 Release
+
+- [Version 1.7.0正式化](v1-7-release-implementation.md)
+- [Version 1.7.0変更File](v1-7-release-files.md)
+- [Version 1.7.0 Test Report](test-report-v1-7-release.md)
+- [Version 1.7.0 Release Gate](release-gate-v1.7.0.md)
+- [Version 1.7.0 Artifact Inventory](release-artifact-inventory-v1.7.0.md)
+- [PowerShell GitHub登録手順](github-v1-7-powershell.md)
+
+
+## Version 1.7
+
+- [V1.7-H / R4 Calendar日本祝日](v1-7-h-r4-implementation.md)
+- [V1.7-H / R4 File Boundary](v1-7-h-r4-files.md)
+- [V1.7-H / R4 Test Report](test-report-v1-7-h-r4.md)
+
+- [V1.7-H / R3 標準高さ互換調整](v1-7-h-r3-implementation.md)
+- [V1.7-H / R3 File Boundary](v1-7-h-r3-files.md)
+- [V1.7-H / R3 Test Report](test-report-v1-7-h-r3.md)
+
+
+- [V1.7-H / R2 Widget Grid調整](v1-7-h-r2-implementation.md)
+- [V1.7-H / R2 File Boundary](v1-7-h-r2-files.md)
+- [V1.7-H / R2 Migration Compatibility](v1-7-h-r2-migration.md)
+- [V1.7-H / R2 Test Report](test-report-v1-7-h-r2.md)
+- [V1.7-E Remember Token DB／Backend](v1-7-e-implementation.md)
+- [V1.7-E Migration](v1-7-e-migration.md)
+- [V1.7-E Test Report](test-report-v1-7-e.md)
+
 # Documentation
 
 RSS Reader Modernization Projectの公開ドキュメント索引です。
@@ -90,6 +119,35 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`release-gate-v1.4.0.md`](release-gate-v1.4.0.md) — Version 1.4.0 Quality Gate
 - [`release-artifact-inventory-v1.4.0.md`](release-artifact-inventory-v1.4.0.md) — Version 1.4.0 Artifact一覧
 - [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.4.0 Release Notes
+
+## Version 1.5
+
+- [`v1-5-b-implementation.md`](v1-5-b-implementation.md) — Clock Timer基本実装
+- [`test-report-v1-5-b.md`](test-report-v1-5-b.md) — V1.5-B Test結果
+- [`v1-5-c-implementation.md`](v1-5-c-implementation.md) — Recovery、複数Tab同期、復帰補正
+- [`test-report-v1-5-c.md`](test-report-v1-5-c.md) — V1.5-C Test結果
+- [`test-report-v1-5-c-r2.md`](test-report-v1-5-c-r2.md) — Smartphone Feed横Overflow修正Test
+- [`v1-5-release-implementation.md`](v1-5-release-implementation.md) — Version 1.5.0正式化
+- [`v1-5-release-files.md`](v1-5-release-files.md) — Version 1.5正式化の変更File
+- [`test-report-v1-5-release.md`](test-report-v1-5-release.md) — Version 1.5 Full回帰結果
+- [`release-gate-v1.5.0.md`](release-gate-v1.5.0.md) — Version 1.5.0 Quality Gate
+- [`release-artifact-inventory-v1.5.0.md`](release-artifact-inventory-v1.5.0.md) — Version 1.5.0 Artifact一覧
+- [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.5.0 Release Notes
+
+## Version 1.6
+
+- [`v1-6-b-implementation.md`](v1-6-b-implementation.md) — Smartphone Tab Swipe方向Indicator
+- [`test-report-v1-6-b.md`](test-report-v1-6-b.md) — V1.6-B Test結果
+- [`v1-6-c-implementation.md`](v1-6-c-implementation.md) — Lights Out基本実装
+- [`test-report-v1-6-c.md`](test-report-v1-6-c.md) — V1.6-C Test結果
+- [`v1-6-d-implementation.md`](v1-6-d-implementation.md) — 状態保持、Storage Recovery、Keyboard、品質調整
+- [`test-report-v1-6-d.md`](test-report-v1-6-d.md) — V1.6-D Test結果
+- [`v1-6-release-implementation.md`](v1-6-release-implementation.md) — Version 1.6.0正式化
+- [`v1-6-release-files.md`](v1-6-release-files.md) — Version 1.6正式化の変更File
+- [`test-report-v1-6-release.md`](test-report-v1-6-release.md) — Version 1.6 Full回帰結果
+- [`release-gate-v1.6.0.md`](release-gate-v1.6.0.md) — Version 1.6.0 Quality Gate
+- [`release-artifact-inventory-v1.6.0.md`](release-artifact-inventory-v1.6.0.md) — Version 1.6.0 Artifact一覧
+- [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) — Version 1.6.0 Release Notes
 
 ## M4 release preparation
 
@@ -189,3 +247,24 @@ Secure Baseline初期のdeployment / login / session / logout等のhotfix記録�
 - [`release-gate-v1.0.0.md`](release-gate-v1.0.0.md) — Version 1.0.0 Quality Gate
 - [`release-artifact-inventory-v1.0.0.md`](release-artifact-inventory-v1.0.0.md) — GitHub / ZIP inventory
 - [`test-report-m4-a.md`](test-report-m4-a.md) — M4-A test report
+
+## Version 1.7
+
+- [V1.7-H / R2 Widget Grid調整](v1-7-h-r2-implementation.md)
+- [V1.7-H / R2 File Boundary](v1-7-h-r2-files.md)
+- [V1.7-H / R2 Migration Compatibility](v1-7-h-r2-migration.md)
+- [V1.7-H / R2 Test Report](test-report-v1-7-h-r2.md)
+- [V1.7-C Asset Cache Busting一元化](v1-7-c-implementation.md)
+- [V1.7-C変更ファイル](v1-7-c-files.md)
+- [V1.7-C Test Report](test-report-v1-7-c.md)
+- [V1.7-D HTTP Cache／Security Header](v1-7-d-implementation.md)
+- [V1.7-D変更ファイル](v1-7-d-files.md)
+- [V1.7-D Test Report](test-report-v1-7-d.md)
+
+## Version 1.7
+
+- [V1.7-H / R2 Widget Grid調整](v1-7-h-r2-implementation.md)
+- [V1.7-H / R2 File Boundary](v1-7-h-r2-files.md)
+- [V1.7-H / R2 Migration Compatibility](v1-7-h-r2-migration.md)
+- [V1.7-H / R2 Test Report](test-report-v1-7-h-r2.md)
+- [V1.7-G Widget Grid Prototype](v1-7-g-implementation.md)

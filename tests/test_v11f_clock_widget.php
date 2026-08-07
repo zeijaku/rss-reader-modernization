@@ -70,7 +70,7 @@ $row = dashboard_widget_normalize_row([
     'widget_type' => 'clock',
     'widget_reference_id' => null,
     'widget_sort_order' => '10',
-    'widget_width' => '2',
+    'widget_width' => '2', 'widget_height' => '1',
     'widget_style' => 'primary',
     'widget_config' => '{"schema":1,"title":"Clock","hour_format":"24","show_seconds":false,"show_date":true}',
 ]);
@@ -135,7 +135,7 @@ final class V11fClockStatement extends PDOStatement
                 'widget_type' => 'clock',
                 'widget_reference_id' => null,
                 'widget_sort_order' => (int) $params[':sort_order'],
-                'widget_width' => (int) $params[':width'],
+                'widget_width' => (int) $params[':width'], 'widget_height' => (int) $params[':height'],
                 'widget_style' => (string) $params[':style'],
                 'widget_config' => (string) $params[':config'],
                 'widget_flag' => 0,
@@ -162,6 +162,7 @@ final class V11fClockStatement extends PDOStatement
             $widget = $this->pdo->widgets[$id] ?? null;
             if (is_array($widget) && $widget['widget_owner'] === (int) $params[':owner'] && $widget['widget_type'] === 'clock' && $widget['widget_flag'] === 0) {
                 $this->pdo->widgets[$id]['widget_width'] = (int) $params[':width'];
+                $this->pdo->widgets[$id]['widget_height'] = (int) $params[':height'];
                 $this->pdo->widgets[$id]['widget_style'] = (string) $params[':style'];
                 $this->pdo->widgets[$id]['widget_config'] = (string) $params[':config'];
                 $this->pdo->widgets[$id]['widget_updated_at'] = (string) $params[':updated_at'];
@@ -199,7 +200,7 @@ $create = api_dispatch('widget.clock.create', 7, [
     'widget_owner' => '999',
     'widget_location' => '1',
     'widget_style' => 'primary',
-    'widget_width' => '1',
+    'widget_width' => '1', 'widget_height' => '2',
     'clock_title' => 'Main Clock',
     'clock_hour_format' => '24',
     'clock_show_seconds' => '0',
@@ -209,12 +210,13 @@ v11f_check($create['status'] === 201 && ($create['body']['ok'] ?? false) === tru
 $firstId = (int) ($create['body']['data']['widget_id'] ?? 0);
 v11f_check($firstId === 1 && $pdo->widgets[$firstId]['widget_owner'] === 7, 'Clock owner always comes from the authenticated session');
 v11f_check($pdo->widgets[$firstId]['widget_sort_order'] === 10, 'first Clock is appended with the initial order');
+v11f_check($pdo->widgets[$firstId]['widget_height'] === 2, 'Clock create stores the requested vertical height');
 v11f_check($pdo->widgets[$firstId]['widget_reference_id'] === null, 'Clock does not require another database table reference');
 
 $second = api_dispatch('widget.clock.create', 7, [
     'widget_location' => '1',
     'widget_style' => 'info',
-    'widget_width' => '2',
+    'widget_width' => '2', 'widget_height' => '1',
     'clock_title' => 'Second',
     'clock_hour_format' => '12',
     'clock_show_seconds' => '1',
@@ -226,7 +228,7 @@ v11f_check($second['status'] === 201 && $pdo->widgets[$secondId]['widget_sort_or
 $wrongOwnerUpdate = api_dispatch('widget.clock.update', 8, [
     'widget_id' => (string) $firstId,
     'widget_style' => 'danger',
-    'widget_width' => '4',
+    'widget_width' => '4', 'widget_height' => '1',
     'clock_title' => 'Hijack',
     'clock_hour_format' => '12',
     'clock_show_seconds' => '1',
@@ -237,7 +239,7 @@ v11f_check($wrongOwnerUpdate['status'] === 404 && $pdo->widgets[$firstId]['widge
 $update = api_dispatch('widget.clock.update', 7, [
     'widget_id' => (string) $firstId,
     'widget_style' => 'success',
-    'widget_width' => '3',
+    'widget_width' => '3', 'widget_height' => '1',
     'clock_title' => 'Updated Clock',
     'clock_hour_format' => '12',
     'clock_show_seconds' => '1',
@@ -245,6 +247,7 @@ $update = api_dispatch('widget.clock.update', 7, [
 ]);
 $updatedConfig = dashboard_widget_decode_config($pdo->widgets[$firstId]['widget_config']);
 v11f_check($update['status'] === 200 && $pdo->widgets[$firstId]['widget_width'] === 3, 'Clock style and width can be updated');
+v11f_check($pdo->widgets[$firstId]['widget_height'] === 1, 'Clock update stores the requested vertical height');
 v11f_check(($updatedConfig['title'] ?? '') === 'Updated Clock' && ($updatedConfig['show_seconds'] ?? false) === true, 'Clock display settings are stored in widget_config');
 v11f_check($pdo->widgets[$firstId]['widget_location'] === 1, 'Clock edit does not silently move it to another tab');
 
@@ -256,7 +259,7 @@ v11f_check($delete['status'] === 200 && $pdo->widgets[$firstId]['widget_flag'] =
 $invalid = api_dispatch('widget.clock.create', 7, [
     'widget_location' => '9',
     'widget_style' => 'script',
-    'widget_width' => '9',
+    'widget_width' => '9', 'widget_height' => '1',
     'clock_title' => '',
     'clock_hour_format' => '99',
     'clock_show_seconds' => 'x',

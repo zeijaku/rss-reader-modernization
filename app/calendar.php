@@ -390,6 +390,17 @@ function calendar_month_data(int $ownerId, int $year, int $month, bool $showComp
         ];
     }
 
+    $holidayState = function_exists('japanese_holiday_current_data')
+        ? japanese_holiday_current_data()
+        : ['holidays' => [], 'refresh_due' => false, 'source' => 'unavailable'];
+    $holidayPrefix = sprintf('%04d-%02d-', $year, $month);
+    $holidays = [];
+    foreach ($holidayState['holidays'] as $holidayDate => $holidayName) {
+        if (str_starts_with($holidayDate, $holidayPrefix)) {
+            $holidays[$holidayDate] = $holidayName;
+        }
+    }
+
     return [
         'year' => $year,
         'month' => $month,
@@ -397,5 +408,8 @@ function calendar_month_data(int $ownerId, int $year, int $month, bool $showComp
         'month_end' => $range['end'],
         'events' => $events,
         'tasks' => $tasks,
+        'holidays' => $holidays,
+        'holiday_refresh_due' => (bool) $holidayState['refresh_due'],
+        'holiday_source' => (string) $holidayState['source'],
     ];
 }

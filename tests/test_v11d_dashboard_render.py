@@ -175,7 +175,7 @@ check(all(attrs.get('data-dashboard-widget-type') == 'feed' for _, attrs in feed
 check(all(attrs.get('data-dashboard-widget-location') == '0' for _, attrs in feed_cards), 'Widget location hook keeps the active tab')
 check('col-lg-6' in classes(feed_cards[0][1]), 'width=2 Widget renders as a two-column-width card')
 check('col-lg-3' in classes(feed_cards[1][1]), 'width=1 Widget retains the existing four-column layout')
-check('999' not in feed_html, 'another owner Widget is not rendered')
+check('data-dashboard-widget-id="99"' not in feed_html and 'feed999.xml' not in feed_html, 'another owner Widget is not rendered')
 check(all(attrs.get('role') == 'region' and attrs.get('aria-busy') == 'true' for _, attrs in feed_cards), 'Widget Feed cards retain region and loading semantics')
 check(all(name in ''.join(feed.text) for name in ['Base', 'Maint', 'IT', 'Observe']), 'all four existing tab labels remain visible')
 check('RSS Reader Modernization V1.1-' in ''.join(feed.text) or 'RSS Reader Modernization 1.1.0' in ''.join(feed.text) or 'RSS Reader Modernization 1.2.0-dev.3' or 'RSS Reader Modernization 1.2.0-dev.4' in ''.join(feed.text) or 'RSS Reader Modernization 1.2.0-dev.3' or 'RSS Reader Modernization 1.2.0-dev.4' in ''.join(feed.text), 'Dashboard displays a Version 1.1 marker')

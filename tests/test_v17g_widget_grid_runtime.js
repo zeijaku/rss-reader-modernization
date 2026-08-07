@@ -1,0 +1,11 @@
+'use strict';
+const assert = require('assert');
+const prototype = require('../docs/prototypes/v1-7-g/widget-grid-prototype.js');
+const ids = ['feed','search','clock','tall','memo'];
+assert.deepStrictEqual(prototype.orderAfterKey(ids, 3, 'ArrowLeft'), ['feed','search','tall','clock','memo']);
+assert.deepStrictEqual(prototype.orderAfterKey(ids, 1, 'ArrowDown'), ['feed','clock','search','tall','memo']);
+assert.deepStrictEqual(prototype.orderAfterKey(ids, 3, 'Home'), ['tall','feed','search','clock','memo']);
+assert.deepStrictEqual(prototype.orderAfterKey(ids, 1, 'End'), ['feed','clock','tall','memo','search']);
+assert.deepStrictEqual(prototype.orderAfterKey(ids, 0, 'ArrowLeft'), ids);
+assert.deepStrictEqual(prototype.orderAfterKey(ids, 4, 'ArrowRight'), ids);
+console.log('PASS: V1.7-G keyboard order runtime checks');

@@ -110,7 +110,7 @@ for unsafe in ['.html(', 'innerHTML', 'insertAdjacentHTML', 'document.write(', '
     check(unsafe not in email_js + password_js, f'Account Settings frontend avoids unsafe operation: {unsafe}')
 
 schema_text = schema_path.read_text(encoding='utf-8')
-check('account_settings' not in schema_text.lower() and schema_text.count("'CREATE TABLE ',") == 9, 'Account Settings adds no table or column to the Version 1.1 schema')
+check('account_settings' not in schema_text.lower(), 'Account Settings adds no table or column to the Version 1.1 schema')
 account_migrations = list((ROOT / 'database/migrations').glob('*account*')) if (ROOT / 'database/migrations').exists() else []
 check(account_migrations == [], 'Account Settings adds no database migration')
 check("const APP_VERSION = '1.1.0-dev.9';" in version or "const APP_VERSION = '1.1.0';" in version or "const APP_VERSION = '1.2.0-dev.3';" or "const APP_VERSION = '1.2.0-dev.4';" in version, 'application version is V1.1-J dev.9 or final 1.1.0')

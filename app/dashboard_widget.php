@@ -45,6 +45,61 @@ function dashboard_widget_validate_width(mixed $value): ?int
     return $width !== null && $width <= 4 ? $width : null;
 }
 
+function dashboard_widget_validate_height(mixed $value): ?int
+{
+    $height = app_validate_positive_int($value);
+    return $height !== null && $height <= 2 ? $height : null;
+}
+
+/** @return array{schema:int,item_limit:int|string} */
+function dashboard_widget_feed_defaults(): array
+{
+    return [
+        'schema' => 1,
+        'item_limit' => 'auto',
+    ];
+}
+
+function dashboard_widget_validate_feed_item_limit(mixed $value): int|string|null
+{
+    if ($value === null || $value === '' || $value === 'auto') {
+        return 'auto';
+    }
+
+    $limit = app_validate_positive_int($value);
+    return $limit !== null && $limit <= 30 ? $limit : null;
+}
+
+/** @return array{schema:int,item_limit:int|string}|null */
+function dashboard_widget_feed_config_from_input(array $input): ?array
+{
+    $itemLimit = dashboard_widget_validate_feed_item_limit($input['feed_item_limit'] ?? null);
+    if ($itemLimit === null) {
+        return null;
+    }
+
+    return [
+        'schema' => 1,
+        'item_limit' => $itemLimit,
+    ];
+}
+
+/** @return array{schema:int,item_limit:int|string} */
+function dashboard_widget_feed_config_from_storage(mixed $value): array
+{
+    $defaults = dashboard_widget_feed_defaults();
+    $config = dashboard_widget_decode_config($value);
+    $itemLimit = dashboard_widget_validate_feed_item_limit($config['item_limit'] ?? null);
+    if ($itemLimit === null) {
+        return $defaults;
+    }
+
+    return [
+        'schema' => 1,
+        'item_limit' => $itemLimit,
+    ];
+}
+
 function dashboard_widget_validate_boolean(mixed $value): ?bool
 {
     if (is_bool($value)) {
@@ -316,9 +371,10 @@ function dashboard_widget_normalize_row(array $row): ?array
     $type = dashboard_widget_validate_type($row['widget_type'] ?? null);
     $sortOrder = dashboard_widget_non_negative_int($row['widget_sort_order'] ?? null);
     $width = dashboard_widget_validate_width($row['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($row['widget_height'] ?? 1);
     $style = app_normalize_content_style($row['widget_style'] ?? null);
 
-    if ($widgetId === null || $owner === null || $location === null || $type === null || $sortOrder === null || $width === null || $style === null) {
+    if ($widgetId === null || $owner === null || $location === null || $type === null || $sortOrder === null || $width === null || $height === null || $style === null) {
         return null;
     }
 
@@ -336,6 +392,7 @@ function dashboard_widget_normalize_row(array $row): ?array
     $row['widget_reference_id'] = $referenceId;
     $row['widget_sort_order'] = $sortOrder;
     $row['widget_width'] = $width;
+    $row['widget_height'] = $height;
     $row['widget_style'] = $style;
     $row['widget_config_data'] = match ($type) {
         'clock' => dashboard_widget_clock_config_from_storage($row['widget_config'] ?? null),
@@ -343,6 +400,7 @@ function dashboard_widget_normalize_row(array $row): ?array
         'calendar' => calendar_widget_config_from_storage($row['widget_config'] ?? null),
         'game' => mini_game_widget_config_from_storage($row['widget_config'] ?? null),
         'search' => search_feed_config_from_storage($row['widget_config'] ?? null),
+        'feed' => dashboard_widget_feed_config_from_storage($row['widget_config'] ?? null),
         default => dashboard_widget_decode_config($row['widget_config'] ?? null),
     };
     $row['widget_width_class'] = dashboard_widget_width_class($width);
@@ -360,7 +418,7 @@ function search_dashboard_widgets(int $ownerId, int $location): array
     $pdo = conn_db();
     $stmt = $pdo->prepare(
         'SELECT w.widget_id, w.widget_owner, w.widget_location, w.widget_type, '
-        . 'w.widget_reference_id, w.widget_sort_order, w.widget_width, w.widget_style, '
+        . 'w.widget_reference_id, w.widget_sort_order, w.widget_width, w.widget_height, w.widget_style, '
         . 'w.widget_config, w.widget_flag, w.widget_created_at, w.widget_updated_at, '
         . 'c.content_id, c.content_date, c.content_flag, c.content_owner, c.content_location, '
         . 'c.content_style, c.content_value, '
@@ -460,6 +518,7 @@ function dashboard_widget_public_list(int $ownerId, int $location): array
             'widget_reference_id' => $row['widget_reference_id'],
             'widget_sort_order' => $row['widget_sort_order'],
             'widget_width' => $row['widget_width'],
+            'widget_height' => $row['widget_height'],
             'widget_style' => $row['widget_style'],
             'widget_config' => $row['widget_config_data'],
         ];
@@ -522,20 +581,28 @@ function dashboard_widget_next_sort_order(PDO $pdo, int $ownerId, int $location)
     return $maxOrder + 10;
 }
 
-function dashboard_widget_insert_feed(PDO $pdo, int $ownerId, int $contentId, int $location, string $style, string $createdAt): int
+function dashboard_widget_insert_feed(PDO $pdo, int $ownerId, int $contentId, int $location, string $style, string $createdAt, int $width = 1, int $height = 1, mixed $itemLimit = null): int
 {
+    $config = dashboard_widget_feed_config_from_input(['feed_item_limit' => $itemLimit]);
+    if ($config === null) {
+        throw new InvalidArgumentException('Feed Widget item limit is invalid.');
+    }
+
     $stmt = $pdo->prepare(
         'INSERT INTO ' . db_table_identifier('dashboard_widget') . ' '
         . '(widget_owner, widget_location, widget_type, widget_reference_id, widget_sort_order, '
-        . 'widget_width, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
-        . "VALUES (:owner, :location, 'feed', :reference_id, :sort_order, 1, :style, NULL, 0, :created_at, :updated_at)"
+        . 'widget_width, widget_height, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
+        . "VALUES (:owner, :location, 'feed', :reference_id, :sort_order, :width, :height, :style, :config, 0, :created_at, :updated_at)"
     );
     $stmt->execute([
         ':owner' => $ownerId,
         ':location' => $location,
         ':reference_id' => $contentId,
         ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
+        ':width' => $width,
+        ':height' => $height,
         ':style' => $style,
+        ':config' => dashboard_widget_encode_config($config),
         ':created_at' => $createdAt,
         ':updated_at' => $createdAt,
     ]);
@@ -582,7 +649,7 @@ function dashboard_widget_ensure_feed(PDO $pdo, array $content): int
     return dashboard_widget_insert_feed($pdo, $ownerId, $contentId, $location, $style, $createdAt);
 }
 
-function dashboard_widget_create_feed(int $ownerId, string $url, string $style, int $location): int
+function dashboard_widget_create_feed(int $ownerId, string $url, string $style, int $location, int $width = 1, int $height = 1, mixed $itemLimit = null): int
 {
     $pdo = conn_db();
     $started = !$pdo->inTransaction();
@@ -592,7 +659,13 @@ function dashboard_widget_create_feed(int $ownerId, string $url, string $style, 
 
     try {
         $contentId = entry_content($ownerId, $url, $style, $location);
-        dashboard_widget_insert_feed($pdo, $ownerId, $contentId, $location, $style, app_now());
+        if (dashboard_widget_validate_width($width) === null || dashboard_widget_validate_height($height) === null) {
+            throw new InvalidArgumentException('Feed Widget size is invalid.');
+        }
+        if (dashboard_widget_validate_feed_item_limit($itemLimit) === null) {
+            throw new InvalidArgumentException('Feed Widget item limit is invalid.');
+        }
+        dashboard_widget_insert_feed($pdo, $ownerId, $contentId, $location, $style, app_now(), $width, $height, $itemLimit);
         if ($started) {
             $pdo->commit();
         }
@@ -605,7 +678,7 @@ function dashboard_widget_create_feed(int $ownerId, string $url, string $style, 
     }
 }
 
-function dashboard_widget_update_feed(int $ownerId, int $contentId, string $url, string $style): bool
+function dashboard_widget_update_feed(int $ownerId, int $contentId, string $url, string $style, int $width = 1, int $height = 1, mixed $itemLimit = null): bool
 {
     $pdo = conn_db();
     $started = !$pdo->inTransaction();
@@ -621,7 +694,27 @@ function dashboard_widget_update_feed(int $ownerId, int $contentId, string $url,
             }
             return false;
         }
+        if (dashboard_widget_validate_width($width) === null || dashboard_widget_validate_height($height) === null) {
+            throw new InvalidArgumentException('Feed Widget size is invalid.');
+        }
+        $config = dashboard_widget_feed_config_from_input(['feed_item_limit' => $itemLimit]);
+        if ($config === null) {
+            throw new InvalidArgumentException('Feed Widget item limit is invalid.');
+        }
         update_content_owned($ownerId, $contentId, $url, $style);
+        $sizeStmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_width = :width, widget_height = :height, widget_config = :config, widget_updated_at = :updated_at '
+            . "WHERE widget_owner = :owner AND widget_type = 'feed' AND widget_reference_id = :reference_id AND widget_flag = 0"
+        );
+        $sizeStmt->execute([
+            ':width' => $width,
+            ':height' => $height,
+            ':config' => dashboard_widget_encode_config($config),
+            ':updated_at' => app_now(),
+            ':owner' => $ownerId,
+            ':reference_id' => $contentId,
+        ]);
         $content['content_value'] = $url;
         $content['content_style'] = $style;
         dashboard_widget_ensure_feed($pdo, $content);
@@ -704,12 +797,14 @@ function dashboard_widget_create_clock(
     int $location,
     string $style,
     int $width,
-    array $config
+    array $config,
+    int $height = 1
 ): int {
     if ($ownerId <= 0
         || dashboard_widget_validate_location($location) === null
         || app_normalize_content_style($style) === null
         || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null
         || dashboard_widget_clock_config_from_input([
             'clock_title' => $config['title'] ?? null,
             'clock_hour_format' => $config['hour_format'] ?? null,
@@ -730,14 +825,15 @@ function dashboard_widget_create_clock(
         $stmt = $pdo->prepare(
             'INSERT INTO ' . db_table_identifier('dashboard_widget') . ' '
             . '(widget_owner, widget_location, widget_type, widget_reference_id, widget_sort_order, '
-            . 'widget_width, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
-            . "VALUES (:owner, :location, 'clock', NULL, :sort_order, :width, :style, :config, 0, :created_at, :updated_at)"
+            . 'widget_width, widget_height, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
+            . "VALUES (:owner, :location, 'clock', NULL, :sort_order, :width, :height, :style, :config, 0, :created_at, :updated_at)"
         );
         $stmt->execute([
             ':owner' => $ownerId,
             ':location' => $location,
             ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
             ':width' => $width,
+            ':height' => $height,
             ':style' => $style,
             ':config' => dashboard_widget_encode_config($config),
             ':created_at' => $now,
@@ -762,12 +858,14 @@ function dashboard_widget_update_clock(
     int $widgetId,
     string $style,
     int $width,
-    array $config
+    array $config,
+    int $height = 1
 ): bool {
     if ($ownerId <= 0
         || $widgetId <= 0
         || app_normalize_content_style($style) === null
         || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null
         || dashboard_widget_clock_config_from_input([
             'clock_title' => $config['title'] ?? null,
             'clock_hour_format' => $config['hour_format'] ?? null,
@@ -792,13 +890,14 @@ function dashboard_widget_update_clock(
         }
         $stmt = $pdo->prepare(
             'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
-            . 'SET widget_width = :width, widget_style = :style, widget_config = :config, '
+            . 'SET widget_width = :width, widget_height = :height, widget_style = :style, widget_config = :config, '
             . 'widget_updated_at = :updated_at '
             . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
             . "AND widget_type = 'clock' AND widget_flag = 0"
         );
         $stmt->execute([
             ':width' => $width,
+            ':height' => $height,
             ':style' => $style,
             ':config' => dashboard_widget_encode_config($config),
             ':updated_at' => app_now(),
@@ -883,7 +982,8 @@ function dashboard_widget_create_memo(
     string $style,
     int $width,
     string $title,
-    string $body
+    string $body,
+    int $height = 1
 ): array {
     $title = dashboard_widget_validate_memo_title($title);
     $body = dashboard_widget_validate_memo_body($body);
@@ -891,6 +991,7 @@ function dashboard_widget_create_memo(
         || dashboard_widget_validate_location($location) === null
         || app_normalize_content_style($style) === null
         || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null
         || $title === null
         || $body === null) {
         throw new InvalidArgumentException('Memo Widget settings are invalid.');
@@ -921,8 +1022,8 @@ function dashboard_widget_create_memo(
         $widgetStmt = $pdo->prepare(
             'INSERT INTO ' . db_table_identifier('dashboard_widget') . ' '
             . '(widget_owner, widget_location, widget_type, widget_reference_id, widget_sort_order, '
-            . 'widget_width, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
-            . "VALUES (:owner, :location, 'memo', :reference_id, :sort_order, :width, :style, NULL, 0, :created_at, :updated_at)"
+            . 'widget_width, widget_height, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
+            . "VALUES (:owner, :location, 'memo', :reference_id, :sort_order, :width, :height, :style, NULL, 0, :created_at, :updated_at)"
         );
         $widgetStmt->execute([
             ':owner' => $ownerId,
@@ -930,6 +1031,7 @@ function dashboard_widget_create_memo(
             ':reference_id' => $memoId,
             ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
             ':width' => $width,
+            ':height' => $height,
             ':style' => $style,
             ':created_at' => $now,
             ':updated_at' => $now,
@@ -954,7 +1056,8 @@ function dashboard_widget_update_memo(
     string $style,
     int $width,
     string $title,
-    string $body
+    string $body,
+    int $height = 1
 ): bool {
     $title = dashboard_widget_validate_memo_title($title);
     $body = dashboard_widget_validate_memo_body($body);
@@ -962,6 +1065,7 @@ function dashboard_widget_update_memo(
         || $widgetId <= 0
         || app_normalize_content_style($style) === null
         || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null
         || $title === null
         || $body === null) {
         throw new InvalidArgumentException('Memo Widget settings are invalid.');
@@ -999,12 +1103,13 @@ function dashboard_widget_update_memo(
 
         $widgetStmt = $pdo->prepare(
             'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
-            . 'SET widget_width = :width, widget_style = :style, widget_updated_at = :updated_at '
+            . 'SET widget_width = :width, widget_height = :height, widget_style = :style, widget_updated_at = :updated_at '
             . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
             . "AND widget_type = 'memo' AND widget_flag = 0"
         );
         $widgetStmt->execute([
             ':width' => $width,
+            ':height' => $height,
             ':style' => $style,
             ':updated_at' => $now,
             ':widget_id' => $widgetId,
@@ -1086,7 +1191,8 @@ function dashboard_widget_create_task_widget(
     int $location,
     string $style,
     int $width,
-    array $config
+    array $config,
+    int $height = 1
 ): int {
     $config = dashboard_widget_task_config_from_input([
         'task_widget_title' => $config['title'] ?? null,
@@ -1095,6 +1201,7 @@ function dashboard_widget_create_task_widget(
         || dashboard_widget_validate_location($location) === null
         || app_normalize_content_style($style) === null
         || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null
         || $config === null) {
         throw new InvalidArgumentException('Task Widget settings are invalid.');
     }
@@ -1109,14 +1216,15 @@ function dashboard_widget_create_task_widget(
         $stmt = $pdo->prepare(
             'INSERT INTO ' . db_table_identifier('dashboard_widget') . ' '
             . '(widget_owner, widget_location, widget_type, widget_reference_id, widget_sort_order, '
-            . 'widget_width, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
-            . "VALUES (:owner, :location, 'task', NULL, :sort_order, :width, :style, :config, 0, :created_at, :updated_at)"
+            . 'widget_width, widget_height, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
+            . "VALUES (:owner, :location, 'task', NULL, :sort_order, :width, :height, :style, :config, 0, :created_at, :updated_at)"
         );
         $stmt->execute([
             ':owner' => $ownerId,
             ':location' => $location,
             ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
             ':width' => $width,
+            ':height' => $height,
             ':style' => $style,
             ':config' => dashboard_widget_encode_config($config),
             ':created_at' => $now,
@@ -1140,7 +1248,8 @@ function dashboard_widget_update_task_widget(
     int $widgetId,
     string $style,
     int $width,
-    array $config
+    array $config,
+    int $height = 1
 ): bool {
     $config = dashboard_widget_task_config_from_input([
         'task_widget_title' => $config['title'] ?? null,
@@ -1148,6 +1257,7 @@ function dashboard_widget_update_task_widget(
     if ($ownerId <= 0 || $widgetId <= 0
         || app_normalize_content_style($style) === null
         || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null
         || $config === null) {
         throw new InvalidArgumentException('Task Widget settings are invalid.');
     }
@@ -1166,12 +1276,13 @@ function dashboard_widget_update_task_widget(
         }
         $stmt = $pdo->prepare(
             'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
-            . 'SET widget_width = :width, widget_style = :style, widget_config = :config, widget_updated_at = :updated_at '
+            . 'SET widget_width = :width, widget_height = :height, widget_style = :style, widget_config = :config, widget_updated_at = :updated_at '
             . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
             . "AND widget_type = 'task' AND widget_flag = 0"
         );
         $stmt->execute([
             ':width' => $width,
+            ':height' => $height,
             ':style' => $style,
             ':config' => dashboard_widget_encode_config($config),
             ':updated_at' => app_now(),
@@ -1483,7 +1594,8 @@ function dashboard_widget_create_calendar(
     int $location,
     string $style,
     int $width,
-    array $config
+    array $config,
+    int $height = 1
 ): int {
     $config = calendar_widget_config_from_input([
         'calendar_title' => $config['title'] ?? null,
@@ -1493,6 +1605,7 @@ function dashboard_widget_create_calendar(
         || dashboard_widget_validate_location($location) === null
         || app_normalize_content_style($style) === null
         || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null
         || $config === null) {
         throw new InvalidArgumentException('Calendar Widget settings are invalid.');
     }
@@ -1506,14 +1619,15 @@ function dashboard_widget_create_calendar(
         $stmt = $pdo->prepare(
             'INSERT INTO ' . db_table_identifier('dashboard_widget') . ' '
             . '(widget_owner, widget_location, widget_type, widget_reference_id, widget_sort_order, '
-            . 'widget_width, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
-            . "VALUES (:owner, :location, 'calendar', NULL, :sort_order, :width, :style, :config, 0, :created_at, :updated_at)"
+            . 'widget_width, widget_height, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
+            . "VALUES (:owner, :location, 'calendar', NULL, :sort_order, :width, :height, :style, :config, 0, :created_at, :updated_at)"
         );
         $stmt->execute([
             ':owner' => $ownerId,
             ':location' => $location,
             ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
             ':width' => $width,
+            ':height' => $height,
             ':style' => $style,
             ':config' => dashboard_widget_encode_config($config),
             ':created_at' => $now,
@@ -1538,7 +1652,8 @@ function dashboard_widget_update_calendar(
     int $widgetId,
     string $style,
     int $width,
-    array $config
+    array $config,
+    int $height = 1
 ): bool {
     $config = calendar_widget_config_from_input([
         'calendar_title' => $config['title'] ?? null,
@@ -1547,6 +1662,7 @@ function dashboard_widget_update_calendar(
     if ($ownerId <= 0 || $widgetId <= 0
         || app_normalize_content_style($style) === null
         || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null
         || $config === null) {
         throw new InvalidArgumentException('Calendar Widget settings are invalid.');
     }
@@ -1564,12 +1680,13 @@ function dashboard_widget_update_calendar(
         }
         $stmt = $pdo->prepare(
             'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
-            . 'SET widget_width = :width, widget_style = :style, widget_config = :config, widget_updated_at = :updated_at '
+            . 'SET widget_width = :width, widget_height = :height, widget_style = :style, widget_config = :config, widget_updated_at = :updated_at '
             . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
             . "AND widget_type = 'calendar' AND widget_flag = 0"
         );
         $stmt->execute([
             ':width' => $width,
+            ':height' => $height,
             ':style' => $style,
             ':config' => dashboard_widget_encode_config($config),
             ':updated_at' => app_now(),

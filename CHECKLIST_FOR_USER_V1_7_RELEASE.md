@@ -1,0 +1,25 @@
+# Version 1.7.0 確認Checklist
+
+- [ ] Complete／Runtime ZIPのSHA-256がSidecarと一致する
+- [ ] ZIPのCRC、重複Entry、危険Path、内部ManifestがPASSする
+- [ ] `config/local.php`、実DB、Session、Log、Feed／Holiday Cache、Throttle Dataが含まれていない
+- [ ] Footerが`RSS Reader Modernization 1.7.0`
+- [ ] 通常Login／Logoutが動く
+- [ ] 30日ログインCheckbox、Session復元、Logout後失効が動く
+- [ ] Password変更後にRemember Tokenが失効する
+- [ ] Static Asset URLが`?v=1.7.0`へ切り替わる
+- [ ] Dashboard／Login／APIのCache Headerが想定どおり
+- [ ] Security Headerで既存画面が壊れていない
+- [ ] Widget追加／編集で標準／縦2段を保存できる
+- [ ] Desktop／Tablet／SmartphoneのGridが正常
+- [ ] RSS自動表示が標準5件／縦2段10件
+- [ ] RSS 1～30件の明示設定が保存される
+- [ ] Clock／Timer、Icon Quest、Lights Outが高さ1でも操作できる
+- [ ] Calendar祝日が赤表示され、祝日名Tooltipが出る
+- [ ] `var/cache/`書込可能で、Holiday Cache更新失敗時もCalendarが表示される
+- [ ] V1.7-H/R4適用済み環境ではMigration 007／008を再実行していない
+- [ ] GitHub登録に`rss-reader-modernization-1.7.0-complete.zip`を使用する
+- [ ] GitHubへ`config/local.php`、実DB、Runtime Data、ZIPをCommitしない
+- [ ] `feature/v1.7-modernization`→`main`がFast-forward可能
+- [ ] `v1.7.0`Tagが既存でないことを確認してから作成する
+- [ ] Force push／既存Tag移動を行っていない

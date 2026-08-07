@@ -15,8 +15,11 @@ putenv('LOGIN_RATE_BLOCK_SECONDS=60');
 require_once $root . '/app/common/common_conf.php';
 require_once $root . '/app/common/common_db.php';
 require_once $root . '/app/validation.php';
+require_once $root . '/app/session.php';
 require_once $root . '/app/login_throttle.php';
 require_once $root . '/app/auth.php';
+require_once $root . '/app/remember_token.php';
+require_once $root . '/app/persistent_login.php';
 require_once $root . '/app/account_settings.php';
 require_once $root . '/app/api.php';
 
@@ -35,10 +38,12 @@ function v11j_check(bool $condition, string $message): void
 final class V11jAccountPDO extends PDO
 {
     public array $users = [];
+    public array $tokens = [];
     public bool $failEmailUpdate = false;
     public bool $failPasswordUpdate = false;
     private bool $transaction = false;
     private ?array $snapshot = null;
+    private ?array $tokenSnapshot = null;
 
     public function __construct()
     {
@@ -61,6 +66,7 @@ final class V11jAccountPDO extends PDO
         }
         $this->transaction = true;
         $this->snapshot = $this->users;
+        $this->tokenSnapshot = $this->tokens;
         return true;
     }
 
@@ -68,6 +74,7 @@ final class V11jAccountPDO extends PDO
     {
         $this->transaction = false;
         $this->snapshot = null;
+        $this->tokenSnapshot = null;
         return true;
     }
 
@@ -76,8 +83,12 @@ final class V11jAccountPDO extends PDO
         if ($this->snapshot !== null) {
             $this->users = $this->snapshot;
         }
+        if ($this->tokenSnapshot !== null) {
+            $this->tokens = $this->tokenSnapshot;
+        }
         $this->transaction = false;
         $this->snapshot = null;
+        $this->tokenSnapshot = null;
         return true;
     }
 
@@ -151,6 +162,17 @@ final class V11jAccountStatement extends PDOStatement
             if (is_array($row) && (int) $row['user_flag'] === 0) {
                 $this->pdo->users[$id]['user_password'] = (string) $params[':password'];
                 $this->affected = 1;
+            }
+            return true;
+        }
+
+        if (str_starts_with($this->sql, 'DELETE FROM `ig_remember_token` WHERE remember_token_user_id')) {
+            $userId = (int) ($params[':user_id'] ?? 0);
+            foreach ($this->pdo->tokens as $tokenId => $token) {
+                if ((int) ($token['remember_token_user_id'] ?? 0) === $userId) {
+                    unset($this->pdo->tokens[$tokenId]);
+                    $this->affected++;
+                }
             }
             return true;
         }
@@ -245,11 +267,13 @@ $unchanged = account_settings_change_password(7, 'CurrentPass123!', 'CurrentPass
 v11j_check(($unchanged['reason'] ?? '') === 'password_unchanged', 'password change rejects the current password as the new password');
 
 $otherHashBefore = $pdo->users[8]['user_password'];
+$pdo->tokens = [1 => ['remember_token_user_id' => 7], 2 => ['remember_token_user_id' => 8]];
 $passwordResult = account_settings_change_password(7, 'CurrentPass123!', 'NewPassword123!', 'NewPassword123!');
 v11j_check(($passwordResult['ok'] ?? false) === true, 'password can be changed with valid confirmation');
 v11j_check(password_verify('NewPassword123!', $pdo->users[7]['user_password']), 'new password is stored with password_hash-compatible output');
 v11j_check(!password_verify('CurrentPass123!', $pdo->users[7]['user_password']), 'old password no longer verifies after a change');
 v11j_check($pdo->users[8]['user_password'] === $otherHashBefore, 'password change does not affect another user');
+v11j_check(!isset($pdo->tokens[1]) && isset($pdo->tokens[2]), 'password change revokes all persistent tokens only for the changed account');
 
 $emailBeforeFailure = $pdo->users[7]['user_email'];
 $pdo->failEmailUpdate = true;

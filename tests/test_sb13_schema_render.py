@@ -19,8 +19,9 @@ vars_map = {
     '@t_content_stock': f'`{prefix}content_stock`',
 }
 
-blocks = re.findall(r'SET @sql = CONCAT\((.*?)\n\);\nPREPARE sb13_stmt', text, flags=re.S)
-check(len(blocks) == 4, 'schema contains exactly four rendered CREATE TABLE blocks')
+all_blocks = re.findall(r'SET @sql = CONCAT\((.*?)\n\);\nPREPARE ([A-Za-z0-9_]+) FROM @sql;', text, flags=re.S)
+blocks = [block for block, statement in all_blocks if statement == 'sb13_stmt']
+check(len(blocks) == 4, 'schema retains exactly four Legacy SB-13 CREATE TABLE blocks')
 
 rendered = []
 for block in blocks:

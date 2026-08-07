@@ -120,6 +120,9 @@ function account_settings_change_password(
             throw new RuntimeException('Account password update did not affect one active user.');
         }
 
+        // Password changes invalidate persistent login on every browser/device.
+        remember_token_revoke_user($userId, $conn);
+
         $conn->commit();
         return ['ok' => true];
     } catch (Throwable $exception) {

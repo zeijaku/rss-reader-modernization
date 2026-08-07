@@ -44,6 +44,12 @@ return [
     // V1.1-C: deleted Feed item state retention. Active Feed state is retained.
     'APP_FEED_ITEM_STATE_RETENTION_DAYS' => '90',
 
+    // V1.7-H/R4: Japanese national holiday CSV cache.
+    // Change only APP_HOLIDAY_CSV_URL if the Cabinet Office URL changes.
+    'APP_HOLIDAY_CSV_URL' => 'https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv',
+    'APP_HOLIDAY_CACHE_DAYS' => '60',
+    'APP_HOLIDAY_TIMEOUT_MS' => '5000',
+
     'DB_DRIVER' => 'mysql',
     'DB_HOST' => 'replace-with-your-db-host',
     'DB_PORT' => '3306',

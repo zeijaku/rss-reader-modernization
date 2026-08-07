@@ -59,7 +59,7 @@ check('日月火水木金土' in ''.join(p.text).replace('\n','').replace(' ',''
 check('id="registerCalendarWidgetForm"' in html and 'id="changeCalendarWidgetForm"' in html,'Calendar Widget add and edit modals render')
 check('id="registerCalendarEventForm"' in html and 'id="changeCalendarEventForm"' in html,'Calendar event add and edit modals render')
 check('Calendar追加' in ''.join(p.text),'Drawer contains Calendar add action')
-check('<script src="./js/calendar.js"></script>' in html,'Calendar external JavaScript is loaded')
+check(any(f'<script src="./js/calendar.js?v={v}"></script>' in html for v in ['1.7.0-dev.3','1.7.0-dev.4','1.7.0-dev.5','1.7.0-dev.6','1.7.0-dev.7','1.7.0-dev.8','1.7.0-dev.9','1.7.0-dev.10','1.7.0']),'Calendar external JavaScript is loaded with the active Version token')
 check(any(label in ''.join(p.text) for label in ['RSS Reader Modernization V1.1-I / R2','RSS Reader Modernization V1.1-J / R1','RSS Reader Modernization 1.1.0']) or 'RSS Reader Modernization 1.2.0-dev.3' or 'RSS Reader Modernization 1.2.0-dev.4' in ''.join(p.text),'Dashboard displays V1.1-I R2 or later marker')
 ids=[a['id'] for _,a in p.records if a.get('id')]
 check(len(ids)==len(set(ids)),'mixed Dashboard has no duplicate ids')

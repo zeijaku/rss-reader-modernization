@@ -2,6 +2,7 @@
     'use strict';
 
     var eventNamespace = '.iguguruCalendar';
+    var holidayRefreshRequested = false;
 
     function appCsrfToken() {
         return $('meta[name="csrf-token"]').attr('content') || '';
@@ -117,7 +118,8 @@
             'calendar_title': $('.' + prefix + 'CalendarWidgetTitleValue').val(),
             'calendar_show_completed_tasks': $('.' + prefix + 'CalendarShowCompletedTasks').prop('checked') ? '1' : '0',
             'widget_style': $('.' + prefix + 'CalendarWidgetStyle').val(),
-            'widget_width': $('.' + prefix + 'CalendarWidgetWidth').val()
+            'widget_width': $('.' + prefix + 'CalendarWidgetWidth').val(),
+            'widget_height': $('.' + prefix + 'CalendarWidgetHeight').val()
         };
     }
 
@@ -148,6 +150,7 @@
         $('.changeCalendarShowCompletedTasks').prop('checked', String($trigger.attr('data-calendar-show-completed-tasks') || '0') === '1');
         $('.changeCalendarWidgetStyle').val(String($trigger.attr('data-widget-style') || 'info'));
         $('.changeCalendarWidgetWidth').val(String($trigger.attr('data-widget-width') || '2'));
+        $('.changeCalendarWidgetHeight').val(String($trigger.attr('data-widget-height') || '1'));
     }
 
     function changeCalendarWidget($form) {
@@ -337,6 +340,7 @@
         $card.attr('data-calendar-year', String(year)).attr('data-calendar-month', String(month));
         $card.find('.calendar-month-label').text(year + '年' + month + '月');
 
+        var holidays = data.holidays && typeof data.holidays === 'object' && !Array.isArray(data.holidays) ? data.holidays : {};
         var itemsByDate = {};
         (Array.isArray(data.events) ? data.events : []).forEach(function (event) {
             var start = String(event.start_date || '');
@@ -363,18 +367,24 @@
                 continue;
             }
             var date = year + '-' + pad(month) + '-' + pad(dayNumber);
+            var holidayName = typeof holidays[date] === 'string' ? String(holidays[date]).trim() : '';
             var $day = $('<div>')
                 .addClass('calendar-day')
                 .toggleClass('calendar-day-today', date === today)
+                .toggleClass('calendar-day-holiday', holidayName !== '')
                 .attr('role', 'gridcell')
                 .attr('data-calendar-date', date);
+            if (holidayName !== '') {
+                $day.attr('data-calendar-holiday', holidayName).attr('title', holidayName);
+            }
             var $dateButton = $('<button>')
                 .attr('type', 'button')
                 .addClass('calendar-day-number calendar-day-add-trigger')
                 .attr('data-calendar-date', date)
                 .attr('data-toggle', 'modal')
                 .attr('data-target', '#registerCalendarEvent')
-                .attr('aria-label', date + 'に予定を追加')
+                .attr('aria-label', holidayName !== '' ? date + ' ' + holidayName + '。予定を追加' : date + 'に予定を追加')
+                .attr('title', holidayName !== '' ? holidayName : null)
                 .text(String(dayNumber));
             $day.append($dateButton);
             var $entries = $('<div>').addClass('calendar-day-entries');
@@ -386,7 +396,29 @@
         }
     }
 
-    function loadCalendar($card, year, month) {
+    function requestHolidayRefresh() {
+        if (holidayRefreshRequested) {
+            return;
+        }
+        holidayRefreshRequested = true;
+        apiRequest('calendar.holiday.refresh', {}, 6500)
+            .done(function (response) {
+                var data = response && response.ok === true && response.data ? response.data : null;
+                if (!data || (data.refreshed !== true && Number(data.count || 0) <= 0)) {
+                    return;
+                }
+                $('[data-dashboard-widget-type="calendar"]').each(function () {
+                    var $calendar = $(this);
+                    var year = Number($calendar.attr('data-calendar-year') || 0);
+                    var month = Number($calendar.attr('data-calendar-month') || 0);
+                    if (year >= 2000 && year <= 2100 && month >= 1 && month <= 12) {
+                        loadCalendar($calendar, year, month, true);
+                    }
+                });
+            });
+    }
+
+    function loadCalendar($card, year, month, skipHolidayRefresh) {
         var widgetId = String($card.attr('data-dashboard-widget-id') || '');
         if (!/^\d+$/.test(widgetId) || year < 2000 || year > 2100 || month < 1 || month > 12) {
             return;
@@ -404,6 +436,9 @@
                 var data = apiResponseData(response);
                 if (data !== null) {
                     renderCalendar($card, data);
+                    if (skipHolidayRefresh !== true && data.holiday_refresh_due === true) {
+                        requestHolidayRefresh();
+                    }
                 } else {
                     $days.attr('aria-busy', 'false').empty().append($('<div>').addClass('calendar-error').attr('role', 'alert').text('Calendarを読み込めませんでした'));
                 }

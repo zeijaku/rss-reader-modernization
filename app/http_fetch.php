@@ -406,7 +406,11 @@ function app_curl_single_hop(array $request): array
         ];
     }
 
-    $httpHeaders = ['Accept: application/rss+xml, application/atom+xml, application/xml, text/xml, */*;q=0.1'];
+    $accept = isset($request['accept']) && is_string($request['accept'])
+        && $request['accept'] !== '' && !str_contains($request['accept'], "\r") && !str_contains($request['accept'], "\n")
+        ? $request['accept']
+        : 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*;q=0.1';
+    $httpHeaders = ['Accept: ' . $accept];
     foreach (($request['request_headers'] ?? []) as $header) {
         if (!is_string($header) || str_contains($header, "\r") || str_contains($header, "\n")) {
             continue;

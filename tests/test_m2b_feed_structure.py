@@ -14,7 +14,7 @@ def check(condition, message):
     checks.append(bool(condition))
     print(('PASS' if condition else 'FAIL') + ': ' + message)
 
-check('<link rel="icon" type="image/png" href="./favicon.png">' in index, 'favicon is explicitly loaded over the current origin')
+check("app_asset_url('favicon.png')" in index, 'favicon is explicitly loaded through the local versioned Asset helper')
 check('data-feed-state="loading"' in index, 'Feed cards start with an explicit loading state')
 check('フィードを読み込んでいます' in index, 'server-rendered Feed placeholder is not blank')
 check('content-state-row feed-state-loading' in index, 'initial loading row uses the shared state hook')

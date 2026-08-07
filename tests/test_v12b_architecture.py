@@ -53,7 +53,7 @@ check("fetch_content($card, {preserve: true})" in js, 'NEW state refresh also ke
 
 check('.feed-item-title-text' in css and 'text-overflow: ellipsis' in css and 'white-space: normal' in css and '-webkit-line-clamp: 2' in css, 'article titles use a natural one-to-two-line CSS clamp')
 check('.feed-title-tooltip' in css and 'max-width: min(420px' in css, 'tooltip is bounded to the viewport')
-check('.feed-item-summary' in css and 'max-height: 14rem' in css and 'overflow: auto' in css, 'long RSS summary is bounded and scrollable')
+check('.feed-item-summary' in css and 'max-height: 14rem' in css and 'overflow-y: auto' in css and 'overflow-x: hidden' in css, 'long RSS summary is vertically scrollable without horizontal scrolling')
 check('.feed-item-action' in css and 'width: 44px' in css and 'min-height: 44px' in css, 'article actions have touch-friendly targets')
 check('.feed-item-stock-cell' in css and '.feed-item-summary-cell' in css, 'Stock stays left and summary stays right without sharing one crowded cell')
 check('.feed-item-summary-icon' in css and 'color: #6c757d' in css and 'font-size: 0.88rem' in css, 'summary Font Awesome icon has a compact explicit color and size')

@@ -33,7 +33,7 @@ check(js.includes("item.kind === 'task'") && js.includes('task-item-edit-trigger
 check(js.includes("item.kind === 'event'") || js.includes('calendar-event-edit-trigger'), 'normal event has its own edit path');
 check(js.includes("data-calendar-year") && js.includes("data-calendar-month"), 'viewed month state remains card scoped');
 check(js.includes("new Date(year, month - 1 + offset, 1)"), 'month navigation handles year boundaries through Date');
-check(index.includes('<script src="./js/dashboard.js"></script>') && index.includes('<script src="./js/calendar.js"></script>') && index.indexOf('./js/dashboard.js') < index.indexOf('./js/calendar.js'), 'Calendar loads after shared Dashboard behavior');
+check(index.includes("app_asset_url('js/dashboard.js')") && index.includes("app_asset_url('js/calendar.js')") && index.indexOf("app_asset_url('js/dashboard.js')") < index.indexOf("app_asset_url('js/calendar.js')"), 'Calendar loads after shared Dashboard behavior');
 check(index.includes('id="registerCalendarEventForm"') && index.includes('id="changeCalendarEventForm"'), 'Calendar event forms are present');
 check(css.includes('grid-template-columns: repeat(7') && css.includes('.calendar-day-today'), 'Calendar CSS provides month grid and today state');
 if (failed) process.exit(1);

@@ -19,11 +19,11 @@ require $root . '/app/validation.php';
 // This historical API contract test uses a small in-memory PDO fake. V1.1-D
 // transaction behavior is covered by test_v11d_dashboard_widget.php; here the
 // wrappers keep the original API validation/authorization matrix focused.
-function dashboard_widget_create_feed(int $ownerId, string $url, string $style, int $location): int
+function dashboard_widget_create_feed(int $ownerId, string $url, string $style, int $location, int $width = 1, int $height = 1): int
 {
     return entry_content($ownerId, $url, $style, $location);
 }
-function dashboard_widget_update_feed(int $ownerId, int $contentId, string $url, string $style): bool
+function dashboard_widget_update_feed(int $ownerId, int $contentId, string $url, string $style, int $width = 1, int $height = 1): bool
 {
     return update_content_owned($ownerId, $contentId, $url, $style) > 0;
 }
@@ -35,6 +35,24 @@ function dashboard_widget_validate_location(mixed $value): ?int
 {
     $location = app_validate_content_location($value);
     return $location;
+}
+function dashboard_widget_validate_width(mixed $value): ?int
+{
+    $width = app_validate_positive_int($value);
+    return $width !== null && $width <= 4 ? $width : null;
+}
+function dashboard_widget_validate_height(mixed $value): ?int
+{
+    $height = app_validate_positive_int($value);
+    return $height !== null && $height <= 2 ? $height : null;
+}
+function dashboard_widget_validate_feed_item_limit(mixed $value): int|string|null
+{
+    if ($value === null || $value === '' || $value === 'auto') {
+        return 'auto';
+    }
+    $limit = app_validate_positive_int($value);
+    return $limit !== null && $limit <= 30 ? $limit : null;
 }
 function dashboard_widget_public_list(int $ownerId, int $location): array
 {
@@ -275,6 +293,14 @@ $r = api_dispatch('content.create', 10, [
     'content_location' => '4',
 ]);
 api_check($r['status'] === 422 && $pdo->contentSeq === $beforeContentSeq, 'invalid content location is rejected before DB insert');
+
+$r = api_dispatch('content.create', 10, [
+    'content_value' => 'https://feed.example/a',
+    'content_style' => 'success',
+    'content_location' => '0',
+    'feed_item_limit' => '31',
+]);
+api_check($r['status'] === 422 && $pdo->contentSeq === $beforeContentSeq, 'out-of-range RSS item limit is rejected before DB insert');
 
 $r = api_dispatch('content.create', 10, [
     'content_value' => 'https://feed.example/a',

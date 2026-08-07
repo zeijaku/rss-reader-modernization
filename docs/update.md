@@ -16,6 +16,123 @@ Releaseごとに次を確認します。
 
 
 
+
+
+## V1.7-H / R4からVersion 1.7.0
+
+正式化によるApplication Runtime変更は`app/version.php`だけです。V1.7-H/R4まで適用済みの環境ではMigration 007／008を再実行しません。
+
+1. Code、`config/local.php`、Server固有`.htaccess`、実DB、`var/`をBackupする。
+2. Runtime ZIPを本番Folderとは別のFolderへ展開する。
+3. `config/local.php`、実DB、Runtime Dataを上書きせずCodeを更新する。
+4. SQL／Migrationは再実行しない。
+5. `config/local.php`へHoliday設定がなければExampleを参考に追記する。
+6. Browserを再読み込みしFooterが`RSS Reader Modernization 1.7.0`であることを確認する。
+7. Remember Login、Widget縦2、RSS 5／10件、Clock／Game、Calendar祝日を確認する。
+
+```text
+DB schema / Migration       R4まで適用済みなら追加なし
+Remember Token              Migration 007適用済み
+Widget Height               Migration 008適用済み。再実行しない
+Holiday Cache               var/cache/へRuntime生成
+必須設定                    Defaultあり。URL変更に備えlocal.phpへ明示推奨
+Browser Cache               APP_VERSION 1.7.0で新URLへ切替
+```
+
+## Version 1.6以前からVersion 1.7.0へ更新する場合
+
+V1.7ではMigration 007／008が必要です。実DatabaseをBackupし、`DB_TABLE_PREFIX`と各SQLの`@table_prefix`を一致させます。
+
+1. Migration 007で`remember_token` Tableを追加する。
+2. `v1_7_h_preflight.sql`で`widget_height`の有無を確認する。
+3. `widget_height`が存在しない場合だけMigration 008を実行する。
+4. `v1_7_h_postflight.sql`でColumn定義と値を確認する。
+5. ApplicationをVersion 1.7.0へ更新する。
+
+Migration 008は同じColumnへ再実行しません。Duplicate Columnが出る場合はすでに適用済みです。
+
+## V1.7-H / R1からV1.7-H / R2
+
+V1.7-H/R2はWidget Gridの実機調整です。RSS表示件数は既存`widget_config`へ保存するため新しいDB変更はありません。R1で`widget_height`が追加済みならMigration 008を再実行しません。
+
+1. Code、`config/local.php`、Server固有`.htaccess`、実DB、`var/`をBackupする。
+2. R1で`widget_height`適用済みであることを確認する。
+3. R2 Application Fileを配置する。
+4. Browserを再読み込みし、Asset URLが`?v=1.7.0-dev.8`になっていることを確認する。
+5. RSSの横Scrollbar、通常時の縦Scrollbar、表示件数の自動／1～30件を確認する。
+
+```text
+DB schema / Migration       R2による追加なし。適用済み008は再実行しない
+RSS item limit              既存widget_configへ保存
+Public API                  Route追加なし、既存Feed CRUD入力を拡張
+必須設定                    追加なし
+Browser Cache               APP_VERSION更新で新Asset URLへ切替
+Server固有.htaccess         変更なし
+```
+
+
+## V1.7-G / R1からV1.7-H / R1
+
+V1.7-HはDashboard Widgetへ縦幅を追加するため、Migration 008が必要です。Applicationより先にDBを更新します。
+
+1. Code、`config/local.php`、Server固有`.htaccess`、実DB、`var/`をBackupする。
+2. `database/audit/v1_7_h_preflight.sql`を実行する。
+3. `database/migrations/008_v1_7_widget_height.sql`を実行する。
+4. `database/audit/v1_7_h_postflight.sql`を実行する。
+5. Application Fileを配置する。
+6. Browserを再読み込みし、各Widget編集画面の縦幅とResponsive表示を確認する。
+
+```text
+DB schema / Migration       widget_height追加／Migration 008必須
+Public API                  Route追加なし、既存Widget CRUD入力を拡張
+必須設定                    追加なし
+Feed Cache削除              不要
+Browser Cache               APP_VERSION更新により自動更新
+Server固有.htaccess         変更なし
+```
+
+## Version 1.5.0からVersion 1.6.0
+
+Version 1.6.0はSmartphone Tab Swipe方向IndicatorとLights Outを追加します。DB構造変更、Migration、SQL、API Route変更、必須設定追加はありません。Lights Out状態はBrowser Storageへ保存します。
+
+1. Code、`config/local.php`、Server固有`.htaccess`、実DB、`var/`をBackupする。
+2. ZIPを別Folderへ展開し、SHA-256、Manifest、変更Fileを確認する。
+3. `config/local.php`、実DB、`var/`の生成Dataを上書きせずCodeを更新する。
+4. SQL、Migration、`schema.sql`は実行しない。
+5. BrowserをHard Reloadする。
+6. Swipe Indicator、Lights Out、状態復元、Keyboard、Icon Quest、Timerを確認する。
+
+```text
+DB schema / Migration       変更なし
+Public API                  Route変更なし
+必須設定                    追加なし
+Feed Cache削除              不要
+Browser Cache               Hard Reload推奨
+Browser Storage             User ID／Widget IDごとにLights Out状態を保存
+Server固有.htaccess         不用意に上書きしない
+```
+
+## Version 1.4.0からVersion 1.5.0
+
+Version 1.5.0は既存Clock WidgetへCountdown Timerを追加します。DB構造変更、Migration、SQL、必須設定追加はありません。Timer状態はBrowser Storageへ保存します。
+
+1. Code、`config/local.php`、Server固有`.htaccess`、実DB、`var/`をBackupする。
+2. ZIPを別Folderへ展開し、SHA-256、Manifest、変更Fileを確認する。
+3. `config/local.php`、実DB、`var/`の生成Dataを上書きせずCodeを更新する。
+4. SQL、Migration、`schema.sql`は実行しない。
+5. Browserを再読み込みする。
+6. 既存Clock、Timer、Reload後の復元、Background補正、終了表示、Smartphone Feedを確認する。
+
+```text
+DB schema / Migration       変更なし
+Public API                  変更なし
+必須設定                    追加なし
+Feed Cache削除              不要
+Browser Cache               再読み込み推奨
+Browser Storage             User ID／Widget IDごとにTimer状態を保存
+Server固有.htaccess         不用意に上書きしない
+```
+
 ## Version 1.3.0からVersion 1.4.0
 
 Version 1.4.0はMini Game Widgetを追加しますが、DB構造変更、Migration、SQL、必須設定追加はありません。Game Widgetの登録には既存`dashboard_widget` Tableを利用し、盤面やScoreはBrowser Storageへ保存します。

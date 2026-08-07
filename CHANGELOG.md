@@ -1,3 +1,245 @@
+## RSS Reader Modernization 1.7.0 — 2026-08-07
+
+### Version 1.7 finalization
+
+- V1.7-H/R4を機能Baselineとして`APP_VERSION`／Labelを`1.7.0`へ正式化。
+- Asset Cache Busting、HTTP Cache／Security Header、Remember Token、30日ログイン、Widget縦2段、RSS表示件数、日本の祝日表示をVersion 1.7 Release範囲として確定。
+- `.gitignore`へMigration 007／008とV1.7 Audit SQLの明示Allowを追加し、Complete ZIPからGitHubへ反映した際にSQLがIgnoreされないよう整理。
+- Complete／Runtime Release BuilderとVerifierをVersion 1.7.0へ更新し、Holiday Runtime Cacheを配布除外境界へ追加。
+- README、Release Notes、Update、Versioning、PowerShell GitHub登録手順、Release Gate／Artifact InventoryをVersion 1.7.0へ更新。
+- V1.7-H/R4からのApplication Runtime変更は`app/version.php`だけ。新しいDB Migration／API Route／必須外部Libraryは追加しない。
+
+## RSS Reader Modernization 1.7.0-dev.10 — V1.7-H / R4 — 2026-08-07
+
+### Calendar Japanese holiday support
+
+- Calendarの日付へ日本の祝日／休日の赤表示を追加。
+- 祝日名をTooltipと`aria-label`へ追加し、既存の日曜赤／土曜青より祝日を優先。
+- 内閣府CSV URLを`APP_HOLIDAY_CSV_URL`として設定可能化。
+- 60日Cache、5秒Timeout、512KiB上限、HTTPS限定、Redirect再検証を追加。
+- Calendar描画後にBackground更新し、通常表示を外部通信で待たせない。
+- CSV破損／取得失敗時は既存Cacheを維持し、Cache未作成時は2026／2027 SnapshotへFallback。
+- Runtime Cacheは`var/cache/japanese_holidays.json`へ保存し、Git／配布物から除外。
+- DB Table／Column／Migration追加なし。
+
+## RSS Reader Modernization 1.7.0-dev.9 — V1.7-H / R3 — 2026-08-07
+
+### Widget Grid standard-height compatibility adjustment
+
+- Desktop／TabletのGrid Rowを固定220pxから`minmax(320px, auto)`へ変更。
+- 通常RSSの自動表示を高さ1=5件、高さ2=10件へ単純化し、以前の情報量を復元。
+- R2のDOM高さ測定による自動Trimを廃止し、表示件数の揺れを抑制。
+- RSSの1～30件手動指定と`widget_config`保存は維持。
+- Clock／Icon Quest／Lights Outは高さ1で320pxを超える場合にRowを自然拡張し、操作部を`overflow:hidden`で切らない。
+- Memo／Task／Calendarの必要時縦Scroll、横Overflow抑止、Smartphone自動高は維持。
+- 新しいDB Column／Table／Migration／API Route／Configは追加しない。
+- CSS／JavaScript更新のため`APP_VERSION`を`1.7.0-dev.9`へ更新。
+
+## RSS Reader Modernization 1.7.0-dev.8 — V1.7-H / R2 — 2026-08-07
+
+### Widget Grid overflow and RSS item-count adjustment
+
+- V1.7-H/R1の全Widget一律`overflow:auto`を撤去し、横Scrollbarを原則抑止。
+- RSS Feedは通常時Scrollbarを出さず、Cardの実高さに収まる記事数へ自動調整。
+- 通常RSSへ表示件数「自動／1～30件」を追加し、既存`widget_config`へ保存。
+- 明示件数がCardへ収まらない場合と記事概要展開時だけFeed縦Scrollを許可。
+- Clock／Gameは不要Scrollなし、Memo／Task／Calendarは必要時のみ縦Scroll。
+- Migration 008／Preflight／Postflightを`information_schema`非依存・Table Prefix対応へ修正。
+- RSS表示件数機能による新しいDB Column／Migration／API Route／Configは追加しない。
+- CSS／JavaScript更新のため`APP_VERSION`を`1.7.0-dev.8`へ更新。
+
+## RSS Reader Modernization 1.7.0-dev.7 — V1.7-H / R1 — 2026-08-07
+
+### Widget vertical size implementation
+
+- `dashboard_widget`へ`widget_height` 1～2を追加するMigration 008を追加。
+- RSS、Search Feed、Clock、Memo、Task、Calendar、Gameの追加／編集画面へ標準／縦2段を追加。
+- 全Widget CRUDで高さをValidationし、既存Owner ScopeとTransactionを維持して保存。
+- DashboardをDesktop 4列、Tablet 2列、Smartphone 1列のCSS Gridへ変更。
+- Desktop／Tabletは固定220px Row、高さ2は2 Row Span、長文Bodyは内部Scroll。
+- Smartphoneは固定Rowと縦Spanを解除して自動高を維持。
+- Dense packingは使わず、DOM／Keyboard／Screen Reader／保存順を一致。
+- API Route、Config、外部Library、Remember Token、Game／Timer Storageは変更なし。
+
+## RSS Reader Modernization 1.7.0-dev.6 — V1.7-G / R1 — 2026-08-07
+
+### Widget Grid prototype
+
+- DB・API・本番Dashboardを変更せず、代表Widget 9件のCSS Grid Fixtureを追加。
+- 固定Row方式と内容優先方式を切り替え、Desktop 4列、Tablet 2列、Smartphone 1列を比較。
+- 4個目の1×2 Widgetが1段目／2段目右端を占有し、2段目左側へ3 Widgetが並ぶ配置を確認。
+- `grid-auto-flow: dense`を使わず、DOM順、Keyboard順、Screen Reader順を維持。
+- Pointer DragとArrow／Home／EndのPrototypeを追加。
+- V1.7-Hは固定220px Row、縦2 Span、長文Body内Scroll、Smartphone自動高を基本方針とする。
+- Chromium Headlessは実行環境で終了しなかったためScreenshot TestはSKIPし、Static DOM／CSS、配置Simulation、Node Runtimeで検証。
+
+## RSS Reader Modernization 1.7.0-dev.5 — V1.7-F / R1 — 2026-08-07
+
+### 30-day login UI, cookie and session integration
+
+- Login画面へ任意の「この端末で30日間ログイン状態を維持」Checkboxを追加。
+- `iguguru_remember` CookieをHttpOnly、SameSite=Lax、HTTPS時Secure、固定30日期限で発行。
+- Session未存在／期限切れ時にRemember Tokenを検証し、Validator RotationとSession ID再生成後に自動Login。
+- Checkbox未選択Loginでは現在Browserの既存Tokenを失効。
+- Logout時に現在Browser Token、Password変更時にUser全Tokenを失効。
+- 不正Cookie、期限切れ、無効User、DB ErrorはFail Closedで通常Loginへ戻す。
+- 通常Session期限、Migration、API Route、Widget、`.htaccess`、外部Libraryは変更なし。
+
+## RSS Reader Modernization 1.7.0-dev.4 — V1.7-E / R1 — 2026-08-07
+
+### Remember Token database and backend
+
+- 30日間ログインの土台として`remember_token` TableとMigration 007を追加。
+- Selector 12 bytes／Validator 32 bytesをHex化し、DBにはValidatorのSHA-256 Hashだけを保存。
+- Token発行、Validation、固定期限、Validator Rotation、現在Token／User全Token失効、Expired Cleanupを追加。
+- 不正Validator、期限切れ、無効UserはFail Closedで対象Tokenを削除。
+- MySQLではTransaction＋`FOR UPDATE`、Rotation時は以前のHashを条件にして競合を拒否。
+- Login Checkbox、Cookie、Session自動Login、Logout／Password変更統合はV1.7-Fへ分離。
+- Widget Height、API Route、Frontend、`.htaccess`、外部Libraryは変更なし。
+
+## RSS Reader Modernization 1.7.0-dev.3 — V1.7-D / R1 — 2026-08-07
+
+### HTTP Cache and Security Header organization
+
+- Version付きCSS／JavaScriptへ`public, max-age=31536000, immutable`を設定。
+- CSS内部参照を含むFont／画像は`public, max-age=604800`とし、`immutable`を付けない。
+- Dashboard、Login、Logout、Redirectへ`private, no-store, max-age=0`を明示。
+- API、共通Error、Unhandled JSON Errorへ`no-store, max-age=0`を明示。
+- PHP Sessionの自動Cache Limiterを無効にし、Response種別ごとのPolicyへ統一。
+- `X-Frame-Options: SAMEORIGIN`、制限付き`Permissions-Policy`、`frame-ancestors`／`base-uri`／`form-action`だけの限定CSPを追加。
+- HSTSと全面CSPは、HTTPS専用運用と外部Font／Inline処理の確認まで保留。
+- DB、Migration、API Route、Config、外部Library、Widget、Remember Tokenは変更なし。
+
+## RSS Reader Modernization 1.7.0-dev.2 — V1.7-C / R1 — 2026-08-07
+
+### Asset Cache Busting centralization
+
+- `app_asset_url()`を追加し、CSS、JavaScript、Theme、認証画面、faviconのVersion Queryを`APP_VERSION`へ一元化。
+- V1.6までの個別`?v=1.6-*`を削除し、全画面で`?v=1.7.0-dev.2`を使用。
+- 外部URL、Absolute Path、Traversal、Backslash、既存Query／Fragmentを拒否するLocal Asset Allowlistを追加。
+- Themeは既存`resolve_theme_stylesheet()`のAllowlistを維持。
+- `filemtime()`、Runtime Hash、外部Library、Build Dependencyは追加しない。
+- DB、Migration、API、Config、`.htaccess`、HTTP Cache Header、CSS／JavaScript本体は変更なし。
+
+## RSS Reader Modernization 1.7.0-dev.1 — V1.7-B / R1 — 2026-08-07
+
+### GitHub development restart baseline
+
+- Version 1.6.0 Complete版を正として、Application Versionを`1.7.0-dev.1`へ更新。
+- GitHubの`main`（Version 1.4.0）から`feature/v1.7-modernization`を作成し、Version 1.7開発を再開。
+- Version 1.5／1.6の機能はV1.7 Baselineへ統合する一方、GitHub Releaseの追加やV1.6 Tag作成は行わない。
+- V1.7-Bでは機能、DB、Migration、API、設定、外部Library、`.htaccess`を変更しない。
+- Cache整理、30日間ログイン、Widget縦幅、Security HeaderはV1.7-C以降の独立Stageで実装する。
+- main、既存Tag、GitHub Releaseは変更せず、Feature Branchだけを対象とする。
+
+## RSS Reader Modernization 1.6.0 — 2026-08-07
+
+### Version 1.6.0 finalization
+
+- V1.6-B～Dの確認済み内容を統合し、Application Versionを`1.6.0`へ確定。
+- Smartphone Tab Swipe中の方向Indicatorを追加し、既存の縦Scroll、操作要素除外、画面端Gesture保護を維持。
+- 第二のMini Game Widgetとして5×5「Lights Out」を追加。
+- 解ける問題生成、Moves、Reset、新しい問題、Clear、状態保存・復元へ対応。
+- User／Widget単位のStorage分離、localStorage／sessionStorage／memory Fallback、異常Data Recoveryを追加。
+- Keyboard、Focus、Screen Reader Label、Reduced Motion、全8 Theme、Smartphone表示へ対応。
+- Version 1.6でDB Table／Column、Migration、SQL、API Route、必須設定、外部Library、音、Vibration、Browser通知は追加なし。
+- Full Regression、Release Documentation、Complete／Runtime Package、Manifest、SHA-256、CRC、再展開確認を実施。
+- V1.6-D / R1からのApplication Runtime変更は`app/version.php`のみ。
+
+## RSS Reader Modernization 1.6.0-dev.3 — V1.6-D / R1 — 2026-08-07
+
+### Lights Out persistence and quality polish
+
+- Lights Outの現在盤面、初期盤面、Moves、Clear状態をBrowser Storageへ保存・復元。
+- User ID／Widget ID／Storage Versionで状態を分離し、複数Widgetの混線を防止。
+- `localStorage`、`sessionStorage`、memoryのFallbackと、壊れた保存CopyのValidation／Recoveryを追加。
+- Game Widget削除とGame種類変更成功後に、対象となる旧Game Storageを削除。
+- Arrow Key、Home、EndによるRoving Focus、Clear後のReset Focus、Focus Ringを追加。
+- 360px、全8 Theme、Reduced Motion、Screen Reader向け状態表現を確認。
+- DB、API Route、Migration、SQL、Config、外部Library、音、Vibration、通知は変更なし。
+- 専用・Game・Timer・Swipe・Theme・Core回帰でPASS 1,096、FAIL 0、SKIP 0。
+
+## RSS Reader Modernization 1.6.0-dev.2 — V1.6-C / R1 — 2026-08-06
+
+### Lights Out basic implementation
+
+- 既存Mini Game Widgetへ`lights_out` subtypeを追加。
+- 5×5盤面、Tap／Click、上下左右反転、Moves、Reset、新しい問題、Clearを実装。
+- 全消灯盤面から有効操作を適用し、解ける問題だけを生成。
+- Icon QuestとRuntimeを分離し、旧Subtype未指定Fixtureの後方互換を維持。
+- 44px操作領域、ARIA state、360px、Solar／Slateへ対応。
+- Browser Storage、音、Vibration、通知、Solver、HintはV1.6-Cに追加せず保留。
+- DB、API、Migration、SQL、Config、外部Libraryは変更なし。
+- 専用／Game／Timer／Swipe／Core回帰でPASS 1,030、FAIL 0、SKIP 0。
+
+## RSS Reader Modernization 1.6.0-dev.1 — V1.6-B / R1 — 2026-08-06
+
+### Smartphone Tab Swipe direction indicator
+
+- SmartphoneのDashboard Tab Swipe中、移動方向側の画面端へ小さな矢印を表示。
+- 左Swipeは右端の左向き矢印、右Swipeは左端の右向き矢印としてTab構造と一致させた。
+- 移動量に応じてOpacityを上げ、成立時は短く強調、不成立時は静かに消去。
+- 既存64px閾値、左右24px画面端除外、縦／斜め判定、操作要素除外を維持。
+- `pointer-events: none`、Smartphone限定、Safe Area、Reduced Motionへ対応。
+- 変更した`dashboard.css`と`dashboard.js`だけ個別Cache Bustingを更新。
+- DB、API、Migration、SQL、Config、Storage、外部Libraryは変更なし。
+- V1.6-B専用＋横断＋Core TestでPASS 2,123、FAIL 0、SKIP 1を確認。
+
+## RSS Reader Modernization 1.5.0 — 2026-08-06
+
+### Version 1.5.0 finalization
+
+- V1.5-B～C／R5の確認済み内容を統合し、Application Versionを`1.5.0`へ確定。
+- 既存Clock Widgetへ、時計／Timer切替、Preset、任意時間、開始／一時停止／再開／Resetを追加。
+- 終了予定時刻`endAt`を基準に残り時間を再計算し、Reload、Sleep、Background復帰後も補正。
+- User／Widget単位のBrowser Storage、Fallback、Validation、Recovery、複数Tab同期へ対応。
+- Timer終了時に短い「終了」表示と視覚強調を追加し、Reduced MotionとDark Themeへ対応。
+- Smartphone Feedの横Overflow、概要［＋］表示、古い`dashboard.js` Cacheの実機問題を修正。
+- Version 1.5でDB Table／Column、Migration、SQL、必須設定、外部Library、音、Browser通知は追加なし。
+- Full回帰、Release Documentation、Complete／Runtime Package、Manifest、SHA-256、CRC、再展開確認を実施。
+- V1.5-C / R5からのApplication Runtime変更は`app/version.php`のみ。
+
+## RSS Reader Modernization 1.5.0-dev.2 — V1.5-C / R2 — 2026-08-06
+
+### Smartphone Feed horizontal overflow correction
+
+- iOS SafariでFeed内のTable／Flexが親幅を押し広げる可能性があるため、スマートフォン幅で`width`、`min-width`、`max-width`を明示。
+- Feed見出しのFlex要素を`flex-basis: 0`で縮小可能にし、長いFeed名でも編集／更新ButtonをCard内へ維持。
+- Smartphone幅の概要列と概要Buttonを44pxへ統一し、負の左Offsetを解除。
+- `dashboard.css`だけ古いCacheが残る場合を避けるため、同CSSの読込みURLへR2 Queryを追加。
+- Timer、Clock、Game、Feed処理、JavaScript、API、DB、Migrationは変更なし。
+- iPhone相当375pxと既存Feed Header／記事ActionsをFocused Testし、PASS 173、FAIL 0、SKIP 0を確認。
+
+## RSS Reader Modernization 1.5.0-dev.2 — V1.5-C / R1 — 2026-08-06
+
+### Clock Timer recovery, synchronization and polish
+
+- `localStorage`、`sessionStorage`、Memoryの保存Copyを個別検証し、`savedAt`が新しい正常Copyを優先するRecoveryへ強化。
+- 壊れたJSON、未知Schema、異常値のCopyだけを除去し、すべて異常な場合は安全な初期状態へ戻す。
+- `storage` Eventで同じUser／WidgetのTimerを複数Browser Tab間で同期。
+- `focus`、`pageshow`、`visibilitychange`で終了予定時刻から即時再計算し、Sleep／長時間Background後の遅延を補正。
+- Key Repeatと同一操作の短時間連続Activationを抑止。
+- Timer完了時に短い視覚強調を追加し、`prefers-reduced-motion`ではAnimationを無効化。
+- Focus表示とDark Themeの完了Message Contrastを調整。
+- 全8 Theme、360／420／1024px、複数Tab同期、Storage異常Recoveryを専用Testで確認。
+- 終了音、Browser通知、DB Table／Column、Migration、SQL、外部Libraryは追加なし。
+- Feature横断回帰PASS 1,075、FAIL 0、SKIP 0を確認。
+
+## RSS Reader Modernization 1.5.0-dev.1 — V1.5-B / R1 — 2026-08-06
+
+### Clock Timer
+
+- 既存Clock Widgetへ「時計／タイマー」切替を追加。
+- 1／3／5／10／25分Presetと、1～1440分の任意設定へ対応。
+- 開始、一時停止、再開、Reset、終了判定を追加。
+- 単純減算ではなく終了予定日時`endAt`から残り時間を再計算し、Reload後も復元。
+- User ID／Widget ID／Storage VersionでTimer状態を分離。
+- `localStorage`、`sessionStorage`、MemoryのFallbackと保存値Validationを追加。
+- Clock Widget削除成功後に対象Timer状態だけを削除。
+- 44px操作領域、Keyboard、ARIA Live Region、Reduced Motion、360px表示へ対応。
+- 終了音、Browser通知、Server保存、DB Table／Column、Migration、SQL、外部Libraryは追加なし。
+- Feature回帰PASS 889、FAIL 0、SKIP 0を確認。
+
 ## RSS Reader Modernization 1.4.0 — 2026-08-06
 
 ### Version 1.4.0 finalization

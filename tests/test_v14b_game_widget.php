@@ -56,7 +56,7 @@ $row = dashboard_widget_normalize_row([
     'widget_type' => 'game',
     'widget_reference_id' => null,
     'widget_sort_order' => '4',
-    'widget_width' => '1',
+    'widget_width' => '1', 'widget_height' => '1',
     'widget_style' => 'secondary',
     'widget_config' => '{"schema":1,"title":"Icon Quest","game":"icon_quest"}',
 ]);
@@ -121,7 +121,7 @@ final class V14bGameStatement extends PDOStatement
                 'widget_type' => 'game',
                 'widget_reference_id' => null,
                 'widget_sort_order' => (int) $params[':sort_order'],
-                'widget_width' => (int) $params[':width'],
+                'widget_width' => (int) $params[':width'], 'widget_height' => '1',
                 'widget_style' => (string) $params[':style'],
                 'widget_config' => (string) $params[':config'],
                 'widget_flag' => 0,
@@ -185,7 +185,7 @@ $first = api_dispatch('widget.game.create', 7, [
     'widget_owner' => '999',
     'widget_location' => '1',
     'widget_style' => 'secondary',
-    'widget_width' => '1',
+    'widget_width' => '1', 'widget_height' => '1',
     'game_title' => 'Icon Quest A',
     'game_type' => 'icon_quest',
 ]);
@@ -197,7 +197,7 @@ v14b_check($pdo->widgets[$firstId]['widget_reference_id'] === null, 'Game Widget
 $second = api_dispatch('widget.game.create', 7, [
     'widget_location' => '1',
     'widget_style' => 'primary',
-    'widget_width' => '2',
+    'widget_width' => '2', 'widget_height' => '1',
     'game_title' => 'Icon Quest B',
     'game_type' => 'icon_quest',
 ]);
@@ -206,7 +206,7 @@ v14b_check($second['status'] === 201 && $secondId === 2, 'same user can create m
 v14b_check($pdo->widgets[$secondId]['widget_sort_order'] > $pdo->widgets[$firstId]['widget_sort_order'], 'new Game Widget appends after current order');
 
 $invalid = api_dispatch('widget.game.create', 7, [
-    'widget_location' => '1', 'widget_style' => 'secondary', 'widget_width' => '1',
+    'widget_location' => '1', 'widget_style' => 'secondary', 'widget_width' => '1', 'widget_height' => '1',
     'game_title' => 'Broken', 'game_type' => 'unknown',
 ]);
 v14b_check($invalid['status'] === 422, 'unknown Game type is rejected before mutation');
@@ -214,7 +214,7 @@ v14b_check($invalid['status'] === 422, 'unknown Game type is rejected before mut
 $foreignUpdate = api_dispatch('widget.game.update', 8, [
     'widget_id' => (string) $firstId,
     'widget_style' => 'danger',
-    'widget_width' => '4',
+    'widget_width' => '4', 'widget_height' => '1',
     'game_title' => 'Foreign',
     'game_type' => 'icon_quest',
 ]);
@@ -223,7 +223,7 @@ v14b_check($foreignUpdate['status'] === 404, 'another user cannot update a Game 
 $update = api_dispatch('widget.game.update', 7, [
     'widget_id' => (string) $firstId,
     'widget_style' => 'info',
-    'widget_width' => '2',
+    'widget_width' => '2', 'widget_height' => '1',
     'game_title' => 'Updated Game',
     'game_type' => 'icon_quest',
 ]);

@@ -6,6 +6,7 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/common/common_login.php';
 
 app_session_start();
+app_send_private_no_store_headers();
 access_log();
 
 $token = isset($_POST['token']) && is_string($_POST['token']) ? $_POST['token'] : null;
@@ -27,6 +28,7 @@ if ($token === 'login' || $token === 'regist') {
 if ($token === 'login' && !$authCsrfInvalid) {
     $email = isset($_POST['email']) && is_string($_POST['email']) ? $_POST['email'] : '';
     $password = isset($_POST['password']) && is_string($_POST['password']) ? $_POST['password'] : '';
+    $rememberRequested = persistent_login_is_requested($_POST['remember_me'] ?? null);
     $ipAddress = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
     $throttleIdentity = auth_throttle_identity($email);
     $throttle = login_throttle_status($throttleIdentity, $ipAddress);
@@ -40,7 +42,13 @@ if ($token === 'login' && !$authCsrfInvalid) {
         }
         if (($resultAuth['ok'] ?? false) === true) {
             login_throttle_record_success($throttleIdentity, $ipAddress);
-            app_session_login((int) $resultAuth['user_id']);
+            $authenticatedUserId = (int) $resultAuth['user_id'];
+            app_session_login($authenticatedUserId);
+            if ($rememberRequested) {
+                persistent_login_issue_for_user($authenticatedUserId);
+            } else {
+                persistent_login_revoke_current();
+            }
             header('Location: ./', true, 303);
             exit;
         }
@@ -88,19 +96,20 @@ $tabParam = app_tab_from_query($_GET['tab'] ?? null);
     <meta name="keywords" content="iGuguru beta,igoogle,rss,bootstrap,jquery">
 
     <title>iGuguru</title>
-    <link rel="icon" type="image/png" href="./favicon.png">
+    <link rel="icon" type="image/png" href="<?php echo htmlspecialchars(app_asset_url('favicon.png'), ENT_QUOTES, 'UTF-8'); ?>">
     <meta name="csrf-token" content="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
     <!-- Bootstrap -->
-    <link rel="stylesheet" href="./css/<?php echo htmlspecialchars(resolve_theme_stylesheet($ui['conf_style'] ?? null), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/' . resolve_theme_stylesheet($ui['conf_style'] ?? null)), ENT_QUOTES, 'UTF-8'); ?>">
     <!-- Fontawesome -->
-    <link rel="stylesheet" href="./css/all.css">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/all.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <!-- Drawer -->
-    <link rel="stylesheet" href="./css/drawer.min.css">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/drawer.min.css'), ENT_QUOTES, 'UTF-8'); ?>">
 
-    <link rel="stylesheet" href="./css/dashboard.css">
-    <link rel="stylesheet" href="./css/mini-game.css">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/dashboard.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/mini-game.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/clock-timer.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <?php if ($currentUserId === null): ?>
-    <link rel="stylesheet" href="./css/auth.css">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/auth.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <?php endif; ?>
 
 </head>
@@ -179,7 +188,7 @@ function search_feed_form_fields(string $prefix): string
     return '<div class="form-group"><label for="searchQuery' . $id . '">検索語句</label><input type="text" id="searchQuery' . $id . '" class="form-control ' . $p . 'SearchQuery" maxlength="128" required></div>'
         . '<div class="form-row"><div class="form-group col-6"><label>検索範囲</label><select class="form-control ' . $p . 'SearchScope"><option value="owned">自分の登録RSS</option><option value="common">共通RSS</option><option value="both">両方</option></select></div><div class="form-group col-6"><label>検索条件</label><select class="form-control ' . $p . 'SearchCondition"><option value="or">いずれかを含む（OR）</option><option value="and">すべて含む（AND）</option></select></div></div>'
         . '<div class="form-row"><div class="form-group col-6"><label>表示件数</label><select class="form-control ' . $p . 'SearchLimit"><option value="5">5件</option><option value="10" selected>10件</option><option value="20">20件</option><option value="30">30件</option></select></div><div class="form-group col-6"><label>共通RSSカテゴリー</label><select class="form-control ' . $p . 'SearchCategory">' . $categories . '</select></div></div>'
-        . '<div class="form-row"><div class="form-group col-6"><label>横幅</label><select class="form-control ' . $p . 'SearchWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div><div class="form-group col-6"><label>見出し色</label><select class="form-control ' . $p . 'SearchStyle"><option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary" selected>secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div></div>';
+        . '<div class="form-row"><div class="form-group col-md-4"><label for="' . $p . 'SearchWidth">横幅</label><select id="' . $p . 'SearchWidth" class="form-control ' . $p . 'SearchWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div><div class="form-group col-md-4"><label for="' . $p . 'SearchHeight">縦幅</label><select id="' . $p . 'SearchHeight" class="form-control ' . $p . 'SearchHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div><div class="form-group col-md-4"><label for="' . $p . 'SearchStyle">見出し色</label><select id="' . $p . 'SearchStyle" class="form-control ' . $p . 'SearchStyle"><option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary" selected>secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div></div>';
 }
 ?>
 
@@ -260,7 +269,7 @@ if (is_int($content_location)) {
     $result_content_cnt = count($result_content);
 
     if ($result_content_cnt > 0) {
-        echo '<div class="row content-grid feed-grid" data-dashboard-widget-location="' . (int) $content_location . '" aria-busy="false">';
+        echo '<div class="row content-grid feed-grid dashboard-grid" data-dashboard-widget-location="' . (int) $content_location . '" aria-busy="false">';
     }
 
     /* Widgetをカードに表示 */
@@ -271,16 +280,22 @@ if (is_int($content_location)) {
         $widgetWidthClass = (string) ($result_content[$i]['widget_width_class'] ?? dashboard_widget_width_class(1));
         $widgetSortOrder = (int) ($result_content[$i]['widget_sort_order'] ?? 0);
         $widgetWidth = dashboard_widget_validate_width($result_content[$i]['widget_width'] ?? null) ?? 1;
+        $widgetHeight = dashboard_widget_validate_height($result_content[$i]['widget_height'] ?? null) ?? 1;
 
         if ($widgetType === 'feed') {
             /* Feed取得用にはContent IDだけをdata属性へ渡す */
             $contentId = (int) ($result_content[$i]['content_id'] ?? 0);
             $contentValue = (string) ($result_content[$i]['content_value'] ?? '');
             $contentStyle = app_normalize_content_style($result_content[$i]['content_style'] ?? null) ?? $widgetStyle;
+            $feedConfig = is_array($result_content[$i]['widget_config_data'] ?? null)
+                ? $result_content[$i]['widget_config_data']
+                : dashboard_widget_feed_defaults();
+            $feedItemLimit = dashboard_widget_validate_feed_item_limit($feedConfig['item_limit'] ?? null) ?? 'auto';
+            $feedItemLimitAttr = is_int($feedItemLimit) ? (string) $feedItemLimit : 'auto';
 
             echo '
             <!-- Feed Widget -->
-                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget feed-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="feed" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-feed-content-id="' . $contentId . '" data-feed-state="loading" role="region" aria-labelledby="feed-title-' . $contentId . '" aria-busy="true">
+                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget feed-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="feed" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-feed-item-limit="' . app_html($feedItemLimitAttr) . '" data-feed-content-id="' . $contentId . '" data-feed-state="loading" role="region" aria-labelledby="feed-title-' . $contentId . '" aria-busy="true">
                     <div class="feed-card-inner">
                         <input type="hidden" class="content-value" value="' . app_html($contentValue) . '">
                         <table class="table table-hover feed-table">
@@ -290,7 +305,7 @@ if (is_int($content_location)) {
                                 <col class="feed-summary-column">
                             </colgroup>
                             <thead>
-                                <tr><th colspan="3" scope="col" class="bg-' . app_html($contentStyle) . ' feed-card-header"><div class="feed-card-header-inner"><button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button><small class="content-title widget-title-text" id="feed-title-' . $contentId . '"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>読み込み中...</span></span></small><span class="feed-card-actions"><button type="button" class="btn btn-link content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" data-toggle="modal" data-target="#changeContent" aria-label="このRSSを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button><button type="button" class="btn btn-link feed-refresh-trigger" aria-label="このRSSを更新" title="このRSSを更新"><i class="fas fa-sync-alt text-white" aria-hidden="true"></i></button></span></div></th></tr>
+                                <tr><th colspan="3" scope="col" class="bg-' . app_html($contentStyle) . ' feed-card-header"><div class="feed-card-header-inner"><button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button><small class="content-title widget-title-text" id="feed-title-' . $contentId . '"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>読み込み中...</span></span></small><span class="feed-card-actions"><button type="button" class="btn btn-link content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-feed-item-limit="' . app_html($feedItemLimitAttr) . '" data-toggle="modal" data-target="#changeContent" aria-label="このRSSを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button><button type="button" class="btn btn-link feed-refresh-trigger" aria-label="このRSSを更新" title="このRSSを更新"><i class="fas fa-sync-alt text-white" aria-hidden="true"></i></button></span></div></th></tr>
                             </thead>
                             <tbody class="content-body" aria-live="polite" aria-relevant="all">
                                 <tr class="content-state-row feed-state-loading"><td colspan="3" role="status"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>フィードを読み込んでいます</span></span></td></tr>
@@ -310,7 +325,7 @@ if (is_int($content_location)) {
             $searchLimit = search_feed_validate_limit($searchConfig['limit'] ?? null) ?? 10;
             $searchCategory = search_feed_validate_category($searchConfig['category'] ?? null) ?? 'all';
             $searchTitleId = 'search-title-' . $widgetId;
-            echo '<section class="' . app_html($widgetWidthClass) . ' dashboard-widget feed-card search-feed-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="search" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-search-limit="' . $searchLimit . '" data-search-state="loading" role="region" aria-labelledby="' . app_html($searchTitleId) . '" aria-busy="true"><div class="feed-card-inner"><table class="table table-hover feed-table"><colgroup><col class="feed-stock-column"><col><col class="feed-summary-column"></colgroup><thead><tr class="bg-' . app_html($widgetStyle) . '"><th colspan="3" class="content-header feed-card-header"><div class="content-header-row feed-card-header-inner"><button type="button" class="widget-drag-handle" aria-label="Search Feedを並び替え" aria-describedby="widget-sort-help">＝</button><span class="content-title widget-title-text" id="' . app_html($searchTitleId) . '"><span class="feed-title-text text-white" title="' . app_html($searchQuery) . '">' . app_html($searchQuery) . '</span></span><span class="content-actions feed-card-actions"><button type="button" class="btn btn-link search-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-search-query="' . app_html($searchQuery) . '" data-search-scope="' . app_html($searchScope) . '" data-search-condition="' . app_html($searchCondition) . '" data-search-limit="' . $searchLimit . '" data-search-category="' . app_html($searchCategory) . '" data-toggle="modal" data-target="#changeSearchFeed" aria-label="このSearch Feedを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button><button type="button" class="btn btn-link feed-refresh search-feed-refresh" aria-label="このSearch Feedを更新"><i class="fas fa-sync-alt text-white" aria-hidden="true"></i></button></span></div></th></tr></thead><tbody class="content-body"><tr class="content-state-row"><td colspan="3" class="feed-state-message"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>検索しています</span></span></td></tr></tbody></table></div></section>';
+            echo '<section class="' . app_html($widgetWidthClass) . ' dashboard-widget feed-card search-feed-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="search" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-search-limit="' . $searchLimit . '" data-search-state="loading" role="region" aria-labelledby="' . app_html($searchTitleId) . '" aria-busy="true"><div class="feed-card-inner"><table class="table table-hover feed-table"><colgroup><col class="feed-stock-column"><col><col class="feed-summary-column"></colgroup><thead><tr class="bg-' . app_html($widgetStyle) . '"><th colspan="3" class="content-header feed-card-header"><div class="content-header-row feed-card-header-inner"><button type="button" class="widget-drag-handle" aria-label="Search Feedを並び替え" aria-describedby="widget-sort-help">＝</button><span class="content-title widget-title-text" id="' . app_html($searchTitleId) . '"><span class="feed-title-text text-white" title="' . app_html($searchQuery) . '">' . app_html($searchQuery) . '</span></span><span class="content-actions feed-card-actions"><button type="button" class="btn btn-link search-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-search-query="' . app_html($searchQuery) . '" data-search-scope="' . app_html($searchScope) . '" data-search-condition="' . app_html($searchCondition) . '" data-search-limit="' . $searchLimit . '" data-search-category="' . app_html($searchCategory) . '" data-toggle="modal" data-target="#changeSearchFeed" aria-label="このSearch Feedを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button><button type="button" class="btn btn-link feed-refresh search-feed-refresh" aria-label="このSearch Feedを更新"><i class="fas fa-sync-alt text-white" aria-hidden="true"></i></button></span></div></th></tr></thead><tbody class="content-body"><tr class="content-state-row"><td colspan="3" class="feed-state-message"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>検索しています</span></span></td></tr></tbody></table></div></section>';
             continue;
         }
 
@@ -326,17 +341,45 @@ if (is_int($content_location)) {
 
             echo '
             <!-- Clock Widget -->
-                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget clock-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="clock" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-clock-title="' . app_html($clockTitle) . '" data-clock-hour-format="' . app_html($clockHourFormat) . '" data-clock-show-seconds="' . ($clockShowSeconds ? '1' : '0') . '" data-clock-show-date="' . ($clockShowDate ? '1' : '0') . '" role="region" aria-labelledby="' . app_html($clockTitleId) . '">
+                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget clock-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="clock" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-clock-title="' . app_html($clockTitle) . '" data-clock-hour-format="' . app_html($clockHourFormat) . '" data-clock-show-seconds="' . ($clockShowSeconds ? '1' : '0') . '" data-clock-show-date="' . ($clockShowDate ? '1' : '0') . '" role="region" aria-labelledby="' . app_html($clockTitleId) . '">
                     <div class="clock-card-inner">
                         <div class="bg-' . app_html($widgetStyle) . ' clock-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
                             <small class="clock-title widget-title-text text-white" id="' . app_html($clockTitleId) . '" title="' . app_html($clockTitle) . '">' . app_html($clockTitle) . '</small>
-                            <button type="button" class="btn btn-link clock-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-clock-title="' . app_html($clockTitle) . '" data-clock-hour-format="' . app_html($clockHourFormat) . '" data-clock-show-seconds="' . ($clockShowSeconds ? '1' : '0') . '" data-clock-show-date="' . ($clockShowDate ? '1' : '0') . '" data-toggle="modal" data-target="#changeClock" aria-label="このClockを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-link clock-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-clock-title="' . app_html($clockTitle) . '" data-clock-hour-format="' . app_html($clockHourFormat) . '" data-clock-show-seconds="' . ($clockShowSeconds ? '1' : '0') . '" data-clock-show-date="' . ($clockShowDate ? '1' : '0') . '" data-toggle="modal" data-target="#changeClock" aria-label="このClockを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
                         </div>
-                        <div class="clock-card-body">
-                            <time class="clock-time" datetime="">--:--</time>
-                            <div class="clock-date"' . ($clockShowDate ? '' : ' hidden') . '>----年--月--日</div>
-                            <div class="clock-zone text-muted small">端末の現在時刻</div>
+                        <div class="clock-card-body clock-timer-enabled" data-dashboard-swipe-ignore="true">
+                            <div class="btn-group clock-view-switch" role="group" aria-label="Clock表示切替">
+                                <button type="button" class="btn btn-sm btn-outline-secondary clock-view-toggle active" data-clock-view-trigger="clock" aria-controls="clock-view-' . $widgetId . '" aria-pressed="true"><i class="far fa-clock" aria-hidden="true"></i><span>時計</span></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary clock-view-toggle" data-clock-view-trigger="timer" aria-controls="clock-timer-view-' . $widgetId . '" aria-pressed="false"><i class="fas fa-hourglass-half" aria-hidden="true"></i><span>タイマー</span></button>
+                            </div>
+                            <div class="clock-view-panel clock-view-clock" id="clock-view-' . $widgetId . '" data-clock-view-panel="clock">
+                                <time class="clock-time" datetime="">--:--</time>
+                                <div class="clock-date"' . ($clockShowDate ? '' : ' hidden') . '>----年--月--日</div>
+                                <div class="clock-zone text-muted small">端末の現在時刻</div>
+                            </div>
+                            <div class="clock-view-panel clock-view-timer" id="clock-timer-view-' . $widgetId . '" data-clock-view-panel="timer" hidden>
+                                <time class="clock-timer-display" datetime="PT300S" aria-label="残り時間 00:05:00">00:05:00</time>
+                                <p class="clock-timer-status" aria-live="polite" aria-atomic="true">時間を選択して開始してください</p>
+                                <div class="clock-timer-presets" role="group" aria-label="タイマーのプリセット">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary clock-timer-preset clock-timer-duration-control" data-clock-timer-seconds="60" aria-pressed="false">1分</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary clock-timer-preset clock-timer-duration-control" data-clock-timer-seconds="180" aria-pressed="false">3分</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary clock-timer-preset clock-timer-duration-control active" data-clock-timer-seconds="300" aria-pressed="true">5分</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary clock-timer-preset clock-timer-duration-control" data-clock-timer-seconds="600" aria-pressed="false">10分</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary clock-timer-preset clock-timer-duration-control" data-clock-timer-seconds="1500" aria-pressed="false">25分</button>
+                                </div>
+                                <div class="clock-timer-custom">
+                                    <label class="sr-only" for="clock-timer-minutes-' . $widgetId . '">任意の分数</label>
+                                    <input type="number" class="form-control clock-timer-custom-minutes clock-timer-duration-control" id="clock-timer-minutes-' . $widgetId . '" min="1" max="1440" step="1" inputmode="numeric" value="5">
+                                    <span class="clock-timer-custom-unit" aria-hidden="true">分</span>
+                                    <button type="button" class="btn btn-outline-secondary clock-timer-custom-apply clock-timer-duration-control">設定</button>
+                                </div>
+                                <div class="clock-timer-actions" role="group" aria-label="タイマー操作">
+                                    <button type="button" class="btn btn-primary clock-timer-start">開始</button>
+                                    <button type="button" class="btn btn-outline-secondary clock-timer-pause" disabled>一時停止</button>
+                                    <button type="button" class="btn btn-outline-danger clock-timer-reset">Reset</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -348,64 +391,78 @@ if (is_int($content_location)) {
             $gameConfig = is_array($result_content[$i]['widget_config_data'] ?? null)
                 ? $result_content[$i]['widget_config_data']
                 : mini_game_widget_defaults();
-            $gameTitle = mini_game_widget_validate_title($gameConfig['title'] ?? null) ?? 'Icon Quest';
             $gameType = mini_game_widget_validate_type($gameConfig['game'] ?? null) ?? 'icon_quest';
+            $gameDefaultTitle = $gameType === 'lights_out' ? 'Lights Out' : 'Icon Quest';
+            $gameTitle = mini_game_widget_validate_title($gameConfig['title'] ?? null) ?? $gameDefaultTitle;
             $gameTitleId = 'mini-game-title-' . $widgetId;
             $gameBoardId = 'mini-game-board-' . $widgetId;
-            $gameTutorialId = 'mini-game-tutorial-' . $widgetId;
-            $gameBoard = mini_game_icon_quest_initial_board();
-            $gameCellMeta = [
-                'player' => ['Player', 'fas fa-user-shield', 'mini-game-cell-player'],
-                'enemy' => ['Enemy', 'fas fa-skull-crossbones', 'mini-game-cell-enemy'],
-                'treasure' => ['Treasure', 'fas fa-gem', 'mini-game-cell-treasure'],
-                'goal' => ['Goal', 'fas fa-door-open', 'mini-game-cell-goal'],
-                'wall' => ['Wall', 'fas fa-cube', 'mini-game-cell-wall'],
-                'floor' => ['空きマス', '', 'mini-game-cell-floor'],
-            ];
 
             echo '<!-- Mini Game Widget -->';
-            echo '<section class="' . app_html($widgetWidthClass) . ' dashboard-widget mini-game-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="game" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-mini-game-type="' . app_html($gameType) . '" data-dashboard-swipe-ignore="true" role="region" aria-labelledby="' . app_html($gameTitleId) . '">';
+            echo '<section class="' . app_html($widgetWidthClass) . ' dashboard-widget mini-game-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="game" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-mini-game-type="' . app_html($gameType) . '" data-dashboard-swipe-ignore="true" role="region" aria-labelledby="' . app_html($gameTitleId) . '">';
             echo '<div class="mini-game-card-inner">';
             echo '<div class="bg-' . app_html($widgetStyle) . ' mini-game-card-header">';
             echo '<button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>';
             echo '<small class="mini-game-title widget-title-text text-white" id="' . app_html($gameTitleId) . '" title="' . app_html($gameTitle) . '">' . app_html($gameTitle) . '</small>';
-            echo '<button type="button" class="btn btn-link mini-game-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-game-title="' . app_html($gameTitle) . '" data-game-type="' . app_html($gameType) . '" data-toggle="modal" data-target="#changeGameWidget" aria-label="このGame Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>';
+            echo '<button type="button" class="btn btn-link mini-game-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-game-title="' . app_html($gameTitle) . '" data-game-type="' . app_html($gameType) . '" data-toggle="modal" data-target="#changeGameWidget" aria-label="このGame Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>';
             echo '</div>';
             echo '<div class="mini-game-card-body">';
-            echo '<div class="mini-game-board" id="' . app_html($gameBoardId) . '" role="grid" aria-label="Icon Quest 5×5盤面、Level 1">';
-            foreach ($gameBoard as $gameCellIndex => $gameCellType) {
-                $gameCell = $gameCellMeta[$gameCellType] ?? $gameCellMeta['floor'];
-                $gameRow = intdiv($gameCellIndex, 5) + 1;
-                $gameColumn = ($gameCellIndex % 5) + 1;
-                $gameLabel = $gameRow . '行' . $gameColumn . '列、' . $gameCell[0];
-                echo '<button type="button" class="mini-game-cell ' . app_html($gameCell[2]) . '" role="gridcell" aria-rowindex="' . $gameRow . '" aria-colindex="' . $gameColumn . '" aria-label="' . app_html($gameLabel) . '" data-mini-game-cell-index="' . $gameCellIndex . '" tabindex="' . ($gameCellType === 'player' ? '0' : '-1') . '" aria-disabled="' . ($gameCellType === 'wall' ? 'true' : 'false') . '">';
-                if ($gameCell[1] !== '') {
-                    echo '<i class="' . app_html($gameCell[1]) . '" aria-hidden="true"></i>';
-                } else {
-                    echo '<span aria-hidden="true">&middot;</span>';
+
+            if ($gameType === 'lights_out') {
+                echo '<div class="lights-out-summary" aria-label="Lights Out状況"><span>Moves</span><strong class="lights-out-moves">0</strong></div>';
+                echo '<div class="mini-game-board lights-out-board" id="' . app_html($gameBoardId) . '" role="grid" aria-label="Lights Out 5×5盤面">';
+                for ($gameCellIndex = 0; $gameCellIndex < 25; $gameCellIndex++) {
+                    $gameRow = intdiv($gameCellIndex, 5) + 1;
+                    $gameColumn = ($gameCellIndex % 5) + 1;
+                    echo '<button type="button" class="mini-game-cell lights-out-cell" role="gridcell" aria-rowindex="' . $gameRow . '" aria-colindex="' . $gameColumn . '" aria-label="' . $gameRow . '行' . $gameColumn . '列、消灯" aria-pressed="false" data-lights-out-cell-index="' . $gameCellIndex . '" tabindex="' . ($gameCellIndex === 0 ? '0' : '-1') . '"><span aria-hidden="true"></span></button>';
                 }
-                echo '</button>';
+                echo '</div>';
+                echo '<div class="mini-game-result lights-out-result" hidden aria-hidden="true"><i class="mini-game-result-icon fas fa-lightbulb" aria-hidden="true"></i><strong class="mini-game-result-text">CLEAR</strong></div>';
+                echo '<div class="mini-game-status-row"><p class="mini-game-status lights-out-status text-muted" aria-live="polite" aria-atomic="true">問題を準備しています...</p></div>';
+                echo '<div class="lights-out-controls" role="group" aria-label="Lights Out操作"><button type="button" class="btn btn-sm btn-outline-secondary lights-out-reset">Reset</button><button type="button" class="btn btn-sm btn-outline-primary lights-out-new-game">新しい問題</button></div>';
+                echo '<p class="mini-game-storage-note text-muted">進行状態を確認しています...</p>';
+                echo '<p class="sr-only">押したマスと上下左右のマスが反転します。すべて消灯するとClearです。</p>';
+            } else {
+                $gameTutorialId = 'mini-game-tutorial-' . $widgetId;
+                $gameBoard = mini_game_icon_quest_initial_board();
+                $gameCellMeta = [
+                    'player' => ['Player', 'fas fa-user-shield', 'mini-game-cell-player'],
+                    'enemy' => ['Enemy', 'fas fa-skull-crossbones', 'mini-game-cell-enemy'],
+                    'treasure' => ['Treasure', 'fas fa-gem', 'mini-game-cell-treasure'],
+                    'goal' => ['Goal', 'fas fa-door-open', 'mini-game-cell-goal'],
+                    'wall' => ['Wall', 'fas fa-cube', 'mini-game-cell-wall'],
+                    'floor' => ['空きマス', '', 'mini-game-cell-floor'],
+                ];
+                echo '<div class="mini-game-board" id="' . app_html($gameBoardId) . '" role="grid" aria-label="Icon Quest 5×5盤面、Level 1">';
+                foreach ($gameBoard as $gameCellIndex => $gameCellType) {
+                    $gameCell = $gameCellMeta[$gameCellType] ?? $gameCellMeta['floor'];
+                    $gameRow = intdiv($gameCellIndex, 5) + 1;
+                    $gameColumn = ($gameCellIndex % 5) + 1;
+                    $gameLabel = $gameRow . '行' . $gameColumn . '列、' . $gameCell[0];
+                    echo '<button type="button" class="mini-game-cell ' . app_html($gameCell[2]) . '" role="gridcell" aria-rowindex="' . $gameRow . '" aria-colindex="' . $gameColumn . '" aria-label="' . app_html($gameLabel) . '" data-mini-game-cell-index="' . $gameCellIndex . '" tabindex="' . ($gameCellType === 'player' ? '0' : '-1') . '" aria-disabled="' . ($gameCellType === 'wall' ? 'true' : 'false') . '">';
+                    if ($gameCell[1] !== '') echo '<i class="' . app_html($gameCell[1]) . '" aria-hidden="true"></i>'; else echo '<span aria-hidden="true">&middot;</span>';
+                    echo '</button>';
+                }
+                echo '</div>';
+                echo '<div class="mini-game-summary" aria-label="Game状況">';
+                echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Level</span><strong class="mini-game-level">Level 1</strong></div>';
+                echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Moves</span><strong class="mini-game-moves">0 / 20</strong></div>';
+                echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Best</span><strong class="mini-game-best">--</strong></div>';
+                echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Treasure</span><strong class="mini-game-treasure-state">未取得</strong></div>';
+                echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Enemy</span><strong><span class="mini-game-enemy-turn">2</span>手後</strong></div>';
+                echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Record</span><strong><span class="mini-game-wins">0</span>勝 / <span class="mini-game-losses">0</span>敗</strong></div></div>';
+                echo '<div class="mini-game-result" hidden aria-hidden="true"><i class="mini-game-result-icon fas fa-flag-checkered" aria-hidden="true"></i><strong class="mini-game-result-text"></strong></div>';
+                echo '<div class="mini-game-status-row"><p class="mini-game-status text-muted" id="mini-game-status-' . $widgetId . '" aria-live="polite" aria-atomic="true">準備中...</p></div>';
+                echo '<div class="mini-game-controls"><div class="mini-game-action-buttons"><button type="button" class="btn btn-sm btn-outline-primary mini-game-new-game">New Game</button><button type="button" class="btn btn-sm btn-outline-secondary mini-game-reset">Reset</button></div>';
+                echo '<div class="mini-game-dpad" role="group" aria-label="Player移動">';
+                echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-up" data-mini-game-direction="up" aria-label="上へ移動"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>';
+                echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-left" data-mini-game-direction="left" aria-label="左へ移動"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>';
+                echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-down" data-mini-game-direction="down" aria-label="下へ移動"><i class="fas fa-chevron-down" aria-hidden="true"></i></button>';
+                echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-right" data-mini-game-direction="right" aria-label="右へ移動"><i class="fas fa-chevron-right" aria-hidden="true"></i></button></div></div>';
+                echo '<div class="mini-game-tools"><button type="button" class="btn btn-sm btn-outline-info mini-game-tutorial-toggle" aria-expanded="false" aria-controls="' . app_html($gameTutorialId) . '"><i class="fas fa-question-circle" aria-hidden="true"></i><span>遊び方</span></button><button type="button" class="btn btn-sm btn-outline-danger mini-game-storage-reset"><i class="fas fa-trash-alt" aria-hidden="true"></i><span>記録を削除</span></button></div>';
+                echo '<div class="mini-game-tutorial" id="' . app_html($gameTutorialId) . '" hidden><p><strong>Icon Quest</strong>は、Treasureを取ってからGoalへ進む5×5の短時間Gameです。</p><ul><li>矢印Key・WASD・方向Button・隣接マスTapで移動</li><li>敵は有効移動2回ごとに1マス接近</li><li>敵に捕まるか20手に達するとGame Over</li></ul><p class="mb-0">Resetは現在Levelだけ、記録を削除はこのWidgetの進行・Best・勝敗を初期化します。</p></div>';
+                echo '<p class="mini-game-storage-note text-muted">進行状態を確認しています...</p>';
+                echo '<p class="sr-only">矢印KeyまたはWASD、隣接マス、方向ButtonでPlayerを移動出来ます。Treasureを取得してからGoalへ進んでください。</p>';
             }
-            echo '</div>';
-            echo '<div class="mini-game-summary" aria-label="Game状況">';
-            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Level</span><strong class="mini-game-level">Level 1</strong></div>';
-            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Moves</span><strong class="mini-game-moves">0 / 20</strong></div>';
-            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Best</span><strong class="mini-game-best">--</strong></div>';
-            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Treasure</span><strong class="mini-game-treasure-state">未取得</strong></div>';
-            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Enemy</span><strong><span class="mini-game-enemy-turn">2</span>手後</strong></div>';
-            echo '<div class="mini-game-summary-item"><span class="mini-game-summary-label">Record</span><strong><span class="mini-game-wins">0</span>勝 / <span class="mini-game-losses">0</span>敗</strong></div></div>';
-            echo '<div class="mini-game-result" hidden aria-hidden="true"><i class="mini-game-result-icon fas fa-flag-checkered" aria-hidden="true"></i><strong class="mini-game-result-text"></strong></div>';
-            echo '<div class="mini-game-status-row"><p class="mini-game-status text-muted" id="mini-game-status-' . $widgetId . '" aria-live="polite" aria-atomic="true">準備中...</p></div>';
-            echo '<div class="mini-game-controls"><div class="mini-game-action-buttons"><button type="button" class="btn btn-sm btn-outline-primary mini-game-new-game">New Game</button><button type="button" class="btn btn-sm btn-outline-secondary mini-game-reset">Reset</button></div>';
-            echo '<div class="mini-game-dpad" role="group" aria-label="Player移動">';
-            echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-up" data-mini-game-direction="up" aria-label="上へ移動"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>';
-            echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-left" data-mini-game-direction="left" aria-label="左へ移動"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>';
-            echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-down" data-mini-game-direction="down" aria-label="下へ移動"><i class="fas fa-chevron-down" aria-hidden="true"></i></button>';
-            echo '<button type="button" class="btn btn-outline-secondary mini-game-direction mini-game-direction-right" data-mini-game-direction="right" aria-label="右へ移動"><i class="fas fa-chevron-right" aria-hidden="true"></i></button></div></div>';
-            echo '<div class="mini-game-tools"><button type="button" class="btn btn-sm btn-outline-info mini-game-tutorial-toggle" aria-expanded="false" aria-controls="' . app_html($gameTutorialId) . '"><i class="fas fa-question-circle" aria-hidden="true"></i><span>遊び方</span></button><button type="button" class="btn btn-sm btn-outline-danger mini-game-storage-reset"><i class="fas fa-trash-alt" aria-hidden="true"></i><span>記録を削除</span></button></div>';
-            echo '<div class="mini-game-tutorial" id="' . app_html($gameTutorialId) . '" hidden><p><strong>Icon Quest</strong>は、Treasureを取ってからGoalへ進む5×5の短時間Gameです。</p><ul><li>矢印Key・WASD・方向Button・隣接マスTapで移動</li><li>敵は有効移動2回ごとに1マス接近</li><li>敵に捕まるか20手に達するとGame Over</li></ul><p class="mb-0">Resetは現在Levelだけ、記録を削除はこのWidgetの進行・Best・勝敗を初期化します。</p></div>';
-            echo '<p class="mini-game-storage-note text-muted">進行状態を確認しています...</p>';
-            echo '<p class="sr-only">矢印KeyまたはWASD、隣接マス、方向ButtonでPlayerを移動出来ます。Treasureを取得してからGoalへ進んでください。</p>';
             echo '</div></div></section>';
             continue;
         }
@@ -418,12 +475,12 @@ if (is_int($content_location)) {
 
             echo '
             <!-- Memo Widget -->
-                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget memo-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="memo" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-memo-id="' . $memoId . '" role="region" aria-labelledby="' . app_html($memoTitleId) . '">
+                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget memo-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="memo" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-memo-id="' . $memoId . '" role="region" aria-labelledby="' . app_html($memoTitleId) . '">
                     <div class="memo-card-inner">
                         <div class="bg-' . app_html($widgetStyle) . ' memo-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
                             <small class="memo-title widget-title-text text-white" id="' . app_html($memoTitleId) . '" title="' . app_html($memoTitle) . '">' . app_html($memoTitle) . '</small>
-                            <button type="button" class="btn btn-link memo-edit-trigger" data-widget-id="' . $widgetId . '" data-memo-id="' . $memoId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-toggle="modal" data-target="#changeMemo" aria-label="このMemoを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-link memo-edit-trigger" data-widget-id="' . $widgetId . '" data-memo-id="' . $memoId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-toggle="modal" data-target="#changeMemo" aria-label="このMemoを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
                         </div>
                         <div class="memo-card-body"><div class="memo-body">' . app_html($memoBody) . '</div></div>
                     </div>
@@ -443,12 +500,12 @@ if (is_int($content_location)) {
 
             echo '
             <!-- Task Widget -->
-                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget task-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="task" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-task-widget-title="' . app_html($taskWidgetTitle) . '" role="region" aria-labelledby="' . app_html($taskTitleId) . '">
+                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget task-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="task" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-task-widget-title="' . app_html($taskWidgetTitle) . '" role="region" aria-labelledby="' . app_html($taskTitleId) . '">
                     <div class="task-card-inner">
                         <div class="bg-' . app_html($widgetStyle) . ' task-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
                             <small class="task-widget-title widget-title-text text-white" id="' . app_html($taskTitleId) . '" title="' . app_html($taskWidgetTitle) . '">' . app_html($taskWidgetTitle) . '</small>
-                            <button type="button" class="btn btn-link task-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-task-widget-title="' . app_html($taskWidgetTitle) . '" data-toggle="modal" data-target="#changeTaskWidget" aria-label="このTask Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-link task-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-task-widget-title="' . app_html($taskWidgetTitle) . '" data-toggle="modal" data-target="#changeTaskWidget" aria-label="このTask Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
                         </div>
                         <div class="task-card-body">
                             <ul class="task-list" aria-live="polite">';
@@ -506,12 +563,12 @@ if (is_int($content_location)) {
 
             echo '
             <!-- Calendar Widget -->
-                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget calendar-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="calendar" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" role="region" aria-labelledby="' . app_html($calendarTitleId) . '">
+                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget calendar-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="calendar" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" role="region" aria-labelledby="' . app_html($calendarTitleId) . '">
                     <div class="calendar-card-inner">
                         <div class="bg-' . app_html($widgetStyle) . ' calendar-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
                             <small class="calendar-widget-title widget-title-text text-white" id="' . app_html($calendarTitleId) . '" title="' . app_html($calendarTitle) . '">' . app_html($calendarTitle) . '</small>
-                            <button type="button" class="btn btn-link calendar-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" data-toggle="modal" data-target="#changeCalendarWidget" aria-label="このCalendar Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-link calendar-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" data-toggle="modal" data-target="#changeCalendarWidget" aria-label="このCalendar Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
                         </div>
                         <div class="calendar-card-body">
                             <div class="calendar-toolbar">
@@ -611,6 +668,15 @@ if ($result_content_cnt === 0) {
                 <input type="hidden" id="content_location" class="content_location" value="<?php echo app_html((string) $addTargetLocation); ?>">
                 </div>
                 <hr>
+                <div class="form-row">
+                    <div class="form-group col-6"><label for="registerContentWidth"><small class="text-dark">横幅</small></label><select class="form-control registerContentWidth" id="registerContentWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="form-group col-6"><label for="registerContentHeight"><small class="text-dark">縦幅</small></label><select class="form-control registerContentHeight" id="registerContentHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                </div>
+                <div class="form-group">
+                    <label for="registerContentItemLimit"><small class="text-dark">表示件数</small></label>
+                    <input type="number" class="form-control registerContentItemLimit" id="registerContentItemLimit" min="1" max="30" step="1" inputmode="numeric" placeholder="自動" aria-describedby="registerContentItemLimitHelp">
+                    <small id="registerContentItemLimitHelp" class="form-text text-muted">空欄はカードの高さに合わせて自動調整します。1～30件を指定できます。</small>
+                </div>
                 <div class="form-group">
                     <label for="style_select"><small class="text-dark">コンテンツデザイン指定</small></label>
                     <div class="input-group mb-2 mr-sm-2">
@@ -664,6 +730,15 @@ if ($result_content_cnt === 0) {
                 </div>
                 <small id="changeContentHelp" class="form-text text-muted">アドレスまたは見出し色を変更できます</small>
                 <hr>
+                <div class="form-row">
+                    <div class="form-group col-6"><label for="changeContentWidth"><small class="text-dark">横幅</small></label><select class="form-control changeContentWidth" id="changeContentWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="form-group col-6"><label for="changeContentHeight"><small class="text-dark">縦幅</small></label><select class="form-control changeContentHeight" id="changeContentHeight"><option value="1">標準</option><option value="2">縦2段</option></select></div>
+                </div>
+                <div class="form-group">
+                    <label for="changeContentItemLimit"><small class="text-dark">表示件数</small></label>
+                    <input type="number" class="form-control changeContentItemLimit" id="changeContentItemLimit" min="1" max="30" step="1" inputmode="numeric" placeholder="自動" aria-describedby="changeContentItemLimitHelp">
+                    <small id="changeContentItemLimitHelp" class="form-text text-muted">空欄はカードの高さに合わせて自動調整します。1～30件を指定できます。</small>
+                </div>
                 <div class="form-group">
                     <label for="changeContentStyle"><small class="text-dark">コンテンツデザイン指定</small></label>
                     <div class="input-group mb-2 mr-sm-2">
@@ -718,14 +793,14 @@ if ($result_content_cnt === 0) {
                     <input type="text" class="form-control registerClockName" id="registerClockName" value="Clock" maxlength="32" required>
                 </div>
                 <div class="form-row">
-                    <div class="form-group col-6">
+                    <div class="form-group col-md-4">
                         <label for="registerClockHourFormat"><small class="text-dark">時刻表示</small></label>
                         <select class="form-control registerClockHourFormat" id="registerClockHourFormat">
                             <option value="24" selected>24時間</option>
                             <option value="12">12時間</option>
                         </select>
                     </div>
-                    <div class="form-group col-6">
+                    <div class="form-group col-md-4">
                         <label for="registerClockWidth"><small class="text-dark">横幅</small></label>
                         <select class="form-control registerClockWidth" id="registerClockWidth">
                             <option value="1" selected>1列</option>
@@ -733,6 +808,10 @@ if ($result_content_cnt === 0) {
                             <option value="3">3列</option>
                             <option value="4">全幅</option>
                         </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="registerClockHeight"><small class="text-dark">縦幅</small></label>
+                        <select class="form-control registerClockHeight" id="registerClockHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select>
                     </div>
                 </div>
                 <div class="form-group">
@@ -785,14 +864,14 @@ if ($result_content_cnt === 0) {
                     <input type="text" class="form-control changeClockName" id="changeClockName" maxlength="32" required>
                 </div>
                 <div class="form-row">
-                    <div class="form-group col-6">
+                    <div class="form-group col-md-4">
                         <label for="changeClockHourFormat"><small class="text-dark">時刻表示</small></label>
                         <select class="form-control changeClockHourFormat" id="changeClockHourFormat">
                             <option value="24">24時間</option>
                             <option value="12">12時間</option>
                         </select>
                     </div>
-                    <div class="form-group col-6">
+                    <div class="form-group col-md-4">
                         <label for="changeClockWidth"><small class="text-dark">横幅</small></label>
                         <select class="form-control changeClockWidth" id="changeClockWidth">
                             <option value="1">1列</option>
@@ -800,6 +879,10 @@ if ($result_content_cnt === 0) {
                             <option value="3">3列</option>
                             <option value="4">全幅</option>
                         </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="changeClockHeight"><small class="text-dark">縦幅</small></label>
+                        <select class="form-control changeClockHeight" id="changeClockHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select>
                     </div>
                 </div>
                 <div class="form-group">
@@ -854,13 +937,14 @@ if ($result_content_cnt === 0) {
                     <small class="form-text text-muted">改行を含めて4,000文字まで保存できます。</small>
                 </div>
                 <div class="form-row">
-                    <div class="form-group col-6">
+                    <div class="form-group col-md-4">
                         <label for="registerMemoWidth"><small class="text-dark">横幅</small></label>
                         <select class="form-control registerMemoWidth" id="registerMemoWidth">
                             <option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option>
                         </select>
                     </div>
-                    <div class="form-group col-6">
+                    <div class="form-group col-md-4"><label for="registerMemoHeight"><small class="text-dark">縦幅</small></label><select class="form-control registerMemoHeight" id="registerMemoHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="form-group col-md-4">
                         <label for="registerMemoStyle"><small class="text-dark">見出し色</small></label>
                         <select class="form-control registerMemoStyle" id="registerMemoStyle">
                             <option value="success" selected>success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option>
@@ -899,13 +983,14 @@ if ($result_content_cnt === 0) {
                     <textarea class="form-control memo-textarea changeMemoBody" id="changeMemoBody" maxlength="4000" rows="8" required></textarea>
                 </div>
                 <div class="form-row">
-                    <div class="form-group col-6">
+                    <div class="form-group col-md-4">
                         <label for="changeMemoWidth"><small class="text-dark">横幅</small></label>
                         <select class="form-control changeMemoWidth" id="changeMemoWidth">
                             <option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option>
                         </select>
                     </div>
-                    <div class="form-group col-6">
+                    <div class="form-group col-md-4"><label for="changeMemoHeight"><small class="text-dark">縦幅</small></label><select class="form-control changeMemoHeight" id="changeMemoHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="form-group col-md-4">
                         <label for="changeMemoStyle"><small class="text-dark">見出し色</small></label>
                         <select class="form-control changeMemoStyle" id="changeMemoStyle">
                             <option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option>
@@ -939,11 +1024,12 @@ if ($result_content_cnt === 0) {
                     <input type="text" class="form-control registerTaskWidgetTitleValue" id="registerTaskWidgetTitleValue" value="Task" maxlength="32" required>
                 </div>
                 <div class="form-row">
-                    <div class="form-group col-6">
+                    <div class="form-group col-md-4">
                         <label for="registerTaskWidgetWidth"><small class="text-dark">横幅</small></label>
                         <select class="form-control registerTaskWidgetWidth" id="registerTaskWidgetWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select>
                     </div>
-                    <div class="form-group col-6">
+                    <div class="form-group col-md-4"><label for="registerTaskWidgetHeight"><small class="text-dark">縦幅</small></label><select class="form-control registerTaskWidgetHeight" id="registerTaskWidgetHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="form-group col-md-4">
                         <label for="registerTaskWidgetStyle"><small class="text-dark">見出し色</small></label>
                         <select class="form-control registerTaskWidgetStyle" id="registerTaskWidgetStyle"><option value="primary" selected>primary</option><option value="success">success</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select>
                     </div>
@@ -969,8 +1055,9 @@ if ($result_content_cnt === 0) {
                 <input type="hidden" class="changeTaskWidgetId">
                 <div class="form-group"><label for="changeTaskWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeTaskWidgetTitleValue" id="changeTaskWidgetTitleValue" maxlength="32" required></div>
                 <div class="form-row">
-                    <div class="form-group col-6"><label for="changeTaskWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-control changeTaskWidgetWidth" id="changeTaskWidgetWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                    <div class="form-group col-6"><label for="changeTaskWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeTaskWidgetStyle" id="changeTaskWidgetStyle"><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                    <div class="form-group col-md-4"><label for="changeTaskWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-control changeTaskWidgetWidth" id="changeTaskWidgetWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="form-group col-md-4"><label for="changeTaskWidgetHeight"><small class="text-dark">縦幅</small></label><select class="form-control changeTaskWidgetHeight" id="changeTaskWidgetHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="form-group col-md-4"><label for="changeTaskWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeTaskWidgetStyle" id="changeTaskWidgetStyle"><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
                 </div>
                 <small class="form-text text-muted">Widgetを削除すると、このWidget内のTaskも論理削除されます。</small>
             </div>
@@ -1010,11 +1097,12 @@ if ($result_content_cnt === 0) {
         <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Gameを追加</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
         <div class="modal-body">
             <div class="form-group"><label for="registerGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerGameTitleValue" id="registerGameTitleValue" maxlength="32" value="Icon Quest" required></div>
-            <div class="form-group"><label for="registerGameType"><small class="text-dark">Game</small></label><select class="form-control registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option></select></div>
+            <div class="form-group"><label for="registerGameType"><small class="text-dark">Game</small></label><select class="form-control registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option></select></div>
             <input type="hidden" class="registerGameLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
             <div class="form-row">
-                <div class="form-group col-6"><label for="registerGameWidth"><small class="text-dark">横幅</small></label><select class="form-control registerGameWidth" id="registerGameWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                <div class="form-group col-6"><label for="registerGameStyle"><small class="text-dark">見出し色</small></label><select class="form-control registerGameStyle" id="registerGameStyle"><option value="secondary" selected>secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                <div class="form-group col-md-4"><label for="registerGameWidth"><small class="text-dark">横幅</small></label><select class="form-control registerGameWidth" id="registerGameWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                <div class="form-group col-md-4"><label for="registerGameHeight"><small class="text-dark">縦幅</small></label><select class="form-control registerGameHeight" id="registerGameHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="form-group col-md-4"><label for="registerGameStyle"><small class="text-dark">見出し色</small></label><select class="form-control registerGameStyle" id="registerGameStyle"><option value="secondary" selected>secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
             </div>
             <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
             <small class="form-text text-muted">Gameの進行状態はこのBrowserへ保存され、ServerやDBには保存されません。</small>
@@ -1032,10 +1120,11 @@ if ($result_content_cnt === 0) {
         <div class="modal-body">
             <input type="hidden" class="changeGameWidgetId">
             <div class="form-group"><label for="changeGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeGameTitleValue" id="changeGameTitleValue" maxlength="32" required></div>
-            <div class="form-group"><label for="changeGameType"><small class="text-dark">Game</small></label><select class="form-control changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option></select></div>
+            <div class="form-group"><label for="changeGameType"><small class="text-dark">Game</small></label><select class="form-control changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option></select></div>
             <div class="form-row">
-                <div class="form-group col-6"><label for="changeGameWidth"><small class="text-dark">横幅</small></label><select class="form-control changeGameWidth" id="changeGameWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                <div class="form-group col-6"><label for="changeGameStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeGameStyle" id="changeGameStyle"><option value="secondary">secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                <div class="form-group col-md-4"><label for="changeGameWidth"><small class="text-dark">横幅</small></label><select class="form-control changeGameWidth" id="changeGameWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                <div class="form-group col-md-4"><label for="changeGameHeight"><small class="text-dark">縦幅</small></label><select class="form-control changeGameHeight" id="changeGameHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="form-group col-md-4"><label for="changeGameStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeGameStyle" id="changeGameStyle"><option value="secondary">secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
             </div>
             <small class="form-text text-muted">Widget削除時は、このWidgetのBrowser保存状態も削除します。</small>
         </div>
@@ -1053,8 +1142,9 @@ if ($result_content_cnt === 0) {
             <input type="hidden" class="registerCalendarWidgetLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
             <div class="form-group"><label for="registerCalendarWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerCalendarWidgetTitleValue" id="registerCalendarWidgetTitleValue" value="Calendar" maxlength="32" required></div>
             <div class="form-row">
-                <div class="form-group col-6"><label for="registerCalendarWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-control registerCalendarWidgetWidth" id="registerCalendarWidgetWidth"><option value="1">1列</option><option value="2" selected>2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                <div class="form-group col-6"><label for="registerCalendarWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-control registerCalendarWidgetStyle" id="registerCalendarWidgetStyle"><option value="info" selected>info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                <div class="form-group col-md-4"><label for="registerCalendarWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-control registerCalendarWidgetWidth" id="registerCalendarWidgetWidth"><option value="1">1列</option><option value="2" selected>2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                <div class="form-group col-md-4"><label for="registerCalendarWidgetHeight"><small class="text-dark">縦幅</small></label><select class="form-control registerCalendarWidgetHeight" id="registerCalendarWidgetHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="form-group col-md-4"><label for="registerCalendarWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-control registerCalendarWidgetStyle" id="registerCalendarWidgetStyle"><option value="info" selected>info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
             </div>
             <div class="custom-control custom-checkbox"><input type="checkbox" class="custom-control-input registerCalendarShowCompletedTasks" id="registerCalendarShowCompletedTasks"><label class="custom-control-label" for="registerCalendarShowCompletedTasks">完了済みTaskも表示する</label></div>
             <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
@@ -1073,8 +1163,9 @@ if ($result_content_cnt === 0) {
             <input type="hidden" class="changeCalendarWidgetId">
             <div class="form-group"><label for="changeCalendarWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeCalendarWidgetTitleValue" id="changeCalendarWidgetTitleValue" maxlength="32" required></div>
             <div class="form-row">
-                <div class="form-group col-6"><label for="changeCalendarWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-control changeCalendarWidgetWidth" id="changeCalendarWidgetWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                <div class="form-group col-6"><label for="changeCalendarWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeCalendarWidgetStyle" id="changeCalendarWidgetStyle"><option value="info">info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                <div class="form-group col-md-4"><label for="changeCalendarWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-control changeCalendarWidgetWidth" id="changeCalendarWidgetWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                <div class="form-group col-md-4"><label for="changeCalendarWidgetHeight"><small class="text-dark">縦幅</small></label><select class="form-control changeCalendarWidgetHeight" id="changeCalendarWidgetHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="form-group col-md-4"><label for="changeCalendarWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeCalendarWidgetStyle" id="changeCalendarWidgetStyle"><option value="info">info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
             </div>
             <div class="custom-control custom-checkbox"><input type="checkbox" class="custom-control-input changeCalendarShowCompletedTasks" id="changeCalendarShowCompletedTasks"><label class="custom-control-label" for="changeCalendarShowCompletedTasks">完了済みTaskも表示する</label></div>
             <small class="form-text text-muted">Widgetを削除しても、登録済みの予定は残ります。</small>
@@ -1434,16 +1525,18 @@ if ($result_content_cnt === 0) {
 </nav>
 
 <!-- Bootstrap -->
-<script src="./js/jquery-3.7.1.min.js"></script>
-<script src="./js/popper.min.js"></script>
-<script src="./js/bootstrap.min.js"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/jquery-3.7.1.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/popper.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/bootstrap.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <!-- Drawer -->
-<script src="./js/iscroll.js"></script>
-<script src="./js/drawer.min.js"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/iscroll.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/drawer.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 
-<script src="./js/mini-game.js"></script>
-<script src="./js/dashboard.js"></script>
-<script src="./js/calendar.js"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/mini-game.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/lights-out.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/clock-timer.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/calendar.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 
 
 

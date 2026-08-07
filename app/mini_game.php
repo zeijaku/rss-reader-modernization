@@ -10,7 +10,7 @@ declare(strict_types=1);
 /** @return list<string> */
 function mini_game_widget_types(): array
 {
-    return ['icon_quest'];
+    return ['icon_quest', 'lights_out'];
 }
 
 function mini_game_widget_validate_type(mixed $value): ?string
@@ -95,7 +95,8 @@ function mini_game_widget_create(
     int $location,
     string $style,
     int $width,
-    array $config
+    array $config,
+    int $height = 1
 ): int {
     $config = mini_game_widget_config_from_input([
         'game_title' => $config['title'] ?? null,
@@ -105,6 +106,7 @@ function mini_game_widget_create(
         || dashboard_widget_validate_location($location) === null
         || app_normalize_content_style($style) === null
         || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null
         || $config === null) {
         throw new InvalidArgumentException('Game Widget settings are invalid.');
     }
@@ -120,14 +122,15 @@ function mini_game_widget_create(
         $stmt = $pdo->prepare(
             'INSERT INTO ' . db_table_identifier('dashboard_widget') . ' '
             . '(widget_owner, widget_location, widget_type, widget_reference_id, widget_sort_order, '
-            . 'widget_width, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
-            . "VALUES (:owner, :location, 'game', NULL, :sort_order, :width, :style, :config, 0, :created_at, :updated_at)"
+            . 'widget_width, widget_height, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
+            . "VALUES (:owner, :location, 'game', NULL, :sort_order, :width, :height, :style, :config, 0, :created_at, :updated_at)"
         );
         $stmt->execute([
             ':owner' => $ownerId,
             ':location' => $location,
             ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
             ':width' => $width,
+            ':height' => $height,
             ':style' => $style,
             ':config' => dashboard_widget_encode_config($config),
             ':created_at' => $now,
@@ -152,7 +155,8 @@ function mini_game_widget_update(
     int $widgetId,
     string $style,
     int $width,
-    array $config
+    array $config,
+    int $height = 1
 ): bool {
     $config = mini_game_widget_config_from_input([
         'game_title' => $config['title'] ?? null,
@@ -161,6 +165,7 @@ function mini_game_widget_update(
     if ($ownerId <= 0 || $widgetId <= 0
         || app_normalize_content_style($style) === null
         || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null
         || $config === null) {
         throw new InvalidArgumentException('Game Widget settings are invalid.');
     }
@@ -180,12 +185,13 @@ function mini_game_widget_update(
         }
         $stmt = $pdo->prepare(
             'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
-            . 'SET widget_width = :width, widget_style = :style, widget_config = :config, widget_updated_at = :updated_at '
+            . 'SET widget_width = :width, widget_height = :height, widget_style = :style, widget_config = :config, widget_updated_at = :updated_at '
             . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
             . "AND widget_type = 'game' AND widget_flag = 0"
         );
         $stmt->execute([
             ':width' => $width,
+            ':height' => $height,
             ':style' => $style,
             ':config' => dashboard_widget_encode_config($config),
             ':updated_at' => app_now(),
