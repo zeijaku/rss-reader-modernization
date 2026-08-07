@@ -47,7 +47,7 @@ check('rendered < itemLimit' in dashboard and 'rendered++' in dashboard, 'browse
 
 # SB-11-04: close partial rows for Feed and Stock branches.
 check("echo '</div><!-- /feed-grid -->';" in index and "echo '</div><!-- /stock-grid -->';" in index, 'Feed/Stock responsive grid rows are explicitly closed')
-check('$row_cnt' not in index and 'row content-grid feed-grid' in index and 'row content-grid stock-grid' in index, 'legacy grid row counter is replaced by responsive grid wrapping')
+check('$row_cnt' not in index and 'row content-grid feed-grid' in index and 'class="stock-grid"' in index and 'row content-grid stock-grid' not in index, 'legacy grid row counter is replaced by responsive Feed grid and compact Stock list')
 check('rsort($result_stock)' not in index, 'Stock order is not re-sorted incorrectly after ordered DB query')
 
 # SB-11-05/06: tab update is isolated and one request path.

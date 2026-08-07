@@ -2,10 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.7.0`
-Release tag: `v1.7.0`
+**Stable release:** `RSS Reader Modernization 1.8.0`  
+Release tag: `v1.8.0`
 
-Version 1.7ではAsset Cache Busting、HTTP Cache／Security Header、固定30日のRemember Token、Widget縦2段、RSS表示件数、日本の祝日表示を正式化しました。Calendarの祝日は設定可能な内閣府CSV URLを60日Cacheで更新し、通信失敗時は既存Cache／同梱SnapshotへFallbackします。
+Version 1.8ではStock一覧を、保存するだけの画面から後で探して利用できる画面へ改善しました。Stock解除、タイトル／URL／Domain検索、新旧／タイトル順Sort、20件単位Pagination、Domain表示、URL Copy／X／Task Actions、1列Compact Listを追加し、既存`content_stock`構造をそのまま利用しています。
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
@@ -42,7 +42,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Mini Game Widget「Lights Out」の5×5盤面、Moves、Reset、新しい問題、Clear
 - スマートフォンでの左右スワイプによるタブ切り替えと方向Indicator
 - Feed／Calendar読込中のSpinner表示
-- 記事リンクのStock保存と一覧表示
+- 記事リンクのStock保存、Stock解除、検索・並び替え・Pagination、Domain表示、URL Copy／X／Task Actions付きCompact一覧
 - Bootstrapテーマ、Navbarリンク、タブ名のユーザー設定
 - MySQL 8系での新規DB構築
 - configurable table prefix（例: `rss_`）
@@ -184,6 +184,20 @@ Version 1.6.0では、Smartphone Tab Swipeの方向Indicatorと、第二のMini 
 
 Version 1.7.0では`remember_token` Tableと`dashboard_widget.widget_height`を追加します。既存環境から更新する場合はMigration 007／008が必要ですが、すでにV1.7-H/R4まで適用済みの環境では再実行しません。RSS表示件数は既存`widget_config`、祝日Cacheは`var/cache/`を利用するため追加DB変更はありません。詳細は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/v1-7-release-implementation.md`](docs/v1-7-release-implementation.md)、[`docs/test-report-v1-7-release.md`](docs/test-report-v1-7-release.md)を参照してください。
 
+
+## Version 1.8 progress
+
+| Stage | 内容 | 状態 |
+|---|---|---|
+| V1.8-A | Stock現状調査・DB／Ownership／Actions／UI設計 | 完了 |
+| V1.8-B | Stock解除、Ownership／CSRF、Ajax反映 | 完了 |
+| V1.8-C / R1～R2 | Title／URL／Domain検索、新旧／Title Sort、Native PDO Placeholder修正 | 完了 |
+| V1.8-D | 20件単位Pagination、COUNT、検索／Sort条件保持 | 完了 |
+| V1.8-E | Domain表示、共通Actions、Task追加先、1列Compact List | 完了 |
+| V1.8-F | 分割Full回帰、Documentation、Package、Version 1.8.0確定 | 完了 |
+
+Version 1.8.0は既存`content_stock` Tableの`stock_id`、`stock_date`、`stock_flag`、`stock_owner`、`stock_data`、`stock_title`をそのまま利用します。新しいTable／Column／Index／Migrationは追加していません。Stock解除は`stock_flag=1`の論理削除、検索／PaginationはServer-side、Actionsは通常RSS／Search Feedの共通Menuを再利用します。詳細は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/v1-8-release-implementation.md`](docs/v1-8-release-implementation.md)、[`docs/test-report-v1-8-release.md`](docs/test-report-v1-8-release.md)を参照してください。
+
 ## M1 progress
 
 M1 completion checkpoint: `RSS Engine M1-G / R1`
@@ -230,7 +244,7 @@ M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4
 
 詳細は [`docs/m4-f-implementation.md`](docs/m4-f-implementation.md)、[`docs/m4-f-validation.md`](docs/m4-f-validation.md)、[`docs/m4-e-implementation.md`](docs/m4-e-implementation.md)、[`docs/release-package.md`](docs/release-package.md)、[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
 
-## Version 1.7.0 release package
+## Version 1.8.0 release package
 
 GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分けて生成します。
 
@@ -238,11 +252,11 @@ GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分
 python tools/build_complete_package.py --output-dir ../release-output
 python tools/build_release_package.py --mode final --output-dir ../release-output
 python tools/verify_complete_package.py \
-  ../release-output/rss-reader-modernization-1.7.0-complete.zip \
-  ../release-output/rss-reader-modernization-1.7.0-complete.zip.sha256
+  ../release-output/rss-reader-modernization-1.8.0-complete.zip \
+  ../release-output/rss-reader-modernization-1.8.0-complete.zip.sha256
 python tools/verify_release_package.py \
-  ../release-output/rss-reader-modernization-1.7.0.zip \
-  ../release-output/rss-reader-modernization-1.7.0.zip.sha256
+  ../release-output/rss-reader-modernization-1.8.0.zip \
+  ../release-output/rss-reader-modernization-1.8.0.zip.sha256
 ```
 
 Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、検証限界は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)を参照してください。

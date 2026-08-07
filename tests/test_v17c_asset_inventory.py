@@ -2,6 +2,7 @@
 from pathlib import Path
 import re
 
+from version_test_utils import is_later_application_release, is_later_visible_label
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
 
@@ -17,8 +18,8 @@ index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
 login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
 combined = index + '\n' + login
 
-check(any(v in version for v in ["APP_VERSION = '1.7.0-dev.2'", "APP_VERSION = '1.7.0-dev.3'", "APP_VERSION = '1.7.0-dev.4'", "APP_VERSION = '1.7.0-dev.5'", "APP_VERSION = '1.7.0-dev.6'", "APP_VERSION = '1.7.0-dev.7'", "APP_VERSION = '1.7.0-dev.8'", "APP_VERSION = '1.7.0-dev.9'", "APP_VERSION = '1.7.0-dev.10'", "APP_VERSION = '1.7.0'"]), 'Application Version is V1.7-C or later')
-check(any(v in version for v in ["APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-C / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-D / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-E / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-F / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-G / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R2'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R3'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R4'", "APP_VERSION_LABEL = 'RSS Reader Modernization 1.7.0'"]), 'Application Label is V1.7-C or later')
+check(any(v in version for v in ["APP_VERSION = '1.7.0-dev.2'", "APP_VERSION = '1.7.0-dev.3'", "APP_VERSION = '1.7.0-dev.4'", "APP_VERSION = '1.7.0-dev.5'", "APP_VERSION = '1.7.0-dev.6'", "APP_VERSION = '1.7.0-dev.7'", "APP_VERSION = '1.7.0-dev.8'", "APP_VERSION = '1.7.0-dev.9'", "APP_VERSION = '1.7.0-dev.10'", "APP_VERSION = '1.7.0'"]) or is_later_application_release(version, (1, 7, 0)), 'Application Version is V1.7-C or later')
+check(any(v in version for v in ["APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-C / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-D / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-E / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-F / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-G / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R2'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R3'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R4'", "APP_VERSION_LABEL = 'RSS Reader Modernization 1.7.0'"]) or is_later_visible_label(version, (1, 7, 0)), 'Application Label is V1.7-C or later')
 check("require_once __DIR__ . '/asset.php';" in bootstrap, 'Bootstrap loads the Asset URL helper')
 check('function app_asset_url(string $path): string' in asset_php, 'Asset URL helper has a strict string contract')
 check("rawurlencode(APP_VERSION)" in asset_php, 'Asset URLs use the shared Application Version token')
@@ -51,7 +52,7 @@ if "APP_VERSION = '1.7.0-dev.2'" in version:
     check(not (ROOT / 'database/migrations/007_v1_7_remember_token.sql').exists(), 'V1.7-C introduces no DB or Remember Token migration')
 else:
     check(True, 'Later V1.7 checkpoints may add the planned Remember Token migration')
-check((not (ROOT / 'database/migrations/008_v1_7_widget_height.sql').exists()) or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version), 'V1.7-C adds no height migration; V1.7-H may add the planned migration')
+check((not (ROOT / 'database/migrations/008_v1_7_widget_height.sql').exists()) or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version) or is_later_application_release(version, (1, 7, 0)), 'V1.7-C adds no height migration; V1.7-H may add the planned migration')
 build = (ROOT / 'SOURCE_BUILD.txt').read_text(encoding='utf-8')
 check(('application_version=1.7.0-dev.2' in build and 'baseline_sha256=aabc4942f85ebe397b3ab738643c75ee1f763b15508de8bccd453702bcfa5014' in build) or 'application_version=1.7.0-dev.3' in build or 'application_version=1.7.0-dev.4' in build or 'application_version=1.7.0-dev.5' in build or 'application_version=1.7.0-dev.6' in build or 'application_version=1.7.0-dev.7' in build or 'application_version=1.7.0-dev.8' in build or 'application_version=1.7.0-dev.9' in build or 'application_version=1.7.0-dev.10' in build or 'application_version=1.7.0' in build, 'Source metadata retains V1.7-C or a later checkpoint')
 for rel in ['APPLY_NOTE_V1_7_C.md', 'CHECKLIST_FOR_USER_V1_7_C.md', 'UPDATED_FILES_V1_7_C.md', 'docs/v1-7-c-implementation.md', 'docs/v1-7-c-files.md', 'docs/test-report-v1-7-c.md']:

@@ -178,14 +178,95 @@ function search_content(int|string|null $content_owner = null, int|string $conte
     return $stmt->fetchAll();
 }
 
-function search_stock(int|string|null $stock_owner): array
+function stock_search_like_pattern(string $query): string
+{
+    $escaped = strtr($query, [
+        '!' => '!!',
+        '%' => '!%',
+        '_' => '!_',
+    ]);
+    return '%' . $escaped . '%';
+}
+
+function stock_search_order_by(string $sort): string
+{
+    return match ($sort) {
+        'oldest' => 'stock_id ASC',
+        'title' => 'stock_title ASC, stock_id DESC',
+        default => 'stock_id DESC',
+    };
+}
+
+function count_stock(int|string|null $stock_owner, string $query = ''): int
+{
+    $sql = 'SELECT COUNT(*) FROM ' . db_table_name('content_stock') . ' '
+        . 'WHERE stock_flag = 0 AND stock_owner = :owner';
+    $params = [':owner' => $stock_owner === null ? null : (int) $stock_owner];
+
+    $query = trim($query);
+    if ($query !== '') {
+        $sql .= " AND (stock_title LIKE :stock_title_query ESCAPE '!' OR stock_data LIKE :stock_data_query ESCAPE '!')";
+        $pattern = stock_search_like_pattern($query);
+        $params[':stock_title_query'] = $pattern;
+        $params[':stock_data_query'] = $pattern;
+    }
+
+    $stmt = conn_db()->prepare($sql);
+    $stmt->execute($params);
+    $count = $stmt->fetchColumn();
+    return is_numeric($count) ? max(0, (int) $count) : 0;
+}
+
+function search_stock(
+    int|string|null $stock_owner,
+    string $query = '',
+    string $sort = 'newest',
+    ?int $limit = null,
+    int $offset = 0
+): array {
+    $sql = 'SELECT * FROM ' . db_table_name('content_stock') . ' '
+        . 'WHERE stock_flag = 0 AND stock_owner = :owner';
+    $params = [':owner' => $stock_owner === null ? null : (int) $stock_owner];
+
+    $query = trim($query);
+    if ($query !== '') {
+        $sql .= " AND (stock_title LIKE :stock_title_query ESCAPE '!' OR stock_data LIKE :stock_data_query ESCAPE '!')";
+        $pattern = stock_search_like_pattern($query);
+        $params[':stock_title_query'] = $pattern;
+        $params[':stock_data_query'] = $pattern;
+    }
+
+    $sql .= ' ORDER BY ' . stock_search_order_by($sort);
+    if ($limit !== null) {
+        $safeLimit = max(1, min(100, $limit));
+        $safeOffset = max(0, $offset);
+        $sql .= ' LIMIT ' . $safeLimit . ' OFFSET ' . $safeOffset;
+    }
+
+    $stmt = conn_db()->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
+function find_owned_active_stock(int $userId, int $stockId): ?array
 {
     $stmt = conn_db()->prepare(
         'SELECT * FROM ' . db_table_name('content_stock') . ' '
-        . 'WHERE stock_flag = 0 AND stock_owner = :owner ORDER BY stock_id DESC'
+        . 'WHERE stock_id = :stock_id AND stock_owner = :owner AND stock_flag = 0 LIMIT 1'
     );
-    $stmt->execute([':owner' => $stock_owner === null ? null : (int) $stock_owner]);
-    return $stmt->fetchAll();
+    $stmt->execute([':stock_id' => $stockId, ':owner' => $userId]);
+    $row = $stmt->fetch();
+    return is_array($row) ? $row : null;
+}
+
+function delete_stock_owned(int $userId, int $stockId): int
+{
+    $stmt = conn_db()->prepare(
+        'UPDATE ' . db_table_name('content_stock') . ' SET stock_flag = 1 '
+        . 'WHERE stock_id = :stock_id AND stock_owner = :owner AND stock_flag = 0'
+    );
+    $stmt->execute([':stock_id' => $stockId, ':owner' => $userId]);
+    return $stmt->rowCount();
 }
 
 function search_conf(int|string|null $conf_owner = null): array

@@ -17,8 +17,8 @@ def check(condition: bool, message: str) -> None:
 
 check('class="row content-grid feed-grid"' in index or 'class="row content-grid feed-grid dashboard-grid"' in index, 'Feed cards use one responsive grid')
 check("default => 'col-12 col-md-6 col-lg-3'" in widget and "app_html($widgetWidthClass) . ' dashboard-widget feed-card" in index, 'Feed grid keeps Mobile 1 / Tablet 2 / Desktop 4 as the default width')
-check('class="row content-grid stock-grid"' in index, 'Stock cards use one responsive grid')
-check('class="col-12 col-md-6 col-lg-3 stock-card"' in index, 'Stock grid follows the same responsive columns')
+check('class="stock-grid"' in index, 'Stock uses one dedicated compact-list container')
+check('class="stock-card"' in index and 'col-md-6 col-lg-3 stock-card' not in index, 'Stock remains one-column while Feed keeps its responsive grid')
 check('$row_cnt' not in index, 'legacy four-item PHP row counter is removed')
 check('style="padding: 0px; margin: 2px;"' not in index, 'card spacing is no longer inline')
 check('.content-grid' in css and '.feed-card,' in css and '.stock-card' in css, 'grid spacing is centralized in Dashboard CSS')

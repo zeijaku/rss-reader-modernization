@@ -2,6 +2,7 @@ from pathlib import Path
 import re
 import sys
 
+from version_test_utils import is_later_application_release, is_later_visible_label
 ROOT = Path(__file__).resolve().parents[1]
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
@@ -16,8 +17,8 @@ def check(condition: bool, message: str) -> None:
     print(('PASS' if condition else 'FAIL') + ': ' + message)
 
 
-check(re.search(r"const APP_VERSION = '(?:1\.6\.0(?:-dev\.[1-9][0-9]*)?|1\.7\.0-dev\.[1-9][0-9]*)';", version) is not None, 'Application Version retains V1.6-B behavior in later checkpoints')
-check('RSS Reader Modernization V1.6-' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.6.0'" in version or 'RSS Reader Modernization V1.7-' in version, 'Application Label identifies V1.6-B or later')
+check(re.search(r"const APP_VERSION = '(?:1\.6\.0(?:-dev\.[1-9][0-9]*)?|1\.7\.0-dev\.[1-9][0-9]*)';", version) is not None or is_later_application_release(version, (1, 6, 0)), 'Application Version retains V1.6-B behavior in later checkpoints')
+check('RSS Reader Modernization V1.6-' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.6.0'" in version or 'RSS Reader Modernization V1.7-' in version or is_later_visible_label(version, (1, 6, 0)), 'Application Label identifies V1.6-B or later')
 check('dashboardSwipeThreshold = 64' in js and 'dashboardSwipeEdge = 24' in js, 'existing Swipe threshold and screen-edge exclusion are unchanged')
 check("absY > 18 && absY > absX" in js and "absX > 14 && absX > absY * 1.25" in js, 'existing vertical and horizontal intent checks are unchanged')
 check("Math.abs(distanceX) < Math.abs(distanceY) * 1.3" in js and 'elapsed > 1200' in js, 'existing final dominance and time limit are unchanged')

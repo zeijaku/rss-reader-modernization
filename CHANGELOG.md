@@ -1,3 +1,16 @@
+## RSS Reader Modernization 1.8.0 — 2026-08-07
+
+### Version 1.8 Stock list improvement
+
+- Stock一覧からの解除を追加し、既存`stock_flag`を使った論理削除、Owner Scope、CSRF、Ajax反映を維持。
+- Stock Title／URL／DomainのServer-side検索と、新しい順／古い順／タイトル順を追加。
+- V1.8-C/R1のMySQL Native Prepare互換問題をR2で修正し、Title／URL検索を別Named Placeholderへ分離。
+- 20件単位の通常Paginationを追加し、`COUNT(*)`と`LIMIT/OFFSET`で全件HTML生成を回避。検索／Sort条件とPage範囲補正を維持。
+- Legacyのランダム色4列Stock Cardを1列Compact Listへ変更し、Domain、保存日時、共通Article Actionsを整理。
+- StockからURL Copy、X投稿画面、Task追加、Stock解除へアクセス可能化。Task Widgetが複数ある場合は追加先を選択。
+- V1.8全体でDB Table／Column／Index／Migration、外部Library、Framework、必須Configは追加しない。
+- Version 1.8.0正式化ではApplication Runtimeの機能追加を行わず、Version Marker、Documentation、Release Package、Release Gateを整備。
+
 ## RSS Reader Modernization 1.7.0 — 2026-08-07
 
 ### Version 1.7 finalization

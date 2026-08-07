@@ -95,6 +95,17 @@ V1.6-Bは既存Swipe判定と操作除外を維持し、表示だけを追加し
 
 V1.7-BはVersion 1.6.0 Complete版を正として`1.7.0-dev.1`へ進め、GitHubの`feature/v1.7-modernization`を作成しました。V1.7-CではLocal Asset URLを`APP_VERSION`ベースのHelperへ一元化し、V1.7-DでStatic Asset Cache、動的Response no-store、限定的なSecurity Headerを追加しました。V1.7-Eでは固定30日期限のRemember Token TableとToken Domain処理を追加し、V1.7-FでLogin Checkbox、Cookie、Session自動復元、Logout／Password変更時失効へ接続しました。V1.7-GではDB・APIを変更せず、4列／2列／1列、縦2段、Drag／Keyboard、全8 ThemeをFixtureで比較しました。V1.7-HではMigration 008、全Widget CRUD、追加／編集画面、固定Rowを正式実装し、Smartphoneは自動高を維持しました。R2では実機確認を受けて一律Scrollを撤去し、RSSの自動／1～30件表示と`information_schema`非依存SQLへ調整しました。R3では標準Rowを320px下限へ引き上げ、RSS自動表示を5件／10件へ単純化し、Clock／Gameは高さ1でも従来どおり主要操作を切らない自然拡張へ戻しました。R4ではCalendarへ日本の祝日表示を追加し、内閣府CSVを設定可能URLから60日間隔でBackground更新、取得失敗時は既存Cache／SnapshotへFallbackします。V1.5／V1.6の機能はV1.7へ統合しますが、V1.6 TagやV1.5／V1.6 GitHub Releaseを追加しません。
 
+## Version 1.8 — Stock一覧改善
+
+- [x] V1.8-A Stock現状調査・設計
+- [x] V1.8-B Stock解除・Ownership／CSRF・Ajax反映
+- [x] V1.8-C / R1～R2 Title／URL／Domain検索・Sort・Native PDO互換修正
+- [x] V1.8-D 20件Pagination・検索／Sort条件保持
+- [x] V1.8-E Domain／Article Actions／Task追加先／Compact List
+- [x] V1.8-F Full回帰・Version 1.8.0 Release
+
+Version 1.8は既存`content_stock`構造を変更せず、Stock解除、Server-side検索、新旧／Title Sort、20件Pagination、Domain表示、共通Actions、1列Compact Listを追加します。新しいTable／Column／Index／Migration／必須Config／外部Libraryは追加しません。
+
 ## M1 — Source / RSS Engine
 
 ### Goal

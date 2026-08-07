@@ -549,6 +549,40 @@ function dashboard_widget_public_list(int $ownerId, int $location): array
     return $result;
 }
 
+/** @return list<array{widget_id:int,widget_location:int,title:string}> */
+function dashboard_widget_task_targets(int $ownerId): array
+{
+    if ($ownerId <= 0) {
+        return [];
+    }
+
+    $stmt = conn_db()->prepare(
+        'SELECT widget_id, widget_location, widget_config FROM ' . db_table_identifier('dashboard_widget') . ' '
+        . "WHERE widget_owner = :owner AND widget_type = 'task' AND widget_flag = 0 "
+        . 'ORDER BY widget_location ASC, widget_sort_order ASC, widget_id ASC'
+    );
+    $stmt->execute([':owner' => $ownerId]);
+
+    $targets = [];
+    foreach ($stmt->fetchAll() as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $widgetId = app_validate_positive_int($row['widget_id'] ?? null);
+        $location = dashboard_widget_validate_location($row['widget_location'] ?? null);
+        if ($widgetId === null || $location === null) {
+            continue;
+        }
+        $config = dashboard_widget_task_config_from_storage($row['widget_config'] ?? null);
+        $targets[] = [
+            'widget_id' => $widgetId,
+            'widget_location' => $location,
+            'title' => $config['title'],
+        ];
+    }
+    return $targets;
+}
+
 /** @return array<string,mixed>|null */
 function dashboard_widget_lock_owned_content(PDO $pdo, int $ownerId, int $contentId): ?array
 {

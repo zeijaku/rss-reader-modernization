@@ -2,6 +2,7 @@
 from pathlib import Path
 import re
 
+from version_test_utils import is_later_application_release, is_later_visible_label
 ROOT = Path(__file__).resolve().parents[1]
 checks = []
 
@@ -9,8 +10,8 @@ def check(value, message):
     checks.append((bool(value), message))
 
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
-check("APP_VERSION = '1.7.0-dev.1'" in version or "APP_VERSION = '1.7.0-dev.2'" in version or "APP_VERSION = '1.7.0-dev.3'" in version or "APP_VERSION = '1.7.0-dev.4'" in version or "APP_VERSION = '1.7.0-dev.5'" in version or "APP_VERSION = '1.7.0-dev.6'" in version or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version), 'Application Version retains the V1.7-B baseline in later checkpoints')
-check("APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-B / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-C / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-D / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-E / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-F / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-G / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R2'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R3'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R4'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.7.0'" in version, 'Application Label is V1.7-B or later')
+check("APP_VERSION = '1.7.0-dev.1'" in version or "APP_VERSION = '1.7.0-dev.2'" in version or "APP_VERSION = '1.7.0-dev.3'" in version or "APP_VERSION = '1.7.0-dev.4'" in version or "APP_VERSION = '1.7.0-dev.5'" in version or "APP_VERSION = '1.7.0-dev.6'" in version or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version) or is_later_application_release(version, (1, 7, 0)), 'Application Version retains the V1.7-B baseline in later checkpoints')
+check("APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-B / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-C / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-D / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-E / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-F / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-G / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R1'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R2'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R3'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R4'" in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.7.0'" in version or is_later_visible_label(version, (1, 7, 0)), 'Application Label is V1.7-B or later')
 
 build = (ROOT / 'SOURCE_BUILD.txt').read_text(encoding='utf-8')
 check('package_type=development-checkpoint' in build or 'package_type=release-source-worktree' in build or 'package_type=complete-source' in build, 'Source build retains V1.7 development lineage or final complete-source metadata')
@@ -28,7 +29,7 @@ if "APP_VERSION = '1.7.0-dev.1'" in version:
     check(not (ROOT / 'database/migrations/007_v1_7_remember_token.sql').exists(), 'Remember Token migration is not introduced in V1.7-B')
 else:
     check(True, 'Later V1.7 checkpoints may add the planned Remember Token migration')
-check((not (ROOT / 'database/migrations/008_v1_7_widget_height.sql').exists()) or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version), 'Widget height is not introduced in B and may be implemented in H')
+check((not (ROOT / 'database/migrations/008_v1_7_widget_height.sql').exists()) or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version) or is_later_application_release(version, (1, 7, 0)), 'Widget height is not introduced in B and may be implemented in H')
 
 for ok, message in checks:
     print(('PASS' if ok else 'FAIL') + ': ' + message)

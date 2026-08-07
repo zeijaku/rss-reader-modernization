@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 
+from version_test_utils import is_later_application_release, is_later_visible_label
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
 
@@ -15,8 +16,8 @@ css = (ROOT / 'public/css/clock-timer.css').read_text(encoding='utf-8')
 index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
 run = (ROOT / 'tests/run.sh').read_text(encoding='utf-8')
 
-check("const APP_VERSION = '1.5.0-dev.2';" in version or "const APP_VERSION = '1.5.0';" in version or re.search(r"const APP_VERSION = '1\.[67]\.0(?:-dev\.[1-9][0-9]*)?';", version) is not None, 'Application Version retains V1.5-C behavior')
-check('RSS Reader Modernization V1.5-C / R' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.5.0'" in version or 'RSS Reader Modernization V1.6-' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.6.0'" in version or 'RSS Reader Modernization V1.7-' in version or 'RSS Reader Modernization V1.7-' in version, 'visible label identifies V1.5-C or final release')
+check("const APP_VERSION = '1.5.0-dev.2';" in version or "const APP_VERSION = '1.5.0';" in version or re.search(r"const APP_VERSION = '1\.[67]\.0(?:-dev\.[1-9][0-9]*)?';", version) is not None or is_later_application_release(version, (1, 5, 0)), 'Application Version retains V1.5-C behavior')
+check('RSS Reader Modernization V1.5-C / R' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.5.0'" in version or 'RSS Reader Modernization V1.6-' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.6.0'" in version or 'RSS Reader Modernization V1.7-' in version or 'RSS Reader Modernization V1.7-' in version or is_later_visible_label(version, (1, 5, 0)), 'visible label identifies V1.5-C or final release')
 check('loadStateResult' in timer and "browserStorageRaw('localStorage'" in timer and "browserStorageRaw('sessionStorage'" in timer, 'Timer inspects all Browser Storage copies')
 check('valid.sort' in timer and 'savedAt' in timer and "left.name === 'localStorage'" in timer, 'newest valid Storage copy is selected deterministically')
 check('removeStorageCopy' in timer and "'repaired-copy'" in timer and "reason: 'invalid-data'" in timer, 'invalid Storage copies are removed with explicit recovery reasons')

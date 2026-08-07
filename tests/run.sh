@@ -503,3 +503,36 @@ if grep -Fq "const APP_VERSION = '1.7.0';" "$ROOT/app/version.php"; then
 else
     echo 'SKIP: Version 1.7.0 release gate requires APP_VERSION 1.7.0.'
 fi
+
+
+echo '== V1.8-B Stock removal checks =='
+python3 "$ROOT/tests/test_v18b_stock_static.py"
+php "$ROOT/tests/test_v18b_stock_db.php"
+
+echo '== V1.8-C Stock search / sorting checks =='
+python3 "$ROOT/tests/test_v18c_stock_search_static.py"
+php "$ROOT/tests/test_v18c_stock_helpers.php"
+php "$ROOT/tests/test_v18c_stock_render.php"
+
+echo '== V1.8-D Stock pagination checks =='
+python3 "$ROOT/tests/test_v18d_stock_pagination_static.py"
+php "$ROOT/tests/test_v18d_stock_pagination.php"
+php "$ROOT/tests/test_v18d_stock_page_clamp.php"
+
+echo '== V1.8-E Stock actions / domain / compact UI checks =='
+python3 "$ROOT/tests/test_v18e_stock_ui_static.py"
+php "$ROOT/tests/test_v18e_stock_task_targets.php"
+php "$ROOT/tests/test_v18e_stock_render.php"
+
+if grep -Fq "const APP_VERSION = '1.8.0';" "$ROOT/app/version.php"; then
+    for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
+        if [ -d "$runtime_dir" ]; then
+            find "$runtime_dir" -type f ! -name '.gitkeep' -delete
+        fi
+    done
+    echo '== Version 1.8.0 release checks =='
+    python3 "$ROOT/tests/test_v18f_release.py"
+    python3 "$ROOT/tests/test_v18f_release_documentation.py"
+else
+    echo 'SKIP: Version 1.8.0 release gate requires APP_VERSION 1.8.0.'
+fi

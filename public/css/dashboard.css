@@ -577,6 +577,26 @@
     opacity: 0.5;
 }
 
+.article-actions-separator {
+    height: 1px;
+    margin: 4px 6px;
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.article-action-stock-remove {
+    color: #b02a37;
+}
+
+.article-action-stock-remove i {
+    color: #dc3545;
+}
+
+.article-action-stock-remove:hover,
+.article-action-stock-remove:focus {
+    background: rgba(220, 53, 69, 0.09);
+    color: #842029;
+}
+
 .feed-item-summary-icon {
     color: #6c757d;
     font-size: 0.88rem;
@@ -650,19 +670,121 @@
     word-break: break-word;
 }
 
-.stock-card-inner .list-group-item {
-    height: 100%;
-    min-height: 92px;
+.stock-grid {
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 6px;
+    background: #ffffff;
 }
 
-.stock-date,
+.stock-card {
+    width: 100%;
+    padding: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.09);
+}
+
+.stock-card:last-child {
+    border-bottom: 0;
+}
+
+.stock-card-inner {
+    display: flex;
+    min-height: 76px;
+    padding: 12px 8px 12px 14px;
+    align-items: center;
+    background: #ffffff;
+}
+
+.stock-card-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .stock-title {
     display: block;
+    font-size: 0.94rem;
+    font-weight: 500;
+    line-height: 1.45;
 }
 
+.stock-title a {
+    color: #343a40;
+}
+
+.stock-title a:hover,
+.stock-title a:focus {
+    color: #0056b3;
+}
+
+.stock-meta {
+    display: flex;
+    min-width: 0;
+    margin-top: 7px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    color: #6c757d;
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.stock-domain,
 .stock-date {
-    width: fit-content;
-    margin-bottom: 8px;
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+}
+
+.stock-domain {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.stock-meta i {
+    margin-right: 3px;
+    color: #868e96;
+}
+
+.stock-meta-separator {
+    color: #adb5bd;
+}
+
+.stock-card-actions {
+    flex: 0 0 44px;
+    width: 44px;
+    margin-left: 8px;
+}
+
+.stock-actions-trigger {
+    display: inline-flex;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    text-decoration: none;
+}
+
+.stock-actions-trigger:hover,
+.stock-actions-trigger:focus {
+    color: #17a2b8;
+    text-decoration: none;
+}
+
+.stock-pagination {
+    flex-wrap: wrap;
+    margin-bottom: 0;
+}
+
+.stock-pagination .page-link {
+    display: flex;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
 }
 
 .empty-state {
@@ -1218,6 +1340,19 @@ select:focus,
     .stock-card,
     .mini-game-card {
         padding: 4px 0;
+    }
+
+    .stock-card {
+        padding: 0;
+    }
+
+    .stock-card-inner {
+        min-height: 72px;
+        padding: 10px 4px 10px 10px;
+    }
+
+    .stock-card-actions {
+        margin-left: 4px;
     }
 
     .content-grid {

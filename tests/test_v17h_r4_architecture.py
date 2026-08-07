@@ -3,6 +3,7 @@ import json
 import re
 import sys
 
+from version_test_utils import is_later_application_release, is_later_visible_label
 root = Path(__file__).resolve().parents[1]
 checks = []
 def check(cond, message):
@@ -22,7 +23,7 @@ gitignore = (root/'.gitignore').read_text()
 snapshot = json.loads((root/'app/data/japanese_holidays_snapshot.json').read_text())
 version = (root/'app/version.php').read_text()
 
-check(("1.7.0-dev.10" in version and 'V1.7-H / R4' in version) or ("APP_VERSION = '1.7.0'" in version and "RSS Reader Modernization 1.7.0" in version), 'R4 behavior is retained in final cache-busting version marker')
+check(is_later_application_release(version, (1, 7, 0)) or ("1.7.0-dev.10" in version and 'V1.7-H / R4' in version) or ("APP_VERSION = '1.7.0'" in version and "RSS Reader Modernization 1.7.0" in version), 'R4 behavior is retained in final cache-busting version marker')
 check('APP_HOLIDAY_CSV_URL' in conf and 'APP_HOLIDAY_CACHE_DAYS' in conf and "'60'" in conf, 'holiday source URL and 60-day interval are runtime configuration')
 check('APP_HOLIDAY_CSV_URL' in local and 'APP_HOLIDAY_CACHE_DAYS' in local, 'private local.php example exposes the URL and interval')
 check('APP_HOLIDAY_CSV_URL=' in env and 'APP_HOLIDAY_CACHE_DAYS=60' in env, 'environment example exposes the same holiday settings')

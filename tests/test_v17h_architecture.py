@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 
+from version_test_utils import is_later_application_release, is_later_visible_label
 ROOT = Path(__file__).resolve().parents[1]
 failures: list[str] = []
 
@@ -24,8 +25,8 @@ preflight = (ROOT / 'database/audit/v1_7_h_preflight.sql').read_text(encoding='u
 postflight = (ROOT / 'database/audit/v1_7_h_postflight.sql').read_text(encoding='utf-8')
 run = (ROOT / 'tests/run.sh').read_text(encoding='utf-8')
 
-check(re.search(r"const APP_VERSION = '(?:1\.7\.0-dev\.(?:9|10)|1\.7\.0)';", version) is not None, 'Application Version is V1.7-H/R3 or later R4 checkpoint')
-check("RSS Reader Modernization V1.7-H / R3" in version or "RSS Reader Modernization V1.7-H / R4" in version or "RSS Reader Modernization 1.7.0" in version, 'Application Label is V1.7-H/R3 or R4')
+check(is_later_application_release(version, (1, 7, 0)) or re.search(r"const APP_VERSION = '(?:1\.7\.0-dev\.(?:9|10)|1\.7\.0)';", version) is not None, 'Application Version is V1.7-H/R3 or later R4 checkpoint')
+check(is_later_visible_label(version, (1, 7, 0)) or "RSS Reader Modernization V1.7-H / R3" in version or "RSS Reader Modernization V1.7-H / R4" in version or "RSS Reader Modernization 1.7.0" in version, 'Application Label is V1.7-H/R3 or R4')
 
 for rel in [
     'database/migrations/008_v1_7_widget_height.sql',

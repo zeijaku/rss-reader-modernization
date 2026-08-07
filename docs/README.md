@@ -268,3 +268,16 @@ Secure Baseline初期のdeployment / login / session / logout等のhotfix記録�
 - [V1.7-H / R2 Migration Compatibility](v1-7-h-r2-migration.md)
 - [V1.7-H / R2 Test Report](test-report-v1-7-h-r2.md)
 - [V1.7-G Widget Grid Prototype](v1-7-g-implementation.md)
+
+## Version 1.8
+
+- [V1.8-B Stock解除](v1-8-b-implementation.md)
+- [V1.8-C Stock検索・並び替え](v1-8-c-implementation.md)
+- [V1.8-C / R2 Search 500修正](v1-8-c-r2-fix.md)
+- [V1.8-D Stock Pagination](v1-8-d-implementation.md)
+- [V1.8-E Stock Actions / Domain / UI](v1-8-e-implementation.md)
+- [V1.8.0正式化](v1-8-release-implementation.md)
+- [V1.8.0 Test Report](test-report-v1-8-release.md)
+- [V1.8.0 Release Gate](release-gate-v1.8.0.md)
+- [V1.8.0 Artifact Inventory](release-artifact-inventory-v1.8.0.md)
+- [V1.8.0 GitHub PowerShell手順](github-v1-8-powershell.md)

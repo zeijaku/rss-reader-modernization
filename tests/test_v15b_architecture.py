@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 
+from version_test_utils import is_later_application_release, is_later_visible_label
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
 
@@ -19,8 +20,8 @@ widget = (ROOT / 'app/dashboard_widget.php').read_text(encoding='utf-8')
 schema = (ROOT / 'database/schema.sql').read_text(encoding='utf-8')
 run = (ROOT / 'tests/run.sh').read_text(encoding='utf-8')
 
-check(re.search(r"const APP_VERSION = '1\.5\.0(?:-dev\.[12])?';", version) is not None or re.search(r"const APP_VERSION = '1\.[67]\.0(?:-dev\.[1-9][0-9]*)?';", version) is not None, 'Application Version remains in the V1.5 line')
-check('RSS Reader Modernization V1.5-' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.5.0'" in version or 'RSS Reader Modernization V1.6-' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.6.0'" in version or 'RSS Reader Modernization V1.7-' in version or 'RSS Reader Modernization V1.7-' in version, 'visible label identifies Version 1.5')
+check(re.search(r"const APP_VERSION = '1\.5\.0(?:-dev\.[12])?';", version) is not None or re.search(r"const APP_VERSION = '1\.[67]\.0(?:-dev\.[1-9][0-9]*)?';", version) is not None or is_later_application_release(version, (1, 5, 0)), 'Application Version remains in the V1.5 line')
+check('RSS Reader Modernization V1.5-' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.5.0'" in version or 'RSS Reader Modernization V1.6-' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.6.0'" in version or 'RSS Reader Modernization V1.7-' in version or 'RSS Reader Modernization V1.7-' in version or is_later_visible_label(version, (1, 5, 0)), 'visible label identifies Version 1.5')
 check('data-clock-view-trigger="clock"' in index and 'data-clock-view-trigger="timer"' in index, 'Clock and Timer view controls render')
 check(all(label in index for label in ['1分', '3分', '5分', '10分', '25分']), 'approved Timer presets render')
 check('min="1" max="1440" step="1"' in index, 'custom minutes input is bounded from 1 to 1440')

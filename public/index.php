@@ -82,6 +82,27 @@ if ($token === 'login' && !$authCsrfInvalid) {
 $currentUserId = app_session_user_id();
 $ui = $currentUserId !== null ? user_ui_config($currentUserId) : app_safe_ui_config(default_ui_config());
 $tabParam = app_tab_from_query($_GET['tab'] ?? null);
+
+$stockSearchQuery = '';
+$stockSort = 'newest';
+$stockPage = 1;
+$stockTaskTargets = [];
+if ($tabParam === 'stock') {
+    $validatedStockQuery = app_validate_text($_GET['q'] ?? '', 128, true);
+    if ($validatedStockQuery !== null) {
+        $stockSearchQuery = trim($validatedStockQuery);
+    }
+
+    $validatedStockSort = app_validate_enum($_GET['sort'] ?? 'newest', ['newest', 'oldest', 'title']);
+    if ($validatedStockSort !== null) {
+        $stockSort = $validatedStockSort;
+    }
+
+    $validatedStockPage = app_validate_positive_int($_GET['page'] ?? '1');
+    if ($validatedStockPage !== null) {
+        $stockPage = $validatedStockPage;
+    }
+}
 ?>
 
 <!doctype html>
@@ -236,7 +257,7 @@ function search_feed_form_fields(string $prefix): string
 
 <div id="app-notice" class="app-notice alert" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden></div>
 
-<!-- 記事Actions: 通常RSSとSearch Feedで共通利用 -->
+<!-- 記事Actions: 通常RSS / Search Feed / Stockで共通利用 -->
 <div id="articleActionsMenu" class="article-actions-menu" role="menu" aria-label="記事Actions" hidden>
     <button type="button" class="article-actions-item article-action-stock" role="menuitem">
         <i class="far fa-bookmark fa-fw" aria-hidden="true"></i><span>Stockへ保存</span>
@@ -249,6 +270,10 @@ function search_feed_form_fields(string $prefix): string
     </button>
     <button type="button" class="article-actions-item article-action-task" role="menuitem">
         <i class="fas fa-tasks fa-fw" aria-hidden="true"></i><span>Taskへ追加</span>
+    </button>
+    <div class="article-actions-separator article-action-stock-only" role="separator" hidden></div>
+    <button type="button" class="article-actions-item article-action-stock-remove article-action-stock-only" role="menuitem" hidden>
+        <i class="far fa-bookmark fa-fw" aria-hidden="true"></i><span>Stock解除</span>
     </button>
 </div>
 
@@ -594,36 +619,118 @@ if (is_int($content_location)) {
 
 } elseif ($content_location === 'stock') {
     /* Stockデータ表示 */
-    $result_stock = search_stock($currentUserId);
+    $stockTaskTargets = dashboard_widget_task_targets($currentUserId);
+    $stockPerPage = 20;
+    $stockTotalCount = count_stock($currentUserId, $stockSearchQuery);
+    $stockTotalPages = max(1, (int) ceil($stockTotalCount / $stockPerPage));
+    if ($stockPage > $stockTotalPages) {
+        $stockPage = $stockTotalPages;
+    }
+    $stockOffset = ($stockPage - 1) * $stockPerPage;
+    $result_stock = search_stock($currentUserId, $stockSearchQuery, $stockSort, $stockPerPage, $stockOffset);
     $result_content_cnt = count($result_stock);
 
+    $stockPageUrl = static function (int $page) use ($stockSearchQuery, $stockSort): string {
+        $params = ['tab' => 'stock'];
+        if ($stockSearchQuery !== '') {
+            $params['q'] = $stockSearchQuery;
+        }
+        if ($stockSort !== 'newest') {
+            $params['sort'] = $stockSort;
+        }
+        if ($page > 1) {
+            $params['page'] = $page;
+        }
+        return './?' . http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+    };
+
+    echo '<section class="stock-filter-panel mb-3" aria-labelledby="stock-filter-title">';
+    echo '<h2 id="stock-filter-title" class="sr-only">Stock検索と並び替え</h2>';
+    echo '<form method="get" action="./" class="form-row align-items-end stock-filter-form" role="search">';
+    echo '<input type="hidden" name="tab" value="stock">';
+    echo '<div class="form-group col-12 col-md-6 mb-2"><label for="stockSearchQuery" class="mb-1"><small>Stock検索</small></label><input type="search" class="form-control" id="stockSearchQuery" name="q" value="' . app_html($stockSearchQuery) . '" maxlength="128" placeholder="記事タイトル / URL / Domain"></div>';
+    echo '<div class="form-group col-7 col-md-3 mb-2"><label for="stockSort" class="mb-1"><small>並び順</small></label><select class="form-control" id="stockSort" name="sort">';
+    echo '<option value="newest"' . ($stockSort === 'newest' ? ' selected' : '') . '>新しい順</option>';
+    echo '<option value="oldest"' . ($stockSort === 'oldest' ? ' selected' : '') . '>古い順</option>';
+    echo '<option value="title"' . ($stockSort === 'title' ? ' selected' : '') . '>タイトル順</option>';
+    echo '</select></div>';
+    echo '<div class="form-group col-5 col-md-3 mb-2 d-flex"><button type="submit" class="btn btn-primary flex-fill">表示</button>';
+    if ($stockSearchQuery !== '' || $stockSort !== 'newest') {
+        echo '<a class="btn btn-outline-secondary ml-2" href="./?tab=stock">クリア</a>';
+    }
+    echo '</div></form>';
+    if ($stockSearchQuery !== '') {
+        echo '<p class="small text-muted mb-2">「' . app_html($stockSearchQuery) . '」の検索結果: ' . $stockTotalCount . '件</p>';
+    } elseif ($stockTotalCount > 0) {
+        echo '<p class="small text-muted mb-2">Stock: ' . $stockTotalCount . '件</p>';
+    }
+    if ($stockTotalCount > 0) {
+        $stockRangeStart = $stockOffset + 1;
+        $stockRangeEnd = $stockOffset + $result_content_cnt;
+        echo '<p class="small text-muted mb-2">' . $stockRangeStart . '〜' . $stockRangeEnd . '件を表示 / ' . $stockPage . ' / ' . $stockTotalPages . 'ページ</p>';
+    }
+    echo '</section>';
+
     if ($result_content_cnt > 0) {
-        echo '<div class="row content-grid stock-grid">';
+        $stockEmptyRedirect = $stockTotalPages > 1
+            ? $stockPageUrl($stockPage > 1 ? $stockPage - 1 : 1)
+            : '';
+        echo '<div class="stock-grid" data-stock-page="' . $stockPage . '" data-stock-total-pages="' . $stockTotalPages . '" data-stock-empty-redirect="' . app_html($stockEmptyRedirect) . '">';
     }
 
-    /* コンテンツをカードに表示 */
+    /* StockをCompact Listとして表示 */
     for( $i = 0; $i < $result_content_cnt; $i++ ) {
         /* Stock表示値は既存DB行もuntrustedとして扱う */
+        $stockId = (int) ($result_stock[$i]['stock_id'] ?? 0);
         $stockUrl = app_validate_stock_url($result_stock[$i]['stock_data'] ?? null);
         $stockTitle = (string) ($result_stock[$i]['stock_title'] ?? '');
         $stockDate = (string) ($result_stock[$i]['stock_date'] ?? '');
+        $stockDomain = '';
+        if ($stockUrl !== null) {
+            $parsedHost = parse_url($stockUrl, PHP_URL_HOST);
+            if (is_string($parsedHost) && $parsedHost !== '') {
+                $stockDomain = strtolower($parsedHost);
+                if (str_starts_with($stockDomain, 'www.')) {
+                    $stockDomain = substr($stockDomain, 4);
+                }
+            }
+        }
 
-        /* ランダムカラーテーマ */
-        $select_color_val = array('secondary', 'primary', 'dark', 'success', 'info');
-        $select_color = $select_color_val[mt_rand(0,4)];
-
+        $stockDisplayTitle = trim($stockTitle) !== '' ? $stockTitle : 'タイトルなし';
         $stockDisplay = $stockUrl !== null
-            ? '<a href="' . app_html($stockUrl) . '" target="_blank" rel="noopener noreferrer">' . app_html($stockTitle) . '</a>'
-            : '<span>' . app_html($stockTitle) . '</span>';
+            ? '<a href="' . app_html($stockUrl) . '" target="_blank" rel="noopener noreferrer">' . app_html($stockDisplayTitle) . '</a>'
+            : '<span>' . app_html($stockDisplayTitle) . '</span>';
+
         echo '
-        <!-- Stock Card -->
-            <article class="col-12 col-md-6 col-lg-3 stock-card">
-                <ul class="list-group stock-card-inner">
-                    <li class="list-group-item list-group-item-' . app_html($select_color) . '">
-                        <span class="badge badge-' . app_html($select_color) . ' stock-date">' . app_html($stockDate) . '</span>
-                        <small class="stock-title">' . $stockDisplay . '</small>
-                    </li>
-                </ul>
+        <!-- Stock Item -->
+            <article class="stock-card" data-stock-id="' . $stockId . '">
+                <div class="stock-card-inner">
+                    <div class="stock-card-content">
+                        <div class="stock-title">' . $stockDisplay . '</div>
+                        <div class="stock-meta">';
+        if ($stockDomain !== '') {
+            echo '<span class="stock-domain"><i class="fas fa-globe fa-fw" aria-hidden="true"></i>' . app_html($stockDomain) . '</span>';
+        }
+        if ($stockDomain !== '' && $stockDate !== '') {
+            echo '<span class="stock-meta-separator" aria-hidden="true">·</span>';
+        }
+        if ($stockDate !== '') {
+            echo '<span class="stock-date"><i class="far fa-clock fa-fw" aria-hidden="true"></i>' . app_html($stockDate) . '</span>';
+        }
+        echo '</div>
+                    </div>
+                    <div class="stock-card-actions">
+                        <button type="button" class="btn btn-link article-actions-trigger stock-actions-trigger"
+                            data-article-context="stock"
+                            data-article-url="' . app_html($stockUrl ?? '') . '"
+                            data-article-title="' . app_html($stockDisplayTitle) . '"
+                            data-stock-id="' . $stockId . '"
+                            aria-haspopup="menu" aria-expanded="false" aria-controls="articleActionsMenu"
+                            title="記事Actions" aria-label="記事Actions: ' . app_html($stockDisplayTitle) . '">
+                            <i class="fas fa-ellipsis-h fa-fw" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
             </article>
         ';
     }
@@ -631,15 +738,55 @@ if (is_int($content_location)) {
     if ($result_content_cnt > 0) {
         echo '</div><!-- /stock-grid -->';
     }
-}
 
-/* 登録直後 or コンテンツ無し時 */
-if ($result_content_cnt === 0) {
-    if ($content_location === 'stock') {
-        echo '<div class="empty-state text-center" role="status"><i class="far fa-bookmark fa-2x text-muted" aria-hidden="true"></i><p>Stockした記事はまだありません。</p><a class="btn btn-outline-secondary" href="./?tab=0">RSS一覧へ戻る</a></div>';
-    } else {
-        echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#registerClock">Clockを追加する</button><button type="button" class="btn btn-outline-secondary mr-2" data-toggle="modal" data-target="#registerMemo">Memoを追加する</button><button type="button" class="btn btn-outline-dark mr-2" data-toggle="modal" data-target="#registerTaskWidget">Taskを追加する</button><button type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#registerCalendarWidget">Calendarを追加する</button><button type="button" class="btn btn-outline-warning ml-2" data-toggle="modal" data-target="#registerSearchFeed">Search Feedを追加する</button></div>';
+    if ($stockTotalPages > 1 && $stockTotalCount > 0) {
+        $stockPageNumbers = [1];
+        $stockWindowStart = max(2, $stockPage - 2);
+        $stockWindowEnd = min($stockTotalPages - 1, $stockPage + 2);
+        for ($pageNumber = $stockWindowStart; $pageNumber <= $stockWindowEnd; $pageNumber++) {
+            $stockPageNumbers[] = $pageNumber;
+        }
+        $stockPageNumbers[] = $stockTotalPages;
+        $stockPageNumbers = array_values(array_unique($stockPageNumbers));
+        sort($stockPageNumbers, SORT_NUMERIC);
+
+        echo '<nav class="stock-pagination-nav mt-3" aria-label="Stockページ"><ul class="pagination justify-content-center stock-pagination">';
+        if ($stockPage > 1) {
+            echo '<li class="page-item"><a class="page-link stock-page-prev" href="' . app_html($stockPageUrl($stockPage - 1)) . '" aria-label="前のページ">&laquo;</a></li>';
+        } else {
+            echo '<li class="page-item disabled" aria-disabled="true"><span class="page-link">&laquo;</span></li>';
+        }
+
+        $previousPageNumber = null;
+        foreach ($stockPageNumbers as $pageNumber) {
+            if ($previousPageNumber !== null && $pageNumber > $previousPageNumber + 1) {
+                echo '<li class="page-item disabled" aria-hidden="true"><span class="page-link">…</span></li>';
+            }
+            if ($pageNumber === $stockPage) {
+                echo '<li class="page-item active" aria-current="page"><span class="page-link">' . $pageNumber . '</span></li>';
+            } else {
+                echo '<li class="page-item"><a class="page-link" href="' . app_html($stockPageUrl($pageNumber)) . '">' . $pageNumber . '</a></li>';
+            }
+            $previousPageNumber = $pageNumber;
+        }
+
+        if ($stockPage < $stockTotalPages) {
+            echo '<li class="page-item"><a class="page-link stock-page-next" href="' . app_html($stockPageUrl($stockPage + 1)) . '" aria-label="次のページ">&raquo;</a></li>';
+        } else {
+            echo '<li class="page-item disabled" aria-disabled="true"><span class="page-link">&raquo;</span></li>';
+        }
+        echo '</ul></nav>';
     }
+
+    if ($stockSearchQuery !== '') {
+        echo '<div id="stockEmptyState" class="empty-state text-center" role="status"' . ($stockTotalCount > 0 ? ' hidden' : '') . '><i class="fas fa-search fa-2x text-muted" aria-hidden="true"></i><p>条件に一致するStockはありません。</p><a class="btn btn-outline-secondary" href="./?tab=stock">検索条件を解除</a></div>';
+    } else {
+        echo '<div id="stockEmptyState" class="empty-state text-center" role="status"' . ($stockTotalCount > 0 ? ' hidden' : '') . '><i class="far fa-bookmark fa-2x text-muted" aria-hidden="true"></i><p>Stockした記事はまだありません。</p><a class="btn btn-outline-secondary" href="./?tab=0">RSS一覧へ戻る</a></div>';
+    }
+}
+/* 登録直後 or コンテンツ無し時 */
+if ($result_content_cnt === 0 && $content_location !== 'stock') {
+    echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#registerClock">Clockを追加する</button><button type="button" class="btn btn-outline-secondary mr-2" data-toggle="modal" data-target="#registerMemo">Memoを追加する</button><button type="button" class="btn btn-outline-dark mr-2" data-toggle="modal" data-target="#registerTaskWidget">Taskを追加する</button><button type="button" class="btn btn-outline-info" data-toggle="modal" data-target="#registerCalendarWidget">Calendarを追加する</button><button type="button" class="btn btn-outline-warning ml-2" data-toggle="modal" data-target="#registerSearchFeed">Search Feedを追加する</button></div>';
 }
 ?>
 </main><!-- /igcontainer -->
@@ -1426,6 +1573,47 @@ if ($result_content_cnt === 0) {
     </div>
 </div>
 
+<?php if ($tabParam === 'stock' && count($stockTaskTargets) > 1): ?>
+<!-- Stock Actions: Task追加先選択 -->
+<div class="modal fade" id="stockTaskTargetModal" tabindex="-1" role="dialog" aria-labelledby="stockTaskTargetTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+        <form id="stockTaskTargetForm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="stockTaskTargetTitle"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i> Taskへ追加</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group mb-0">
+                        <label for="stockTaskTargetSelect">追加先Task Widget</label>
+                        <select class="form-control" id="stockTaskTargetSelect" required>
+<?php foreach ($stockTaskTargets as $target): ?>
+<?php
+    $targetLocation = (int) $target['widget_location'];
+    $targetTabKey = 'conf_style_tabname' . ($targetLocation + 1);
+    $targetTabName = trim((string) ($ui[$targetTabKey] ?? ''));
+    if ($targetTabName === '') {
+        $targetTabName = 'タブ' . ($targetLocation + 1);
+    }
+?>
+                            <option value="<?php echo (int) $target['widget_id']; ?>"><?php echo app_html((string) $target['title'] . ' — ' . $targetTabName); ?></option>
+<?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                    <button type="submit" class="btn btn-primary stock-task-target-submit">追加する</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<?php endif; ?>
+
+<?php if ($tabParam === 'stock' && count($stockTaskTargets) === 1): ?>
+<div id="stockTaskSingleTarget" data-widget-id="<?php echo (int) $stockTaskTargets[0]['widget_id']; ?>" hidden></div>
+<?php endif; ?>
 
 <!-- Top Page -->
 <p id="page-top">

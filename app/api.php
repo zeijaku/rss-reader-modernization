@@ -129,6 +129,7 @@ function api_dispatch(string $action, int $userId, array $input): array
         'content.update' => api_content_update($userId, $input),
         'content.delete' => api_content_delete($userId, $input),
         'stock.create' => api_stock_create($userId, $input),
+        'stock.delete' => api_stock_delete($userId, $input),
         'settings.update' => api_settings_update($userId, $input),
         'account.email.update' => api_account_email_update($userId, $input),
         'account.password.update' => api_account_password_update($userId, $input),
@@ -950,6 +951,25 @@ function api_stock_create(int $userId, array $input): array
     // The title was already present in the authenticated user's fetched feed.
     $stockId = info_dbsave($userId, $url, $title);
     return api_success(['stock_id' => $stockId], 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_stock_delete(int $userId, array $input): array
+{
+    $stockId = api_positive_int($input, 'stock_id');
+    if ($stockId === null) {
+        return api_validation_error('stock_id must be a positive integer.');
+    }
+
+    if (find_owned_active_stock($userId, $stockId) === null) {
+        return api_error('not_found', 'Stock was not found.', 404);
+    }
+
+    if (delete_stock_owned($userId, $stockId) === 0) {
+        return api_error('not_found', 'Stock was not found.', 404);
+    }
+
+    return api_success(['stock_id' => $stockId]);
 }
 
 /** @return array{status:int,body:array<string,mixed>} */

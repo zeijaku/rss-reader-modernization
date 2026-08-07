@@ -23,7 +23,7 @@ def check(cond, msg):
 check("function app_html" in validation and "ENT_QUOTES | ENT_SUBSTITUTE" in validation, 'context-safe HTML escaping helper exists')
 check("app_safe_ui_config" in validation, 'Legacy DB UI values are normalized before rendering')
 check("app_normalize_content_style" in index, 'content style class is allowlisted at render time')
-check("app_validate_stock_url" in index and "app_html($stockTitle)" in index, 'Stock URL/title are validated/escaped at render time')
+check("app_validate_stock_url" in index and "app_html($stockDisplayTitle)" in index, 'Stock URL/title are validated/escaped at render time')
 check("rel=\"noopener noreferrer\"" in index, 'external target=_blank links are hardened with rel')
 
 # Untrusted Feed data must not be concatenated into HTML strings.

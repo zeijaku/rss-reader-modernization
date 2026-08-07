@@ -18,6 +18,26 @@ Releaseごとに次を確認します。
 
 
 
+## Version 1.7.0からVersion 1.8.0
+
+Version 1.8.0はStock一覧改善です。既存`content_stock` Tableをそのまま利用し、DB Migration／SQL実行／必須Config追加はありません。
+
+1. Code、`config/local.php`、Server固有`.htaccess`、実DB、`var/`をBackupする。
+2. Runtime ZIPを本番Folderとは別Folderへ展開し、SHA-256を確認する。
+3. `config/local.php`、実DB、Session／Log／Cache等のRuntime Dataを上書きせずCodeを更新する。
+4. Migration 007／008を含め、SQL／Migrationは再実行しない。
+5. Browserを再読み込みしFooterが`RSS Reader Modernization 1.8.0`であることを確認する。
+6. Stock保存、解除、検索（Title／Domain）、新旧／Title Sort、20件超のPagination、URL Copy／X／Task、Smartphone表示を確認する。
+
+```text
+DB schema / Migration       変更なし
+Public API                  stock.deleteをVersion 1.8-Bで追加済み
+必須設定                    追加なし
+Feed Cache削除              不要
+Browser Cache               APP_VERSION 1.8.0で新Asset URLへ切替
+Server固有.htaccess         不用意に上書きしない
+```
+
 ## V1.7-H / R4からVersion 1.7.0
 
 正式化によるApplication Runtime変更は`app/version.php`だけです。V1.7-H/R4まで適用済みの環境ではMigration 007／008を再実行しません。

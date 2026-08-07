@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 
+from version_test_utils import is_later_application_release, is_later_visible_label
 ROOT = Path(__file__).resolve().parents[1]
 failures: list[str] = []
 
@@ -19,8 +20,8 @@ migration = (ROOT / 'database/migrations/008_v1_7_widget_height.sql').read_text(
 preflight = (ROOT / 'database/audit/v1_7_h_preflight.sql').read_text(encoding='utf-8')
 postflight = (ROOT / 'database/audit/v1_7_h_postflight.sql').read_text(encoding='utf-8')
 
-check(any(token in version for token in ["const APP_VERSION = '1.7.0-dev.8';", "const APP_VERSION = '1.7.0-dev.9';", "const APP_VERSION = '1.7.0-dev.10';", "const APP_VERSION = '1.7.0';"]), 'R2 behavior remains available in R2/R3/R4 checkpoint')
-check(any(label in version for label in ['V1.7-H / R2','V1.7-H / R3','V1.7-H / R4','RSS Reader Modernization 1.7.0']), 'R2 or successor label is visible')
+check(is_later_application_release(version, (1, 7, 0)) or any(token in version for token in ["const APP_VERSION = '1.7.0-dev.8';", "const APP_VERSION = '1.7.0-dev.9';", "const APP_VERSION = '1.7.0-dev.10';", "const APP_VERSION = '1.7.0';"]), 'R2 behavior remains available in R2/R3/R4 checkpoint')
+check(is_later_visible_label(version, (1, 7, 0)) or any(label in version for label in ['V1.7-H / R2','V1.7-H / R3','V1.7-H / R4','RSS Reader Modernization 1.7.0']), 'R2 or successor label is visible')
 
 check('function dashboard_widget_validate_feed_item_limit' in widget, 'Feed item-limit validator exists')
 check("'item_limit' => 'auto'" in widget, 'Feed item-limit default is automatic')

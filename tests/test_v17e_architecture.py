@@ -2,6 +2,7 @@
 from pathlib import Path
 import re
 
+from version_test_utils import is_later_application_release, is_later_visible_label
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
 
@@ -18,8 +19,8 @@ migration = (ROOT / 'database/migrations/007_v1_7_remember_token.sql').read_text
 index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
 session = (ROOT / 'app/session.php').read_text(encoding='utf-8')
 
-check("APP_VERSION = '1.7.0-dev.4'" in version or "APP_VERSION = '1.7.0-dev.5'" in version or "APP_VERSION = '1.7.0-dev.6'" in version or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version), 'Application Version is V1.7-E or a compatible V1.7-F successor')
-check("V1.7-E / R1" in version or "V1.7-F / R1" in version or "V1.7-G / R1" in version or "V1.7-H / R1" in version or "V1.7-H / R2" in version or "V1.7-H / R3" in version or "V1.7-H / R4" in version or "RSS Reader Modernization 1.7.0" in version, 'Application Label is V1.7-E or later')
+check("APP_VERSION = '1.7.0-dev.4'" in version or "APP_VERSION = '1.7.0-dev.5'" in version or "APP_VERSION = '1.7.0-dev.6'" in version or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version) or is_later_application_release(version, (1, 7, 0)), 'Application Version is V1.7-E or a compatible V1.7-F successor')
+check("V1.7-E / R1" in version or "V1.7-F / R1" in version or "V1.7-G / R1" in version or "V1.7-H / R1" in version or "V1.7-H / R2" in version or "V1.7-H / R3" in version or "V1.7-H / R4" in version or "RSS Reader Modernization 1.7.0" in version or is_later_visible_label(version, (1, 7, 0)), 'Application Label is V1.7-E or later')
 check("require_once __DIR__ . '/remember_token.php';" in bootstrap, 'Bootstrap loads Remember Token domain backend')
 check("'remember_token'" in conf and 'Unknown database table name.' in conf, 'Remember Token table uses the existing logical table allowlist')
 
@@ -65,7 +66,7 @@ if "APP_VERSION = '1.7.0-dev.4'" in version:
 else:
     check('remember_me' in index, 'V1.7-F successor connects the Remember Me login input')
     check('persistent_login_restore_session' in session, 'V1.7-F successor connects Session auto-login')
-check((not (ROOT / 'database/migrations/008_v1_7_widget_height.sql').exists()) or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version), 'Widget height is deferred through G and implemented in H')
+check((not (ROOT / 'database/migrations/008_v1_7_widget_height.sql').exists()) or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version) or is_later_application_release(version, (1, 7, 0)), 'Widget height is deferred through G and implemented in H')
 
 for rel in [
     'APPLY_NOTE_V1_7_E.md', 'CHECKLIST_FOR_USER_V1_7_E.md', 'UPDATED_FILES_V1_7_E.md',

@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 import sys
 
+from version_test_utils import is_later_application_release, is_later_visible_label
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
 
@@ -21,8 +22,8 @@ index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
 logout = (ROOT / 'public/logout.php').read_text(encoding='utf-8')
 api = (ROOT / 'public/api_v1.php').read_text(encoding='utf-8')
 
-check(any(v in version for v in ["APP_VERSION = '1.7.0-dev.3'", "APP_VERSION = '1.7.0-dev.4'", "APP_VERSION = '1.7.0-dev.5'", "APP_VERSION = '1.7.0-dev.6'", "APP_VERSION = '1.7.0-dev.7'", "APP_VERSION = '1.7.0-dev.8'", "APP_VERSION = '1.7.0-dev.9'", "APP_VERSION = '1.7.0-dev.10'", "APP_VERSION = '1.7.0'"]), 'Application Version is V1.7-D or later')
-check(any(v in version for v in ["APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-D / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-E / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-F / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-G / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R2'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R3'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R4'", "APP_VERSION_LABEL = 'RSS Reader Modernization 1.7.0'"]), 'Application Label is V1.7-D or later')
+check(any(v in version for v in ["APP_VERSION = '1.7.0-dev.3'", "APP_VERSION = '1.7.0-dev.4'", "APP_VERSION = '1.7.0-dev.5'", "APP_VERSION = '1.7.0-dev.6'", "APP_VERSION = '1.7.0-dev.7'", "APP_VERSION = '1.7.0-dev.8'", "APP_VERSION = '1.7.0-dev.9'", "APP_VERSION = '1.7.0-dev.10'", "APP_VERSION = '1.7.0'"]) or is_later_application_release(version, (1, 7, 0)), 'Application Version is V1.7-D or later')
+check(any(v in version for v in ["APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-D / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-E / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-F / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-G / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R1'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R2'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R3'", "APP_VERSION_LABEL = 'RSS Reader Modernization V1.7-H / R4'", "APP_VERSION_LABEL = 'RSS Reader Modernization 1.7.0'"]) or is_later_visible_label(version, (1, 7, 0)), 'Application Label is V1.7-D or later')
 check('<IfModule mod_headers.c>' in public_ht, 'Header rules are guarded by mod_headers availability')
 for header, value in [
     ('X-Content-Type-Options', 'nosniff'),
@@ -62,7 +63,7 @@ if "APP_VERSION = '1.7.0-dev.3'" in version:
     check(not (ROOT / 'database/migrations/007_v1_7_remember_token.sql').exists(), 'V1.7-D adds no Remember Token migration')
 else:
     check(True, 'Later V1.7 checkpoints may add the planned Remember Token migration')
-check((not (ROOT / 'database/migrations/008_v1_7_widget_height.sql').exists()) or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version), 'V1.7-D adds no height migration; V1.7-H may add the planned migration')
+check((not (ROOT / 'database/migrations/008_v1_7_widget_height.sql').exists()) or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version) or is_later_application_release(version, (1, 7, 0)), 'V1.7-D adds no height migration; V1.7-H may add the planned migration')
 for rel in [
     'APPLY_NOTE_V1_7_D.md', 'CHECKLIST_FOR_USER_V1_7_D.md', 'UPDATED_FILES_V1_7_D.md',
     'docs/v1-7-d-implementation.md', 'docs/v1-7-d-files.md', 'docs/test-report-v1-7-d.md'

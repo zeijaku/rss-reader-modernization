@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 import base64
 from html.parser import HTMLParser
 from pathlib import Path
@@ -41,7 +42,10 @@ check(html.count('lights-out-reset')==1 and html.count('lights-out-new-game')==1
 check('lights-out-moves' in html and 'lights-out-result' in html,'Moves and Clear result render')
 check('mini-game-direction' in html and 'mini-game-storage-reset' in html,'Icon Quest controls remain unchanged')
 check(html.count('value="lights_out"')==2,'add and edit forms both offer Lights Out')
-check(('./js/lights-out.js?v=1.6-c-r1' in html and './css/mini-game.css?v=1.6-c-r1' in html) or ('./js/lights-out.js?v=1.6-d-r1' in html and './css/mini-game.css?v=1.6-d-r1' in html) or ('./js/lights-out.js?v=1.7.0-dev.2' in html and './css/mini-game.css?v=1.7.0-dev.2' in html) or ('./js/lights-out.js?v=1.7.0-dev.3' in html and './css/mini-game.css?v=1.7.0-dev.3' in html) or ('./js/lights-out.js?v=1.7.0-dev.4' in html and './css/mini-game.css?v=1.7.0-dev.4' in html) or ('./js/lights-out.js?v=1.7.0-dev.5' in html and './css/mini-game.css?v=1.7.0-dev.5' in html) or ('./js/lights-out.js?v=1.7.0-dev.6' in html and './css/mini-game.css?v=1.7.0-dev.6' in html) or ('./js/lights-out.js?v=1.7.0-dev.7' in html and './css/mini-game.css?v=1.7.0-dev.7' in html) or ('./js/lights-out.js?v=1.7.0-dev.8' in html and './css/mini-game.css?v=1.7.0-dev.8' in html) or ('./js/lights-out.js?v=1.7.0-dev.9' in html and './css/mini-game.css?v=1.7.0-dev.9' in html) or ('./js/lights-out.js?v=1.7.0-dev.10' in html and './css/mini-game.css?v=1.7.0-dev.10' in html) or ('./js/lights-out.js?v=1.7.0' in html and './css/mini-game.css?v=1.7.0' in html), 'new and changed assets use the active Cache Busting strategy')
+version_text = (ROOT / 'app/version.php').read_text(encoding='utf-8')
+version_match = re.search(r"const APP_VERSION = '([^']+)';", version_text)
+current_version = version_match.group(1) if version_match else ''
+check(f'./js/lights-out.js?v={current_version}' in html and f'./css/mini-game.css?v={current_version}' in html, 'new and changed assets use the active Cache Busting strategy')
 ids=[attrs['id'] for _,attrs in parser.records if attrs.get('id')]
 check(len(ids)==len(set(ids)),'mixed Game render has no duplicate ids')
 if failures:raise SystemExit(1)

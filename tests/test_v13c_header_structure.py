@@ -77,12 +77,14 @@ final class S13C extends PDOStatement {
                 'conf_style_navlink4'=>'https://example.com/image', 'conf_style_navlink_view4'=>'Image', 'conf_style_navlink_icon4'=>'images'
             ]]; return true;
         }
+        if(str_contains($this->sql,"widget_type = 'task'")) return true;
         if(str_contains($this->sql,'FROM `ig_dashboard_widget` w')) return true;
         if(str_contains($this->sql,'FROM `ig_task`')) return true;
         if(str_contains($this->sql,'FROM ig_content_stock')) return true;
         throw new RuntimeException('Unexpected SQL: '.$this->sql);
     }
     public function fetchAll(int $mode=PDO::FETCH_DEFAULT,mixed ...$args):array{return $this->rows;}
+    public function fetchColumn(int $column=0):mixed{return str_contains($this->sql,'COUNT(*)') ? 0 : false;}
 }
 final class P13C extends PDO {
     public function __construct(private string $nav){}

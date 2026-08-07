@@ -1,3 +1,61 @@
+# RSS Reader Modernization 1.8.0 Release Notes
+
+Release date: 2026-08-07
+
+Version 1.8.0は、既存Stock一覧を「保存するだけの場所」から「後から探して利用する場所」へ改善するReleaseです。既存`content_stock`構造とStockデータを維持し、DB MigrationなしでStock解除、検索、並び替え、Pagination、Domain表示、Article Actions、Compact Listを追加しました。
+
+## Stock removal
+
+- `stock_flag=1`による既存論理削除を利用
+- `stock_id` + `stock_owner` + `stock_flag=0`でOwnershipを確認
+- APIの既存Session認証、POST限定、CSRF境界を維持
+- 解除成功時は通常、対象ItemだけをDOMから除去して全画面Reloadを避ける
+- Pagination中の最終Item解除で空Pageになる場合だけ適切なPageへ移動
+
+## Search / sorting
+
+- `stock_title`と`stock_data`をServer-side検索
+- URL全体を対象にするためDomain文字列でも検索可能
+- LIKEの`!`／`%`／`_`をLiteral Escape
+- MySQL Native Prepare互換のためTitle／URLは別Named Placeholderを使用
+- Sortは`newest`／`oldest`／`title`のWhitelistのみ許可
+
+## Pagination
+
+- 1Page 20件
+- 同じOwner／active／検索条件で`COUNT(*)`を取得
+- 表示対象だけ`LIMIT/OFFSET`で取得し、Stock全件HTML生成を回避
+- `q`／`sort`をPage移動後も保持
+- 条件変更時はPage 1へ戻り、範囲外Pageは最終Pageへ補正
+
+## Stock list / actions
+
+- Legacyのランダム色4列Cardを1列Compact Listへ変更
+- Title、Domain、保存日時、三点Menuを情報の中心に整理
+- Domainは保存URLから表示時に算出し、DBへ新しい値を保存しない
+- 通常RSS／Search Feedと同じArticle Actions Menuを再利用
+- StockではURL Copy、X、Task追加、Stock解除を提供
+- Task Widgetが1個なら直接追加、複数なら追加先Modal、0個ならNotice
+
+## Database / configuration
+
+Version 1.8によるDB変更はありません。
+
+- Table追加なし
+- Column追加なし
+- Index追加なし
+- Migration追加なし
+- 必須Config追加なし
+- 外部Library／Framework追加なし
+
+Version 1.7.0から更新する場合、Version 1.7で適用済みのMigration 007／008を再実行しません。
+
+## Verification limits
+
+Automated regression、PHP／JavaScript syntax、Release Package Manifest／CRC／SHA-256、Private file／Runtime data除外を確認します。この実行環境ではPDO SQLite Driverが利用できない場合があるため、該当するSQLite実DBTestはSKIPし、Fake PDO／Static invariant／既存API Testで補完します。実MySQL／MariaDB Server、Hosting固有Apache設定、全Browser／全Themeの表示は配布環境のChecklistで最終確認してください。
+
+---
+
 # RSS Reader Modernization 1.7.0 Release Notes
 
 Release date: 2026-08-07

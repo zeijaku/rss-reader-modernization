@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 
+from version_test_utils import is_later_application_release, is_later_visible_label
 ROOT = Path(__file__).resolve().parents[1]
 failures = []
 def check(condition, message):
@@ -16,8 +17,8 @@ dash_js = (ROOT / 'public/js/dashboard.js').read_text()
 css = (ROOT / 'public/css/mini-game.css').read_text()
 run = (ROOT / 'tests/run.sh').read_text()
 
-check("const APP_VERSION = '1.6.0-dev.2';" in version or "const APP_VERSION = '1.6.0-dev.3';" in version or "const APP_VERSION = '1.6.0';" in version or "const APP_VERSION = '1.7.0-dev.1';" in version or "const APP_VERSION = '1.7.0-dev.2';" in version or "const APP_VERSION = '1.7.0-dev.3';" in version or "const APP_VERSION = '1.7.0-dev.4';" in version or "const APP_VERSION = '1.7.0-dev.5';" in version or "const APP_VERSION = '1.7.0-dev.6';" in version or "const APP_VERSION = '1.7.0-dev.7';" in version or "const APP_VERSION = '1.7.0-dev.8';" in version or "const APP_VERSION = '1.7.0-dev.9';" in version or "const APP_VERSION = '1.7.0-dev.10';" in version or "const APP_VERSION = '1.7.0';" in version, 'Application version is V1.6-C or later checkpoint')
-check('RSS Reader Modernization V1.6-C / R1' in version or 'RSS Reader Modernization V1.6-D / R1' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.6.0'" in version or 'RSS Reader Modernization V1.7-' in version, 'visible label identifies V1.6-C or later checkpoint')
+check("const APP_VERSION = '1.6.0-dev.2';" in version or "const APP_VERSION = '1.6.0-dev.3';" in version or "const APP_VERSION = '1.6.0';" in version or "const APP_VERSION = '1.7.0-dev.1';" in version or "const APP_VERSION = '1.7.0-dev.2';" in version or "const APP_VERSION = '1.7.0-dev.3';" in version or "const APP_VERSION = '1.7.0-dev.4';" in version or "const APP_VERSION = '1.7.0-dev.5';" in version or "const APP_VERSION = '1.7.0-dev.6';" in version or "const APP_VERSION = '1.7.0-dev.7';" in version or "const APP_VERSION = '1.7.0-dev.8';" in version or "const APP_VERSION = '1.7.0-dev.9';" in version or "const APP_VERSION = '1.7.0-dev.10';" in version or "const APP_VERSION = '1.7.0';" in version or is_later_application_release(version, (1, 6, 0)), 'Application version is V1.6-C or later checkpoint')
+check('RSS Reader Modernization V1.6-C / R1' in version or 'RSS Reader Modernization V1.6-D / R1' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.6.0'" in version or 'RSS Reader Modernization V1.7-' in version or is_later_visible_label(version, (1, 6, 0)), 'visible label identifies V1.6-C or later checkpoint')
 check("return ['icon_quest', 'lights_out'];" in mini_php, 'Game type whitelist includes Lights Out without a new Widget type')
 check('value="lights_out"' in index and index.count('Lights Out（5×5 消灯Puzzle）') == 2, 'add and edit forms expose Lights Out')
 check('data-mini-game-type="' in index and "if ($gameType === 'lights_out')" in index, 'Dashboard render branches by the existing Game subtype')

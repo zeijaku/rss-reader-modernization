@@ -43,6 +43,7 @@ require $root . '/app/bootstrap.php';
 final class V11dRenderStatement extends PDOStatement
 {
     private array $rows = [];
+    private int $countValue = 0;
     public function __construct(private string $sql) {}
     public function execute(?array $params = null): bool
     {
@@ -59,6 +60,9 @@ final class V11dRenderStatement extends PDOStatement
                 'conf_style_navlink3' => '', 'conf_style_navlink_view3' => '', 'conf_style_navlink_icon3' => 'search',
                 'conf_style_navlink4' => '', 'conf_style_navlink_view4' => '', 'conf_style_navlink_icon4' => 'images',
             ]];
+            return true;
+        }
+        if (str_contains($this->sql, 'FROM `ig_dashboard_widget`') && str_contains($this->sql, "widget_type = 'task'")) {
             return true;
         }
         if (str_contains($this->sql, 'FROM `ig_dashboard_widget` w')) {
@@ -99,8 +103,15 @@ final class V11dRenderStatement extends PDOStatement
             return true;
         }
         if (str_contains($this->sql, 'FROM ig_content_stock')) {
+            if ($mode === 'stock' && str_starts_with($this->sql, 'SELECT COUNT(*)')) {
+                $this->countValue = 1;
+                return true;
+            }
             if ($mode === 'stock') {
                 $this->rows = [[
+                    'stock_id' => 1,
+                    'stock_flag' => 0,
+                    'stock_owner' => 1,
                     'stock_data' => 'https://example.com/article',
                     'stock_title' => 'Stock title',
                     'stock_date' => '2026-08-02 10:00:00',
@@ -111,6 +122,7 @@ final class V11dRenderStatement extends PDOStatement
         throw new RuntimeException('Unexpected SQL: ' . $this->sql);
     }
     public function fetchAll(int $mode = PDO::FETCH_DEFAULT, mixed ...$args): array { return $this->rows; }
+    public function fetchColumn(int $column = 0): mixed { return $this->countValue; }
 }
 final class V11dRenderPDO extends PDO
 {

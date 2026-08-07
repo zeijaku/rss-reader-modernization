@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 
+from version_test_utils import is_later_application_release, is_later_visible_label
 ROOT = Path(__file__).resolve().parents[1]
 failures = []
 
@@ -18,8 +19,8 @@ migration = (ROOT / 'database/migrations/008_v1_7_widget_height.sql').read_text(
 preflight = (ROOT / 'database/audit/v1_7_h_preflight.sql').read_text(encoding='utf-8')
 postflight = (ROOT / 'database/audit/v1_7_h_postflight.sql').read_text(encoding='utf-8')
 
-check(re.search(r"const APP_VERSION = '(?:1\.7\.0-dev\.(?:9|10)|1\.7\.0)';", version) is not None, 'R3-or-later checkpoint preserves immutable asset cache refresh')
-check("RSS Reader Modernization V1.7-H / R3" in version or "RSS Reader Modernization V1.7-H / R4" in version or "RSS Reader Modernization 1.7.0" in version, 'R3-or-later V1.7-H label is visible')
+check(is_later_application_release(version, (1, 7, 0)) or re.search(r"const APP_VERSION = '(?:1\.7\.0-dev\.(?:9|10)|1\.7\.0)';", version) is not None, 'R3-or-later checkpoint preserves immutable asset cache refresh')
+check(is_later_visible_label(version, (1, 7, 0)) or "RSS Reader Modernization V1.7-H / R3" in version or "RSS Reader Modernization V1.7-H / R4" in version or "RSS Reader Modernization 1.7.0" in version, 'R3-or-later V1.7-H label is visible')
 check(css.count('grid-auto-rows: minmax(320px, auto)') >= 2, 'Desktop and Tablet use a 320px minimum row')
 check('[data-widget-height="2"] { grid-row: span 2; }' in css, 'height 2 still spans two Grid rows')
 check('grid-auto-flow: dense' not in css, 'dense packing remains disabled')
