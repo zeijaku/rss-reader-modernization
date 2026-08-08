@@ -126,6 +126,15 @@ if (!defined('APP_HTTP_USER_AGENT')) {
     define('APP_HTTP_USER_AGENT', app_env('APP_HTTP_USER_AGENT', 'iGuguru-RSS/1.0 (+Secure-Baseline)'));
 }
 
+if (!defined('APP_MAIL_CREDENTIAL_KEY_ID')) {
+    define('APP_MAIL_CREDENTIAL_KEY_ID', app_env('APP_MAIL_CREDENTIAL_KEY_ID', 'primary'));
+}
+if (!defined('APP_MAIL_CREDENTIAL_KEY_B64')) {
+    define('APP_MAIL_CREDENTIAL_KEY_B64', app_env('APP_MAIL_CREDENTIAL_KEY_B64', ''));
+}
+if (!defined('APP_MAIL_IMAP_TIMEOUT_SECONDS')) {
+    define('APP_MAIL_IMAP_TIMEOUT_SECONDS', max(2, min(30, (int) app_env('APP_MAIL_IMAP_TIMEOUT_SECONDS', '5'))));
+}
 if (!defined('APP_FEED_CACHE_ENABLED')) {
     define('APP_FEED_CACHE_ENABLED', app_env_bool('APP_FEED_CACHE_ENABLED', true));
 }
@@ -222,7 +231,7 @@ if (!defined('DB_TABLE_PREFIX')) {
 /** Return the physical table name for a known logical table. */
 function db_table_name(string $logicalName): string
 {
-    static $allowed = ['user_info', 'user_conf', 'content', 'content_stock', 'feed_item_state', 'memo', 'task', 'calendar_event', 'dashboard_widget', 'remember_token'];
+    static $allowed = ['user_info', 'user_conf', 'content', 'content_stock', 'feed_item_state', 'memo', 'task', 'calendar_event', 'dashboard_widget', 'remember_token', 'mail_account'];
     if (!in_array($logicalName, $allowed, true)) {
         throw new InvalidArgumentException('Unknown database table name.');
     }
@@ -311,5 +320,6 @@ function app_runtime_status(): array
         'feed_conditional_request_enabled' => (bool) APP_FEED_CONDITIONAL_REQUEST_ENABLED,
         'feed_cache_ttl_seconds' => (int) APP_FEED_CACHE_TTL_SECONDS,
         'feed_cache_dir' => (string) APP_FEED_CACHE_DIR,
+        'sodium_available' => function_exists('sodium_crypto_aead_xchacha20poly1305_ietf_encrypt'),
     ];
 }

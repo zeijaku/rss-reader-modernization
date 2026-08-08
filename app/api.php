@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/url_normalizer.php';
 require_once __DIR__ . '/feed/feed_item_state.php';
+require_once __DIR__ . '/mail/mail_api.php';
 
 /**
  * Secure Baseline API contract (SB-05..10).
@@ -130,7 +131,11 @@ function api_dispatch(string $action, int $userId, array $input): array
         'content.delete' => api_content_delete($userId, $input),
         'stock.create' => api_stock_create($userId, $input),
         'stock.delete' => api_stock_delete($userId, $input),
-        'settings.update' => api_settings_update($userId, $input),
+        'mail.account.list' => api_mail_account_list($userId, $input),
+        'mail.account.create' => api_mail_account_create($userId, $input),
+        'mail.account.update' => api_mail_account_update($userId, $input),
+        'mail.account.delete' => api_mail_account_delete($userId, $input),
+        'mail.account.test' => api_mail_account_test($userId, $input),        'settings.update' => api_settings_update($userId, $input),
         'account.email.update' => api_account_email_update($userId, $input),
         'account.password.update' => api_account_password_update($userId, $input),
         'tabs.update' => api_tabs_update($userId, $input),

@@ -1,0 +1,77 @@
+name: V1.9-B Mail Foundation
+
+on:
+  push:
+    branches:
+      - feature/v1.9-mail-b
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: v19b-mail-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  focused:
+    name: V1.9-B focused validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up PHP 8.1
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml, sodium
+          coverage: none
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Resolve pinned production dependencies
+        run: composer update --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress
+
+      - name: Validate Composer metadata
+        run: composer validate --strict --no-check-publish
+
+      - name: Audit locked production dependencies
+        run: composer audit --locked --no-dev
+
+      - name: Check Composer platform requirements
+        run: composer check-platform-reqs --no-dev
+
+      - name: Verify ImapEngine 1.25.3
+        run: php tests/test_v19b_imap_dependency.php
+
+      - name: Run V1.9-B focused PHP checks
+        run: |
+          php -l app/mail/mail_crypto.php
+          php -l app/mail/mail_target.php
+          php -l app/mail/mail_account.php
+          php -l app/mail/mail_client.php
+          php -l app/mail/mail_service.php
+          php -l app/mail/mail_api.php
+          php -l tools/v19b_mail_connection_probe.php
+          php tests/test_v19b_mail_foundation.php
+
+      - name: Run V1.9-B focused static checks
+        run: python3 tests/test_v19b_mail_static.py
+
+      - name: Upload resolved Composer runtime
+        uses: actions/upload-artifact@v4
+        with:
+          name: v19b-composer-runtime
+          path: |
+            composer.lock
+            vendor/
+          if-no-files-found: error
+          retention-days: 7

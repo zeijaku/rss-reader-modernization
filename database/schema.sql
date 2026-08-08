@@ -18,6 +18,7 @@ SET @t_memo = CONCAT('`', @table_prefix, 'memo`');
 SET @t_task = CONCAT('`', @table_prefix, 'task`');
 SET @t_calendar_event = CONCAT('`', @table_prefix, 'calendar_event`');
 SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
+SET @t_mail_account = CONCAT('`', @table_prefix, 'mail_account`');
 SET @t_remember_token = CONCAT('`', @table_prefix, 'remember_token`');
 
 SET @sql = CONCAT(
@@ -182,6 +183,28 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Task保管'''
 );
 PREPARE v11h_stmt FROM @sql; EXECUTE v11h_stmt; DEALLOCATE PREPARE v11h_stmt;
+
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_mail_account, ' (',
+  '`mail_account_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`mail_account_owner` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`mail_account_display_name` VARCHAR(128) NOT NULL,',
+  '`mail_account_host` VARCHAR(253) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`mail_account_port` SMALLINT UNSIGNED NOT NULL,',
+  '`mail_account_encryption` VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`mail_account_username` VARCHAR(320) NOT NULL,',
+  '`mail_account_secret` TEXT CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT ''AEAD encrypted credential envelope'',',
+  '`mail_account_enabled` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT ''0:disabled/1:enabled'',',
+  '`mail_account_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:active/1:deleted'',',
+  '`mail_account_created_at` DATETIME NOT NULL,',
+  '`mail_account_updated_at` DATETIME NOT NULL,',
+  'PRIMARY KEY (`mail_account_id`),',
+  'KEY `idx_mail_account_owner_flag_id` (`mail_account_owner`, `mail_account_flag`, `mail_account_id`),',
+  'KEY `idx_mail_account_owner_enabled_flag` (`mail_account_owner`, `mail_account_enabled`, `mail_account_flag`, `mail_account_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Mail account settings'''
+);
+PREPARE v19b_stmt FROM @sql; EXECUTE v19b_stmt; DEALLOCATE PREPARE v19b_stmt;
 
 
 SET @sql = CONCAT(

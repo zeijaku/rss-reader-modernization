@@ -53,6 +53,7 @@ Thumbs.db
 *.tmp
 .phpunit.result.cache
 coverage/
+/vendor/
 __pycache__/
 *.py[cod]
 
@@ -78,6 +79,9 @@ __pycache__/
 !/database/audit/v1_7_h_preflight.sql
 !/database/audit/v1_7_h_postflight.sql
 !/database/migrations/008_v1_7_widget_height.sql
+!/database/audit/v1_9_b_preflight.sql
+!/database/audit/v1_9_b_postflight.sql
+!/database/migrations/009_v1_9_mail_account.sql
 !/database/audit/v1_1_c_preflight.sql
 !/database/audit/v1_1_c_postflight.sql
 !/database/audit/v1_1_h_preflight.sql

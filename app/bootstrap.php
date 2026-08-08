@@ -47,6 +47,10 @@ set_exception_handler(static function (Throwable $exception): void {
 
 require_once __DIR__ . '/common/common_conf.php';
 
+$composerAutoload = dirname(__DIR__) . '/vendor/autoload.php';
+if (is_file($composerAutoload)) {
+    require_once $composerAutoload;
+}
 error_reporting(E_ALL);
 ini_set('display_errors', APP_DEBUG ? '1' : '0');
 ini_set('display_startup_errors', APP_DEBUG ? '1' : '0');
@@ -68,7 +72,11 @@ require_once __DIR__ . '/calendar.php';
 require_once __DIR__ . '/url_normalizer.php';
 require_once __DIR__ . '/feed/feed_retry.php';
 require_once __DIR__ . '/http_fetch.php';
-require_once __DIR__ . '/holiday.php';
+require_once __DIR__ . '/mail/mail_crypto.php';
+require_once __DIR__ . '/mail/mail_target.php';
+require_once __DIR__ . '/mail/mail_account.php';
+require_once __DIR__ . '/mail/mail_client.php';
+require_once __DIR__ . '/mail/mail_service.php';require_once __DIR__ . '/holiday.php';
 require_once __DIR__ . '/feed/feed_source.php';
 require_once __DIR__ . '/feed/feed_http_headers.php';
 require_once __DIR__ . '/feed/feed_source_mapper.php';

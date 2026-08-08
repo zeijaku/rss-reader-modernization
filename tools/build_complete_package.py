@@ -14,7 +14,7 @@ ARTIFACT = f'rss-reader-modernization-{VERSION}-complete'
 FIXED_TIME = (1980, 1, 1, 0, 0, 0)
 FORBIDDEN_EXACT = {'config/local.php', '.env', 'rss.sql', 'rss.zip'}
 FORBIDDEN_SUFFIXES = ('.sqlite', '.sqlite3', '.db', '.dump', '.bak', '.backup', '.log', '.pid', '.zip')
-EXCLUDED_TOP = {'.git', 'dist', '.idea', '.vscode'}
+EXCLUDED_TOP = {'.git', 'dist', '.idea', '.vscode', 'vendor'}
 RUNTIME_DIRS = (
     'var/session', 'var/log', 'var/cache', 'var/db-migration',
     'var/security/login-throttle', 'var/m4f-evidence',
@@ -51,7 +51,7 @@ def collect() -> dict[str, bytes]:
             if rel.startswith(runtime + '/') and posix.name != '.gitkeep':
                 fail(f'generated runtime file found: {rel}')
         payload[rel] = path.read_bytes()
-    required = {'.github/workflows/ci.yml', 'tests/run.sh', 'app/version.php', 'database/schema.sql'}
+    required = {'.github/workflows/ci.yml', 'tests/run.sh', 'app/version.php', 'database/schema.sql', 'composer.json'}
     if not required <= set(payload):
         fail('complete package is missing source/test/repository files')
     build = '\n'.join([

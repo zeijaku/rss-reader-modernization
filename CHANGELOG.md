@@ -1,3 +1,17 @@
+## RSS Reader Modernization 1.9.0-dev.1 — V1.9-B / R4 — 2026-08-08
+
+### Mail account foundation
+
+- Pure PHP IMAP dependencyとして`directorytree/imapengine` 1.25.3を`composer.json`で固定。
+- Windows開発PCはPHP／Composer／Pythonを要求せず、Git＋PowerShellだけでV1.9-Bを適用可能。
+- Composer依存解決・`composer.lock`生成・`vendor`生成はGitHub ActionsのV1.9-B専用Workflowで実施し、成果物をArtifactとして保存。
+- User所有の`mail_account` TableとMigration 009を追加し、Mail Account CRUD／接続Test APIを追加。
+- Mail passwordはSodium XChaCha20-Poly1305 AEADで暗号化し、Owner ID／Account IDをAADへ含める。
+- 暗号鍵は`APP_MAIL_CREDENTIAL_KEY_B64`としてprivate config／Environmentで管理し、DB／Git／Logへ保存しない。
+- IMAP接続はSSL/993またはSTARTTLS/143に限定し、Public IP検証、DNS pinning、元Host名でのTLS証明書検証を追加。
+- 接続Probeは`INBOX EXAMINE`のみを使用し、Seen変更、削除、移動、送信は行わない。
+- `vendor/`はGit対象外。Dashboard上のMail Widget表示／本文／CacheはV1.9-C以降へ分離し、V1.9-Bでは追加しない。
+
 ## RSS Reader Modernization 1.8.0 — 2026-08-07
 
 ### Version 1.8 Stock list improvement

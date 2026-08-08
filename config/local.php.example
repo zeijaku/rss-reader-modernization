@@ -31,6 +31,11 @@ return [
     'APP_HTTP_MAX_BYTES' => '2097152',
     'APP_HTTP_USER_AGENT' => 'iGuguru-RSS/1.0 (+Secure-Baseline)',
 
+    // V1.9-B: Mail credential encryption / IMAP connection.
+    // Generate a dedicated 32-byte key. Never reuse APP_HASH_KEY.
+    'APP_MAIL_CREDENTIAL_KEY_ID' => 'primary',
+    'APP_MAIL_CREDENTIAL_KEY_B64' => '',
+    'APP_MAIL_IMAP_TIMEOUT_SECONDS' => '5',
     // M1-E/M1-F server-side Feed cache and conditional requests.
     // Runtime files stay under var/cache/feed and outside public/.
     'APP_FEED_CACHE_ENABLED' => true,
