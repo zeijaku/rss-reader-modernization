@@ -6,5 +6,5 @@ declare(strict_types=1);
  * Visible release marker for deployment verification.
  * Update these values for every distributed checkpoint/build.
  */
-const APP_VERSION = '1.9.0-dev.1';
-const APP_VERSION_LABEL = 'RSS Reader Modernization V1.9-B / R4';
+const APP_VERSION = '1.9.0-dev.2';
+const APP_VERSION_LABEL = 'RSS Reader Modernization V1.9-C / R1';

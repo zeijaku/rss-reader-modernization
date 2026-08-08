@@ -6,6 +6,7 @@ define('APP_RESPONSE_FORMAT', 'json');
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/api.php';
+require_once dirname(__DIR__) . '/app/mail/mail_widget.php';
 
 function api_emit(array $response): never
 {
@@ -44,6 +45,9 @@ if ($action === '' || strlen($action) > 64 || preg_match('/^[a-z]+(?:\.[a-z]+)+$
 }
 
 try {
+    if (str_starts_with($action, 'mail.widget.')) {
+        api_emit(api_mail_widget_dispatch($action, $userId, $_POST));
+    }
     api_emit(api_dispatch($action, $userId, $_POST));
 } catch (Throwable $exception) {
     try {
