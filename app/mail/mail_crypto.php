@@ -19,7 +19,10 @@ function mail_crypto_base64url_decode(string $value): ?string
 
     $padding = (4 - (strlen($value) % 4)) % 4;
     $decoded = base64_decode(strtr($value, '-_', '+/') . str_repeat('=', $padding), true);
-    return is_string($decoded) ? $decoded : null;
+    if (!is_string($decoded) || mail_crypto_base64url_encode($decoded) !== $value) {
+        return null;
+    }
+    return $decoded;
 }
 
 function mail_crypto_key_id(): string
