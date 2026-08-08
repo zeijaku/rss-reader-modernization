@@ -69,12 +69,14 @@ jobs:
           php -l public/api_v1.php
           php tests/test_v19c_mail_widget.php
           python3 tests/test_v19c_mail_widget_static.py
+          node --check public/js/calendar.js
+          node --check public/js/calendar-core.js
           node --check public/js/mail-widget.js
 
       - name: Upload resolved Composer runtime
         uses: actions/upload-artifact@v4
         with:
-          name: v19c-composer-runtime
+          name: v19b-composer-runtime
           path: |
             composer.lock
             vendor/
