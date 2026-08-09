@@ -58,8 +58,8 @@ if ($extensionsAvailable) {
     $parser = new rss_parse();
     $four = $parser->parse_start(file_get_contents($root . '/tests/fixtures/rss2_four.xml'));
     sb14_parser_check(($four['item'][0]['date'] ?? null) === '2026-07-29 10:00:00', 'valid RSS item date is normalized');
-    sb14_parser_check(($four['item'][1]['date'] ?? 'not-null') === null, 'invalid RSS item date becomes null');
-    sb14_parser_check(($four['item'][2]['date'] ?? 'not-null') === null, 'missing RSS item date remains null');
+    sb14_parser_check(array_key_exists('date', $four['item'][1]) && $four['item'][1]['date'] === null, 'invalid RSS item date becomes null');
+    sb14_parser_check(array_key_exists('date', $four['item'][2]) && $four['item'][2]['date'] === null, 'missing RSS item date remains null');
 
     $atom = $parser->parse_start(file_get_contents($root . '/tests/fixtures/atom_no_declaration.xml'));
     sb14_parser_check(($atom['item'][0]['link'] ?? null) === 'https://example.test/article', 'Atom alternate item link parses without XML declaration');
