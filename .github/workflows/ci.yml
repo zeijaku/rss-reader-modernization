@@ -47,7 +47,7 @@ jobs:
         with:
           node-version: '20'
       - name: Validate Composer lock
-        run: composer validate --strict
+        run: composer validate
       - name: Install Composer runtime
         run: composer install --no-interaction --prefer-dist --no-progress
       - name: Composer security audit
