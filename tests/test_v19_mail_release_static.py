@@ -28,7 +28,7 @@ check(all((ROOT/p).is_file() for p in [
 check(all(action in api for action in actions) and "str_starts_with($action, 'mail.widget.')" in api, 'public API routes Mail Account and Mail Widget actions explicitly')
 check('XCHACHA20POLY1305' in crypto.upper() and 'APP_MAIL_CREDENTIAL_KEY_B64' in crypto, 'Mail credentials use dedicated XChaCha20-Poly1305 key')
 check('APP_HASH_KEY' not in crypto, 'Mail credential crypto does not reuse APP_HASH_KEY')
-check('verify_peer' in target and 'verify_peer_name' in target and 'allow_self_signed' in target, 'Mail TLS peer validation is explicit')
+check('verify_peer' in client and 'verify_peer_name' in client and 'allow_self_signed' in client, 'Mail TLS peer validation is explicit')
 check('app_resolve_host_ips' in target and 'public' in target.lower(), 'Mail target reuses public-IP resolution boundary')
 check('EXAMINE' in client.upper() or 'EXAMINE' in widget.upper(), 'INBOX is opened through read-only EXAMINE path')
 check('leaveUnread()' in widget, 'Mail list/body queries preserve unread state')
