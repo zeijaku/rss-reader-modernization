@@ -4,7 +4,7 @@ import re, sys
 ROOT = Path(__file__).resolve().parents[1]
 index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
 dashboard = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
-calendar = (ROOT / 'public/js/calendar.js').read_text(encoding='utf-8')
+calendar = (ROOT / 'public/js/calendar-core.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 run = (ROOT / 'tests/run.sh').read_text(encoding='utf-8')

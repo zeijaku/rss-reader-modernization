@@ -30,6 +30,7 @@ expected_css = {
     'auth.css',
     'mini-game.css',
     'clock-timer.css',
+    'mail-widget.css',
 }
 expected_js = {
     'jquery-3.7.1.min.js',
@@ -40,6 +41,8 @@ expected_js = {
     'drawer.min.js',
     'dashboard.js',
     'calendar.js',
+    'calendar-core.js',
+    'mail-widget.js',
     'auth.js',
     'mini-game.js',
     'lights-out.js',
@@ -137,7 +140,7 @@ for path, marker in license_markers.items():
 
 public_files = [p for p in PUBLIC.rglob('*') if p.is_file()]
 public_size = sum(p.stat().st_size for p in public_files)
-check(len(public_files) == 41, 'public inventory contains the retained files plus Mini Game, Lights Out and Clock Timer assets')
+check(len(public_files) == 44, 'public inventory contains the retained files plus Mini Game, Lights Out and Clock Timer assets')
 check(public_size < 4_000_000, 'public inventory is below 4 MB without removing runtime dependencies')
 check(not (ROOT / 'package.json').exists(), 'asset cleanup adds no npm dependency')
 check(not (ROOT / 'node_modules').exists(), 'asset cleanup adds no node_modules directory')

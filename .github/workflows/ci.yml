@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/v1.9-mail
   pull_request:
     branches:
       - main
@@ -20,43 +21,84 @@ jobs:
   regression:
     name: PHP ${{ matrix.php }} regression
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        php:
-          - '8.1'
-          - '8.4'
-
+        php: ['8.1', '8.4']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-
+          fetch-depth: 2
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml, sodium
           coverage: none
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Validate Composer lock
+        run: composer validate --strict
+      - name: Install Composer runtime
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Composer security audit
+        run: composer audit --locked --no-interaction
+      - name: V1.9 Mail release checks
+        run: python tests/test_v19_mail_release_static.py
+      - name: Historical full regression
+        run: bash tools/run_historical_regression_v19.sh
 
-      - name: Show runtime versions
+  package:
+    name: Build Version 1.9.0 artifacts
+    needs: regression
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/feature/v1.9-mail' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml, sodium
+          coverage: none
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install production Composer runtime
+        run: composer install --no-dev --no-interaction --prefer-dist --no-progress --classmap-authoritative
+      - name: Build Complete and Runtime ZIPs
         run: |
-          php -v
-          python --version
-          node --version
-
-      - name: Run regression tests
-        run: bash tests/run.sh
+          python tools/build_complete_package.py --output-dir release-output
+          python tools/build_release_package.py --mode final --output-dir release-output
+      - name: Verify project release packages
+        run: |
+          python tools/verify_complete_package.py release-output/rss-reader-modernization-1.9.0-complete.zip release-output/rss-reader-modernization-1.9.0-complete.zip.sha256
+          python tools/verify_release_package.py release-output/rss-reader-modernization-1.9.0.zip release-output/rss-reader-modernization-1.9.0.zip.sha256
+      - name: Verify V1.9 Mail payload in artifacts
+        run: python tools/verify_v19_release_artifacts.py release-output/rss-reader-modernization-1.9.0-complete.zip release-output/rss-reader-modernization-1.9.0.zip
+      - name: Upload Version 1.9.0 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-modernization-1.9.0-release
+          path: |
+            release-output/rss-reader-modernization-1.9.0-complete.zip
+            release-output/rss-reader-modernization-1.9.0-complete.zip.sha256
+            release-output/rss-reader-modernization-1.9.0.zip
+            release-output/rss-reader-modernization-1.9.0.zip.sha256
+          if-no-files-found: error
+          retention-days: 30

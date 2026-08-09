@@ -1,6 +1,8 @@
-package_type=complete-source
-application_version=1.8.0
-application_label=RSS Reader Modernization 1.8.0
-intended_tag=v1.8.0
+package_type=source-tree
+application_version=1.9.0
+application_label=RSS Reader Modernization 1.9.0
+intended_tag=v1.9.0
+baseline_version=1.8.0
+baseline_commit=3b729e7274f9561a9ce2aa10b1572b50f2ca882d
 runtime_data=excluded
-manifest=SOURCE_MANIFEST.sha256
+composer_runtime=resolved-in-ci

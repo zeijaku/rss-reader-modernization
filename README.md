@@ -2,10 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.8.0`  
-Release tag: `v1.8.0`
+**Stable release:** `RSS Reader Modernization 1.9.0`
+Release tag: `v1.9.0`
 
-Version 1.8ではStock一覧を、保存するだけの画面から後で探して利用できる画面へ改善しました。Stock解除、タイトル／URL／Domain検索、新旧／タイトル順Sort、20件単位Pagination、Domain表示、URL Copy／X／Task Actions、1列Compact Listを追加し、既存`content_stock`構造をそのまま利用しています。
+Version 1.9ではDashboardへread-only Mail Widgetを追加しました。Generic IMAP Accountをユーザー単位で登録し、INBOX最新5件／10件、未読表示、plain-text本文の遅延表示、Mail Account管理に対応しています。Version 1.8のStock改善と既存Dashboard機能はそのまま維持しています。
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
@@ -38,6 +38,9 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Memo Widgetの追加・変更・削除、改行を保持した本文表示
 - Task Widgetの追加・変更・削除、完了切替、期限、優先度
 - Calendar Widgetの月表示、通常予定、Task期限連動、日本の祝日赤表示・祝日名Tooltip
+- Mail Widgetの追加・変更・削除、Mail Account切替、Drag & Drop
+- INBOX最新5件／10件のFrom・Subject・Date・未読表示、plain-text本文の遅延表示
+- Mail Accountの追加・編集・有効／無効・接続確認・削除Guard
 - Mini Game Widget「Icon Quest」の5×5盤面、4 Level、Keyboard／Tap操作、途中保存
 - Mini Game Widget「Lights Out」の5×5盤面、Moves、Reset、新しい問題、Clear
 - スマートフォンでの左右スワイプによるタブ切り替えと方向Indicator

@@ -38,3 +38,12 @@ The versions and paths below are the files distributed by this checkpoint.
 - Source Mapは配布Assetの一部として残すが、License一覧では対応するBootstrap本体へ含めて扱う。
 
 詳細な実ファイル対応は [`docs/dependencies.md`](docs/dependencies.md) を参照してください。
+
+## DirectoryTree ImapEngine 1.25.3
+
+- Package: `directorytree/imapengine`
+- Purpose: pure-PHP IMAP client used by the Version 1.9 read-only Mail Widget
+- License: MIT
+- Project: https://github.com/directorytree/imapengine
+
+The dependency is pinned by `composer.lock`. Git source does not commit `vendor/`; CI resolves the locked runtime and the Version 1.9 Runtime ZIP includes the installed dependency.

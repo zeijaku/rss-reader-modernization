@@ -1,3 +1,19 @@
+## RSS Reader Modernization 1.9.0 — 2026-08-09
+
+### Version 1.9 Mail Widget
+
+- Dashboardへread-only Mail Widgetを追加。1 Widget = 1 Mail Account = INBOXとして最新5件／10件のFrom・Subject・Date・未読状態を表示。
+- Mail本文は`+`操作時だけ1通単位で遅延取得し、plain textのみを表示。HTML直接描画、外部画像、添付取得は行わない。
+- INBOXはread-onlyで扱い、一覧・本文表示によってServer側Seenを変更しない。
+- Mail Accountの追加・編集・Password更新、有効／無効、接続確認、削除を追加。使用中Accountの誤削除を防止。
+- Mail WidgetのAccount切替、初期TitleへのAccount表示名反映、Drag & Dropを既存Dashboard契約へ統合。
+- Mail Password / App PasswordはMail専用Keyを使ったSodium XChaCha20-Poly1305で暗号化保存し、`APP_HASH_KEY`を流用しない。
+- IMAP接続はpublic address限定、DNS再検証、Certificate validation必須、SSL/TLS 993またはSTARTTLS 143に限定。
+- Migration 009で`mail_account` Tableを追加。既存TableへのALTERは行わない。
+- DirectoryTree ImapEngine 1.25.3を`composer.lock`で固定。Gitでは`vendor/`を除外し、Release CIでRuntimeを解決して配布ZIPへ同梱。
+- Mail / Calendar / Dashboard通知の残留を整理し、成功・情報・エラー通知を時間経過で消去。
+- Microsoft 365 Basic Authentication、OAuth、HTML Mail rendering、送信／返信／削除／移動はVersion 1.9.0の対象外。
+
 ## RSS Reader Modernization 1.8.0 — 2026-08-07
 
 ### Version 1.8 Stock list improvement
