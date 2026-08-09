@@ -96,7 +96,11 @@ for doc in required:
         assert resolved.exists(), f'broken local link in {doc.relative_to(ROOT)}: {target}'
 
 # Documentation must not accidentally embed high-signal secret formats.
-scan_docs = required + [ROOT / 'CHECKLIST_FOR_USER.md', ROOT / 'UPDATED_FILES_SB15.md']
+local_handoff_docs = [
+    ROOT / 'CHECKLIST_FOR_USER.md',
+    ROOT / 'UPDATED_FILES_SB15.md',
+]
+scan_docs = required + [doc for doc in local_handoff_docs if doc.is_file()]
 secret_patterns = [
     re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),
     re.compile(r'\bAKIA[0-9A-Z]{16}\b'),
