@@ -90,16 +90,18 @@ function search_feed_owned_widget(int $ownerId,int $widgetId): ?array
     $stmt=conn_db()->prepare('SELECT * FROM '.db_table_identifier('dashboard_widget')." WHERE widget_id=:id AND widget_owner=:owner AND widget_type='search' AND widget_flag=0");
     $stmt->execute([':id'=>$widgetId,':owner'=>$ownerId]); $r=$stmt->fetch(); return is_array($r)?$r:null;
 }
-function search_feed_create(int $ownerId,int $location,string $style,int $width,array $config): int
+function search_feed_create(int $ownerId,int $location,string $style,int $width,array $config,int $height=1): int
 {
+    if(dashboard_widget_validate_height($height)===null)throw new InvalidArgumentException('Search Feed height is invalid.');
     $pdo=conn_db(); $now=gmdate('Y-m-d H:i:s');
-    $pdo->beginTransaction(); try{$sort=dashboard_widget_next_sort_order($pdo,$ownerId,$location); $st=$pdo->prepare('INSERT INTO '.db_table_identifier('dashboard_widget').' (widget_owner,widget_location,widget_type,widget_reference_id,widget_sort_order,widget_width,widget_style,widget_config,widget_flag,widget_created_at,widget_updated_at) VALUES (:owner,:location,\'search\',NULL,:sort,:width,:style,:config,0,:created,:updated)');$st->execute([':owner'=>$ownerId,':location'=>$location,':sort'=>$sort,':width'=>$width,':style'=>$style,':config'=>dashboard_widget_encode_config($config),':created'=>$now,':updated'=>$now]);$id=(int)$pdo->lastInsertId();$pdo->commit();return $id;}catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
+    $pdo->beginTransaction(); try{$sort=dashboard_widget_next_sort_order($pdo,$ownerId,$location); $st=$pdo->prepare('INSERT INTO '.db_table_identifier('dashboard_widget').' (widget_owner,widget_location,widget_type,widget_reference_id,widget_sort_order,widget_width,widget_height,widget_style,widget_config,widget_flag,widget_created_at,widget_updated_at) VALUES (:owner,:location,\'search\',NULL,:sort,:width,:height,:style,:config,0,:created,:updated)');$st->execute([':owner'=>$ownerId,':location'=>$location,':sort'=>$sort,':width'=>$width,':height'=>$height,':style'=>$style,':config'=>dashboard_widget_encode_config($config),':created'=>$now,':updated'=>$now]);$id=(int)$pdo->lastInsertId();$pdo->commit();return $id;}catch(Throwable $e){if($pdo->inTransaction())$pdo->rollBack();throw $e;}
 }
-function search_feed_update(int $ownerId,int $widgetId,string $style,int $width,array $config): bool
+function search_feed_update(int $ownerId,int $widgetId,string $style,int $width,array $config,int $height=1): bool
 {
+    if(dashboard_widget_validate_height($height)===null)throw new InvalidArgumentException('Search Feed height is invalid.');
     if(search_feed_owned_widget($ownerId,$widgetId)===null)return false;
-    $st=conn_db()->prepare('UPDATE '.db_table_identifier('dashboard_widget').' SET widget_width=:width,widget_style=:style,widget_config=:config,widget_updated_at=:updated WHERE widget_id=:id AND widget_owner=:owner AND widget_type=\'search\' AND widget_flag=0');
-    $st->execute([':width'=>$width,':style'=>$style,':config'=>dashboard_widget_encode_config($config),':updated'=>gmdate('Y-m-d H:i:s'),':id'=>$widgetId,':owner'=>$ownerId]);return $st->rowCount()===1;
+    $st=conn_db()->prepare('UPDATE '.db_table_identifier('dashboard_widget').' SET widget_width=:width,widget_height=:height,widget_style=:style,widget_config=:config,widget_updated_at=:updated WHERE widget_id=:id AND widget_owner=:owner AND widget_type=\'search\' AND widget_flag=0');
+    $st->execute([':width'=>$width,':height'=>$height,':style'=>$style,':config'=>dashboard_widget_encode_config($config),':updated'=>gmdate('Y-m-d H:i:s'),':id'=>$widgetId,':owner'=>$ownerId]);return $st->rowCount()===1;
 }
 function search_feed_delete(int $ownerId,int $widgetId): bool
 {

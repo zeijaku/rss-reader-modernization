@@ -170,6 +170,43 @@ body.auth-page {
     outline-offset: 2px;
 }
 
+
+.auth-remember {
+    display: flex;
+    min-height: 44px;
+    margin: -4px 0 0;
+    align-items: center;
+    gap: 9px;
+}
+
+.auth-remember-input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    accent-color: var(--auth-accent);
+    cursor: pointer;
+}
+
+.auth-remember-label {
+    margin: 0;
+    color: var(--auth-text);
+    font-size: .91rem;
+    line-height: 1.45;
+    cursor: pointer;
+}
+
+.auth-remember-input:focus-visible {
+    outline: 3px solid var(--auth-focus);
+    outline-offset: 3px;
+}
+
+.auth-remember-note {
+    margin: -2px 0 16px 27px;
+    color: var(--auth-muted);
+    font-size: .79rem;
+    line-height: 1.45;
+}
+
 .auth-button {
     display: inline-flex;
     width: 100%;

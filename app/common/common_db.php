@@ -178,14 +178,130 @@ function search_content(int|string|null $content_owner = null, int|string $conte
     return $stmt->fetchAll();
 }
 
-function search_stock(int|string|null $stock_owner): array
+function stock_search_like_pattern(string $query): string
+{
+    $escaped = strtr($query, [
+        '!' => '!!',
+        '%' => '!%',
+        '_' => '!_',
+    ]);
+    return '%' . $escaped . '%';
+}
+
+function stock_search_order_by(string $sort): string
+{
+    return match ($sort) {
+        'oldest' => 'stock_id ASC',
+        'title' => 'stock_title ASC, stock_id DESC',
+        default => 'stock_id DESC',
+    };
+}
+
+function count_stock(int|string|null $stock_owner, string $query = '', ?int $tagId = null): int
+{
+    $sql = 'SELECT COUNT(*) FROM ' . db_table_name('content_stock') . ' s '
+        . 'WHERE s.stock_flag = 0 AND s.stock_owner = :owner';
+    $params = [':owner' => $stock_owner === null ? null : (int) $stock_owner];
+
+    $query = trim($query);
+    if ($query !== '') {
+        $sql .= " AND (s.stock_title LIKE :stock_title_query ESCAPE '!' OR s.stock_data LIKE :stock_data_query ESCAPE '!'"
+            . ' OR EXISTS (SELECT 1 FROM ' . db_table_identifier('stock_tag_map') . ' sqm '
+            . 'INNER JOIN ' . db_table_identifier('stock_tag') . ' sqt ON sqt.tag_id = sqm.map_tag_id '
+            . 'WHERE sqm.map_owner = :search_map_owner AND sqm.map_stock_id = s.stock_id '
+            . "AND sqt.tag_owner = :search_tag_owner AND sqt.tag_flag = 0 AND sqt.tag_name LIKE :stock_tag_query ESCAPE '!'))";
+        $pattern = stock_search_like_pattern($query);
+        $params[':stock_title_query'] = $pattern;
+        $params[':stock_data_query'] = $pattern;
+        $params[':stock_tag_query'] = $pattern;
+        $params[':search_map_owner'] = $stock_owner === null ? null : (int) $stock_owner;
+        $params[':search_tag_owner'] = $stock_owner === null ? null : (int) $stock_owner;
+    }
+
+    if ($tagId !== null && $tagId > 0) {
+        $sql .= ' AND EXISTS (SELECT 1 FROM ' . db_table_identifier('stock_tag_map') . ' ftm '
+            . 'INNER JOIN ' . db_table_identifier('stock_tag') . ' ftt ON ftt.tag_id = ftm.map_tag_id '
+            . 'WHERE ftm.map_owner = :filter_map_owner AND ftm.map_stock_id = s.stock_id '
+            . 'AND ftm.map_tag_id = :filter_tag_id AND ftt.tag_owner = :filter_tag_owner AND ftt.tag_flag = 0)';
+        $params[':filter_map_owner'] = $stock_owner === null ? null : (int) $stock_owner;
+        $params[':filter_tag_owner'] = $stock_owner === null ? null : (int) $stock_owner;
+        $params[':filter_tag_id'] = $tagId;
+    }
+
+    $stmt = conn_db()->prepare($sql);
+    $stmt->execute($params);
+    $count = $stmt->fetchColumn();
+    return is_numeric($count) ? max(0, (int) $count) : 0;
+}
+
+function search_stock(
+    int|string|null $stock_owner,
+    string $query = '',
+    string $sort = 'newest',
+    ?int $limit = null,
+    int $offset = 0,
+    ?int $tagId = null
+): array {
+    $sql = 'SELECT s.* FROM ' . db_table_name('content_stock') . ' s '
+        . 'WHERE s.stock_flag = 0 AND s.stock_owner = :owner';
+    $params = [':owner' => $stock_owner === null ? null : (int) $stock_owner];
+
+    $query = trim($query);
+    if ($query !== '') {
+        $sql .= " AND (s.stock_title LIKE :stock_title_query ESCAPE '!' OR s.stock_data LIKE :stock_data_query ESCAPE '!'"
+            . ' OR EXISTS (SELECT 1 FROM ' . db_table_identifier('stock_tag_map') . ' sqm '
+            . 'INNER JOIN ' . db_table_identifier('stock_tag') . ' sqt ON sqt.tag_id = sqm.map_tag_id '
+            . 'WHERE sqm.map_owner = :search_map_owner AND sqm.map_stock_id = s.stock_id '
+            . "AND sqt.tag_owner = :search_tag_owner AND sqt.tag_flag = 0 AND sqt.tag_name LIKE :stock_tag_query ESCAPE '!'))";
+        $pattern = stock_search_like_pattern($query);
+        $params[':stock_title_query'] = $pattern;
+        $params[':stock_data_query'] = $pattern;
+        $params[':stock_tag_query'] = $pattern;
+        $params[':search_map_owner'] = $stock_owner === null ? null : (int) $stock_owner;
+        $params[':search_tag_owner'] = $stock_owner === null ? null : (int) $stock_owner;
+    }
+
+    if ($tagId !== null && $tagId > 0) {
+        $sql .= ' AND EXISTS (SELECT 1 FROM ' . db_table_identifier('stock_tag_map') . ' ftm '
+            . 'INNER JOIN ' . db_table_identifier('stock_tag') . ' ftt ON ftt.tag_id = ftm.map_tag_id '
+            . 'WHERE ftm.map_owner = :filter_map_owner AND ftm.map_stock_id = s.stock_id '
+            . 'AND ftm.map_tag_id = :filter_tag_id AND ftt.tag_owner = :filter_tag_owner AND ftt.tag_flag = 0)';
+        $params[':filter_map_owner'] = $stock_owner === null ? null : (int) $stock_owner;
+        $params[':filter_tag_owner'] = $stock_owner === null ? null : (int) $stock_owner;
+        $params[':filter_tag_id'] = $tagId;
+    }
+
+    $sql .= ' ORDER BY ' . stock_search_order_by($sort);
+    if ($limit !== null) {
+        $safeLimit = max(1, min(100, $limit));
+        $safeOffset = max(0, $offset);
+        $sql .= ' LIMIT ' . $safeLimit . ' OFFSET ' . $safeOffset;
+    }
+
+    $stmt = conn_db()->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
+function find_owned_active_stock(int $userId, int $stockId): ?array
 {
     $stmt = conn_db()->prepare(
         'SELECT * FROM ' . db_table_name('content_stock') . ' '
-        . 'WHERE stock_flag = 0 AND stock_owner = :owner ORDER BY stock_id DESC'
+        . 'WHERE stock_id = :stock_id AND stock_owner = :owner AND stock_flag = 0 LIMIT 1'
     );
-    $stmt->execute([':owner' => $stock_owner === null ? null : (int) $stock_owner]);
-    return $stmt->fetchAll();
+    $stmt->execute([':stock_id' => $stockId, ':owner' => $userId]);
+    $row = $stmt->fetch();
+    return is_array($row) ? $row : null;
+}
+
+function delete_stock_owned(int $userId, int $stockId): int
+{
+    $stmt = conn_db()->prepare(
+        'UPDATE ' . db_table_name('content_stock') . ' SET stock_flag = 1 '
+        . 'WHERE stock_id = :stock_id AND stock_owner = :owner AND stock_flag = 0'
+    );
+    $stmt->execute([':stock_id' => $stockId, ':owner' => $userId]);
+    return $stmt->rowCount();
 }
 
 function search_conf(int|string|null $conf_owner = null): array

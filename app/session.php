@@ -31,6 +31,8 @@ function app_session_configure(): void
         'session.cookie_httponly' => '1',
         'session.cookie_samesite' => 'Lax',
         'session.cookie_lifetime' => '0',
+        // Dynamic response cache headers are controlled explicitly by the application.
+        'session.cache_limiter' => '',
         'session.gc_maxlifetime' => (string) max(SESSION_ABSOLUTE_TIMEOUT, SESSION_IDLE_TIMEOUT),
     ];
 
@@ -65,25 +67,33 @@ function app_session_start(): void
     }
 
     $now = time();
+    $authenticationExpired = false;
     if (isset($_SESSION['user_id'])) {
         $authenticatedAt = isset($_SESSION['authenticated_at']) ? (int) $_SESSION['authenticated_at'] : 0;
         $lastActivity = isset($_SESSION['last_activity']) ? (int) $_SESSION['last_activity'] : 0;
 
-        $expired = $authenticatedAt <= 0
+        $authenticationExpired = $authenticatedAt <= 0
             || $lastActivity <= 0
             || ($now - $lastActivity) > SESSION_IDLE_TIMEOUT
             || ($now - $authenticatedAt) > SESSION_ABSOLUTE_TIMEOUT;
 
-        if ($expired) {
+        if ($authenticationExpired) {
             app_session_clear_authentication();
             if (!session_regenerate_id(true)) {
                 throw new RuntimeException('Unable to rotate an expired session identifier.');
             }
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-            app_flash_set('auth_notice', 'セッションの有効期限が切れました。もう一度ログインしてください。', 'warning');
         } else {
             $_SESSION['last_activity'] = $now;
         }
+    }
+
+    $restored = false;
+    if (!app_session_is_authenticated() && function_exists('persistent_login_restore_session')) {
+        $restored = persistent_login_restore_session();
+    }
+    if ($authenticationExpired && !$restored) {
+        app_flash_set('auth_notice', 'セッションの有効期限が切れました。もう一度ログインしてください。', 'warning');
     }
 
     app_csrf_token();

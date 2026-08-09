@@ -1,0 +1,206 @@
+/* V1.10 Dashboard utility widgets: Links / Weather */
+/* V1.10.0: keep the outer card spacing aligned with existing Mail / Game widgets. */
+.links-card,
+.weather-card {
+    margin-bottom: 1rem;
+}
+
+.links-card-inner,
+.weather-card-inner {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(0, 0, 0, .125);
+    border-radius: .25rem;
+    background: #fff;
+    overflow: hidden;
+}
+
+.links-card-header {
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .25rem .5rem;
+}
+
+.weather-card-header {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 4px 0 8px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.links-card-header .widget-title-text,
+.weather-card-header .widget-title-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.links-card-header .btn-link {
+    padding: .15rem .3rem;
+    line-height: 1.2;
+}
+
+.weather-refresh-trigger,
+.weather-widget-edit-trigger {
+    display: inline-flex;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 4px;
+    line-height: 1;
+    touch-action: manipulation;
+}
+
+.links-card-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: .45rem .5rem .5rem;
+}
+
+.links-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0 0 .4rem;
+    padding: 0;
+}
+
+.links-item {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    min-width: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, .07);
+}
+
+.links-item:last-child { border-bottom: 0; }
+
+.links-item-link {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .38rem .15rem;
+    overflow: hidden;
+}
+
+.links-item-link span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.links-item-edit {
+    flex: 0 0 auto;
+    padding: .25rem .35rem;
+}
+
+.links-empty {
+    padding: .75rem .2rem;
+    text-align: center;
+}
+
+.links-create-form {
+    flex: 0 0 auto;
+    border-top: 1px solid rgba(0, 0, 0, .08);
+    padding-top: .4rem;
+}
+
+.links-create-form .form-control {
+    height: calc(1.75rem + 2px);
+    padding: .2rem .4rem;
+    font-size: .78rem;
+}
+
+.links-create-row {
+    display: grid;
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.35fr) auto;
+    gap: .25rem;
+}
+
+.weather-card-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: .6rem .65rem .45rem;
+    overflow-y: auto;
+}
+
+.weather-current {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .55rem;
+}
+
+.weather-current-icon {
+    width: 2.25rem;
+    text-align: center;
+    font-size: 1.8rem;
+}
+
+.weather-location,
+.weather-current-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.weather-location { font-size: .78rem; }
+.weather-current-label { font-size: .82rem; font-weight: 600; }
+.weather-current-temp { font-size: 1.75rem; font-weight: 600; line-height: 1; white-space: nowrap; }
+
+.weather-days {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .25rem;
+}
+
+.weather-day {
+    min-width: 0;
+    padding: .35rem .2rem;
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: .2rem;
+    text-align: center;
+    font-size: .72rem;
+}
+
+.weather-day-date,
+.weather-day-temp,
+.weather-day-rain { white-space: nowrap; }
+.weather-day-icon { margin: .2rem 0; font-size: 1.05rem; }
+.weather-day-rain { color: #6c757d; }
+.weather-source { margin-top: .4rem; font-size: .65rem; text-align: right; }
+.weather-status { padding: 1rem .25rem; text-align: center; }
+.weather-stale { margin-top: .35rem; font-size: .7rem; color: #856404; }
+
+@media (min-width: 768px) {
+    .dashboard-widget[data-widget-width="2"] .weather-days,
+    .dashboard-widget[data-widget-width="3"] .weather-days,
+    .dashboard-widget[data-widget-width="4"] .weather-days {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 575.98px) {
+    .links-create-row { grid-template-columns: minmax(0, 1fr) auto; }
+    .links-create-title { grid-column: 1 / -1; }
+    .weather-days { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

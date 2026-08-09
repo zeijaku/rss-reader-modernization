@@ -7,6 +7,31 @@ define('APP_RESPONSE_FORMAT', 'json');
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/api.php';
 
+// V1.9-C R2: Mail dependencies are loaded at the API boundary so the V1.8
+// bootstrap/api core does not need to be rewritten just to enable Mail Widget.
+$composerAutoload = dirname(__DIR__) . '/vendor/autoload.php';
+if (is_file($composerAutoload)) {
+    require_once $composerAutoload;
+}
+
+if (!defined('APP_MAIL_CREDENTIAL_KEY_ID')) {
+    define('APP_MAIL_CREDENTIAL_KEY_ID', app_env('APP_MAIL_CREDENTIAL_KEY_ID', 'primary'));
+}
+if (!defined('APP_MAIL_CREDENTIAL_KEY_B64')) {
+    define('APP_MAIL_CREDENTIAL_KEY_B64', app_env('APP_MAIL_CREDENTIAL_KEY_B64', ''));
+}
+if (!defined('APP_MAIL_IMAP_TIMEOUT_SECONDS')) {
+    define('APP_MAIL_IMAP_TIMEOUT_SECONDS', max(2, min(30, (int) app_env('APP_MAIL_IMAP_TIMEOUT_SECONDS', '5'))));
+}
+
+require_once dirname(__DIR__) . '/app/mail/mail_crypto.php';
+require_once dirname(__DIR__) . '/app/mail/mail_target.php';
+require_once dirname(__DIR__) . '/app/mail/mail_account.php';
+require_once dirname(__DIR__) . '/app/mail/mail_client.php';
+require_once dirname(__DIR__) . '/app/mail/mail_service.php';
+require_once dirname(__DIR__) . '/app/mail/mail_api.php';
+require_once dirname(__DIR__) . '/app/mail/mail_widget.php';
+
 function api_emit(array $response): never
 {
     $status = isset($response['status']) ? (int) $response['status'] : 500;
@@ -16,9 +41,22 @@ function api_emit(array $response): never
 
     http_response_code($status);
     header('Content-Type: application/json; charset=UTF-8');
-    header('Cache-Control: no-store');
+    app_send_no_store_headers();
     echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
     exit;
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_mail_account_dispatch(string $action, int $userId, array $input): array
+{
+    return match ($action) {
+        'mail.account.list' => api_mail_account_list($userId, $input),
+        'mail.account.create' => api_mail_account_create($userId, $input),
+        'mail.account.update' => api_mail_account_update($userId, $input),
+        'mail.account.delete' => api_mail_account_delete($userId, $input),
+        'mail.account.test' => api_mail_account_test($userId, $input),
+        default => api_error('unknown_action', 'Unknown API action.', 400),
+    };
 }
 
 app_session_start();
@@ -44,6 +82,12 @@ if ($action === '' || strlen($action) > 64 || preg_match('/^[a-z]+(?:\.[a-z]+)+$
 }
 
 try {
+    if (str_starts_with($action, 'mail.account.')) {
+        api_emit(api_mail_account_dispatch($action, $userId, $_POST));
+    }
+    if (str_starts_with($action, 'mail.widget.')) {
+        api_emit(api_mail_widget_dispatch($action, $userId, $_POST));
+    }
     api_emit(api_dispatch($action, $userId, $_POST));
 } catch (Throwable $exception) {
     try {

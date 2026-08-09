@@ -39,11 +39,16 @@
             .prop('hidden', false)
             .text(String(message || '処理を完了出来ませんでした'));
 
-        if (Number(autoCloseMs) > 0) {
-            noticeTimer = window.setTimeout(function () {
-                clearNotice();
-            }, Number(autoCloseMs));
+        var closeMs = Number(autoCloseMs);
+        if (!(closeMs > 0)) {
+            closeMs = noticeType === 'success' ? 2500 : (noticeType === 'info' ? 3000 : 6000);
         }
+        noticeTimer = window.setTimeout(function () {
+            // Shared notice area: only clear the message this timer created.
+            if ($('#app-notice').text() === String(message || '処理を完了出来ませんでした')) {
+                clearNotice();
+            }
+        }, closeMs);
     }
 
     function clearNotice() {
@@ -112,6 +117,10 @@
         $('.changeContentId').val(contentId);
         $('.changeContentValue').val(contentValue);
         $('.changeContentStyle').val(contentStyle);
+        $('.changeContentWidth').val(String($trigger.attr('data-widget-width') || '1'));
+        $('.changeContentHeight').val(String($trigger.attr('data-widget-height') || '1'));
+        var itemLimit = String($trigger.attr('data-feed-item-limit') || 'auto');
+        $('.changeContentItemLimit').val(itemLimit === 'auto' ? '' : itemLimit);
     }
 
     /* Content変更 / 論理削除 */
@@ -124,11 +133,17 @@
         var contentId = $('.changeContentId').val();
         var contentValue = $('.changeContentValue').val();
         var contentStyle = $('.changeContentStyle').val();
+        var widgetWidth = $('.changeContentWidth').val();
+        var widgetHeight = $('.changeContentHeight').val();
+        var feedItemLimit = $('.changeContentItemLimit').val();
 
         apiRequest('content.update', {
             'content_id': contentId,
             'content_value': contentValue,
-            'content_style': contentStyle
+            'content_style': contentStyle,
+            'widget_width': widgetWidth,
+            'widget_height': widgetHeight,
+            'feed_item_limit': feedItemLimit
         }, 3000)
             .done(function (data) {
                 if (apiResponseOk(data)) {
@@ -326,6 +341,133 @@
             });
     }
 
+    function stockTagPayload($source) {
+        var $card = $source.closest('.stock-card');
+        var stockId = parseInt(String($card.attr('data-stock-id') || ''), 10);
+        return {
+            stock_id: Number.isFinite(stockId) && stockId > 0 ? stockId : 0
+        };
+    }
+
+    function attachStockTag($source, tagId, tagName) {
+        var payload = stockTagPayload($source);
+        if (payload.stock_id <= 0) {
+            showNotice('Stockを確認出来ませんでした', 'danger', 3000);
+            return;
+        }
+        if (tagId) {
+            payload.tag_id = tagId;
+        } else {
+            payload.tag_name = String(tagName || '').trim();
+            if (payload.tag_name === '') {
+                return;
+            }
+        }
+        if (!requestStart($source)) {
+            return;
+        }
+        apiRequest('stock.tag.attach', payload, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($source);
+            });
+    }
+
+    function detachStockTag($source) {
+        var payload = stockTagPayload($source);
+        var tagId = parseInt(String($source.attr('data-tag-id') || ''), 10);
+        if (payload.stock_id <= 0 || !Number.isFinite(tagId) || tagId <= 0) {
+            showNotice('Tagを確認出来ませんでした', 'danger', 3000);
+            return;
+        }
+        payload.tag_id = tagId;
+        if (!requestStart($source)) {
+            return;
+        }
+        apiRequest('stock.tag.detach', payload, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($source);
+            });
+    }
+
+    function renameStockTag($form) {
+        var tagId = parseInt(String($form.attr('data-tag-id') || ''), 10);
+        var $input = $form.find('.stock-tag-rename-input').first();
+        var tagName = String($input.val() || '').trim();
+        if (!Number.isFinite(tagId) || tagId <= 0 || tagName === '') {
+            showNotice('Tag名を確認してください', 'danger', 3000);
+            return;
+        }
+        var $button = $form.find('button[type="submit"]').first();
+        if (!requestStart($button)) {
+            return;
+        }
+        apiRequest('stock.tag.rename', { tag_id: tagId, tag_name: tagName }, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
+    function deleteStockTag($button) {
+        var tagId = parseInt(String($button.attr('data-tag-id') || ''), 10);
+        var tagName = String($button.attr('data-tag-name') || '').trim();
+        var usageCount = parseInt(String($button.attr('data-usage-count') || '0'), 10);
+        if (!Number.isFinite(tagId) || tagId <= 0) {
+            showNotice('Tagを確認出来ませんでした', 'danger', 3000);
+            return;
+        }
+        var message = 'Tag「' + (tagName || String(tagId)) + '」を削除しますか？';
+        if (Number.isFinite(usageCount) && usageCount > 0) {
+            message += '\nこのTagは ' + usageCount + ' 件のStockから外れます。';
+        }
+        if (!window.confirm(message)) {
+            return;
+        }
+        if (!requestStart($button)) {
+            return;
+        }
+        apiRequest('stock.tag.delete', { tag_id: tagId }, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
+    function toggleStockTagEditor($button) {
+        var $editor = $button.closest('.stock-card-content').find('.stock-tag-editor').first();
+        var willOpen = $editor.prop('hidden');
+        $editor.prop('hidden', !willOpen);
+        $button.attr('aria-expanded', willOpen ? 'true' : 'false');
+        if (willOpen) {
+            var $input = $editor.find('.stock-tag-name-input').first();
+            if ($input.length) {
+                window.setTimeout(function () { $input.trigger('focus'); }, 0);
+            }
+        }
+    }
+
     function articleActionValue($source, name) {
         return String($source.attr('data-article-' + name) || '');
     }
@@ -339,7 +481,11 @@
         var $menu = $('#articleActionsMenu');
         var trigger = articleActionsTrigger;
         if ($menu.length > 0) {
-            $menu.prop('hidden', true).attr('style', '').data('article-url', '').data('article-title', '').data('stock-title', '');
+            $menu.prop('hidden', true).attr('style', '')
+                .data('article-url', '')
+                .data('article-title', '')
+                .data('stock-title', '')
+                .data('stock-id', 0);
         }
         $('.article-actions-trigger[aria-expanded="true"]').attr('aria-expanded', 'false');
         articleActionsTrigger = null;
@@ -350,7 +496,7 @@
 
     function positionArticleActionsMenu($menu, $trigger) {
         var trigger = $trigger.get(0);
-        var card = $trigger.closest('.feed-card').get(0);
+        var card = $trigger.closest('.feed-card, .stock-card').get(0);
         if (!trigger || !card) {
             return false;
         }
@@ -415,13 +561,26 @@
         articleActionsTrigger = $trigger.get(0);
         var articleUrl = articleActionValue($trigger, 'url');
         var articleTitle = articleActionTitle($trigger);
+        var articleContext = String($trigger.attr('data-article-context') || 'feed');
+        var isStockContext = articleContext === 'stock' || $trigger.closest('.stock-card').length > 0;
+        var stockId = parseInt(String($trigger.attr('data-stock-id') || ''), 10);
+        var hasStockId = Number.isFinite(stockId) && stockId > 0;
         $menu
             .data('article-url', articleUrl)
             .data('article-title', articleTitle)
-            .data('stock-title', articleActionValue($trigger, 'title'));
-        $menu.find('.article-action-stock, .article-action-copy, .article-action-x')
+            .data('stock-title', articleActionValue($trigger, 'title'))
+            .data('stock-id', hasStockId ? stockId : 0);
+        $menu.find('.article-action-stock')
+            .prop('hidden', isStockContext)
+            .prop('disabled', isStockContext || articleUrl === '')
+            .attr('aria-disabled', isStockContext || articleUrl === '' ? 'true' : 'false');
+        $menu.find('.article-action-copy, .article-action-x')
             .prop('disabled', articleUrl === '')
             .attr('aria-disabled', articleUrl === '' ? 'true' : 'false');
+        $menu.find('.article-action-stock-only').prop('hidden', !isStockContext);
+        $menu.find('.article-action-stock-remove')
+            .prop('disabled', !isStockContext || !hasStockId)
+            .attr('aria-disabled', !isStockContext || !hasStockId ? 'true' : 'false');
         $trigger.attr('aria-expanded', 'true');
 
         if (!positionArticleActionsMenu($menu, $trigger)) {
@@ -430,7 +589,7 @@
             return;
         }
 
-        var $items = $menu.find('.article-actions-item:not(:disabled)');
+        var $items = $menu.find('.article-actions-item:not([hidden]):not(:disabled)');
         if ($items.length > 0) {
             (focusLast === true ? $items.last() : $items.first()).focus();
         }
@@ -586,7 +745,10 @@
         apiRequest('content.create', {
             'content_value': $('.registerContentValue').val(),
             'content_style': $('.style_select').val(),
-            'content_location': $('.content_location').val()
+            'content_location': $('.content_location').val(),
+            'widget_width': $('.registerContentWidth').val(),
+            'widget_height': $('.registerContentHeight').val(),
+            'feed_item_limit': $('.registerContentItemLimit').val()
         }, 3000)
             .done(function (data) {
                 if (apiResponseOk(data)) {
@@ -606,7 +768,8 @@
             'clock_show_seconds': $('.' + prefix + 'ClockShowSeconds').prop('checked') ? '1' : '0',
             'clock_show_date': $('.' + prefix + 'ClockShowDate').prop('checked') ? '1' : '0',
             'widget_style': $('.' + prefix + 'ClockStyle').val(),
-            'widget_width': $('.' + prefix + 'ClockWidth').val()
+            'widget_width': $('.' + prefix + 'ClockWidth').val(),
+            'widget_height': $('.' + prefix + 'ClockHeight').val()
         };
     }
 
@@ -638,6 +801,7 @@
         $('.changeClockShowDate').prop('checked', String($trigger.attr('data-clock-show-date') || '1') === '1');
         $('.changeClockStyle').val(String($trigger.attr('data-widget-style') || 'primary'));
         $('.changeClockWidth').val(String($trigger.attr('data-widget-width') || '1'));
+        $('.changeClockHeight').val(String($trigger.attr('data-widget-height') || '1'));
     }
 
     function changeClock($form) {
@@ -666,7 +830,7 @@
             showNotice('削除するClockを確認出来ませんでした', 'danger');
             return;
         }
-        if (!window.confirm('このClockを削除しますか？')) {
+        if (!window.confirm('このClockを削除しますか？Browserに保存されたTimer状態も削除します。')) {
             return;
         }
         if (!requestStart($button)) {
@@ -676,6 +840,119 @@
         apiRequest('widget.clock.delete', {'widget_id': widgetId}, 3000)
             .done(function (data) {
                 if (apiResponseOk(data)) {
+                    if (window.RssClockTimer && typeof window.RssClockTimer.removeWidgetState === 'function') {
+                        window.RssClockTimer.removeWidgetState(widgetId);
+                    }
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
+    function gameFormPayload(prefix) {
+        return {
+            'game_title': $('.' + prefix + 'GameTitleValue').val(),
+            'game_type': $('.' + prefix + 'GameType').val(),
+            'widget_style': $('.' + prefix + 'GameStyle').val(),
+            'widget_width': $('.' + prefix + 'GameWidth').val(),
+            'widget_height': $('.' + prefix + 'GameHeight').val()
+        };
+    }
+
+    function gameDefaultTitle(gameType) {
+        return gameType === 'lights_out' ? 'Lights Out' : 'Icon Quest';
+    }
+
+    function syncGameDefaultTitle(prefix, previousType) {
+        var $type = $('.' + prefix + 'GameType');
+        var $title = $('.' + prefix + 'GameTitleValue');
+        var currentTitle = String($title.val() || '').trim();
+        var previousTitle = gameDefaultTitle(previousType);
+        if (currentTitle === '' || currentTitle === previousTitle) {
+            $title.val(gameDefaultTitle(String($type.val() || 'icon_quest')));
+        }
+    }
+
+    function addGameWidget($form) {
+        var $button = $form.find('button[type="submit"]');
+        if (!requestStart($button)) {
+            return;
+        }
+        var payload = gameFormPayload('register');
+        payload.widget_location = $('.registerGameLocation').val();
+        apiRequest('widget.game.create', payload, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
+    function editGameWidget($trigger) {
+        var gameType = String($trigger.attr('data-game-type') || 'icon_quest');
+        $('.changeGameWidgetId').val(String($trigger.attr('data-widget-id') || ''));
+        $('.changeGameTitleValue').val(String($trigger.attr('data-game-title') || 'Icon Quest'));
+        $('.changeGameType').val(gameType).attr('data-previous-game-type', gameType).attr('data-original-game-type', gameType);
+        $('.changeGameStyle').val(String($trigger.attr('data-widget-style') || 'secondary'));
+        $('.changeGameWidth').val(String($trigger.attr('data-widget-width') || '1'));
+        $('.changeGameHeight').val(String($trigger.attr('data-widget-height') || '1'));
+    }
+
+    function removeGameWidgetBrowserState(widgetId, gameType) {
+        if ((!gameType || gameType === 'icon_quest') && window.RssMiniGame && typeof window.RssMiniGame.removeWidgetState === 'function') {
+            window.RssMiniGame.removeWidgetState(widgetId);
+        }
+        if ((!gameType || gameType === 'lights_out') && window.RssLightsOut && typeof window.RssLightsOut.removeWidgetState === 'function') {
+            window.RssLightsOut.removeWidgetState(widgetId);
+        }
+    }
+
+    function changeGameWidget($form) {
+        var $button = $form.find('button[type="submit"]');
+        if (!requestStart($button)) {
+            return;
+        }
+        var payload = gameFormPayload('change');
+        payload.widget_id = $('.changeGameWidgetId').val();
+        var originalGameType = String($('.changeGameType').attr('data-original-game-type') || 'icon_quest');
+        apiRequest('widget.game.update', payload, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    if (originalGameType !== String(payload.game_type || 'icon_quest')) {
+                        removeGameWidgetBrowserState(payload.widget_id, originalGameType);
+                    }
+                    window.location.reload();
+                }
+            })
+            .fail(requestFail)
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
+    function deleteGameWidget($button) {
+        var widgetId = String($('.changeGameWidgetId').val() || '');
+        if (!/^\d+$/.test(widgetId)) {
+            showNotice('削除するGame Widgetを確認出来ませんでした', 'danger');
+            return;
+        }
+        if (!window.confirm('このGame Widgetを削除しますか？Browserに保存されたこのWidgetの状態も削除します。')) {
+            return;
+        }
+        if (!requestStart($button)) {
+            return;
+        }
+        apiRequest('widget.game.delete', {'widget_id': widgetId}, 3000)
+            .done(function (data) {
+                if (apiResponseOk(data)) {
+                    removeGameWidgetBrowserState(widgetId, null);
                     window.location.reload();
                 }
             })
@@ -690,7 +967,8 @@
             'memo_title': $('.' + prefix + 'MemoTitleValue').val(),
             'memo_body': $('.' + prefix + 'MemoBody').val(),
             'widget_style': $('.' + prefix + 'MemoStyle').val(),
-            'widget_width': $('.' + prefix + 'MemoWidth').val()
+            'widget_width': $('.' + prefix + 'MemoWidth').val(),
+            'widget_height': $('.' + prefix + 'MemoHeight').val()
         };
     }
 
@@ -721,6 +999,7 @@
         $('.changeMemoBody').val(String($card.find('.memo-body').first().text() || ''));
         $('.changeMemoStyle').val(String($trigger.attr('data-widget-style') || 'success'));
         $('.changeMemoWidth').val(String($trigger.attr('data-widget-width') || '1'));
+        $('.changeMemoHeight').val(String($trigger.attr('data-widget-height') || '1'));
     }
 
     function changeMemo($form) {
@@ -770,7 +1049,8 @@
         return {
             'task_widget_title': $('.' + prefix + 'TaskWidgetTitleValue').val(),
             'widget_style': $('.' + prefix + 'TaskWidgetStyle').val(),
-            'widget_width': $('.' + prefix + 'TaskWidgetWidth').val()
+            'widget_width': $('.' + prefix + 'TaskWidgetWidth').val(),
+            'widget_height': $('.' + prefix + 'TaskWidgetHeight').val()
         };
     }
 
@@ -798,6 +1078,7 @@
         $('.changeTaskWidgetTitleValue').val(String($trigger.attr('data-task-widget-title') || 'Task'));
         $('.changeTaskWidgetStyle').val(String($trigger.attr('data-widget-style') || 'primary'));
         $('.changeTaskWidgetWidth').val(String($trigger.attr('data-widget-width') || '1'));
+        $('.changeTaskWidgetHeight').val(String($trigger.attr('data-widget-height') || '1'));
     }
 
     function changeTaskWidget($form) {
@@ -1114,14 +1395,55 @@
         return 'feed-summary-' + (contentId || ('search-' + (widgetId || '0'))) + '-' + String(index);
     }
 
+    function feedDisplayLimit($card) {
+        var searchLimitValue = $card.attr('data-search-limit');
+        if (searchLimitValue !== undefined && searchLimitValue !== null && String(searchLimitValue) !== '') {
+            var searchLimit = Number(searchLimitValue);
+            return Number.isFinite(searchLimit) && searchLimit >= 1 && searchLimit <= 30 ? Math.floor(searchLimit) : 10;
+        }
+
+        var configured = String($card.attr('data-feed-item-limit') || 'auto');
+        if (configured === '' || configured === 'auto') {
+            return 'auto';
+        }
+        if (!/^\d+$/.test(configured)) {
+            return 'auto';
+        }
+        var feedLimit = Number(configured);
+        return Number.isFinite(feedLimit) && feedLimit >= 1 && feedLimit <= 30 ? Math.floor(feedLimit) : 'auto';
+    }
+
+    function feedAutoDefaultLimit($card) {
+        if (window.matchMedia && window.matchMedia('(max-width: 767.98px)').matches) {
+            return 5;
+        }
+        return String($card.attr('data-widget-height') || '1') === '2' ? 10 : 5;
+    }
+
+    function feedInnerOverflows($card) {
+        var inner = $card.find('.feed-card-inner').get(0);
+        if (!inner || Number(inner.clientHeight || 0) <= 0) {
+            return false;
+        }
+        return Number(inner.scrollHeight || 0) > Number(inner.clientHeight || 0) + 1;
+    }
+
+    function refreshFeedOverflowState($card) {
+        var hasDetail = $card.find('.feed-item-detail-row').length > 0;
+        var displayLimit = feedDisplayLimit($card);
+        var allowScroll = hasDetail || (displayLimit !== 'auto' && feedInnerOverflows($card));
+        $card.find('.feed-card-inner').toggleClass('is-scrollable-y', allowScroll);
+    }
+
     function renderFeedItems($card, rawItems) {
         closeArticleActionsMenu(false);
         var items = Array.isArray(rawItems) ? rawItems : [];
         var $body = $card.find('.content-body').empty();
         var renderedItems = [];
         var rendered = 0;
-        var itemLimit = Number($card.attr('data-search-limit') || 5);
-        if (!Number.isFinite(itemLimit) || itemLimit < 1 || itemLimit > 30) { itemLimit = 5; }
+        var displayLimit = feedDisplayLimit($card);
+        var itemLimit = displayLimit === 'auto' ? feedAutoDefaultLimit($card) : displayLimit;
+        $card.find('.feed-card-inner').removeClass('is-scrollable-y');
 
         hideFeedTitleTooltip();
         for (var i = 0; i < items.length && rendered < itemLimit; i++) {
@@ -1219,6 +1541,7 @@
         }
 
         $card.data('feed-render-items', renderedItems);
+        refreshFeedOverflowState($card);
         if (rendered === 0) {
             renderFeedBodyMessage($card, 'empty', '記事はありません');
             return;
@@ -1401,6 +1724,7 @@
         if ($button.attr('aria-expanded') === 'true') {
             $existing.remove();
             setFeedSummaryExpanded($button, false);
+            refreshFeedOverflowState($card);
             return;
         }
 
@@ -1430,6 +1754,7 @@
 
         $detailRow.insertAfter($row);
         setFeedSummaryExpanded($button, true);
+        refreshFeedOverflowState($card);
     }
 
     var feedTitleTooltipTimer = null;
@@ -1814,10 +2139,10 @@
     }
 
     function searchPayload(prefix) {
-        return {search_query: $('.' + prefix + 'SearchQuery').val(), search_scope: $('.' + prefix + 'SearchScope').val(), search_condition: $('.' + prefix + 'SearchCondition').val(), search_limit: $('.' + prefix + 'SearchLimit').val(), search_category: $('.' + prefix + 'SearchCategory').val(), widget_width: $('.' + prefix + 'SearchWidth').val(), widget_style: $('.' + prefix + 'SearchStyle').val()};
+        return {search_query: $('.' + prefix + 'SearchQuery').val(), search_scope: $('.' + prefix + 'SearchScope').val(), search_condition: $('.' + prefix + 'SearchCondition').val(), search_limit: $('.' + prefix + 'SearchLimit').val(), search_category: $('.' + prefix + 'SearchCategory').val(), widget_width: $('.' + prefix + 'SearchWidth').val(), widget_height: $('.' + prefix + 'SearchHeight').val(), widget_style: $('.' + prefix + 'SearchStyle').val()};
     }
     function addSearchFeed($form) { var $b=$form.find('button[type="submit"]'); if(!requestStart($b))return; var p=searchPayload('register'); p.widget_location=$('.registerSearchLocation').val(); apiRequest('widget.search.create',p,10000).done(function(d){if(apiResponseOk(d))window.location.reload();}).fail(requestFail).always(function(){requestEnd($b);}); }
-    function editSearchFeed($t) { $('.changeSearchId').val($t.attr('data-widget-id')||''); $('.changeSearchQuery').val($t.attr('data-search-query')||''); $('.changeSearchScope').val($t.attr('data-search-scope')||'owned'); $('.changeSearchCondition').val($t.attr('data-search-condition')||'or'); $('.changeSearchLimit').val($t.attr('data-search-limit')||'10'); $('.changeSearchCategory').val($t.attr('data-search-category')||'all'); $('.changeSearchWidth').val($t.attr('data-widget-width')||'1'); $('.changeSearchStyle').val($t.attr('data-widget-style')||'warning'); }
+    function editSearchFeed($t) { $('.changeSearchId').val($t.attr('data-widget-id')||''); $('.changeSearchQuery').val($t.attr('data-search-query')||''); $('.changeSearchScope').val($t.attr('data-search-scope')||'owned'); $('.changeSearchCondition').val($t.attr('data-search-condition')||'or'); $('.changeSearchLimit').val($t.attr('data-search-limit')||'10'); $('.changeSearchCategory').val($t.attr('data-search-category')||'all'); $('.changeSearchWidth').val($t.attr('data-widget-width')||'1'); $('.changeSearchHeight').val($t.attr('data-widget-height')||'1'); $('.changeSearchStyle').val($t.attr('data-widget-style')||'warning'); }
     function changeSearchFeed($form) { var $b=$form.find('button[type="submit"]'); if(!requestStart($b))return; var p=searchPayload('change'); p.widget_id=$('.changeSearchId').val(); apiRequest('widget.search.update',p,10000).done(function(d){if(apiResponseOk(d))window.location.reload();}).fail(requestFail).always(function(){requestEnd($b);}); }
     function deleteSearchFeed($b) { var id=String($('.changeSearchId').val()||''); if(!/^\d+$/.test(id)||!window.confirm('このSearch Feedを削除しますか？'))return; if(!requestStart($b))return; apiRequest('widget.search.delete',{widget_id:id},5000).done(function(d){if(apiResponseOk(d))window.location.reload();}).fail(requestFail).always(function(){requestEnd($b);}); }
     function renderSearchFeedTitle($card) {
@@ -1899,6 +2224,36 @@
             .on('click' + eventNamespace, '.delete_memo', function () {
                 deleteMemo($(this));
             })
+            .off('submit' + eventNamespace, '#registerGameWidgetForm')
+            .on('submit' + eventNamespace, '#registerGameWidgetForm', function (event) {
+                event.preventDefault();
+                addGameWidget($(this));
+            })
+            .off('change' + eventNamespace, '.registerGameType')
+            .on('change' + eventNamespace, '.registerGameType', function () {
+                var previousType = String($(this).attr('data-previous-game-type') || 'icon_quest');
+                syncGameDefaultTitle('register', previousType);
+                $(this).attr('data-previous-game-type', String($(this).val() || 'icon_quest'));
+            })
+            .off('change' + eventNamespace, '.changeGameType')
+            .on('change' + eventNamespace, '.changeGameType', function () {
+                var previousType = String($(this).attr('data-previous-game-type') || 'icon_quest');
+                syncGameDefaultTitle('change', previousType);
+                $(this).attr('data-previous-game-type', String($(this).val() || 'icon_quest'));
+            })
+            .off('click' + eventNamespace, '.mini-game-edit-trigger')
+            .on('click' + eventNamespace, '.mini-game-edit-trigger', function () {
+                editGameWidget($(this));
+            })
+            .off('submit' + eventNamespace, '#changeGameWidgetForm')
+            .on('submit' + eventNamespace, '#changeGameWidgetForm', function (event) {
+                event.preventDefault();
+                changeGameWidget($(this));
+            })
+            .off('click' + eventNamespace, '.delete_game_widget')
+            .on('click' + eventNamespace, '.delete_game_widget', function () {
+                deleteGameWidget($(this));
+            })
             .off('submit' + eventNamespace, '#registerClockForm')
             .on('submit' + eventNamespace, '#registerClockForm', function (event) {
                 event.preventDefault();
@@ -1954,6 +2309,40 @@
                 event.preventDefault();
                 changeTabs($(this));
             })
+            .off('click' + eventNamespace, '.stock-tag-editor-toggle')
+            .on('click' + eventNamespace, '.stock-tag-editor-toggle', function (event) {
+                event.preventDefault();
+                toggleStockTagEditor($(this));
+            })
+            .off('click' + eventNamespace, '.stock-tag-attach')
+            .on('click' + eventNamespace, '.stock-tag-attach', function (event) {
+                event.preventDefault();
+                var $button = $(this);
+                var tagId = parseInt(String($button.attr('data-tag-id') || ''), 10);
+                attachStockTag($button, Number.isFinite(tagId) && tagId > 0 ? tagId : 0, String($button.attr('data-tag-name') || ''));
+            })
+            .off('click' + eventNamespace, '.stock-tag-remove')
+            .on('click' + eventNamespace, '.stock-tag-remove', function (event) {
+                event.preventDefault();
+                detachStockTag($(this));
+            })
+            .off('submit' + eventNamespace, '.stock-tag-add-form')
+            .on('submit' + eventNamespace, '.stock-tag-add-form', function (event) {
+                event.preventDefault();
+                var $form = $(this);
+                var $input = $form.find('.stock-tag-name-input').first();
+                attachStockTag($form.find('button[type="submit"]').first(), 0, String($input.val() || ''));
+            })
+            .off('submit' + eventNamespace, '.stock-tag-rename-form')
+            .on('submit' + eventNamespace, '.stock-tag-rename-form', function (event) {
+                event.preventDefault();
+                renameStockTag($(this));
+            })
+            .off('click' + eventNamespace, '.stock-tag-delete')
+            .on('click' + eventNamespace, '.stock-tag-delete', function (event) {
+                event.preventDefault();
+                deleteStockTag($(this));
+            })
             .off('click' + eventNamespace, '.article-actions-trigger')
             .on('click' + eventNamespace, '.article-actions-trigger', function (event) {
                 event.preventDefault();
@@ -1983,6 +2372,33 @@
                 }
                 $('#saveContent').modal('show');
             })
+            .off('click' + eventNamespace, '.article-action-stock-remove')
+            .on('click' + eventNamespace, '.article-action-stock-remove', function (event) {
+                event.preventDefault();
+                var $button = $(this);
+                var $menu = $('#articleActionsMenu');
+                var stockId = parseInt(String($menu.data('stock-id') || ''), 10);
+                if (!Number.isFinite(stockId) || stockId <= 0) {
+                    showNotice('解除するStockを確認出来ませんでした', 'danger', 3000);
+                    return;
+                }
+                if (!window.confirm('このStockを解除しますか？')) {
+                    return;
+                }
+                if (!requestStart($button)) {
+                    return;
+                }
+                apiRequest('stock.delete', { stock_id: stockId }, 3000)
+                    .done(function (data) {
+                        if (apiResponseOk(data)) {
+                            window.location.reload();
+                        }
+                    })
+                    .fail(requestFail)
+                    .always(function () {
+                        requestEnd($button);
+                    });
+            })
             .off('click' + eventNamespace, '.article-action-copy')
             .on('click' + eventNamespace, '.article-action-copy', function (event) {
                 event.preventDefault();
@@ -2000,7 +2416,7 @@
             })
             .off('keydown' + eventNamespace, '#articleActionsMenu')
             .on('keydown' + eventNamespace, '#articleActionsMenu', function (event) {
-                var $items = $(this).find('.article-actions-item:not(:disabled)');
+                var $items = $(this).find('.article-actions-item:not([hidden]):not(:disabled)');
                 var index = $items.index(document.activeElement);
                 if (event.key === 'Escape') {
                     event.preventDefault();
@@ -2156,6 +2572,89 @@
     var dashboardSwipeState = null;
     var dashboardSwipeThreshold = 64;
     var dashboardSwipeEdge = 24;
+    var dashboardSwipeIndicator = null;
+    var dashboardSwipeIndicatorTimer = null;
+    var dashboardSwipeNavigateTimer = null;
+    var dashboardSwipeNavigateDelay = 160;
+
+    function dashboardSwipeIndicatorElement() {
+        if (dashboardSwipeIndicator !== null && dashboardSwipeIndicator.parentNode) {
+            return dashboardSwipeIndicator;
+        }
+        if (!document || typeof document.createElement !== 'function' || !document.body) {
+            return null;
+        }
+
+        dashboardSwipeIndicator = document.createElement('div');
+        dashboardSwipeIndicator.className = 'dashboard-swipe-indicator';
+        dashboardSwipeIndicator.setAttribute('aria-hidden', 'true');
+        dashboardSwipeIndicator.setAttribute('data-dashboard-swipe-indicator', 'true');
+        document.body.appendChild(dashboardSwipeIndicator);
+        return dashboardSwipeIndicator;
+    }
+
+    function dashboardSwipeIndicatorReset() {
+        if (dashboardSwipeIndicatorTimer !== null) {
+            window.clearTimeout(dashboardSwipeIndicatorTimer);
+            dashboardSwipeIndicatorTimer = null;
+        }
+        if (dashboardSwipeIndicator === null) {
+            return;
+        }
+        dashboardSwipeIndicator.className = 'dashboard-swipe-indicator';
+        dashboardSwipeIndicator.textContent = '';
+        dashboardSwipeIndicator.style.opacity = '';
+        dashboardSwipeIndicator.style.removeProperty('--dashboard-swipe-shift');
+    }
+
+    function dashboardSwipeIndicatorShow(distanceX, state) {
+        var targetTab = distanceX < 0 ? state.currentTab + 1 : state.currentTab - 1;
+        if (targetTab < 0 || targetTab >= state.tabCount) {
+            dashboardSwipeIndicatorReset();
+            return false;
+        }
+
+        var indicator = dashboardSwipeIndicatorElement();
+        if (indicator === null) {
+            return false;
+        }
+        if (dashboardSwipeIndicatorTimer !== null) {
+            window.clearTimeout(dashboardSwipeIndicatorTimer);
+            dashboardSwipeIndicatorTimer = null;
+        }
+
+        var nextTab = distanceX < 0;
+        var progress = Math.min(1, Math.abs(distanceX) / dashboardSwipeThreshold);
+        var shift = Math.round((1 - progress) * 10) * (nextTab ? 1 : -1);
+        indicator.className = 'dashboard-swipe-indicator ' + (nextTab ? 'is-right' : 'is-left') + ' is-visible';
+        indicator.textContent = nextTab ? '‹' : '›';
+        indicator.style.opacity = String(0.16 + progress * 0.68);
+        indicator.style.setProperty('--dashboard-swipe-shift', String(shift) + 'px');
+        return true;
+    }
+
+    function dashboardSwipeIndicatorHide(accepted) {
+        if (dashboardSwipeIndicator === null) {
+            return;
+        }
+        if (dashboardSwipeIndicatorTimer !== null) {
+            window.clearTimeout(dashboardSwipeIndicatorTimer);
+        }
+
+        if (accepted) {
+            dashboardSwipeIndicator.className = dashboardSwipeIndicator.className.replace(/\s+is-hiding/g, '') + ' is-complete';
+            dashboardSwipeIndicator.style.opacity = '1';
+            dashboardSwipeIndicator.style.setProperty('--dashboard-swipe-shift', '0px');
+        } else {
+            dashboardSwipeIndicator.className = dashboardSwipeIndicator.className.replace(/\s+is-complete/g, '') + ' is-hiding';
+            dashboardSwipeIndicator.style.opacity = '0';
+        }
+
+        dashboardSwipeIndicatorTimer = window.setTimeout(function () {
+            dashboardSwipeIndicatorTimer = null;
+            dashboardSwipeIndicatorReset();
+        }, accepted ? 280 : 220);
+    }
 
     function dashboardSwipeIsMobile() {
         if (window.matchMedia) {
@@ -2201,17 +2700,38 @@
         return /^[0-3]$/.test(value) ? Number(value) : null;
     }
 
-    function dashboardNavigateToTab(tab) {
+    function dashboardTabCountFromMain($main) {
+        var tabCount = Number($main.attr('data-dashboard-tab-count') || 4);
+        if (!Number.isInteger(tabCount) || tabCount < 1 || tabCount > 8) {
+            return 4;
+        }
+        return tabCount;
+    }
+
+    function dashboardNavigateToTab(tab, delayed) {
         var target = './?tab=' + String(tab);
-        if (window.location && typeof window.location.assign === 'function') {
-            window.location.assign(target);
+        var navigate = function () {
+            dashboardSwipeNavigateTimer = null;
+            if (window.location && typeof window.location.assign === 'function') {
+                window.location.assign(target);
+                return;
+            }
+            window.location.href = target;
+        };
+
+        if (delayed && dashboardSwipeIndicator !== null) {
+            if (dashboardSwipeNavigateTimer !== null) {
+                window.clearTimeout(dashboardSwipeNavigateTimer);
+            }
+            dashboardSwipeNavigateTimer = window.setTimeout(navigate, dashboardSwipeNavigateDelay);
             return;
         }
-        window.location.href = target;
+        navigate();
     }
 
     function dashboardSwipeStart(event, $main) {
         dashboardSwipeState = null;
+        dashboardSwipeIndicatorReset();
         if (!dashboardSwipeIsMobile() || dashboardTabFromMain($main) === null) {
             return;
         }
@@ -2237,6 +2757,8 @@
             lastX: Number(point.clientX || 0),
             lastY: Number(point.clientY || 0),
             startedAt: Date.now(),
+            currentTab: dashboardTabFromMain($main),
+            tabCount: dashboardTabCountFromMain($main),
             horizontal: false
         };
     }
@@ -2247,6 +2769,7 @@
         }
         var point = dashboardSwipePoint(event, false);
         if (point === null) {
+            dashboardSwipeIndicatorHide(false);
             dashboardSwipeState = null;
             return;
         }
@@ -2260,6 +2783,7 @@
 
         if (!dashboardSwipeState.horizontal) {
             if (absY > 18 && absY > absX) {
+                dashboardSwipeIndicatorHide(false);
                 dashboardSwipeState = null;
                 return;
             }
@@ -2269,6 +2793,7 @@
         }
 
         if (dashboardSwipeState !== null && dashboardSwipeState.horizontal) {
+            dashboardSwipeIndicatorShow(distanceX, dashboardSwipeState);
             event.preventDefault();
         }
     }
@@ -2289,22 +2814,23 @@
         var distanceY = state.lastY - state.startY;
         var elapsed = Date.now() - state.startedAt;
         if (!state.horizontal || Math.abs(distanceX) < dashboardSwipeThreshold || Math.abs(distanceX) < Math.abs(distanceY) * 1.3 || elapsed > 1200) {
+            dashboardSwipeIndicatorHide(false);
             return;
         }
 
         var currentTab = dashboardTabFromMain($main);
         if (currentTab === null) {
+            dashboardSwipeIndicatorHide(false);
             return;
         }
-        var tabCount = Number($main.attr('data-dashboard-tab-count') || 4);
-        if (!Number.isInteger(tabCount) || tabCount < 1 || tabCount > 8) {
-            tabCount = 4;
-        }
+        var tabCount = dashboardTabCountFromMain($main);
         var targetTab = distanceX < 0 ? currentTab + 1 : currentTab - 1;
         if (targetTab < 0 || targetTab >= tabCount) {
+            dashboardSwipeIndicatorHide(false);
             return;
         }
-        dashboardNavigateToTab(targetTab);
+        dashboardSwipeIndicatorHide(true);
+        dashboardNavigateToTab(targetTab, true);
     }
 
     function initTabSwipe() {
@@ -2327,6 +2853,7 @@
             })
             .off('touchcancel' + eventNamespace)
             .on('touchcancel' + eventNamespace, function () {
+                dashboardSwipeIndicatorHide(false);
                 dashboardSwipeState = null;
             });
     }

@@ -18,6 +18,7 @@ SET @t_memo = CONCAT('`', @table_prefix, 'memo`');
 SET @t_task = CONCAT('`', @table_prefix, 'task`');
 SET @t_calendar_event = CONCAT('`', @table_prefix, 'calendar_event`');
 SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
+SET @t_remember_token = CONCAT('`', @table_prefix, 'remember_token`');
 
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_user_info, ' (',
@@ -60,6 +61,23 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''ユーザー固有の設定'''
 );
 PREPARE sb13_stmt FROM @sql; EXECUTE sb13_stmt; DEALLOCATE PREPARE sb13_stmt;
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_remember_token, ' (',
+  '`remember_token_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`remember_token_user_id` INT UNSIGNED NOT NULL,',
+  '`remember_token_selector` CHAR(24) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`remember_token_validator_hash` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`remember_token_created_at` DATETIME NOT NULL,',
+  '`remember_token_expires_at` DATETIME NOT NULL,',
+  '`remember_token_last_used_at` DATETIME NULL DEFAULT NULL,',
+  'PRIMARY KEY (`remember_token_id`),',
+  'UNIQUE KEY `uq_remember_token_selector` (`remember_token_selector`),',
+  'KEY `idx_remember_token_user_expiry` (`remember_token_user_id`, `remember_token_expires_at`),',
+  'KEY `idx_remember_token_expiry` (`remember_token_expires_at`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Persistent login token'''
+);
+PREPARE v17e_stmt FROM @sql; EXECUTE v17e_stmt; DEALLOCATE PREPARE v17e_stmt;
 
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_content, ' (',
@@ -175,6 +193,7 @@ SET @sql = CONCAT(
   '`widget_reference_id` INT UNSIGNED NULL DEFAULT NULL,',
   '`widget_sort_order` INT UNSIGNED NOT NULL DEFAULT 0,',
   '`widget_width` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT ''1..4'',',
+  '`widget_height` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT ''1..2'',',
   '`widget_style` VARCHAR(16) NOT NULL DEFAULT ''success'',',
   '`widget_config` TEXT NULL,',
   '`widget_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:有効/1:無効'',',

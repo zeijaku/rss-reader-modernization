@@ -45,6 +45,11 @@ function view_login(?string $message = null, string $messageType = 'danger', boo
                             </button>
                         </div>
                     </div>
+                    <div class="auth-remember">
+                        <input type="checkbox" id="loginRememberMe" name="remember_me" value="1" class="auth-remember-input">
+                        <label for="loginRememberMe" class="auth-remember-label">この端末で30日間ログイン状態を維持</label>
+                    </div>
+                    <p class="auth-remember-note">共用端末では選択しないでください。</p>
                     <button class="auth-button" type="submit"><span data-submit-label>ログイン</span><i class="fas fa-sign-in-alt" aria-hidden="true"></i></button>
                 </form>
 
@@ -99,7 +104,7 @@ function view_login(?string $message = null, string $messageType = 'danger', boo
         </div>
     </main>
 
-    <script src="./js/auth.js"></script>
+    <script src="<?php echo htmlspecialchars(app_asset_url('js/auth.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
     </body>
     </html>
     <?php

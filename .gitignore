@@ -72,6 +72,11 @@ __pycache__/
 !/database/migrations/004_v1_1_memo.sql
 !/database/migrations/005_v1_1_task.sql
 !/database/migrations/006_v1_1_calendar_event.sql
+!/database/migrations/007_v1_7_remember_token.sql
+!/database/migrations/008_v1_7_widget_height.sql
+!/database/migrations/009_v1_9_mail_account.sql
+!/database/migrations/010_v1_10_links.sql
+!/database/migrations/011_v1_11_stock_tags.sql
 !/database/audit/v1_1_c_preflight.sql
 !/database/audit/v1_1_c_postflight.sql
 !/database/audit/v1_1_h_preflight.sql

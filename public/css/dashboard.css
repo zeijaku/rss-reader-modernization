@@ -12,7 +12,8 @@
 .memo-card,
 .task-card,
 .calendar-card,
-.stock-card {
+.stock-card,
+.mini-game-card {
     min-width: 0;
     padding: 4px;
 }
@@ -22,7 +23,8 @@
 .memo-card-inner,
 .task-card-inner,
 .calendar-card-inner,
-.stock-card-inner {
+.stock-card-inner,
+.mini-game-card-inner {
     height: 100%;
 }
 
@@ -319,6 +321,8 @@
 
 .feed-table {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
     margin-bottom: 0;
     table-layout: fixed;
 }
@@ -409,7 +413,8 @@
     opacity: 0.72;
 }
 
-.feed-item-title-cell {
+/* V1.3-D: Bootstrapの.table tdより強いSelectorで記事Title余白を確実に適用する。 */
+.feed-table .feed-item-title-cell {
     min-width: 0;
     padding: 7px 2px 7px 6px;
     vertical-align: middle;
@@ -455,7 +460,8 @@
     outline-offset: 2px;
 }
 
-.feed-item-stock-cell {
+/* V1.3-D: 三点リーダー列はCell paddingを除去し、Buttonを列中央へ収める。 */
+.feed-table .feed-item-stock-cell {
     width: 36px;
     padding: 0;
     text-align: center;
@@ -463,7 +469,7 @@
     white-space: nowrap;
 }
 
-.feed-item-summary-cell {
+.feed-table .feed-item-summary-cell {
     width: 32px;
     padding: 0;
     text-align: center;
@@ -571,6 +577,26 @@
     opacity: 0.5;
 }
 
+.article-actions-separator {
+    height: 1px;
+    margin: 4px 6px;
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.article-action-stock-remove {
+    color: #b02a37;
+}
+
+.article-action-stock-remove i {
+    color: #dc3545;
+}
+
+.article-action-stock-remove:hover,
+.article-action-stock-remove:focus {
+    background: rgba(220, 53, 69, 0.09);
+    color: #842029;
+}
+
 .feed-item-summary-icon {
     color: #6c757d;
     font-size: 0.88rem;
@@ -595,7 +621,8 @@
 .feed-item-summary {
     max-height: 14rem;
     padding: 10px 11px;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     border-left: 3px solid rgba(23, 162, 184, 0.48);
     border-radius: 2px;
     background: #ffffff;
@@ -643,19 +670,230 @@
     word-break: break-word;
 }
 
-.stock-card-inner .list-group-item {
-    height: 100%;
-    min-height: 92px;
+.stock-grid {
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 6px;
+    background: #ffffff;
 }
 
-.stock-date,
+.stock-card {
+    width: 100%;
+    padding: 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.09);
+}
+
+.stock-card:last-child {
+    border-bottom: 0;
+}
+
+.stock-card-inner {
+    display: flex;
+    min-height: 76px;
+    padding: 12px 8px 12px 14px;
+    align-items: center;
+    background: #ffffff;
+}
+
+.stock-card-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 .stock-title {
     display: block;
+    font-size: 0.94rem;
+    font-weight: 500;
+    line-height: 1.45;
 }
 
+.stock-title a {
+    color: #343a40;
+}
+
+.stock-title a:hover,
+.stock-title a:focus {
+    color: #0056b3;
+}
+
+.stock-meta {
+    display: flex;
+    min-width: 0;
+    margin-top: 7px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    color: #6c757d;
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.stock-domain,
 .stock-date {
-    width: fit-content;
-    margin-bottom: 8px;
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+}
+
+.stock-domain {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.stock-meta i {
+    margin-right: 3px;
+    color: #868e96;
+}
+
+.stock-meta-separator {
+    color: #adb5bd;
+}
+
+.stock-tags-row {
+    display: flex;
+    min-height: 28px;
+    margin-top: 7px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.stock-tag-chip {
+    display: inline-flex;
+    min-height: 26px;
+    padding: 2px 4px 2px 8px;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid rgba(23, 162, 184, 0.28);
+    border-radius: 999px;
+    background: rgba(23, 162, 184, 0.08);
+    color: #4b6267;
+    font-size: 0.74rem;
+    line-height: 1.2;
+}
+
+.stock-tag-chip > i {
+    color: #17a2b8;
+    font-size: 0.7rem;
+}
+
+.stock-tag-remove {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #6c757d;
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.stock-tag-remove:hover,
+.stock-tag-remove:focus {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    outline: none;
+}
+
+.stock-tag-editor-toggle {
+    min-height: 28px;
+    padding: 2px 6px;
+    color: #6c757d;
+    font-size: 0.76rem;
+    text-decoration: none;
+}
+
+.stock-tag-editor-toggle:hover,
+.stock-tag-editor-toggle:focus {
+    color: #17a2b8;
+    text-decoration: none;
+}
+
+.stock-tag-editor {
+    max-width: 720px;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1px solid rgba(0, 0, 0, 0.09);
+    border-radius: 5px;
+    background: #f8f9fa;
+}
+
+.stock-tag-editor[hidden] {
+    display: none !important;
+}
+
+.stock-tag-suggestion-group + .stock-tag-suggestion-group,
+.stock-tag-suggestion-group + .stock-tag-add-form {
+    margin-top: 7px;
+}
+
+.stock-tag-group-label {
+    display: block;
+    margin-bottom: 4px;
+    color: #6c757d;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.stock-tag-choice-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.stock-tag-choice-list .btn {
+    padding: 2px 7px;
+    font-size: 0.73rem;
+    line-height: 1.5;
+}
+
+.stock-tag-add-form {
+    max-width: 360px;
+    margin-top: 8px;
+}
+
+.stock-card-actions {
+    flex: 0 0 44px;
+    width: 44px;
+    margin-left: 8px;
+}
+
+.stock-actions-trigger {
+    display: inline-flex;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    text-decoration: none;
+}
+
+.stock-actions-trigger:hover,
+.stock-actions-trigger:focus {
+    color: #17a2b8;
+    text-decoration: none;
+}
+
+.stock-pagination {
+    flex-wrap: wrap;
+    margin-bottom: 0;
+}
+
+.stock-pagination .page-link {
+    display: flex;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
 }
 
 .empty-state {
@@ -805,22 +1043,203 @@ select:focus,
     outline-offset: -3px;
 }
 
-.navbar-brand {
+.app-header {
     min-width: 0;
-    max-width: calc(100% - 64px);
+}
+
+.app-navbar {
+    height: 56px;
+    min-height: 56px;
+    padding: 4px 12px;
+    flex-wrap: nowrap;
+}
+
+.app-navbar-identity {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.app-navbar-brand {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    margin-right: 0;
+    padding: 4px 0;
+    font-size: 1.1rem;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.app-navbar-brand-icon {
+    margin-right: 6px;
+}
+
+.app-navbar-separator {
+    flex: 0 0 1px;
+    width: 1px;
+    height: 20px;
+    margin: 0 12px;
+    background-color: currentColor;
+    opacity: 0.35;
+}
+
+.app-navbar-current {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.navbar-dark .app-navbar-current {
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.navbar-light .app-navbar-current {
+    color: rgba(0, 0, 0, 0.68);
+}
+
+.app-navbar-collapse {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.app-navbar-links {
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.app-navbar-links > .nav-item {
+    flex: 0 1 9rem;
+    min-width: 0;
+}
+
+.app-navbar-link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    max-width: 9rem;
+    padding: 8px 10px !important;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.app-navbar-link > i {
+    flex: 0 0 auto;
+    margin-right: 6px;
+}
+
+.app-navbar-link-label {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
+.app-navbar-menu-button {
+    display: inline-flex;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    margin-left: 8px;
+    padding: 0;
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    background: transparent;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.navbar-dark .app-navbar-menu-button {
+    border-color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.navbar-light .app-navbar-menu-button {
+    border-color: rgba(0, 0, 0, 0.28);
+    color: rgba(0, 0, 0, 0.68);
+}
+
+.app-navbar-menu-button:hover,
+.app-navbar-menu-button:focus {
+    background-color: rgba(127, 127, 127, 0.16);
+    color: inherit;
+}
+
+.app-navbar-menu-button:focus,
+.app-navbar-menu-button:focus-visible {
+    outline: 3px solid #005fcc;
+    outline-offset: 2px;
+}
+
+.drawer-nav {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.drawer-menu {
+    padding-bottom: 16px;
+}
+
 .drawer-brand {
-    margin-top: 4px;
-    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    margin: 0;
+    padding: 0 14px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    font-size: 1.15rem;
+    line-height: 1.2;
+}
+
+.drawer-brand-icon {
+    flex: 0 0 1.5rem;
+    width: 1.5rem;
+    margin-right: 6px;
+    text-align: center;
+}
+
+.drawer-brand-label {
+    min-width: 0;
+    color: #6c757d;
 }
 
 .drawer-section-title {
-    padding: 5px 4px;
-    background-color: #cccccc;
+    display: flex;
+    align-items: center;
+    min-height: 32px;
+    margin-top: 8px;
+    padding: 6px 12px;
+    background-color: #dedede;
+    color: #343a40;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.drawer-brand + .drawer-section-title {
+    margin-top: 0;
+}
+
+.drawer-section-title > i {
+    margin-right: 6px;
 }
 
 .drawer-menu > li > a,
@@ -829,12 +1248,72 @@ select:focus,
     display: flex;
     align-items: center;
     width: 100%;
-    min-height: 36px;
-    padding: 5px 10px;
+    min-height: 40px;
+    margin: 0;
+    padding: 8px 12px;
+    border: 0;
+    border-left: 3px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: #6c757d !important;
+    line-height: 1.35;
     text-align: left;
     text-decoration: none;
     white-space: normal;
     overflow-wrap: anywhere;
+}
+
+.drawer-item-icon {
+    display: inline-flex;
+    flex: 0 0 1.5rem;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    margin-right: 8px;
+    text-align: center;
+}
+
+.drawer-item-label {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.drawer-menu > li > a:hover,
+.drawer-menu > li > a:focus,
+.drawer-menu-action:hover,
+.drawer-menu-action:focus,
+.drawer-logout-button:hover,
+.drawer-logout-button:focus {
+    background-color: rgba(0, 0, 0, 0.06);
+    color: #343a40 !important;
+    text-decoration: none;
+}
+
+.drawer-menu > li > a:focus-visible,
+.drawer-menu-action:focus-visible,
+.drawer-logout-button:focus-visible {
+    outline-offset: -3px;
+}
+
+.drawer-item-current,
+.drawer-item-current:hover,
+.drawer-item-current:focus {
+    border-left-color: #005fcc !important;
+    background-color: rgba(0, 95, 204, 0.1) !important;
+    color: #212529 !important;
+    font-weight: 600;
+}
+
+.drawer-logout-button:hover,
+.drawer-logout-button:focus {
+    background-color: rgba(176, 42, 55, 0.08);
+    color: #b02a37 !important;
+}
+
+.drawer-logout-form {
+    display: block;
+    width: 100%;
+    margin: 0;
 }
 
 @media (pointer: coarse) {
@@ -844,22 +1323,22 @@ select:focus,
         min-height: 44px;
         padding: 8px 12px;
     }
+
+    .feed-stock-column,
+    .feed-table .feed-item-stock-cell {
+        width: 44px;
+    }
+
+    .article-actions-trigger {
+        width: 44px;
+        min-width: 44px;
+    }
 }
 
-.drawer-menu-action:hover,
-.drawer-menu-action:focus,
-.drawer-logout-button:hover,
-.drawer-logout-button:focus {
-    text-decoration: none;
-}
-
-.drawer-divider {
-    margin: 0 4px;
-}
-
-.drawer-logout-form {
-    display: block;
-    width: 100%;
+@media (min-width: 992px) {
+    .drawer-mobile-links {
+        display: none;
+    }
 }
 
 .navbar-link-setting,
@@ -880,7 +1359,85 @@ select:focus,
     cursor: progress;
 }
 
+@media (max-width: 991.98px) {
+    .app-navbar-collapse {
+        display: none !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .app-navbar {
+        padding-right: 8px;
+        padding-left: 8px;
+    }
+
+    .app-navbar-brand {
+        font-size: 1rem;
+    }
+
+    .app-navbar-brand-icon {
+        margin-right: 5px;
+    }
+
+    .app-navbar-separator {
+        margin-right: 8px;
+        margin-left: 8px;
+    }
+
+    .app-navbar-current {
+        font-size: 0.82rem;
+    }
+}
+
+/* V1.6-B: Smartphone Tab Swipeの方向を画面端で短く示す。 */
+.dashboard-swipe-indicator {
+    display: none;
+    position: fixed;
+    top: 50%;
+    z-index: 1020;
+    width: 38px;
+    height: 72px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 20px;
+    background: rgba(24, 32, 40, 0.82);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.28);
+    color: #ffffff;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate3d(var(--dashboard-swipe-shift, 0), -50%, 0);
+    transition: opacity 180ms ease, transform 180ms ease, background-color 180ms ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.dashboard-swipe-indicator.is-left {
+    left: max(8px, env(safe-area-inset-left));
+}
+
+.dashboard-swipe-indicator.is-right {
+    right: max(8px, env(safe-area-inset-right));
+}
+
+.dashboard-swipe-indicator.is-complete {
+    border-color: #ffffff;
+    background: rgba(0, 95, 204, 0.94);
+    box-shadow: 0 4px 16px rgba(0, 95, 204, 0.48);
+}
+
+.dashboard-swipe-indicator.is-hiding {
+    transition-duration: 220ms;
+}
+
 @media (max-width: 767.98px) {
+    .dashboard-swipe-indicator.is-visible {
+        display: flex;
+    }
+
     .igcontainer {
         padding: 4px;
     }
@@ -889,13 +1446,182 @@ select:focus,
     .clock-card,
     .memo-card,
     .task-card,
-    .stock-card {
+    .stock-card,
+    .mini-game-card {
         padding: 4px 0;
+    }
+
+    .stock-card {
+        padding: 0;
+    }
+
+    .stock-card-inner {
+        min-height: 72px;
+        padding: 10px 4px 10px 10px;
+    }
+
+    .stock-tags-row {
+    display: flex;
+    min-height: 28px;
+    margin-top: 7px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.stock-tag-chip {
+    display: inline-flex;
+    min-height: 26px;
+    padding: 2px 4px 2px 8px;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid rgba(23, 162, 184, 0.28);
+    border-radius: 999px;
+    background: rgba(23, 162, 184, 0.08);
+    color: #4b6267;
+    font-size: 0.74rem;
+    line-height: 1.2;
+}
+
+.stock-tag-chip > i {
+    color: #17a2b8;
+    font-size: 0.7rem;
+}
+
+.stock-tag-remove {
+    display: inline-flex;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #6c757d;
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.stock-tag-remove:hover,
+.stock-tag-remove:focus {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    outline: none;
+}
+
+.stock-tag-editor-toggle {
+    min-height: 28px;
+    padding: 2px 6px;
+    color: #6c757d;
+    font-size: 0.76rem;
+    text-decoration: none;
+}
+
+.stock-tag-editor-toggle:hover,
+.stock-tag-editor-toggle:focus {
+    color: #17a2b8;
+    text-decoration: none;
+}
+
+.stock-tag-editor {
+    max-width: 720px;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1px solid rgba(0, 0, 0, 0.09);
+    border-radius: 5px;
+    background: #f8f9fa;
+}
+
+.stock-tag-editor[hidden] {
+    display: none !important;
+}
+
+.stock-tag-suggestion-group + .stock-tag-suggestion-group,
+.stock-tag-suggestion-group + .stock-tag-add-form {
+    margin-top: 7px;
+}
+
+.stock-tag-group-label {
+    display: block;
+    margin-bottom: 4px;
+    color: #6c757d;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.stock-tag-choice-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.stock-tag-choice-list .btn {
+    padding: 2px 7px;
+    font-size: 0.73rem;
+    line-height: 1.5;
+}
+
+.stock-tag-add-form {
+    max-width: 360px;
+    margin-top: 8px;
+}
+
+.stock-card-actions {
+        margin-left: 4px;
     }
 
     .content-grid {
         margin-right: 0;
         margin-left: 0;
+    }
+
+    /* V1.5-C / R2: iOS SafariでもFeed内のFlex/Tableが親幅を押し広げないようにする。 */
+    .feed-card,
+    .feed-card-inner,
+    .feed-table,
+    .feed-card-header-inner {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .feed-summary-column,
+    .feed-table .feed-item-summary-cell {
+        width: 44px;
+    }
+
+    .feed-item-summary-toggle {
+        left: 0;
+        display: inline-flex;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    /* V1.5-C / R3: iOSを含むスマートフォンでも概要の＋／－を常に表示する。 */
+    .feed-item-summary-icon,
+    .feed-item-summary-icon::before {
+        display: inline-block;
+        visibility: visible;
+        opacity: 1;
+    }
+
+    .feed-item-summary-icon {
+        color: #6c757d;
+        -webkit-text-fill-color: #6c757d;
+        font-size: 1rem;
+    }
+
+    .feed-item-summary-toggle:disabled {
+        opacity: 1;
+    }
+
+    .feed-item-summary-toggle:disabled .feed-item-summary-icon {
+        color: #adb5bd;
+        -webkit-text-fill-color: #adb5bd;
+        opacity: 1;
     }
 
     .feed-card-inner,
@@ -973,6 +1699,10 @@ select:focus,
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
+    }
+
+    .dashboard-swipe-indicator {
+        transform: translate3d(0, -50%, 0) !important;
     }
 }
 
@@ -1236,6 +1966,27 @@ select:focus,
     line-height: 1;
 }
 
+/* V1.3-D: Widget見出しの文字位置と文字サイズを種類ごとに揃える。 */
+.widget-title-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-left: 0;
+    overflow: hidden;
+    font-size: 80%;
+    font-weight: 400;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    .feed-card .content-title {
+        width: 0;
+        max-width: 100%;
+        flex: 1 1 0;
+    }
+}
+
 .calendar-card-body {
     min-height: calc(13rem - 44px);
     padding: 8px;
@@ -1289,6 +2040,12 @@ select:focus,
 .calendar-weekdays span:last-child,
 .calendar-day:nth-child(7n) .calendar-day-number {
     color: #0056b3;
+}
+
+/* V1.7-H/R4: Japanese national holidays override weekday / Saturday colors. */
+.calendar-day.calendar-day-holiday .calendar-day-number {
+    color: #bd2130;
+    font-weight: 700;
 }
 
 .calendar-day {
@@ -1477,3 +2234,256 @@ select:focus,
     outline-offset:-5px;
 }
 .search-feed-card .search-feed-refresh.is-refreshing i{animation:feed-refresh-spin .8s linear infinite;}
+
+/* V1.7-H / R3: Widget width / height grid.
+ * 標準Rowは320pxを下限とし、Clock / Gameは縦2導入前と同様に
+ * 必要な場合だけRow自体が自然に伸びる。DOM順を正本としてdense配置は使用しない。 */
+.dashboard-grid {
+    display: grid;
+    margin-right: 0;
+    margin-left: 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: minmax(320px, auto);
+    grid-auto-flow: row;
+    gap: 8px;
+}
+
+.dashboard-grid > .dashboard-widget {
+    width: auto;
+    max-width: none;
+    min-height: 0;
+    padding: 0;
+    flex: none;
+    grid-column: span 1;
+    grid-row: span 1;
+}
+
+.dashboard-grid > .dashboard-widget[data-widget-width="2"] { grid-column: span 2; }
+.dashboard-grid > .dashboard-widget[data-widget-width="3"] { grid-column: span 3; }
+.dashboard-grid > .dashboard-widget[data-widget-width="4"] { grid-column: span 4; }
+.dashboard-grid > .dashboard-widget[data-widget-height="2"] { grid-row: span 2; }
+
+.dashboard-grid .feed-card-inner,
+.dashboard-grid .clock-card-inner,
+.dashboard-grid .memo-card-inner,
+.dashboard-grid .task-card-inner,
+.dashboard-grid .calendar-card-inner,
+.dashboard-grid .mini-game-card-inner {
+    min-height: 0;
+}
+
+.dashboard-grid .clock-card-inner,
+.dashboard-grid .memo-card-inner,
+.dashboard-grid .task-card-inner,
+.dashboard-grid .calendar-card-inner,
+.dashboard-grid .mini-game-card-inner {
+    display: flex;
+    flex-direction: column;
+}
+
+.dashboard-grid .feed-card-inner,
+.dashboard-grid .clock-card-body,
+.dashboard-grid .memo-card-body,
+.dashboard-grid .task-card-body,
+.dashboard-grid .calendar-card-body,
+.dashboard-grid .mini-game-card-body {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-height: 0;
+    overflow-x: hidden;
+}
+
+/* V1.7-H / R3: Feedの自動表示は高さ1=5件、高さ2=10件を基準にする。
+ * 指定件数が収まらない場合と概要展開時だけ縦Scrollを許可する。 */
+.dashboard-grid .feed-card-inner {
+    overflow-y: hidden;
+}
+
+.dashboard-grid .feed-card-inner.is-scrollable-y {
+    overflow-y: auto;
+}
+
+/* V1.7-H / R3: Clock / Gameは高さ1でも主要機能を切らない。
+ * 標準320pxを超える場合はScrollbarで隠さず、従来と同様にRowを自然に伸ばす。 */
+.dashboard-grid > .clock-card[data-widget-height="1"] .clock-card-inner,
+.dashboard-grid > .mini-game-card[data-widget-height="1"] .mini-game-card-inner {
+    height: auto;
+    min-height: 320px;
+}
+
+.dashboard-grid > .clock-card[data-widget-height="1"] .clock-card-body,
+.dashboard-grid > .mini-game-card[data-widget-height="1"] .mini-game-card-body {
+    flex: 0 0 auto;
+    min-height: calc(320px - 44px);
+    overflow-y: visible;
+}
+
+/* 高さ2はGridの2段分を使う。内容が少ない場合もCard全体を領域へ伸ばす。 */
+.dashboard-grid > .clock-card[data-widget-height="2"] .clock-card-inner,
+.dashboard-grid > .mini-game-card[data-widget-height="2"] .mini-game-card-inner {
+    height: 100%;
+}
+
+.dashboard-grid > .clock-card[data-widget-height="2"] .clock-card-body,
+.dashboard-grid > .mini-game-card[data-widget-height="2"] .mini-game-card-body {
+    overflow-y: visible;
+}
+
+/* 内容量がユーザー操作で増えるWidgetだけ、必要時に縦Scrollを許可する。 */
+.dashboard-grid .memo-card-body,
+.dashboard-grid .task-card-body,
+.dashboard-grid .calendar-card-body {
+    overflow-y: auto;
+}
+
+.dashboard-grid .memo-card-body,
+.dashboard-grid .task-card-body,
+.dashboard-grid .calendar-card-body {
+    flex: 1 1 auto;
+}
+
+.dashboard-grid > .clock-card[data-widget-height="2"] .clock-card-body,
+.dashboard-grid > .mini-game-card[data-widget-height="2"] .mini-game-card-body {
+    flex: 1 1 auto;
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: minmax(320px, auto);
+    }
+
+    .dashboard-grid > .dashboard-widget[data-widget-width="2"],
+    .dashboard-grid > .dashboard-widget[data-widget-width="3"],
+    .dashboard-grid > .dashboard-widget[data-widget-width="4"] {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        grid-auto-rows: auto;
+        gap: 8px;
+    }
+
+    .dashboard-grid > .dashboard-widget,
+    .dashboard-grid > .dashboard-widget[data-widget-width="2"],
+    .dashboard-grid > .dashboard-widget[data-widget-width="3"],
+    .dashboard-grid > .dashboard-widget[data-widget-width="4"],
+    .dashboard-grid > .dashboard-widget[data-widget-height="2"] {
+        grid-column: span 1;
+        grid-row: auto;
+        height: auto;
+    }
+
+    .dashboard-grid .feed-card-inner,
+    .dashboard-grid .clock-card-inner,
+    .dashboard-grid .memo-card-inner,
+    .dashboard-grid .task-card-inner,
+    .dashboard-grid .calendar-card-inner,
+    .dashboard-grid .mini-game-card-inner {
+        height: auto;
+        min-height: 11rem;
+    }
+}
+
+
+/* V1.11-C: Stock Tag management. Kept scoped so existing Stock cards stay unchanged. */
+.stock-tag-manager-wrap {
+    margin-bottom: 10px;
+}
+
+.stock-tag-manager-toggle {
+    min-height: 34px;
+}
+
+.stock-tag-manager {
+    margin-top: 8px;
+}
+
+.stock-tag-manager-inner {
+    padding: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    background: #f8f9fa;
+}
+
+.stock-tag-manager-head {
+    display: flex;
+    margin-bottom: 8px;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.stock-tag-manager-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+}
+
+.stock-tag-manager-row {
+    display: grid;
+    grid-template-columns: minmax(90px, 0.8fr) minmax(150px, 1.4fr) 36px;
+    min-width: 0;
+    align-items: center;
+    gap: 6px;
+}
+
+.stock-tag-manager-meta {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 6px;
+}
+
+.stock-tag-manager-chip {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stock-tag-rename-form,
+.stock-tag-rename-form .input-group {
+    min-width: 0;
+}
+
+.stock-tag-delete {
+    width: 36px;
+    min-width: 36px;
+    height: 32px;
+    padding: 0;
+}
+
+@media (max-width: 767.98px) {
+    .stock-tag-manager-list {
+        grid-template-columns: 1fr;
+    }
+
+    .stock-tag-manager-row {
+        grid-template-columns: minmax(90px, 0.8fr) minmax(120px, 1.2fr) 36px;
+    }
+}
+
+@media (max-width: 479.98px) {
+    .stock-tag-manager-row {
+        grid-template-columns: minmax(0, 1fr) 36px;
+    }
+
+    .stock-tag-manager-meta {
+        grid-column: 1 / -1;
+    }
+
+    .stock-tag-rename-form {
+        grid-column: 1;
+    }
+
+    .stock-tag-delete {
+        grid-column: 2;
+    }
+}
