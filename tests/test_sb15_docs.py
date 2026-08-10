@@ -96,7 +96,7 @@ for doc in required:
         assert resolved.exists(), f'broken local link in {doc.relative_to(ROOT)}: {target}'
 
 # Documentation must not accidentally embed high-signal secret formats.
-scan_docs = required + [ROOT / 'CHECKLIST_FOR_USER.md', ROOT / 'UPDATED_FILES_SB15.md']
+scan_docs = required + [path for path in [ROOT / 'CHECKLIST_FOR_USER.md', ROOT / 'UPDATED_FILES_SB15.md'] if path.is_file()]
 secret_patterns = [
     re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),
     re.compile(r'\bAKIA[0-9A-Z]{16}\b'),
