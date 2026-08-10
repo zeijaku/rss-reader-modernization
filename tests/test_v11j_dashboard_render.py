@@ -29,6 +29,7 @@ final class S extends PDOStatement {
         if(str_contains($this->sql,'FROM ig_user_conf')){
             $this->rows=[['conf_style'=>'bootstrap','conf_style_nav'=>'dark','conf_style_tabname1'=>'Base','conf_style_tabname2'=>'Maint','conf_style_tabname3'=>'IT','conf_style_tabname4'=>'Observe','conf_style_navlink1'=>'','conf_style_navlink_view1'=>'','conf_style_navlink_icon1'=>'map-marker-alt','conf_style_navlink2'=>'','conf_style_navlink_view2'=>'','conf_style_navlink_icon2'=>'mail-bulk','conf_style_navlink3'=>'','conf_style_navlink_view3'=>'','conf_style_navlink_icon3'=>'search','conf_style_navlink4'=>'','conf_style_navlink_view4'=>'','conf_style_navlink_icon4'=>'images']]; return true;
         }
+        if(str_contains($this->sql,'FROM `ig_feed_keyword`')) return true;
         if(str_contains($this->sql,'FROM `ig_dashboard_widget` w')) return true;
         if(str_contains($this->sql,'FROM `ig_task`')) return true;
         if(str_contains($this->sql,'FROM ig_content_stock')) return true;

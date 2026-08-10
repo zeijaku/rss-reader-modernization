@@ -68,6 +68,12 @@ final class V11dRenderStatement extends PDOStatement
         if (str_contains($this->sql, 'FROM `ig_dashboard_widget`') && str_contains($this->sql, "widget_type = 'task'")) {
             return true;
         }
+        if (str_starts_with($this->sql, 'SELECT t.tag_id')) {
+            return true;
+        }
+        if (str_starts_with($this->sql, 'SELECT m.map_stock_id')) {
+            return true;
+        }
         if (str_contains($this->sql, 'FROM `ig_dashboard_widget` w')) {
             if ($mode !== 'feed' || (int) ($params[':owner'] ?? 0) !== 1 || (int) ($params[':location'] ?? -1) !== 0) {
                 return true;

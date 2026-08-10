@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import textwrap
 
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
+version_text = (ROOT / 'app/version.php').read_text(encoding='utf-8')
+version_match = re.search(r"APP_VERSION\s*=\s*'([^']+)'", version_text)
+active_version = version_match.group(1) if version_match is not None else ''
 
 
 def check(condition: bool, message: str) -> None:
@@ -41,7 +45,7 @@ check(result.returncode == 0, 'Asset render worker exits successfully')
 check(result.stderr.strip() == '', 'Asset render worker has no PHP warning')
 urls = [line.strip() for line in result.stdout.splitlines() if line.strip()]
 check(len(urls) == 26, 'All static and Theme Asset URLs are rendered')
-check(all(url.startswith('./') and url.endswith('?v=1.7.0-dev.2') or url.endswith('?v=1.7.0-dev.3') or url.endswith('?v=1.7.0-dev.4') or url.endswith('?v=1.7.0-dev.5') or url.endswith('?v=1.7.0-dev.6') or url.endswith('?v=1.7.0-dev.7') or url.endswith('?v=1.7.0-dev.8') or url.endswith('?v=1.7.0-dev.9') or url.endswith('?v=1.7.0-dev.10') or url.endswith('?v=1.7.0') for url in urls), 'Every rendered Asset URL uses one shared Version token')
+check(active_version != '' and all(url.startswith('./') and url.endswith('?v=' + active_version) for url in urls), 'Every rendered Asset URL uses the active shared Version token')
 check(len(set(urls[-8:])) == 8, 'Eight Theme URLs remain distinct after centralization')
 check(all('..' not in url and '://' not in url for url in urls), 'Rendered Asset URLs remain local and traversal-free')
 

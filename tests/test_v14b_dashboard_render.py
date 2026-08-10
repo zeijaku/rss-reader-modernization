@@ -89,6 +89,9 @@ final class V14bRenderStatement extends PDOStatement
             ];
             return true;
         }
+        if (str_contains($this->sql, 'FROM `ig_feed_keyword`')) {
+            return true;
+        }
         if (str_contains($this->sql, 'FROM ig_content_stock')) {
             return true;
         }

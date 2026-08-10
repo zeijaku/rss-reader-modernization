@@ -86,6 +86,7 @@ final class V15bRenderStatement extends PDOStatement
             ];
             return true;
         }
+        if (str_contains($this->sql, 'FROM `ig_feed_keyword`')) return true;
         if (str_contains($this->sql, 'FROM ig_content_stock')) return true;
         throw new RuntimeException('Unexpected SQL: ' . $this->sql);
     }
