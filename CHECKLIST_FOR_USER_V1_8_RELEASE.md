@@ -1,0 +1,25 @@
+# Version 1.8.0 確認Checklist
+
+- [ ] Complete／Runtime ZIPのSHA-256がSidecarと一致する
+- [ ] ZIPのCRC、重複Entry、危険Path、内部ManifestがPASSする
+- [ ] `config/local.php`、実DB、Session、Log、Feed／Holiday Cache、Throttle Dataが含まれていない
+- [ ] Footerが`RSS Reader Modernization 1.8.0`
+- [ ] 通常Login／Logoutが動く
+- [ ] 通常RSSからStock保存できる
+- [ ] Stock一覧から解除でき、再読込後も戻らない
+- [ ] 他UserのStockを操作できない
+- [ ] `AI`等の検索語で500にならずTitle検索できる
+- [ ] `qiita.com`等のDomain文字列で検索できる
+- [ ] 新しい順／古い順／タイトル順が動く
+- [ ] 21件以上のStockで20件単位Paginationが動く
+- [ ] 検索／Sort条件をPage移動後も保持する
+- [ ] Domain、保存日時、三点ActionsがCompact Listで表示される
+- [ ] URL Copy／X／Task追加／Stock解除が動く
+- [ ] Task Widget複数時に追加先を選択できる
+- [ ] Smartphoneで横Overflowせず操作領域が押しやすい
+- [ ] Version 1.8用SQL／Migrationを実行していない
+- [ ] GitHub登録に`rss-reader-modernization-1.8.0-complete.zip`を使用する
+- [ ] GitHubへ`config/local.php`、実DB、Runtime Data、ZIPをCommitしない
+- [ ] `feature/v1.8-stock`→`main`がFast-forward可能
+- [ ] `v1.8.0`Tagが既存でないことを確認してから作成する
+- [ ] Force push／既存Tag移動を行っていない
