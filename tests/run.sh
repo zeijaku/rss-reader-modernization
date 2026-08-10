@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+SCRIPT_DIR="$ROOT/tests"
 
 echo '== PHP syntax =='
 find "$ROOT" -type f -name '*.php' -print0 | xargs -0 -n1 php -l
@@ -332,4 +333,206 @@ if grep -Fq "const APP_VERSION = '1.2.0';" "$ROOT/app/version.php"; then
     python3 "$ROOT/tests/test_v12_release_documentation.py"
 else
     echo 'SKIP: Version 1.2.0 release gate requires APP_VERSION 1.2.0.'
+fi
+
+echo '== V1.3-B Drawer organization checks =='
+python3 "$ROOT/tests/test_v13b_drawer_structure.py"
+python3 "$ROOT/tests/test_v13b_drawer_browser.py"
+
+echo '== V1.3-C Header organization checks =='
+python3 "$ROOT/tests/test_v13c_header_structure.py"
+python3 "$ROOT/tests/test_v13c_header_browser.py"
+
+echo '== V1.3-D Common spacing checks =='
+python3 "$ROOT/tests/test_v13d_spacing_structure.py"
+python3 "$ROOT/tests/test_v13d_spacing_browser.py"
+
+if grep -Fq "const APP_VERSION = '1.3.0';" "$ROOT/app/version.php"; then
+    for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache/feed" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
+        if [ -d "$runtime_dir" ]; then
+            find "$runtime_dir" -type f ! -name '.gitkeep' -delete
+        fi
+    done
+    echo '== Version 1.3.0 release checks =='
+    python3 "$ROOT/tests/test_v13e_release.py"
+    python3 "$ROOT/tests/test_v13e_release_documentation.py"
+else
+    echo 'SKIP: Version 1.3.0 release gate requires APP_VERSION 1.3.0.'
+fi
+
+echo '== V1.4-B Mini Game Widget foundation checks =='
+php "$ROOT/tests/test_v14b_game_widget.php"
+python3 "$ROOT/tests/test_v14b_architecture.py"
+node "$ROOT/tests/test_v14b_storage_runtime.js"
+python3 "$ROOT/tests/test_v14b_dashboard_render.py"
+
+echo '== V1.4-C Icon Quest Game checks =='
+node "$ROOT/tests/test_v14c_game_runtime.js"
+python3 "$ROOT/tests/test_v14c_architecture.py"
+python3 "$ROOT/tests/test_v14c_dashboard_render.py"
+python3 "$ROOT/tests/test_v14c_browser.py"
+
+echo '== V1.4-D Icon Quest polish / recovery checks =='
+node "$ROOT/tests/test_v14d_game_runtime.js"
+python3 "$ROOT/tests/test_v14d_architecture.py"
+python3 "$ROOT/tests/test_v14d_dashboard_render.py"
+python3 "$ROOT/tests/test_v14d_browser.py"
+python3 "$ROOT/tests/test_v14d_theme_browser.py"
+python3 "$ROOT/tests/test_v14d_r2_game_header.py"
+
+if grep -Fq "const APP_VERSION = '1.4.0';" "$ROOT/app/version.php"; then
+    for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache/feed" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
+        if [ -d "$runtime_dir" ]; then
+            find "$runtime_dir" -type f ! -name '.gitkeep' -delete
+        fi
+    done
+    echo '== Version 1.4.0 release checks =='
+    python3 "$ROOT/tests/test_v14e_release.py"
+    python3 "$ROOT/tests/test_v14e_release_documentation.py"
+else
+    echo 'SKIP: Version 1.4.0 release gate requires APP_VERSION 1.4.0.'
+fi
+
+echo '== V1.5-B Clock Timer checks =='
+node "$ROOT/tests/test_v15b_clock_timer_runtime.js"
+python3 "$ROOT/tests/test_v15b_architecture.py"
+python3 "$ROOT/tests/test_v15b_dashboard_render.py"
+python3 "$ROOT/tests/test_v15b_browser.py"
+
+echo '== V1.5-C Clock Timer recovery / synchronization checks =='
+node "$ROOT/tests/test_v15c_clock_timer_runtime.js"
+python3 "$ROOT/tests/test_v15c_architecture.py"
+python3 "$ROOT/tests/test_v15c_dashboard_render.py"
+python3 "$ROOT/tests/test_v15c_browser.py"
+python3 "$ROOT/tests/test_v15c_theme_browser.py"
+python3 "$ROOT/tests/test_v15c_r2_mobile_feed_overflow.py"
+python3 "$ROOT/tests/test_v15c_r3_mobile_summary_icon.py"
+
+if grep -Fq "const APP_VERSION = '1.5.0';" "$ROOT/app/version.php"; then
+    for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache/feed" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
+        if [ -d "$runtime_dir" ]; then
+            find "$runtime_dir" -type f ! -name '.gitkeep' -delete
+        fi
+    done
+    echo '== Version 1.5.0 release checks =='
+    python3 "$ROOT/tests/test_v15d_release.py"
+    python3 "$ROOT/tests/test_v15d_release_documentation.py"
+else
+    echo 'SKIP: Version 1.5.0 release gate requires APP_VERSION 1.5.0.'
+fi
+
+echo '== V1.6-B Smartphone Swipe indicator checks =='
+python3 "$ROOT/tests/test_v16b_architecture.py"
+node "$ROOT/tests/test_v16b_frontend_runtime.js"
+python3 "$ROOT/tests/test_v16b_browser.py"
+
+
+echo '== V1.6-C Lights Out basic checks =='
+php "$ROOT/tests/test_v16c_game_widget.php"
+node "$ROOT/tests/test_v16c_lights_out_runtime.js"
+python3 "$ROOT/tests/test_v16c_architecture.py"
+python3 "$ROOT/tests/test_v16c_dashboard_render.py"
+python3 "$ROOT/tests/test_v16c_browser.py"
+
+echo '== V1.6-D Lights Out persistence / quality checks =='
+node "$ROOT/tests/test_v16d_storage_runtime.js"
+python3 "$ROOT/tests/test_v16d_architecture.py"
+python3 "$ROOT/tests/test_v16d_browser.py"
+
+if grep -Fq "const APP_VERSION = '1.6.0';" "$ROOT/app/version.php"; then
+    for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache/feed" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
+        if [ -d "$runtime_dir" ]; then
+            find "$runtime_dir" -type f ! -name '.gitkeep' -delete
+        fi
+    done
+    echo '== Version 1.6.0 release checks =='
+    python3 "$ROOT/tests/test_v16e_release.py"
+    python3 "$ROOT/tests/test_v16e_release_documentation.py"
+else
+    echo 'SKIP: Version 1.6.0 release gate requires APP_VERSION 1.6.0.'
+fi
+
+# Version 1.7-B GitHub restart baseline
+python3 "$SCRIPT_DIR/test_v17b_github_baseline.py"
+
+echo '== V1.7-C Asset URL centralization checks =='
+php "$SCRIPT_DIR/test_v17c_asset_url.php"
+python3 "$SCRIPT_DIR/test_v17c_asset_inventory.py"
+python3 "$SCRIPT_DIR/test_v17c_asset_render.py"
+
+echo '== V1.7-D HTTP Cache / Security Header checks =='
+python3 "$SCRIPT_DIR/test_v17d_cache_security.py"
+python3 "$SCRIPT_DIR/test_v17d_response_headers.py"
+
+echo '== V1.7-E Remember Token DB / Backend checks =='
+php "$SCRIPT_DIR/test_v17e_remember_token.php"
+python3 "$SCRIPT_DIR/test_v17e_architecture.py"
+
+echo '== V1.7-F Persistent Login UI / Session integration checks =='
+php "$SCRIPT_DIR/test_v17f_persistent_login.php"
+python3 "$SCRIPT_DIR/test_v17f_architecture.py"
+
+echo '== V1.7-G Widget Grid Prototype checks =='
+node "$SCRIPT_DIR/test_v17g_widget_grid_runtime.js"
+python3 "$SCRIPT_DIR/test_v17g_widget_grid_prototype.py"
+python3 "$SCRIPT_DIR/test_v17g_architecture.py"
+
+echo '== V1.7-H Widget height DB / API / Dashboard checks =='
+php "$SCRIPT_DIR/test_v17h_widget_height.php"
+python3 "$SCRIPT_DIR/test_v17h_dashboard_render.py"
+python3 "$SCRIPT_DIR/test_v17h_architecture.py"
+php "$SCRIPT_DIR/test_v17h_r2_feed_display.php"
+python3 "$SCRIPT_DIR/test_v17h_r2_architecture.py"
+python3 "$SCRIPT_DIR/test_v17h_r3_architecture.py"
+echo '== V1.7-H/R4 Calendar holiday checks =='
+php "$ROOT/tests/test_v17h_r4_holiday.php"
+python3 "$ROOT/tests/test_v17h_r4_architecture.py"
+python3 "$ROOT/tests/test_v17h_r4_browser.py"
+
+
+
+if grep -Fq "const APP_VERSION = '1.7.0';" "$ROOT/app/version.php"; then
+    for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
+        if [ -d "$runtime_dir" ]; then
+            find "$runtime_dir" -type f ! -name '.gitkeep' -delete
+        fi
+    done
+    echo '== Version 1.7.0 release checks =='
+    python3 "$ROOT/tests/test_v17i_release.py"
+    python3 "$ROOT/tests/test_v17i_release_documentation.py"
+else
+    echo 'SKIP: Version 1.7.0 release gate requires APP_VERSION 1.7.0.'
+fi
+
+
+echo '== V1.8-B Stock removal checks =='
+python3 "$ROOT/tests/test_v18b_stock_static.py"
+php "$ROOT/tests/test_v18b_stock_db.php"
+
+echo '== V1.8-C Stock search / sorting checks =='
+python3 "$ROOT/tests/test_v18c_stock_search_static.py"
+php "$ROOT/tests/test_v18c_stock_helpers.php"
+php "$ROOT/tests/test_v18c_stock_render.php"
+
+echo '== V1.8-D Stock pagination checks =='
+python3 "$ROOT/tests/test_v18d_stock_pagination_static.py"
+php "$ROOT/tests/test_v18d_stock_pagination.php"
+php "$ROOT/tests/test_v18d_stock_page_clamp.php"
+
+echo '== V1.8-E Stock actions / domain / compact UI checks =='
+python3 "$ROOT/tests/test_v18e_stock_ui_static.py"
+php "$ROOT/tests/test_v18e_stock_task_targets.php"
+php "$ROOT/tests/test_v18e_stock_render.php"
+
+if grep -Fq "const APP_VERSION = '1.8.0';" "$ROOT/app/version.php"; then
+    for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
+        if [ -d "$runtime_dir" ]; then
+            find "$runtime_dir" -type f ! -name '.gitkeep' -delete
+        fi
+    done
+    echo '== Version 1.8.0 release checks =='
+    python3 "$ROOT/tests/test_v18f_release.py"
+    python3 "$ROOT/tests/test_v18f_release_documentation.py"
+else
+    echo 'SKIP: Version 1.8.0 release gate requires APP_VERSION 1.8.0.'
 fi

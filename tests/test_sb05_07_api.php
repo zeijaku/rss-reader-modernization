@@ -19,11 +19,11 @@ require $root . '/app/validation.php';
 // This historical API contract test uses a small in-memory PDO fake. V1.1-D
 // transaction behavior is covered by test_v11d_dashboard_widget.php; here the
 // wrappers keep the original API validation/authorization matrix focused.
-function dashboard_widget_create_feed(int $ownerId, string $url, string $style, int $location, int $width = 1, int $height = 1, mixed $itemLimit = null): int
+function dashboard_widget_create_feed(int $ownerId, string $url, string $style, int $location, int $width = 1, int $height = 1): int
 {
     return entry_content($ownerId, $url, $style, $location);
 }
-function dashboard_widget_update_feed(int $ownerId, int $contentId, string $url, string $style, int $width = 1, int $height = 1, mixed $itemLimit = null): bool
+function dashboard_widget_update_feed(int $ownerId, int $contentId, string $url, string $style, int $width = 1, int $height = 1): bool
 {
     return update_content_owned($ownerId, $contentId, $url, $style) > 0;
 }
@@ -41,13 +41,11 @@ function dashboard_widget_validate_width(mixed $value): ?int
     $width = app_validate_positive_int($value);
     return $width !== null && $width <= 4 ? $width : null;
 }
-
 function dashboard_widget_validate_height(mixed $value): ?int
 {
     $height = app_validate_positive_int($value);
     return $height !== null && $height <= 2 ? $height : null;
 }
-
 function dashboard_widget_validate_feed_item_limit(mixed $value): int|string|null
 {
     if ($value === null || $value === '' || $value === 'auto') {
@@ -56,7 +54,6 @@ function dashboard_widget_validate_feed_item_limit(mixed $value): int|string|nul
     $limit = app_validate_positive_int($value);
     return $limit !== null && $limit <= 30 ? $limit : null;
 }
-
 function dashboard_widget_public_list(int $ownerId, int $location): array
 {
     return [];
@@ -167,6 +164,26 @@ final class ApiFakeStatement extends PDOStatement
             ];
             $this->pdo->lastId = $id;
             $this->affected = 1;
+            return true;
+        }
+
+        if (str_starts_with($sql, 'SELECT * FROM ig_content_stock WHERE stock_id =')) {
+            $id = (int) ($params[':stock_id'] ?? 0);
+            $owner = (int) ($params[':owner'] ?? 0);
+            $row = $this->pdo->stocks[$id] ?? null;
+            if (is_array($row) && (int) $row['stock_owner'] === $owner && (int) $row['stock_flag'] === 0) {
+                $this->rows = [$row];
+            }
+            return true;
+        }
+
+        if (str_starts_with($sql, 'UPDATE ig_content_stock SET stock_flag = 1')) {
+            $id = (int) ($params[':stock_id'] ?? 0);
+            $owner = (int) ($params[':owner'] ?? 0);
+            if (isset($this->pdo->stocks[$id]) && (int) $this->pdo->stocks[$id]['stock_owner'] === $owner && (int) $this->pdo->stocks[$id]['stock_flag'] === 0) {
+                $this->pdo->stocks[$id]['stock_flag'] = 1;
+                $this->affected = 1;
+            }
             return true;
         }
 
@@ -301,6 +318,14 @@ $r = api_dispatch('content.create', 10, [
     'content_value' => 'https://feed.example/a',
     'content_style' => 'success',
     'content_location' => '0',
+    'feed_item_limit' => '31',
+]);
+api_check($r['status'] === 422 && $pdo->contentSeq === $beforeContentSeq, 'out-of-range RSS item limit is rejected before DB insert');
+
+$r = api_dispatch('content.create', 10, [
+    'content_value' => 'https://feed.example/a',
+    'content_style' => 'success',
+    'content_location' => '0',
     'content_owner' => '20',
     'user_id' => '20',
 ]);
@@ -425,6 +450,20 @@ api_check(
 );
 api_check((int) ($pdo->stocks[$trackedStockId]['stock_owner'] ?? 0) === 10, 'tracking cleanup does not change Stock owner scope');
 api_check(count($GLOBALS['test_fetched_urls']) === $beforeFetchCount, 'tracking cleanup performs no outbound article request');
+
+$r = api_dispatch('stock.delete', 20, ['stock_id' => (string) $stockId]);
+api_check($r['status'] === 404, 'stock.delete does not expose another user Stock');
+api_check((int) ($pdo->stocks[$stockId]['stock_flag'] ?? -1) === 0, 'foreign Stock delete leaves the row active');
+
+$r = api_dispatch('stock.delete', 10, ['stock_id' => 'not-an-int']);
+api_check($r['status'] === 422 && (int) ($pdo->stocks[$stockId]['stock_flag'] ?? -1) === 0, 'stock.delete rejects malformed id before mutation');
+
+$r = api_dispatch('stock.delete', 10, ['stock_id' => (string) $stockId]);
+api_check($r['status'] === 200 && (int) ($pdo->stocks[$stockId]['stock_flag'] ?? 0) === 1, 'stock.delete logically deletes the owner Stock');
+api_check((int) ($r['body']['data']['stock_id'] ?? 0) === $stockId, 'stock.delete returns the deleted Stock id');
+
+$r = api_dispatch('stock.delete', 10, ['stock_id' => (string) $stockId]);
+api_check($r['status'] === 404, 'stock.delete cannot delete an already inactive Stock');
 
 $r = api_dispatch('content.delete', 10, ['content_id' => (string) $contentA]);
 api_check($r['status'] === 200 && (int) $pdo->contents[$contentA]['content_flag'] === 1, 'owner can logically delete own content');

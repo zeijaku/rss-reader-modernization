@@ -40,13 +40,13 @@ v11g_check(dashboard_widget_validate_memo_body('<script>alert(1)</script>') !== 
 $row = dashboard_widget_normalize_row([
     'widget_id' => '9', 'widget_owner' => '7', 'widget_location' => '1',
     'widget_type' => 'memo', 'widget_reference_id' => '4', 'widget_sort_order' => '20',
-    'widget_width' => '2', 'widget_style' => 'warning', 'widget_config' => null,
+    'widget_width' => '2', 'widget_height' => '1', 'widget_style' => 'warning', 'widget_config' => null,
 ]);
 v11g_check(is_array($row) && $row['widget_reference_id'] === 4, 'Memo Widget requires a positive reference id');
 $rowBad = dashboard_widget_normalize_row([
     'widget_id' => '9', 'widget_owner' => '7', 'widget_location' => '1',
     'widget_type' => 'memo', 'widget_reference_id' => null, 'widget_sort_order' => '20',
-    'widget_width' => '2', 'widget_style' => 'warning', 'widget_config' => null,
+    'widget_width' => '2', 'widget_height' => '1', 'widget_style' => 'warning', 'widget_config' => null,
 ]);
 v11g_check($rowBad === null, 'Memo Widget rejects a missing reference id');
 
@@ -100,7 +100,7 @@ final class V11gMemoStatement extends PDOStatement
             $this->pdo->widgets[$id] = [
                 'widget_id'=>$id, 'widget_owner'=>(int)$params[':owner'], 'widget_location'=>(int)$params[':location'],
                 'widget_type'=>'memo', 'widget_reference_id'=>(int)$params[':reference_id'], 'widget_sort_order'=>(int)$params[':sort_order'],
-                'widget_width'=>(int)$params[':width'], 'widget_style'=>(string)$params[':style'], 'widget_config'=>null, 'widget_flag'=>0,
+                'widget_width'=>(int)$params[':width'], 'widget_height' => '1', 'widget_style'=>(string)$params[':style'], 'widget_config'=>null, 'widget_flag'=>0,
                 'widget_created_at'=>(string)$params[':created_at'], 'widget_updated_at'=>(string)$params[':updated_at'],
             ]; $this->affected=1; return true;
         }
@@ -147,7 +147,7 @@ final class V11gMemoStatement extends PDOStatement
 $pdo = new V11gMemoPDO();
 set_db_connection_for_testing($pdo);
 $create = api_dispatch('widget.memo.create', 7, [
-    'widget_owner'=>'999','widget_location'=>'1','widget_style'=>'warning','widget_width'=>'2',
+    'widget_owner'=>'999','widget_location'=>'1','widget_style'=>'warning','widget_width'=>'2', 'widget_height' => '1',
     'memo_title'=>'連絡','memo_body'=>"一行目\r\n二行目 <b>text</b>",
 ]);
 v11g_check($create['status']===201 && ($create['body']['ok']??false)===true, 'authenticated user can create a Memo Widget');
@@ -158,13 +158,13 @@ v11g_check($pdo->widgets[$widgetId]['widget_reference_id']===$memoId, 'Memo Widg
 v11g_check($pdo->widgets[$widgetId]['widget_sort_order']===10, 'first Memo appends at initial order');
 v11g_check($pdo->memos[$memoId]['memo_body']==="一行目\n二行目 <b>text</b>", 'Memo body keeps line breaks and text exactly after normalization');
 
-$second=api_dispatch('widget.memo.create',7,['widget_location'=>'1','widget_style'=>'info','widget_width'=>'1','memo_title'=>'Second','memo_body'=>'Body']);
+$second=api_dispatch('widget.memo.create',7,['widget_location'=>'1','widget_style'=>'info','widget_width'=>'1', 'widget_height' => '1','memo_title'=>'Second','memo_body'=>'Body']);
 $secondWidget=(int)($second['body']['data']['widget_id']??0);
 v11g_check($pdo->widgets[$secondWidget]['widget_sort_order']===20, 'second Memo appends after current Widget order');
 
-$wrong=api_dispatch('widget.memo.update',8,['widget_id'=>(string)$widgetId,'widget_style'=>'danger','widget_width'=>'4','memo_title'=>'Hijack','memo_body'=>'Bad']);
+$wrong=api_dispatch('widget.memo.update',8,['widget_id'=>(string)$widgetId,'widget_style'=>'danger','widget_width'=>'4', 'widget_height' => '1','memo_title'=>'Hijack','memo_body'=>'Bad']);
 v11g_check($wrong['status']===404 && $pdo->memos[$memoId]['memo_title']==='連絡', 'another user cannot update Memo');
-$update=api_dispatch('widget.memo.update',7,['widget_id'=>(string)$widgetId,'widget_style'=>'success','widget_width'=>'3','memo_title'=>'更新','memo_body'=>"新しい\n本文"]);
+$update=api_dispatch('widget.memo.update',7,['widget_id'=>(string)$widgetId,'widget_style'=>'success','widget_width'=>'3', 'widget_height' => '1','memo_title'=>'更新','memo_body'=>"新しい\n本文"]);
 v11g_check($update['status']===200 && $pdo->memos[$memoId]['memo_title']==='更新', 'owner can update Memo content');
 v11g_check($pdo->widgets[$widgetId]['widget_width']===3 && $pdo->widgets[$widgetId]['widget_style']==='success', 'Memo Widget style and width update together');
 v11g_check($pdo->widgets[$widgetId]['widget_location']===1, 'Memo edit does not move it to another tab');
@@ -174,7 +174,7 @@ v11g_check($wrongDelete['status']===404 && $pdo->memos[$memoId]['memo_flag']===0
 $delete=api_dispatch('widget.memo.delete',7,['widget_id'=>(string)$widgetId]);
 v11g_check($delete['status']===200 && $pdo->memos[$memoId]['memo_flag']===1 && $pdo->widgets[$widgetId]['widget_flag']===1, 'Memo delete deactivates content and placement together');
 
-$invalid=api_dispatch('widget.memo.create',7,['widget_location'=>'9','widget_style'=>'x','widget_width'=>'9','memo_title'=>'','memo_body'=>'']);
+$invalid=api_dispatch('widget.memo.create',7,['widget_location'=>'9','widget_style'=>'x','widget_width'=>'9', 'widget_height' => '1','memo_title'=>'','memo_body'=>'']);
 v11g_check($invalid['status']===422, 'invalid Memo payload is rejected before DB access');
 v11g_check(api_dispatch('widget.memo.create',0,[])['status']===401, 'Memo API requires authentication');
 

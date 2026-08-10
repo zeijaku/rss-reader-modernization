@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
@@ -12,7 +13,7 @@ def check(condition, message):
     checks.append(ok)
     print(('PASS' if ok else 'FAIL') + ': ' + message)
 
-check("APP_VERSION = '1.2.0-dev.4'" in version or "APP_VERSION = '1.2.0'" in version, 'V1.2-D or final 1.2.0 marker is visible')
+check(re.search(r"const APP_VERSION = '(?:1\.2\.0-dev\.[4-9][0-9]*|1\.[2-9][0-9]*\.\d+(?:-dev\.\d+)?)';", version) is not None, 'V1.2-D or a later Version marker is visible')
 check('id="articleActionsMenu"' in index and 'role="menu"' in index, 'one shared Article Actions menu exists')
 for label in ('Stockへ保存', 'URLをコピー', 'Xへ投稿', 'Taskへ追加'):
     check(label in index, f'Article Actions menu includes {label}')

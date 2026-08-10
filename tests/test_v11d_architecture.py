@@ -20,7 +20,7 @@ schema = (ROOT / 'database/schema.sql').read_text(encoding='utf-8')
 
 check("'dashboard_widget'" in conf and 'DB_TABLE_PREFIX' in conf, 'Dashboard Widget uses the existing prefixed table-name resolver')
 check("require_once __DIR__ . '/dashboard_widget.php';" in bootstrap, 'Dashboard Widget module loads through bootstrap')
-check("['feed', 'search', 'clock', 'memo', 'task', 'calendar']" in widget, 'Widget type allowlist covers the Version 1.1 plan only')
+check("['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game']" in widget, 'Widget type allowlist includes existing Widgets and the V1.4 Game type')
 check('dashboard_widget_validate_location' in widget and '<= 3' in widget, 'Widget location remains limited to the four existing tabs')
 check('dashboard_widget_validate_width' in widget and '<= 4' in widget, 'Widget width is bounded')
 check('JSON_THROW_ON_ERROR' in widget and '4096' in widget, 'Widget JSON config is bounded and parsed strictly')

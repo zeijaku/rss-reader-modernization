@@ -23,7 +23,7 @@ def check(condition, message):
 
 # Dedicated auth UI and behavior.
 check('form-control' not in login and 'btn-primary' not in login and '<div class="panel' not in login, 'authentication markup no longer relies on Bootstrap sample classes')
-check('./css/auth.css' in index and './js/auth.js' in login, 'authentication page uses dedicated CSS and JavaScript')
+check("app_asset_url('css/auth.css')" in index and "app_asset_url('js/auth.js')" in login, 'authentication page uses dedicated CSS and JavaScript')
 check(login.count('data-password-toggle') == 2 and 'aria-pressed="false"' in login, 'both password fields have accessible visibility toggles')
 check("input.type = reveal ? 'text' : 'password'" in js, 'password visibility is changed without modifying authentication data')
 check("form.dataset.submitting === 'true'" in js and 'event.preventDefault();' in js and 'submit.disabled = true' in js, 'double submission is blocked client-side')

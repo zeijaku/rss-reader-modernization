@@ -37,7 +37,7 @@ check(css.count('width: 44px') >= 2 and 'min-height: 44px' in css, 'Feed Stock a
 check('id="app-notice"' in index and 'aria-live="polite"' in index, 'shared in-page notice remains accessible')
 check('class="btn btn-outline-danger delete_content"' in index and 'type="button"' in index, 'RSS edit modal keeps explicit delete action')
 check('追加先：' in index, 'RSS add modal still shows its destination tab')
-check('article class="col-12 col-md-6 col-lg-3 stock-card"' in index, 'Stock cards retain the responsive grid')
+check('article class="stock-card"' in index and 'col-md-6 col-lg-3 stock-card' not in index and '.stock-grid' in css, 'Stock uses the Version 1.8 compact one-column list')
 check('stock-title' in index and '.stock-title' in css, 'Stock title wrapping hook remains')
 check('@media (pointer: coarse)' in css and 'min-height: 44px' in css, 'coarse pointer targets remain touch-sized')
 check('.dashboard-widget' in css and 'min-width: 0' in css, 'Widget base rule prevents responsive overflow')

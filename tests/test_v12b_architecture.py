@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,7 +53,7 @@ check("fetch_content($card, {preserve: true})" in js, 'NEW state refresh also ke
 
 check('.feed-item-title-text' in css and 'text-overflow: ellipsis' in css and 'white-space: normal' in css and '-webkit-line-clamp: 2' in css, 'article titles use a natural one-to-two-line CSS clamp')
 check('.feed-title-tooltip' in css and 'max-width: min(420px' in css, 'tooltip is bounded to the viewport')
-check('.feed-item-summary' in css and 'max-height: 14rem' in css and 'overflow: auto' in css, 'long RSS summary is bounded and scrollable')
+check('.feed-item-summary' in css and 'max-height: 14rem' in css and 'overflow-y: auto' in css and 'overflow-x: hidden' in css, 'long RSS summary is vertically scrollable without horizontal scrolling')
 check('.feed-item-action' in css and 'width: 44px' in css and 'min-height: 44px' in css, 'article actions have touch-friendly targets')
 check('.feed-item-stock-cell' in css and '.feed-item-summary-cell' in css, 'Stock stays left and summary stays right without sharing one crowded cell')
 check('.feed-item-summary-icon' in css and 'color: #6c757d' in css and 'font-size: 0.88rem' in css, 'summary Font Awesome icon has a compact explicit color and size')
@@ -62,7 +63,7 @@ check('@media (prefers-reduced-motion: reduce)' in css, 'reduced-motion handling
 check("'description' => api_feed_text" in api and "'content' => api_feed_text" in api, 'safe API payload continues to include bounded description and content')
 check('strip_tags' in api, 'server-side Feed text still strips markup')
 check("'feed.fetch' => api_feed_fetch" in api, 'existing structured Feed API remains in use')
-check('1.2.0-dev.3' in version or "APP_VERSION = '1.2.0'" in version, 'Version marker identifies V1.2-B or final 1.2.0')
+check(re.search(r"const APP_VERSION = '(?:1\.2\.0-dev\.[3-9][0-9]*|1\.[2-9][0-9]*\.\d+(?:-dev\.\d+)?)';", version) is not None, 'Version marker identifies V1.2-B or a later checkpoint')
 check(".addClass('feed-item-stock-cell')" in js and ".addClass('feed-item-summary-cell')" in js, 'article DOM uses Stock-left and summary-right cells')
 check(".addClass('fas fa-plus-square feed-item-summary-icon')" in js and ".toggleClass('fa-minus-square', expanded)" in js, 'summary control uses compact Font Awesome plus/minus icons')
 check(js.index(".addClass('feed-item-stock-cell')") < js.index(".addClass('feed-item-title-cell')") < js.index(".addClass('feed-item-summary-cell')"), 'article cells are generated in Stock, title, summary order')

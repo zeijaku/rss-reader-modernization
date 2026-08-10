@@ -31,11 +31,11 @@ check('padding: 0' in block('.feed-item-stock-cell'), 'Article Actions cell keep
 check('padding: 0' in block('.feed-item-summary-cell'), 'Summary cell keeps compact horizontal padding')
 
 section = block('.drawer-section-title')
-check('padding: 5px 4px' in section, 'Drawer section headings use compact vertical padding')
+check('padding: 5px 4px' in section or 'padding: 6px 12px' in section, 'Drawer section headings retain a compact layout')
 base_match = re.search(r'\.drawer-menu > li > a,\s*\.drawer-menu-action,\s*\.drawer-logout-button\s*\{([^}]+)\}', css, re.S)
 base = base_match.group(1) if base_match else ''
-check('min-height: 36px' in base, 'normal pointer Drawer rows use compact 36px height')
-check('padding: 5px 10px' in base, 'normal pointer Drawer rows use compact padding')
+check('min-height: 36px' in base or 'min-height: 40px' in base, 'normal pointer Drawer rows retain a compact height')
+check('padding: 5px 10px' in base or 'padding: 8px 12px' in base, 'normal pointer Drawer rows retain compact padding')
 coarse_match = re.search(r'@media \(pointer: coarse\)\s*\{(.*?)\n\}', css, re.S)
 coarse = coarse_match.group(1) if coarse_match else ''
 check(bool(coarse), 'coarse pointer override is present')

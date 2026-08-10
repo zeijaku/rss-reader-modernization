@@ -27,7 +27,7 @@ check('PDO::ATTR_EMULATE_PREPARES => false' in db,'native prepare policy present
 check('$conn->beginTransaction()' in db and '$conn->commit()' in db and '$conn->rollBack()' in db,'user creation transaction present')
 check("format('Y-m-d H:i:s')" in db and "H:m:s" not in db,'date format bug removed')
 check('ORDER BY content_id ASC' in db,'content order explicit')
-check("default => 'stock_id DESC'," in db and "stock_search_order_by($sort)" in db,'stock order explicit')
+check("default => 'stock_id DESC'" in db and "'oldest' => 'stock_id ASC'" in db,'stock order explicit')
 for fn in ['entry_user','entry_content','info_dbsave']:
     # rough function body segment until next function
     pos=db.index('function '+fn)

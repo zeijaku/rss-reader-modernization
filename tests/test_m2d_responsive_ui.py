@@ -15,10 +15,10 @@ def check(condition: bool, message: str) -> None:
     checks.append(bool(condition))
     print(('PASS' if condition else 'FAIL') + ': ' + message)
 
-check('class="row content-grid feed-grid"' in index, 'Feed cards use one responsive grid')
+check('class="row content-grid feed-grid"' in index or 'class="row content-grid feed-grid dashboard-grid"' in index, 'Feed cards use one responsive grid')
 check("default => 'col-12 col-md-6 col-lg-3'" in widget and "app_html($widgetWidthClass) . ' dashboard-widget feed-card" in index, 'Feed grid keeps Mobile 1 / Tablet 2 / Desktop 4 as the default width')
-check('class="row content-grid stock-grid"' in index, 'Stock cards use one responsive grid')
-check('class="col-12 col-md-6 col-lg-3 stock-card"' in index, 'Stock grid follows the same responsive columns')
+check('class="stock-grid"' in index, 'Stock uses one dedicated compact-list container')
+check('class="stock-card"' in index and 'col-md-6 col-lg-3 stock-card' not in index, 'Stock remains one-column while Feed keeps its responsive grid')
 check('$row_cnt' not in index, 'legacy four-item PHP row counter is removed')
 check('style="padding: 0px; margin: 2px;"' not in index, 'card spacing is no longer inline')
 check('.content-grid' in css and '.feed-card,' in css and '.stock-card' in css, 'grid spacing is centralized in Dashboard CSS')
@@ -30,7 +30,7 @@ check('min-height: 13rem' in css and 'min-height: 11rem' in css, 'Feed card heig
 check('min-width: 44px' in css and 'min-height: 44px' in css, 'small icon actions receive touch-sized targets')
 check('.save-modal-dialog' in css and 'style="width: 240px;"' not in index, 'Stock modal no longer uses a fixed inline width')
 check('.modal-footer .btn' in css and 'flex: 1 1 100%' in css, 'Modal actions stack on narrow screens')
-check('.navbar-brand' in css and 'text-overflow: ellipsis' in css, 'long current-tab names do not break the Navbar')
+check('.app-navbar-current' in css and 'text-overflow: ellipsis' in css, 'long current-tab names do not break the Navbar')
 check('#page-top' in css and 'z-index: 1040' in css, 'Page Top stays usable without falling behind content')
 
 check('id="app-notice"' in index and 'aria-live="polite"' in index, 'shared UI notice region is present')

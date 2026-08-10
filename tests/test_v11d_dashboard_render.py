@@ -43,6 +43,7 @@ require $root . '/app/bootstrap.php';
 final class V11dRenderStatement extends PDOStatement
 {
     private array $rows = [];
+    private int $countValue = 0;
     public function __construct(private string $sql) {}
     public function execute(?array $params = null): bool
     {
@@ -59,6 +60,9 @@ final class V11dRenderStatement extends PDOStatement
                 'conf_style_navlink3' => '', 'conf_style_navlink_view3' => '', 'conf_style_navlink_icon3' => 'search',
                 'conf_style_navlink4' => '', 'conf_style_navlink_view4' => '', 'conf_style_navlink_icon4' => 'images',
             ]];
+            return true;
+        }
+        if (str_contains($this->sql, 'FROM `ig_dashboard_widget`') && str_contains($this->sql, "widget_type = 'task'")) {
             return true;
         }
         if (str_contains($this->sql, 'FROM `ig_dashboard_widget` w')) {
@@ -99,8 +103,15 @@ final class V11dRenderStatement extends PDOStatement
             return true;
         }
         if (str_contains($this->sql, 'FROM ig_content_stock')) {
+            if ($mode === 'stock' && str_starts_with($this->sql, 'SELECT COUNT(*)')) {
+                $this->countValue = 1;
+                return true;
+            }
             if ($mode === 'stock') {
                 $this->rows = [[
+                    'stock_id' => 1,
+                    'stock_flag' => 0,
+                    'stock_owner' => 1,
                     'stock_data' => 'https://example.com/article',
                     'stock_title' => 'Stock title',
                     'stock_date' => '2026-08-02 10:00:00',
@@ -111,6 +122,7 @@ final class V11dRenderStatement extends PDOStatement
         throw new RuntimeException('Unexpected SQL: ' . $this->sql);
     }
     public function fetchAll(int $mode = PDO::FETCH_DEFAULT, mixed ...$args): array { return $this->rows; }
+    public function fetchColumn(int $column = 0): mixed { return $this->countValue; }
 }
 final class V11dRenderPDO extends PDO
 {
@@ -175,7 +187,7 @@ check(all(attrs.get('data-dashboard-widget-type') == 'feed' for _, attrs in feed
 check(all(attrs.get('data-dashboard-widget-location') == '0' for _, attrs in feed_cards), 'Widget location hook keeps the active tab')
 check('col-lg-6' in classes(feed_cards[0][1]), 'width=2 Widget renders as a two-column-width card')
 check('col-lg-3' in classes(feed_cards[1][1]), 'width=1 Widget retains the existing four-column layout')
-check('999' not in feed_html, 'another owner Widget is not rendered')
+check('data-dashboard-widget-id="99"' not in feed_html and 'feed999.xml' not in feed_html, 'another owner Widget is not rendered')
 check(all(attrs.get('role') == 'region' and attrs.get('aria-busy') == 'true' for _, attrs in feed_cards), 'Widget Feed cards retain region and loading semantics')
 check(all(name in ''.join(feed.text) for name in ['Base', 'Maint', 'IT', 'Observe']), 'all four existing tab labels remain visible')
 check('RSS Reader Modernization V1.1-' in ''.join(feed.text) or 'RSS Reader Modernization 1.1.0' in ''.join(feed.text) or 'RSS Reader Modernization 1.2.0-dev.3' or 'RSS Reader Modernization 1.2.0-dev.4' in ''.join(feed.text) or 'RSS Reader Modernization 1.2.0-dev.3' or 'RSS Reader Modernization 1.2.0-dev.4' in ''.join(feed.text), 'Dashboard displays a Version 1.1 marker')

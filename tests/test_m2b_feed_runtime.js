@@ -66,7 +66,9 @@ function findDescendants(element, selector, result) {
 class Wrapper {
     constructor(elements) {
         this.elements = elements || [];
+        this.elements.forEach((element, index) => { this[index] = element; });
     }
+    get(index) { return this.elements[index]; }
     get length() { return this.elements.length; }
     each(fn) {
         this.elements.forEach((element, index) => fn.call(element, index, element));
@@ -85,6 +87,12 @@ class Wrapper {
     addClass(names) {
         String(names || '').split(/\s+/).filter(Boolean).forEach((name) => {
             this.elements.forEach((element) => element.classes.add(name));
+        });
+        return this;
+    }
+    removeClass(names) {
+        String(names || '').split(/\s+/).filter(Boolean).forEach((name) => {
+            this.elements.forEach((element) => element.classes.delete(name));
         });
         return this;
     }
@@ -130,6 +138,17 @@ class Wrapper {
         const found = [];
         this.elements.forEach((element) => findDescendants(element, selector, found));
         return new Wrapper(found);
+    }
+    last() {
+        return new Wrapper(this.elements.length > 0 ? [this.elements[this.elements.length - 1]] : []);
+    }
+    remove() {
+        this.elements.forEach((element) => {
+            if (!element.parent) return;
+            element.parent.children = element.parent.children.filter((child) => child !== element);
+            element.parent = null;
+        });
+        return this;
     }
     closest(selector) {
         const found = [];
@@ -279,7 +298,7 @@ check(cards[0].attrs['aria-busy'] === 'false', 'valid Feed clears aria-busy');
 check(firstTitle.children.length === 1 && firstTitle.children[0].tag === 'a', 'valid channel link renders as an anchor');
 check(firstTitle.children[0].attrs.href === 'https://example.com/feed', 'channel anchor keeps the validated URL');
 check(aggregateText(firstTitle).includes('<b>安全なタイトル</b>'), 'HTML-looking channel title remains literal text');
-check(firstBody.children.length === 5, 'only five valid items are rendered');
+check(firstBody.children.length === 5, 'layout-unmeasurable auto mode uses the five-item fallback');
 check(aggregateText(firstBody.children[0]).includes('<script>alert(1)</script>'), 'HTML-looking item title remains literal text');
 const firstStockCell = firstBody.children[0].children[0];
 const firstTitleCell = firstBody.children[0].children[1];

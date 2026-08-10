@@ -27,7 +27,7 @@ function v11d_check(bool $condition, string $message): void
     }
 }
 
-v11d_check(dashboard_widget_types() === ['feed', 'search', 'clock', 'memo', 'task', 'calendar'], 'Widget type allowlist is exact');
+v11d_check(dashboard_widget_types() === ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game'], 'Widget type allowlist is exact');
 v11d_check(dashboard_widget_validate_type('feed') === 'feed', 'feed Widget type is accepted');
 v11d_check(dashboard_widget_validate_type('iframe') === null, 'unknown Widget type is rejected');
 v11d_check(dashboard_widget_validate_location('0') === 0 && dashboard_widget_validate_location(3) === 3, 'four tab locations 0..3 are accepted');
@@ -128,9 +128,10 @@ final class V11dFakeStatement extends PDOStatement
                 'widget_type' => 'feed',
                 'widget_reference_id' => $reference,
                 'widget_sort_order' => (int) $params[':sort_order'],
-                'widget_width' => 1,
+                'widget_width' => (int) ($params[':width'] ?? 1),
+                'widget_height' => (int) ($params[':height'] ?? 1),
                 'widget_style' => (string) $params[':style'],
-                'widget_config' => null,
+                'widget_config' => $params[':config'] ?? null,
                 'widget_flag' => 0,
                 'widget_created_at' => (string) $params[':created_at'],
                 'widget_updated_at' => (string) $params[':updated_at'],
@@ -178,6 +179,22 @@ final class V11dFakeStatement extends PDOStatement
                 $this->pdo->contents[$id]['content_style'] = (string) $params[':style'];
                 $this->affected = 1;
             }
+            return true;
+        }
+
+        if (str_starts_with($sql, 'UPDATE `ig_dashboard_widget` SET widget_width')) {
+            foreach ($this->pdo->widgets as &$widget) {
+                if ($widget['widget_owner'] === (int) $params[':owner'] && $widget['widget_type'] === 'feed' && $widget['widget_reference_id'] === (int) $params[':reference_id'] && $widget['widget_flag'] === 0) {
+                    $widget['widget_width'] = (int) $params[':width'];
+                    $widget['widget_height'] = (int) $params[':height'];
+                    if (array_key_exists(':config', $params)) {
+                        $widget['widget_config'] = $params[':config'];
+                    }
+                    $widget['widget_updated_at'] = (string) $params[':updated_at'];
+                    $this->affected++;
+                }
+            }
+            unset($widget);
             return true;
         }
 
@@ -280,6 +297,7 @@ dashboard_widget_create_feed(20, 'https://example.com/other', 'danger', 0);
 v11d_check(count($pdo->contents) === 3 && count($pdo->widgets) === 3, 'Feed creation writes content and Widget together');
 v11d_check($pdo->widgets[1]['widget_sort_order'] === 10 && $pdo->widgets[2]['widget_sort_order'] === 20, 'new Feed appends to the current Widget order');
 v11d_check($pdo->widgets[1]['widget_width'] === 1, 'new Feed Widget keeps existing width');
+v11d_check((dashboard_widget_feed_config_from_storage($pdo->widgets[1]['widget_config'])['item_limit'] ?? null) === 'auto', 'new Feed Widget stores automatic item limit by default');
 
 $list = search_dashboard_widgets(10, 0);
 v11d_check(count($list) === 2, 'Widget list returns only the authenticated owner and selected tab');
@@ -289,7 +307,8 @@ $public = dashboard_widget_public_list(10, 0);
 v11d_check(!array_key_exists('widget_owner', $public[0]), 'public Widget metadata does not expose owner id');
 v11d_check(($public[0]['widget_type'] ?? '') === 'feed', 'public Widget metadata keeps allowlisted type');
 
-v11d_check(dashboard_widget_update_feed(10, $contentA, 'https://example.com/feed-a2', 'warning'), 'owned Feed update succeeds');
+v11d_check(dashboard_widget_update_feed(10, $contentA, 'https://example.com/feed-a2', 'warning', 1, 1, 12), 'owned Feed update succeeds');
+v11d_check((dashboard_widget_feed_config_from_storage($pdo->widgets[1]['widget_config'])['item_limit'] ?? null) === 12, 'Feed update persists an explicit RSS item limit');
 v11d_check($pdo->contents[$contentA]['content_style'] === 'warning' && $pdo->widgets[1]['widget_style'] === 'warning', 'Feed style remains mirrored in content and Widget');
 v11d_check(!dashboard_widget_update_feed(20, $contentA, 'https://evil.example/', 'danger'), 'another owner cannot update Feed Widget');
 v11d_check($pdo->contents[$contentA]['content_value'] === 'https://example.com/feed-a2', 'failed cross-owner update leaves content unchanged');

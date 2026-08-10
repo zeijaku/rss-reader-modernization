@@ -24,15 +24,15 @@ check('jQuery v3.3.1' not in jquery[:200], 'old jQuery header is absent')
 check('ajax:function' in jquery or '.ajax=' in jquery or 'ajaxSettings' in jquery, 'jQuery full build contains AJAX implementation')
 check('slim' not in jquery[:200].lower(), 'jQuery slim build is not used')
 check(not (PUBLIC / 'js/jquery-3.3.1.min.js').exists(), 'old jQuery file is absent')
-check('./js/jquery-3.7.1.min.js' in index and './js/jquery-3.7.1.min.js' not in login and './js/auth.js' in login, 'Dashboard keeps jQuery while the dedicated authentication screen uses dependency-free JavaScript')
+check("app_asset_url('js/jquery-3.7.1.min.js')" in index and "app_asset_url('js/jquery-3.7.1.min.js')" not in login and "app_asset_url('js/auth.js')" in login, 'Dashboard keeps jQuery while the dedicated authentication screen uses dependency-free JavaScript')
 check('jquery-3.3.1.min.js' not in index + login, 'old jQuery reference is absent')
 healthcheck = (ROOT / 'tools/healthcheck.php').read_text(encoding='utf-8')
 check('js/jquery-3.7.1.min.js' in healthcheck and 'jquery-3.3.1.min.js' not in healthcheck, 'healthcheck requires the updated jQuery asset')
 
-order = ['./js/jquery-3.7.1.min.js', './js/popper.min.js', './js/bootstrap.min.js', './js/iscroll.js', './js/drawer.min.js', './js/dashboard.js', './js/calendar.js']
+order = ["app_asset_url('js/jquery-3.7.1.min.js')", "app_asset_url('js/popper.min.js')", "app_asset_url('js/bootstrap.min.js')", "app_asset_url('js/iscroll.js')", "app_asset_url('js/drawer.min.js')", "app_asset_url('js/dashboard.js')", "app_asset_url('js/calendar.js')"]
 positions = [index.index(item) for item in order]
 check(positions == sorted(positions), 'Dashboard dependency order remains jQuery, Popper, Bootstrap, iScroll, Drawer, app')
-check('./js/popper.min.js' not in login and './js/bootstrap.min.js' not in login and './js/auth.js' in login, 'authentication screen no longer loads unnecessary Popper or Bootstrap JavaScript')
+check("app_asset_url('js/popper.min.js')" not in login and "app_asset_url('js/bootstrap.min.js')" not in login and "app_asset_url('js/auth.js')" in login, 'authentication screen no longer loads unnecessary Popper or Bootstrap JavaScript')
 
 check('Bootstrap v4.1.3' in bootstrap_js[:500], 'Bootstrap JavaScript remains paired at 4.1.3')
 check('Bootstrap v4.1.3' in (PUBLIC / 'css/bootstrap.min.css').read_text(errors='replace')[:500], 'Bootstrap CSS remains paired at 4.1.3')

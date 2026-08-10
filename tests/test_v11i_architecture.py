@@ -55,7 +55,7 @@ check('id="registerCalendarWidgetForm"' in index and 'id="changeCalendarWidgetFo
 check('id="registerCalendarEventForm"' in index and 'id="changeCalendarEventForm"' in index, 'Calendar event forms are explicit')
 check(index.count('type="date"') >= 4 and 'maxlength="128"' in index and 'maxlength="2000"' in index, 'Calendar event inputs are bounded and date based')
 check('Calendar追加' in index and 'fa-calendar-alt' in index, 'Drawer exposes Calendar Widget addition')
-check('<script src="./js/calendar.js"></script>' in index, 'Calendar JavaScript is loaded as an external asset')
+check("app_asset_url('js/calendar.js')" in index, 'Calendar JavaScript is loaded as an external versioned asset')
 check("var eventNamespace = '.iguguruCalendar';" in js, 'Calendar events use one namespace')
 check("url: './api_v1.php'" in js and "'csrf_token': appCsrfToken()" in js, 'Calendar requests use the protected central API endpoint')
 for action in ['widget.calendar.create','widget.calendar.update','widget.calendar.delete','calendar.month.list','calendar.event.create','calendar.event.update','calendar.event.delete']:

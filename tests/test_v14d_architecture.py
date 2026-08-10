@@ -1,0 +1,28 @@
+from pathlib import Path
+import re
+from version_test_utils import is_later_application_release, is_later_visible_label
+ROOT=Path(__file__).resolve().parents[1]; failures=[]
+def check(ok,msg): print(('PASS' if ok else 'FAIL')+': '+msg); failures.append(msg) if not ok else None
+version=(ROOT/'app/version.php').read_text(); index=(ROOT/'public/index.php').read_text(); js=(ROOT/'public/js/mini-game.js').read_text(); css=(ROOT/'public/css/mini-game.css').read_text(); run=(ROOT/'tests/run.sh').read_text()
+check("const APP_VERSION = '1.4.0-dev.3';" in version or "const APP_VERSION = '1.4.0';" in version or re.search(r"const APP_VERSION = '1\.[567]\.0(?:-dev\.[1-9][0-9]*)?';", version) is not None or is_later_application_release(version, (1, 4, 0)),'Application version retains V1.4-D behavior in V1.4 or later')
+check('V1.4-D / R1' in version or 'V1.4-D / R2' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.4.0'" in version or (('RSS Reader Modernization V1.5-' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.5.0'" in version) or 'RSS Reader Modernization V1.6-' in version or "APP_VERSION_LABEL = 'RSS Reader Modernization 1.6.0'" in version or 'RSS Reader Modernization V1.7-' in version) or is_later_visible_label(version, (1, 4, 0)),'Application label identifies V1.4-D or later')
+check('mini-game-tutorial-toggle' in index and 'mini-game-tutorial' in index,'Tutorial UI is rendered')
+check('mini-game-storage-reset' in index and '記録を削除' in index,'Widget-scoped record reset is rendered')
+check('mini-game-result' in index and 'mini-game-wins' in index and 'mini-game-losses' in index,'result and win/loss display are rendered')
+check('aria-atomic="true"' in index,'live status is atomic without reading the whole board')
+check('data-dashboard-theme=' in index,'current Theme is exposed for Game styling')
+check('function loadStateResult' in js and 'recovered: true' in js,'Storage recovery is explicit')
+check("removeFromBrowserStorage('localStorage'" in js and "removeFromBrowserStorage('sessionStorage'" in js,'reset clears every Browser Storage backend')
+check('event.repeat' in js,'Keyboard long-press repeat is ignored')
+check('event.detail > 1' in js,'rapid double activation is suppressed')
+check('tutorialSeen = true' in js and 'setTutorialOpen' in js,'Tutorial state is stored per Widget')
+check("event === 'storage-reset'" in js,'record reset has an explicit status message')
+check('innerHTML' not in js and 'textContent' in js,'Storage values never enter innerHTML')
+check('user-select: none' in css and '-webkit-touch-callout: none' in css,'Touch long-press selection is suppressed')
+check('mini-game-result-won' in css and 'mini-game-result-lost' in css,'Clear and Game Over have visible non-color-only containers')
+check('bootstrap-solar' in css and 'bootstrap-slate' in css,'dark Theme adjustments are present')
+check('min-height: 44px' in css and 'prefers-reduced-motion' in css,'44px controls and reduced motion remain supported')
+check('test_v14d_game_runtime.js' in run and 'test_v14d_browser.py' in run and 'test_v14d_theme_browser.py' in run,'main Test runner includes V1.4-D checks')
+check(not any('v14' in p.name.lower() for p in (ROOT/'database/migrations').glob('*')),'no V1.4 DB migration is added')
+if failures: raise SystemExit(f'{len(failures)} V1.4-D architecture checks failed')
+print('All V1.4-D architecture checks passed.')

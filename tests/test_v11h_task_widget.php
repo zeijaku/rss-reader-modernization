@@ -52,7 +52,7 @@ v11h_check(dashboard_widget_task_config_from_storage('{broken') === dashboard_wi
 
 $row = dashboard_widget_normalize_row([
     'widget_id'=>'8','widget_owner'=>'7','widget_location'=>'1','widget_type'=>'task','widget_reference_id'=>null,
-    'widget_sort_order'=>'20','widget_width'=>'2','widget_style'=>'primary','widget_config'=>'{"schema":1,"title":"Task List"}',
+    'widget_sort_order'=>'20','widget_width'=>'2', 'widget_height' => '1','widget_style'=>'primary','widget_config'=>'{"schema":1,"title":"Task List"}',
 ]);
 v11h_check(is_array($row) && $row['widget_reference_id'] === null, 'Task Widget does not require a reference id');
 v11h_check(($row['widget_config_data']['title'] ?? '') === 'Task List', 'Task Widget row exposes normalized config');
@@ -100,7 +100,7 @@ final class V11hTaskStatement extends PDOStatement
             $id=++$this->pdo->widgetSeq; $this->pdo->lastId=$id;
             $this->pdo->widgets[$id]=[
                 'widget_id'=>$id,'widget_owner'=>(int)$params[':owner'],'widget_location'=>(int)$params[':location'],'widget_type'=>'task',
-                'widget_reference_id'=>null,'widget_sort_order'=>(int)$params[':sort_order'],'widget_width'=>(int)$params[':width'],
+                'widget_reference_id'=>null,'widget_sort_order'=>(int)$params[':sort_order'],'widget_width'=>(int)$params[':width'], 'widget_height' => '1',
                 'widget_style'=>(string)$params[':style'],'widget_config'=>(string)$params[':config'],'widget_flag'=>0,
                 'widget_created_at'=>(string)$params[':created_at'],'widget_updated_at'=>(string)$params[':updated_at'],
             ]; $this->affected=1; return true;
@@ -175,7 +175,7 @@ final class V11hTaskStatement extends PDOStatement
 
 $pdo=new V11hTaskPDO(); set_db_connection_for_testing($pdo);
 $widgetCreate=api_dispatch('widget.task.create',7,[
-    'widget_owner'=>'999','widget_location'=>'1','widget_style'=>'primary','widget_width'=>'2','task_widget_title'=>'今日の作業',
+    'widget_owner'=>'999','widget_location'=>'1','widget_style'=>'primary','widget_width'=>'2', 'widget_height' => '1','task_widget_title'=>'今日の作業',
 ]);
 v11h_check($widgetCreate['status']===201&&($widgetCreate['body']['ok']??false)===true,'authenticated user can create a Task Widget');
 $widgetId=(int)($widgetCreate['body']['data']['widget_id']??0);
@@ -212,7 +212,7 @@ v11h_check($otherToggle['status']===404&&$pdo->tasks[$taskId]['task_completed']=
 $uncomplete=api_dispatch('task.item.toggle',7,['task_id'=>(string)$taskId,'task_completed'=>'0']);
 v11h_check($uncomplete['status']===200&&$pdo->tasks[$taskId]['task_completed_at']===null,'Task can return to incomplete state');
 
-$widgetUpdate=api_dispatch('widget.task.update',7,['widget_id'=>(string)$widgetId,'widget_style'=>'warning','widget_width'=>'3','task_widget_title'=>'保守作業']);
+$widgetUpdate=api_dispatch('widget.task.update',7,['widget_id'=>(string)$widgetId,'widget_style'=>'warning','widget_width'=>'3', 'widget_height' => '1','task_widget_title'=>'保守作業']);
 v11h_check($widgetUpdate['status']===200&&$pdo->widgets[$widgetId]['widget_width']===3,'Task Widget width can be updated');
 v11h_check(json_decode($pdo->widgets[$widgetId]['widget_config'],true)['title']==='保守作業','Task Widget title can be updated');
 $otherWidgetDelete=api_dispatch('widget.task.delete',8,['widget_id'=>(string)$widgetId]);

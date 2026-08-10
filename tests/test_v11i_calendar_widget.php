@@ -12,6 +12,9 @@ putenv('DB_TABLE_PREFIX=ig_');
 require_once $root . '/app/common/common_conf.php';
 require_once $root . '/app/common/common_db.php';
 require_once $root . '/app/validation.php';
+require_once $root . '/app/feed/feed_http_headers.php';
+require_once $root . '/app/http_fetch.php';
+require_once $root . '/app/holiday.php';
 require_once $root . '/app/dashboard_widget.php';
 require_once $root . '/app/calendar.php';
 require_once $root . '/app/api.php';
@@ -53,7 +56,7 @@ v11i_check(calendar_widget_config_from_storage('{broken') === calendar_widget_de
 
 $row = dashboard_widget_normalize_row([
     'widget_id'=>'8','widget_owner'=>'7','widget_location'=>'1','widget_type'=>'calendar','widget_reference_id'=>null,
-    'widget_sort_order'=>'20','widget_width'=>'2','widget_style'=>'info','widget_config'=>'{"schema":1,"title":"予定","show_completed_tasks":true}',
+    'widget_sort_order'=>'20','widget_width'=>'2', 'widget_height' => '1','widget_style'=>'info','widget_config'=>'{"schema":1,"title":"予定","show_completed_tasks":true}',
 ]);
 v11i_check(is_array($row) && $row['widget_reference_id'] === null, 'Calendar Widget does not require a reference id');
 v11i_check(($row['widget_config_data']['show_completed_tasks'] ?? false) === true, 'Calendar Widget row exposes normalized config');
@@ -101,7 +104,7 @@ final class V11iCalendarStatement extends PDOStatement
             $id=++$this->pdo->widgetSeq; $this->pdo->lastId=$id;
             $this->pdo->widgets[$id]=[
                 'widget_id'=>$id,'widget_owner'=>(int)$params[':owner'],'widget_location'=>(int)$params[':location'],'widget_type'=>'calendar',
-                'widget_reference_id'=>null,'widget_sort_order'=>(int)$params[':sort_order'],'widget_width'=>(int)$params[':width'],
+                'widget_reference_id'=>null,'widget_sort_order'=>(int)$params[':sort_order'],'widget_width'=>(int)$params[':width'], 'widget_height' => '1',
                 'widget_style'=>(string)$params[':style'],'widget_config'=>(string)$params[':config'],'widget_flag'=>0,
                 'widget_created_at'=>(string)$params[':created_at'],'widget_updated_at'=>(string)$params[':updated_at'],
             ]; $this->affected=1; return true;
@@ -185,13 +188,13 @@ final class V11iCalendarStatement extends PDOStatement
 }
 
 $pdo=new V11iCalendarPDO();
-$pdo->widgets[90]=['widget_id'=>90,'widget_owner'=>7,'widget_location'=>0,'widget_type'=>'task','widget_reference_id'=>null,'widget_sort_order'=>5,'widget_width'=>1,'widget_style'=>'primary','widget_config'=>'{"schema":1,"title":"Task"}','widget_flag'=>0,'widget_created_at'=>'','widget_updated_at'=>''];
+$pdo->widgets[90]=['widget_id'=>90,'widget_owner'=>7,'widget_location'=>0,'widget_type'=>'task','widget_reference_id'=>null,'widget_sort_order'=>5,'widget_width'=>1, 'widget_height' => '1','widget_style'=>'primary','widget_config'=>'{"schema":1,"title":"Task"}','widget_flag'=>0,'widget_created_at'=>'','widget_updated_at'=>''];
 $pdo->tasks[900]=['task_id'=>900,'task_owner'=>7,'task_widget_id'=>90,'task_title'=>'提出','task_due_date'=>'2026-08-10','task_priority'=>'high','task_completed'=>0,'task_flag'=>0,'task_sort_order'=>10,'task_updated_at'=>'2026-08-01 00:00:00'];
 $pdo->tasks[901]=['task_id'=>901,'task_owner'=>7,'task_widget_id'=>90,'task_title'=>'完了済み','task_due_date'=>'2026-08-11','task_priority'=>'low','task_completed'=>1,'task_flag'=>0,'task_sort_order'=>20,'task_updated_at'=>'2026-08-01 00:00:00'];
 set_db_connection_for_testing($pdo);
 
 $widgetCreate=api_dispatch('widget.calendar.create',7,[
-    'widget_owner'=>'999','widget_location'=>'1','widget_style'=>'info','widget_width'=>'2','calendar_title'=>'予定','calendar_show_completed_tasks'=>'0',
+    'widget_owner'=>'999','widget_location'=>'1','widget_style'=>'info','widget_width'=>'2', 'widget_height' => '1','calendar_title'=>'予定','calendar_show_completed_tasks'=>'0',
 ]);
 v11i_check($widgetCreate['status']===201&&($widgetCreate['body']['ok']??false)===true,'authenticated user can create a Calendar Widget');
 $widgetId=(int)($widgetCreate['body']['data']['widget_id']??0);
@@ -218,10 +221,12 @@ v11i_check($month['status']===200&&($month['body']['ok']??false)===true,'owned C
 v11i_check(count($data['events']??[])===1,'Calendar month contains overlapping normal event');
 v11i_check(count($data['tasks']??[])===1&&($data['tasks'][0]['task_id']??0)===900,'Calendar month reads incomplete Task due date directly');
 v11i_check(($data['events'][0]['title']??'')==='会議変更','Calendar month returns normalized event title');
+v11i_check(($data['holidays']['2026-08-11']??'')==='山の日','Calendar month includes Japanese holiday snapshot data');
+v11i_check(($data['holiday_refresh_due']??false)===true,'Calendar month marks holiday cache refresh due when only snapshot is available');
 $otherMonth=api_dispatch('calendar.month.list',8,['widget_id'=>(string)$widgetId,'calendar_year'=>'2026','calendar_month'=>'8']);
 v11i_check($otherMonth['status']===404,'another user cannot read Calendar Widget settings');
 
-$widgetUpdate=api_dispatch('widget.calendar.update',7,['widget_id'=>(string)$widgetId,'widget_style'=>'warning','widget_width'=>'4','calendar_title'=>'全予定','calendar_show_completed_tasks'=>'1']);
+$widgetUpdate=api_dispatch('widget.calendar.update',7,['widget_id'=>(string)$widgetId,'widget_style'=>'warning','widget_width'=>'4', 'widget_height' => '1','calendar_title'=>'全予定','calendar_show_completed_tasks'=>'1']);
 v11i_check($widgetUpdate['status']===200&&$pdo->widgets[$widgetId]['widget_width']===4,'Calendar Widget width can be updated');
 $monthWithCompleted=api_dispatch('calendar.month.list',7,['widget_id'=>(string)$widgetId,'calendar_year'=>'2026','calendar_month'=>'8']);
 v11i_check(count($monthWithCompleted['body']['data']['tasks']??[])===2,'Calendar can include completed Tasks when configured');

@@ -38,6 +38,7 @@ class Wrapper {
         this.textValue = '';
         this.disabled = false;
         this.hidden = true;
+        this.removed = false;
     }
     data(key, value) { if (arguments.length === 1) return this.dataValues[key]; this.dataValues[key] = value; return this; }
     prop(key, value) { if (key === 'disabled') this.disabled = value; if (key === 'hidden') this.hidden = value; return this; }
@@ -54,6 +55,11 @@ class Wrapper {
     fadeIn() { return this; }
     fadeOut() { return this; }
     animate() { return this; }
+    remove() {
+        this.removed = true;
+        if (this.name === 'closest-card') getWrapper('.stock-grid .stock-card').length = 0;
+        return this;
+    }
     popover() { return this; }
     drawer() { return this; }
     modal(method) { if (method === 'hide') modalHideCount += 1; return this; }
@@ -150,6 +156,8 @@ check(modalHideCount === 1, 'Stock modal closes after successful save');
 check(notice.textValue === 'Stockへ保存しました', 'Stock success is shown in the shared notice');
 check(notice.classes.has('alert-success'), 'Stock success uses success presentation');
 check(stockButton.disabled === false, 'Stock button is released after completion');
+
+check(handlers.get('click.iguguruDashboard|.article-action-stock-remove') instanceof Function, 'Stock remove action handler is registered');
 
 if (failures > 0) process.exit(1);
 console.log('All M2-D mutation runtime checks passed.');

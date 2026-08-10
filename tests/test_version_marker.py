@@ -15,7 +15,7 @@ label_value = label_match.group(1) if label_match else ""
 is_old_checkpoint = bool(re.fullmatch(r"(?:SB-\d+|M\d+-[A-Z]) R\d+", version_value))
 is_semver = bool(re.fullmatch(r"\d+\.\d+\.\d+(?:-(?:rc[1-9][0-9]*|dev\.[1-9][0-9]*))?", version_value))
 old_checkpoint_label = bool(re.fullmatch(r"(?:Secure Baseline SB-\d+|(?:RSS Engine|Frontend|Release) M\d+-[A-Z]) / R\d+", label_value))
-v11_checkpoint_label = bool(re.fullmatch(r"RSS Reader Modernization V1\.1-[A-Z] / R\d+", label_value))
+development_checkpoint_label = bool(re.fullmatch(r"RSS Reader Modernization V[0-9]+\.[0-9]+-[A-Z] / R[0-9]+", label_value))
 release_label = label_value == ("RSS Reader Modernization " + version_value) if is_semver else False
 
 stage_match = False
@@ -24,14 +24,15 @@ if version_value and label_value:
         stage_match = version_value.replace(" ", " / ", 1) == label_value.replace("Secure Baseline ", "")
     elif version_value.startswith("M"):
         stage_match = version_value.replace(" ", " / ", 1) == label_value.replace("RSS Engine ", "").replace("Frontend ", "").replace("Release ", "")
-    elif version_value.startswith("1.1.0-dev."):
-        stage_match = v11_checkpoint_label
+    elif re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+-dev\.[1-9][0-9]*", version_value):
+        version_prefix = '.'.join(version_value.split('.', 2)[:2])
+        stage_match = development_checkpoint_label and ("V" + version_prefix + "-") in label_value
     elif is_semver:
         stage_match = release_label
 
 checks = {
     "version constant format": is_old_checkpoint or is_semver,
-    "version label format": old_checkpoint_label or v11_checkpoint_label or release_label,
+    "version label format": old_checkpoint_label or development_checkpoint_label or release_label,
     "version and label stages match": stage_match,
     "bootstrap loads version": "require_once __DIR__ . '/version.php';" in bootstrap,
     "login marker": login.count("data-app-version") >= 1,

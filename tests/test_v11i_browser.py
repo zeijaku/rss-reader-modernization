@@ -27,7 +27,7 @@ html='''<!doctype html><html lang="ja"><head><meta name="csrf-token" content="cs
 <form id="changeCalendarEventForm"><input class="changeCalendarEventId"><input class="changeCalendarEventTitleValue"><input class="changeCalendarEventStartDate"><input class="changeCalendarEventEndDate"><textarea class="changeCalendarEventNote"></textarea><button type="submit">change event</button><button type="button" class="delete_calendar_event">delete event</button></form>
 <form id="changeTaskItemForm"><input class="changeTaskItemId"><input class="changeTaskItemTitleValue"><input class="changeTaskItemDueDate"><select class="changeTaskItemPriority"><option value="normal">normal</option><option value="high">high</option><option value="low">low</option></select></form>
 </body></html>'''
-month_response={'ok':True,'data':{'year':2026,'month':8,'month_start':'2026-08-01','month_end':'2026-08-31','events':[{'event_id':801,'title':'<予定>','start_date':'2026-08-10','end_date':'2026-08-11','note':'安全なメモ'}],'tasks':[{'task_id':901,'title':'締切Task','due_date':'2026-08-12','priority':'high','completed':False}]}}
+month_response={'ok':True,'data':{'year':2026,'month':8,'month_start':'2026-08-01','month_end':'2026-08-31','events':[{'event_id':801,'title':'<予定>','start_date':'2026-08-10','end_date':'2026-08-11','note':'安全なメモ'}],'tasks':[{'task_id':901,'title':'締切Task','due_date':'2026-08-12','priority':'high','completed':False}],'holidays':{'2026-08-11':'山の日'},'holiday_refresh_due':False}}
 with sync_playwright() as p:
     browser=p.chromium.launch(executable_path=chromium,headless=True,args=['--no-sandbox'])
     page=browser.new_page(locale='ja-JP',timezone_id='Asia/Tokyo')
@@ -49,6 +49,10 @@ with sync_playwright() as p:
     check(page.locator('body script').count()==0,'HTML-like event title does not inject a script node')
     check(page.locator('.calendar-task-entry').count()==1,'Task deadline renders in Calendar')
     check('task-priority-high' in page.locator('.calendar-task-entry').get_attribute('class'),'Task priority class is retained')
+    holiday=page.locator('.calendar-day[data-calendar-date="2026-08-11"]')
+    check('calendar-day-holiday' in holiday.get_attribute('class'),'Japanese holiday receives the holiday visual class')
+    check(holiday.locator('.calendar-day-number').get_attribute('title')=='山の日','holiday name is available as a tooltip')
+    check('山の日' in holiday.locator('.calendar-day-number').get_attribute('aria-label'),'holiday name is included in the accessible day label')
     page.locator('.calendar-widget-edit-trigger').click()
     check(page.locator('.changeCalendarWidgetId').input_value()=='71','Calendar Widget edit fills Widget id')
     check(page.locator('.changeCalendarWidgetTitleValue').input_value()=='予定','Calendar Widget edit fills title')
