@@ -110,8 +110,8 @@ if ($liveParserAvailable) {
 
     $rssFour = $parser->parse_normalized(file_get_contents($root . '/tests/fixtures/rss2_four.xml'));
     m1c_check(($rssFour['item'][0]->date ?? null) === '2026-07-29 10:00:00', 'RSS 2.0 adapter normalizes valid pubDate');
-    m1c_check(($rssFour['item'][1]->date ?? 'not-null') === null, 'RSS 2.0 adapter converts invalid pubDate to null');
-    m1c_check(($rssFour['item'][2]->date ?? 'not-null') === null, 'RSS 2.0 adapter preserves missing date as null');
+    m1c_check($rssFour['item'][1]->date === null, 'RSS 2.0 adapter converts invalid pubDate to null');
+    m1c_check($rssFour['item'][2]->date === null, 'RSS 2.0 adapter preserves missing date as null');
 
     $modules = $parser->parse_normalized(file_get_contents($root . '/tests/fixtures/rss2_modules.xml'));
     m1c_check(($modules['item'][0]->content ?? null) === '<article>Full body</article>', 'RSS 2.0 adapter extracts content:encoded');
