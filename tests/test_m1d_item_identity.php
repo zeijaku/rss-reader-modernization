@@ -161,7 +161,7 @@ if ($liveParserAvailable) {
     m1d_check(($atomItems[2]->identity?->basis ?? null) === ItemIdentity::BASIS_FINGERPRINT, 'Atom entry without id/link falls back to fingerprint');
 
     $withoutScope = $parser->parse_normalized(file_get_contents($root . '/tests/fixtures/rss2_identity.xml'));
-    m1d_check(($withoutScope['item'][0]->identity ?? 'sentinel') === null, 'legacy parser call without source scope remains compatible and leaves identity unresolved');
+    m1d_check($withoutScope['item'][0]->identity === null, 'legacy parser call without source scope remains compatible and leaves identity unresolved');
 
     $legacy = $parser->parse_start(file_get_contents($root . '/tests/fixtures/rss2_identity.xml'), $scope);
     m1d_check(array_keys($legacy['item'][0] ?? []) === ['title', 'link', 'description', 'content', 'date'], 'parse_start still removes internal identity metadata from public arrays');
