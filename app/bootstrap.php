@@ -64,6 +64,7 @@ require_once dirname(__DIR__) . '/config/common_feeds.php';
 require_once __DIR__ . '/dashboard_widget.php';
 require_once __DIR__ . '/links.php';
 require_once __DIR__ . '/stock_tag.php';
+require_once __DIR__ . '/feed_keyword.php';
 require_once __DIR__ . '/mini_game.php';
 require_once __DIR__ . '/search_feed.php';
 require_once __DIR__ . '/calendar.php';

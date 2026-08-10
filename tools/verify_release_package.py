@@ -80,8 +80,8 @@ def main() -> int:
 
         build = archive.read(relative['RELEASE_BUILD.txt']).decode('utf-8')
         metadata = dict(line.split('=', 1) for line in build.splitlines() if '=' in line)
-        check(metadata.get('intended_release') == '1.6.0', 'release build metadata targets 1.6.0')
-        check(metadata.get('intended_tag') == 'v1.6.0', 'release build metadata targets v1.6.0')
+        check(metadata.get('intended_release') == '1.12.0', 'release build metadata targets 1.12.0')
+        check(metadata.get('intended_tag') == 'v1.12.0', 'release build metadata targets v1.12.0')
         check(metadata.get('package_status') in {'PREVIEW', 'RELEASE_CANDIDATE', 'FINAL'}, 'release build status is recognized')
         check(metadata.get('publishable') in {'yes', 'no'}, 'release build publishable flag is explicit')
         check(metadata.get('validation_scope') == 'automated-regression-and-package', 'release build validation scope is explicit')
@@ -111,14 +111,14 @@ def main() -> int:
         notes = archive.read(relative['RELEASE_NOTES.md']).decode('utf-8')
         if metadata.get('package_status') == 'PREVIEW':
             check(metadata.get('publishable') == 'no', 'preview package is not publishable')
-            check('M4-E preview' in notes and '正式Releaseではありません' in notes, 'preview release notes contain non-release warning')
+            check('正式Releaseではありません' in notes, 'preview release notes contain non-release warning')
         if metadata.get('package_status') == 'RELEASE_CANDIDATE':
             check(metadata.get('publishable') == 'no', 'release candidate package is not final-publishable')
-            check(bool(re.fullmatch(r'1\.6\.0-rc[1-9][0-9]*', metadata.get('application_version', ''))), 'release candidate version format is valid')
+            check(bool(re.fullmatch(r'1\.12\.0-rc[1-9][0-9]*', metadata.get('application_version', ''))), 'release candidate version format is valid')
             check('正式Releaseではありません' in notes, 'release candidate notes contain non-release warning')
         if metadata.get('package_status') == 'FINAL':
             check(metadata.get('publishable') == 'yes', 'final package is marked publishable')
-            check("APP_VERSION = '1.6.0'" in version_text, 'final package has exact 1.6.0 version')
+            check("APP_VERSION = '1.12.0'" in version_text, 'final package has exact 1.12.0 version')
             check('正式Releaseではありません' not in notes, 'final release notes contain no RC non-release warning')
             check('Verification limits' in notes, 'final release notes disclose verification limits')
 

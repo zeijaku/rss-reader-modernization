@@ -450,6 +450,14 @@
     flex: 1 1 auto;
 }
 
+/* V1.12-D: RSS / Search Feed共通のKeyword強調。Title自体の文字色は継承する。 */
+.feed-keyword-highlight {
+    padding: 0 0.08em;
+    border-radius: 2px;
+    background: #ffe69c;
+    color: inherit;
+}
+
 .feed-item-title-text[data-feed-title-truncated="1"] {
     cursor: help;
 }
@@ -2486,4 +2494,21 @@ select:focus,
     .stock-tag-delete {
         grid-column: 2;
     }
+}
+
+
+/* V1.12-C: RSS Highlight Keyword manager */
+.rss-highlight-keyword-list {
+    max-height: 18rem;
+    overflow-y: auto;
+}
+
+.rss-highlight-keyword-item {
+    min-width: 0;
+}
+
+.rss-highlight-keyword-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }

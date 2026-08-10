@@ -107,6 +107,325 @@
         showNotice(apiErrorMessage(xhr, textStatus), 'danger');
     }
 
+    var feedKeywordState = {
+        available: false,
+        keywords: [],
+        maxKeywords: 50,
+        maxLength: 64
+    };
+
+    function readFeedKeywordState() {
+        var element = document.getElementById('rssHighlightKeywordData');
+        var parsed;
+        var keywords = [];
+
+        if (!element) {
+            return;
+        }
+
+        try {
+            parsed = JSON.parse(String(element.textContent || '{}'));
+        } catch (error) {
+            parsed = null;
+        }
+
+        if (!parsed || typeof parsed !== 'object') {
+            return;
+        }
+
+        if (Array.isArray(parsed.keywords)) {
+            parsed.keywords.forEach(function (item) {
+                var keywordId;
+                var keywordValue;
+                if (!item || typeof item !== 'object') {
+                    return;
+                }
+                keywordId = parseInt(String(item.keyword_id || ''), 10);
+                keywordValue = typeof item.keyword_value === 'string' ? item.keyword_value : '';
+                if (!Number.isFinite(keywordId) || keywordId <= 0 || keywordValue === '') {
+                    return;
+                }
+                keywords.push({
+                    keyword_id: keywordId,
+                    keyword_value: keywordValue
+                });
+            });
+        }
+
+        feedKeywordState.available = parsed.available !== false;
+        feedKeywordState.keywords = keywords;
+        feedKeywordState.maxKeywords = Math.max(1, parseInt(String(parsed.max_keywords || '50'), 10) || 50);
+        feedKeywordState.maxLength = Math.max(1, parseInt(String(parsed.max_length || '64'), 10) || 64);
+    }
+
+    function feedKeywordValues() {
+        return feedKeywordState.keywords.map(function (item) {
+            return item.keyword_value;
+        });
+    }
+
+    function escapeFeedKeywordPattern(value) {
+        return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function feedKeywordMatches(title) {
+        var source = String(title || '');
+        var keywords = feedKeywordValues()
+            .filter(function (keyword) {
+                return String(keyword || '') !== '';
+            })
+            .sort(function (left, right) {
+                return String(right).length - String(left).length;
+            });
+        var pattern;
+        var matches = [];
+        var match;
+
+        if (source === '' || keywords.length === 0) {
+            return matches;
+        }
+
+        pattern = new RegExp(keywords.map(escapeFeedKeywordPattern).join('|'), 'gi');
+        while ((match = pattern.exec(source)) !== null) {
+            if (match[0] === '') {
+                pattern.lastIndex++;
+                continue;
+            }
+            matches.push({
+                start: match.index,
+                end: match.index + match[0].length
+            });
+        }
+        return matches;
+    }
+
+    function renderFeedKeywordTitle($target, title) {
+        var source = String(title || '');
+        var matches = feedKeywordMatches(source);
+        var element = $target && $target.length > 0 ? $target.get(0) : null;
+        var offset = 0;
+
+        if (!element) {
+            return;
+        }
+
+        while (element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
+
+        if (matches.length === 0) {
+            element.appendChild(document.createTextNode(source));
+            return;
+        }
+
+        matches.forEach(function (range) {
+            var mark;
+            if (range.start > offset) {
+                element.appendChild(document.createTextNode(source.slice(offset, range.start)));
+            }
+            mark = document.createElement('mark');
+            mark.className = 'feed-keyword-highlight';
+            mark.appendChild(document.createTextNode(source.slice(range.start, range.end)));
+            element.appendChild(mark);
+            offset = range.end;
+        });
+
+        if (offset < source.length) {
+            element.appendChild(document.createTextNode(source.slice(offset)));
+        }
+    }
+
+    function refreshFeedKeywordHighlights() {
+        $('.feed-item-title-text[data-full-title]').each(function () {
+            var $target = $(this);
+            renderFeedKeywordTitle($target, String($target.attr('data-full-title') || ''));
+            $target.attr('data-feed-title-truncated', feedTitleIsTruncated(this) ? '1' : '0');
+        });
+    }
+
+    function syncFeedKeywordDataElement() {
+        var element = document.getElementById('rssHighlightKeywordData');
+        if (!element) {
+            return;
+        }
+        element.textContent = JSON.stringify({
+            available: feedKeywordState.available,
+            keywords: feedKeywordState.keywords,
+            max_keywords: feedKeywordState.maxKeywords,
+            max_length: feedKeywordState.maxLength
+        });
+    }
+
+    function setFeedKeywordStatus(message, type) {
+        var $status = $('#rssHighlightKeywordStatus');
+        var statusType = type === 'success' ? 'success' : (type === 'info' ? 'info' : 'danger');
+        if ($status.length === 0) {
+            return;
+        }
+        if (!message) {
+            $status.prop('hidden', true).removeClass('alert-success alert-info alert-danger').text('');
+            return;
+        }
+        $status
+            .removeClass('alert-success alert-info alert-danger')
+            .addClass('alert-' + statusType)
+            .text(String(message))
+            .prop('hidden', false);
+    }
+
+    function renderFeedKeywordManager() {
+        var $list = $('#rssHighlightKeywordList');
+        var $count = $('#rssHighlightKeywordCount');
+        var $input = $('#rssHighlightKeywordInput');
+        var $button = $('#rssHighlightKeywordForm button[type="submit"]');
+        var limitReached = feedKeywordState.keywords.length >= feedKeywordState.maxKeywords;
+
+        $count.text(String(feedKeywordState.keywords.length));
+        if ($list.length > 0) {
+            $list.empty();
+            if (feedKeywordState.keywords.length === 0) {
+                $('<div>')
+                    .addClass('list-group-item text-muted small rss-highlight-keyword-empty')
+                    .text('まだKeywordは登録されていません。')
+                    .appendTo($list);
+            } else {
+                feedKeywordState.keywords.forEach(function (item) {
+                    var $row = $('<div>')
+                        .addClass('list-group-item d-flex align-items-center rss-highlight-keyword-item')
+                        .attr('data-keyword-id', String(item.keyword_id));
+                    $('<span>')
+                        .addClass('rss-highlight-keyword-value mr-2')
+                        .text(item.keyword_value)
+                        .appendTo($row);
+                    $('<button>')
+                        .attr({
+                            type: 'button',
+                            'data-keyword-id': String(item.keyword_id),
+                            'aria-label': item.keyword_value + ' を削除'
+                        })
+                        .addClass('btn btn-sm btn-outline-danger ml-auto rss-highlight-keyword-delete')
+                        .append($('<i>').addClass('fas fa-times').attr('aria-hidden', 'true'))
+                        .appendTo($row);
+                    $row.appendTo($list);
+                });
+            }
+        }
+
+        if (!feedKeywordState.available) {
+            $input.prop('disabled', true);
+            $button.prop('disabled', true);
+        } else {
+            $input.prop('disabled', limitReached);
+            $button.prop('disabled', limitReached);
+        }
+    }
+
+    function upsertFeedKeyword(keyword) {
+        var keywordId = parseInt(String(keyword && keyword.keyword_id || ''), 10);
+        var keywordValue = keyword && typeof keyword.keyword_value === 'string' ? keyword.keyword_value : '';
+        var found = false;
+        if (!Number.isFinite(keywordId) || keywordId <= 0 || keywordValue === '') {
+            return false;
+        }
+
+        feedKeywordState.keywords = feedKeywordState.keywords.map(function (item) {
+            if (item.keyword_id !== keywordId) {
+                return item;
+            }
+            found = true;
+            return { keyword_id: keywordId, keyword_value: keywordValue };
+        });
+        if (!found) {
+            feedKeywordState.keywords.push({ keyword_id: keywordId, keyword_value: keywordValue });
+        }
+        feedKeywordState.keywords.sort(function (left, right) {
+            return left.keyword_value.localeCompare(right.keyword_value, 'ja', { sensitivity: 'base' });
+        });
+        syncFeedKeywordDataElement();
+        return true;
+    }
+
+    function createFeedKeyword($form) {
+        var $input = $form.find('#rssHighlightKeywordInput');
+        var $button = $form.find('button[type="submit"]');
+        var keywordValue = String($input.val() || '').trim();
+
+        if (!feedKeywordState.available) {
+            setFeedKeywordStatus('Keywordを利用出来ません。DB Migration適用状況を確認してください。', 'danger');
+            return;
+        }
+        if (keywordValue === '') {
+            setFeedKeywordStatus('Keywordを入力してください。', 'danger');
+            $input.focus();
+            return;
+        }
+        if (feedKeywordState.keywords.length >= feedKeywordState.maxKeywords) {
+            setFeedKeywordStatus('Keywordは最大' + feedKeywordState.maxKeywords + '件まで登録出来ます。', 'info');
+            return;
+        }
+        if (!requestStart($button)) {
+            return;
+        }
+
+        apiRequest('feed.keyword.create', { keyword_value: keywordValue }, 3000)
+            .done(function (data) {
+                var keyword;
+                if (!apiResponseOk(data)) {
+                    return;
+                }
+                keyword = data && data.data ? data.data.keyword : null;
+                if (!upsertFeedKeyword(keyword)) {
+                    setFeedKeywordStatus('登録結果を確認出来ませんでした。画面を再読込してください。', 'danger');
+                    return;
+                }
+                renderFeedKeywordManager();
+                refreshFeedKeywordHighlights();
+                $input.val('');
+                if (keyword && keyword.created === false) {
+                    setFeedKeywordStatus('そのKeywordは既に登録されています。', 'info');
+                } else {
+                    setFeedKeywordStatus('Keywordを追加しました。', 'success');
+                }
+            })
+            .fail(function (xhr, textStatus) {
+                setFeedKeywordStatus(apiErrorMessage(xhr, textStatus), 'danger');
+            })
+            .always(function () {
+                requestEnd($button);
+                renderFeedKeywordManager();
+                if (!$input.prop('disabled')) {
+                    $input.focus();
+                }
+            });
+    }
+
+    function deleteFeedKeyword($button) {
+        var keywordId = parseInt(String($button.attr('data-keyword-id') || ''), 10);
+        if (!Number.isFinite(keywordId) || keywordId <= 0 || !requestStart($button)) {
+            return;
+        }
+
+        apiRequest('feed.keyword.delete', { keyword_id: keywordId }, 3000)
+            .done(function (data) {
+                if (!apiResponseOk(data)) {
+                    return;
+                }
+                feedKeywordState.keywords = feedKeywordState.keywords.filter(function (item) {
+                    return item.keyword_id !== keywordId;
+                });
+                syncFeedKeywordDataElement();
+                renderFeedKeywordManager();
+                refreshFeedKeywordHighlights();
+                setFeedKeywordStatus('Keywordを削除しました。', 'success');
+            })
+            .fail(function (xhr, textStatus) {
+                setFeedKeywordStatus(apiErrorMessage(xhr, textStatus), 'danger');
+            })
+            .always(function () {
+                requestEnd($button);
+            });
+    }
+
     /* Editボタン選択時に変更モーダルの値書き換え */
     function editContent($trigger) {
         var $card = $trigger.closest('[data-feed-content-id]');
@@ -1496,23 +1815,23 @@
                     .appendTo($itemNewButton);
             }
 
+            var $itemTitleText;
             if (itemLink !== '') {
-                $('<a>')
+                $itemTitleText = $('<a>')
                     .addClass('feed-item-title-text')
                     .attr('href', itemLink)
                     .attr('target', '_blank')
                     .attr('rel', 'noopener noreferrer')
                     .attr('data-full-title', viewTitle)
-                    .text(viewTitle)
                     .appendTo($titleWrap);
             } else {
-                $('<span>')
+                $itemTitleText = $('<span>')
                     .addClass('feed-item-title-text')
                     .attr('tabindex', '0')
                     .attr('data-full-title', viewTitle)
-                    .text(viewTitle)
                     .appendTo($titleWrap);
             }
+            renderFeedKeywordTitle($itemTitleText, viewTitle);
 
             var $summaryCell = $('<td>').addClass('feed-item-summary-cell').appendTo($row);
             var $summaryButton = $('<button type="button">')
@@ -2299,6 +2618,28 @@
             .on('hidden.bs.modal' + eventNamespace, '#accountSettings', function () {
                 accountResetForms();
             })
+            .off('submit' + eventNamespace, '#rssHighlightKeywordForm')
+            .on('submit' + eventNamespace, '#rssHighlightKeywordForm', function (event) {
+                event.preventDefault();
+                createFeedKeyword($(this));
+            })
+            .off('click' + eventNamespace, '.rss-highlight-keyword-delete')
+            .on('click' + eventNamespace, '.rss-highlight-keyword-delete', function (event) {
+                event.preventDefault();
+                deleteFeedKeyword($(this));
+            })
+            .off('shown.bs.modal' + eventNamespace, '#rssHighlightSettings')
+            .on('shown.bs.modal' + eventNamespace, '#rssHighlightSettings', function () {
+                renderFeedKeywordManager();
+                if (!$('#rssHighlightKeywordInput').prop('disabled')) {
+                    $('#rssHighlightKeywordInput').focus();
+                }
+            })
+            .off('hidden.bs.modal' + eventNamespace, '#rssHighlightSettings')
+            .on('hidden.bs.modal' + eventNamespace, '#rssHighlightSettings', function () {
+                $('#rssHighlightKeywordInput').val('');
+                setFeedKeywordStatus('', 'info');
+            })
             .off('submit' + eventNamespace, '#settingsForm')
             .on('submit' + eventNamespace, '#settingsForm', function (event) {
                 event.preventDefault();
@@ -2999,6 +3340,8 @@
         $body.data('iguguru-dashboard-initialized', true);
 
         $('[data-toggle="popover"]').popover();
+        readFeedKeywordState();
+        renderFeedKeywordManager();
         bindEvents();
         initFeeds();
         initClocks();

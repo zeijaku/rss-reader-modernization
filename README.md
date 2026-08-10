@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.2.0`  
-Release tag: `v1.2.0`
+**Stable release:** `RSS Reader Modernization 1.12.0`
+Release tag: `v1.12.0`
+
+Version 1.12.0では、RSS HighlightとMail Widget Phase 2を追加しました。RSS Highlightはユーザー登録Keywordを通常RSS／Search Feedで強調表示し、Mail Widgetは未読件数、未読のみ表示、件名／From検索、送信者Filter、IMAP Folder切替に対応します。
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 

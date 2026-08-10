@@ -1,82 +1,88 @@
-# RSS Reader Modernization 1.2.0 Release Notes
+# RSS Reader Modernization 1.12.0 Release Notes
 
 ## Overview
 
-Version 1.2.0は、Version 1.1.0のDashboard機能とDB構造を維持したまま、認証画面、記事表示、Search Feed、記事Actionsを改善したReleaseです。
+Version 1.12.0は、Version 1.11.0までのDashboard／Stock／Mail基盤を維持しながら、RSS HighlightとMail Widget Phase 2を追加したReleaseです。
 
-既存のPHP / PDO / MySQL構成、4タブ、Feed CRUD、Stock、Memo、Task、Calendar、Account Settings、公開APIを残し、新しいFramework、外部SNS API、Build環境は追加していません。
+既存のPHP / PDO / MySQL構成、4タブ、Feed CRUD、Stock、Memo、Task、Calendar、Search Feed、Account Settings、Dashboard Widget基盤を維持し、Mailについてはread-onlyの閲覧Widgetとして操作性を拡張しています。
 
-## Version 1.2 main changes
+## Version 1.12 main changes
 
-### Authentication / notice / common error
+### RSS Highlight
 
-- Login／Registrationを専用Layoutへ更新。
-- 中立名Honeypot、二重送信防止、Password表示切替を追加。
-- LogoutとSession expiryを1回限りの通知として区別。
-- 403／404／500／503の共通Error画面を追加。
+- ユーザーごとにHighlight Keywordを登録／削除。
+- 複数Keyword、英字の大文字小文字差、日本語、`C++`や`a.b`のような記号を含むKeywordに対応。
+- Keywordが重なる場合は長いKeywordを優先。
+- RSS WidgetとSearch FeedのTitleで共通表示。
+- Highlightは表示専用とし、Stock、Task、共有、Tooltip等では元Titleを維持。
+- Keywordは最大50件、1件64文字まで。
+- Keyword削除は論理削除とし、同じKeywordの再登録時は既存IDを再利用。
 
-### Feed article display
+### Mail Widget Phase 2
 
-- 記事Titleを内容に応じて最大2行表示。
-- 実際に省略されたTitleだけHover／Keyboard Focusで全文表示。
-- Feed内の`content`または`description`をPlain Textの概要として開閉。
-- Feed Card単位の個別更新を追加し、既存Cache、ETag、Last-Modified、Retry、Backoffを再利用。
+- 選択Folder全体の未読件数を表示。
+- `すべて / 未読のみ`の表示切替。
+- 最終更新時刻を表示。
+- 件名／Fromを対象としたIMAP検索。
+- 現在取得済みMailに対する送信者Filter。
+- IMAP Folder一覧取得とFolder切替。
+- `\Noselect` / `\NonExistent` Folderを選択候補から除外。
+- Folder選択を既存`dashboard_widget.widget_config`へ保存。
+- 旧schema 1のMail Widgetは`INBOX`として互換維持。
+- 本文取得は`widget_id + folder + UID`で整合を確認。
 
-### Search Feed
+### Mail read-only boundary
 
-- 検索語句を保存するSearch Feed Widgetを追加。
-- 通常RSSと共通の記事描画・記事Actions処理を利用。
-- 1段見出し、固定白Title、概要開閉、個別更新、通知の自動消去へ対応。
+Mail Phase 2でもMail Server側の状態変更は行いません。
 
-### Article Actions
-
-- 記事左端のBookmarkを三点リーダーへ変更。
-- 既存処理を再利用したStock保存。
-- Clipboard APIとFallbackによる記事URL Copy。
-- 外部APIを使わないX投稿画面。
-- 記事Titleのみを既存Task Widgetへ追加。
-- 外側Click、Esc、Scroll、Resize、記事再描画時のMenu Closeに対応。
-
-### UI adjustments
-
-- 三点リーダーの占有幅を抑え、記事Title領域を拡張。
-- 概要「＋」の44px操作領域と位置を維持しながら、文字との余白を調整。
-- 新着BellをTitle左上へ配置し、2行目の表示幅を回復。
+- 一覧取得: read-only mailbox access
+- 本文取得: peek相当のread-only取得
+- 既読化: なし
+- 未読化: なし
+- 削除: なし
+- 移動: なし
+- コピー: なし
+- 送信: なし
+- Folder作成／削除: なし
 
 ## Database and configuration
 
-Version 1.2によるDB構造変更はありません。
+Version 1.12で追加するMigrationは次の1件です。
 
-- Table追加: なし
-- Column追加: なし
-- Migration: なし
-- SQL実行: 不要
-- 必須設定追加: なし
-- `config/local.php`変更: なし
+- `database/migrations/012_v1_12_feed_keywords.sql`
 
-Version 1.0系から直接更新する場合は、Version 1.1で追加されたMigration 002～006が必要です。Version 1.1.0適用済み環境からVersion 1.2.0へ更新する場合、追加Migrationはありません。
+このMigrationでRSS Highlight用`feed_keyword` Tableを追加します。
+
+Mail Phase 2ではTable／Column追加はありません。Folder選択は既存`dashboard_widget.widget_config` JSONのschema 2として保存します。
+
+Version 1.11.0適用済み環境からVersion 1.12.0へ更新する場合は、Migration 012を適用したうえでCodeを更新してください。
 
 ## Distribution files
 
-- `rss-reader-modernization-1.2.0-complete.zip` — GitHub作業Folder相当。Source、Tests、Documentation、GitHub metadataを含む完全統合ZIP。
-- `rss-reader-modernization-1.2.0.zip` — Server配置用Runtime ZIP。TestsとGitHub metadataを除外。
-- 各ZIPの`.zip.sha256` — ZIP全体のSHA-256。
-- ZIP内部Manifest — 各FileのSHA-256。
+- `rss-reader-modernization-1.12.0-complete.zip` — GitHub作業Folder相当の完全統合ZIP。
+- `.zip.sha256` — ZIP全体のSHA-256。
+- 配布物には`vendor`、`config/local.php`、`.env`、Runtime DB／Log／Cacheを含めません。
 
 ## Update notes
 
-更新前にCode、`config/local.php`、実DB、Runtime DataをBackupしてください。ZIPは別Folderへ展開し、`config/local.php`、実DB、`var/`の生成Dataを上書きしないでください。
+更新前にCode、`config/local.php`、実DB、Runtime DataをBackupしてください。
 
-Version 1.1.0適用済み環境ではSQLを実行せず、Codeを更新してBrowser Cacheを更新します。Login、通常RSS、Search Feed、概要開閉、個別更新、新着Bell、記事Actions、Stock、URL Copy、X、Task追加を確認してください。
+Version 1.11.0適用済み環境ではMigration 012を適用し、Code更新後にBrowser Cacheを更新してください。
 
-詳細は[`docs/update.md`](docs/update.md)、[`docs/installation.md`](docs/installation.md)、[`docs/deployment-checklist.md`](docs/deployment-checklist.md)を参照してください。
+主な確認項目:
+
+- RSS Highlightが通常RSS／Search Feedで動作すること。
+- Keyword追加／削除が反映されること。
+- Mail Folder切替が動作すること。
+- Mail未読件数、未読のみ表示、件名／From検索、送信者Filterが動作すること。
+- Mail本文Previewを開いてもMail Server側の状態を変更しないこと。
 
 ## Verification limits
 
-自動TestではPHP / JavaScript / Python / Shell構文、Security境界、Authentication、Session、CSRF、RSS / Atom、Cache、Widget CRUD、Search Feed、記事概要、個別更新、記事Actions、Stock、Task、新着Bell、Responsive、Accessibility、Schema、Migration構造、Secret Pattern、ZIP CRC / Path Traversal、Manifest、Documentation Link、Version表記を確認しています。
+Focused regressionではRSS Highlightの一致処理、Keyword Validation、Mail検索、Folder Validation、schema互換、未読数取得、read-only境界、PHP／JavaScript構文、Migration整合、Secret／Runtime Data除外、ZIP整合性を確認しています。
 
-この実行環境に実MySQL Serverまたは利用可能な`pdo_mysql`接続先がない場合、実DBへの接続、Hosting固有設定、実Feed到達性、実Mail配送、BackupからのRestoreは利用者環境での最終確認が必要です。Browser項目は同梱Testから利用可能な範囲で確認します。
+実IMAP Server、実MySQL Server、Hosting固有設定、実Feed到達性については利用者環境での最終確認が必要です。
 
 ## License
 
-Project本体は`LICENSE`、外部Assetは`THIRD_PARTY_NOTICES.md`と`licenses/`を参照してください。
+既存ProjectのLicenseおよびThird-party noticeを維持します。

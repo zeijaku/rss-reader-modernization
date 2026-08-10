@@ -140,6 +140,8 @@ function api_dispatch(string $action, int $userId, array $input): array
         'tabs.update' => api_tabs_update($userId, $input),
         'feed.fetch' => api_feed_fetch($userId, $input),
         'feed.new.clear' => api_feed_new_clear($userId, $input),
+        'feed.keyword.create' => api_feed_keyword_create($userId, $input),
+        'feed.keyword.delete' => api_feed_keyword_delete($userId, $input),
         'widget.list' => api_widget_list($userId, $input),
         'widget.reorder' => api_widget_reorder($userId, $input),
         'widget.search.create' => api_widget_search_create($userId, $input),
@@ -1325,6 +1327,55 @@ function api_tabs_update(int $userId, array $input): array
 
     update_tab($userId, $tabs[1], $tabs[2], $tabs[3], $tabs[4]);
     return api_success();
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_feed_keyword_create(int $userId, array $input): array
+{
+    $keywordValueRaw = api_string($input, 'keyword_value');
+    $keywordValue = feed_keyword_validate_value($keywordValueRaw);
+    if ($keywordValue === null) {
+        return api_validation_error('keyword_value must be valid UTF-8 text at most 64 characters.');
+    }
+
+    try {
+        $keyword = feed_keyword_create($userId, $keywordValue);
+    } catch (LengthException $exception) {
+        return api_error('keyword_limit', $exception->getMessage(), 409);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('RSS Highlight keyword create failed: ' . $exception->getMessage());
+        return api_error('feed_keyword_unavailable', 'RSS Highlight keyword could not be saved.', 503);
+    } catch (RuntimeException $exception) {
+        error_log('RSS Highlight keyword create failed: ' . $exception->getMessage());
+        return api_error('feed_keyword_unavailable', 'RSS Highlight keyword could not be saved.', 503);
+    }
+
+    return api_success(['keyword' => $keyword], $keyword['created'] ? 201 : 200);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_feed_keyword_delete(int $userId, array $input): array
+{
+    $keywordId = api_positive_int($input, 'keyword_id');
+    if ($keywordId === null) {
+        return api_validation_error('keyword_id must be a positive integer.');
+    }
+
+    try {
+        if (!feed_keyword_delete($userId, $keywordId)) {
+            return api_error('not_found', 'RSS Highlight keyword was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('RSS Highlight keyword delete failed: ' . $exception->getMessage());
+        return api_error('feed_keyword_unavailable', 'RSS Highlight keyword could not be removed.', 503);
+    } catch (RuntimeException $exception) {
+        error_log('RSS Highlight keyword delete failed: ' . $exception->getMessage());
+        return api_error('feed_keyword_unavailable', 'RSS Highlight keyword could not be removed.', 503);
+    }
+
+    return api_success(['keyword_id' => $keywordId]);
 }
 
 /** @return array{status:int,body:array<string,mixed>} */

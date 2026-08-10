@@ -89,6 +89,13 @@
         return 'Mailの通信に失敗しました';
     }
 
+    function errorCode(xhr) {
+        if (xhr && xhr.responseJSON && xhr.responseJSON.error && xhr.responseJSON.error.code) {
+            return String(xhr.responseJSON.error.code);
+        }
+        return '';
+    }
+
     function responseData(response) {
         if (response && response.ok === true && response.data) { return response.data; }
         return null;
@@ -103,7 +110,7 @@
         if ($('link[data-mail-widget-style]').length === 0) {
             $('<link>')
                 .attr('rel', 'stylesheet')
-                .attr('href', './css/mail-widget.css?v=1.9.0')
+                .attr('href', './css/mail-widget.css?v=1.12.0')
                 .attr('data-mail-widget-style', '1')
                 .appendTo('head');
         }
@@ -115,14 +122,14 @@
         var modalHtml = ''
             + '<div class="modal fade" id="registerMailWidget" tabindex="-1" role="dialog" aria-labelledby="registerMailWidgetTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="registerMailWidgetForm">'
             + '<div class="modal-header mail-modal-header"><h5 class="modal-title" id="registerMailWidgetTitle"><i class="far fa-envelope" aria-hidden="true"></i> Mail Widgetを追加</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true">&times;</span></button></div>'
-            + '<div class="modal-body"><input type="hidden" class="registerMailLocation"><div class="form-group"><label>Mail Account</label><select class="form-control registerMailAccount" required></select><small class="form-text text-muted mail-account-empty-note" hidden>Mail Accountがありません。先にAccountを追加してください。</small><div class="mt-2"><button type="button" class="btn btn-sm btn-outline-dark open-mail-account-register">Mail Accountを追加</button><button type="button" class="btn btn-sm btn-outline-secondary ml-1 open-mail-account-manage">Mail Account管理</button></div></div>'
+            + '<div class="modal-body"><input type="hidden" class="registerMailLocation"><input type="hidden" class="registerMailFolder" value="INBOX"><div class="form-group"><label>Mail Account</label><select class="form-control registerMailAccount" required></select><small class="form-text text-muted mail-account-empty-note" hidden>Mail Accountがありません。先にAccountを追加してください。</small><div class="mt-2"><button type="button" class="btn btn-sm btn-outline-dark open-mail-account-register">Mail Accountを追加</button><button type="button" class="btn btn-sm btn-outline-secondary ml-1 open-mail-account-manage">Mail Account管理</button></div></div>'
             + '<div class="form-group"><label>見出し</label><input type="text" class="form-control registerMailTitle" value="Mail" maxlength="32" required></div>'
             + '<div class="form-row"><div class="form-group col-4"><label>表示件数</label><select class="form-control registerMailLimit"><option value="5" selected>5件</option><option value="10">10件</option></select></div><div class="form-group col-4"><label>横幅</label><select class="form-control registerMailWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div><div class="form-group col-4"><label>縦幅</label><select class="form-control registerMailHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div></div>'
             + '<div class="form-group"><label>見出し色</label><select class="form-control registerMailStyle"><option value="success">success</option><option value="primary" selected>primary</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div></div>'
             + '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary register-mail-submit">追加</button></div></form></div></div></div>'
             + '<div class="modal fade" id="changeMailWidget" tabindex="-1" role="dialog" aria-labelledby="changeMailWidgetTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="changeMailWidgetForm">'
             + '<div class="modal-header mail-modal-header"><h5 class="modal-title" id="changeMailWidgetTitle"><i class="far fa-envelope" aria-hidden="true"></i> Mail Widgetを変更</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true">&times;</span></button></div>'
-            + '<div class="modal-body"><input type="hidden" class="changeMailWidgetId"><div class="form-group"><label>Mail Account</label><select class="form-control changeMailAccount" required></select><button type="button" class="btn btn-sm btn-outline-secondary mt-2 open-mail-account-manage">Mail Account管理</button></div><div class="form-group"><label>見出し</label><input type="text" class="form-control changeMailTitle" maxlength="32" required></div>'
+            + '<div class="modal-body"><input type="hidden" class="changeMailWidgetId"><input type="hidden" class="changeMailFolder" value="INBOX"><div class="form-group"><label>Mail Account</label><select class="form-control changeMailAccount" required></select><button type="button" class="btn btn-sm btn-outline-secondary mt-2 open-mail-account-manage">Mail Account管理</button></div><div class="form-group"><label>見出し</label><input type="text" class="form-control changeMailTitle" maxlength="32" required></div>'
             + '<div class="form-row"><div class="form-group col-4"><label>表示件数</label><select class="form-control changeMailLimit"><option value="5">5件</option><option value="10">10件</option></select></div><div class="form-group col-4"><label>横幅</label><select class="form-control changeMailWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div><div class="form-group col-4"><label>縦幅</label><select class="form-control changeMailHeight"><option value="1">標準</option><option value="2">縦2段</option></select></div></div><div class="form-group"><label>見出し色</label><select class="form-control changeMailStyle"><option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div></div>'
             + '<div class="modal-footer"><button type="button" class="btn btn-outline-danger mr-auto delete-mail-widget">削除</button><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">変更</button></div></form></div></div></div>'
             + '<div class="modal fade" id="registerMailAccount" tabindex="-1" role="dialog" aria-labelledby="registerMailAccountTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="registerMailAccountForm" autocomplete="off">'
@@ -400,6 +407,7 @@
     function makeCard(widget) {
         var id = Number(widget.widget_id || 0);
         var config = widget.widget_config || {};
+        var initialFolder = String(config.folder || 'INBOX');
         var $card = $('<section>')
             .addClass(widthClass(widget.widget_width) + ' dashboard-widget mail-card')
             .attr({
@@ -410,6 +418,7 @@
                 'data-widget-width': String(widget.widget_width),
                 'data-widget-height': String(widget.widget_height),
                 'data-mail-account-id': String(widget.mail_account_id),
+                'data-mail-folder': initialFolder,
                 'role': 'region',
                 'aria-labelledby': 'mail-title-' + id,
                 'aria-busy': 'true'
@@ -419,12 +428,32 @@
         $('<button>').attr({'type': 'button', 'draggable': 'false', 'aria-describedby': 'widget-sort-help', 'aria-label': 'このWidgetを並び替え', 'aria-pressed': 'false', 'title': 'ここを掴んで並び替え'})
             .addClass('btn btn-link widget-drag-handle').append($('<i>').addClass('fas fa-grip-lines text-white').attr('aria-hidden', 'true')).appendTo($header);
         $('<small>').addClass('mail-card-title widget-title-text text-white').attr('id', 'mail-title-' + id).text(String(config.title || widget.account_name || 'Mail')).appendTo($header);
+        $('<span>').addClass('badge badge-light mail-unread-count').attr('aria-label', '未読件数').text('未読 -').appendTo($header);
         $('<div>').addClass('mail-card-actions').append(
             $('<button>').attr({'type': 'button', 'aria-label': 'このMail Widgetを編集'}).addClass('btn btn-link mail-widget-edit-trigger').append($('<i>').addClass('fas fa-edit text-white').attr('aria-hidden', 'true')),
             $('<button>').attr({'type': 'button', 'aria-label': 'このMailを更新'}).addClass('btn btn-link mail-widget-refresh').append($('<i>').addClass('fas fa-sync-alt text-white').attr('aria-hidden', 'true'))
         ).appendTo($header);
+        var $folderBar = $('<div>').addClass('mail-folder-bar').appendTo($inner);
+        $('<i>').addClass('far fa-folder-open text-muted').attr('aria-hidden', 'true').appendTo($folderBar);
+        $('<select>').addClass('form-control form-control-sm mail-folder-select').attr({'aria-label': 'IMAP Folder', 'title': '表示するIMAP Folder'})
+            .append($('<option>').val(initialFolder).text(initialFolder)).appendTo($folderBar);
+        var $searchBar = $('<form>').addClass('mail-search-bar').attr({'role': 'search', 'aria-label': 'Mail検索'}).appendTo($inner);
+        $('<select>').addClass('form-control form-control-sm mail-search-type').attr('aria-label', '検索対象')
+            .append($('<option>').val('subject').text('件名'), $('<option>').val('from').text('From')).appendTo($searchBar);
+        $('<input>').attr({'type': 'search', 'maxlength': '128', 'placeholder': '検索', 'aria-label': 'Mail検索キーワード'}).addClass('form-control form-control-sm mail-search-query').appendTo($searchBar);
+        $('<button>').attr({'type': 'submit', 'title': '検索', 'aria-label': 'Mailを検索'}).addClass('btn btn-sm btn-outline-secondary mail-search-submit')
+            .append($('<i>').addClass('fas fa-search').attr('aria-hidden', 'true')).appendTo($searchBar);
+        $('<button>').attr({'type': 'button', 'title': '検索解除', 'aria-label': 'Mail検索を解除'}).addClass('btn btn-sm btn-outline-secondary mail-search-clear d-none')
+            .append($('<i>').addClass('fas fa-times').attr('aria-hidden', 'true')).appendTo($searchBar);
+        var $toolbar = $('<div>').addClass('mail-toolbar').appendTo($inner);
+        var $filters = $('<div>').addClass('btn-group btn-group-sm mail-filter-group').attr({'role': 'group', 'aria-label': 'Mail表示'}).appendTo($toolbar);
+        $('<button>').attr({'type': 'button', 'data-mail-filter': 'all', 'aria-pressed': 'true'}).addClass('btn btn-outline-secondary mail-filter active').text('すべて').appendTo($filters);
+        $('<button>').attr({'type': 'button', 'data-mail-filter': 'unread', 'aria-pressed': 'false'}).addClass('btn btn-outline-secondary mail-filter').text('未読のみ').appendTo($filters);
+        $('<select>').addClass('form-control form-control-sm mail-sender-filter').attr({'aria-label': '送信者Filter', 'title': '表示中Mailを送信者で絞り込み'})
+            .append($('<option>').val('').text('送信者: すべて')).appendTo($toolbar);
+        $('<small>').addClass('mail-last-updated text-muted').text('未更新').appendTo($toolbar);
         $('<div>').addClass('mail-list').attr('role', 'status').append($('<div>').addClass('mail-loading').text('Mailを読み込んでいます')).appendTo($inner);
-        $card.data('mail-widget', widget);
+        $card.attr({'data-mail-unread-only': '0', 'data-mail-sender-filter': ''}).data('mail-widget', widget).data('mail-folder', initialFolder);
         return $card;
     }
 
@@ -468,18 +497,108 @@
         }
     }
 
-    function renderMessages($card, messages) {
-        var $list = $card.find('.mail-list').empty();
-        if (!Array.isArray(messages) || messages.length === 0) {
-            $('<div>').addClass('mail-empty text-muted').text('INBOXに表示するMailはありません').appendTo($list);
+    function formatFetchedAt(value) {
+        var date = new Date(String(value || ''));
+        if (isNaN(date.getTime())) { return '更新済み'; }
+        try {
+            return '更新 ' + new Intl.DateTimeFormat('ja-JP', {hour: '2-digit', minute: '2-digit'}).format(date);
+        } catch (e) {
+            return '更新済み';
+        }
+    }
+
+    function folderOptionLabel(folder) {
+        var path = String(folder && folder.path ? folder.path : '');
+        var name = String(folder && folder.name ? folder.name : '');
+        if (path === '') { return ''; }
+        if (name !== '' && name !== path) { return name + ' — ' + path; }
+        return path;
+    }
+
+    function updateFolderSelect($card, folders, selectedFolder) {
+        var $select = $card.find('.mail-folder-select');
+        var selected = String(selectedFolder || $card.attr('data-mail-folder') || 'INBOX');
+        var items = Array.isArray(folders) ? folders : [];
+        $select.empty();
+        items.forEach(function (folder) {
+            var path = String(folder && folder.path ? folder.path : '');
+            if (path === '') { return; }
+            $('<option>').val(path).text(folderOptionLabel(folder)).attr('title', path).appendTo($select);
+        });
+        if ($select.find('option').filter(function () { return $(this).val() === selected; }).length === 0) {
+            $('<option>').val(selected).text(selected).attr('title', selected).prependTo($select);
+        }
+        $select.val(selected).prop('disabled', false);
+    }
+
+    function senderFilterKey(message) {
+        var email = String(message && message.from_email ? message.from_email : '').trim().toLowerCase();
+        if (email !== '') { return email; }
+        return String(message && message.from ? message.from : '').trim().toLowerCase();
+    }
+
+    function updateSenderFilter($card, messages) {
+        var $select = $card.find('.mail-sender-filter');
+        var previous = String($card.attr('data-mail-sender-filter') || '');
+        var options = {};
+        (Array.isArray(messages) ? messages : []).forEach(function (message) {
+            var key = senderFilterKey(message);
+            if (key === '' || options[key]) { return; }
+            options[key] = String(message.from || message.from_email || key);
+        });
+        $select.empty().append($('<option>').val('').text('送信者: すべて'));
+        Object.keys(options).sort(function (left, right) {
+            return options[left].localeCompare(options[right], 'ja');
+        }).forEach(function (key) {
+            $('<option>').val(key).text(options[key]).appendTo($select);
+        });
+        if (previous !== '' && Object.prototype.hasOwnProperty.call(options, previous)) {
+            $select.val(previous);
         } else {
-            messages.forEach(function (message) {
+            previous = '';
+            $select.val('');
+            $card.attr('data-mail-sender-filter', '');
+        }
+    }
+
+    function renderMessageRows($card, messages) {
+        var unreadOnly = String($card.attr('data-mail-unread-only') || '0') === '1';
+        var visible = Array.isArray(messages) ? messages.slice() : [];
+        if (unreadOnly) {
+            visible = visible.filter(function (message) { return message && message.unread === true; });
+        }
+        var senderFilter = String($card.attr('data-mail-sender-filter') || '');
+        if (senderFilter !== '') {
+            visible = visible.filter(function (message) { return senderFilterKey(message) === senderFilter; });
+        }
+
+        $card.find('.mail-filter').each(function () {
+            var active = ($(this).attr('data-mail-filter') === 'unread') === unreadOnly;
+            $(this).toggleClass('active', active).attr('aria-pressed', active ? 'true' : 'false');
+        });
+
+        var $list = $card.find('.mail-list').empty();
+        if (visible.length === 0) {
+            var unreadCount = Number($card.data('mail-unread-count') || 0);
+            var currentFolder = String($card.attr('data-mail-folder') || 'INBOX');
+            var emptyText = $card.data('mail-search-active') === true ? '検索条件に一致するMailはありません' : currentFolder + ' に表示するMailはありません';
+            if (senderFilter !== '') {
+                emptyText = 'この送信者のMailは表示中にありません';
+            } else if (unreadOnly) {
+                emptyText = unreadCount > 0
+                    ? '表示中のMailに未読はありません（未読全体 ' + String(unreadCount) + '件）'
+                    : '未読Mailはありません';
+            }
+            $('<div>').addClass('mail-empty text-muted').text(emptyText).appendTo($list);
+        } else {
+            visible.forEach(function (message) {
                 var $row = $('<div>').addClass('mail-row').toggleClass('mail-unread', message.unread === true).appendTo($list);
                 var $from = $('<div>').addClass('mail-from-line').appendTo($row);
                 if (message.unread === true) { $('<span>').addClass('mail-unread-dot').attr('aria-label', '未読').appendTo($from); }
                 $('<span>').addClass('mail-from').text(String(message.from || '送信者不明')).appendTo($from);
                 $('<time>').addClass('mail-date').attr('datetime', String(message.date || '')).text(formatDate(message.date)).appendTo($from);
                 var uid = String(message.uid || '');
+                var messageFolder = String($card.attr('data-mail-folder') || 'INBOX');
                 var $subjectLine = $('<div>').addClass('mail-subject-line').appendTo($row);
                 $('<div>').addClass('mail-subject').text(String(message.subject || '件名なし')).appendTo($subjectLine);
                 if (/^\d+$/.test(uid)) {
@@ -488,7 +607,8 @@
                             'type': 'button',
                             'aria-expanded': 'false',
                             'aria-label': 'Mail本文を表示',
-                            'data-mail-uid': uid
+                            'data-mail-uid': uid,
+                            'data-mail-folder': messageFolder
                         })
                         .addClass('feed-item-action mail-message-toggle')
                         .appendTo($subjectLine);
@@ -498,12 +618,38 @@
                         .appendTo($messageToggle);
                     $('<div>')
                         .addClass('mail-message-body')
-                        .attr({'data-mail-uid': uid, 'data-mail-body-state': 'idle', 'hidden': true})
+                        .attr({'data-mail-uid': uid, 'data-mail-folder': messageFolder, 'data-mail-body-state': 'idle', 'hidden': true})
                         .appendTo($row);
                 }
             });
         }
         $card.attr('aria-busy', 'false');
+    }
+
+    function renderMessages($card, data) {
+        var messages = data && Array.isArray(data.messages) ? data.messages : [];
+        var unreadCount = data && /^\d+$/.test(String(data.unread_count)) ? Number(data.unread_count) : 0;
+        var searchQuery = data ? String(data.search_query || '') : '';
+        var searchType = data ? String(data.search_type || '') : '';
+        var searchActive = searchQuery !== '';
+        var folder = data ? String(data.folder || $card.attr('data-mail-folder') || 'INBOX') : String($card.attr('data-mail-folder') || 'INBOX');
+        var folders = data && Array.isArray(data.folders) ? data.folders : [];
+        $card.attr('data-mail-folder', folder).data('mail-folder', folder).data('mail-messages', messages).data('mail-unread-count', unreadCount).data('mail-search-active', searchActive);
+        updateFolderSelect($card, folders, folder);
+        var widget = $card.data('mail-widget');
+        if (widget && typeof widget === 'object') {
+            widget.widget_config = widget.widget_config || {};
+            widget.widget_config.schema = 2;
+            widget.widget_config.folder = folder;
+            widgetCache[String(widget.widget_id || $card.attr('data-dashboard-widget-id') || '')] = widget;
+        }
+        $card.find('.mail-unread-count').text('未読 ' + String(unreadCount));
+        $card.find('.mail-last-updated').text(formatFetchedAt(data ? data.fetched_at : ''));
+        if (searchType === 'subject' || searchType === 'from') { $card.find('.mail-search-type').val(searchType); }
+        $card.find('.mail-search-query').val(searchQuery);
+        $card.find('.mail-search-clear').toggleClass('d-none', !searchActive);
+        updateSenderFilter($card, messages);
+        renderMessageRows($card, messages);
     }
 
     function bodyInlineError(xhr, textStatus) {
@@ -525,8 +671,13 @@
         var $card = $toggle.closest('[data-dashboard-widget-type="mail"]');
         var widgetId = String($card.attr('data-dashboard-widget-id') || '');
         var uid = String($toggle.attr('data-mail-uid') || '');
+        var folder = String($toggle.attr('data-mail-folder') || '');
         var $body = $toggle.closest('.mail-row').find('.mail-message-body[data-mail-uid="' + uid + '"]').first();
-        if (!/^\d+$/.test(widgetId) || !/^\d+$/.test(uid) || $body.length === 0) { return; }
+        if (!/^\d+$/.test(widgetId) || !/^\d+$/.test(uid) || folder === '' || $body.length === 0) { return; }
+        if (folder !== String($card.attr('data-mail-folder') || '')) {
+            showNotice('Folderが切り替わっています。Mail Widgetを更新してください', 'info');
+            return;
+        }
 
         var state = String($body.attr('data-mail-body-state') || 'idle');
         if (state === 'loaded') {
@@ -550,7 +701,7 @@
         $toggle.prop('disabled', true);
         setMessageToggleExpanded($toggle, true);
 
-        apiRequest('mail.widget.message', {'widget_id': widgetId, 'mail_uid': uid}, 12000)
+        apiRequest('mail.widget.message', {'widget_id': widgetId, 'mail_uid': uid, 'mail_folder': folder}, 12000)
             .done(function (response) {
                 var data = responseData(response);
                 if (data === null) {
@@ -576,19 +727,69 @@
             });
     }
 
+    function loadFolderOptions($card) {
+        var widgetId = String($card.attr('data-dashboard-widget-id') || '');
+        if (!/^\d+$/.test(widgetId)) { return $.Deferred().resolve().promise(); }
+        return apiRequest('mail.widget.folders', {'widget_id': widgetId}, 12000)
+            .done(function (response) {
+                var data = responseData(response);
+                if (data === null) { return; }
+                updateFolderSelect($card, Array.isArray(data.folders) ? data.folders : [], String(data.folder || $card.attr('data-mail-folder') || 'INBOX'));
+            });
+    }
+
+    function saveFolderSelection($select) {
+        var $card = $select.closest('[data-dashboard-widget-type="mail"]');
+        var widgetId = String($card.attr('data-dashboard-widget-id') || '');
+        var previous = String($card.attr('data-mail-folder') || 'INBOX');
+        var folder = String($select.val() || '');
+        if (!/^\d+$/.test(widgetId) || folder === '' || folder === previous) { return; }
+        $select.prop('disabled', true);
+        apiRequest('mail.widget.folder.update', {'widget_id': widgetId, 'mail_folder': folder}, 12000)
+            .done(function (response) {
+                var data = responseData(response);
+                if (data === null) { $select.val(previous); return; }
+                var resolved = String(data.folder || folder);
+                $card.attr('data-mail-folder', resolved).data('mail-folder', resolved);
+                $card.attr('data-mail-sender-filter', '').find('.mail-sender-filter').val('');
+                var widget = $card.data('mail-widget');
+                if (widget && typeof widget === 'object') {
+                    widget.widget_config = widget.widget_config || {};
+                    widget.widget_config.schema = 2;
+                    widget.widget_config.folder = resolved;
+                    widgetCache[String(widget.widget_id || widgetId)] = widget;
+                }
+                fetchWidget(widgetId, true);
+            })
+            .fail(function (xhr, textStatus) {
+                $select.val(previous);
+                showNotice(errorMessage(xhr, textStatus), 'danger');
+            })
+            .always(function () { $select.prop('disabled', false); });
+    }
+
     function fetchWidget(widgetId, showErrors) {
         var $card = $('[data-dashboard-widget-type="mail"][data-dashboard-widget-id="' + String(widgetId) + '"]');
         if ($card.length === 0) { return $.Deferred().resolve().promise(); }
         $card.attr('aria-busy', 'true');
         $card.find('.mail-list').empty().append($('<div>').addClass('mail-loading').text('Mailを読み込んでいます'));
         $card.find('.mail-widget-refresh i').addClass('fa-spin');
-        return apiRequest('mail.widget.fetch', {'widget_id': String(widgetId)}, 12000)
+        var payload = {'widget_id': String(widgetId)};
+        var searchQuery = String($card.find('.mail-search-query').val() || '').trim();
+        if (searchQuery !== '') {
+            payload.mail_search_type = String($card.find('.mail-search-type').val() || 'subject');
+            payload.mail_search_query = searchQuery;
+        }
+        return apiRequest('mail.widget.fetch', payload, 12000)
             .done(function (response) {
                 var data = responseData(response);
-                if (data !== null) { renderMessages($card, data.messages || []); }
+                if (data !== null) { renderMessages($card, data); }
             })
             .fail(function (xhr, textStatus) {
                 $card.attr('aria-busy', 'false').find('.mail-list').empty().append($('<div>').addClass('mail-error').text(errorMessage(xhr, textStatus)));
+                if (errorCode(xhr) === 'mail_folder_not_found') {
+                    loadFolderOptions($card);
+                }
                 if (showErrors === true) { showNotice(errorMessage(xhr, textStatus), 'danger'); }
             })
             .always(function () { $card.find('.mail-widget-refresh i').removeClass('fa-spin'); });
@@ -619,6 +820,7 @@
             'mail_account_id': $('.' + prefix + 'MailAccount').val(),
             'mail_title': $('.' + prefix + 'MailTitle').val(),
             'mail_item_limit': $('.' + prefix + 'MailLimit').val(),
+            'mail_folder': $('.' + prefix + 'MailFolder').val() || 'INBOX',
             'widget_style': $('.' + prefix + 'MailStyle').val(),
             'widget_width': $('.' + prefix + 'MailWidth').val(),
             'widget_height': $('.' + prefix + 'MailHeight').val()
@@ -633,6 +835,7 @@
         $('.changeMailWidgetId').val(String(widget.widget_id));
         $('.changeMailTitle').val(String(config.title || 'Mail'));
         $('.changeMailLimit').val(String(config.item_limit || 5));
+        $('.changeMailFolder').val(String(config.folder || $card.attr('data-mail-folder') || 'INBOX'));
         $('.changeMailStyle').val(String(widget.widget_style || 'primary'));
         $('.changeMailWidth').val(String(widget.widget_width || 1));
         $('.changeMailHeight').val(String(widget.widget_height || 1));
@@ -708,6 +911,7 @@
                 $('.registerMailLocation').val(String(currentLocation));
                 registerMailAutoTitle = true;
                 $('.registerMailTitle').val('Mail');
+                $('.registerMailFolder').val('INBOX');
                 loadAccounts(true).done(function () { suggestRegisterMailTitle(true); });
             })
             .off('change' + ns, '.registerMailAccount').on('change' + ns, '.registerMailAccount', function () {
@@ -730,8 +934,33 @@
             .off('submit' + ns, '#registerMailWidgetForm').on('submit' + ns, '#registerMailWidgetForm', function (event) { event.preventDefault(); saveWidget($(this), false); })
             .off('click' + ns, '.mail-widget-edit-trigger').on('click' + ns, '.mail-widget-edit-trigger', function () { editWidget($(this)); })
             .off('submit' + ns, '#changeMailWidgetForm').on('submit' + ns, '#changeMailWidgetForm', function (event) { event.preventDefault(); saveWidget($(this), true); })
+            .off('change' + ns, '.changeMailAccount').on('change' + ns, '.changeMailAccount', function () { $('.changeMailFolder').val('INBOX'); })
             .off('click' + ns, '.delete-mail-widget').on('click' + ns, '.delete-mail-widget', deleteWidget)
+            .off('change' + ns, '.mail-folder-select').on('change' + ns, '.mail-folder-select', function () { saveFolderSelection($(this)); })
             .off('click' + ns, '.mail-widget-refresh').on('click' + ns, '.mail-widget-refresh', function () { fetchWidget($(this).closest('[data-dashboard-widget-type="mail"]').attr('data-dashboard-widget-id'), true); })
+            .off('click' + ns, '.mail-filter').on('click' + ns, '.mail-filter', function () {
+                var $card = $(this).closest('[data-dashboard-widget-type="mail"]');
+                var unreadOnly = $(this).attr('data-mail-filter') === 'unread';
+                $card.attr('data-mail-unread-only', unreadOnly ? '1' : '0');
+                renderMessageRows($card, $card.data('mail-messages') || []);
+            })
+            .off('change' + ns, '.mail-sender-filter').on('change' + ns, '.mail-sender-filter', function () {
+                var $card = $(this).closest('[data-dashboard-widget-type="mail"]');
+                $card.attr('data-mail-sender-filter', String($(this).val() || ''));
+                renderMessageRows($card, $card.data('mail-messages') || []);
+            })
+            .off('submit' + ns, '.mail-search-bar').on('submit' + ns, '.mail-search-bar', function (event) {
+                event.preventDefault();
+                var $card = $(this).closest('[data-dashboard-widget-type="mail"]');
+                $card.attr('data-mail-sender-filter', '').find('.mail-sender-filter').val('');
+                fetchWidget($card.attr('data-dashboard-widget-id'), true);
+            })
+            .off('click' + ns, '.mail-search-clear').on('click' + ns, '.mail-search-clear', function () {
+                var $card = $(this).closest('[data-dashboard-widget-type="mail"]');
+                $card.find('.mail-search-query').val('');
+                $card.attr('data-mail-sender-filter', '').find('.mail-sender-filter').val('');
+                fetchWidget($card.attr('data-dashboard-widget-id'), true);
+            })
             .off('click' + ns, '.mail-message-toggle').on('click' + ns, '.mail-message-toggle', function () { loadMessageBody($(this)); });
     }
 

@@ -1,5 +1,19 @@
 # Changelog
 
+## RSS Reader Modernization 1.12.0 — 2026-08-10
+
+### Version 1.12.0 finalization
+
+- RSS Highlightを追加し、ユーザー登録Keywordに一致するRSS Title部分を通常RSS／Search Feedの共通描画で強調表示。
+- Highlight Keywordは複数登録、追加／削除、重複防止、最大50件、1件64文字までに対応。
+- `feed_keyword` TableとMigration `012_v1_12_feed_keywords.sql`を追加。
+- Mail Widget Phase 2として、Folder全体の未読件数、未読のみ表示、最終更新時刻を追加。
+- Mail Widgetに件名／From検索、送信者Filter、IMAP Folder切替を追加。
+- Mail本文取得はFolderとUIDを組み合わせて検証し、read-only境界を維持。
+- Mail Folder選択は既存`dashboard_widget.widget_config`のschema 2として保存し、旧schema 1は`INBOX`として互換維持。
+- Release helperをVersion 1.12.0向けへ更新し、Application Versionを`1.12.0`へ確定。
+- Version 1.12でのDB構造変更はRSS Highlight用Migration 012のみ。Mail Phase 2によるTable／Column追加はなし。
+
 ## RSS Reader Modernization 1.2.0 — 2026-08-05
 
 ### Version 1.2.0 finalization

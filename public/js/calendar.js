@@ -11,5 +11,5 @@
     }
 
     loadScript('./js/calendar-core.js?v=1.9.0');
-    loadScript('./js/mail-widget.js?v=1.9.0');
+    loadScript('./js/mail-widget.js?v=1.12.0');
 })(document);
