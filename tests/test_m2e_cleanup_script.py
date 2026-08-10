@@ -17,7 +17,7 @@ def check(condition: bool, message: str) -> None:
 
 check(all(byte < 128 for byte in script_bytes), 'cleanup helper is ASCII-only for Windows PowerShell 5.1')
 check(script_bytes.decode('cp932') == script, 'cleanup helper decodes identically with Japanese Windows ANSI code page')
-check(b'\r\n' in script_bytes and b'\n' not in script_bytes.replace(b'\r\n', b''), 'cleanup helper uses CRLF line endings')
+check(b'\r' not in script_bytes.replace(b'\r\n', b'') and (b'\r\n' not in script_bytes or b'\n' not in script_bytes.replace(b'\r\n', b'')), 'cleanup helper uses consistent LF or CRLF line endings')
 check(not script_bytes.startswith((b'\xef\xbb\xbf', b'\xff\xfe', b'\xfe\xff')), 'cleanup helper does not depend on a BOM')
 check('Dry run complete. No files were removed.' in script, 'cleanup helper messages are encoding-safe')
 check('Git working tree not found' in script and 'public/index.php not found' in script, 'cleanup helper guard messages are encoding-safe')

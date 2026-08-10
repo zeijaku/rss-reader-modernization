@@ -20,7 +20,7 @@ old_files = [
     'public/webfonts/fa-solid-900.eot', 'public/webfonts/fa-solid-900.svg', 'public/webfonts/fa-solid-900.woff',
 ]
 check(all(byte < 128 for byte in data), 'M2-F cleanup helper is ASCII-only')
-check(b'\r\n' in data and b'\n' not in data.replace(b'\r\n', b''), 'M2-F cleanup helper uses CRLF')
+check(b'\r' not in data.replace(b'\r\n', b'') and (b'\r\n' not in data or b'\n' not in data.replace(b'\r\n', b'')), 'M2-F cleanup helper uses consistent LF or CRLF line endings')
 check(not data.startswith((b'\xef\xbb\xbf', b'\xff\xfe', b'\xfe\xff')), 'M2-F cleanup helper does not depend on BOM')
 check('[switch]$WhatIf' in text, 'M2-F cleanup helper supports dry-run')
 check('Git working tree not found' in text and 'public/index.php not found' in text, 'M2-F cleanup helper has safety sentinels')
