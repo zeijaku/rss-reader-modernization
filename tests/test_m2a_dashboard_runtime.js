@@ -92,7 +92,7 @@ function getWrapper(key) {
     return wrappers.get(key);
 }
 
-const documentObject = {};
+const documentObject = { getElementById: () => null };
 const windowObject = {
     location: { reload: () => { reloadCount += 1; } },
     setTimeout: () => 1,

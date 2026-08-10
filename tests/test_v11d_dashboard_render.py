@@ -62,6 +62,9 @@ final class V11dRenderStatement extends PDOStatement
             ]];
             return true;
         }
+        if (str_contains($this->sql, 'FROM `ig_feed_keyword`')) {
+            return true;
+        }
         if (str_contains($this->sql, 'FROM `ig_dashboard_widget`') && str_contains($this->sql, "widget_type = 'task'")) {
             return true;
         }

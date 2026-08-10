@@ -98,6 +98,7 @@ const pageTop = new Element('div', {id: 'page-top'});
 const notice = new Element('div', {id: 'app-notice'});
 body.appendChild(pageTop); body.appendChild(notice);
 const documentObject = new Element('document');
+documentObject.getElementById = () => null;
 documentObject.body = body;
 documentObject.documentElement = {clientWidth: 390};
 let mobileMatches = true;

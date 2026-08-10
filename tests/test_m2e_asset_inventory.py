@@ -30,6 +30,8 @@ expected_css = {
     'auth.css',
     'mini-game.css',
     'clock-timer.css',
+    'mail-widget.css',
+    'utility-widgets.css',
 }
 expected_js = {
     'jquery-3.7.1.min.js',
@@ -39,7 +41,10 @@ expected_js = {
     'iscroll.js',
     'drawer.min.js',
     'dashboard.js',
+    'calendar-core.js',
     'calendar.js',
+    'mail-widget.js',
+    'utility-widgets.js',
     'auth.js',
     'mini-game.js',
     'lights-out.js',
@@ -71,9 +76,9 @@ direct_static_refs = {ref.split('?', 1)[0].split('#', 1)[0] for ref in re.findal
 helper_static_refs = set(re.findall(r"app_asset_url\('((?:css|js)/[^']+|favicon\.png)'\)", all_php))
 static_refs = direct_static_refs | helper_static_refs
 expected_static_refs = {
-    'css/all.css', 'css/drawer.min.css', 'css/dashboard.css', 'css/auth.css', 'css/mini-game.css', 'css/clock-timer.css',
+    'css/all.css', 'css/drawer.min.css', 'css/dashboard.css', 'css/auth.css', 'css/mini-game.css', 'css/clock-timer.css', 'css/utility-widgets.css',
     'js/jquery-3.7.1.min.js', 'js/popper.min.js', 'js/bootstrap.min.js',
-    'js/iscroll.js', 'js/drawer.min.js', 'js/dashboard.js', 'js/calendar.js', 'js/auth.js', 'js/mini-game.js', 'js/lights-out.js', 'js/clock-timer.js', 'favicon.png',
+    'js/iscroll.js', 'js/drawer.min.js', 'js/dashboard.js', 'js/utility-widgets.js', 'js/calendar.js', 'js/auth.js', 'js/mini-game.js', 'js/lights-out.js', 'js/clock-timer.js', 'favicon.png',
 }
 check(static_refs == expected_static_refs, 'static HTML/PHP asset references match the retained inventory')
 for ref in static_refs:
@@ -137,7 +142,7 @@ for path, marker in license_markers.items():
 
 public_files = [p for p in PUBLIC.rglob('*') if p.is_file()]
 public_size = sum(p.stat().st_size for p in public_files)
-check(len(public_files) == 41, 'public inventory contains the retained files plus Mini Game, Lights Out and Clock Timer assets')
+check(len(public_files) == 46, 'public inventory contains the retained files plus V1.9-V1.12 frontend assets')
 check(public_size < 4_000_000, 'public inventory is below 4 MB without removing runtime dependencies')
 check(not (ROOT / 'package.json').exists(), 'asset cleanup adds no npm dependency')
 check(not (ROOT / 'node_modules').exists(), 'asset cleanup adds no node_modules directory')

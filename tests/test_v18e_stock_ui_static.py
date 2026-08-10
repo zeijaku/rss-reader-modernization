@@ -1,4 +1,5 @@
 from pathlib import Path
+from version_test_utils import is_later_application_release
 
 ROOT = Path(__file__).resolve().parents[1]
 index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
@@ -17,7 +18,7 @@ def check(condition: bool, message: str) -> None:
 stock_branch = index[index.find("} elseif ($content_location === 'stock')"):index.find('/* 登録直後 or コンテンツ無し時 */')]
 target_block = widgets[widgets.find('function dashboard_widget_task_targets'):widgets.find('function dashboard_widget_lock_owned_content')]
 
-check(("1.8.0-dev.4" in version and 'V1.8-E / R1' in version) or "APP_VERSION = '1.8.0'" in version, 'V1.8-E R1 or final 1.8.0 marker is present')
+check(("1.8.0-dev.4" in version and 'V1.8-E / R1' in version) or "APP_VERSION = '1.8.0'" in version or is_later_application_release(version, (1, 8, 0)), 'V1.8-E or later Version marker is present')
 check('mt_rand(' not in stock_branch and 'ランダムカラーテーマ' not in stock_branch, 'legacy random Stock card colors are removed')
 check('class="stock-grid"' in stock_branch and 'class="stock-card"' in stock_branch, 'Stock renders as a dedicated compact list')
 check('col-md-6 col-lg-3 stock-card' not in stock_branch and 'list-group-item-' not in stock_branch, 'legacy four-column colored card markup is removed')

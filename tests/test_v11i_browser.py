@@ -35,7 +35,7 @@ with sync_playwright() as p:
     page.add_script_tag(path=str(ROOT/'public/js/jquery-3.7.1.min.js'))
     page.evaluate('''response => { window.__ajaxCalls=[]; window.__monthResponse=response; window.confirm=()=>true; jQuery.fn.popover=function(){return this;}; jQuery.fn.drawer=function(){return this;}; jQuery.fn.modal=function(){return this;}; jQuery.ajax=function(options){window.__ajaxCalls.push(options); const chain={done(fn){if(options.data && options.data.action==='calendar.month.list'){setTimeout(()=>fn(window.__monthResponse),0);} return chain;},fail(){return chain;},always(){return chain;}}; return chain;}; }''', month_response)
     page.add_script_tag(path=str(ROOT/'public/js/dashboard.js'))
-    page.add_script_tag(path=str(ROOT/'public/js/calendar.js'))
+    page.add_script_tag(path=str(ROOT/'public/js/calendar-core.js'))
     page.wait_for_timeout(150)
     calls=page.evaluate('window.__ajaxCalls')
     month_calls=[c for c in calls if c.get('data',{}).get('action')=='calendar.month.list']

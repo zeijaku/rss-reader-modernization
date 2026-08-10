@@ -1,4 +1,5 @@
 from pathlib import Path
+from version_test_utils import is_later_application_release
 
 ROOT = Path(__file__).resolve().parents[1]
 db = (ROOT / 'app/common/common_db.php').read_text(encoding='utf-8')
@@ -18,16 +19,16 @@ count_block = db[db.find('function count_stock'):db.find('function search_stock'
 search_block = db[db.find('function search_stock'):db.find('function find_owned_active_stock')]
 stock_branch = index[index.find("} elseif ($content_location === 'stock')"):index.find('/* 登録直後 or コンテンツ無し時 */')]
 
-check("1.8.0-dev." in version or "APP_VERSION = '1.8.0'" in version, 'V1.8-D or later development/final marker is present')
+check("1.8.0-dev." in version or "APP_VERSION = '1.8.0'" in version or is_later_application_release(version, (1, 8, 0)), 'V1.8-D or later development/final marker is present')
 check("app_validate_positive_int($_GET['page'] ?? '1')" in index, 'page uses existing positive integer validation')
 check('$stockPerPage = 20;' in stock_branch, 'Stock page size is fixed at 20')
-check('count_stock($currentUserId, $stockSearchQuery)' in stock_branch, 'Stock total count is calculated server-side')
+check('count_stock($currentUserId, $stockSearchQuery, $stockTagFilter)' in stock_branch, 'Stock total count is calculated server-side with the optional Tag filter')
 check('$stockTotalPages = max(1, (int) ceil($stockTotalCount / $stockPerPage));' in stock_branch, 'total page count is derived from total rows')
 check('if ($stockPage > $stockTotalPages)' in stock_branch and '$stockPage = $stockTotalPages;' in stock_branch, 'out-of-range page is clamped to the final page')
 check('$stockOffset = ($stockPage - 1) * $stockPerPage;' in stock_branch, 'offset is calculated from the normalized page')
-check('search_stock($currentUserId, $stockSearchQuery, $stockSort, $stockPerPage, $stockOffset)' in stock_branch, 'Stock row query receives limit and offset')
-check('SELECT COUNT(*) FROM ' in count_block and 'WHERE stock_flag = 0 AND stock_owner = :owner' in count_block, 'count query keeps active owner scope')
-check("stock_title LIKE :stock_title_query ESCAPE '!'" in count_block and "stock_data LIKE :stock_data_query ESCAPE '!'" in count_block, 'count query applies the same title and URL filters')
+check('search_stock($currentUserId, $stockSearchQuery, $stockSort, $stockPerPage, $stockOffset, $stockTagFilter)' in stock_branch, 'Stock row query receives limit, offset, and the optional Tag filter')
+check('SELECT COUNT(*) FROM ' in count_block and 'WHERE s.stock_flag = 0 AND s.stock_owner = :owner' in count_block, 'count query keeps active owner scope')
+check("s.stock_title LIKE :stock_title_query ESCAPE '!'" in count_block and "s.stock_data LIKE :stock_data_query ESCAPE '!'" in count_block, 'count query applies the same title and URL filters')
 check('?int $limit = null' in search_block and 'int $offset = 0' in search_block, 'search helper keeps optional pagination arguments for compatibility')
 check('$safeLimit = max(1, min(100, $limit));' in search_block and '$safeOffset = max(0, $offset);' in search_block, 'limit and offset are normalized as integers before SQL')
 check("$sql .= ' LIMIT ' . $safeLimit . ' OFFSET ' . $safeOffset;" in search_block, 'paginated query adds SQL LIMIT/OFFSET without raw GET input')

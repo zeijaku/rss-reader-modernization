@@ -45,6 +45,7 @@ const modalTrigger = new Element('modalTrigger');
 const meta = new Element('meta', {content: 'csrf-m2c-token'});
 const dummy = new Element('dummy');
 const documentObject = new Element('document');
+documentObject.getElementById = () => null;
 documentObject.activeElement = null;
 const windowObject = {
     location: {reload: () => {}},

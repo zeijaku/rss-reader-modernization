@@ -106,6 +106,7 @@ const notice=new Element('div',{id:'app-notice'});
 const pageTop=new Element('div',{id:'page-top'});
 body.appendChild(notice);body.appendChild(pageTop);
 const documentObject=new Element('document'); documentObject.activeElement=null; documentObject.body=body; documentObject.createElement=(tag)=>new Element(tag); let pointTarget=grid.children[0]; documentObject.elementFromPoint=()=>pointTarget;
+documentObject.getElementById=()=>null;
 const scheduledTimers=[];
 const windowObject={
     matchMedia:()=>({matches:false}),
