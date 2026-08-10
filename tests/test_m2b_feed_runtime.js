@@ -48,6 +48,20 @@ class Element {
         const className = this.attrs.class || '';
         className.split(/\s+/).filter(Boolean).forEach((name) => this.classes.add(name));
     }
+    appendChild(child) {
+        child.parent = this;
+        this.children.push(child);
+        return child;
+    }
+    removeChild(child) {
+        const index = this.children.indexOf(child);
+        if (index >= 0) this.children.splice(index, 1);
+        if (child) child.parent = null;
+        return child;
+    }
+    get firstChild() {
+        return this.children[0] || null;
+    }
 }
 
 function aggregateText(element) {
@@ -217,6 +231,12 @@ const meta = new Element('meta', {content: 'csrf-m2b-token'});
 const cards = [1, 2, 3, 4, 5, 6, 7, 8].map(createFeedCard);
 const documentObject = new Element('document');
 documentObject.getElementById = () => null;
+documentObject.createTextNode = (text) => {
+    const node = new Element('#text');
+    node.textValue = String(text);
+    return node;
+};
+documentObject.createElement = (tag) => new Element(tag);
 const windowObject = {
     location: {reload: () => {}},
     matchMedia: () => ({matches: false}),

@@ -47,6 +47,15 @@ final class V18dClampStatement extends PDOStatement
             $this->rows = [];
             return true;
         }
+        if (str_contains($this->sql, 'FROM `ig_feed_keyword`')) {
+            return true;
+        }
+        if (str_starts_with($this->sql, 'SELECT t.tag_id')) {
+            return true;
+        }
+        if (str_starts_with($this->sql, 'SELECT m.map_stock_id')) {
+            return true;
+        }
         if (str_contains($this->sql, 'FROM ig_content_stock')) {
             if (str_starts_with($this->sql, 'SELECT COUNT(*)')) {
                 $this->countValue = 45;

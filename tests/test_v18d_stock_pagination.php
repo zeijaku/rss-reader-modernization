@@ -51,6 +51,15 @@ final class V18dPaginationStatement extends PDOStatement
             $this->rows = [];
             return true;
         }
+        if (str_contains($this->sql, 'FROM `ig_feed_keyword`')) {
+            return true;
+        }
+        if (str_starts_with($this->sql, 'SELECT t.tag_id')) {
+            return true;
+        }
+        if (str_starts_with($this->sql, 'SELECT m.map_stock_id')) {
+            return true;
+        }
         if (str_contains($this->sql, 'FROM ig_content_stock')) {
             preg_match_all('/:[A-Za-z_][A-Za-z0-9_]*/', $this->sql, $matches);
             if (count($matches[0]) !== count(array_unique($matches[0]))) {
@@ -115,7 +124,7 @@ $selectSql = (string) $GLOBALS['v18d_select_sql'];
 $selectParams = (array) $GLOBALS['v18d_select_params'];
 
 v18d_check(str_starts_with($countSql, 'SELECT COUNT(*) FROM ig_content_stock'), 'pagination performs a dedicated COUNT query');
-v18d_check(str_contains($countSql, 'stock_flag = 0 AND stock_owner = :owner'), 'COUNT query keeps active owner scope');
+v18d_check(str_contains($countSql, 's.stock_flag = 0 AND s.stock_owner = :owner'), 'COUNT query keeps active owner scope');
 v18d_check(str_contains($countSql, 'stock_title LIKE :stock_title_query') && str_contains($countSql, 'stock_data LIKE :stock_data_query'), 'COUNT query applies search filters');
 v18d_check(($countParams[':owner'] ?? null) === 1, 'COUNT query binds authenticated owner');
 v18d_check(($countParams[':stock_title_query'] ?? null) === '%AI%' && ($countParams[':stock_data_query'] ?? null) === '%AI%', 'COUNT query binds both search placeholders');

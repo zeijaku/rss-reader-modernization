@@ -84,6 +84,7 @@ class Wrapper {
         return this;
     }
     val() { return ''; }
+    text(value) { return this; }
     find(selector) {
         if (this.elements.includes(menu) && selector.indexOf('a[href]') !== -1) {
             return new Wrapper([firstItem, lastItem]);
@@ -149,6 +150,7 @@ function $(arg) {
     if (arg === '.modal.show') return new Wrapper([]);
     if (arg === '[data-feed-content-id]' || arg === '[data-dashboard-widget-type="clock"]') return new Wrapper([]);
     if (arg === 'meta[name="csrf-token"]') return new Wrapper([meta]);
+    if (typeof arg === 'string' && arg.startsWith('#rssHighlightKeyword')) return new Wrapper([]);
     if (typeof arg === 'string' && arg.startsWith('<')) return new Wrapper([new Element('created')]);
     return new Wrapper([dummy]);
 }

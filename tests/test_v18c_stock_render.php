@@ -49,6 +49,15 @@ final class V18cRenderStatement extends PDOStatement
             $this->rows = [];
             return true;
         }
+        if (str_contains($this->sql, 'FROM `ig_feed_keyword`')) {
+            return true;
+        }
+        if (str_starts_with($this->sql, 'SELECT t.tag_id')) {
+            return true;
+        }
+        if (str_starts_with($this->sql, 'SELECT m.map_stock_id')) {
+            return true;
+        }
         if (str_contains($this->sql, 'FROM ig_content_stock')) {
             if (str_starts_with($this->sql, 'SELECT COUNT(*)')) {
                 $this->countValue = 1;
@@ -105,7 +114,7 @@ function v18c_render_check(bool $condition, string $message): void
 
 $sql = (string) $GLOBALS['v18c_stock_sql'];
 $params = (array) $GLOBALS['v18c_stock_params'];
-v18c_render_check(str_contains($sql, 'stock_flag = 0 AND stock_owner = :owner'), 'rendered search keeps active owner scope');
+v18c_render_check(str_contains($sql, 's.stock_flag = 0 AND s.stock_owner = :owner'), 'rendered search keeps active owner scope');
 v18c_render_check(str_contains($sql, "stock_title LIKE :stock_title_query ESCAPE '!'"), 'rendered search includes title filter with a unique placeholder');
 v18c_render_check(str_contains($sql, "stock_data LIKE :stock_data_query ESCAPE '!'"), 'rendered search includes URL/domain filter with a unique placeholder');
 v18c_render_check(str_contains($sql, 'ORDER BY stock_id ASC'), 'oldest request selects only the whitelisted oldest SQL');

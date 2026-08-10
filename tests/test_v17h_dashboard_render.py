@@ -1,5 +1,6 @@
 from __future__ import annotations
 import base64
+import re
 from html.parser import HTMLParser
 from pathlib import Path
 import subprocess
@@ -55,9 +56,12 @@ check(len(feed_edit)==1 and feed_edit[0].get('data-widget-height')=='2','Feed ed
 check(len(feed_edit)==1 and feed_edit[0].get('data-feed-item-limit')=='auto','Feed edit trigger restores automatic item limit')
 check(len(clock_edit)==1 and clock_edit[0].get('data-widget-height')=='1','Clock edit trigger restores height 1')
 selects=[a for tag,a in p.records if tag=='select' and a.get('id','').endswith('Height')]
-check(len(selects)==14,'seven Widget add/edit pairs render vertical height selects')
-check(html.count('>縦2段</option>')>=14,'every height select offers the vertical two-row option')
-check('?v=1.7.0-dev.10' in html or '?v=1.7.0' in html,'V1.7-H/R4 or final assets use the active centralized version token')
+check(len(selects)==18,'nine current Widget add/edit pairs render vertical height selects')
+check(html.count('>縦2段</option>')>=18,'every height select offers the vertical two-row option')
+version_text=(ROOT/'app/version.php').read_text(encoding='utf-8')
+version_match=re.search(r"APP_VERSION\s*=\s*'([^']+)'",version_text)
+active_version=version_match.group(1) if version_match is not None else ''
+check(active_version!='' and ('?v='+active_version) in html,'Dashboard assets use the active centralized version token')
 ids=[a['id'] for _,a in p.records if a.get('id')]
 check(len(ids)==len(set(ids)),'V1.7-H Dashboard has no duplicate ids')
 if failures: raise SystemExit(1)

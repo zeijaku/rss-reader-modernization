@@ -17,7 +17,7 @@ bootstrap = (root/'app/bootstrap.php').read_text()
 holiday = (root/'app/holiday.php').read_text()
 calendar = (root/'app/calendar.php').read_text()
 api = (root/'app/api.php').read_text()
-js = (root/'public/js/calendar.js').read_text()
+js = (root/'public/js/calendar-core.js').read_text()
 css = (root/'public/css/dashboard.css').read_text()
 gitignore = (root/'.gitignore').read_text()
 snapshot = json.loads((root/'app/data/japanese_holidays_snapshot.json').read_text())
@@ -38,7 +38,11 @@ check("'calendar.holiday.refresh'" in api and 'japanese_holiday_refresh()' in ap
 check("calendar-day-holiday" in js and "holidayName" in js and "aria-label" in js and "title" in js, 'Calendar renderer marks holidays red with tooltip/accessibility metadata')
 check("requestHolidayRefresh" in js and "holiday_refresh_due" in js and "calendar.holiday.refresh" in js, 'stale holiday refresh happens after normal Calendar rendering')
 check('.calendar-day.calendar-day-holiday .calendar-day-number' in css and '#bd2130' in css, 'holiday date color overrides weekday and Saturday colors')
-check('/var/cache/*' in gitignore and '!/var/cache/.gitkeep' in gitignore, 'runtime holiday cache files remain excluded from source control')
+check(
+    ('/var/cache/*' in gitignore and '!/var/cache/.gitkeep' in gitignore)
+    or ('/var/*' in gitignore and '!/var/cache/' in gitignore and '!/var/cache/.gitkeep' in gitignore),
+    'runtime holiday cache files remain excluded from source control'
+)
 check(snapshot.get('holidays',{}).get('2026-08-11') == '山の日', 'bundled snapshot contains the current official 2026 Mountain Day')
 check(snapshot.get('holidays',{}).get('2026-09-22') == '休日', 'bundled snapshot contains the 2026 holiday-law bridging day')
 check(snapshot.get('holidays',{}).get('2027-03-22') == '休日', 'bundled snapshot contains the 2027 substitute holiday')

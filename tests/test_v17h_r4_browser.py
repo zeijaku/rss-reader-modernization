@@ -48,7 +48,7 @@ with sync_playwright() as p:
         };
     }''', {'month':month,'refresh':refresh})
     page.add_script_tag(path=str(ROOT/'public/js/dashboard.js'))
-    page.add_script_tag(path=str(ROOT/'public/js/calendar.js'))
+    page.add_script_tag(path=str(ROOT/'public/js/calendar-core.js'))
     page.wait_for_timeout(250)
     calls=page.evaluate('window.__ajaxCalls.map(c => c.data.action)')
     check(calls.count('calendar.holiday.refresh') == 1, 'stale snapshot triggers exactly one background holiday refresh request')
