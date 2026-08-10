@@ -22,7 +22,7 @@ check(index.index("app_asset_url('js/jquery-3.7.1.min.js')") < index.index("app_
 check(index.index("app_asset_url('js/bootstrap.min.js')") < index.index("app_asset_url('js/dashboard.js')"), 'Bootstrap loads before dashboard JavaScript')
 check(index.index("app_asset_url('js/drawer.min.js')") < index.index("app_asset_url('js/dashboard.js')"), 'Drawer loads before dashboard JavaScript')
 check('<style>' not in index, 'dashboard style block is removed from index.php')
-check(not re.search(r'<script(?![^>]*\bsrc=)[^>]*>', index), 'application inline JavaScript is removed from index.php')
+check(not re.search(r'<script(?![^>]*\bsrc=)(?![^>]*\btype="application/json")[^>]*>', index), 'application inline JavaScript is removed from index.php')
 check('$window_load' not in index, 'PHP no longer builds a JavaScript Feed load list')
 check('fetch_content(' not in index, 'PHP no longer emits Feed JavaScript calls')
 check('data-feed-content-id="' in index, 'Feed cards expose Content ID through a data hook')
