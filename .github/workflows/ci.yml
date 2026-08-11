@@ -59,18 +59,4 @@ jobs:
           node --version
 
       - name: Run regression tests
-        run: |
-          set +e
-          bash tests/run.sh > "regression-${{ matrix.php }}.log" 2>&1
-          status=$?
-          cat "regression-${{ matrix.php }}.log"
-          exit "$status"
-
-      - name: Upload regression log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: regression-log-php-${{ matrix.php }}
-          path: regression-${{ matrix.php }}.log
-          if-no-files-found: error
-          retention-days: 1
+        run: bash tests/run.sh
