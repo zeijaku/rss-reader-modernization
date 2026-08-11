@@ -80,6 +80,9 @@ final class S13C extends PDOStatement {
         if(str_contains($this->sql,"widget_type = 'task'")) return true;
         if(str_contains($this->sql,'FROM `ig_dashboard_widget` w')) return true;
         if(str_contains($this->sql,'FROM `ig_task`')) return true;
+        if(str_contains($this->sql,'FROM `ig_feed_keyword`')) return true;
+        if(str_starts_with($this->sql,'SELECT t.tag_id')) return true;
+        if(str_starts_with($this->sql,'SELECT m.map_stock_id')) return true;
         if(str_contains($this->sql,'FROM ig_content_stock')) return true;
         throw new RuntimeException('Unexpected SQL: '.$this->sql);
     }

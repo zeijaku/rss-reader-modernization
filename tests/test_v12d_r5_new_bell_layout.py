@@ -2,7 +2,11 @@ from pathlib import Path
 import re
 import sys
 
-from playwright.sync_api import sync_playwright
+try:
+    from playwright.sync_api import sync_playwright
+except Exception:
+    print('SKIP: Playwright Python package is unavailable.')
+    raise SystemExit(0)
 
 ROOT = Path(__file__).resolve().parents[1]
 CSS_PATH = ROOT / 'public/css/dashboard.css'
