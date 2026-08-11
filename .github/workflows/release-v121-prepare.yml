@@ -1,0 +1,58 @@
+name: Prepare V1.12.1
+
+on:
+  push:
+    branches:
+      - release/v1.12.1
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prepare-v1.12.1
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/v1.12.1
+          fetch-depth: 0
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Apply exact release metadata patch
+        run: python3 tools/prepare_v121.py
+
+      - name: Focused release metadata checks
+        run: |
+          php -l app/version.php
+          python3 tests/test_version_marker.py
+          grep -Fq "RSS Reader Modernization 1.12.1" README.md
+          grep -Fq "## RSS Reader Modernization 1.12.1 — 2026-08-11" CHANGELOG.md
+          git diff --check
+
+      - name: Commit verified release metadata
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/version.php README.md CHANGELOG.md
+          git rm tools/prepare_v121.py .github/workflows/release-v121-prepare.yml
+          git diff --cached --check
+          git commit -m "release: prepare version 1.12.1"
+          git push origin HEAD:release/v1.12.1
