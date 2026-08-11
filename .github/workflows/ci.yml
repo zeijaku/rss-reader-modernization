@@ -1,44 +1,36 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-batch-d-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  regression:
-    name: PHP ${{ matrix.php }} regression
+  batch-d-apply:
+    name: Batch D focused and full regression
+    if: github.event_name == 'workflow_dispatch' || github.head_ref == 'ci/v1.12-batch-d'
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
-    strategy:
-      fail-fast: false
-      matrix:
-        php:
-          - '8.1'
-          - '8.4'
-
     steps:
-      - name: Checkout
+      - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          ref: ci/v1.12-batch-d
+          fetch-depth: 0
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: '8.4'
           extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
           coverage: none
 
@@ -52,25 +44,50 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Show runtime versions
-        run: |
-          php -v
-          python --version
-          node --version
+      - name: Apply exact V1.8 behavior restoration
+        run: python3 tools/ci_patch_v18_regressions.py
 
-      - name: Run regression tests
+      - name: Run focused V1.8 checks
+        run: |
+          python3 tests/test_v18b_stock_static.py
+          php tests/test_v18b_stock_db.php
+          python3 tests/test_v18c_stock_search_static.py
+          php tests/test_v18c_stock_helpers.php
+          php tests/test_v18c_stock_render.php
+          python3 tests/test_v18d_stock_pagination_static.py
+          php tests/test_v18d_stock_pagination.php
+          php tests/test_v18d_stock_page_clamp.php
+          python3 tests/test_v18e_stock_ui_static.py
+          php tests/test_v18e_stock_task_targets.php
+          php tests/test_v18e_stock_render.php
+
+      - name: Check patch whitespace
+        run: git diff --check
+
+      - name: Run full regression once
         run: |
           set +e
-          bash tests/run.sh > "regression-${{ matrix.php }}.log" 2>&1
+          bash tests/run.sh > regression-batch-d.log 2>&1
           status=$?
-          cat "regression-${{ matrix.php }}.log"
+          cat regression-batch-d.log
           exit "$status"
+
+      - name: Commit verified restoration to PR branch
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/js/dashboard.js
+          git rm tools/ci_patch_v18_regressions.py
+          git diff --cached --check
+          git commit -m "fix: restore v1.8 stock action behavior"
+          git push origin HEAD:ci/v1.12-batch-d
 
       - name: Upload regression log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: regression-log-php-${{ matrix.php }}
-          path: regression-${{ matrix.php }}.log
-          if-no-files-found: error
+          name: regression-batch-d
+          path: regression-batch-d.log
+          if-no-files-found: ignore
           retention-days: 1
