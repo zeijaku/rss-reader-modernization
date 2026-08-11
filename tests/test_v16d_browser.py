@@ -1,7 +1,11 @@
 from pathlib import Path
 import json
 import os
-from playwright.sync_api import sync_playwright
+try:
+    from playwright.sync_api import sync_playwright
+except Exception:
+    print('SKIP: Playwright Python package is unavailable.')
+    raise SystemExit(0)
 
 ROOT = Path(__file__).resolve().parents[1]
 CSS = (ROOT / 'public/css/mini-game.css').read_text()
