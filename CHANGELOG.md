@@ -1,5 +1,16 @@
 # Changelog
 
+## RSS Reader Modernization 1.12.1 — 2026-08-11
+
+### Version 1.12.1 compatibility and regression fixes
+
+- V1.11統合時に失われていたStock解除のAjax部分更新を復元し、対象Stockのみを削除する挙動を維持。
+- Stock最終カード解除時は空状態表示、Page 2以降では前Pageへ戻る既存V1.8挙動を復元。
+- StockからTaskへ追加する際、Task Widget 1件時の直接追加と複数時の既存選択Modalを復元。
+- V1.12の現行実装に合わせ、履歴RegressionのV1.3-C fixtureとBrowser依存TestをCI環境へ整合。
+- DB schema、Migration、configの追加変更はなし。Version 1.12のDB変更は引き続きMigration `012_v1_12_feed_keywords.sql`のみ。
+- GitHub ActionsのPHP 8.1 / 8.4で全Regression PASSを確認。
+
 ## RSS Reader Modernization 1.12.0 — 2026-08-10
 
 ### Version 1.12.0 finalization

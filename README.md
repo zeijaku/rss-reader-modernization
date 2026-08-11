@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.12.0`
-Release tag: `v1.12.0`
+**Stable release:** `RSS Reader Modernization 1.12.1`
+Release tag: `v1.12.1`
+
+Version 1.12.1では、V1.12.0後の互換性・回帰修正として、Stock解除のAjax部分更新とStockからTaskへの追加先選択を復元し、履歴Regressionを現行V1.12へ整合しました。DB schema／Migration／configの追加変更はありません。
 
 Version 1.12.0では、RSS HighlightとMail Widget Phase 2を追加しました。RSS Highlightはユーザー登録Keywordを通常RSS／Search Feedで強調表示し、Mail Widgetは未読件数、未読のみ表示、件名／From検索、送信者Filter、IMAP Folder切替に対応します。
 
