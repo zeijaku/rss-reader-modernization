@@ -2,7 +2,7 @@ from pathlib import Path
 from version_test_utils import is_later_application_release
 
 ROOT = Path(__file__).resolve().parents[1]
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = (ROOT / 'public/stock.php').read_text(encoding='utf-8')
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 widgets = (ROOT / 'app/dashboard_widget.php').read_text(encoding='utf-8')

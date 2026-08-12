@@ -8,6 +8,18 @@ Options -Indexes
 
 RewriteEngine On
 
+# V1.13-B R2: Stockは拡張子を見せない /stock をCanonical URLとする。
+# 直接stock.phpへアクセスされた場合だけ302で /stock へ戻す。
+# THE_REQUESTを見ることで /stock -> public/stock.php の内部RewriteではRedirectしない。
+# Subdirectory設置時もURLのPrefixを保つ。
+RewriteCond %{THE_REQUEST} \s/+(.*/)?public/stock\.php(?:[?\s]) [NC]
+RewriteRule ^public/stock\.php$ /%1stock [R=302,L,NE]
+RewriteCond %{THE_REQUEST} \s/+(.*/)?stock\.php(?:[?\s]) [NC]
+RewriteRule ^stock\.php$ /%1stock [R=302,L,NE]
+
+# 実体はpublic/stock.phpのまま維持し、Query Stringもそのまま渡す。
+RewriteRule ^stock/?$ public/stock.php [L,QSA]
+
 # Common error page for the current server layout (application root -> public/ internal rewrite).
 # For a subdirectory install, prefix the path, for example: /rss/public/error.php
 ErrorDocument 403 /public/error.php

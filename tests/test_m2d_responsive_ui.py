@@ -4,6 +4,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+stock = (ROOT / 'public/stock.php').read_text(encoding='utf-8')
 login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
@@ -17,8 +18,8 @@ def check(condition: bool, message: str) -> None:
 
 check('class="row content-grid feed-grid"' in index or 'class="row content-grid feed-grid dashboard-grid"' in index, 'Feed cards use one responsive grid')
 check("default => 'col-12 col-md-6 col-lg-3'" in widget and "app_html($widgetWidthClass) . ' dashboard-widget feed-card" in index, 'Feed grid keeps Mobile 1 / Tablet 2 / Desktop 4 as the default width')
-check('class="stock-grid"' in index, 'Stock uses one dedicated compact-list container')
-check('class="stock-card"' in index and 'col-md-6 col-lg-3 stock-card' not in index, 'Stock remains one-column while Feed keeps its responsive grid')
+check('class="stock-grid"' in stock, 'Stock uses one dedicated compact-list container')
+check('class="stock-card"' in stock and 'col-md-6 col-lg-3 stock-card' not in stock, 'Stock remains one-column while Feed keeps its responsive grid')
 check('$row_cnt' not in index, 'legacy four-item PHP row counter is removed')
 check('style="padding: 0px; margin: 2px;"' not in index, 'card spacing is no longer inline')
 check('.content-grid' in css and '.feed-card,' in css and '.stock-card' in css, 'grid spacing is centralized in Dashboard CSS')
@@ -51,7 +52,7 @@ check("$addTargetLocation = is_int($tabParam) ? $tabParam : 0;" in index, 'Stock
 check(".addClass('btn btn-sm btn-outline-secondary feed-retry')" in js, 'Feed error state includes a retry control')
 check(".on('click' + eventNamespace, '.feed-retry'" in js, 'Feed retry uses delegated event handling')
 check("fetch_content($(this).closest('[data-feed-content-id]'))" in js, 'Feed retry remains scoped to its card')
-check('Stockした記事はまだありません。' in index, 'Stock has a specific empty state')
+check('Stockした記事はまだありません。' in stock, 'Stock has a specific empty state')
 check('このタブにはWidgetが登録されていません。' in index, 'RSS tabs have a specific Widget-aware empty state')
 check('RSSを追加する' in index, 'empty RSS tab offers the existing add action')
 check('<h5 class="modal-title" id="registerContentTitle">RSSを追加</h5>' in index, 'RSS add modal has a direct title')

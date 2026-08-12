@@ -14,11 +14,11 @@ putenv('DB_USER=test');
 putenv('DB_PASSWORD=test');
 putenv('APP_LOG_ENABLED=false');
 $_SERVER['REQUEST_METHOD'] = 'GET';
-$_SERVER['REQUEST_URI'] = '/?tab=stock';
+$_SERVER['REQUEST_URI'] = '/stock';
 $_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
 $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 $_SERVER['SERVER_PORT'] = '80';
-$_GET = ['tab' => 'stock'];
+$_GET = [];
 require $root . '/app/bootstrap.php';
 
 final class V18eRenderStatement extends PDOStatement
@@ -88,7 +88,7 @@ set_db_connection_for_testing(new V18eRenderPDO());
 app_session_start();
 app_session_login(1);
 ob_start();
-require $root . '/public/index.php';
+require $root . '/public/stock.php';
 $html = ob_get_clean();
 app_session_logout();
 

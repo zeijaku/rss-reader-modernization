@@ -3,7 +3,7 @@ from version_test_utils import is_later_application_release
 
 ROOT = Path(__file__).resolve().parents[1]
 db = (ROOT / 'app/common/common_db.php').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = (ROOT / 'public/stock.php').read_text(encoding='utf-8')
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')

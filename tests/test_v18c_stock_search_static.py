@@ -3,7 +3,7 @@ from version_test_utils import is_later_application_release
 
 ROOT = Path(__file__).resolve().parents[1]
 db = (ROOT / 'app/common/common_db.php').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = (ROOT / 'public/stock.php').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 
 failures = []
@@ -31,7 +31,7 @@ check("'%' => '!%'" in like_block and "'_' => '!_'" in like_block and "'!' => '!
 check("'oldest' => 'stock_id ASC'" in order_block, 'oldest sort is explicitly mapped')
 check("'title' => 'stock_title ASC, stock_id DESC'" in order_block, 'title sort is explicitly mapped with stable id fallback')
 check("default => 'stock_id DESC'" in order_block, 'unknown/newest sort falls back to newest order')
-check('name="tab" value="stock"' in stock_branch and 'name="q"' in stock_branch and 'name="sort"' in stock_branch, 'Stock GET form preserves stock route and exposes query/sort fields')
+check('action="./stock"' in stock_branch and 'name="tab" value="stock"' not in stock_branch and 'name="q"' in stock_branch and 'name="sort"' in stock_branch, 'Stock GET form uses the canonical /stock route and exposes query/sort fields')
 check('value="\' . app_html($stockSearchQuery) . \'"' in stock_branch, 'Stock query is HTML escaped when restored into the form')
 check('記事タイトル / URL / Tag' in stock_branch, 'Search UI documents title, URL, and Tag scope')
 check('新しい順' in stock_branch and '古い順' in stock_branch and 'タイトル順' in stock_branch, 'UI exposes the three planned sort choices')

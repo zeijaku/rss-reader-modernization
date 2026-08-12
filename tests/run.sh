@@ -524,6 +524,10 @@ python3 "$ROOT/tests/test_v18e_stock_ui_static.py"
 php "$ROOT/tests/test_v18e_stock_task_targets.php"
 php "$ROOT/tests/test_v18e_stock_render.php"
 
+# V1.13-B Stock entry-point split
+python3 "$ROOT/tests/test_v113b_stock_split.py"
+python3 "$ROOT/tests/test_v113b_stock_route.py"
+
 if grep -Fq "const APP_VERSION = '1.8.0';" "$ROOT/app/version.php"; then
     for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
         if [ -d "$runtime_dir" ]; then

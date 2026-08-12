@@ -4,7 +4,7 @@ ROOT = Path(__file__).resolve().parents[1]
 db = (ROOT / 'app/common/common_db.php').read_text(encoding='utf-8')
 api = (ROOT / 'app/api.php').read_text(encoding='utf-8')
 endpoint = (ROOT / 'public/api_v1.php').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = (ROOT / 'public/stock.php').read_text(encoding='utf-8')
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 

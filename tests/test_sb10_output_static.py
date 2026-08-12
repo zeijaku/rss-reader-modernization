@@ -4,6 +4,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 index = (ROOT / 'public/index.php').read_text()
+stock = (ROOT / 'public/stock.php').read_text()
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
 frontend = index + '\n' + dashboard
 api = (ROOT / 'app/api.php').read_text()
@@ -23,7 +24,7 @@ def check(cond, msg):
 check("function app_html" in validation and "ENT_QUOTES | ENT_SUBSTITUTE" in validation, 'context-safe HTML escaping helper exists')
 check("app_safe_ui_config" in validation, 'Legacy DB UI values are normalized before rendering')
 check("app_normalize_content_style" in index, 'content style class is allowlisted at render time')
-check("app_validate_stock_url" in index and "app_html($stockDisplayTitle)" in index, 'Stock URL/title are validated/escaped at render time')
+check("app_validate_stock_url" in stock and "app_html($stockDisplayTitle)" in stock, 'Stock URL/title are validated/escaped at render time')
 check("rel=\"noopener noreferrer\"" in index, 'external target=_blank links are hardened with rel')
 
 # Untrusted Feed data must not be concatenated into HTML strings.
@@ -46,7 +47,7 @@ raw_ui_patterns = [
 for pattern in raw_ui_patterns:
     check(re.search(pattern, index) is None, f'no raw UI DB output matches {pattern}')
 check("value=\"' . $result_content[$i]['content_value']" not in index, 'Feed URL hidden input is escaped instead of raw DB interpolation')
-check("href=\"' . $result_stock[$i]['stock_data']" not in index, 'Stock href is not raw DB interpolation')
+check("href=\"' . $result_stock[$i]['stock_data']" not in stock, 'Stock href is not raw DB interpolation')
 
 check("strip_tags($text)" in api and "api_safe_feed_payload" in api, 'Feed payload is reduced to bounded text plus validated URLs')
 check("app_validate_external_link" in api, 'Feed channel/item links are URL-validated before JSON response')

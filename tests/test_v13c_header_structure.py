@@ -59,7 +59,7 @@ putenv('APP_ENV=testing'); putenv('APP_DEBUG=false');
 putenv('APP_HASH_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
 putenv('DB_DRIVER=mysql'); putenv('DB_TABLE_PREFIX=ig_'); putenv('DB_HOST=test'); putenv('DB_NAME=test'); putenv('DB_USER=test'); putenv('DB_PASSWORD=test');
 putenv('REGISTRATION_ENABLED=true'); putenv('APP_LOG_ENABLED=false');
-$_SERVER['REQUEST_METHOD']='GET'; $_SERVER['REQUEST_URI']='/?tab='.$tab; $_SERVER['SERVER_PROTOCOL']='HTTP/1.1'; $_SERVER['REMOTE_ADDR']='127.0.0.1'; $_SERVER['SERVER_PORT']='80'; $_GET['tab']=$tab;
+$_SERVER['REQUEST_METHOD']='GET'; $_SERVER['REQUEST_URI']=$tab === 'stock' ? '/stock' : '/?tab='.$tab; $_SERVER['SERVER_PROTOCOL']='HTTP/1.1'; $_SERVER['REMOTE_ADDR']='127.0.0.1'; $_SERVER['SERVER_PORT']='80'; $_GET=$tab === 'stock' ? [] : ['tab'=>$tab];
 require $root.'/app/bootstrap.php';
 final class S13C extends PDOStatement {
     private array $rows=[];
@@ -94,7 +94,7 @@ final class P13C extends PDO {
     public function prepare(string $q,array $o=[]):PDOStatement|false{return new S13C($q,$this->nav);}
 }
 set_db_connection_for_testing(new P13C($nav)); app_session_start(); app_session_login(1);
-ob_start(); require $root.'/public/index.php'; $html=ob_get_clean(); app_session_logout(); echo base64_encode($html);
+ob_start(); require $root.($tab === 'stock' ? '/public/stock.php' : '/public/index.php'); $html=ob_get_clean(); app_session_logout(); echo base64_encode($html);
 ''')
 
 class Parser(HTMLParser):

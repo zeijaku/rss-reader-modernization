@@ -33,11 +33,11 @@ putenv('DB_PASSWORD=test');
 putenv('REGISTRATION_ENABLED=true');
 putenv('APP_LOG_ENABLED=false');
 $_SERVER['REQUEST_METHOD'] = 'GET';
-$_SERVER['REQUEST_URI'] = $mode === 'stock' ? '/?tab=stock' : '/?tab=0';
+$_SERVER['REQUEST_URI'] = $mode === 'stock' ? '/stock' : '/?tab=0';
 $_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
 $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 $_SERVER['SERVER_PORT'] = '80';
-$_GET['tab'] = $mode === 'stock' ? 'stock' : '0';
+$_GET = $mode === 'stock' ? [] : ['tab' => '0'];
 require $root . '/app/bootstrap.php';
 
 final class V11dRenderStatement extends PDOStatement
@@ -142,7 +142,7 @@ set_db_connection_for_testing(new V11dRenderPDO());
 app_session_start();
 app_session_login(1);
 ob_start();
-require $root . '/public/index.php';
+require $root . ($mode === 'stock' ? '/public/stock.php' : '/public/index.php');
 $html = ob_get_clean();
 app_session_logout();
 echo base64_encode($html);
