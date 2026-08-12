@@ -23,8 +23,69 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .github/tmp/v113b.part*.b64 | base64 --decode | gzip --decompress > /tmp/v113b.patch
-          cat .github/tmp/v113c.part*.b64 | base64 --decode | gzip --decompress > /tmp/v113c.patch
+
+          # part04 lost exactly one Base64 character while being staged through the connector.
+          # Reconstruct it only in /tmp and accept it only when the expected Git blob SHA matches.
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import string
+
+          src = Path('.github/tmp/v113b.part04.b64').read_text(encoding='utf-8')
+          expected = 'd2495b43d3d8f5774516ac067ee46d627baeb4e4'
+          if len(src) != 11999:
+              raise SystemExit(f'unexpected staged part04 length: {len(src)}')
+
+          header = b'blob 12000\0'
+          alphabet = string.ascii_letters + string.digits + '+/'
+          src_bytes = src.encode('ascii')
+          base = hashlib.sha1(header)
+          repaired = None
+
+          for pos in range(len(src_bytes) + 1):
+              prefix_hash = base.copy()
+              prefix_hash.update(src_bytes[:pos])
+              suffix = src_bytes[pos:]
+              for char in alphabet.encode('ascii'):
+                  candidate_hash = prefix_hash.copy()
+                  candidate_hash.update(bytes((char,)))
+                  candidate_hash.update(suffix)
+                  if candidate_hash.hexdigest() == expected:
+                      repaired = src_bytes[:pos] + bytes((char,)) + suffix
+                      print(f'part04 repaired at offset {pos}')
+                      break
+              if repaired is not None:
+                  break
+
+          if repaired is None:
+              raise SystemExit('part04 repair did not match expected Git blob SHA')
+
+          Path('/tmp/v113b.part04.fixed.b64').write_bytes(repaired)
+          PY
+
+          test "$(git hash-object .github/tmp/v113b.part01.b64)" = 'c0cf09bff415d264bae2844c8450044e4ff0345b'
+          test "$(git hash-object .github/tmp/v113b.part02.b64)" = '607e91e549c78da36e39e4d1203dfc615d054252'
+          test "$(git hash-object .github/tmp/v113b.part03.b64)" = '084cc84ff8cbbc5eb3726e8f58ce5033fea2293a'
+          test "$(git hash-object /tmp/v113b.part04.fixed.b64)" = 'd2495b43d3d8f5774516ac067ee46d627baeb4e4'
+          test "$(git hash-object .github/tmp/v113b.part05.b64)" = 'ba6f76c1077c8d0bbaed6193ee5b792706dad802'
+          test "$(git hash-object .github/tmp/v113c.part01.b64)" = '7eccb8fc07a4e879b863e05c6d1ba5eedabce4b4'
+          test "$(git hash-object .github/tmp/v113c.part02.b64)" = '9d8e595c3352c0becdf1d7940a2e81ab80073005'
+          test "$(git hash-object .github/tmp/v113c.part03.b64)" = '95060e96e1f2aeeb446bb3fbe059cfbe8d0287e0'
+
+          cat \
+            .github/tmp/v113b.part01.b64 \
+            .github/tmp/v113b.part02.b64 \
+            .github/tmp/v113b.part03.b64 \
+            /tmp/v113b.part04.fixed.b64 \
+            .github/tmp/v113b.part05.b64 \
+            | base64 --decode | gzip --decompress > /tmp/v113b.patch
+
+          cat \
+            .github/tmp/v113c.part01.b64 \
+            .github/tmp/v113c.part02.b64 \
+            .github/tmp/v113c.part03.b64 \
+            | base64 --decode | gzip --decompress > /tmp/v113c.patch
+
           echo '6b6827b3006a6bb9894eb9a72de674b9e1f286595a7d324cc26d66ad0e72f047  /tmp/v113b.patch' | sha256sum --check --strict
           echo '0cf8581086dc58325a88250203793de51552dcca97d3e0303d6686c8e55b52c5  /tmp/v113c.patch' | sha256sum --check --strict
 
