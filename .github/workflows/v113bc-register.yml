@@ -1,0 +1,74 @@
+name: V1.13 B-C commit registration
+
+on:
+  push:
+    branches:
+      - 'tmp/v113bc-register'
+
+permissions:
+  contents: write
+
+jobs:
+  register:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout staging branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Assemble and verify patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .github/tmp/v113b.part*.b64 | base64 --decode | gzip --decompress > /tmp/v113b.patch
+          cat .github/tmp/v113c.part*.b64 | base64 --decode | gzip --decompress > /tmp/v113c.patch
+          echo '6b6827b3006a6bb9894eb9a72de674b9e1f286595a7d324cc26d66ad0e72f047  /tmp/v113b.patch' | sha256sum --check --strict
+          echo '0cf8581086dc58325a88250203793de51552dcca97d3e0303d6686c8e55b52c5  /tmp/v113c.patch' | sha256sum --check --strict
+
+      - name: Create exact B and C commits on temporary result branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='f1a072b92c8ba65e6d38e355e7e6d6a4fe56c2c9'
+
+          git fetch --no-tags origin feature/v1.13-structure
+          CURRENT="$(git rev-parse refs/remotes/origin/feature/v1.13-structure)"
+          test "$CURRENT" = "$BASE"
+
+          git checkout -B v113-register refs/remotes/origin/feature/v1.13-structure
+          test -z "$(git status --porcelain)"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          git apply --check /tmp/v113b.patch
+          git apply /tmp/v113b.patch
+          git diff --check
+          test "$(git diff --name-only | wc -l | tr -d ' ')" = '24'
+          git add -A
+          git commit -m 'refactor: split stock page for V1.13-B' \
+            -m 'Split Stock rendering to public/stock.php, keep legacy URL compatibility, and expose the canonical extensionless /stock route. Includes focused regression coverage and V1.13-B R2 documentation. No DB migration or application version change.'
+          B_SHA="$(git rev-parse HEAD)"
+
+          git apply --check /tmp/v113c.patch
+          git apply /tmp/v113c.patch
+          git diff --check
+          test "$(git diff --name-only | wc -l | tr -d ' ')" = '17'
+          git add -A
+          git commit -m 'refactor: split settings page for V1.13-C' \
+            -m 'Move Display Settings, tab names, and RSS Highlight management to public/settings.php and expose the canonical extensionless /settings route. Account Settings remains separate. Includes focused regression coverage and V1.13-C documentation. No DB migration or application version change.'
+          C_SHA="$(git rev-parse HEAD)"
+
+          test "$(git rev-list --count "$BASE"..HEAD)" = '2'
+          test "$(git diff --name-only "$BASE" "$B_SHA" | wc -l | tr -d ' ')" = '24'
+          test "$(git diff --name-only "$B_SHA" "$C_SHA" | wc -l | tr -d ' ')" = '17'
+          test -z "$(git status --porcelain)"
+
+          echo "B_SHA=$B_SHA"
+          echo "C_SHA=$C_SHA"
+          git log --oneline --decorate -3
+
+          git push origin HEAD:refs/heads/tmp/v113bc-result
