@@ -107,18 +107,18 @@ jobs:
 
           git apply --check /tmp/v113b.patch
           git apply /tmp/v113b.patch
-          git diff --check
-          test "$(git diff --name-only | wc -l | tr -d ' ')" = '24'
+          test "$(git status --porcelain | wc -l | tr -d ' ')" = '24'
           git add -A
+          git diff --cached --check
           git commit -m 'refactor: split stock page for V1.13-B' \
             -m 'Split Stock rendering to public/stock.php, keep legacy URL compatibility, and expose the canonical extensionless /stock route. Includes focused regression coverage and V1.13-B R2 documentation. No DB migration or application version change.'
           B_SHA="$(git rev-parse HEAD)"
 
           git apply --check /tmp/v113c.patch
           git apply /tmp/v113c.patch
-          git diff --check
-          test "$(git diff --name-only | wc -l | tr -d ' ')" = '17'
+          test "$(git status --porcelain | wc -l | tr -d ' ')" = '17'
           git add -A
+          git diff --cached --check
           git commit -m 'refactor: split settings page for V1.13-C' \
             -m 'Move Display Settings, tab names, and RSS Highlight management to public/settings.php and expose the canonical extensionless /settings route. Account Settings remains separate. Includes focused regression coverage and V1.13-C documentation. No DB migration or application version change.'
           C_SHA="$(git rev-parse HEAD)"
