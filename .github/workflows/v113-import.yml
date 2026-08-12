@@ -1,0 +1,58 @@
+name: V1.13 B/C importer
+
+on:
+  push:
+    branches:
+      - 'tmp/v113bc-import'
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout importer branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Preserve payloads
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/v113-import
+          cp .git-import/v113b_payload.b64 /tmp/v113-import/
+          cp .git-import/v113c_payload.b64 /tmp/v113-import/
+
+      - name: Import B and C as separate commits
+        shell: bash
+        env:
+          BASE_SHA: f1a072b92c8ba65e6d38e355e7e6d6a4fe56c2c9
+          B_PAYLOAD_SHA256: db3d6bc3c4a25dc9e22508c742dc2a96588670a238655ca26075841f7659f6b7
+          C_PAYLOAD_SHA256: e4753acee1f962fe48e9e752bd3fa342ae3d6d3b3433799696b5051cb3767889
+        run: |
+          set -euo pipefail
+          git fetch origin feature/v1.13-structure
+          git checkout feature/v1.13-structure
+          test "$(git rev-parse HEAD)" = "$BASE_SHA"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          base64 -d /tmp/v113-import/v113b_payload.b64 > /tmp/v113-import/b.tar.gz
+          echo "$B_PAYLOAD_SHA256  /tmp/v113-import/b.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/v113-import/b.tar.gz -C .
+          git add -A
+          git diff --cached --check
+          git commit -m "refactor: split stock page for V1.13-B"
+
+          base64 -d /tmp/v113-import/v113c_payload.b64 > /tmp/v113-import/c.tar.gz
+          echo "$C_PAYLOAD_SHA256  /tmp/v113-import/c.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/v113-import/c.tar.gz -C .
+          git add -A
+          git diff --cached --check
+          git commit -m "refactor: split settings page for V1.13-C"
+
+          git push origin feature/v1.13-structure
