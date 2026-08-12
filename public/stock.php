@@ -1672,166 +1672,6 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
     </div>
 </div>
 
-<!-- 設定変更モーダル -->
-<div class="modal fade" id="changeConf" tabindex="-1" role="dialog" aria-labelledby="changeConfTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-        <form id="settingsForm" method="post" action="./">
-
-            <div class="modal-header" style="color: #fff; background-color: #666;">
-                <h5 class="modal-title" id="changeConfTitle">表示設定</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
-                    <span aria-hidden="true" style="color: #ccc;">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-
-                <div class="form-group">
-                    <label for="conf_style"><small class="text-dark">全体デザイン指定</small></label>
-                    <div class="input-group mb-2 mr-sm-2">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-signature" aria-hidden="true"></i></div>
-                    </div>
-                    <select class="form-control conf_style" name="conf_style" id="conf_style" aria-describedby="conf_designHelp">
-                        <?php
-                        $themeLabels = [
-                            'bootstrap' => 'Normal',
-                            'bootstrap-yeti' => 'Yeti',
-                            'bootstrap-minty' => 'Minty',
-                            'bootstrap-flatly' => 'Flatly',
-                            'bootstrap-journal' => 'Journal',
-                            'bootstrap-sketchy' => 'Sketchy',
-                            'bootstrap-solar' => 'Solar',
-                            'bootstrap-slate' => 'Slate',
-                        ];
-                        foreach ($themeLabels as $themeValue => $themeLabel):
-                        ?>
-                            <option value="<?php echo app_html($themeValue); ?>"<?php echo app_selected_attr($ui['conf_style'] ?? '', $themeValue); ?>><?php echo app_html($themeLabel); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    </div>
-                    <small id="conf_designHelp" class="form-text text-muted">サイト全体のベースになるデザインを指定します</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="conf_style_nav"><small class="text-dark">Navbarデザイン指定</small></label>
-                    <div class="input-group mb-2 mr-sm-2">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-signature" aria-hidden="true"></i></div>
-                    </div>
-                    <select class="form-control conf_style_nav" name="conf_style_nav" id="conf_style_nav" aria-describedby="conf_navDesignHelp">
-                        <?php foreach (['dark' => 'Dark', 'primary' => 'Primary', 'light' => 'Light'] as $navStyleValue => $navStyleLabel): ?>
-                            <option value="<?php echo app_html($navStyleValue); ?>"<?php echo app_selected_attr($ui['conf_style_nav'] ?? '', $navStyleValue); ?>><?php echo app_html($navStyleLabel); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    </div>
-                    <small id="conf_navDesignHelp" class="form-text text-muted">Navbarのデザインを指定します</small>
-                </div>
-
-                <?php for ($navIndex = 1; $navIndex <= 4; $navIndex++): ?>
-                    <?php
-                    $linkKey = 'conf_style_navlink' . $navIndex;
-                    $viewKey = 'conf_style_navlink_view' . $navIndex;
-                    $iconKey = 'conf_style_navlink_icon' . $navIndex;
-                    ?>
-                    <fieldset class="navbar-link-setting">
-                        <legend class="h6 text-dark">Navbarリンク[<?php echo $navIndex; ?>]</legend>
-                        <label for="<?php echo app_html($linkKey); ?>"><small class="text-dark">リンクURL</small></label>
-                        <div class="input-group mb-2 mr-sm-2">
-                            <div class="input-group-prepend">
-                                <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
-                            </div>
-                            <input type="text" class="form-control <?php echo app_html($linkKey); ?>" id="<?php echo app_html($linkKey); ?>" name="<?php echo app_html($linkKey); ?>" value="<?php echo app_html($ui[$linkKey] ?? ''); ?>" placeholder="Input Type NavbarLink">
-                        </div>
-
-                        <label for="<?php echo app_html($viewKey); ?>"><small class="text-dark">表示名</small></label>
-                        <div class="input-group mb-2 mr-sm-2">
-                            <div class="input-group-prepend">
-                                <div class="input-group-text"><i class="far fa-edit" aria-hidden="true"></i></div>
-                            </div>
-                            <input type="text" class="form-control <?php echo app_html($viewKey); ?>" id="<?php echo app_html($viewKey); ?>" name="<?php echo app_html($viewKey); ?>" value="<?php echo app_html($ui[$viewKey] ?? ''); ?>" placeholder="Input Type Nav Name">
-                        </div>
-
-                        <fieldset class="navbar-icon-setting">
-                            <legend class="small text-dark">アイコンを選択</legend>
-                            <?php foreach (app_allowed_nav_icons() as $iconOption): ?>
-                                <?php $radioId = $iconKey . '_' . $iconOption; ?>
-                                <label for="<?php echo app_html($radioId); ?>" class="navbar-icon-option">
-                                    <input id="<?php echo app_html($radioId); ?>" type="radio" name="<?php echo app_html($iconKey); ?>" value="<?php echo app_html($iconOption); ?>"<?php echo app_checked_attr($ui[$iconKey] ?? '', $iconOption); ?>>
-                                    <i class="fas fa-<?php echo app_html($iconOption); ?> fa-fw" aria-hidden="true"></i>
-                                    <span class="sr-only"><?php echo app_html($iconOption); ?></span>
-                                </label>
-                            <?php endforeach; ?>
-                        </fieldset>
-                    </fieldset>
-                    <?php if ($navIndex < 4): ?><hr><?php endif; ?>
-                <?php endfor; ?>
-
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
-                <button type="submit" class="btn btn-primary submit_setting">変更する</button>
-            </div>
-        </form>
-        </div>
-    </div>
-</div>
-
-<!-- タブ名変更モーダル -->
-<div class="modal fade" id="tabContent" tabindex="-1" role="dialog" aria-labelledby="tabContentTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <form id="tabsForm" method="post" action="./">
-        <div class="modal-content">
-            <div class="modal-header" style="color: #fff; background-color: #333;">
-                <h5 class="modal-title" id="tabContentTitle">タブ名を変更</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
-                    <span aria-hidden="true" style="color: #ccc;">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-
-                <label class="" for="conf_style_tabname1"><small class="text-dark">タブ名1入力</small></label>
-                <div class="input-group mb-2 mr-sm-2">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
-                    </div>
-                    <input type="text" class="form-control conf_style_tabname1" id="conf_style_tabname1" name="conf_style_tabname1" value="<?php echo app_html($ui['conf_style_tabname1']); ?>" placeholder="Input Type Tab Name1" required>
-                </div>
-
-                <label class="" for="conf_style_tabname2"><small class="text-dark">タブ名2入力</small></label>
-                <div class="input-group mb-2 mr-sm-2">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
-                    </div>
-                    <input type="text" class="form-control conf_style_tabname2" id="conf_style_tabname2" name="conf_style_tabname2" value="<?php echo app_html($ui['conf_style_tabname2']); ?>" placeholder="Input Type Tab Name2">
-                </div>
-
-                <label class="" for="conf_style_tabname3"><small class="text-dark">タブ名3入力</small></label>
-                <div class="input-group mb-2 mr-sm-2">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
-                    </div>
-                    <input type="text" class="form-control conf_style_tabname3" id="conf_style_tabname3" name="conf_style_tabname3" value="<?php echo app_html($ui['conf_style_tabname3']); ?>" placeholder="Input Type Tab Name3">
-                </div>
-
-                <label class="" for="conf_style_tabname4"><small class="text-dark">タブ名4入力</small></label>
-                <div class="input-group mb-2 mr-sm-2">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
-                    </div>
-                    <input type="text" class="form-control conf_style_tabname4" id="conf_style_tabname4" name="conf_style_tabname4" value="<?php echo app_html($ui['conf_style_tabname4']); ?>" placeholder="Input Type Tab Name4">
-                </div>
-
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
-                <button type="submit" class="btn btn-primary submit_tab">タブ名を変更する</button>
-            </div>
-        </div>
-        </form>
-    </div>
-</div>
-
 <!-- 記録用スモールモーダル[Save] -->
 <div class="modal fade save_modal" id="saveContent" tabindex="-1" role="dialog" aria-labelledby="saveContentTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm save-modal-dialog" role="document">
@@ -1957,9 +1797,9 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 
         <!-- Customize -->
         <li class="drawer-section-title"><i class="fas fa-sliders-h fa-fw" aria-hidden="true"></i><span>カスタマイズ</span></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#tabContent"><span class="drawer-item-icon"><i class="fas fa-clone fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">タブ表示変更</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#changeConf"><span class="drawer-item-icon"><i class="fas fa-cogs fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">表示設定</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#rssHighlightSettings"><span class="drawer-item-icon"><i class="fas fa-highlighter fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">RSS Highlight</span></button></li>
+        <li><a href="./settings#tabs" class="text-muted drawer-item"><span class="drawer-item-icon"><i class="fas fa-clone fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">タブ表示変更</span></a></li>
+        <li><a href="./settings#display" class="text-muted drawer-item"><span class="drawer-item-icon"><i class="fas fa-cogs fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">表示設定</span></a></li>
+        <li><a href="./settings#highlight" class="text-muted drawer-item"><span class="drawer-item-icon"><i class="fas fa-highlighter fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">RSS Highlight</span></a></li>
 
         <?php
             $drawerNavbarLinks = [];
@@ -1999,51 +1839,6 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
         </li>
     </ul>
 </nav>
-
-<!-- RSS Highlight Keyword管理モーダル -->
-<div class="modal fade" id="rssHighlightSettings" tabindex="-1" role="dialog" aria-labelledby="rssHighlightSettingsTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="color: #fff; background-color: #555;">
-                <h5 class="modal-title" id="rssHighlightSettingsTitle"><i class="fas fa-highlighter" aria-hidden="true"></i> RSS Highlight</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
-            </div>
-            <div class="modal-body">
-                <p class="small text-muted mb-3">RSS記事タイトルで強調したいKeywordを登録します。RSS WidgetとSearch Feedの両方で利用します。</p>
-                <?php if ($feedKeywordLoadFailed): ?>
-                    <div class="alert alert-warning small" role="alert">Keywordを読み込めませんでした。V1.12-BのDB Migration適用状況を確認してください。</div>
-                <?php endif; ?>
-                <form id="rssHighlightKeywordForm" method="post" action="./">
-                    <label for="rssHighlightKeywordInput"><small class="text-dark">Keyword</small></label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="rssHighlightKeywordInput" maxlength="<?php echo FEED_KEYWORD_MAX_VALUE_LENGTH; ?>" autocomplete="off" placeholder="OpenAI / PHP など"<?php echo $feedKeywordLoadFailed ? ' disabled' : ''; ?>>
-                        <div class="input-group-append"><button type="submit" class="btn btn-primary rss-highlight-keyword-add"<?php echo $feedKeywordLoadFailed ? ' disabled' : ''; ?>><i class="fas fa-plus" aria-hidden="true"></i><span class="sr-only">Keywordを追加</span></button></div>
-                    </div>
-                    <small class="form-text text-muted">最大<?php echo FEED_KEYWORD_MAX_PER_USER; ?>件 / 1件<?php echo FEED_KEYWORD_MAX_VALUE_LENGTH; ?>文字まで。大文字小文字は区別せず同じKeywordとして扱います。</small>
-                </form>
-                <div id="rssHighlightKeywordStatus" class="alert mt-3 mb-2 py-2 small" role="status" aria-live="polite" hidden></div>
-                <div class="d-flex justify-content-between align-items-center mt-3 mb-2">
-                    <strong class="small">登録済みKeyword</strong>
-                    <span class="small text-muted"><span id="rssHighlightKeywordCount"><?php echo count($feedKeywords); ?></span> / <?php echo FEED_KEYWORD_MAX_PER_USER; ?></span>
-                </div>
-                <div class="list-group rss-highlight-keyword-list" id="rssHighlightKeywordList" aria-live="polite">
-                    <?php if ($feedKeywords === []): ?>
-                        <div class="list-group-item text-muted small rss-highlight-keyword-empty">まだKeywordは登録されていません。</div>
-                    <?php else: ?>
-                        <?php foreach ($feedKeywords as $feedKeyword): ?>
-                            <div class="list-group-item d-flex align-items-center rss-highlight-keyword-item" data-keyword-id="<?php echo (int) $feedKeyword['keyword_id']; ?>">
-                                <span class="rss-highlight-keyword-value mr-2"><?php echo app_html((string) $feedKeyword['keyword_value']); ?></span>
-                                <button type="button" class="btn btn-sm btn-outline-danger ml-auto rss-highlight-keyword-delete" data-keyword-id="<?php echo (int) $feedKeyword['keyword_id']; ?>" aria-label="<?php echo app_html((string) $feedKeyword['keyword_value']); ?> を削除"><i class="fas fa-times" aria-hidden="true"></i></button>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button></div>
-        </div>
-    </div>
-</div>
-
 
 <!-- RSS Highlight: HTMLへ実行可能コードとして埋め込まずJSONデータとして渡す -->
 <script type="application/json" id="rssHighlightKeywordData"><?php echo $feedKeywordJson; ?></script>

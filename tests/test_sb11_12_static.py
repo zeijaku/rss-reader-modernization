@@ -5,6 +5,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
 stock = (ROOT / 'public' / 'stock.php').read_text(encoding='utf-8')
+settings = (ROOT / 'public' / 'settings.php').read_text(encoding='utf-8')
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
 frontend = index + '\n' + dashboard
 api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8')
@@ -57,14 +58,14 @@ body = match.group('body') if match else ''
 check(bool(match), 'tabs.update handler exists')
 check('update_content' not in body and 'delete_content' not in body, 'tabs.update contains no stray content mutation logic')
 check(".on('submit' + eventNamespace, '#tabsForm'" in dashboard and 'event.preventDefault();' in dashboard, 'tabs form uses AJAX submit with preventDefault')
-check('type="submit" class="btn btn-primary submit_tab"' in index, 'tab button uses the single form submit path')
+check('type="submit" class="btn btn-primary submit_tab"' in settings, 'tab button uses the single form submit path')
 
 # SB-11-07/08: settings persistence/current values.
 check('$_SESSION' not in api, 'settings/tab API does not cache mutable UI settings in Session')
 check('function app_selected_attr' in validation and 'function app_checked_attr' in validation, 'selected/checked output helpers exist')
-check("app_selected_attr($ui['conf_style']" in index and "app_selected_attr($ui['conf_style_nav']" in index, 'theme and navbar selects render stored current values')
-check('app_checked_attr($ui[$iconKey]' in index, 'navbar icon radios render stored current values')
-check(".on('submit' + eventNamespace, '#settingsForm'" in dashboard and 'type="submit" class="btn btn-primary submit_setting"' in index, 'settings form uses one AJAX submit path')
+check("app_selected_attr($ui['conf_style']" in settings and "app_selected_attr($ui['conf_style_nav']" in settings, 'theme and navbar selects render stored current values')
+check('app_checked_attr($ui[$iconKey]' in settings, 'navbar icon radios render stored current values')
+check(".on('submit' + eventNamespace, '#settingsForm'" in dashboard and 'type="submit" class="btn btn-primary submit_setting"' in settings, 'settings form uses one AJAX submit path')
 
 # Additional functional corrections found while auditing SB-11.
 check('content-edit-trigger' in index and 'data-content-style' in index, 'content edit modal carries the current style explicitly')

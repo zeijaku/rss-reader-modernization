@@ -39,6 +39,15 @@ RewriteRule ^stock\.php$ /%1stock [R=302,L,NE]
 # 実体stock.phpへ内部Rewrite。Query Stringは維持する。
 RewriteRule ^stock/?$ stock.php [L,QSA]
 
+# V1.13-C: DocumentRootがpublic/直下の場合も /settings をCanonical URLとする。
+RewriteCond %{THE_REQUEST} \s/+(.*/)?public/settings\.php(?:[?\s]) [NC]
+RewriteRule ^settings\.php$ /%1settings [R=302,L,NE]
+RewriteCond %{THE_REQUEST} \s/+(.*/)?settings\.php(?:[?\s]) [NC]
+RewriteRule ^settings\.php$ /%1settings [R=302,L,NE]
+
+# 実体settings.phpへ内部Rewrite。
+RewriteRule ^settings/?$ settings.php [L,QSA]
+
 # 実在するファイル・ディレクトリはそのまま返す
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
