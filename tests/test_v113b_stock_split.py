@@ -8,9 +8,11 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 INDEX = ROOT / 'public' / 'index.php'
 STOCK = ROOT / 'public' / 'stock.php'
+SETTINGS = ROOT / 'public' / 'settings.php'
 
 index = INDEX.read_text(encoding='utf-8')
 stock = STOCK.read_text(encoding='utf-8')
+settings = SETTINGS.read_text(encoding='utf-8') if SETTINGS.is_file() else ''
 api = (ROOT / 'public' / 'api_v1.php').read_text(encoding='utf-8')
 js = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
 
@@ -88,12 +90,12 @@ for needle, label in [
     ('stock-tag-delete', 'Tag delete control'),
     ('id="registerContent"', 'RSS add modal'),
     ('id="accountSettings"', 'Account Settings modal'),
-    ('id="changeConf"', 'Display Settings modal'),
-    ('id="tabContent"', 'Tab name modal'),
-    ('id="rssHighlightSettings"', 'RSS Highlight modal'),
     ('id="drawerMenu"', 'Drawer'),
 ]:
     check(needle in stock, 'Stock page preserves ' + label)
+
+check('id="settingsForm"' in settings and 'id="tabsForm"' in settings and 'id="rssHighlightKeywordForm"' in settings, 'V1.13-C keeps moved Settings controls on dedicated Settings page')
+check('href="./settings#display"' in stock and 'href="./settings#tabs"' in stock and 'href="./settings#highlight"' in stock, 'Stock Drawer keeps access to moved Settings controls')
 
 check('meta name="csrf-token"' in stock, 'Stock page keeps CSRF meta for existing API JS')
 check('method="post" action="./logout.php"' in stock and 'name="csrf_token"' in stock, 'Stock logout remains POST + CSRF')

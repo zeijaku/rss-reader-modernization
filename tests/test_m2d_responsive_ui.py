@@ -5,6 +5,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
 stock = (ROOT / 'public/stock.php').read_text(encoding='utf-8')
+settings = (ROOT / 'public/settings.php').read_text(encoding='utf-8')
 login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
@@ -57,8 +58,8 @@ check('このタブにはWidgetが登録されていません。' in index, 'RSS
 check('RSSを追加する' in index, 'empty RSS tab offers the existing add action')
 check('<h5 class="modal-title" id="registerContentTitle">RSSを追加</h5>' in index, 'RSS add modal has a direct title')
 check('<h5 class="modal-title" id="changeContentTitle">RSSを変更</h5>' in index, 'RSS edit modal has a direct title')
-check('<h5 class="modal-title" id="changeConfTitle">表示設定</h5>' in index, 'Settings modal title is clear')
-check('Nabvar Link' not in index and 'Navbarリンク' in index, 'Drawer Navbar label typo is corrected')
+check('id="displaySettingsTitle">表示設定</strong>' in settings, 'Settings page display title is clear')
+check('Nabvar Link' not in settings and 'Navbarリンク' in settings, 'Settings Navbar label typo remains corrected')
 check('iGugur RSS Reader' not in login and 'iGuguru RSS Reader' in login, 'Login product name is consistent')
 
 check('.html(' not in js and 'innerHTML' not in js, 'UI changes retain text-based safe DOM rendering')

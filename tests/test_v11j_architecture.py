@@ -69,7 +69,7 @@ check("api_success(['csrf_token' => $csrfToken])" in api, 'success response incl
 check('session_regenerate_id(true)' in session, 'session helper rotates the session identifier')
 
 modal_start = index.find('id="accountSettings"')
-modal_end = index.find('<!-- 設定変更モーダル -->', modal_start)
+modal_end = index.find('<!-- 記録用スモールモーダル[Save] -->', modal_start)
 modal = index[modal_start:modal_end]
 check(modal_start >= 0 and modal_end > modal_start, 'Account Settings modal is present')
 check('aria-labelledby="accountSettingsTitle"' in modal, 'Account Settings modal has an accessible label')
@@ -85,7 +85,7 @@ check(modal.count('type="password"') == 4, 'all four credential inputs are passw
 check('value="' not in '\n'.join(line for line in modal.splitlines() if 'type="password"' in line), 'password fields are never prefilled in HTML')
 check('user_email' not in modal and 'user_password' not in modal, 'stored account identity and hash are not rendered in the modal')
 check('data-target="#accountSettings"' in index and 'アカウント設定' in index, 'Drawer exposes Account Settings')
-check(index.index('data-target="#changeConf"') < index.index('data-target="#accountSettings"') < index.index('drawer-logout-button'), 'V1.3 Drawer separates display settings from Account and keeps Account Settings before logout')
+check(index.index('href="./settings#display"') < index.index('data-target="#accountSettings"') < index.index('drawer-logout-button'), 'Drawer keeps dedicated Display Settings before Account Settings and logout')
 
 check("function accountRefreshCsrfToken" in js, 'frontend has a bounded CSRF refresh helper')
 check("/^[a-f0-9]{64}$/.test(token)" in js, 'frontend validates the rotated CSRF token shape')

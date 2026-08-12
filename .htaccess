@@ -20,6 +20,15 @@ RewriteRule ^stock\.php$ /%1stock [R=302,L,NE]
 # 実体はpublic/stock.phpのまま維持し、Query Stringもそのまま渡す。
 RewriteRule ^stock/?$ public/stock.php [L,QSA]
 
+# V1.13-C: Settingsは拡張子を見せない /settings をCanonical URLとする。
+RewriteCond %{THE_REQUEST} \s/+(.*/)?public/settings\.php(?:[?\s]) [NC]
+RewriteRule ^public/settings\.php$ /%1settings [R=302,L,NE]
+RewriteCond %{THE_REQUEST} \s/+(.*/)?settings\.php(?:[?\s]) [NC]
+RewriteRule ^settings\.php$ /%1settings [R=302,L,NE]
+
+# 実体はpublic/settings.phpのまま維持する。
+RewriteRule ^settings/?$ public/settings.php [L,QSA]
+
 # Common error page for the current server layout (application root -> public/ internal rewrite).
 # For a subdirectory install, prefix the path, for example: /rss/public/error.php
 ErrorDocument 403 /public/error.php
