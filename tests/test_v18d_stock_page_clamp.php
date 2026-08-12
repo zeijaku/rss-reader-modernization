@@ -14,11 +14,11 @@ putenv('DB_USER=test');
 putenv('DB_PASSWORD=test');
 putenv('APP_LOG_ENABLED=false');
 $_SERVER['REQUEST_METHOD'] = 'GET';
-$_SERVER['REQUEST_URI'] = '/?tab=stock&page=999';
+$_SERVER['REQUEST_URI'] = '/stock?page=999';
 $_SERVER['SERVER_PROTOCOL'] = 'HTTP/1.1';
 $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 $_SERVER['SERVER_PORT'] = '80';
-$_GET = ['tab' => 'stock', 'page' => '999'];
+$_GET = ['page' => '999'];
 require $root . '/app/bootstrap.php';
 
 $GLOBALS['v18d_clamp_select_sql'] = '';
@@ -90,7 +90,7 @@ set_db_connection_for_testing(new V18dClampPDO());
 app_session_start();
 app_session_login(1);
 ob_start();
-require $root . '/public/index.php';
+require $root . '/public/stock.php';
 $html = ob_get_clean();
 app_session_logout();
 
@@ -110,7 +110,7 @@ v18d_clamp_check(substr_count($html, 'class="stock-card"') === 5, 'final page re
 v18d_clamp_check(str_contains($html, '41〜45件を表示 / 3 / 3ページ'), 'out-of-range request renders the normalized final page summary');
 v18d_clamp_check(str_contains($html, '<li class="page-item active" aria-current="page"><span class="page-link">3</span></li>'), 'normalized final page is active');
 v18d_clamp_check(str_contains($html, 'class="page-item disabled" aria-disabled="true"><span class="page-link">&raquo;</span>'), 'next control is disabled on normalized final page');
-v18d_clamp_check(str_contains($html, 'data-stock-empty-redirect="./?tab=stock&amp;page=2"'), 'last-card removal on final page recovers to previous page');
+v18d_clamp_check(str_contains($html, 'data-stock-empty-redirect="./stock?page=2"'), 'last-card removal on final page recovers to previous page');
 
 if ($failures !== []) {
     fwrite(STDERR, count($failures) . "/{$tests} V1.8-D page clamp checks failed.\n");
