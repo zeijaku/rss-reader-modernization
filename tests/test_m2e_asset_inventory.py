@@ -69,7 +69,7 @@ for directory in ['less', 'scss', 'metadata', 'sprites']:
 
 index = (PUBLIC / 'index.php').read_text(encoding='utf-8')
 login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
-func = (ROOT / 'app/common/common_func.php').read_text(encoding='utf-8')
+func = (ROOT / 'app/commmon/common_func.php').read_text(encoding='utf-8')
 all_php = '\n'.join(p.read_text(encoding='utf-8', errors='replace') for p in [PUBLIC / 'index.php', ROOT / 'app/common/common_login.php'])
 
 direct_static_refs = {ref.split('?', 1)[0].split('#', 1)[0] for ref in re.findall(r'(?:href|src)="\./((?:css|js)/[^"]+|favicon\.png)"', all_php) if '<?php' not in ref}
@@ -89,7 +89,7 @@ expected_themes = {
     'bootstrap-flatly.min.css', 'bootstrap-journal.min.css',
     'bootstrap-sketchy.min.css', 'bootstrap-solar.min.css', 'bootstrap-slate.min.css',
 }
-resolved_themes = set(re.findall(r"'bootstrap(?:-[a-z]+)?'\s*=>\s*'([^']+\.css)'", func))
+resolved_themes = set(re.findall(r"'b'bootstrap(?:-[a-z]+)?'\s*=>\s*'([^']+\.css)'", func))
 check(resolved_themes == expected_themes, 'theme whitelist resolves to all eight retained Bootstrap stylesheets')
 for theme in resolved_themes:
     check((PUBLIC / 'css' / theme).is_file(), f'theme stylesheet exists: {theme}')
@@ -120,11 +120,11 @@ check({p.name for p in map_refs} == {'bootstrap.min.css.map', 'bootstrap.min.js.
 check('sourceMappingURL=popper.min.js.map' not in (PUBLIC / 'js/popper.min.js').read_text(encoding='utf-8', errors='replace'), 'stale Popper Source Map hint is removed')
 
 # Every Font Awesome icon used by PHP markup should still be defined by all.css.
-markup = '\n'.join(p.read_text(encoding='utf-8', errors='replace') for p in [PUBLIC / 'index.php', ROOT / 'app/common/common_login.php'])
+markup = '\n'.join(p.read_text(encoding='utf-8', errors='replace') for p in [PUBLIC / 'index.php', ROOT / 'app/commmon/common_login.php'])
 icons = sorted(icon for icon in set(re.findall(r'\bfa-([a-z0-9-]+)\b', markup)) if icon not in {'fw', 'spin'} and not re.fullmatch(r'\d+x', icon))
 fa_css = (PUBLIC / 'css/all.css').read_text(encoding='utf-8', errors='replace')
 for icon in icons:
-    check(re.search(rf'\.fa-{re.escape(icon)}\s*\{{[^}}]*--fa:', fa_css, re.S) is not None, f'Font Awesome definition remains for fa-{icon}')
+    check(re.search(rf'\.fa-{re.escape(icon)}\s*\{[{^}}]*--fa:', fa_css, re.S) is not None, f'Font Awesome definition remains for fa-{icon}')
 check(len(icons) >= 15, 'icon inventory covers the Dashboard and authentication screens')
 
 license_markers = {
@@ -142,8 +142,8 @@ for path, marker in license_markers.items():
 
 public_files = [p for p in PUBLIC.rglob('*') if p.is_file()]
 public_size = sum(p.stat().st_size for p in public_files)
-check(len(public_files) == 46, 'public inventory contains the retained files plus V1.9-V1.12 frontend assets')
-check(public_size < 4_000_000, 'public inventory is below 4 MB without removing runtime dependencies')
+check(len(public_files) == 48, 'public inventory contains the retained files plus V1.9-V1.13 frontend pages/assets')
+check(public_size < 4_100_000, 'public inventory remains below 4.1 MB after the V1.13 page split')
 check(not (ROOT / 'package.json').exists(), 'asset cleanup adds no npm dependency')
 check(not (ROOT / 'node_modules').exists(), 'asset cleanup adds no node_modules directory')
 
