@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.12.1`
-Release tag: `v1.12.1`
+**Stable release:** `RSS Reader Modernization 1.13.0`
+Release tag: `v1.13.0`
+
+Version 1.13.0では、Dashboard構造整理を中心に、Stock一覧を`/stock`、表示設定・タブ名・RSS Highlight設定を`/settings`へ分離し、Dashboard本体も内部Viewへ分割しました。既存の`/?tab=stock`互換、Account Settings、Stock／Settingsの既存動作は維持しています。Performance再計測では追加最適化を行う根拠となる劣化を確認せず、Security／新規設置DocumentationとHealthcheckを整理しました。新しいDB Migration／config追加はありません。
 
 Version 1.12.1では、V1.12.0後の互換性・回帰修正として、Stock解除のAjax部分更新とStockからTaskへの追加先選択を復元し、履歴Regressionを現行V1.12へ整合しました。DB schema／Migration／configの追加変更はありません。
 
