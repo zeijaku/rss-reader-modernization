@@ -5,6 +5,8 @@ import re
 import sys
 from urllib.parse import unquote
 
+from dashboard_source_utils import dashboard_source
+
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC = ROOT / 'public'
 checks: list[bool] = []
@@ -13,7 +15,7 @@ def check(condition: bool, message: str) -> None:
     checks.append(bool(condition))
     print(('PASS' if condition else 'FAIL') + ': ' + message)
 
-index = (PUBLIC / 'index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
 jquery = (PUBLIC / 'js/jquery-3.7.1.min.js').read_text(encoding='utf-8', errors='replace')
 bootstrap_js = (PUBLIC / 'js/bootstrap.min.js').read_text(encoding='utf-8', errors='replace')
