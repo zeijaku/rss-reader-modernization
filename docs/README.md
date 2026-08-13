@@ -145,8 +145,14 @@ Secure Baseline初期のdeployment / login / session / logout等のhotfix記録�
 - `database/migrations/004_v1_1_memo.sql` — V1.1-G既存DB migration
 - `database/migrations/005_v1_1_task.sql` — V1.1-H既存DB migration
 - `database/migrations/006_v1_1_calendar_event.sql` — V1.1-I既存DB migration
+- `database/migrations/007_v1_7_remember_token.sql` — V1.7 persistent login migration
+- `database/migrations/008_v1_7_widget_height.sql` — V1.7 Widget height migration
+- `database/migrations/009_v1_9_mail_account.sql` — V1.9 Mail account migration
+- `database/migrations/010_v1_10_links.sql` — V1.10 Links migration
+- `database/migrations/011_v1_11_stock_tags.sql` — V1.11 Stock Tags migration
+- `database/migrations/012_v1_12_feed_keywords.sql` — V1.12 RSS Highlight migration
 
-新規環境では `database/schema.sql` を使用し、Legacy DBを保持して移行する場合だけpreflight → migration → postflightの順に使用します。
+現行の新規環境では `database/schema.sql` をBaseとして投入した後、009〜012を番号順に適用します。詳細は [`installation.md`](installation.md) を参照してください。既存DBを更新する場合は `schema.sql` を再実行せず、Backupと必要なauditを確認して未適用Migrationだけを使用します。
 
 ## M4 Release preparation
 

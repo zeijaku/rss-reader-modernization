@@ -2,11 +2,12 @@
 -- Mail Account foundation for existing MySQL / MariaDB databases.
 --
 -- IMPORTANT:
--- 1. Run database/audit/v1_9_b_preflight.sql first.
--- 2. Set @table_prefix to the SAME value as DB_TABLE_PREFIX in config/local.php.
+-- 1. Set @table_prefix to the SAME value as DB_TABLE_PREFIX in config/local.php.
+-- 2. Existing DB upgrades require a verified backup before running this migration.
 -- 3. Run this file only when mail_account does NOT already exist.
--- 4. This migration creates a metadata/credential table only. Mail messages are not stored.
--- 5. The credential column stores authenticated ciphertext, never plaintext.
+-- 4. Fresh installs apply this after database/schema.sql; see docs/installation.md.
+-- 5. This migration creates a metadata/credential table only. Mail messages are not stored.
+-- 6. The credential column stores authenticated ciphertext, never plaintext.
 
 SET NAMES utf8mb4;
 

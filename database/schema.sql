@@ -1,6 +1,8 @@
--- RSS Reader Modernization 1.1.0 new-install schema
+-- RSS Reader Modernization base new-install schema (through migration 008 / V1.7).
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
+-- Current fresh installs must also apply migrations 009-012 in numeric order.
+-- See docs/installation.md. No table definition is changed by this V1.13-F note update.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
 -- config/local.php. Allowed characters: ASCII letters, digits, underscore;

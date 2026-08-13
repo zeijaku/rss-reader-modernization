@@ -239,6 +239,48 @@ Foreign Keyを入れないのはSecurity omissionではなく、Legacy orphan/us
 
 Version管理するSQLはreview済みschema/audit/migration/fake fixtureだけです。
 
+## V1.13 Security review
+
+### New entry points
+
+V1.13で追加した `public/stock.php` と `public/settings.php` も、既存のSecurity boundaryを維持します。
+
+- `stock.php` は中央Session bootstrapを使用し、未認証時はStock dataを取得せずLogin viewで終了。
+- `settings.php` はSession userがない場合DashboardへRedirect。
+- Mutationは引き続き `public/api_v1.php` のPOST / Session / CSRF / Validation boundaryを通す。
+- Browserからowner/user IDをSecurity authorityとして受け取らず、Session userでscopeする。
+- Stock/Settings分離のための新しいDB access pathや独自HTTP fetch pathは追加していない。
+
+### CSP
+
+現行CSPは `frame-ancestors 'self'`、`base-uri 'self'`、`form-action 'self'` を強制しています。Dashboardには既存のinline script/styleとLegacy frontend dependencyが残るため、V1.13では `default-src` / `script-src` / `style-src` 等を推測で追加しません。
+
+より厳格なCSPは、inline依存を棚卸しし、nonce/hashまたは外部file化を進めた後に段階導入します。Security headerを増やすこと自体より、既存画面を壊さず検証可能なPolicyにすることを優先します。
+
+### HTTPS / HSTS
+
+ApplicationはHTTPS request時にSession cookieへ `Secure` を付与します。HSTSはBrowserへ長期間残るhost-level policyのため、Repositoryから本番HTTPS強制状態を確認できない現段階では自動追加しません。
+
+Productionでは次をHosting / Web server側で確認します。
+
+- HTTPからHTTPSへ確実にRedirectされる。
+- 全運用URLがHTTPSで利用できる。
+- 証明書更新が継続できる。
+- 上記を確認した後にだけHSTS導入を判断する。
+
+### Runtime configuration check
+
+`php tools/healthcheck.php` は秘密値そのものを表示せず、Productionで重要なRuntime stateを確認します。
+
+- `APP_ENV` / `APP_DEBUG`
+- `APP_HASH_KEY` が設定済みか、32文字以上か
+- Session / Feed cache / Login throttleの保存先と書込み可否
+- 各Runtime storageが `public/` 外か
+- `config/local.php` の有無と `public/` 外配置
+- Registration設定
+
+`APP_HASH_KEY`、DB password、Mail credential等の実値はHealthcheckへ出力しません。
+
 ## Production checklist
 
 - HTTPSを使用。

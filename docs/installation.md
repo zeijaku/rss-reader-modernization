@@ -102,9 +102,11 @@ Prefix:   rss_
 'DB_TABLE_PREFIX' => 'rss_',
 ```
 
-## 6. Schemaを投入
+## 6. Schemaと現行Migrationを投入
 
-`database/schema.sql` 冒頭の値を、`DB_TABLE_PREFIX` と同じにします。
+`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までを取り込んだBase schemaです。V1.13-FではDB定義そのものは変更せず、現行Repositoryの新規Install手順を明確化しています。
+
+まず `database/schema.sql` 冒頭の値を、`DB_TABLE_PREFIX` と同じにします。
 
 ```sql
 SET @table_prefix = 'rss_';
@@ -116,9 +118,27 @@ MySQL CLI例:
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\schema.sql
 ```
 
-phpMyAdminを使用する場合は、対象の空Databaseを選択してから `database/schema.sql` をImportします。
+その後、現行機能に必要なMigrationを**番号順**に適用します。各SQLの `SET @table_prefix` も `DB_TABLE_PREFIX` と同じ値へ変更してください。
 
-Prefixが `rss_` の場合、Version 1.1.0では次の9 tableが作成されます。
+```text
+009_v1_9_mail_account.sql
+010_v1_10_links.sql
+011_v1_11_stock_tags.sql
+012_v1_12_feed_keywords.sql
+```
+
+CLI例:
+
+```powershell
+mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\009_v1_9_mail_account.sql
+mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\010_v1_10_links.sql
+mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\011_v1_11_stock_tags.sql
+mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\012_v1_12_feed_keywords.sql
+```
+
+phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012を同じ順番でImportします。
+
+Prefixが `rss_` の場合、最終的に次の15 tableが存在します。
 
 ```text
 rss_user_info
@@ -130,9 +150,15 @@ rss_memo
 rss_task
 rss_calendar_event
 rss_dashboard_widget
+rss_remember_token
+rss_mail_account
+rss_link_item
+rss_stock_tag
+rss_stock_tag_map
+rss_feed_keyword
 ```
 
-既存Databaseへ `schema.sql` を再実行しないでください。
+**既存Databaseへ `schema.sql` を再実行しないでください。** 既存環境はBackupを取得し、未適用Migrationだけを順番に適用します。
 
 ## 7. Runtime directory
 
