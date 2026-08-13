@@ -1,6 +1,7 @@
 from pathlib import Path
 import re
 
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
 
@@ -13,7 +14,7 @@ bootstrap = (ROOT / 'app/bootstrap.php').read_text(encoding='utf-8')
 widget = (ROOT / 'app/dashboard_widget.php').read_text(encoding='utf-8')
 game = (ROOT / 'app/mini_game.php').read_text(encoding='utf-8')
 api = (ROOT / 'app/api.php').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 dashboard_js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 game_js = (ROOT / 'public/js/mini-game.js').read_text(encoding='utf-8')
 game_css = (ROOT / 'public/css/mini-game.css').read_text(encoding='utf-8')

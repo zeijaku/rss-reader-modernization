@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 from pathlib import Path
+from dashboard_source_utils import dashboard_source
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -11,7 +12,7 @@ JS = ROOT / 'public' / 'js' / 'dashboard.js'
 API = ROOT / 'public' / 'api_v1.php'
 APP_API = ROOT / 'app' / 'api.php'
 
-index = INDEX.read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 stock = STOCK.read_text(encoding='utf-8')
 settings = SETTINGS.read_text(encoding='utf-8')
 js = JS.read_text(encoding='utf-8')

@@ -2,6 +2,7 @@ from pathlib import Path
 import re
 
 from version_test_utils import is_later_application_release, is_later_visible_label
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 failures: list[str] = []
 
@@ -15,7 +16,7 @@ widget = (ROOT / 'app/dashboard_widget.php').read_text(encoding='utf-8')
 search = (ROOT / 'app/search_feed.php').read_text(encoding='utf-8')
 game = (ROOT / 'app/mini_game.php').read_text(encoding='utf-8')
 api = (ROOT / 'app/api.php').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 dash_js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 calendar_js = (ROOT / 'public/js/calendar-core.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')

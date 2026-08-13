@@ -2,8 +2,10 @@ from pathlib import Path
 import subprocess
 import sys
 
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
+settings = (ROOT / 'public/settings.php').read_text(encoding='utf-8')
 failures: list[str] = []
 
 
@@ -39,7 +41,7 @@ check('aria-live="polite" aria-relevant="all"' in index, 'Feed bodies remain pol
 check('scope="col"' in index and '<th colspan="3"' in index, 'Feed table headings use th and scope')
 check('aria-label="このRSSを編集"' in index, 'Feed edit controls remain named buttons')
 check('id="registerContentForm"' in index and 'id="changeContentForm"' in index, 'RSS add/change forms remain explicit')
-check('class="navbar-link-setting"' in index and 'class="navbar-icon-setting"' in index, 'Settings fieldset grouping remains')
+check('class="navbar-link-setting"' in settings and 'class="navbar-icon-setting"' in settings, 'Settings fieldset grouping remains')
 check('aria-controls="drawerMenu"' in index and 'aria-expanded="false"' in index, 'Drawer triggers keep expanded-state semantics')
 check('id="drawerMenu"' in index and 'aria-label="RSS Readerメニュー"' in index, 'Drawer navigation remains named')
 check('aria-label="ページ先頭へ移動"' in index and 'href="#main-content"' in index, 'Page Top remains keyboard-accessible')

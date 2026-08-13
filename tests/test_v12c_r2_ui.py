@@ -1,7 +1,8 @@
 from pathlib import Path
 
+from dashboard_source_utils import dashboard_source
 root = Path(__file__).resolve().parents[1]
-index = (root / 'public/index.php').read_text()
+index = dashboard_source(root)
 js = (root / 'public/js/dashboard.js').read_text()
 
 checks = []

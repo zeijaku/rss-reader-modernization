@@ -2,6 +2,7 @@ from pathlib import Path
 import re
 
 from version_test_utils import is_later_application_release, is_later_visible_label
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 failures = []
 def check(condition, message):
@@ -9,7 +10,7 @@ def check(condition, message):
     if not condition: failures.append(message)
 
 version = (ROOT / 'app/version.php').read_text()
-index = (ROOT / 'public/index.php').read_text()
+index = dashboard_source(ROOT)
 lights = (ROOT / 'public/js/lights-out.js').read_text()
 dash = (ROOT / 'public/js/dashboard.js').read_text()
 css = (ROOT / 'public/css/mini-game.css').read_text()

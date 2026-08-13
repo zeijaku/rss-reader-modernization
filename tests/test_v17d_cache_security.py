@@ -4,6 +4,7 @@ import re
 import sys
 
 from version_test_utils import is_later_application_release, is_later_visible_label
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
 
@@ -18,7 +19,7 @@ cache = (ROOT / 'app/response_cache.php').read_text(encoding='utf-8')
 bootstrap = (ROOT / 'app/bootstrap.php').read_text(encoding='utf-8')
 error_response = (ROOT / 'app/error_response.php').read_text(encoding='utf-8')
 session = (ROOT / 'app/session.php').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 logout = (ROOT / 'public/logout.php').read_text(encoding='utf-8')
 api = (ROOT / 'public/api_v1.php').read_text(encoding='utf-8')
 

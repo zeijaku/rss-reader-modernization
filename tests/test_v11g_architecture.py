@@ -2,11 +2,12 @@ from pathlib import Path
 import re
 import sys
 
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 domain = (ROOT / 'app/dashboard_widget.php').read_text(encoding='utf-8')
 api = (ROOT / 'app/api.php').read_text(encoding='utf-8')
 conf = (ROOT / 'app/common/common_conf.php').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')

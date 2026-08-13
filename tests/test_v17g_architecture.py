@@ -1,12 +1,13 @@
 from pathlib import Path
 from version_test_utils import is_later_application_release, is_later_visible_label
+from dashboard_source_utils import dashboard_source
 ROOT=Path(__file__).resolve().parents[1]
 failures=[]
 def check(value,message):
     print(('PASS' if value else 'FAIL')+': '+message)
     if not value: failures.append(message)
 version=(ROOT/'app/version.php').read_text()
-index=(ROOT/'public/index.php').read_text()
+index = dashboard_source(ROOT)
 api=(ROOT/'app/api.php').read_text()
 widget=(ROOT/'app/dashboard_widget.php').read_text()
 run=(ROOT/'tests/run.sh').read_text()

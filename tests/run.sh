@@ -533,6 +533,9 @@ python3 "$ROOT/tests/test_v113c_settings_split.py"
 python3 "$ROOT/tests/test_v113c_settings_render.py"
 python3 "$ROOT/tests/test_v113c_settings_browser.py"
 
+# V1.13-D Dashboard entry-point readability split
+python3 "$ROOT/tests/test_v113d_index_views.py"
+
 if grep -Fq "const APP_VERSION = '1.8.0';" "$ROOT/app/version.php"; then
     for runtime_dir in "$ROOT/var/session" "$ROOT/var/log" "$ROOT/var/cache" "$ROOT/var/db-migration" "$ROOT/var/security/login-throttle" "$ROOT/var/m4f-evidence"; do
         if [ -d "$runtime_dir" ]; then

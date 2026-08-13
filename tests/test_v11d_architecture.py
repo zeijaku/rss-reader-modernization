@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
 
@@ -13,7 +14,7 @@ widget = (ROOT / 'app/dashboard_widget.php').read_text(encoding='utf-8')
 conf = (ROOT / 'app/common/common_conf.php').read_text(encoding='utf-8')
 bootstrap = (ROOT / 'app/bootstrap.php').read_text(encoding='utf-8')
 api = (ROOT / 'app/api.php').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 schema = (ROOT / 'database/schema.sql').read_text(encoding='utf-8')

@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 import textwrap
 
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 failures: list[str] = []
 count = 0
@@ -22,7 +23,7 @@ def check(condition: bool, message: str) -> None:
         failures.append(message)
 
 
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')

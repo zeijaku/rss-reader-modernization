@@ -1,9 +1,10 @@
 from pathlib import Path
+from dashboard_source_utils import dashboard_source
 root = Path(__file__).resolve().parents[1]
 checks = []
 def check(name, cond): checks.append((name, bool(cond)))
 
-index = (root/'public/index.php').read_text()
+index = dashboard_source(root)
 api = (root/'public/api_v1.php').read_text()
 logout = (root/'public/logout.php').read_text()
 session = (root/'app/session.php').read_text()

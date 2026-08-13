@@ -2,6 +2,7 @@ from pathlib import Path
 import re
 
 from version_test_utils import is_later_application_release, is_later_visible_label
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
 
@@ -13,7 +14,7 @@ def check(condition: bool, message: str) -> None:
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 timer = (ROOT / 'public/js/clock-timer.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/clock-timer.css').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 run = (ROOT / 'tests/run.sh').read_text(encoding='utf-8')
 
 check("const APP_VERSION = '1.5.0-dev.2';" in version or "const APP_VERSION = '1.5.0';" in version or re.search(r"const APP_VERSION = '1\.[67]\.0(?:-dev\.[1-9][0-9]*)?';", version) is not None or is_later_application_release(version, (1, 5, 0)), 'Application Version retains V1.5-C behavior')

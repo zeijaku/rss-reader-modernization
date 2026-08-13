@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 
 from version_test_utils import is_later_application_release, is_later_visible_label
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
 
@@ -16,7 +17,7 @@ bootstrap = (ROOT / 'app/bootstrap.php').read_text(encoding='utf-8')
 conf = (ROOT / 'app/common/common_conf.php').read_text(encoding='utf-8')
 schema = (ROOT / 'database/schema.sql').read_text(encoding='utf-8')
 migration = (ROOT / 'database/migrations/007_v1_7_remember_token.sql').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 session = (ROOT / 'app/session.php').read_text(encoding='utf-8')
 
 check("APP_VERSION = '1.7.0-dev.4'" in version or "APP_VERSION = '1.7.0-dev.5'" in version or "APP_VERSION = '1.7.0-dev.6'" in version or ("APP_VERSION = '1.7.0-dev.7'" in version or "APP_VERSION = '1.7.0-dev.8'" in version or "APP_VERSION = '1.7.0-dev.9'" in version or "APP_VERSION = '1.7.0-dev.10'" in version or "APP_VERSION = '1.7.0'" in version) or is_later_application_release(version, (1, 7, 0)), 'Application Version is V1.7-E or a compatible V1.7-F successor')

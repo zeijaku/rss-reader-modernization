@@ -2,6 +2,7 @@
 from pathlib import Path
 
 from version_test_utils import is_later_application_release, is_later_visible_label
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 checks=[]
 def check(cond, msg):
@@ -11,7 +12,7 @@ version=(ROOT/'app/version.php').read_text()
 bootstrap=(ROOT/'app/bootstrap.php').read_text()
 persistent=(ROOT/'app/persistent_login.php').read_text()
 session=(ROOT/'app/session.php').read_text()
-index=(ROOT/'public/index.php').read_text()
+index = dashboard_source(ROOT)
 login=(ROOT/'app/common/common_login.php').read_text()
 css=(ROOT/'public/css/auth.css').read_text()
 logout=(ROOT/'public/logout.php').read_text()

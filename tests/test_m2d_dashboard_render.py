@@ -2,8 +2,9 @@ from pathlib import Path
 import subprocess
 import sys
 
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 stock = (ROOT / 'public/stock.php').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 failures: list[str] = []

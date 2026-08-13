@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 
 from version_test_utils import is_later_application_release, is_later_visible_label
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
 
@@ -14,7 +15,7 @@ def check(condition: bool, message: str) -> None:
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 asset_php = (ROOT / 'app/asset.php').read_text(encoding='utf-8')
 bootstrap = (ROOT / 'app/bootstrap.php').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
 combined = index + '\n' + login
 

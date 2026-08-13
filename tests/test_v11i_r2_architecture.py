@@ -1,8 +1,9 @@
 from pathlib import Path
 import re, sys
 
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 dashboard = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 calendar = (ROOT / 'public/js/calendar-core.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')

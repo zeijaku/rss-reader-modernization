@@ -2,6 +2,7 @@ from pathlib import Path
 import re
 
 from version_test_utils import is_later_application_release, is_later_visible_label
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
 
@@ -12,7 +13,7 @@ def check(condition: bool, message: str) -> None:
 
 
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 dashboard = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 timer_js = (ROOT / 'public/js/clock-timer.js').read_text(encoding='utf-8')
 timer_css = (ROOT / 'public/css/clock-timer.css').read_text(encoding='utf-8')

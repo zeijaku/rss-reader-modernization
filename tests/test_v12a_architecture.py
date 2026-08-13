@@ -2,10 +2,11 @@ from pathlib import Path
 import re
 import sys
 
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
 auth = (ROOT / 'app/auth.php').read_text(encoding='utf-8')
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 session = (ROOT / 'app/session.php').read_text(encoding='utf-8')
 logout = (ROOT / 'public/logout.php').read_text(encoding='utf-8')
 bootstrap = (ROOT / 'app/bootstrap.php').read_text(encoding='utf-8')

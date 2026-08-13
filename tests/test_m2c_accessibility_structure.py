@@ -2,8 +2,10 @@ from pathlib import Path
 import re
 import sys
 
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
-index = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
+settings = (ROOT / 'public/settings.php').read_text(encoding='utf-8')
 login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
@@ -52,11 +54,11 @@ check("event.preventDefault();\n                addContent($(this));" in js, 'RS
 check("event.preventDefault();\n                changeContent($(this));" in js, 'RSS change submit stays on the AJAX path')
 check('for="style_select"' in index and 'id="style_select" name="content_style"' in index, 'RSS style select has the correct label')
 check('for="conf_style_navlink_view' not in index, 'generated label markup is not hard-coded incorrectly')
-check('for="<?php echo app_html($viewKey); ?>"' in index, 'Navbar display-name inputs have labels')
-check('<fieldset class="navbar-link-setting">' in index, 'each Navbar link setting is grouped')
-check('<fieldset class="navbar-icon-setting">' in index, 'Navbar icon choices are grouped')
-check('<legend class="small text-dark">アイコンを選択</legend>' in index, 'Navbar radio group has a legend')
-check('id="<?php echo app_html($radioId); ?>" type="radio"' in index, 'Navbar radio buttons receive unique ids')
+check('for="<?php echo app_html($viewKey); ?>"' in settings, 'Navbar display-name inputs have labels')
+check('<fieldset class="navbar-link-setting">' in settings, 'each Navbar link setting is grouped')
+check('<fieldset class="navbar-icon-setting">' in settings, 'Navbar icon choices are grouped')
+check('<legend class="small text-dark">アイコンを選択</legend>' in settings, 'Navbar radio group has a legend')
+check('id="<?php echo app_html($radioId); ?>" type="radio"' in settings, 'Navbar radio buttons receive unique ids')
 
 check('role="region" aria-labelledby="feed-title-' in index, 'each Feed card is a named region')
 check('aria-busy="true"' in index, 'server-rendered Feed card starts busy')

@@ -2,8 +2,9 @@ from pathlib import Path
 import re
 import sys
 
+from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
-index = (ROOT / 'public/index.php').read_text()
+index = dashboard_source(ROOT)
 stock = (ROOT / 'public/stock.php').read_text()
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
 frontend = index + '\n' + dashboard
