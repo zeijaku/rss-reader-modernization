@@ -1,5 +1,17 @@
 # Changelog
 
+## RSS Reader Modernization 1.13.0 — 2026-08-14
+
+### Version 1.13.0 structure / performance / security finalization
+
+- Stock一覧を`public/stock.php`へ分離し、Canonical routeを`/stock`へ整理。既存`/?tab=stock`は検索・並び替え・Page・Tag条件を維持して互換Redirect。
+- 表示設定、Tab名、RSS Highlight設定を`public/settings.php`へ分離し、`/settings`へ集約。Account Settingsは従来どおりDashboard Modalを維持。
+- `public/index.php`のDashboard Widget／Modal表示を内部Viewへ分割し、既存DOM／CSS／JavaScript／API契約を変えず可読性を改善。
+- V1.13-A／EのPerformance計測を比較し、Stock DB helperを含め追加最適化が必要な劣化は確認されなかったため、根拠のないSQL／Cache変更は実施せず現行挙動を維持。
+- V1.13-FでSecurity Header／Session／CSRF／SSRF／XSS／API境界を再確認し、Healthcheckと新規設置／Security Documentationを現行構成へ整合。
+- 既存Migration `009_v1_9_mail_account.sql`と新規設置Schemaの説明を現行状態へ整合したが、DDL変更、新規Migration、必須config追加はなし。
+- Application Versionを`1.13.0`へ確定。
+
 ## RSS Reader Modernization 1.12.1 — 2026-08-11
 
 ### Version 1.12.1 compatibility and regression fixes
