@@ -424,14 +424,14 @@
                 'aria-busy': 'true'
             });
         var $inner = $('<div>').addClass('mail-card-inner').appendTo($card);
-        var $header = $('<div>').addClass('mail-card-header bg-' + String(widget.widget_style || 'primary')).appendTo($inner);
+        var $header = $('<div>').addClass('mail-card-header text-bg-' + String(widget.widget_style || 'primary')).appendTo($inner);
         $('<button>').attr({'type': 'button', 'draggable': 'false', 'aria-describedby': 'widget-sort-help', 'aria-label': 'このWidgetを並び替え', 'aria-pressed': 'false', 'title': 'ここを掴んで並び替え'})
-            .addClass('btn btn-link widget-drag-handle').append($('<i>').addClass('fas fa-grip-lines text-white').attr('aria-hidden', 'true')).appendTo($header);
-        $('<small>').addClass('mail-card-title widget-title-text text-white').attr('id', 'mail-title-' + id).text(String(config.title || widget.account_name || 'Mail')).appendTo($header);
+            .addClass('btn btn-link widget-drag-handle').append($('<i>').addClass('fas fa-grip-lines').attr('aria-hidden', 'true')).appendTo($header);
+        $('<small>').addClass('mail-card-title widget-title-text').attr('id', 'mail-title-' + id).text(String(config.title || widget.account_name || 'Mail')).appendTo($header);
         $('<span>').addClass('badge bg-light text-dark mail-unread-count').attr('aria-label', '未読件数').text('未読 -').appendTo($header);
         $('<div>').addClass('mail-card-actions').append(
-            $('<button>').attr({'type': 'button', 'aria-label': 'このMail Widgetを編集'}).addClass('btn btn-link mail-widget-edit-trigger').append($('<i>').addClass('fas fa-edit text-white').attr('aria-hidden', 'true')),
-            $('<button>').attr({'type': 'button', 'aria-label': 'このMailを更新'}).addClass('btn btn-link mail-widget-refresh').append($('<i>').addClass('fas fa-sync-alt text-white').attr('aria-hidden', 'true'))
+            $('<button>').attr({'type': 'button', 'aria-label': 'このMail Widgetを編集'}).addClass('btn btn-link mail-widget-edit-trigger').append($('<i>').addClass('fas fa-edit').attr('aria-hidden', 'true')),
+            $('<button>').attr({'type': 'button', 'aria-label': 'このMailを更新'}).addClass('btn btn-link mail-widget-refresh').append($('<i>').addClass('fas fa-sync-alt').attr('aria-hidden', 'true'))
         ).appendTo($header);
         var $folderBar = $('<div>').addClass('mail-folder-bar').appendTo($inner);
         $('<i>').addClass('far fa-folder-open text-muted').attr('aria-hidden', 'true').appendTo($folderBar);

@@ -2718,3 +2718,25 @@ legend.text-dark {
         margin: 0;
     }
 }
+
+/* V1.14-F/R1: Card header background and text contrast follow Bootstrap 5 text-bg-* utilities. */
+.dashboard-widget [class*="text-bg-"] .btn-link,
+.dashboard-widget [class*="text-bg-"] .widget-drag-handle,
+.dashboard-widget [class*="text-bg-"] .widget-title-text,
+.dashboard-widget [class*="text-bg-"] .feed-title-text,
+.dashboard-widget [class*="text-bg-"] .loading-inline,
+.dashboard-widget [class*="text-bg-"] .feed-new-clear {
+    color: inherit;
+}
+
+.dashboard-widget [class*="text-bg-"] .widget-drag-handle,
+.dashboard-widget [class*="text-bg-"] .widget-drag-handle:hover,
+.dashboard-widget [class*="text-bg-"] .widget-drag-handle:focus {
+    border-color: currentColor;
+    color: inherit;
+}
+
+.dashboard-widget [class*="text-bg-"] .widget-drag-handle:focus-visible {
+    outline-color: currentColor;
+}
+

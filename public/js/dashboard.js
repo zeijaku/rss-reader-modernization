@@ -1763,7 +1763,7 @@
 
         if (channelLink !== '') {
             $('<a>')
-                .addClass('text-white feed-title-text')
+                .addClass('feed-title-text')
                 .attr('href', channelLink)
                 .attr('target', '_blank')
                 .attr('rel', 'noopener noreferrer')
@@ -2568,7 +2568,7 @@
             .empty()
             .append(
                 $('<span>')
-                    .addClass('feed-title-text text-white')
+                    .addClass('feed-title-text')
                     .attr('title', viewTitle)
                     .text(viewTitle)
             );
