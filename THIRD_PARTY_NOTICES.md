@@ -27,7 +27,7 @@ The distributed third-party source files retain their existing license headers. 
 - iScroll 5.2.0-snapshot
 - standalone Popper JavaScript
 
-Their historical license copies may remain under`licenses/` as repository history/documentation, but the corresponding standalone runtime files are not distributed as active Version 1.14.0 assets.
+Their historical license copies may remain under `licenses/` as repository history/documentation, but the corresponding standalone runtime files are not distributed as active Version 1.14.0 assets.
 
 ## Notes
 
