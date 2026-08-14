@@ -29,7 +29,7 @@ check("Math.abs(distanceX) < Math.abs(distanceY) * 1.3" in dashboard, 'completed
 check('elapsed > 1200' in dashboard, 'slow drags are not treated as tab swipes')
 for selector in ["'a'", "'button'", "'input'", "'textarea'", "'select'", "'.modal'", "'.drawer-nav'", "'.widget-drag-handle'", "'[data-dashboard-widget-type=\"calendar\"]'"]:
     check(selector in dashboard, f'swipe exclusion remains represented: {selector}')
-check("$('.modal.show').length > 0" in dashboard and 'drawerIsActive()' in dashboard and "hasClass('show')" in dashboard and "hasClass('showing')" in dashboard and "hasClass('hiding')" in dashboard, 'open Modal and Offcanvas block tab swipe')
+check("$('.modal.show').length > 0" in dashboard and 'drawerIsActive()' in dashboard and "$('#drawerMenu')" in dashboard and "hasClass('show')" in dashboard and "hasClass('showing')" in dashboard and "hasClass('hiding')" in dashboard, 'open Modal and Bootstrap Offcanvas block tab swipe')
 check('widgetDragState !== null' in dashboard, 'Widget Drag and tab swipe do not run together')
 check('targetTab < 0 || targetTab >= tabCount' in dashboard, 'first and last tabs do not wrap')
 check("window.location.assign(target)" in dashboard and "'./?tab='" in dashboard, 'successful swipe uses the existing tab URL contract')
