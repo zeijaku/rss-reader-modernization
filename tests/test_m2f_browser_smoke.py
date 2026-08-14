@@ -21,32 +21,33 @@ if not Path('/run/dbus/system_bus_socket').exists():
 base = PUBLIC.as_uri()
 html = f'''<!doctype html>
 <html><head><meta charset="utf-8">
-<link rel="stylesheet" href="{base}/css/bootstrap.min.css">
+<link rel="stylesheet" href="{base}/css/bootstrap-5.3.8.min.css">
 <link rel="stylesheet" href="{base}/css/all.css">
-<link rel="stylesheet" href="{base}/css/drawer.min.css">
-</head><body class="drawer drawer--left">
-<header role="banner"><button class="drawer-toggle">menu</button><nav class="drawer-nav"><ul class="drawer-menu"><li><a href="#">item</a></li></ul></nav></header>
+</head><body>
+<button id="offcanvas-trigger" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas-probe">menu</button>
+<div id="offcanvas-probe" class="offcanvas offcanvas-end" tabindex="-1"><div class="offcanvas-body">drawer</div></div>
 <div id="collapse-probe" class="collapse">collapse</div>
 <div id="modal-probe" class="modal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">modal</div></div></div>
+<button id="popover-probe" type="button" title="probe" data-bs-content="content">popover</button>
 <i id="icon-probe" class="fas fa-rss"></i><div id="result">PENDING</div>
 <script src="{base}/js/jquery-3.7.1.min.js"></script>
-<script src="{base}/js/popper.min.js"></script>
-<script src="{base}/js/bootstrap.min.js"></script>
-<script src="{base}/js/iscroll.js"></script>
-<script src="{base}/js/drawer.min.js"></script>
+<script src="{base}/js/bootstrap.bundle-5.3.8.min.js"></script>
 <script>
 (function () {{
   var checks = [];
   function ok(value, name) {{ checks.push([!!value, name]); }}
   ok(window.jQuery && jQuery.fn.jquery === '3.7.1', 'jquery-version');
   ok(typeof jQuery.ajax === 'function', 'jquery-ajax');
-  ok(typeof jQuery.fn.modal === 'function', 'bootstrap-modal');
-  ok(typeof jQuery.fn.collapse === 'function', 'bootstrap-collapse');
-  ok(typeof jQuery.fn.popover === 'function', 'bootstrap-popover');
-  ok(typeof jQuery.fn.drawer === 'function', 'drawer-plugin');
-  ok(typeof window.IScroll === 'function', 'iscroll-global');
-  try {{ jQuery('.drawer').drawer(); ok(true, 'drawer-init'); }} catch (e) {{ ok(false, 'drawer-init:' + e.message); }}
-  try {{ jQuery('#modal-probe').modal({{show:false}}); ok(true, 'modal-init'); }} catch (e) {{ ok(false, 'modal-init:' + e.message); }}
+  ok(window.bootstrap && typeof bootstrap.Modal === 'function', 'bootstrap-modal');
+  ok(window.bootstrap && typeof bootstrap.Collapse === 'function', 'bootstrap-collapse');
+  ok(window.bootstrap && typeof bootstrap.Popover === 'function', 'bootstrap-popover');
+  ok(window.bootstrap && typeof bootstrap.Offcanvas === 'function', 'bootstrap-offcanvas');
+  try {{ bootstrap.Modal.getOrCreateInstance(document.getElementById('modal-probe')); ok(true, 'modal-init'); }} catch (e) {{ ok(false, 'modal-init:' + e.message); }}
+  try {{ bootstrap.Collapse.getOrCreateInstance(document.getElementById('collapse-probe'), {{toggle:false}}); ok(true, 'collapse-init'); }} catch (e) {{ ok(false, 'collapse-init:' + e.message); }}
+  try {{ bootstrap.Popover.getOrCreateInstance(document.getElementById('popover-probe')); ok(true, 'popover-init'); }} catch (e) {{ ok(false, 'popover-init:' + e.message); }}
+  try {{ bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvas-probe')); ok(true, 'offcanvas-init'); }} catch (e) {{ ok(false, 'offcanvas-init:' + e.message); }}
+  ok(typeof jQuery.fn.drawer === 'undefined', 'drawer-plugin-absent');
+  ok(typeof window.IScroll === 'undefined', 'iscroll-global-absent');
   var icon = document.getElementById('icon-probe');
   var before = getComputedStyle(icon, '::before');
   ok(before.content && before.content !== 'none' && before.content !== 'normal', 'fontawesome-content');
@@ -81,4 +82,4 @@ if 'data-status="PASS"' not in output:
     print(output[-3000:])
     print(proc.stderr[-2000:])
     raise SystemExit(1)
-print('PASS: M2-F Chromium smoke loads jQuery, AJAX, Bootstrap plugins, Drawer, iScroll and Font Awesome')
+print('PASS: M2-F Chromium smoke loads jQuery, AJAX, Bootstrap 5 native components, Offcanvas and Font Awesome')
