@@ -89,7 +89,7 @@ class Wrapper {
 
 const handlers = new Map();
 const body = new Element('body');
-const drawerNav = new Element('nav', {class: 'drawer-nav offcanvas offcanvas-end'});
+const drawerNav = new Element('nav', {id: 'drawerMenu', class: 'drawer-nav offcanvas offcanvas-end'});
 const main = new Element('main', {id: 'main-content', 'data-dashboard-current-tab': '1', 'data-dashboard-tab-count': '4'});
 const surface = new Element('div', {class: 'swipe-surface'});
 const calendar = new Element('section', {'data-dashboard-widget-type': 'calendar'});
@@ -120,9 +120,9 @@ function $(arg) {
     if (arg === '#main-content') return new Wrapper([main]);
     if (arg === '#page-top') return new Wrapper([pageTop]);
     if (arg === '#app-notice') return new Wrapper([notice]);
-    if (arg === '.drawer-nav') return new Wrapper([drawerNav]);
+    if (arg === '.drawer-nav' || arg === '#drawerMenu') return new Wrapper([drawerNav]);
     if (arg === '.modal.show') return new Wrapper();
-    if (arg === '#drawerMenu' || arg === '[data-toggle="popover"]' || arg === '[data-feed-content-id]' || arg === '[data-dashboard-widget-type="clock"]') return new Wrapper();
+    if (arg === '[data-toggle="popover"]' || arg === '[data-feed-content-id]' || arg === '[data-dashboard-widget-type="clock"]') return new Wrapper();
     return new Wrapper();
 }
 $.extend = (...args) => Object.assign(...args);
