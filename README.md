@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.13.0`
-Release tag: `v1.13.0`
+**Stable release:** `RSS Reader Modernization 1.14.0`
+Release tag: `v1.14.0`
+
+Version 1.14.0では、Frontend dependencyをBootstrap / Bootswatch 5.3.8へ更新し、Bootstrap 4時代のmarkup / Data APIを5系へ移行しました。右DrawerはBootstrap Offcanvasへ置換し、jquery-drawer / iScroll / standalone Popperと旧Bootstrap 4配布Assetを削除しています。PC / Smartphoneと全8 Themeの表示を調整し、Card見出しは`text-bg-*`で背景色に応じた文字色へ自動追従します。DB schema、Migration、必須configの追加変更はありません。
 
 Version 1.13.0では、Dashboard構造整理を中心に、Stock一覧を`/stock`、表示設定・タブ名・RSS Highlight設定を`/settings`へ分離し、Dashboard本体も内部Viewへ分割しました。既存の`/?tab=stock`互換、Account Settings、Stock／Settingsの既存動作は維持しています。Performance再計測では追加最適化を行う根拠となる劣化を確認せず、Security／新規設置DocumentationとHealthcheckを整理しました。新しいDB Migration／config追加はありません。
 
@@ -13,7 +15,7 @@ Version 1.12.0では、RSS HighlightとMail Widget Phase 2を追加しました�
 
 約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
 
-M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Modernization** もM2-Gまで完了しました。M2-A〜M2-DでFrontend構造、Feed表示、Accessibility、Responsive、UI / UXを整理し、M2-Eで未使用Frontend配布物を削除、M2-FでjQueryを3.7.1、Font Awesome Freeを6.7.2へ更新しています。M2-GではSecure Baseline、M1、M2を横断する最終回帰、配布物・Asset・Documentationの整合確認を行いました。Bootstrap / Bootswatchは4.1.3の組合せ、Drawer 3.2.2、iScroll 5.2.0-snapshotを維持し、Bootstrap 5への移行は別のmajor migrationとして保留しています。Navbar、4タブ、Feed CRUD、Stock、Settings、公開API、DB、M1 RSS Engineの契約は維持しています。
+M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Modernization** もM2-Gまで完了しました。M2-A〜M2-DでFrontend構造、Feed表示、Accessibility、Responsive、UI / UXを整理し、M2-Eで未使用Frontend配布物を削除、M2-FでjQueryを3.7.1、Font Awesome Freeを6.7.2へ更新しています。M2-GではSecure Baseline、M1、M2を横断する最終回帰、配布物・Asset・Documentationの整合確認を行いました。M2時点ではBootstrap / Bootswatch 4.1.3、Drawer 3.2.2、iScroll 5.2.0-snapshotを維持していましたが、Version 1.14.0でBootstrap / Bootswatch 5.3.8へ移行し、DrawerはBootstrap Offcanvasへ置換、旧Frontend dependencyは配布物から整理しました。Navbar、4タブ、Feed CRUD、Stock、Settings、公開API、DB、M1 RSS Engineの契約は維持しています。
 
 ## 現在できること
 

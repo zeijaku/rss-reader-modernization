@@ -9,7 +9,7 @@ import sys
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '1.12.0'
+VERSION = '1.14.0'
 ARTIFACT = f'rss-reader-modernization-{VERSION}-complete'
 FIXED_TIME = (1980, 1, 1, 0, 0, 0)
 FORBIDDEN_EXACT = {'config/local.php', '.env', 'rss.sql', 'rss.zip'}
@@ -78,7 +78,7 @@ def info(name: str) -> zipfile.ZipInfo:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description='Build deterministic complete Version 1.12.0 source package.')
+    parser = argparse.ArgumentParser(description='Build deterministic complete Version 1.14.0 source package.')
     parser.add_argument('--output-dir', type=Path, default=ROOT / 'dist')
     args = parser.parse_args()
     output = args.output_dir.resolve()

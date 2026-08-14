@@ -1,88 +1,92 @@
-# RSS Reader Modernization 1.12.0 Release Notes
+# RSS Reader Modernization 1.14.0 Release Notes
 
 ## Overview
 
-Version 1.12.0は、Version 1.11.0までのDashboard／Stock／Mail基盤を維持しながら、RSS HighlightとMail Widget Phase 2を追加したReleaseです。
+Version 1.14.0は、既存機能・既存データを維持したままFrontend dependencyを現行Bootstrap 5系へ移行するReleaseです。
 
-既存のPHP / PDO / MySQL構成、4タブ、Feed CRUD、Stock、Memo、Task、Calendar、Search Feed、Account Settings、Dashboard Widget基盤を維持し、Mailについてはread-onlyの閲覧Widgetとして操作性を拡張しています。
+Bootstrap / Bootswatchを5.3.8へ更新し、Bootstrap 4時代のmarkup / Data APIを5系へ移行しました。右メニューはjquery-drawerからBootstrap Offcanvasへ置換し、移行完了後に不要となった旧Frontend dependencyとBootstrap 4旧配布Assetを削除しています。
 
-## Version 1.12 main changes
+jQuery 3.7.1、Font Awesome Free 6.7.2、既存のPHP / PDO / MySQL構成、Feed CRUD、Stock、Search Feed、Memo、Task、Calendar、Mail、Account Settings、Dashboard Widget基盤は維持します。
 
-### RSS Highlight
+## Version 1.14 main changes
 
-- ユーザーごとにHighlight Keywordを登録／削除。
-- 複数Keyword、英字の大文字小文字差、日本語、`C++`や`a.b`のような記号を含むKeywordに対応。
-- Keywordが重なる場合は長いKeywordを優先。
-- RSS WidgetとSearch FeedのTitleで共通表示。
-- Highlightは表示専用とし、Stock、Task、共有、Tooltip等では元Titleを維持。
-- Keywordは最大50件、1件64文字まで。
-- Keyword削除は論理削除とし、同じKeywordの再登録時は既存IDを再利用。
+### Bootstrap / Bootswatch 5.3.8
 
-### Mail Widget Phase 2
+- Bootstrap 5.3.8 CSSと`bootstrap.bundle-5.3.8.min.js`へruntimeを切替。
+- Normal + Yeti / Minty / Flatly / Journal / Sketchy / Solar / Slateの全8 ThemeをBootswatch 5.3.8系へ統一。
+- Bootstrap 4時代の`data-toggle` / `data-target`等を`data-bs-*`へ移行。
+- Form、Utility、Badge、Modal等のBootstrap 5互換markupへ整理。
+- Bootstrap bundleを使用し、standalone Popper runtimeは廃止。
 
-- 選択Folder全体の未読件数を表示。
-- `すべて / 未読のみ`の表示切替。
-- 最終更新時刻を表示。
-- 件名／Fromを対象としたIMAP検索。
-- 現在取得済みMailに対する送信者Filter。
-- IMAP Folder一覧取得とFolder切替。
-- `\Noselect` / `\NonExistent` Folderを選択候補から除外。
-- Folder選択を既存`dashboard_widget.widget_config`へ保存。
-- 旧schema 1のMail Widgetは`INBOX`として互換維持。
-- 本文取得は`widget_id + folder + UID`で整合を確認。
+### DrawerからBootstrap Offcanvasへ
 
-### Mail read-only boundary
+- 右メニューをjquery-drawerから`offcanvas-end`へ置換。
+- 既存メニュー内容と右側配置を維持。
+- Offcanvas表示中はSmartphoneのDashboard swipeを抑止。
+- Drawer内ActionからModalを開く場合は、Offcanvasを閉じてからModalを開き、BackdropやScroll lockの競合を回避。
+- jquery-drawer、iScroll、standalone Popperを配布物から削除。
 
-Mail Phase 2でもMail Server側の状態変更は行いません。
+### Theme / Responsive finishing
 
-- 一覧取得: read-only mailbox access
-- 本文取得: peek相当のread-only取得
-- 既読化: なし
-- 未読化: なし
-- 削除: なし
-- 移動: なし
-- コピー: なし
-- 送信: なし
-- Folder作成／削除: なし
+- PC / Smartphoneと全8 ThemeでNavbar、Modal、OffcanvasのcontrastとSpacingを調整。
+- Stock、Memo、Task、Calendar、Mail、Links、Weather等の独自surfaceをBootstrap / Bootswatch Theme変数へ追従。
+- Solar / Slateを含むDark ThemeでForm label、Calendar、Modal close icon等の視認性を調整。
+- SmartphoneのOffcanvas幅とModal footer間隔を調整。
+
+### Card header contrast
+
+- 通常RSS、Search Feed、Clock、Game、Memo、Task、Links、Weather、Calendar、Mailの見出しをBootstrap 5の`text-bg-*`へ統一。
+- Card背景色に応じてタイトル、編集／更新Icon、Drag handle等の文字色をTheme側で自動選択。
+- Search Feedは背景色をTable rowではなくHeader cellへ適用し、Bootstrap 5 Table背景に隠れる問題を修正。
+
+### Legacy asset cleanup
+
+Version 1.14.0ではruntime参照がないことを確認したうえで、次の旧配布物を削除します。
+
+- jquery-drawer CSS / JavaScript
+- iScroll JavaScript
+- standalone Popper JavaScript
+- Bootstrap 4.1.3の旧CSS / JavaScript / Source Map
+- Bootswatch 4.1.3の旧Theme CSS
 
 ## Database and configuration
 
-Version 1.12で追加するMigrationは次の1件です。
+Version 1.14ではDB Table／Column、Migration、SQL、必須configの追加変更はありません。
 
-- `database/migrations/012_v1_12_feed_keywords.sql`
-
-このMigrationでRSS Highlight用`feed_keyword` Tableを追加します。
-
-Mail Phase 2ではTable／Column追加はありません。Folder選択は既存`dashboard_widget.widget_config` JSONのschema 2として保存します。
-
-Version 1.11.0適用済み環境からVersion 1.12.0へ更新する場合は、Migration 012を適用したうえでCodeを更新してください。
+Version 1.13.0適用済み環境では、DB Migrationを実行せずCodeをVersion 1.14.0へ差し替えます。`config/local.php`、`var/`、実DBはそのまま維持してください。
 
 ## Distribution files
 
-- `rss-reader-modernization-1.12.0-complete.zip` — GitHub作業Folder相当の完全統合ZIP。
-- `.zip.sha256` — ZIP全体のSHA-256。
-- 配布物には`vendor`、`config/local.php`、`.env`、Runtime DB／Log／Cacheを含めません。
+- `rss-reader-modernization-1.14.0.zip` — Server配置用Runtime成果物。
+- `rss-reader-modernization-1.14.0.zip.sha256` — Runtime ZIPのSHA-256。
+- `rss-reader-modernization-1.14.0-complete.zip` — Repository / Testsを含む完全Source成果物。
+- `rss-reader-modernization-1.14.0-complete.zip.sha256` — 完全Source ZIPのSHA-256。
+
+Runtime配布物には`config/local.php`、`.env`、実DB、Log、Session、Cache、Release ZIP等を含めません。
 
 ## Update notes
 
 更新前にCode、`config/local.php`、実DB、Runtime DataをBackupしてください。
 
-Version 1.11.0適用済み環境ではMigration 012を適用し、Code更新後にBrowser Cacheを更新してください。
+Version 1.13.0から更新する場合は、Server上の旧Frontend Assetを残さないため、`app/`と`public/`をBackup後に入れ替える方法を推奨します。`.htaccess`、`config/`、`var/`、DBは既存環境を維持してください。
+
+Version番号が1.14.0へ変わるためAsset queryも更新されますが、更新直後はBrowserの強制再読込を行うと確実です。
 
 主な確認項目:
 
-- RSS Highlightが通常RSS／Search Feedで動作すること。
-- Keyword追加／削除が反映されること。
-- Mail Folder切替が動作すること。
-- Mail未読件数、未読のみ表示、件名／From検索、送信者Filterが動作すること。
-- Mail本文Previewを開いてもMail Server側の状態を変更しないこと。
+- Dashboard / Stock / Settingsが表示できること。
+- 右Offcanvasが開閉でき、Drawer内ActionからModalが正常に開くこと。
+- 通常RSS / Search Feedの取得、更新、記事Actionが従来どおり動作すること。
+- Stock、Memo、Task、Calendar、Mail等の主要Widget操作が従来どおり動作すること。
+- Card見出し色変更時に文字とIconが読みやすい色へ追従すること。
+- NetworkでBootstrap 5.3.8 bundleが読み込まれ、旧Bootstrap 4 / Drawer / iScroll / standalone Popperが取得されないこと。
 
 ## Verification limits
 
-Focused regressionではRSS Highlightの一致処理、Keyword Validation、Mail検索、Folder Validation、schema互換、未読数取得、read-only境界、PHP／JavaScript構文、Migration整合、Secret／Runtime Data除外、ZIP整合性を確認しています。
+GitHub ActionsではPHP 8.1 / 8.4の`tests/run.sh`全Regression、PHP / JavaScript構文、Bootstrap / Bootswatch 5.3.8 asset checksum、全8 Theme resolver、legacy dependency不存在、Release package builder / verifier、SHA-256 / Manifest整合を確認します。
 
-実IMAP Server、実MySQL Server、Hosting固有設定、実Feed到達性については利用者環境での最終確認が必要です。
+実Hosting Server、実MySQL Server、外部Feed到達性、実IMAP Server、各Browser / Device固有の描画差については利用環境での最終確認が必要です。
 
 ## License
 
-既存ProjectのLicenseおよびThird-party noticeを維持します。
+Project LicenseおよびThird-party noticeを維持します。現行Frontend dependencyの詳細は`THIRD_PARTY_NOTICES.md`と`docs/dependencies.md`を参照してください。

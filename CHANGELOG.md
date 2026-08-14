@@ -1,5 +1,20 @@
 # Changelog
 
+## RSS Reader Modernization 1.14.0 — 2026-08-14
+
+### Version 1.14.0 frontend modernization finalization
+
+- Bootstrap / Bootswatchを4.1.3から5.3.8へ更新し、全8 ThemeをVersion固定Assetへ切替。
+- Bootstrap 4時代のData API、Form、Utility、Modal等のmarkupをBootstrap 5へ移行。
+- 右メニューのjquery-drawerをBootstrap Offcanvasへ置換し、Drawer→Modal遷移時のBackdrop／Focus競合を回避。
+- jquery-drawer、iScroll、standalone Popper、および移行完了後のBootstrap 4旧配布Assetを削除。
+- PC／Smartphoneと全8 ThemeでNavbar、Modal、Offcanvas、Stock、Memo、Task、Calendar、Mail、Links、Weatherの表示を調整。
+- 通常RSS／Search Feed／各WidgetのCard見出しを`text-bg-*`へ統一し、背景色に応じた文字・Icon色へ自動追従。
+- Search Feedの見出し背景色を`tr`ではなく`th`へ適用し、Bootstrap 5 Table背景に隠れる問題を修正。
+- jQuery 3.7.1、Font Awesome Free 6.7.2、既存API／DB／Widget仕様を維持。
+- Version 1.14でDB schema、Migration、SQL、必須configの追加変更はなし。
+- Application Versionを`1.14.0`へ確定し、Release package builder／verifierとDependency／Release Documentationを現行構成へ更新。
+
 ## RSS Reader Modernization 1.13.0 — 2026-08-14
 
 ### Version 1.13.0 structure / performance / security finalization
