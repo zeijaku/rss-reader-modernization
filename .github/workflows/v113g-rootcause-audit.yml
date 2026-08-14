@@ -1,69 +1,136 @@
-name: V1.13-G root cause audit
+name: V1.13-G root cause fix
 
 on:
   push:
     branches:
       - tmp/v113g-rootcause-audit
 
+permissions:
+  contents: write
+
 jobs:
-  audit:
+  fix:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Audit legacy index assumptions
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          root = Path('.')
-          out = []
-          for path in sorted((root / 'tests').rglob('*')):
-              if not path.is_file() or path.suffix not in {'.py', '.php', '.js', '.sh'}:
-                  continue
-              try:
-                  text = path.read_text(encoding='utf-8')
-              except UnicodeDecodeError:
-                  continue
-              lines = text.splitlines()
-              hits = []
-              for no, line in enumerate(lines, 1):
-                  lower = line.lower()
-                  if 'index.php' in lower or 'dashboard_source' in lower or 'dashboard_widgets.php' in lower or 'dashboard_modals.php' in lower:
-                      hits.append((no, line.rstrip()))
-              if hits:
-                  out.append(f'### {path.as_posix()}')
-                  for no, line in hits:
-                      out.append(f'{no}: {line}')
-                  out.append('')
-
-          Path('v113g-index-audit.txt').write_text('\n'.join(out), encoding='utf-8')
-          print('\n'.join(out))
-          PY
-
-      - name: Package source for offline audit
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          from zipfile import ZipFile, ZIP_DEFLATED
-
-          with ZipFile('v113g-source.zip', 'w', ZIP_DEFLATED) as zf:
-              for path in sorted(Path('.').rglob('*')):
-                  if not path.is_file():
-                      continue
-                  if '.git' in path.parts:
-                      continue
-                  if path.name == 'v113g-source.zip':
-                      continue
-                  zf.write(path, path.as_posix())
-          PY
-
-      - uses: actions/upload-artifact@v4
         with:
-          name: v113g-rootcause-audit
-          path: |
-            v113g-index-audit.txt
-            v113g-source.zip
-          if-no-files-found: error
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify expected main baseline
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "ebd6f5b99b2bbc1429355139cac05bd3fc446f8f"
+
+      - name: Fix Dashboard source assumptions as one root cause
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          for rel in ['tests/test_m1a_architecture.py', 'tests/test_sb12_atom_link_static.py']:
+              p = Path(rel)
+              text = p.read_text(encoding='utf-8')
+              text = text.replace("index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')\n", '')
+              text = text.replace("index = (root / 'public/index.php').read_text(encoding='utf-8')\n", '')
+              p.write_text(text, encoding='utf-8')
+
+          for rel in [
+              'tests/test_m1b_architecture.py',
+              'tests/test_m1c_architecture.py',
+              'tests/test_m1d_architecture.py',
+              'tests/test_m1e_architecture.py',
+              'tests/test_m1f_architecture.py',
+              'tests/test_m1g_architecture.py',
+              'tests/test_v13d_spacing_structure.py',
+              'tests/test_m2g_final_regression.py',
+          ]:
+              p = Path(rel)
+              text = p.read_text(encoding='utf-8')
+              if 'from dashboard_source_utils import dashboard_source' not in text:
+                  marker = "\nROOT = " if "\nROOT = " in text else "\nroot = "
+                  pos = text.index(marker)
+                  text = text[:pos] + "\nfrom dashboard_source_utils import dashboard_source\n" + text[pos:]
+              text = text.replace("index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')", "index = dashboard_source(ROOT)")
+              text = text.replace("INDEX = (ROOT / 'public/index.php').read_text(encoding='utf-8')", "INDEX = dashboard_source(ROOT)")
+              text = text.replace("index = (PUBLIC / 'index.php').read_text(encoding='utf-8')", "index = dashboard_source(ROOT)")
+              p.write_text(text, encoding='utf-8')
+
+          p = Path('tests/test_m2e_asset_inventory.py')
+          text = p.read_text(encoding='utf-8')
+          if 'from dashboard_source_utils import dashboard_source' not in text:
+              pos = text.index('\nROOT = ')
+              text = text[:pos] + '\nfrom dashboard_source_utils import dashboard_source\n' + text[pos:]
+          text = text.replace("index = (PUBLIC / 'index.php').read_text(encoding='utf-8')\n", "dashboard_markup = dashboard_source(ROOT)\n")
+          text = text.replace("all_php = '\\n'.join(p.read_text(encoding='utf-8', errors='replace') for p in [PUBLIC / 'index.php', ROOT / 'app/common/common_login.php'])", "all_php = dashboard_markup + '\\n' + login")
+          text = text.replace("markup = '\\n'.join(p.read_text(encoding='utf-8', errors='replace') for p in [PUBLIC / 'index.php', ROOT / 'app/common/common_login.php'])", "markup = dashboard_markup + '\\n' + login")
+          p.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify root cause is comprehensively covered
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          allowed = {
+              'tests/dashboard_source_utils.py',
+              'tests/test_v113b_stock_route.py',
+              'tests/test_version_marker.py',
+          }
+          raw = []
+          pattern = re.compile(r"(?:public/index\.php|PUBLIC\s*/\s*['\"]index\.php['\"]|ROOT\s*/\s*['\"]public['\"]\s*/\s*['\"]index\.php['\"])[^\n]{0,100}read_text|read_text[^\n]{0,100}(?:public/index\.php|index\.php)")
+          for path in sorted(Path('tests').rglob('*.py')):
+              text = path.read_text(encoding='utf-8', errors='replace')
+              if pattern.search(text):
+                  raw.append(path.as_posix())
+          unexpected = sorted(set(raw) - allowed)
+          print('Raw static index readers:', ', '.join(raw))
+          if unexpected:
+              raise SystemExit('Unexpected legacy Dashboard source readers: ' + ', '.join(unexpected))
+          PY
+
+      - name: Run affected tests once
+        shell: bash
+        run: |
+          set -eu
+          for test_file in \
+            tests/test_sb12_atom_link_static.py \
+            tests/test_m1a_architecture.py \
+            tests/test_m1b_architecture.py \
+            tests/test_m1c_architecture.py \
+            tests/test_m1d_architecture.py \
+            tests/test_m1e_architecture.py \
+            tests/test_m1f_architecture.py \
+            tests/test_m1g_architecture.py \
+            tests/test_m2e_asset_inventory.py \
+            tests/test_v13d_spacing_structure.py \
+            tests/test_version_marker.py \
+            tests/test_v113b_stock_route.py
+          do
+            python3 "$test_file"
+          done
+          python3 -m py_compile tests/test_m2g_final_regression.py
+          git diff --check
+
+      - name: Commit root cause fix to staging branch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            tests/test_m1a_architecture.py \
+            tests/test_m1b_architecture.py \
+            tests/test_m1c_architecture.py \
+            tests/test_m1d_architecture.py \
+            tests/test_m1e_architecture.py \
+            tests/test_m1f_architecture.py \
+            tests/test_m1g_architecture.py \
+            tests/test_m2e_asset_inventory.py \
+            tests/test_m2g_final_regression.py \
+            tests/test_sb12_atom_link_static.py \
+            tests/test_v13d_spacing_structure.py
+          test -n "$(git status --porcelain)"
+          git commit -m "test: align Dashboard source checks after V1.13 split"
+          git push origin HEAD:refs/heads/tmp/v113g-rootcause-ready-r1
