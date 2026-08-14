@@ -1,0 +1,188 @@
+/* V1.14-F: Bootstrap 5 / Bootswatch visual finishing. */
+/* Bootstrap 4-era explicit text-dark labels should inherit the active Bootstrap 5 Theme. */
+.form-label .text-dark,
+legend.text-dark {
+    color: inherit !important;
+}
+
+/* Existing Settings markup contains two class attributes on these labels; keep the intended 44px option target visually active. */
+.navbar-icon-setting > label.form-label {
+    display: inline-block;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px 8px;
+}
+
+/* Bootstrap 5 no longer ships navbar-light; keep application contrast stable for the stored Navbar setting. */
+.navbar-light.app-navbar {
+    --bs-navbar-color: rgba(0, 0, 0, 0.68);
+    --bs-navbar-hover-color: rgba(0, 0, 0, 0.85);
+    --bs-navbar-active-color: rgba(0, 0, 0, 0.92);
+    --bs-navbar-brand-color: rgba(0, 0, 0, 0.9);
+    --bs-navbar-brand-hover-color: #000;
+}
+
+.navbar-dark.app-navbar {
+    --bs-navbar-color: rgba(255, 255, 255, 0.78);
+    --bs-navbar-hover-color: rgba(255, 255, 255, 0.95);
+    --bs-navbar-active-color: #fff;
+    --bs-navbar-brand-color: #fff;
+    --bs-navbar-brand-hover-color: #fff;
+}
+
+/* Dark modal headers are application-owned, so keep their close icon white regardless of Bootswatch internals. */
+.modal-header .btn-close-white,
+.modal .mail-modal-header .btn-close {
+    --bs-btn-close-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293A1 1 0 0 1 .293 14.293L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e");
+    --bs-btn-close-filter: none;
+}
+
+/* The application Drawer intentionally stays light for every Theme. */
+.drawer-close {
+    --bs-btn-close-bg: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293A1 1 0 0 1 .293 14.293L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e");
+    --bs-btn-close-filter: none;
+}
+
+/* Custom application surfaces should follow the selected Bootstrap / Bootswatch Theme. */
+.feed-card-inner,
+.clock-card-inner,
+.memo-card-inner,
+.task-card-inner,
+.calendar-card-inner,
+.stock-grid,
+.stock-card-inner {
+    border-color: var(--bs-border-color-translucent, rgba(0, 0, 0, 0.125));
+}
+
+.clock-card-inner,
+.memo-card-inner,
+.task-card-inner,
+.calendar-card-inner,
+.stock-grid,
+.stock-card-inner,
+.calendar-card-body,
+.calendar-day {
+    background-color: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+}
+
+.clock-time,
+.memo-body,
+.task-item-title,
+.calendar-day-number,
+.stock-title a {
+    color: var(--bs-body-color, #212529);
+}
+
+.clock-date,
+.task-completed .task-item-title,
+.task-item-meta,
+.stock-meta,
+.stock-meta i,
+.stock-meta-separator,
+.stock-tag-remove,
+.stock-tag-editor-toggle,
+.stock-tag-group-label {
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.stock-title a:hover,
+.stock-title a:focus {
+    color: var(--bs-link-hover-color, #0056b3);
+}
+
+.stock-card,
+.task-item,
+.calendar-weekdays,
+.calendar-weekdays span,
+.calendar-day,
+.stock-tag-editor {
+    border-color: var(--bs-border-color-translucent, rgba(0, 0, 0, 0.12));
+}
+
+.calendar-weekdays,
+.calendar-day-empty,
+.stock-tag-editor {
+    background-color: rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.045);
+}
+
+.stock-tag-chip {
+    color: var(--bs-body-color, #4b6267);
+}
+
+/* Mail is loaded later than dashboard.css, so use #main-content specificity instead of changing its runtime loader. */
+#main-content .mail-card-inner,
+#main-content .links-card-inner,
+#main-content .weather-card-inner {
+    border-color: var(--bs-border-color-translucent, rgba(0, 0, 0, 0.125));
+    background: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+}
+
+#main-content .mail-row,
+#main-content .mail-toolbar,
+#main-content .mail-search-bar,
+#main-content .mail-folder-bar,
+#main-content .mail-account-manage-item,
+#main-content .mail-message-body,
+#main-content .links-item,
+#main-content .links-create-form,
+#main-content .weather-day {
+    border-color: var(--bs-border-color-translucent, rgba(0, 0, 0, 0.08));
+}
+
+#main-content .mail-date,
+#main-content .mail-last-updated,
+#main-content .mail-message-body-note,
+#main-content .weather-day-rain,
+#main-content .weather-source {
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+#main-content .mail-subject {
+    color: var(--bs-body-color, #333);
+}
+
+#main-content .mail-toolbar,
+#main-content .mail-search-bar,
+#main-content .mail-folder-bar,
+#main-content .mail-message-body {
+    background: rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.025);
+}
+
+/* Memo keeps its note tint on light Themes, but avoids a bright white block on dark Themes. */
+#main-content[data-dashboard-theme="bootstrap-solar"] .memo-card-body,
+#main-content[data-dashboard-theme="bootstrap-slate"] .memo-card-body {
+    background-color: rgba(var(--bs-body-color-rgb), 0.055);
+}
+
+/* Calendar weekend colors need a little more luminance on the two dark Themes. */
+#main-content[data-dashboard-theme="bootstrap-solar"] .calendar-weekdays span:first-child,
+#main-content[data-dashboard-theme="bootstrap-solar"] .calendar-day:nth-child(7n + 1) .calendar-day-number,
+#main-content[data-dashboard-theme="bootstrap-solar"] .calendar-day.calendar-day-holiday .calendar-day-number,
+#main-content[data-dashboard-theme="bootstrap-slate"] .calendar-weekdays span:first-child,
+#main-content[data-dashboard-theme="bootstrap-slate"] .calendar-day:nth-child(7n + 1) .calendar-day-number,
+#main-content[data-dashboard-theme="bootstrap-slate"] .calendar-day.calendar-day-holiday .calendar-day-number {
+    color: #ff8f9a;
+}
+
+#main-content[data-dashboard-theme="bootstrap-solar"] .calendar-weekdays span:last-child,
+#main-content[data-dashboard-theme="bootstrap-solar"] .calendar-day:nth-child(7n) .calendar-day-number,
+#main-content[data-dashboard-theme="bootstrap-slate"] .calendar-weekdays span:last-child,
+#main-content[data-dashboard-theme="bootstrap-slate"] .calendar-day:nth-child(7n) .calendar-day-number {
+    color: #6ea8fe;
+}
+
+@media (max-width: 575.98px) {
+    .drawer-nav {
+        --bs-offcanvas-width: min(16.25rem, 86vw);
+    }
+
+    .modal-footer {
+        gap: 8px;
+    }
+
+    .modal-footer .btn {
+        margin: 0;
+    }
+}

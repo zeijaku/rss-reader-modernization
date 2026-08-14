@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   visual-finishing:
@@ -30,6 +30,16 @@ jobs:
         with:
           php-version: '8.1'
           coverage: none
+
+      - name: Apply idempotent V1.14-F visual finishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show origin/v1.14-e:public/css/dashboard.css > public/css/dashboard.css
+          if ! grep -Fq 'V1.14-F: Bootstrap 5 / Bootswatch visual finishing.' public/css/dashboard.css; then
+            printf '\n' >> public/css/dashboard.css
+            cat tools/v1.14-f-visual.css >> public/css/dashboard.css
+          fi
 
       - name: Validate Bootstrap and Bootswatch assets
         shell: bash
@@ -139,6 +149,22 @@ jobs:
           node --check public/js/dashboard.js
           node --check public/js/mail-widget.js
           node --check public/js/calendar.js
+
+      - name: Commit generated V1.14-F source when needed
+        id: source_commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add public/css/dashboard.css
+          if git diff --cached --quiet; then
+            echo 'created=false' >> "${GITHUB_OUTPUT}"
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'style(v1.14-f): apply visual finishing CSS'
+            git push origin HEAD:v1.14-f
+            echo 'created=true' >> "${GITHUB_OUTPUT}"
+          fi
 
       - name: Branch diff whitespace check
         shell: bash
