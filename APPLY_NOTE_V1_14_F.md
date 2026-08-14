@@ -48,7 +48,13 @@ V1.14-Fでは全回帰テストは行いません。
 - V1.14-E→Fの`app/` / `public/`差分が`public/css/dashboard.css`だけであること
 - `git diff --check`
 
-全回帰・PHP 8.1 / 8.4 matrix・Version 1.14.0正式化はV1.14-Gで実施しまぅ。
+全回帰・PHP 8.1 / 8.4 matrix・Version 1.14.0正式化はV1.14-Gで実施します。
+
+## Validated checkpoint
+
+- Generated visual CSS commit: `5c124b7d19a5a947a8a830d6b8e87dc0dfd38075`
+- Focused CI run: `31802266267` — success
+- Production code diff from V1.14-E: `public/css/dashboard.css` only
 
 ## 本番確認の重点
 
