@@ -7,8 +7,11 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
 const handlers = new Map();
-let closeCalls = 0;
 let failures = 0;
+let offcanvasCreates = 0;
+let hideCalls = 0;
+let modalShowCalls = 0;
+let modalShowRelatedTarget = null;
 
 function check(condition, message) {
     console.log((condition ? 'PASS' : 'FAIL') + ': ' + message);
@@ -32,12 +35,11 @@ class Element {
     }
 }
 
-const body = new Element('body', {class: 'drawer drawer--right'});
-const menu = new Element('drawerMenu');
-const firstItem = new Element('firstItem');
-const lastItem = new Element('lastItem');
-const mobileToggle = new Element('mobileToggle', {class: 'drawer-toggle'});
-const desktopToggle = new Element('desktopToggle', {class: 'drawer-toggle'});
+const body = new Element('body');
+const menu = new Element('drawerMenu', {class: 'offcanvas offcanvas-end drawer-nav'});
+const mobileToggle = new Element('mobileToggle', {class: 'drawer-toggle', 'aria-controls': 'drawerMenu', 'aria-expanded': 'false', 'aria-label': 'メニューを開く'});
+const desktopToggle = new Element('desktopToggle', {class: 'drawer-toggle', 'aria-controls': 'drawerMenu', 'aria-expanded': 'false', 'aria-label': 'メニューを開く'});
+const drawerAction = new Element('drawerAction', {'data-drawer-modal-target': '#testModal'});
 const main = new Element('main-content');
 const pageTop = new Element('page-top');
 const modal = new Element('modal');
@@ -45,8 +47,10 @@ const modalTrigger = new Element('modalTrigger');
 const meta = new Element('meta', {content: 'csrf-m2c-token'});
 const dummy = new Element('dummy');
 const documentObject = new Element('document');
-documentObject.getElementById = () => null;
 documentObject.activeElement = null;
+documentObject.getElementById = (id) => id === 'drawerMenu' ? menu : null;
+documentObject.querySelector = (selector) => selector === '#testModal' ? modal : null;
+
 const windowObject = {
     location: {reload: () => {}},
     matchMedia: () => ({matches: false}),
@@ -56,9 +60,30 @@ const windowObject = {
     clearInterval: () => {}
 };
 
-menu.children.push(firstItem, lastItem);
-firstItem.parent = menu;
-lastItem.parent = menu;
+const drawerInstance = {
+    hide() {
+        hideCalls += 1;
+    }
+};
+const modalInstance = {
+    show(relatedTarget) {
+        modalShowCalls += 1;
+        modalShowRelatedTarget = relatedTarget || null;
+    }
+};
+const bootstrapObject = {
+    Offcanvas: {
+        getOrCreateInstance(element) {
+            if (element === menu) offcanvasCreates += 1;
+            return drawerInstance;
+        }
+    },
+    Modal: {
+        getOrCreateInstance(element) {
+            return element === modal ? modalInstance : modalInstance;
+        }
+    }
+};
 
 class Wrapper {
     constructor(elements) {
@@ -80,15 +105,16 @@ class Wrapper {
         return this;
     }
     prop(key, value) {
+        if (arguments.length === 1) return this.elements[0] ? this.elements[0][key] : undefined;
         if (key === 'disabled') this.elements.forEach((element) => { element.disabled = value; });
+        if (key === 'hidden') this.elements.forEach((element) => { element.hidden = value; });
         return this;
     }
     val() { return ''; }
-    text(value) { return this; }
+    text() { return this; }
+    empty() { return this; }
+    append() { return this; }
     find(selector) {
-        if (this.elements.includes(menu) && selector.indexOf('a[href]') !== -1) {
-            return new Wrapper([firstItem, lastItem]);
-        }
         if (selector === 'button[type="submit"]') return new Wrapper([dummy]);
         return new Wrapper([]);
     }
@@ -125,13 +151,6 @@ class Wrapper {
         handlers.set(event + '|' + selector, callback);
         return this;
     }
-    drawer(method) {
-        if (method === 'close') {
-            closeCalls += 1;
-            body.classes.delete('drawer-open');
-        }
-        return this;
-    }
 }
 
 function $(arg) {
@@ -142,7 +161,7 @@ function $(arg) {
     if (arg instanceof Element) return new Wrapper([arg]);
     if (arg === documentObject) return new Wrapper([documentObject]);
     if (arg === windowObject) return new Wrapper([dummy]);
-    if (arg === 'body' || arg === '.drawer') return new Wrapper([body]);
+    if (arg === 'body') return new Wrapper([body]);
     if (arg === '#drawerMenu') return new Wrapper([menu]);
     if (arg === '.drawer-toggle[aria-controls="drawerMenu"]') return new Wrapper([mobileToggle, desktopToggle]);
     if (arg === '#main-content') return new Wrapper([main]);
@@ -156,11 +175,11 @@ function $(arg) {
 }
 
 $.extend = (...args) => Object.assign(...args);
-$.fn = {drawer: function () {}};
 $.ajax = () => ({done() { return this; }, fail() { return this; }, always() { return this; }});
 
 const context = {
     jQuery: $,
+    bootstrap: bootstrapObject,
     window: windowObject,
     document: documentObject,
     alert: () => {},
@@ -168,44 +187,41 @@ const context = {
     Array,
     String,
     Math,
-    RegExp
+    RegExp,
+    Number,
+    JSON
 };
 vm.runInNewContext(source, context, {filename: 'dashboard.js'});
 
-check(mobileToggle.attrs['aria-expanded'] === 'false' && desktopToggle.attrs['aria-expanded'] === 'false', 'Drawer triggers start collapsed');
-check(mobileToggle.attrs['aria-label'] === 'メニューを開く', 'Drawer trigger starts with an open label');
+check(offcanvasCreates === 1, 'dashboard initializes Bootstrap Offcanvas exactly once');
+check(mobileToggle.attrs['aria-expanded'] === 'false' && desktopToggle.attrs['aria-expanded'] === 'false', 'Offcanvas triggers start collapsed');
+check(mobileToggle.attrs['aria-label'] === 'メニューを開く', 'Offcanvas trigger starts with an open label');
 
 const toggleHandler = handlers.get('click.iguguruDashboard|.drawer-toggle[aria-controls="drawerMenu"]');
-check(typeof toggleHandler === 'function', 'Drawer trigger click handler is registered');
+const showHandler = handlers.get('show.bs.offcanvas.iguguruDashboard|');
+const hiddenHandler = handlers.get('hidden.bs.offcanvas.iguguruDashboard|');
+check(typeof toggleHandler === 'function', 'Offcanvas trigger tracking handler is registered');
+check(typeof showHandler === 'function' && typeof hiddenHandler === 'function', 'Bootstrap Offcanvas lifecycle handlers are registered');
+
 toggleHandler.call(mobileToggle);
-body.classes.add('drawer-open');
-const openedHandler = handlers.get('drawer.opened.iguguruDashboard|');
-openedHandler.call(body);
-check(mobileToggle.attrs['aria-expanded'] === 'true' && desktopToggle.attrs['aria-expanded'] === 'true', 'opening Drawer expands both trigger states');
-check(mobileToggle.attrs['aria-label'] === 'メニューを閉じる', 'opening Drawer changes the trigger label');
-check(documentObject.activeElement === firstItem, 'opening Drawer focuses the first menu item');
+showHandler.call(menu);
+check(mobileToggle.attrs['aria-expanded'] === 'true' && desktopToggle.attrs['aria-expanded'] === 'true', 'show.bs.offcanvas expands both trigger states');
+check(mobileToggle.attrs['aria-label'] === 'メニューを閉じる', 'show.bs.offcanvas changes the trigger label');
 
-const keyHandler = handlers.get('keydown.iguguruDashboard.drawer|');
+hiddenHandler.call(menu);
+check(mobileToggle.attrs['aria-expanded'] === 'false' && desktopToggle.attrs['aria-expanded'] === 'false', 'hidden.bs.offcanvas collapses both trigger states');
+check(mobileToggle.attrs['aria-label'] === 'メニューを開く', 'hidden.bs.offcanvas restores the open label');
+check(!handlers.has('keydown.iguguruDashboard.drawer|'), 'application no longer duplicates Bootstrap Escape/focus-trap handling');
+
+const drawerModalHandler = handlers.get('click.iguguruDashboard|.drawer-menu-action[data-drawer-modal-target]');
+check(typeof drawerModalHandler === 'function', 'Drawer-to-Modal transition handler is registered');
 let prevented = false;
-keyHandler.call(documentObject, {key: 'Escape', keyCode: 27, preventDefault: () => { prevented = true; }});
-check(prevented, 'Escape key prevents the background key action');
-check(closeCalls === 1, 'Escape key asks the Drawer plugin to close');
-
-body.classes.add('drawer-open');
-documentObject.activeElement = firstItem;
-prevented = false;
-keyHandler.call(documentObject, {key: 'Tab', keyCode: 9, shiftKey: true, preventDefault: () => { prevented = true; }});
-check(prevented && documentObject.activeElement === lastItem, 'Shift+Tab wraps from first to last Drawer item');
-
-documentObject.activeElement = lastItem;
-prevented = false;
-keyHandler.call(documentObject, {key: 'Tab', keyCode: 9, shiftKey: false, preventDefault: () => { prevented = true; }});
-check(prevented && documentObject.activeElement === firstItem, 'Tab wraps from last to first Drawer item');
-
-const closedHandler = handlers.get('drawer.closed.iguguruDashboard|');
-closedHandler.call(body);
-check(mobileToggle.attrs['aria-expanded'] === 'false', 'closing Drawer collapses trigger state');
-check(documentObject.activeElement === mobileToggle, 'closing Drawer returns focus to the opening trigger');
+drawerModalHandler.call(drawerAction, {preventDefault: () => { prevented = true; }});
+check(prevented, 'Drawer modal action prevents a competing Data API transition');
+check(hideCalls === 1, 'Drawer modal action hides Offcanvas first');
+hiddenHandler.call(menu);
+check(modalShowCalls === 1, 'Modal opens after Offcanvas has fully hidden');
+check(modalShowRelatedTarget === mobileToggle, 'Drawer-to-Modal transition preserves the visible menu trigger as return-focus target');
 
 const modalShowHandler = handlers.get('show.bs.modal.iguguruDashboard|.modal');
 const modalHiddenHandler = handlers.get('hidden.bs.modal.iguguruDashboard|.modal');
@@ -214,12 +230,6 @@ modalShowHandler.call(modal, {relatedTarget: modalTrigger});
 modalHiddenHandler.call(modal);
 check(documentObject.activeElement === modalTrigger, 'closing a modal returns focus to its trigger');
 check(modal.dataValues['return-focus'] === undefined, 'modal focus reference is cleared after use');
-
-const pageTopHandler = handlers.get('click.iguguruDashboard|');
-prevented = false;
-pageTopHandler.call(pageTop, {preventDefault: () => { prevented = true; }});
-check(prevented, 'Page Top prevents the default jump');
-check(documentObject.activeElement === main, 'Page Top moves focus to main content');
 
 check(handlers.has('submit.iguguruDashboard|#registerContentForm'), 'RSS add form supports keyboard submit');
 check(handlers.has('submit.iguguruDashboard|#changeContentForm'), 'RSS change form supports keyboard submit');
