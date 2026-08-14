@@ -18,18 +18,16 @@ def check(condition: bool, message: str) -> None:
 
 expected_css = {
     'all.css',
-    'bootstrap.min.css',
-    'bootstrap.min.css.map',
-    'bootstrap-yeti.min.css',
-    'bootstrap-minty.min.css',
-    'bootstrap-flatly.min.css',
-    'bootstrap-journal.min.css',
-    'bootstrap-sketchy.min.css',
-    'bootstrap-solar.min.css',
-    'bootstrap-slate.min.css',
-    'drawer.min.css',
-    'dashboard.css',
     'auth.css',
+    'bootstrap-5.3.8.min.css',
+    'bootstrap-yeti-5.3.8.min.css',
+    'bootstrap-minty-5.3.8.min.css',
+    'bootstrap-flatly-5.3.8.min.css',
+    'bootstrap-journal-5.3.8.min.css',
+    'bootstrap-sketchy-5.3.8.min.css',
+    'bootstrap-solar-5.3.8.min.css',
+    'bootstrap-slate-5.3.8.min.css',
+    'dashboard.css',
     'mini-game.css',
     'clock-timer.css',
     'mail-widget.css',
@@ -37,11 +35,7 @@ expected_css = {
 }
 expected_js = {
     'jquery-3.7.1.min.js',
-    'popper.min.js',
-    'bootstrap.min.js',
-    'bootstrap.min.js.map',
-    'iscroll.js',
-    'drawer.min.js',
+    'bootstrap.bundle-5.3.8.min.js',
     'dashboard.js',
     'calendar-core.js',
     'calendar.js',
@@ -62,8 +56,8 @@ expected_fonts.update({'fa-v4compatibility.ttf', 'fa-v4compatibility.woff2'})
 actual_css = {p.name for p in (PUBLIC / 'css').iterdir() if p.is_file()}
 actual_js = {p.name for p in (PUBLIC / 'js').iterdir() if p.is_file()}
 actual_fonts = {p.name for p in (PUBLIC / 'webfonts').iterdir() if p.is_file()}
-check(actual_css == expected_css, 'CSS directory contains only the retained M2-E inventory')
-check(actual_js == expected_js, 'JavaScript directory contains only the retained M2-E inventory')
+check(actual_css == expected_css, 'CSS directory matches the Version 1.14 retained inventory')
+check(actual_js == expected_js, 'JavaScript directory matches the Version 1.14 retained inventory')
 check(actual_fonts == expected_fonts, 'Font Awesome webfont formats required by all.css remain present')
 
 for directory in ['less', 'scss', 'metadata', 'sprites']:
@@ -78,25 +72,45 @@ direct_static_refs = {ref.split('?', 1)[0].split('#', 1)[0] for ref in re.findal
 helper_static_refs = set(re.findall(r"app_asset_url\('((?:css|js)/[^']+|favicon\.png)'\)", all_php))
 static_refs = direct_static_refs | helper_static_refs
 expected_static_refs = {
-    'css/all.css', 'css/drawer.min.css', 'css/dashboard.css', 'css/auth.css', 'css/mini-game.css', 'css/clock-timer.css', 'css/utility-widgets.css',
-    'js/jquery-3.7.1.min.js', 'js/popper.min.js', 'js/bootstrap.min.js',
-    'js/iscroll.js', 'js/drawer.min.js', 'js/dashboard.js', 'js/utility-widgets.js', 'js/calendar.js', 'js/auth.js', 'js/mini-game.js', 'js/lights-out.js', 'js/clock-timer.js', 'favicon.png',
+    'css/all.css',
+    'css/dashboard.css',
+    'css/auth.css',
+    'css/mini-game.css',
+    'css/clock-timer.css',
+    'css/utility-widgets.css',
+    'js/jquery-3.7.1.min.js',
+    'js/bootstrap.bundle-5.3.8.min.js',
+    'js/dashboard.js',
+    'js/utility-widgets.js',
+    'js/calendar.js',
+    'js/auth.js',
+    'js/mini-game.js',
+    'js/lights-out.js',
+    'js/clock-timer.js',
+    'favicon.png',
 }
-check(static_refs == expected_static_refs, 'static HTML/PHP asset references match the retained inventory')
+check(static_refs == expected_static_refs, 'static HTML/PHP asset references match the Version 1.14 inventory')
 for ref in static_refs:
     check((PUBLIC / ref).is_file(), f'directly referenced asset exists: {ref}')
 
 expected_themes = {
-    'bootstrap.min.css', 'bootstrap-yeti.min.css', 'bootstrap-minty.min.css',
-    'bootstrap-flatly.min.css', 'bootstrap-journal.min.css',
-    'bootstrap-sketchy.min.css', 'bootstrap-solar.min.css', 'bootstrap-slate.min.css',
+    'bootstrap-5.3.8.min.css',
+    'bootstrap-yeti-5.3.8.min.css',
+    'bootstrap-minty-5.3.8.min.css',
+    'bootstrap-flatly-5.3.8.min.css',
+    'bootstrap-journal-5.3.8.min.css',
+    'bootstrap-sketchy-5.3.8.min.css',
+    'bootstrap-solar-5.3.8.min.css',
+    'bootstrap-slate-5.3.8.min.css',
 }
 resolved_themes = set(re.findall(r"'bootstrap(?:-[a-z]+)?'\s*=>\s*'([^']+\.css)'", func))
-check(resolved_themes == expected_themes, 'theme whitelist resolves to all eight retained Bootstrap stylesheets')
+check(resolved_themes == expected_themes, 'theme whitelist resolves to all eight Version 1.14 Bootstrap stylesheets')
 for theme in resolved_themes:
     check((PUBLIC / 'css' / theme).is_file(), f'theme stylesheet exists: {theme}')
 
-# Resolve local url() references from the retained CSS, including query/fragment suffixes.
+# Resolve local url() references from application and Font Awesome CSS.
+# Bootstrap / Bootswatch may reference external Google Fonts and upstream source maps;
+# neither becomes a local runtime dependency in Version 1.14.
 local_css_refs: set[Path] = set()
 for css_path in sorted((PUBLIC / 'css').glob('*.css')):
     text = css_path.read_text(encoding='utf-8', errors='replace')
@@ -110,16 +124,16 @@ for path in sorted(local_css_refs):
     check(path.is_file(), f'local CSS dependency exists: {path.relative_to(ROOT)}')
 check(len(local_css_refs) == 8, 'all.css resolves the expected eight local Font Awesome files')
 
-# Source map hints in retained files must resolve. Popper's stale hint was removed because no map existed in the baseline.
-map_refs: list[Path] = []
-for asset in list((PUBLIC / 'css').glob('*.css')) + list((PUBLIC / 'js').glob('*.js')):
+# Application-owned CSS/JS must not introduce unresolved Source Map dependencies.
+# Exact Bootstrap/Bootswatch 5.3.8 vendor files retain upstream sourceMappingURL comments;
+# those comments are documentation hints, not runtime requests made by the application.
+app_owned_assets = [
+    p for p in list((PUBLIC / 'css').glob('*.css')) + list((PUBLIC / 'js').glob('*.js'))
+    if not p.name.startswith('bootstrap') and p.name not in {'all.css', 'jquery-3.7.1.min.js'}
+]
+for asset in app_owned_assets:
     text = asset.read_text(encoding='utf-8', errors='replace')
-    for value in re.findall(r'sourceMappingURL=([^\s*]+)', text):
-        map_refs.append((asset.parent / value.strip()).resolve())
-for path in map_refs:
-    check(path.is_file(), f'Source Map hint resolves: {path.relative_to(ROOT)}')
-check({p.name for p in map_refs} == {'bootstrap.min.css.map', 'bootstrap.min.js.map'}, 'only loaded Bootstrap files retain Source Map hints')
-check('sourceMappingURL=popper.min.js.map' not in (PUBLIC / 'js/popper.min.js').read_text(encoding='utf-8', errors='replace'), 'stale Popper Source Map hint is removed')
+    check('sourceMappingURL=' not in text, f'application asset has no Source Map dependency: {asset.relative_to(ROOT)}')
 
 # Every Font Awesome icon used by PHP markup should still be defined by all.css.
 markup = dashboard_markup + '\n' + login
@@ -130,22 +144,38 @@ for icon in icons:
 check(len(icons) >= 15, 'icon inventory covers the Dashboard and authentication screens')
 
 license_markers = {
-    PUBLIC / 'css/bootstrap.min.css': 'Licensed under MIT',
+    PUBLIC / 'css/bootstrap-5.3.8.min.css': 'Bootstrap v5.3.8',
+    PUBLIC / 'js/bootstrap.bundle-5.3.8.min.js': 'Bootstrap v5.3.8',
     PUBLIC / 'css/all.css': 'Font Awesome Free 6.7.2',
-    PUBLIC / 'css/drawer.min.css': 'License : MIT',
     PUBLIC / 'js/jquery-3.7.1.min.js': 'jQuery v3.7.1',
-    PUBLIC / 'js/popper.min.js': 'Distributed under the MIT License',
-    PUBLIC / 'js/bootstrap.min.js': 'Licensed under MIT',
-    PUBLIC / 'js/iscroll.js': 'iScroll v5.2.0-snapshot',
-    PUBLIC / 'js/drawer.min.js': 'License : MIT',
 }
 for path, marker in license_markers.items():
-    check(marker in path.read_text(encoding='utf-8', errors='replace')[:800], f'license/version header remains in {path.relative_to(ROOT)}')
+    check(marker in path.read_text(encoding='utf-8', errors='replace')[:1000], f'license/version header remains in {path.relative_to(ROOT)}')
+
+legacy_assets = {
+    'css/bootstrap.min.css',
+    'css/bootstrap.min.css.map',
+    'css/bootstrap-yeti.min.css',
+    'css/bootstrap-minty.min.css',
+    'css/bootstrap-flatly.min.css',
+    'css/bootstrap-journal.min.css',
+    'css/bootstrap-sketchy.min.css',
+    'css/bootstrap-solar.min.css',
+    'css/bootstrap-slate.min.css',
+    'css/drawer.min.css',
+    'js/popper.min.js',
+    'js/bootstrap.min.js',
+    'js/bootstrap.min.js.map',
+    'js/iscroll.js',
+    'js/drawer.min.js',
+}
+for rel in sorted(legacy_assets):
+    check(not (PUBLIC / rel).exists(), f'legacy frontend asset is absent: public/{rel}')
 
 public_files = [p for p in PUBLIC.rglob('*') if p.is_file()]
 public_size = sum(p.stat().st_size for p in public_files)
-check(len(public_files) == 48, 'public inventory contains the retained files plus V1.9-V1.13 frontend pages/assets')
-check(public_size < 4_100_000, 'public inventory remains below 4.1 MB after the V1.13 page split')
+check(len(public_files) == 41, 'public inventory contains the Version 1.14 retained files')
+check(public_size < 4_100_000, 'public inventory remains below 4.1 MB after legacy asset cleanup')
 check(not (ROOT / 'package.json').exists(), 'asset cleanup adds no npm dependency')
 check(not (ROOT / 'node_modules').exists(), 'asset cleanup adds no node_modules directory')
 
