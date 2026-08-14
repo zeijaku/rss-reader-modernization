@@ -3,15 +3,15 @@ name: V1.14 Frontend Focused
 on:
   push:
     branches:
-      - v1.14-e
+      - v1.14-f
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  dependency-cleanup:
-    name: Legacy frontend dependency cleanup
+  visual-finishing:
+    name: Bootstrap 5 visual finishing
     runs-on: ubuntu-latest
 
     steps:
@@ -31,89 +31,6 @@ jobs:
           php-version: '8.1'
           coverage: none
 
-      - name: Validate removed legacy dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import sys
-
-          targets = [
-              Path('public/css/drawer.min.css'),
-              Path('public/js/drawer.min.js'),
-              Path('public/js/iscroll.js'),
-              Path('public/js/popper.min.js'),
-          ]
-          failed = False
-          for path in targets:
-              exists = path.exists()
-              print(f'{path}: {"FAIL still exists" if exists else "removed OK"}')
-              failed = failed or exists
-
-          needles = [
-              'drawer.min.css',
-              'drawer.min.js',
-              'iscroll.js',
-              'popper.min.js',
-          ]
-          source_files = []
-          for base in [Path('app'), Path('public')]:
-              for path in base.rglob('*'):
-                  if path.suffix.lower() not in {'.php', '.js', '.css', '.html'}:
-                      continue
-                  if path.name.endswith('.min.js') or path.name.endswith('.min.css') or path.name.endswith('.map'):
-                      continue
-                  source_files.append(path)
-
-          for needle in needles:
-              hits = []
-              for path in source_files:
-                  text = path.read_text(errors='ignore')
-                  if needle in text:
-                      hits.append(str(path))
-              print(f'{needle}: references={len(hits)}')
-              if hits:
-                  print('\n'.join(hits[:20]))
-                  failed = True
-
-          if failed:
-              sys.exit(1)
-          PY
-
-      - name: Validate cleanup scope against V1.14-D
-        shell: bash
-        run: |
-          set -euo pipefail
-          git fetch origin v1.14-d:refs/remotes/origin/v1.14-d
-          python3 - <<'PY'
-          import subprocess
-          import sys
-
-          expected = {
-              ('D', 'public/css/drawer.min.css'),
-              ('D', 'public/js/drawer.min.js'),
-              ('D', 'public/js/iscroll.js'),
-              ('D', 'public/js/popper.min.js'),
-          }
-          output = subprocess.check_output(
-              ['git', 'diff', '--name-status', 'origin/v1.14-d...HEAD', '--', 'app', 'public'],
-              text=True,
-          )
-          actual = set()
-          for line in output.splitlines():
-              if not line.strip():
-                  continue
-              parts = line.split('\t')
-              actual.add((parts[0], parts[-1]))
-          print('app/public diff:')
-          print(output or '(none)')
-          if actual != expected:
-              print(f'Expected only: {sorted(expected)}', file=sys.stderr)
-              print(f'Actual: {sorted(actual)}', file=sys.stderr)
-              sys.exit(1)
-          PY
-
       - name: Validate Bootstrap and Bootswatch assets
         shell: bash
         run: |
@@ -122,8 +39,26 @@ jobs:
           test "$(wc -l < FRONTEND_ASSETS_V1_14_C.sha256)" -eq 9
           sha256sum -c FRONTEND_ASSETS_V1_14_C.sha256
           grep -Fq 'Bootstrap v5.3.8' public/js/bootstrap.bundle-5.3.8.min.js
+          for theme in flatly journal minty sketchy slate solar yeti; do
+            grep -Fq 'Bootswatch v5.3.8' "public/css/bootstrap-${theme}-5.3.8.min.css"
+          done
 
-      - name: Validate Offcanvas runtime remains active
+      - name: Validate all Theme resolver targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+            require "app/common/common_func.php";
+            $keys = ["bootstrap","bootstrap-yeti","bootstrap-minty","bootstrap-flatly","bootstrap-journal","bootstrap-sketchy","bootstrap-solar","bootstrap-slate"];
+            foreach ($keys as $key) {
+                $file = resolve_theme_stylesheet($key);
+                if (!preg_match("/(?:bootstrap|bootstrap-[a-z]+)-5\\.3\\.8\\.min\\.css$/", $file)) { fwrite(STDERR, "Unexpected theme: $key=$file\n"); exit(1); }
+                if (!is_file("public/css/" . $file)) { fwrite(STDERR, "Missing theme asset: $file\n"); exit(1); }
+                echo "$key=$file\n";
+            }
+          '
+
+      - name: Validate V1.14-F visual markers
         shell: bash
         run: |
           set -euo pipefail
@@ -132,40 +67,70 @@ jobs:
           import sys
 
           failed = False
-          for page_name in ['public/index.php', 'public/settings.php', 'public/stock.php']:
-              source = Path(page_name).read_text()
-              checks = {
-                  'offcanvas container': 'class="offcanvas offcanvas-end drawer-nav"' in source,
-                  'offcanvas trigger': 'data-bs-toggle="offcanvas" data-bs-target="#drawerMenu"' in source,
-                  'offcanvas close': 'data-bs-dismiss="offcanvas"' in source,
-                  'Bootstrap bundle active': "app_asset_url('js/bootstrap.bundle-5.3.8.min.js')" in source,
-                  'legacy body class absent': 'drawer drawer--right' not in source,
-              }
-              for label, ok in checks.items():
-                  print(f'{page_name}: {label}: {"OK" if ok else "FAIL"}')
-                  failed = failed or not ok
+          dashboard = Path('public/css/dashboard.css').read_text()
+          dashboard_markers = [
+              'V1.14-F: Bootstrap 5 / Bootswatch visual finishing.',
+              '.form-label .text-dark,',
+              'legend.text-dark',
+              '.navbar-light.app-navbar',
+              '.navbar-dark.app-navbar',
+              '.modal-header .btn-close-white',
+              '.drawer-close',
+              'var(--bs-body-bg, #fff)',
+              'var(--bs-body-color, #212529)',
+              '--bs-offcanvas-width: min(16.25rem, 86vw);',
+          ]
+          for marker in dashboard_markers:
+              ok = marker in dashboard
+              print(f'dashboard.css: {marker}: {"OK" if ok else "FAIL"}')
+              failed = failed or not ok
 
-          dashboard = Path('public/js/dashboard.js').read_text()
-          for forbidden in ['$.fn.drawer', '.drawer(', 'drawer-open']:
-              if forbidden in dashboard:
-                  print(f'dashboard.js: forbidden legacy dependency remains: {forbidden}')
+          for marker in [
+              '.navbar-icon-setting > label.form-label',
+              '#main-content .mail-card-inner',
+              '#main-content .links-card-inner',
+              '#main-content .weather-card-inner',
+          ]:
+              ok = marker in dashboard
+              print(f'dashboard.css: {marker}: {"OK" if ok else "FAIL"}')
+              failed = failed or not ok
+
+          for old_asset in ['public/css/drawer.min.css','public/js/drawer.min.js','public/js/iscroll.js','public/js/popper.min.js']:
+              if Path(old_asset).exists():
+                  print(f'Legacy dependency returned: {old_asset}')
                   failed = True
-          for marker in ['bootstrap.Offcanvas.getOrCreateInstance', 'bootstrap.Modal.getOrCreateInstance', 'data-drawer-modal-target']:
-              if marker not in dashboard:
-                  print(f'dashboard.js: missing marker: {marker}')
-                  failed = True
+
+          for page in ['public/index.php','public/settings.php','public/stock.php']:
+              source = Path(page).read_text()
+              ok = 'bootstrap.bundle-5.3.8.min.js' in source and 'data-bs-toggle="offcanvas"' in source
+              print(f'{page}: Bootstrap 5 / Offcanvas: {"OK" if ok else "FAIL"}')
+              failed = failed or not ok
 
           if failed:
               sys.exit(1)
           PY
-          grep -Fq "APP_VERSION = '1.13.0'" app/version.php
+
+      - name: Validate V1.14-F production scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin v1.14-e:refs/remotes/origin/v1.14-e
+          mapfile -t changed < <(git diff --name-only origin/v1.14-e...HEAD -- app public | sort)
+          expected=(
+            public/css/dashboard.css
+          )
+          printf 'Changed app/public files:\n%s\n' "${changed[*]}"
+          if [[ "${changed[*]}" != "${expected[*]}" ]]; then
+            echo 'Unexpected V1.14-F production scope.' >&2
+            exit 1
+          fi
 
       - name: PHP syntax focused check
         shell: bash
         run: |
           set -euo pipefail
-          find app public -type f -name '*.php' -print0 | xargs -0 -n1 php -l > /tmp/v1.14-e-php-lint.txt
-          cat /tmp/v1.14-e-php-lint.txt
+          find app public -type f -name '*.php' -print0 | xargs -0 -n1 php -l > /tmp/v1.14-f-php-lint.txt
+          cat /tmp/v1.14-f-php-lint.txt
 
       - name: JavaScript syntax focused check
         shell: bash
@@ -179,37 +144,37 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git diff --check origin/v1.14-d...HEAD
+          git diff --check origin/v1.14-e...HEAD
 
       - name: Build production verification ZIP
         shell: bash
         run: |
           set -euo pipefail
-          package_root="${RUNNER_TEMP}/rss-reader-v1.14-e-production-app-public"
+          package_root="${RUNNER_TEMP}/rss-reader-v1.14-f-production-app-public"
           rm -rf "${package_root}"
           mkdir -p "${package_root}"
           cp -a app "${package_root}/app"
           cp -a public "${package_root}/public"
           cp .htaccess "${package_root}/.htaccess"
-          cp APPLY_NOTE_V1_14_E.md "${package_root}/APPLY_NOTE_V1_14_E.md"
+          cp APPLY_NOTE_V1_14_F.md "${package_root}/APPLY_NOTE_V1_14_F.md"
           cp FRONTEND_ASSETS_V1_14_C.sha256 "${package_root}/FRONTEND_ASSETS_V1_14_C.sha256"
           source_sha="$(git rev-parse HEAD)"
           printf '%s\n' \
-            'RSS Reader Modernization V1.14-E' \
-            'Baseline: V1.14-D / application version 1.13.0' \
-            'Checkpoint: removed unused jquery-drawer, iScroll, and standalone Popper files after Bootstrap Offcanvas cutover.' \
+            'RSS Reader Modernization V1.14-F' \
+            'Baseline: V1.14-E / application version 1.13.0' \
+            'Checkpoint: PC/SP and all-theme visual finishing after Bootstrap 5 / Offcanvas migration.' \
             "Source commit: ${source_sha}" \
             > "${package_root}/SOURCE_BUILD.txt"
           cd "${RUNNER_TEMP}"
-          zip -qr rss-reader-v1.14-e-production-app-public.zip rss-reader-v1.14-e-production-app-public
-          sha256sum rss-reader-v1.14-e-production-app-public.zip > rss-reader-v1.14-e-production-app-public.zip.sha256
+          zip -qr rss-reader-v1.14-f-production-app-public.zip rss-reader-v1.14-f-production-app-public
+          sha256sum rss-reader-v1.14-f-production-app-public.zip > rss-reader-v1.14-f-production-app-public.zip.sha256
 
       - name: Upload production verification package
         uses: actions/upload-artifact@v4
         with:
-          name: rss-reader-v1.14-e-production-app-public
+          name: rss-reader-v1.14-f-production-app-public
           path: |
-            ${{ runner.temp }}/rss-reader-v1.14-e-production-app-public.zip
-            ${{ runner.temp }}/rss-reader-v1.14-e-production-app-public.zip.sha256
+            ${{ runner.temp }}/rss-reader-v1.14-f-production-app-public.zip
+            ${{ runner.temp }}/rss-reader-v1.14-f-production-app-public.zip.sha256
           if-no-files-found: error
           retention-days: 30
