@@ -1197,24 +1197,41 @@ select:focus,
 }
 
 .drawer-nav {
+    --bs-offcanvas-width: 16.25rem;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+    color: #222;
+    background-color: #fff;
 }
 
 .drawer-menu {
-    padding-bottom: 16px;
+    margin: 0;
+    padding: 0 0 16px;
+    list-style: none;
 }
 
 .drawer-brand {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     min-height: 52px;
     margin: 0;
     padding: 0 14px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.12);
     font-size: 1.15rem;
     line-height: 1.2;
+}
+
+.drawer-brand-main {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.drawer-close {
+    flex: 0 0 auto;
+    margin-left: 8px;
 }
 
 .drawer-brand-icon {

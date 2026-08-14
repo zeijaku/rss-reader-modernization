@@ -56,10 +56,9 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
     <meta name="csrf-token" content="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/' . resolve_theme_stylesheet($ui['conf_style'] ?? null)), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/all.css'), ENT_QUOTES, 'UTF-8'); ?>">
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/drawer.min.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/dashboard.css'), ENT_QUOTES, 'UTF-8'); ?>">
 </head>
-<body class="drawer drawer--right">
+<body>
 <a class="skip-link" href="#main-content">本文へ移動</a>
 
 <header class="app-header">
@@ -73,7 +72,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
     <span class="app-navbar-current"><span class="visually-hidden">現在の表示：</span><span class="app-navbar-current-label">Settings</span></span>
   </div>
 
-  <button class="navbar-toggler drawer-toggle app-navbar-menu-button" type="button" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
+  <button class="navbar-toggler drawer-toggle app-navbar-menu-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#drawerMenu" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
     <i class="fas fa-bars" aria-hidden="true"></i>
   </button>
 
@@ -91,7 +90,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
         }
     ?>
     </ul>
-    <button class="btn drawer-toggle app-navbar-menu-button app-navbar-menu-button-desktop" type="button" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く"><i class="fas fa-bars" aria-hidden="true"></i></button>
+    <button class="btn drawer-toggle app-navbar-menu-button app-navbar-menu-button-desktop" type="button" data-bs-toggle="offcanvas" data-bs-target="#drawerMenu" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く"><i class="fas fa-bars" aria-hidden="true"></i></button>
   </div>
 </nav>
 </header>
@@ -240,9 +239,9 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
 <p id="page-top"><a href="#main-content" aria-label="ページ先頭へ移動"><i class="fas fa-arrow-circle-up fa-2x" aria-hidden="true"></i><br>ページ上部</a></p>
 <footer class="text-center text-muted small py-3" data-app-version>iGuguru &middot; <?php echo htmlspecialchars(APP_VERSION_LABEL, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?></footer>
 
-<nav class="drawer-nav" id="drawerMenu" aria-label="RSS Readerメニュー" tabindex="-1">
+<nav class="offcanvas offcanvas-end drawer-nav" id="drawerMenu" tabindex="-1" aria-labelledby="drawerMenuLabel">
     <ul class="drawer-menu">
-        <li class="drawer-brand"><i class="fas fa-rss-square text-primary drawer-brand-icon" aria-hidden="true"></i><span class="drawer-brand-label"><strong>iGuguru</strong></span></li>
+        <li class="drawer-brand"><span class="drawer-brand-main"><i class="fas fa-rss-square text-primary drawer-brand-icon" aria-hidden="true"></i><span class="drawer-brand-label" id="drawerMenuLabel"><strong>iGuguru</strong></span></span><button type="button" class="btn-close drawer-close" data-bs-dismiss="offcanvas" aria-label="メニューを閉じる"></button></li>
 
         <li class="drawer-section-title"><i class="far fa-copy fa-fw" aria-hidden="true"></i><span>表示</span></li>
         <?php for ($tabLocation = 0; $tabLocation <= 3; $tabLocation++): ?>
@@ -278,7 +277,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
         <?php endif; ?>
 
         <li class="drawer-section-title"><i class="fas fa-user fa-fw" aria-hidden="true"></i><span>Account</span></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#accountSettings"><span class="drawer-item-icon"><i class="fas fa-user-cog fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">アカウント設定</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#accountSettings"><span class="drawer-item-icon"><i class="fas fa-user-cog fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">アカウント設定</span></button></li>
         <li><form method="post" action="./logout.php" class="drawer-logout-form"><input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>"><button type="submit" class="btn btn-link text-muted drawer-logout-button drawer-item"><span class="drawer-item-icon"><i class="fas fa-sign-out-alt fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">ログアウト</span></button></form></li>
     </ul>
 </nav>
@@ -320,8 +319,6 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
 <script type="application/json" id="rssHighlightKeywordData"><?php echo $feedKeywordJson; ?></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/jquery-3.7.1.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/bootstrap.bundle-5.3.8.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
-<script src="<?php echo htmlspecialchars(app_asset_url('js/iscroll.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
-<script src="<?php echo htmlspecialchars(app_asset_url('js/drawer.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 </body>
 </html>

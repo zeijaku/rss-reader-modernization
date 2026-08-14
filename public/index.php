@@ -131,10 +131,7 @@ if ($tabParam === 'stock') {
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/' . resolve_theme_stylesheet($ui['conf_style'] ?? null)), ENT_QUOTES, 'UTF-8'); ?>">
     <!-- Fontawesome -->
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/all.css'), ENT_QUOTES, 'UTF-8'); ?>">
-    <!-- Drawer -->
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/drawer.min.css'), ENT_QUOTES, 'UTF-8'); ?>">
-
-    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/dashboard.css'), ENT_QUOTES, 'UTF-8'); ?>">
+        <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/dashboard.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/utility-widgets.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/mini-game.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/clock-timer.css'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -143,7 +140,7 @@ if ($tabParam === 'stock') {
     <?php endif; ?>
 
 </head>
-<body class="drawer drawer--right<?php echo $currentUserId === null ? ' auth-page' : ''; ?>">
+<body<?php echo $currentUserId === null ? ' class="auth-page"' : ''; ?>>
 <a class="skip-link" href="#main-content">本文へ移動</a>
 
 <?php
@@ -260,7 +257,7 @@ function search_feed_form_fields(string $prefix): string
     </span>
   </div>
 
-  <button class="navbar-toggler drawer-toggle app-navbar-menu-button" type="button" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
+  <button class="navbar-toggler drawer-toggle app-navbar-menu-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#drawerMenu" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
     <i class="fas fa-bars" aria-hidden="true"></i>
   </button>
 
@@ -280,7 +277,7 @@ function search_feed_form_fields(string $prefix): string
         }
     ?>
     </ul>
-    <button class="btn drawer-toggle app-navbar-menu-button app-navbar-menu-button-desktop" type="button" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
+    <button class="btn drawer-toggle app-navbar-menu-button app-navbar-menu-button-desktop" type="button" data-bs-toggle="offcanvas" data-bs-target="#drawerMenu" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
       <i class="fas fa-bars" aria-hidden="true"></i>
     </button>
   </div>
@@ -326,12 +323,14 @@ function search_feed_form_fields(string $prefix): string
     iGuguru &middot; <?php echo htmlspecialchars(APP_VERSION_LABEL, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); ?>
 </footer>
 
-<!-- Drawer -->
-<nav class="drawer-nav" id="drawerMenu" aria-label="RSS Readerメニュー" tabindex="-1">
+<nav class="offcanvas offcanvas-end drawer-nav" id="drawerMenu" tabindex="-1" aria-labelledby="drawerMenuLabel">
     <ul class="drawer-menu">
         <li class="drawer-brand">
-            <i class="fas fa-rss-square text-primary drawer-brand-icon" aria-hidden="true"></i>
-            <span class="drawer-brand-label"><strong>iGuguru</strong></span>
+            <span class="drawer-brand-main">
+                <i class="fas fa-rss-square text-primary drawer-brand-icon" aria-hidden="true"></i>
+                <span class="drawer-brand-label" id="drawerMenuLabel"><strong>iGuguru</strong></span>
+            </span>
+            <button type="button" class="btn-close drawer-close" data-bs-dismiss="offcanvas" aria-label="メニューを閉じる"></button>
         </li>
 
         <!-- Display -->
@@ -358,15 +357,15 @@ function search_feed_form_fields(string $prefix): string
 
         <!-- Widget -->
         <li class="drawer-section-title"><i class="fas fa-th-large fa-fw" aria-hidden="true"></i><span>Widget追加</span></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerContent"><span class="drawer-item-icon"><i class="fas fa-rss fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">RSS追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerSearchFeed"><span class="drawer-item-icon"><i class="fas fa-search fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Search Feed追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerTaskWidget"><span class="drawer-item-icon"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Task追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerCalendarWidget"><span class="drawer-item-icon"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Calendar追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerLinksWidget"><span class="drawer-item-icon"><i class="fas fa-link fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Links追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerWeatherWidget"><span class="drawer-item-icon"><i class="fas fa-cloud-sun fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Weather追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerGameWidget"><span class="drawer-item-icon"><i class="fas fa-chess-knight fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Game追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerClock"><span class="drawer-item-icon"><i class="far fa-clock fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Clock追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerMemo"><span class="drawer-item-icon"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Memo追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerContent"><span class="drawer-item-icon"><i class="fas fa-rss fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">RSS追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerSearchFeed"><span class="drawer-item-icon"><i class="fas fa-search fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Search Feed追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerTaskWidget"><span class="drawer-item-icon"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Task追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerCalendarWidget"><span class="drawer-item-icon"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Calendar追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerLinksWidget"><span class="drawer-item-icon"><i class="fas fa-link fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Links追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerWeatherWidget"><span class="drawer-item-icon"><i class="fas fa-cloud-sun fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Weather追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerGameWidget"><span class="drawer-item-icon"><i class="fas fa-chess-knight fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Game追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerClock"><span class="drawer-item-icon"><i class="far fa-clock fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Clock追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerMemo"><span class="drawer-item-icon"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Memo追加</span></button></li>
 
         <!-- Customize -->
         <li class="drawer-section-title"><i class="fas fa-sliders-h fa-fw" aria-hidden="true"></i><span>カスタマイズ</span></li>
@@ -403,7 +402,7 @@ function search_feed_form_fields(string $prefix): string
 
         <!-- Account -->
         <li class="drawer-section-title"><i class="fas fa-user fa-fw" aria-hidden="true"></i><span>Account</span></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#accountSettings"><span class="drawer-item-icon"><i class="fas fa-user-cog fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">アカウント設定</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#accountSettings"><span class="drawer-item-icon"><i class="fas fa-user-cog fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">アカウント設定</span></button></li>
         <li>
             <form method="post" action="./logout.php" class="drawer-logout-form">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -419,10 +418,6 @@ function search_feed_form_fields(string $prefix): string
 <!-- Bootstrap -->
 <script src="<?php echo htmlspecialchars(app_asset_url('js/jquery-3.7.1.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/bootstrap.bundle-5.3.8.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
-<!-- Drawer -->
-<script src="<?php echo htmlspecialchars(app_asset_url('js/iscroll.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
-<script src="<?php echo htmlspecialchars(app_asset_url('js/drawer.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
-
 <script src="<?php echo htmlspecialchars(app_asset_url('js/mini-game.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/lights-out.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/clock-timer.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>

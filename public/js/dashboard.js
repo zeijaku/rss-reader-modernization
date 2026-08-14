@@ -3156,7 +3156,7 @@
         if (!dashboardSwipeIsMobile() || dashboardTabFromMain($main) === null) {
             return;
         }
-        if ($('.modal.show').length > 0 || $('.drawer').hasClass('drawer-open') || widgetDragState !== null) {
+        if ($('.modal.show').length > 0 || drawerIsActive() || widgetDragState !== null) {
             return;
         }
         if (dashboardSwipeIgnoredTarget(event.target)) {
@@ -3279,8 +3279,9 @@
             });
     }
 
-    function drawerFocusableItems() {
-        return $('#drawerMenu').find('a[href], button:not([disabled]), input:not([type="hidden"]):not([disabled]), [tabindex]:not([tabindex="-1"])');
+    function drawerIsActive() {
+        var $drawerMenu = $('#drawerMenu');
+        return $drawerMenu.hasClass('show') || $drawerMenu.hasClass('showing') || $drawerMenu.hasClass('hiding');
     }
 
     function updateDrawerState(opened) {
@@ -3290,72 +3291,53 @@
     }
 
     function initDrawer() {
-        if (!$.fn.drawer) {
+        var drawerElement = document.getElementById('drawerMenu');
+        if (!drawerElement || typeof bootstrap === 'undefined' || !bootstrap.Offcanvas) {
             return;
         }
 
-        var $drawer = $('.drawer');
-        var $drawerMenu = $('#drawerMenu');
+        var $drawerMenu = $(drawerElement);
+        var drawer = bootstrap.Offcanvas.getOrCreateInstance(drawerElement);
         var $lastTrigger = $();
+        var pendingModal = null;
 
         $(document)
             .off('click' + eventNamespace, '.drawer-toggle[aria-controls="drawerMenu"]')
             .on('click' + eventNamespace, '.drawer-toggle[aria-controls="drawerMenu"]', function () {
                 $lastTrigger = $(this);
             })
-            .off('keydown' + eventNamespace + '.drawer')
-            .on('keydown' + eventNamespace + '.drawer', function (event) {
-                if (!$drawer.hasClass('drawer-open') || $('.modal.show').length > 0) {
+            .off('click' + eventNamespace, '.drawer-menu-action[data-drawer-modal-target]')
+            .on('click' + eventNamespace, '.drawer-menu-action[data-drawer-modal-target]', function (event) {
+                var selector = String($(this).attr('data-drawer-modal-target') || '');
+                var modalElement = selector.charAt(0) === '#' ? document.querySelector(selector) : null;
+                if (!modalElement || !bootstrap.Modal) {
                     return;
                 }
 
-                if (event.key === 'Escape' || event.keyCode === 27) {
-                    event.preventDefault();
-                    $drawer.drawer('close');
-                    return;
-                }
+                event.preventDefault();
+                pendingModal = {
+                    element: modalElement,
+                    returnFocus: $lastTrigger.length > 0 ? $lastTrigger.get(0) : null
+                };
+                drawer.hide();
+            });
 
-                if (event.key !== 'Tab' && event.keyCode !== 9) {
-                    return;
-                }
-
-                var $items = drawerFocusableItems();
-                if ($items.length === 0) {
-                    return;
-                }
-
-                var first = $items.get(0);
-                var last = $items.get($items.length - 1);
-                if (event.shiftKey && document.activeElement === first) {
-                    event.preventDefault();
-                    last.focus();
-                } else if (!event.shiftKey && document.activeElement === last) {
-                    event.preventDefault();
-                    first.focus();
+        $drawerMenu
+            .off('show.bs.offcanvas' + eventNamespace)
+            .on('show.bs.offcanvas' + eventNamespace, function () {
+                updateDrawerState(true);
+            })
+            .off('hidden.bs.offcanvas' + eventNamespace)
+            .on('hidden.bs.offcanvas' + eventNamespace, function () {
+                updateDrawerState(false);
+                if (pendingModal !== null) {
+                    var nextModal = pendingModal;
+                    pendingModal = null;
+                    bootstrap.Modal.getOrCreateInstance(nextModal.element).show(nextModal.returnFocus || undefined);
                 }
             });
 
-        $drawer
-            .off('drawer.opened' + eventNamespace)
-            .on('drawer.opened' + eventNamespace, function () {
-                updateDrawerState(true);
-                var $items = drawerFocusableItems();
-                if ($items.length > 0) {
-                    $items.first().focus();
-                } else {
-                    $drawerMenu.focus();
-                }
-            })
-            .off('drawer.closed' + eventNamespace)
-            .on('drawer.closed' + eventNamespace, function () {
-                updateDrawerState(false);
-                if ($lastTrigger.length > 0 && $('.modal.show').length === 0) {
-                    $lastTrigger.focus();
-                }
-            })
-            .drawer();
-
-        updateDrawerState(false);
+        updateDrawerState($drawerMenu.hasClass('show'));
     }
 
     function initModalFocus() {

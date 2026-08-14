@@ -151,9 +151,9 @@
             + '<div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto delete-mail-account">削除</button><button type="button" class="btn btn-outline-info test-mail-account">保存済み設定で接続確認</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">変更</button></div></form></div></div></div>';
         $('body').append(modalHtml);
 
-        var $memoItem = $('.drawer-menu-action[data-bs-target="#registerMemo"]').first().closest('li');
+        var $memoItem = $('.drawer-menu-action[data-drawer-modal-target="#registerMemo"]').first().closest('li');
         var $mailItem = $('<li>').append($('<button>')
-            .attr({'type': 'button', 'data-bs-toggle': 'modal', 'data-bs-target': '#registerMailWidget'})
+            .attr({'type': 'button', 'data-drawer-modal-target': '#registerMailWidget'})
             .addClass('btn btn-link text-muted drawer-menu-action drawer-item')
             .append($('<span>').addClass('drawer-item-icon').append($('<i>').addClass('far fa-envelope fa-fw').attr('aria-hidden', 'true')))
             .append($('<span>').addClass('drawer-item-label').text('Mail追加')));
