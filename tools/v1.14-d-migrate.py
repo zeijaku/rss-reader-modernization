@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+from pathlib import Path
+import re
+
+root = Path(__file__).resolve().parents[1]
+
+for rel in ('public/index.php', 'public/settings.php', 'public/stock.php'):
+    path = root / rel
+    text = path.read_text(encoding='utf-8')
+    text = re.sub(r'^\s*<link rel="stylesheet" href="<\?php echo htmlspecialchars\(app_asset_url\(\'css/drawer\.min\.css\'\), ENT_QUOTES, \'UTF-8\'\); \?>">\n', '', text, flags=re.M)
+    text = re.sub(r'^\s*<script src="<\?php echo htmlspecialchars\(app_asset_url\(\'js/iscroll\.js\'\), ENT_QUOTES, \'UTF-8\'\); \?>"></script>\n', '', text, flags=re.M)
+    text = re.sub(r'^\s*<script src="<\?php echo htmlspecialchars\(app_asset_url\(\'js/drawer\.min\.js\'\), ENT_QUOTES, \'UTF-8\'\); \?>"></script>\n', '', text, flags=re.M)
+    text = text.replace('<!-- Drawer -->\n\n', '').replace('<!-- Drawer -->\n', '')
+    text = text.replace('<body class="drawer drawer--right<?php echo $currentUserId === null ? \' auth-page\' : \'\'; ?>">', '<body<?php echo $currentUserId === null ? \' class="auth-page"\' : \'\'; ?>>')
+    text = text.replace('<body class="drawer drawer--right">', '<body>')
+    text = re.sub(r'(<button class="[^"]*\bdrawer-toggle\b[^"]*" type="button")(?! data-bs-toggle="offcanvas")( aria-controls="drawerMenu")', r'\1 data-bs-toggle="offcanvas" data-bs-target="#drawerMenu"\2', text)
+    text = text.replace('<nav class="drawer-nav" id="drawerMenu" aria-label="RSS Readerメニュー" tabindex="-1">', '<nav class="offcanvas offcanvas-end drawer-nav" id="drawerMenu" tabindex="-1" aria-labelledby="drawerMenuLabel">')
+    text = re.sub(r'(class="btn btn-link text-muted drawer-menu-action drawer-item") data-bs-toggle="modal" data-bs-target="(#[^"]+)"', r'\1 data-drawer-modal-target="\2"', text)
+
+    old_multi = '''        <li class="drawer-brand">\n            <i class="fas fa-rss-square text-primary drawer-brand-icon" aria-hidden="true"></i>\n            <span class="drawer-brand-label"><strong>iGuguru</strong></span>\n        </li>'''
+    new_multi = '''        <li class="drawer-brand">\n            <span class="drawer-brand-main">\n                <i class="fas fa-rss-square text-primary drawer-brand-icon" aria-hidden="true"></i>\n                <span class="drawer-brand-label" id="drawerMenuLabel"><strong>iGuguru</strong></span>\n            </span>\n            <button type="button" class="btn-close drawer-close" data-bs-dismiss="offcanvas" aria-label="メニューを閉じる"></button>\n        </li>'''
+    text = text.replace(old_multi, new_multi)
+    old_single = '        <li class="drawer-brand"><i class="fas fa-rss-square text-primary drawer-brand-icon" aria-hidden="true"></i><span class="drawer-brand-label"><strong>iGuguru</strong></span></li>'
+    new_single = '        <li class="drawer-brand"><span class="drawer-brand-main"><i class="fas fa-rss-square text-primary drawer-brand-icon" aria-hidden="true"></i><span class="drawer-brand-label" id="drawerMenuLabel"><strong>iGuguru</strong></span></span><button type="button" class="btn-close drawer-close" data-bs-dismiss="offcanvas" aria-label="メニューを閉じる"></button></li>'
+    text = text.replace(old_single, new_single)
+    path.write_text(text, encoding='utf-8')
+
+css_path = root / 'public/css/dashboard.css'
+css = css_path.read_text(encoding='utf-8')
+old_css = '''.drawer-nav {\n    overflow-x: hidden;\n    overflow-y: auto;\n    overscroll-behavior: contain;\n}\n\n.drawer-menu {\n    padding-bottom: 16px;\n}\n\n.drawer-brand {\n    display: flex;\n    align-items: center;\n    min-height: 52px;\n    margin: 0;\n    padding: 0 14px;\n    border-bottom: 1px solid rgba(0, 0, 0, 0.12);\n    font-size: 1.15rem;\n    line-height: 1.2;\n}\n'''
+new_css = '''.drawer-nav {\n    --bs-offcanvas-width: 16.25rem;\n    overflow-x: hidden;\n    overflow-y: auto;\n    overscroll-behavior: contain;\n    color: #222;\n    background-color: #fff;\n}\n\n.drawer-menu {\n    margin: 0;\n    padding: 0 0 16px;\n    list-style: none;\n}\n\n.drawer-brand {\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n    min-height: 52px;\n    margin: 0;\n    padding: 0 14px;\n    border-bottom: 1px solid rgba(0, 0, 0, 0.12);\n    font-size: 1.15rem;\n    line-height: 1.2;\n}\n\n.drawer-brand-main {\n    display: flex;\n    align-items: center;\n    min-width: 0;\n}\n\n.drawer-close {\n    flex: 0 0 auto;\n    margin-left: 8px;\n}\n'''
+if old_css in css:
+    css = css.replace(old_css, new_css)
+elif new_css not in css:
+    raise SystemExit('dashboard.css Drawer block mismatch')
+css_path.write_text(css, encoding='utf-8')
+
+mail_path = root / 'public/js/mail-widget.js'
+mail = mail_path.read_text(encoding='utf-8')
+mail = mail.replace("$('.drawer-menu-action[data-bs-target=\"#registerMemo\"]').first().closest('li')", "$('.drawer-menu-action[data-drawer-modal-target=\"#registerMemo\"]').first().closest('li')")
+mail = mail.replace(".attr({'type': 'button', 'data-bs-toggle': 'modal', 'data-bs-target': '#registerMailWidget'})\n            .addClass('btn btn-link text-muted drawer-menu-action drawer-item')", ".attr({'type': 'button', 'data-drawer-modal-target': '#registerMailWidget'})\n            .addClass('btn btn-link text-muted drawer-menu-action drawer-item')")
+mail_path.write_text(mail, encoding='utf-8')
+
+dash_path = root / 'public/js/dashboard.js'
+dash = dash_path.read_text(encoding='utf-8')
+dash = dash.replace("if ($('.modal.show').length > 0 || $('.drawer').hasClass('drawer-open') || widgetDragState !== null) {", "if ($('.modal.show').length > 0 || drawerIsActive() || widgetDragState !== null) {")
+old_js = '''    function drawerFocusableItems() {\n        return $('#drawerMenu').find('a[href], button:not([disabled]), input:not([type="hidden"]):not([disabled]), [tabindex]:not([tabindex="-1"])');\n    }\n\n    function updateDrawerState(opened) {\n        $('.drawer-toggle[aria-controls="drawerMenu"]')\n            .attr('aria-expanded', opened ? 'true' : 'false')\n            .attr('aria-label', opened ? 'メニューを閉じる' : 'メニューを開く');\n    }\n\n    function initDrawer() {\n        if (!$.fn.drawer) {\n            return;\n        }\n\n        var $drawer = $('.drawer');\n        var $drawerMenu = $('#drawerMenu');\n        var $lastTrigger = $();\n\n        $(document)\n            .off('click' + eventNamespace, '.drawer-toggle[aria-controls="drawerMenu"]')\n            .on('click' + eventNamespace, '.drawer-toggle[aria-controls="drawerMenu"]', function () {\n                $lastTrigger = $(this);\n            })\n            .off('keydown' + eventNamespace + '.drawer')\n            .on('keydown' + eventNamespace + '.drawer', function (event) {\n                if (!$drawer.hasClass('drawer-open') || $('.modal.show').length > 0) {\n                    return;\n                }\n\n                if (event.key === 'Escape' || event.keyCode === 27) {\n                    event.preventDefault();\n                    $drawer.drawer('close');\n                    return;\n                }\n\n                if (event.key !== 'Tab' && event.keyCode !== 9) {\n                    return;\n                }\n\n                var $items = drawerFocusableItems();\n                if ($items.length === 0) {\n                    return;\n                }\n\n                var first = $items.get(0);\n                var last = $items.get($items.length - 1);\n                if (event.shiftKey && document.activeElement === first) {\n                    event.preventDefault();\n                    last.focus();\n                } else if (!event.shiftKey && document.activeElement === last) {\n                    event.preventDefault();\n                    first.focus();\n                }\n            });\n\n        $drawer\n            .off('drawer.opened' + eventNamespace)\n            .on('drawer.opened' + eventNamespace, function () {\n                updateDrawerState(true);\n                var $items = drawerFocusableItems();\n                if ($items.length > 0) {\n                    $items.first().focus();\n                } else {\n                    $drawerMenu.focus();\n                }\n            })\n            .off('drawer.closed' + eventNamespace)\n            .on('drawer.closed' + eventNamespace, function () {\n                updateDrawerState(false);\n                if ($lastTrigger.length > 0 && $('.modal.show').length === 0) {\n                    $lastTrigger.focus();\n                }\n            })\n            .drawer();\n\n        updateDrawerState(false);\n    }\n'''
+new_js = '''    function drawerIsActive() {\n        var $drawerMenu = $('#drawerMenu');\n        return $drawerMenu.hasClass('show') || $drawerMenu.hasClass('showing') || $drawerMenu.hasClass('hiding');\n    }\n\n    function updateDrawerState(opened) {\n        $('.drawer-toggle[aria-controls="drawerMenu"]')\n            .attr('aria-expanded', opened ? 'true' : 'false')\n            .attr('aria-label', opened ? 'メニューを閉じる' : 'メニューを開く');\n    }\n\n    function initDrawer() {\n        var drawerElement = document.getElementById('drawerMenu');\n        if (!drawerElement || typeof bootstrap === 'undefined' || !bootstrap.Offcanvas) {\n            return;\n        }\n\n        var $drawerMenu = $(drawerElement);\n        var drawer = bootstrap.Offcanvas.getOrCreateInstance(drawerElement);\n        var $lastTrigger = $();\n        var pendingModal = null;\n\n        $(document)\n            .off('click' + eventNamespace, '.drawer-toggle[aria-controls="drawerMenu"]')\n            .on('click' + eventNamespace, '.drawer-toggle[aria-controls="drawerMenu"]', function () {\n                $lastTrigger = $(this);\n            })\n            .off('click' + eventNamespace, '.drawer-menu-action[data-drawer-modal-target]')\n            .on('click' + eventNamespace, '.drawer-menu-action[data-drawer-modal-target]', function (event) {\n                var selector = String($(this).attr('data-drawer-modal-target') || '');\n                var modalElement = selector.charAt(0) === '#' ? document.querySelector(selector) : null;\n                if (!modalElement || !bootstrap.Modal) {\n                    return;\n                }\n\n                event.preventDefault();\n                pendingModal = {\n                    element: modalElement,\n                    returnFocus: $lastTrigger.length > 0 ? $lastTrigger.get(0) : null\n                };\n                drawer.hide();\n            });\n\n        $drawerMenu\n            .off('show.bs.offcanvas' + eventNamespace)\n            .on('show.bs.offcanvas' + eventNamespace, function () {\n                updateDrawerState(true);\n            })\n            .off('hidden.bs.offcanvas' + eventNamespace)\n            .on('hidden.bs.offcanvas' + eventNamespace, function () {\n                updateDrawerState(false);\n                if (pendingModal !== null) {\n                    var nextModal = pendingModal;\n                    pendingModal = null;\n                    bootstrap.Modal.getOrCreateInstance(nextModal.element).show(nextModal.returnFocus || undefined);\n                }\n            });\n\n        updateDrawerState($drawerMenu.hasClass('show'));\n    }\n'''
+if old_js in dash:
+    dash = dash.replace(old_js, new_js)
+elif new_js not in dash:
+    raise SystemExit('dashboard.js Drawer block mismatch')
+dash_path.write_text(dash, encoding='utf-8')
+
+calendar_path = root / 'public/js/calendar.js'
+calendar = calendar_path.read_text(encoding='utf-8')
+calendar = calendar.replace("loadScript('./js/mail-widget.js?v=1.12.0');", "loadScript('./js/mail-widget.js?v=1.14-d');")
+calendar_path.write_text(calendar, encoding='utf-8')
