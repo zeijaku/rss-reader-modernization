@@ -1,0 +1,69 @@
+name: V1.13-G root cause audit
+
+on:
+  push:
+    branches:
+      - tmp/v113g-rootcause-audit
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Audit legacy index assumptions
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          root = Path('.')
+          out = []
+          for path in sorted((root / 'tests').rglob('*')):
+              if not path.is_file() or path.suffix not in {'.py', '.php', '.js', '.sh'}:
+                  continue
+              try:
+                  text = path.read_text(encoding='utf-8')
+              except UnicodeDecodeError:
+                  continue
+              lines = text.splitlines()
+              hits = []
+              for no, line in enumerate(lines, 1):
+                  lower = line.lower()
+                  if 'index.php' in lower or 'dashboard_source' in lower or 'dashboard_widgets.php' in lower or 'dashboard_modals.php' in lower:
+                      hits.append((no, line.rstrip()))
+              if hits:
+                  out.append(f'### {path.as_posix()}')
+                  for no, line in hits:
+                      out.append(f'{no}: {line}')
+                  out.append('')
+
+          Path('v113g-index-audit.txt').write_text('\n'.join(out), encoding='utf-8')
+          print('\n'.join(out))
+          PY
+
+      - name: Package source for offline audit
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+
+          with ZipFile('v113g-source.zip', 'w', ZIP_DEFLATED) as zf:
+              for path in sorted(Path('.').rglob('*')):
+                  if not path.is_file():
+                      continue
+                  if '.git' in path.parts:
+                      continue
+                  if path.name == 'v113g-source.zip':
+                      continue
+                  zf.write(path, path.as_posix())
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v113g-rootcause-audit
+          path: |
+            v113g-index-audit.txt
+            v113g-source.zip
+          if-no-files-found: error
