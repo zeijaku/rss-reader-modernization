@@ -108,9 +108,6 @@ check(resolved_themes == expected_themes, 'theme whitelist resolves to all eight
 for theme in resolved_themes:
     check((PUBLIC / 'css' / theme).is_file(), f'theme stylesheet exists: {theme}')
 
-# Resolve local url() references from application and Font Awesome CSS.
-# Bootstrap / Bootswatch may reference external Google Fonts and upstream source maps;
-# neither becomes a local runtime dependency in Version 1.14.
 local_css_refs: set[Path] = set()
 for css_path in sorted((PUBLIC / 'css').glob('*.css')):
     text = css_path.read_text(encoding='utf-8', errors='replace')
@@ -124,9 +121,6 @@ for path in sorted(local_css_refs):
     check(path.is_file(), f'local CSS dependency exists: {path.relative_to(ROOT)}')
 check(len(local_css_refs) == 8, 'all.css resolves the expected eight local Font Awesome files')
 
-# Application-owned CSS/JS must not introduce unresolved Source Map dependencies.
-# Exact Bootstrap/Bootswatch 5.3.8 vendor files retain upstream sourceMappingURL comments;
-# those comments are documentation hints, not runtime requests made by the application.
 app_owned_assets = [
     p for p in list((PUBLIC / 'css').glob('*.css')) + list((PUBLIC / 'js').glob('*.js'))
     if not p.name.startswith('bootstrap') and p.name not in {'all.css', 'jquery-3.7.1.min.js'}
@@ -135,7 +129,6 @@ for asset in app_owned_assets:
     text = asset.read_text(encoding='utf-8', errors='replace')
     check('sourceMappingURL=' not in text, f'application asset has no Source Map dependency: {asset.relative_to(ROOT)}')
 
-# Every Font Awesome icon used by PHP markup should still be defined by all.css.
 markup = dashboard_markup + '\n' + login
 icons = sorted(icon for icon in set(re.findall(r'\bfa-([a-z0-9-]+)\b', markup)) if icon not in {'fw', 'spin'} and not re.fullmatch(r'\d+x', icon))
 fa_css = (PUBLIC / 'css/all.css').read_text(encoding='utf-8', errors='replace')
@@ -143,8 +136,10 @@ for icon in icons:
     check(re.search(rf'\.fa-{re.escape(icon)}\s*\{{[^}}]*--fa:', fa_css, re.S) is not None, f'Font Awesome definition remains for fa-{icon}')
 check(len(icons) >= 15, 'icon inventory covers the Dashboard and authentication screens')
 
+bootstrap_css_header = (PUBLIC / 'css/bootstrap-5.3.8.min.css').read_text(encoding='utf-8', errors='replace')[:1000]
+check('v5.3.8' in bootstrap_css_header and 'Licensed under MIT' in bootstrap_css_header,
+      'Bootstrap 5.3.8 CSS keeps its upstream version/license header')
 license_markers = {
-    PUBLIC / 'css/bootstrap-5.3.8.min.css': 'Bootstrap v5.3.8',
     PUBLIC / 'js/bootstrap.bundle-5.3.8.min.js': 'Bootstrap v5.3.8',
     PUBLIC / 'css/all.css': 'Font Awesome Free 6.7.2',
     PUBLIC / 'js/jquery-3.7.1.min.js': 'jQuery v3.7.1',
@@ -174,7 +169,7 @@ for rel in sorted(legacy_assets):
 
 public_files = [p for p in PUBLIC.rglob('*') if p.is_file()]
 public_size = sum(p.stat().st_size for p in public_files)
-check(len(public_files) == 41, 'public inventory contains the Version 1.14 retained files')
+check(len(public_files) == 42, 'public inventory contains the 42 Version 1.14 retained files')
 check(public_size < 4_100_000, 'public inventory remains below 4.1 MB after legacy asset cleanup')
 check(not (ROOT / 'package.json').exists(), 'asset cleanup adds no npm dependency')
 check(not (ROOT / 'node_modules').exists(), 'asset cleanup adds no node_modules directory')
