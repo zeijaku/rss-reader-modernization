@@ -1,4 +1,5 @@
 from pathlib import Path
+from dashboard_source_utils import dashboard_source
 r=Path(__file__).resolve().parents[1]
 checks=[]
 def c(v,m): checks.append((bool(v),m))
@@ -6,7 +7,7 @@ widget=(r/'app/dashboard_widget.php').read_text()
 api=(r/'app/api.php').read_text()
 search=(r/'app/search_feed.php').read_text()
 js=(r/'public/js/dashboard.js').read_text()
-html=(r/'public/index.php').read_text()
+html=dashboard_source(r)
 cache=(r/'app/feed/feed_cache.php').read_text()
 c("'search'" in widget.split('function dashboard_widget_types',1)[1].split('}',1)[0],'search widget allowed')
 c('widget.search.create' in api and 'widget.search.fetch' in api,'API actions')
