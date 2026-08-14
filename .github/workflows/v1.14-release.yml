@@ -231,7 +231,25 @@ jobs:
           git diff --exit-code
 
       - name: Run complete regression suite
-        run: bash tests/run.sh
+        shell: bash
+        run: |
+          bash tests/run.sh 2>&1 | tee "${RUNNER_TEMP}/v1.14-regression.log"
+
+      - name: Capture regression failure tail
+        if: failure()
+        shell: bash
+        run: |
+          tail -n 160 "${RUNNER_TEMP}/v1.14-regression.log" > "${RUNNER_TEMP}/v1.14-regression-tail.txt"
+          cat "${RUNNER_TEMP}/v1.14-regression-tail.txt"
+
+      - name: Upload regression failure tail
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v1.14-g-regression-failure-php-${{ matrix.php }}
+          path: ${{ runner.temp }}/v1.14-regression-tail.txt
+          if-no-files-found: error
+          retention-days: 7
 
   package:
     name: Build and verify Version 1.14.0 artifacts
