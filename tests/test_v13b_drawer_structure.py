@@ -8,7 +8,8 @@ index = dashboard_source(ROOT)
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
-drawer = index[index.index('<!-- Drawer -->', index.index('<footer')):index.index('<!-- Bootstrap -->', index.index('<footer'))]
+drawer_start = index.index('<nav class="offcanvas offcanvas-end drawer-nav"', index.index('<footer'))
+drawer = index[drawer_start:index.index('<!-- Bootstrap -->', drawer_start)]
 
 checks = []
 
@@ -57,9 +58,10 @@ check(':focus-visible' in css and 'outline-offset: -3px' in css, 'Drawer keeps a
 check('.drawer-logout-button:hover' in css and 'color: #b02a37' in css, 'logout has a distinguishable restrained hover state')
 check('overflow-y: auto' in css and 'overscroll-behavior: contain' in css, 'long Drawer content remains scrollable')
 
-check("event.key === 'Escape' || event.keyCode === 27" in js, 'Escape handling remains unchanged')
-check("event.key !== 'Tab' && event.keyCode !== 9" in js, 'Tab focus containment remains unchanged')
-check("$lastTrigger.focus();" in js, 'Drawer still returns focus to its trigger')
+check('bootstrap.Offcanvas.getOrCreateInstance' in js, 'Bootstrap Offcanvas owns Drawer behavior')
+check("event.key === 'Escape' || event.keyCode === 27" not in js, 'legacy manual Escape handling is removed')
+check("event.key !== 'Tab' && event.keyCode !== 9" not in js, 'legacy manual Tab focus containment is removed')
+check('show.bs.offcanvas' in js and 'hidden.bs.offcanvas' in js, 'Offcanvas lifecycle keeps application trigger state synchronized')
 check('.html(' not in js and 'innerHTML' not in js, 'V1.3-B does not weaken safe DOM rendering')
 check(not (ROOT / 'package.json').exists(), 'V1.3-B adds no build dependency')
 check(not any(p.name.startswith('007_v1_3') or 'v1_3' in p.name for p in (ROOT / 'database').rglob('*.sql')), 'V1.3-B adds no SQL or migration')
