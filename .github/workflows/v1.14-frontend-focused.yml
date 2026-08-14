@@ -156,7 +156,7 @@ jobs:
         run: |
           set -euo pipefail
           git fetch origin v1.14-e:refs/remotes/origin/v1.14-e
-          mapfile -t changed < <(git diff --name-only origin/v1.14-e...HEAD -- app public | sort)
+          mapfile -t changed < <(git diff --name-only origin/v1.14-e -- app public | sort)
           expected=(
             app/view/dashboard_widgets.php
             public/css/dashboard.css
