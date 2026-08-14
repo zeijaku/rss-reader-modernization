@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import hashlib
 import re
 import sys
 from urllib.parse import unquote
@@ -60,7 +61,8 @@ legacy_assets = [
 legacy_assets.extend(f'public/css/bootstrap-{theme}.min.css' for theme in ['yeti', 'minty', 'flatly', 'journal', 'sketchy', 'solar', 'slate'])
 for rel in legacy_assets:
     check(not (ROOT / rel).exists(), f'legacy dependency asset is absent: {rel}')
-check('Popper' in bootstrap_js[:5000] or 'popper' in bootstrap_js[:5000].lower(), 'Popper support is carried only by the Bootstrap bundle')
+bootstrap_bundle_sha256 = hashlib.sha256((PUBLIC / 'js/bootstrap.bundle-5.3.8.min.js').read_bytes()).hexdigest()
+check(bootstrap_bundle_sha256 == 'e4fd49181388c48ec5040bd3fe66f57c29c8e67fcd8502b3354b96ec7ab47cc7', 'Bootstrap bundle matches the pinned Version 5.3.8 artifact')
 
 check('Font Awesome Free 6.7.2' in fa_css[:300], 'Font Awesome Free is updated to 6.7.2')
 check('Font Awesome Free 5.3.1' not in fa_css[:300], 'old Font Awesome header is absent')
