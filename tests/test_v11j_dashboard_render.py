@@ -71,7 +71,7 @@ check(modal[0].get('aria-labelledby')=='accountSettingsTitle','Account Settings 
 check(html.count('id="accountEmailForm"')==1,'email form renders once')
 check(html.count('id="accountPasswordForm"')==1,'password form renders once')
 check('id="accountEmailForm"' in html and html.index('id="accountEmailForm"') < html.index('id="accountPasswordForm"'),'email and password forms remain separate and ordered')
-check('data-target="#accountSettings"' in html and 'アカウント設定' in text,'Drawer renders Account Settings action')
+check('data-drawer-modal-target="#accountSettings"' in html and 'アカウント設定' in text,'Drawer renders Account Settings action')
 check('メールアドレス変更' in text and 'パスワード変更' in text,'both Account Settings sections render')
 check('現在のメールアドレスは画面には表示していません' in text,'current email storage limitation is explained')
 
