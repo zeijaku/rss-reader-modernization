@@ -57,6 +57,12 @@ V1.14-Dでは全回帰テストは行わず、Offcanvas切替に直接関係す�
 
 全体回帰は計画どおりV1.14-Gで1回実施します。
 
+## Generated checkpoint
+
+- Generated source commit: `ddadc60c8d08150fbdd85a7bdf4ca9f6bba239ce`
+- Initial focused CI run: `31797550652` — success
+- CI上でC→D migration、Offcanvas runtime検査、PHP/JS syntax、Bootstrap asset checksum、ZIP生成まで全てsuccessを確認
+
 ## 本番確認の重点
 
 V1.14-Dは右メニューの実装方式が変わるため、PCとスマホの両方で以下を重点確認してください。
