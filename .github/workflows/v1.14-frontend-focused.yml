@@ -3,15 +3,15 @@ name: V1.14 Frontend Focused
 on:
   push:
     branches:
-      - v1.14-d
+      - v1.14-e
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  offcanvas-cutover:
-    name: Bootstrap Offcanvas drawer cutover
+  dependency-cleanup:
+    name: Legacy frontend dependency cleanup
     runs-on: ubuntu-latest
 
     steps:
@@ -31,11 +31,88 @@ jobs:
           php-version: '8.1'
           coverage: none
 
-      - name: Apply idempotent V1.14-D migration
+      - name: Validate removed legacy dependencies
         shell: bash
         run: |
           set -euo pipefail
-          python3 tools/v1.14-d-migrate.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import sys
+
+          targets = [
+              Path('public/css/drawer.min.css'),
+              Path('public/js/drawer.min.js'),
+              Path('public/js/iscroll.js'),
+              Path('public/js/popper.min.js'),
+          ]
+          failed = False
+          for path in targets:
+              exists = path.exists()
+              print(f'{path}: {"FAIL still exists" if exists else "removed OK"}')
+              failed = failed or exists
+
+          needles = [
+              'drawer.min.css',
+              'drawer.min.js',
+              'iscroll.js',
+              'popper.min.js',
+          ]
+          source_files = []
+          for base in [Path('app'), Path('public')]:
+              for path in base.rglob('*'):
+                  if path.suffix.lower() not in {'.php', '.js', '.css', '.html'}:
+                      continue
+                  if path.name.endswith('.min.js') or path.name.endswith('.min.css') or path.name.endswith('.map'):
+                      continue
+                  source_files.append(path)
+
+          for needle in needles:
+              hits = []
+              for path in source_files:
+                  text = path.read_text(errors='ignore')
+                  if needle in text:
+                      hits.append(str(path))
+              print(f'{needle}: references={len(hits)}')
+              if hits:
+                  print('\n'.join(hits[:20]))
+                  failed = True
+
+          if failed:
+              sys.exit(1)
+          PY
+
+      - name: Validate cleanup scope against V1.14-D
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin v1.14-d:refs/remotes/origin/v1.14-d
+          python3 - <<'PY'
+          import subprocess
+          import sys
+
+          expected = {
+              ('D', 'public/css/drawer.min.css'),
+              ('D', 'public/js/drawer.min.js'),
+              ('D', 'public/js/iscroll.js'),
+              ('D', 'public/js/popper.min.js'),
+          }
+          output = subprocess.check_output(
+              ['git', 'diff', '--name-status', 'origin/v1.14-d...HEAD', '--', 'app', 'public'],
+              text=True,
+          )
+          actual = set()
+          for line in output.splitlines():
+              if not line.strip():
+                  continue
+              parts = line.split('\t')
+              actual.add((parts[0], parts[-1]))
+          print('app/public diff:')
+          print(output or '(none)')
+          if actual != expected:
+              print(f'Expected only: {sorted(expected)}', file=sys.stderr)
+              print(f'Actual: {sorted(actual)}', file=sys.stderr)
+              sys.exit(1)
+          PY
 
       - name: Validate Bootstrap and Bootswatch assets
         shell: bash
@@ -46,85 +123,40 @@ jobs:
           sha256sum -c FRONTEND_ASSETS_V1_14_C.sha256
           grep -Fq 'Bootstrap v5.3.8' public/js/bootstrap.bundle-5.3.8.min.js
 
-      - name: Validate Offcanvas runtime cutover
+      - name: Validate Offcanvas runtime remains active
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          import re
           import sys
 
           failed = False
-          pages = [Path('public/index.php'), Path('public/settings.php'), Path('public/stock.php')]
-          for page in pages:
-              source = page.read_text()
+          for page_name in ['public/index.php', 'public/settings.php', 'public/stock.php']:
+              source = Path(page_name).read_text()
               checks = {
                   'offcanvas container': 'class="offcanvas offcanvas-end drawer-nav"' in source,
                   'offcanvas trigger': 'data-bs-toggle="offcanvas" data-bs-target="#drawerMenu"' in source,
                   'offcanvas close': 'data-bs-dismiss="offcanvas"' in source,
-                  'drawer css inactive': "app_asset_url('css/drawer.min.css')" not in source,
-                  'drawer js inactive': "app_asset_url('js/drawer.min.js')" not in source,
-                  'iscroll inactive': "app_asset_url('js/iscroll.js')" not in source,
                   'Bootstrap bundle active': "app_asset_url('js/bootstrap.bundle-5.3.8.min.js')" in source,
-                  'legacy body class removed': 'drawer drawer--right' not in source,
+                  'legacy body class absent': 'drawer drawer--right' not in source,
               }
               for label, ok in checks.items():
-                  print(f'{page}: {label}: {"OK" if ok else "FAIL"}')
+                  print(f'{page_name}: {label}: {"OK" if ok else "FAIL"}')
                   failed = failed or not ok
-              if re.search(r'drawer-menu-action[^>]+data-bs-toggle="modal"', source):
-                  print(f'{page}: old Drawer modal Data API remains')
-                  failed = True
-
-          for old_asset in ['public/css/drawer.min.css', 'public/js/drawer.min.js', 'public/js/iscroll.js']:
-              ok = Path(old_asset).is_file() and Path(old_asset).stat().st_size > 0
-              print(f'{old_asset}: retained for V1.14-E: {"OK" if ok else "FAIL"}')
-              failed = failed or not ok
 
           dashboard = Path('public/js/dashboard.js').read_text()
           for forbidden in ['$.fn.drawer', '.drawer(', 'drawer-open']:
               if forbidden in dashboard:
                   print(f'dashboard.js: forbidden legacy dependency remains: {forbidden}')
                   failed = True
-          for marker in ['bootstrap.Offcanvas.getOrCreateInstance', 'bootstrap.Modal.getOrCreateInstance', 'data-drawer-modal-target', 'drawerIsActive()', 'show.bs.offcanvas', 'hidden.bs.offcanvas']:
-              ok = marker in dashboard
-              print(f'dashboard.js: {marker}: {"OK" if ok else "FAIL"}')
-              failed = failed or not ok
-
-          mail = Path('public/js/mail-widget.js').read_text()
-          if 'data-drawer-modal-target' not in mail or 'drawer-menu-action[data-bs-target="#registerMemo"]' in mail:
-              print('mail-widget.js: dynamic Drawer modal path is not migrated')
-              failed = True
-
-          calendar = Path('public/js/calendar.js').read_text()
-          if "mail-widget.js?v=1.14-d" not in calendar:
-              print('calendar.js: Mail Widget cache-busting marker is missing')
-              failed = True
-
-          css = Path('public/css/dashboard.css').read_text()
-          for marker in ['--bs-offcanvas-width: 16.25rem;', '.drawer-brand-main', '.drawer-close']:
-              if marker not in css:
-                  print(f'dashboard.css: missing {marker}')
+          for marker in ['bootstrap.Offcanvas.getOrCreateInstance', 'bootstrap.Modal.getOrCreateInstance', 'data-drawer-modal-target']:
+              if marker not in dashboard:
+                  print(f'dashboard.js: missing marker: {marker}')
                   failed = True
 
           if failed:
               sys.exit(1)
-          PY
-
-      - name: Validate Bootstrap runtime order and version marker
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          for page in ['public/index.php', 'public/settings.php', 'public/stock.php']:
-              source = Path(page).read_text()
-              jquery = source.find("app_asset_url('js/jquery-3.7.1.min.js')")
-              bootstrap = source.find("app_asset_url('js/bootstrap.bundle-5.3.8.min.js')")
-              dashboard = source.find("app_asset_url('js/dashboard.js')")
-              if jquery < 0 or bootstrap <= jquery or dashboard <= bootstrap:
-                  raise SystemExit(f'{page}: unexpected jQuery / Bootstrap / dashboard runtime order')
-              print(f'{page}: runtime order OK')
           PY
           grep -Fq "APP_VERSION = '1.13.0'" app/version.php
 
@@ -132,8 +164,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          find app public -type f -name '*.php' -print0 | xargs -0 -n1 php -l > /tmp/v1.14-d-php-lint.txt
-          cat /tmp/v1.14-d-php-lint.txt
+          find app public -type f -name '*.php' -print0 | xargs -0 -n1 php -l > /tmp/v1.14-e-php-lint.txt
+          cat /tmp/v1.14-e-php-lint.txt
 
       - name: JavaScript syntax focused check
         shell: bash
@@ -143,61 +175,41 @@ jobs:
           node --check public/js/mail-widget.js
           node --check public/js/calendar.js
 
-      - name: Working tree whitespace check
-        run: git diff --check
-
-      - name: Commit generated V1.14-D source when needed
-        id: source_commit
-        shell: bash
-        run: |
-          set -euo pipefail
-          git add public
-          if git diff --cached --quiet; then
-            echo 'created=false' >> "${GITHUB_OUTPUT}"
-          else
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'feat(v1.14-d): replace drawer with Bootstrap Offcanvas'
-            git push origin HEAD:v1.14-d
-            echo 'created=true' >> "${GITHUB_OUTPUT}"
-          fi
-
       - name: Branch diff whitespace check
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin v1.14-c:refs/remotes/origin/v1.14-c
-          git diff --check origin/v1.14-c...HEAD
+          git diff --check origin/v1.14-d...HEAD
 
       - name: Build production verification ZIP
         shell: bash
         run: |
           set -euo pipefail
-          package_root="${RUNNER_TEMP}/rss-reader-v1.14-d-production-app-public"
+          package_root="${RUNNER_TEMP}/rss-reader-v1.14-e-production-app-public"
           rm -rf "${package_root}"
           mkdir -p "${package_root}"
           cp -a app "${package_root}/app"
           cp -a public "${package_root}/public"
           cp .htaccess "${package_root}/.htaccess"
-          cp APPLY_NOTE_V1_14_D.md "${package_root}/APPLY_NOTE_V1_14_D.md"
+          cp APPLY_NOTE_V1_14_E.md "${package_root}/APPLY_NOTE_V1_14_E.md"
           cp FRONTEND_ASSETS_V1_14_C.sha256 "${package_root}/FRONTEND_ASSETS_V1_14_C.sha256"
           source_sha="$(git rev-parse HEAD)"
           printf '%s\n' \
-            'RSS Reader Modernization V1.14-D' \
-            'Baseline: V1.14-C / application version 1.13.0' \
-            'Checkpoint: jquery-drawer runtime replaced by Bootstrap 5.3.8 Offcanvas; old Drawer/iScroll files retained for V1.14-E cleanup.' \
+            'RSS Reader Modernization V1.14-E' \
+            'Baseline: V1.14-D / application version 1.13.0' \
+            'Checkpoint: removed unused jquery-drawer, iScroll, and standalone Popper files after Bootstrap Offcanvas cutover.' \
             "Source commit: ${source_sha}" \
             > "${package_root}/SOURCE_BUILD.txt"
           cd "${RUNNER_TEMP}"
-          zip -qr rss-reader-v1.14-d-production-app-public.zip rss-reader-v1.14-d-production-app-public
-          sha256sum rss-reader-v1.14-d-production-app-public.zip > rss-reader-v1.14-d-production-app-public.zip.sha256
+          zip -qr rss-reader-v1.14-e-production-app-public.zip rss-reader-v1.14-e-production-app-public
+          sha256sum rss-reader-v1.14-e-production-app-public.zip > rss-reader-v1.14-e-production-app-public.zip.sha256
 
       - name: Upload production verification package
         uses: actions/upload-artifact@v4
         with:
-          name: rss-reader-v1.14-d-production-app-public
+          name: rss-reader-v1.14-e-production-app-public
           path: |
-            ${{ runner.temp }}/rss-reader-v1.14-d-production-app-public.zip
-            ${{ runner.temp }}/rss-reader-v1.14-d-production-app-public.zip.sha256
+            ${{ runner.temp }}/rss-reader-v1.14-e-production-app-public.zip
+            ${{ runner.temp }}/rss-reader-v1.14-e-production-app-public.zip.sha256
           if-no-files-found: error
           retention-days: 30
