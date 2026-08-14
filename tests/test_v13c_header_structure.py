@@ -40,7 +40,7 @@ check('class="app-navbar-current"' in index and '現在の表示：' in index, '
 check('class="app-navbar-current-label"' in index and 'app_html($currentViewName)' in index, 'Current page label is safely escaped')
 check(index.count('aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く"') == 2, 'Mobile and desktop menu buttons share Drawer ARIA state')
 check(index.count('class="fas fa-bars" aria-hidden="true"') >= 2, 'Both menu buttons use the same existing Font Awesome icon')
-check('class="navbar-nav ml-auto app-navbar-links"' in index, 'Desktop external links are grouped at the right side')
+check('class="navbar-nav ms-auto app-navbar-links"' in index, 'Desktop external links are grouped at the right side')
 check('class="nav-link app-navbar-link"' in index and 'app-navbar-link-label' in index, 'External links use shared icon and truncating label layout')
 check('target="_blank" rel="noopener noreferrer"' in index, 'External links retain safe new-tab attributes')
 check('navbar-toggler-icon' not in index, 'Header no longer depends on Bootstrap background-image toggler icons')
