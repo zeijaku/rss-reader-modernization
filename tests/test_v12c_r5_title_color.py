@@ -2,8 +2,10 @@ from pathlib import Path
 import re
 import shutil
 
+from dashboard_source_utils import dashboard_source
+
 ROOT = Path(__file__).resolve().parents[1]
-INDEX = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+INDEX = dashboard_source(ROOT)
 JS = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 failures = []
 count = 0
