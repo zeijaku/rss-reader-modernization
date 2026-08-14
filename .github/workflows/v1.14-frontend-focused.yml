@@ -3,15 +3,15 @@ name: V1.14 Frontend Focused
 on:
   push:
     branches:
-      - v1.14-b
+      - v1.14-c
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  frontend-foundation:
-    name: Bootstrap 5.3.8 foundation
+  frontend-cutover:
+    name: Bootstrap 5.3.8 runtime cutover
     runs-on: ubuntu-latest
 
     steps:
@@ -31,169 +31,186 @@ jobs:
           php-version: '8.1'
           coverage: none
 
-      - name: Install exact frontend packages
+      - name: Apply idempotent V1.14-C migration
         shell: bash
         run: |
           set -euo pipefail
-          vendor_dir="${RUNNER_TEMP}/v1.14-b-frontend"
-          mkdir -p "${vendor_dir}"
-          cd "${vendor_dir}"
-          npm init -y >/dev/null 2>&1
-          npm install --no-save --ignore-scripts --no-audit --no-fund \
-            bootstrap@5.3.8 \
-            bootswatch@5.3.8
+          python3 tools/v1.14-c-migrate.py
 
-          test "$(node -p "require('${vendor_dir}/node_modules/bootstrap/package.json').version")" = "5.3.8"
-          test "$(node -p "require('${vendor_dir}/node_modules/bootswatch/package.json').version")" = "5.3.8"
-
-      - name: Stage Bootstrap and Bootswatch 5.3.8 assets
+      - name: Validate Bootstrap and Bootswatch assets
         shell: bash
         run: |
           set -euo pipefail
-          vendor_dir="${RUNNER_TEMP}/v1.14-b-frontend/node_modules"
-
-          cp "${vendor_dir}/bootstrap/dist/css/bootstrap.min.css" \
-            public/css/bootstrap-5.3.8.min.css
-          cp "${vendor_dir}/bootstrap/dist/js/bootstrap.bundle.min.js" \
-            public/js/bootstrap.bundle-5.3.8.min.js
-
-          for theme in flatly journal minty sketchy slate solar yeti; do
-            cp "${vendor_dir}/bootswatch/dist/${theme}/bootstrap.min.css" \
-              "public/css/bootstrap-${theme}-5.3.8.min.css"
-          done
-
-          assets=(
-            public/css/bootstrap-5.3.8.min.css
-            public/css/bootstrap-flatly-5.3.8.min.css
-            public/css/bootstrap-journal-5.3.8.min.css
-            public/css/bootstrap-minty-5.3.8.min.css
-            public/css/bootstrap-sketchy-5.3.8.min.css
-            public/css/bootstrap-slate-5.3.8.min.css
-            public/css/bootstrap-solar-5.3.8.min.css
-            public/css/bootstrap-yeti-5.3.8.min.css
-            public/js/bootstrap.bundle-5.3.8.min.js
-          )
-
-          sha256sum "${assets[@]}" > FRONTEND_ASSETS_V1_14_B.sha256
-
-      - name: Validate staged asset identity
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          test -s public/css/bootstrap-5.3.8.min.css
-          test -s public/js/bootstrap.bundle-5.3.8.min.js
+          test -s FRONTEND_ASSETS_V1_14_C.sha256
+          test "$(wc -l < FRONTEND_ASSETS_V1_14_C.sha256)" -eq 9
+          sha256sum -c FRONTEND_ASSETS_V1_14_C.sha256
           grep -Fq 'Bootstrap  v5.3.8' public/css/bootstrap-5.3.8.min.css
           grep -Fq 'Bootstrap v5.3.8' public/js/bootstrap.bundle-5.3.8.min.js
-
           for theme in flatly journal minty sketchy slate solar yeti; do
-            file="public/css/bootstrap-${theme}-5.3.8.min.css"
-            test -s "${file}"
-            grep -Fq 'Bootswatch v5.3.8' "${file}"
+            grep -Fq 'Bootswatch v5.3.8' "public/css/bootstrap-${theme}-5.3.8.min.css"
           done
 
-          test "$(wc -l < FRONTEND_ASSETS_V1_14_B.sha256)" -eq 9
-          sha256sum -c FRONTEND_ASSETS_V1_14_B.sha256
-
-      - name: Confirm V1.14-B has not switched production runtime
+      - name: Scan Bootstrap 4 legacy application syntax
         shell: bash
         run: |
           set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import sys
 
-          grep -Fq "'bootstrap' => 'bootstrap.min.css'" app/common/common_func.php
-          grep -Fq "'bootstrap-flatly' => 'bootstrap-flatly.min.css'" app/common/common_func.php
-          grep -Fq "'bootstrap-journal' => 'bootstrap-journal.min.css'" app/common/common_func.php
-          grep -Fq "'bootstrap-minty' => 'bootstrap-minty.min.css'" app/common/common_func.php
-          grep -Fq "'bootstrap-sketchy' => 'bootstrap-sketchy.min.css'" app/common/common_func.php
-          grep -Fq "'bootstrap-slate' => 'bootstrap-slate.min.css'" app/common/common_func.php
-          grep -Fq "'bootstrap-solar' => 'bootstrap-solar.min.css'" app/common/common_func.php
-          grep -Fq "'bootstrap-yeti' => 'bootstrap-yeti.min.css'" app/common/common_func.php
+          files = []
+          for base in [Path('app'), Path('public')]:
+              for p in base.rglob('*'):
+                  if p.suffix.lower() not in {'.php', '.js', '.css', '.html'}:
+                      continue
+                  if p.name.endswith('.min.js') or p.name.endswith('.min.css') or p.name.endswith('.map') or p.name == 'all.css':
+                      continue
+                  files.append(p)
 
-          for page in public/index.php public/settings.php public/stock.php; do
-            grep -Fq "app_asset_url('js/bootstrap.min.js')" "${page}"
-            grep -Fq "app_asset_url('js/popper.min.js')" "${page}"
-            grep -Fq "app_asset_url('js/drawer.min.js')" "${page}"
-            grep -Fq "app_asset_url('js/iscroll.js')" "${page}"
-          done
+          checks = {
+              'data-toggle': r'\bdata-toggle\s*=',
+              'data-target': r'\bdata-target\s*=',
+              'data-dismiss': r'\bdata-dismiss\s*=',
+              'form-group': r'(?<![-\w])form-group(?![-\w])',
+              'form-row': r'(?<![-\w])form-row(?![-\w])',
+              'custom-control': r'(?<![-\w])custom-control(?![-\w])',
+              'custom-checkbox': r'(?<![-\w])custom-checkbox(?![-\w])',
+              'input-group-prepend': r'(?<![-\w])input-group-prepend(?![-\w])',
+              'input-group-append': r'(?<![-\w])input-group-append(?![-\w])',
+              'sr-only': r'(?<![-\w])sr-only(?![-\w])',
+              'ml/mr utility': r'(?<![-\w])m[lr](?:-(?:sm|md|lg|xl|xxl))?-(?:0|1|2|3|4|5|auto)(?![-\w])',
+              'text-left/right': r'(?<![-\w])text-(?:left|right)(?![-\w])',
+              'old close class': r'class=["\'][^"\']*(?<![-\w])close(?![-\w])',
+              'old badge color': r'(?<![-\w])badge-(?:primary|secondary|success|danger|warning|info|light|dark)(?![-\w])',
+              'select form-control': r'<select\b[^>]*class=["\'][^"\']*(?<![-\w])form-control(?![-\w])',
+          }
 
-          if grep -R -n -E 'bootstrap(-[a-z]+)?-5\.3\.8|min\.js.*5\.3\.8|bundle-5\.3\.8' \
-            --include='*.php' app public; then
-            echo 'V1.14-B staged asset is referenced by production PHP before V1.14-C.' >&2
-            exit 1
-          fi
+          failed = False
+          for name, pattern in checks.items():
+              rx = re.compile(pattern)
+              hits = []
+              for p in files:
+                  for line_no, line in enumerate(p.read_text(errors='ignore').splitlines(), 1):
+                      if rx.search(line):
+                          hits.append(f'{p}:{line_no}: {line.strip()}')
+              print(f'{name}: {len(hits)}')
+              if hits:
+                  failed = True
+                  print('\n'.join(hits[:10]))
+
+          for attr in ('data-content-id', 'data-content-style'):
+              count = sum(p.read_text(errors='ignore').count(attr) for p in files)
+              print(f'{attr}: {count}')
+              if count == 0:
+                  failed = True
+
+          if failed:
+              sys.exit(1)
+          PY
+
+      - name: Validate theme resolver and runtime order
+        shell: bash
+        run: |
+          set -euo pipefail
+          php -r '
+            require "app/common/common_func.php";
+            $keys = ["bootstrap","bootstrap-yeti","bootstrap-minty","bootstrap-flatly","bootstrap-journal","bootstrap-sketchy","bootstrap-solar","bootstrap-slate"];
+            foreach ($keys as $key) {
+              $file = resolve_theme_stylesheet($key);
+              if (!preg_match("/(?:bootstrap|bootstrap-[a-z]+)-5\\.3\\.8\\.min\\.css$/", $file)) { fwrite(STDERR, "Unexpected theme: $key=$file\n"); exit(1); }
+              if (!is_file("public/css/" . $file)) { fwrite(STDERR, "Missing theme asset: $file\n"); exit(1); }
+              echo "$key=$file\n";
+            }
+          '
+          python3 - <<'PY'
+          from pathlib import Path
+          for page in ['public/index.php', 'public/settings.php', 'public/stock.php']:
+              source = Path(page).read_text()
+              jquery = source.find("app_asset_url('js/jquery-3.7.1.min.js')")
+              bootstrap = source.find("app_asset_url('js/bootstrap.bundle-5.3.8.min.js')")
+              if jquery < 0 or bootstrap <= jquery:
+                  raise SystemExit(f'{page}: jQuery must load before Bootstrap bundle')
+              if "app_asset_url('js/popper.min.js')" in source:
+                  raise SystemExit(f'{page}: standalone Popper is still active')
+              if "app_asset_url('js/bootstrap.min.js')" in source:
+                  raise SystemExit(f'{page}: Bootstrap 4 JS is still active')
+              if "app_asset_url('js/drawer.min.js')" not in source or "app_asset_url('js/iscroll.js')" not in source:
+                  raise SystemExit(f'{page}: Drawer/iScroll must remain until V1.14-D/E')
+              print(f'{page}: runtime order OK')
+          PY
+          grep -Fq "APP_VERSION = '1.13.0'" app/version.php
 
       - name: PHP syntax focused check
         shell: bash
         run: |
           set -euo pipefail
-          find app public -type f -name '*.php' -print0 \
-            | xargs -0 -n1 php -l >/tmp/v1.14-b-php-lint.txt
-          cat /tmp/v1.14-b-php-lint.txt
+          find app public -type f -name '*.php' -print0 | xargs -0 -n1 php -l > /tmp/v1.14-c-php-lint.txt
+          cat /tmp/v1.14-c-php-lint.txt
 
-      - name: Whitespace check
-        run: git diff --check
-
-      - name: Commit generated vendor assets when needed
-        id: vendor_commit
+      - name: JavaScript syntax focused check
         shell: bash
         run: |
           set -euo pipefail
-          git add \
-            FRONTEND_ASSETS_V1_14_B.sha256 \
-            public/css/bootstrap-5.3.8.min.css \
-            public/css/bootstrap-flatly-5.3.8.min.css \
-            public/css/bootstrap-journal-5.3.8.min.css \
-            public/css/bootstrap-minty-5.3.8.min.css \
-            public/css/bootstrap-sketchy-5.3.8.min.css \
-            public/css/bootstrap-slate-5.3.8.min.css \
-            public/css/bootstrap-solar-5.3.8.min.css \
-            public/css/bootstrap-yeti-5.3.8.min.css \
-            public/js/bootstrap.bundle-5.3.8.min.js
+          node --check public/js/calendar-core.js
+          node --check public/js/dashboard.js
+          node --check public/js/mail-widget.js
 
+      - name: Working tree whitespace check
+        run: git diff --check
+
+      - name: Commit generated V1.14-C source when needed
+        id: source_commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add app public
           if git diff --cached --quiet; then
             echo 'created=false' >> "${GITHUB_OUTPUT}"
-            exit 0
+          else
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'feat(v1.14-c): activate Bootstrap 5 runtime'
+            git push origin HEAD:v1.14-c
+            echo 'created=true' >> "${GITHUB_OUTPUT}"
           fi
 
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'build(v1.14-b): vendor Bootstrap and Bootswatch 5.3.8 assets'
-          git push origin HEAD:v1.14-b
-          echo 'created=true' >> "${GITHUB_OUTPUT}"
+      - name: Branch diff whitespace check
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin v1.14-b:refs/remotes/origin/v1.14-b
+          git diff --check origin/v1.14-b...HEAD
 
       - name: Build production verification ZIP
         shell: bash
         run: |
           set -euo pipefail
-          package_root="${RUNNER_TEMP}/rss-reader-v1.14-b-production-app-public"
+          package_root="${RUNNER_TEMP}/rss-reader-v1.14-c-production-app-public"
           rm -rf "${package_root}"
           mkdir -p "${package_root}"
-
           cp -a app "${package_root}/app"
           cp -a public "${package_root}/public"
           cp .htaccess "${package_root}/.htaccess"
-          cp APPLY_NOTE_V1_14_B.md "${package_root}/APPLY_NOTE_V1_14_B.md"
-          cp FRONTEND_ASSETS_V1_14_B.sha256 "${package_root}/FRONTEND_ASSETS_V1_14_B.sha256"
-
+          cp APPLY_NOTE_V1_14_C.md "${package_root}/APPLY_NOTE_V1_14_C.md"
+          cp FRONTEND_ASSETS_V1_14_C.sha256 "${package_root}/FRONTEND_ASSETS_V1_14_C.sha256"
+          source_sha="$(git rev-parse HEAD)"
           printf '%s\n' \
-            'RSS Reader Modernization V1.14-B' \
-            'Baseline: v1.13.0' \
-            'Checkpoint: Bootstrap 5.3.8 / Bootswatch 5.3.8 assets staged; runtime remains Bootstrap 4.1.3 until V1.14-C.' \
-            "Source commit: ${GITHUB_SHA}" \
+            'RSS Reader Modernization V1.14-C' \
+            'Baseline: V1.14-B / application version 1.13.0' \
+            'Checkpoint: Bootstrap 5.3.8 / Bootswatch 5.3.8 runtime activated; jQuery 3.7.1 and Drawer/iScroll retained.' \
+            "Source commit: ${source_sha}" \
             > "${package_root}/SOURCE_BUILD.txt"
-
           cd "${RUNNER_TEMP}"
-          zip -qr rss-reader-v1.14-b-production-app-public.zip \
-            rss-reader-v1.14-b-production-app-public
-          sha256sum rss-reader-v1.14-b-production-app-public.zip \
-            > rss-reader-v1.14-b-production-app-public.zip.sha256
+          zip -qr rss-reader-v1.14-c-production-app-public.zip rss-reader-v1.14-c-production-app-public
+          sha256sum rss-reader-v1.14-c-production-app-public.zip > rss-reader-v1.14-c-production-app-public.zip.sha256
 
       - name: Upload production verification package
         uses: actions/upload-artifact@v4
         with:
-          name: rss-reader-v1.14-b-production-app-public
+          name: rss-reader-v1.14-c-production-app-public
           path: |
-            ${{ runner.temp }}/rss-reader-v1.14-b-production-app-public.zip
-            ${{ runner.temp }}/rss-reader-v1.14-b-production-app-public.zip.sha256
+            ${{ runner.temp }}/rss-reader-v1.14-c-production-app-public.zip
+            ${{ runner.temp }}/rss-reader-v1.14-c-production-app-public.zip.sha256
           if-no-files-found: error
           retention-days: 30
