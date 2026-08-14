@@ -50,6 +50,12 @@ V1.14-Cでは全回帰テストは実施せず、Bootstrap切替に直接関係�
 
 全体回帰はV1.14-Gのrelease finalizationで1回実施する方針です。
 
+## Generated source checkpoint
+
+- Bootstrap 5 runtime migration commit: `3aed802ba5e459b6c26b712d671ec53866546877`
+- Migration helper: `tools/v1.14-c-migrate.py`
+- Migration helperは冪等性を確認済みで、既にV1.14-C化されたsourceへ再適用しても追加差分を発生させません。
+
 ## 本番確認時の注意
 
 V1.14-CからBootstrap 5.3.8が実際に有効になります。V1.14-Bと異なり、フォーム、Modal、Navbar等にBootstrap 4との差による軽微な見た目の差が出る可能性があります。
