@@ -31,7 +31,7 @@ if rule is not None:
     check('box-sizing: border-box;' in body, 'Feed header includes its box model in the fixed height')
     check('line-height: 1;' in body, 'Feed header line box does not enlarge the row')
 
-check('class="bg-' in INDEX and 'feed-card-header' in INDEX, 'Feed header markup remains present')
+check('class="text-bg-' in INDEX and 'feed-card-header' in INDEX, 'Feed header markup remains present')
 check('.clock-card-header {' in CSS and 'height: 44px;' in CSS, 'Clock header rule remains present')
 check('.task-card-header {' in CSS and 'height: 44px;' in CSS, 'Task header rule remains present')
 
@@ -48,9 +48,9 @@ else:
         <div style="display:flex;width:900px">
           <section class="col-6 dashboard-widget clock-card">
             <div class="clock-card-inner">
-              <div class="bg-info clock-card-header">
+              <div class="text-bg-info clock-card-header">
                 <button type="button" class="btn btn-link widget-drag-handle"><i aria-hidden="true">=</i></button>
-                <small class="clock-title widget-title-text text-white">Clock</small>
+                <small class="clock-title widget-title-text">Clock</small>
                 <button type="button" class="btn btn-link clock-edit-trigger">E</button>
               </div>
             </div>
@@ -59,10 +59,10 @@ else:
             <div class="feed-card-inner">
               <table class="table table-hover feed-table">
                 <colgroup><col class="feed-stock-column"><col></colgroup>
-                <thead><tr><th colspan="2" class="bg-info feed-card-header">
+                <thead><tr><th colspan="2" class="text-bg-info feed-card-header">
                   <button type="button" class="btn btn-link widget-drag-handle"><i aria-hidden="true">=</i></button>
-                  <small><span class="content-title widget-title-text"><a class="text-white feed-title-text">無いニュース(ﾊﾟﾜ)</a><button class="feed-new-clear">15</button></span></small>
-                  <button type="button" class="btn btn-link float-right content-edit-trigger">E</button>
+                  <small><span class="content-title widget-title-text"><a class="feed-title-text">無いニュース(ﾊﾟﾜ)</a><button class="feed-new-clear">15</button></span></small>
+                  <button type="button" class="btn btn-link float-end content-edit-trigger">E</button>
                 </th></tr></thead>
               </table>
             </div>
@@ -72,7 +72,7 @@ else:
             browser = p.chromium.launch(executable_path=chromium, headless=True, args=['--no-sandbox'])
             page = browser.new_page(viewport={'width': 1000, 'height': 400})
             page.set_content(html)
-            page.add_style_tag(path=str(ROOT / 'public/css/bootstrap.min.css'))
+            page.add_style_tag(path=str(ROOT / 'public/css/bootstrap-5.3.8.min.css'))
             page.add_style_tag(path=str(ROOT / 'public/css/dashboard.css'))
             page.wait_for_timeout(30)
 
