@@ -15,7 +15,7 @@ def check(condition, message):
     if not condition:
         failures.append(message)
 
-check('class="content-header feed-card-header"' in index,
+check('class="content-header feed-card-header text-bg-' in index,
       'Search Feed header uses the same fixed-height header class as normal Feed cards')
 check('class="content-header-row feed-card-header-inner"' in index,
       'Search Feed header uses the same one-row flex container as normal Feed cards')
@@ -37,10 +37,10 @@ if chromium is None:
 
 card = '''<section class="col-12 dashboard-widget feed-card search-feed-card">
 <div class="feed-card-inner"><table class="table table-hover feed-table"><colgroup><col class="feed-stock-column"><col><col class="feed-summary-column"></colgroup>
-<thead><tr class="bg-info"><th colspan="3" class="content-header feed-card-header"><div class="content-header-row feed-card-header-inner">
+<thead><tr><th colspan="3" class="content-header feed-card-header text-bg-info"><div class="content-header-row feed-card-header-inner">
 <button type="button" class="widget-drag-handle" aria-label="Search Feedを並び替え">＝</button>
 <span class="content-title"><span class="feed-title-text">{query}</span></span>
-<span class="content-actions feed-card-actions"><button type="button" class="btn btn-link search-edit-trigger"><i class="fas fa-edit text-white"></i></button><button type="button" class="btn btn-link search-feed-refresh"><i class="fas fa-sync-alt text-white"></i></button></span>
+<span class="content-actions feed-card-actions"><button type="button" class="btn btn-link search-edit-trigger"><i class="fas fa-edit"></i></button><button type="button" class="btn btn-link search-feed-refresh"><i class="fas fa-sync-alt"></i></button></span>
 </div></th></tr></thead><tbody><tr><td colspan="3">item</td></tr></tbody></table></div></section>'''
 html = '<!doctype html><html lang="ja"><head><meta charset="utf-8"></head><body>' + card.format(query='転職') + card.format(query='非常に長い検索語句を設定した場合でも見出しは一段のまま省略されます') + '</body></html>'
 
