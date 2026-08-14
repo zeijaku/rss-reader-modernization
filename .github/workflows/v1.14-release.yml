@@ -31,7 +31,9 @@ jobs:
           python-version: '3.12'
 
       - name: Apply idempotent V1.14-G finalization
-        run: python tools/v1.14-g-finalize.py
+        run: |
+          python tools/v1.14-g-finalize.py
+          python tools/v1.14-g-doc-fix.py
 
       - name: Validate Version 1.14 release markers
         shell: bash
@@ -45,6 +47,8 @@ jobs:
           grep -Fq '# RSS Reader Modernization 1.14.0 Release Notes' RELEASE_NOTES.md
           grep -Fq 'Bootstrap | 5.3.8' docs/dependencies.md
           grep -Fq 'Bootstrap | 5.3.8' THIRD_PARTY_NOTICES.md
+          grep -Fq 'remain under `licenses/` as repository history/documentation' THIRD_PARTY_NOTICES.md
+          ! grep -Fq 'remain under`licenses/`' THIRD_PARTY_NOTICES.md
           grep -Fq "INTENDED_RELEASE = '1.14.0'" tools/build_release_package.py
           grep -Fq "VERSION = '1.14.0'" tools/build_complete_package.py
           ! grep -Fq '1.12.0' tools/build_release_package.py
@@ -116,8 +120,6 @@ jobs:
               for path in root.rglob('*'):
                   if not path.is_file() or path.suffix.lower() not in {'.php', '.js', '.css'}:
                       continue
-                  # Bootstrap / Bootswatch 5.3.8 vendor files legitimately contain
-                  # upstream sourceMappingURL names such as bootstrap.min.css.map.
                   if path.parent.name in {'css', 'js'} and path.name.startswith('bootstrap'):
                       continue
                   scan.append(path)
@@ -220,11 +222,12 @@ jobs:
           python --version
           node --version
 
-      - name: Confirm finalizer is idempotent
+      - name: Confirm final source generation is idempotent
         shell: bash
         run: |
           set -euo pipefail
           python tools/v1.14-g-finalize.py
+          python tools/v1.14-g-doc-fix.py
           git diff --exit-code
 
       - name: Run complete regression suite
@@ -256,6 +259,7 @@ jobs:
         run: |
           set -euo pipefail
           python tools/v1.14-g-finalize.py
+          python tools/v1.14-g-doc-fix.py
           git diff --exit-code
           git diff --check
           echo "Release source: $(git rev-parse HEAD)"
