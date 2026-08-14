@@ -114,8 +114,13 @@ jobs:
           scan = []
           for root in [Path('app'), Path('public')]:
               for path in root.rglob('*'):
-                  if path.is_file() and path.suffix.lower() in {'.php', '.js', '.css'}:
-                      scan.append(path)
+                  if not path.is_file() or path.suffix.lower() not in {'.php', '.js', '.css'}:
+                      continue
+                  # Bootstrap / Bootswatch 5.3.8 vendor files legitimately contain
+                  # upstream sourceMappingURL names such as bootstrap.min.css.map.
+                  if path.parent.name in {'css', 'js'} and path.name.startswith('bootstrap'):
+                      continue
+                  scan.append(path)
           for path in scan:
               try:
                   text = path.read_text(encoding='utf-8')
