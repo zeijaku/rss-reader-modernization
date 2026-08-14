@@ -1,0 +1,80 @@
+name: V1.13.0 release
+
+on:
+  push:
+    branches:
+      - tmp/v1130-release
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release target
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Verify release target
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET_SHA="9ba2ae9e46df2c42c7d8fc277a1a3ce05728bea7"
+          test "$(git rev-parse HEAD)" = "$TARGET_SHA"
+          grep -F "const APP_VERSION = '1.13.0';" app/version.php
+          grep -F "## RSS Reader Modernization 1.13.0 — 2026-08-14" CHANGELOG.md
+
+      - name: Create v1.13.0 tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          TARGET_SHA="9ba2ae9e46df2c42c7d8fc277a1a3ce05728bea7"
+          if git ls-remote --exit-code --tags origin refs/tags/v1.13.0 >/dev/null 2>&1; then
+            EXISTING="$(git ls-remote --tags origin refs/tags/v1.13.0 | awk '{print $1}')"
+            test "$EXISTING" = "$TARGET_SHA"
+          else
+            git tag v1.13.0 "$TARGET_SHA"
+            git push origin refs/tags/v1.13.0
+          fi
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view v1.13.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            exit 0
+          fi
+
+          cat > /tmp/v1130-release-notes.md <<'EOF'
+          ## RSS Reader Modernization 1.13.0
+
+          Version 1.13では、既存機能・既存データを維持したまま、Dashboard周辺の構造整理、Performance再確認、Security／Documentation整合を行いました。
+
+          ### 主な変更
+          - Stock一覧を `public/stock.php` へ分離し、Canonical routeを `/stock` に整理しました。既存 `/?tab=stock` は検索・並び替え・Page・Tag条件を維持してRedirectします。
+          - 表示設定、Tab名、RSS Highlight設定を `public/settings.php` へ分離し、`/settings` に集約しました。Account Settingsは従来どおりDashboard Modalを維持します。
+          - Dashboard Widget／Modal表示を `app/view/dashboard_widgets.php` と `app/view/dashboard_modals.php` へ分離し、既存DOM／CSS／JavaScript／API契約を維持したまま `public/index.php` を整理しました。
+          - V1.13-A／Eの計測結果から、Stock DB helperを含め明確なPerformance regressionは確認されず、不要なSQL／Cache最適化は実施していません。
+          - Security Header、Session、CSRF、SSRF、XSS、API境界を再確認し、Healthcheck／Installation／Security Documentationを現行構成へ整合しました。
+
+          ### Compatibility / deployment
+          - **新規Migrationの実行は不要です。**
+          - **本番DBのDDL変更はありません。**
+          - **必須config項目の追加はありません。**
+          - 既存 `database/migrations/009_v1_9_mail_account.sql` と `database/schema.sql` の変更は新規設置／資料整合目的で、既存本番DBへ再実行しません。
+          - GitHub Actions CI #71で PHP 8.1 / PHP 8.4 の全Regression PASSを確認しています。
+
+          ### Production update from 1.12.1
+          Runtime反映対象は主に `.htaccess`, `public/.htaccess`, `public/index.php`, `public/stock.php`, `public/settings.php`, `app/view/dashboard_widgets.php`, `app/view/dashboard_modals.php`, `app/version.php` です。`tools/healthcheck.php` は運用確認用として更新されています。
+          EOF
+
+          gh release create v1.13.0 \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "RSS Reader Modernization 1.13.0" \
+            --notes-file /tmp/v1130-release-notes.md \
+            --verify-tag
