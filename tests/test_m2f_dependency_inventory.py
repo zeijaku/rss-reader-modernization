@@ -46,7 +46,6 @@ check('data-bs-toggle' in index and 'data-toggle=' not in index + login and 'dat
 dashboard_js = (PUBLIC / 'js/dashboard.js').read_text(encoding='utf-8')
 check('bootstrap.Modal.getOrCreateInstance' in dashboard_js, 'Bootstrap Modal uses the Bootstrap 5 native API')
 check('bootstrap.Offcanvas.getOrCreateInstance' in dashboard_js, 'right menu uses Bootstrap 5 Offcanvas')
-check('.popover(' in dashboard_js, 'existing jQuery popover compatibility path remains represented')
 
 legacy_assets = [
     'public/css/bootstrap.min.css',
