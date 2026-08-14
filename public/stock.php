@@ -236,10 +236,10 @@ function search_feed_form_fields(string $prefix): string
     foreach (search_feed_common_categories() as $category) {
         $categories .= '<option value="' . app_html($category) . '">' . app_html($category) . '</option>';
     }
-    return '<div class="form-group"><label for="searchQuery' . $id . '">検索語句</label><input type="text" id="searchQuery' . $id . '" class="form-control ' . $p . 'SearchQuery" maxlength="128" required></div>'
-        . '<div class="form-row"><div class="form-group col-6"><label>検索範囲</label><select class="form-control ' . $p . 'SearchScope"><option value="owned">自分の登録RSS</option><option value="common">共通RSS</option><option value="both">両方</option></select></div><div class="form-group col-6"><label>検索条件</label><select class="form-control ' . $p . 'SearchCondition"><option value="or">いずれかを含む（OR）</option><option value="and">すべて含む（AND）</option></select></div></div>'
-        . '<div class="form-row"><div class="form-group col-6"><label>表示件数</label><select class="form-control ' . $p . 'SearchLimit"><option value="5">5件</option><option value="10" selected>10件</option><option value="20">20件</option><option value="30">30件</option></select></div><div class="form-group col-6"><label>共通RSSカテゴリー</label><select class="form-control ' . $p . 'SearchCategory">' . $categories . '</select></div></div>'
-        . '<div class="form-row"><div class="form-group col-md-4"><label for="' . $p . 'SearchWidth">横幅</label><select id="' . $p . 'SearchWidth" class="form-control ' . $p . 'SearchWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div><div class="form-group col-md-4"><label for="' . $p . 'SearchHeight">縦幅</label><select id="' . $p . 'SearchHeight" class="form-control ' . $p . 'SearchHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div><div class="form-group col-md-4"><label for="' . $p . 'SearchStyle">見出し色</label><select id="' . $p . 'SearchStyle" class="form-control ' . $p . 'SearchStyle"><option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary" selected>secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div></div>';
+    return '<div class="mb-3"><label class="form-label" for="searchQuery' . $id . '">検索語句</label><input type="text" id="searchQuery' . $id . '" class="form-control ' . $p . 'SearchQuery" maxlength="128" required></div>'
+        . '<div class="row g-2"><div class="mb-3 col-6"><label class="form-label">検索範囲</label><select class="form-select ' . $p . 'SearchScope"><option value="owned">自分の登録RSS</option><option value="common">共通RSS</option><option value="both">両方</option></select></div><div class="mb-3 col-6"><label class="form-label">検索条件</label><select class="form-select ' . $p . 'SearchCondition"><option value="or">いずれかを含む（OR）</option><option value="and">すべて含む（AND）</option></select></div></div>'
+        . '<div class="row g-2"><div class="mb-3 col-6"><label class="form-label">表示件数</label><select class="form-select ' . $p . 'SearchLimit"><option value="5">5件</option><option value="10" selected>10件</option><option value="20">20件</option><option value="30">30件</option></select></div><div class="mb-3 col-6"><label class="form-label">共通RSSカテゴリー</label><select class="form-select ' . $p . 'SearchCategory">' . $categories . '</select></div></div>'
+        . '<div class="row g-2"><div class="mb-3 col-md-4"><label class="form-label" for="' . $p . 'SearchWidth">横幅</label><select id="' . $p . 'SearchWidth" class="form-select ' . $p . 'SearchWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div><div class="mb-3 col-md-4"><label class="form-label" for="' . $p . 'SearchHeight">縦幅</label><select id="' . $p . 'SearchHeight" class="form-select ' . $p . 'SearchHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div><div class="mb-3 col-md-4"><label class="form-label" for="' . $p . 'SearchStyle">見出し色</label><select id="' . $p . 'SearchStyle" class="form-select ' . $p . 'SearchStyle"><option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary" selected>secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div></div>';
 }
 ?>
 
@@ -253,7 +253,7 @@ function search_feed_form_fields(string $prefix): string
     </a>
     <span class="app-navbar-separator" aria-hidden="true"></span>
     <span class="app-navbar-current">
-      <span class="sr-only">現在の表示：</span>
+      <span class="visually-hidden">現在の表示：</span>
       <span class="app-navbar-current-label"><?php echo app_html($currentViewName); ?></span>
     </span>
   </div>
@@ -263,7 +263,7 @@ function search_feed_form_fields(string $prefix): string
   </button>
 
   <div class="collapse navbar-collapse app-navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav ml-auto app-navbar-links">
+    <ul class="navbar-nav ms-auto app-navbar-links">
     <?php
         for ($navIndex = 1; $navIndex <= 4; $navIndex++) {
             $link = (string) $ui['conf_style_navlink' . $navIndex];
@@ -308,8 +308,8 @@ function search_feed_form_fields(string $prefix): string
 </div>
 
 <main id="main-content" class="igcontainer container-fluid" tabindex="-1" data-dashboard-current-tab="<?php echo is_int($tabParam) ? (int) $tabParam : ''; ?>" data-dashboard-tab-count="4" data-dashboard-user-id="<?php echo (int) $currentUserId; ?>" data-dashboard-theme="<?php echo app_html((string) ($ui['conf_style'] ?? 'bootstrap')); ?>">
-<h1 class="sr-only">iGuguru RSS Reader</h1>
-<p id="widget-sort-help" class="sr-only">Widgetのタイトルバーにある並び替えボタンをドラッグして順番を変更出来ます。キーボードでは矢印キー、Home、Endキーを使用します。</p>
+<h1 class="visually-hidden">iGuguru RSS Reader</h1>
+<p id="widget-sort-help" class="visually-hidden">Widgetのタイトルバーにある並び替えボタンをドラッグして順番を変更出来ます。キーボードでは矢印キー、Home、Endキーを使用します。</p>
 <?php
 
 $result_content_cnt = 0;
@@ -360,7 +360,7 @@ if (is_int($content_location)) {
                                 <col class="feed-summary-column">
                             </colgroup>
                             <thead>
-                                <tr><th colspan="3" scope="col" class="bg-' . app_html($contentStyle) . ' feed-card-header"><div class="feed-card-header-inner"><button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button><small class="content-title widget-title-text" id="feed-title-' . $contentId . '"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>読み込み中...</span></span></small><span class="feed-card-actions"><button type="button" class="btn btn-link content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-feed-item-limit="' . app_html($feedItemLimitAttr) . '" data-toggle="modal" data-target="#changeContent" aria-label="このRSSを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button><button type="button" class="btn btn-link feed-refresh-trigger" aria-label="このRSSを更新" title="このRSSを更新"><i class="fas fa-sync-alt text-white" aria-hidden="true"></i></button></span></div></th></tr>
+                                <tr><th colspan="3" scope="col" class="bg-' . app_html($contentStyle) . ' feed-card-header"><div class="feed-card-header-inner"><button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button><small class="content-title widget-title-text" id="feed-title-' . $contentId . '"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>読み込み中...</span></span></small><span class="feed-card-actions"><button type="button" class="btn btn-link content-edit-trigger" data-content-id="' . $contentId . '" data-content-style="' . app_html($contentStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-feed-item-limit="' . app_html($feedItemLimitAttr) . '" data-bs-toggle="modal" data-bs-target="#changeContent" aria-label="このRSSを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button><button type="button" class="btn btn-link feed-refresh-trigger" aria-label="このRSSを更新" title="このRSSを更新"><i class="fas fa-sync-alt text-white" aria-hidden="true"></i></button></span></div></th></tr>
                             </thead>
                             <tbody class="content-body" aria-live="polite" aria-relevant="all">
                                 <tr class="content-state-row feed-state-loading"><td colspan="3" role="status"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>フィードを読み込んでいます</span></span></td></tr>
@@ -380,7 +380,7 @@ if (is_int($content_location)) {
             $searchLimit = search_feed_validate_limit($searchConfig['limit'] ?? null) ?? 10;
             $searchCategory = search_feed_validate_category($searchConfig['category'] ?? null) ?? 'all';
             $searchTitleId = 'search-title-' . $widgetId;
-            echo '<section class="' . app_html($widgetWidthClass) . ' dashboard-widget feed-card search-feed-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="search" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-search-limit="' . $searchLimit . '" data-search-state="loading" role="region" aria-labelledby="' . app_html($searchTitleId) . '" aria-busy="true"><div class="feed-card-inner"><table class="table table-hover feed-table"><colgroup><col class="feed-stock-column"><col><col class="feed-summary-column"></colgroup><thead><tr class="bg-' . app_html($widgetStyle) . '"><th colspan="3" class="content-header feed-card-header"><div class="content-header-row feed-card-header-inner"><button type="button" class="widget-drag-handle" aria-label="Search Feedを並び替え" aria-describedby="widget-sort-help">＝</button><span class="content-title widget-title-text" id="' . app_html($searchTitleId) . '"><span class="feed-title-text text-white" title="' . app_html($searchQuery) . '">' . app_html($searchQuery) . '</span></span><span class="content-actions feed-card-actions"><button type="button" class="btn btn-link search-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-search-query="' . app_html($searchQuery) . '" data-search-scope="' . app_html($searchScope) . '" data-search-condition="' . app_html($searchCondition) . '" data-search-limit="' . $searchLimit . '" data-search-category="' . app_html($searchCategory) . '" data-toggle="modal" data-target="#changeSearchFeed" aria-label="このSearch Feedを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button><button type="button" class="btn btn-link feed-refresh search-feed-refresh" aria-label="このSearch Feedを更新"><i class="fas fa-sync-alt text-white" aria-hidden="true"></i></button></span></div></th></tr></thead><tbody class="content-body"><tr class="content-state-row"><td colspan="3" class="feed-state-message"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>検索しています</span></span></td></tr></tbody></table></div></section>';
+            echo '<section class="' . app_html($widgetWidthClass) . ' dashboard-widget feed-card search-feed-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="search" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-search-limit="' . $searchLimit . '" data-search-state="loading" role="region" aria-labelledby="' . app_html($searchTitleId) . '" aria-busy="true"><div class="feed-card-inner"><table class="table table-hover feed-table"><colgroup><col class="feed-stock-column"><col><col class="feed-summary-column"></colgroup><thead><tr class="bg-' . app_html($widgetStyle) . '"><th colspan="3" class="content-header feed-card-header"><div class="content-header-row feed-card-header-inner"><button type="button" class="widget-drag-handle" aria-label="Search Feedを並び替え" aria-describedby="widget-sort-help">＝</button><span class="content-title widget-title-text" id="' . app_html($searchTitleId) . '"><span class="feed-title-text text-white" title="' . app_html($searchQuery) . '">' . app_html($searchQuery) . '</span></span><span class="content-actions feed-card-actions"><button type="button" class="btn btn-link search-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-search-query="' . app_html($searchQuery) . '" data-search-scope="' . app_html($searchScope) . '" data-search-condition="' . app_html($searchCondition) . '" data-search-limit="' . $searchLimit . '" data-search-category="' . app_html($searchCategory) . '" data-bs-toggle="modal" data-bs-target="#changeSearchFeed" aria-label="このSearch Feedを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button><button type="button" class="btn btn-link feed-refresh search-feed-refresh" aria-label="このSearch Feedを更新"><i class="fas fa-sync-alt text-white" aria-hidden="true"></i></button></span></div></th></tr></thead><tbody class="content-body"><tr class="content-state-row"><td colspan="3" class="feed-state-message"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>検索しています</span></span></td></tr></tbody></table></div></section>';
             continue;
         }
 
@@ -401,7 +401,7 @@ if (is_int($content_location)) {
                         <div class="bg-' . app_html($widgetStyle) . ' clock-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
                             <small class="clock-title widget-title-text text-white" id="' . app_html($clockTitleId) . '" title="' . app_html($clockTitle) . '">' . app_html($clockTitle) . '</small>
-                            <button type="button" class="btn btn-link clock-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-clock-title="' . app_html($clockTitle) . '" data-clock-hour-format="' . app_html($clockHourFormat) . '" data-clock-show-seconds="' . ($clockShowSeconds ? '1' : '0') . '" data-clock-show-date="' . ($clockShowDate ? '1' : '0') . '" data-toggle="modal" data-target="#changeClock" aria-label="このClockを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-link clock-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-clock-title="' . app_html($clockTitle) . '" data-clock-hour-format="' . app_html($clockHourFormat) . '" data-clock-show-seconds="' . ($clockShowSeconds ? '1' : '0') . '" data-clock-show-date="' . ($clockShowDate ? '1' : '0') . '" data-bs-toggle="modal" data-bs-target="#changeClock" aria-label="このClockを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
                         </div>
                         <div class="clock-card-body clock-timer-enabled" data-dashboard-swipe-ignore="true">
                             <div class="btn-group clock-view-switch" role="group" aria-label="Clock表示切替">
@@ -424,7 +424,7 @@ if (is_int($content_location)) {
                                     <button type="button" class="btn btn-sm btn-outline-secondary clock-timer-preset clock-timer-duration-control" data-clock-timer-seconds="1500" aria-pressed="false">25分</button>
                                 </div>
                                 <div class="clock-timer-custom">
-                                    <label class="sr-only" for="clock-timer-minutes-' . $widgetId . '">任意の分数</label>
+                                    <label class="visually-hidden" for="clock-timer-minutes-' . $widgetId . '">任意の分数</label>
                                     <input type="number" class="form-control clock-timer-custom-minutes clock-timer-duration-control" id="clock-timer-minutes-' . $widgetId . '" min="1" max="1440" step="1" inputmode="numeric" value="5">
                                     <span class="clock-timer-custom-unit" aria-hidden="true">分</span>
                                     <button type="button" class="btn btn-outline-secondary clock-timer-custom-apply clock-timer-duration-control">設定</button>
@@ -458,7 +458,7 @@ if (is_int($content_location)) {
             echo '<div class="bg-' . app_html($widgetStyle) . ' mini-game-card-header">';
             echo '<button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>';
             echo '<small class="mini-game-title widget-title-text text-white" id="' . app_html($gameTitleId) . '" title="' . app_html($gameTitle) . '">' . app_html($gameTitle) . '</small>';
-            echo '<button type="button" class="btn btn-link mini-game-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-game-title="' . app_html($gameTitle) . '" data-game-type="' . app_html($gameType) . '" data-toggle="modal" data-target="#changeGameWidget" aria-label="このGame Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>';
+            echo '<button type="button" class="btn btn-link mini-game-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-game-title="' . app_html($gameTitle) . '" data-game-type="' . app_html($gameType) . '" data-bs-toggle="modal" data-bs-target="#changeGameWidget" aria-label="このGame Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>';
             echo '</div>';
             echo '<div class="mini-game-card-body">';
 
@@ -475,7 +475,7 @@ if (is_int($content_location)) {
                 echo '<div class="mini-game-status-row"><p class="mini-game-status lights-out-status text-muted" aria-live="polite" aria-atomic="true">問題を準備しています...</p></div>';
                 echo '<div class="lights-out-controls" role="group" aria-label="Lights Out操作"><button type="button" class="btn btn-sm btn-outline-secondary lights-out-reset">Reset</button><button type="button" class="btn btn-sm btn-outline-primary lights-out-new-game">新しい問題</button></div>';
                 echo '<p class="mini-game-storage-note text-muted">進行状態を確認しています...</p>';
-                echo '<p class="sr-only">押したマスと上下左右のマスが反転します。すべて消灯するとClearです。</p>';
+                echo '<p class="visually-hidden">押したマスと上下左右のマスが反転します。すべて消灯するとClearです。</p>';
             } else {
                 $gameTutorialId = 'mini-game-tutorial-' . $widgetId;
                 $gameBoard = mini_game_icon_quest_initial_board();
@@ -516,7 +516,7 @@ if (is_int($content_location)) {
                 echo '<div class="mini-game-tools"><button type="button" class="btn btn-sm btn-outline-info mini-game-tutorial-toggle" aria-expanded="false" aria-controls="' . app_html($gameTutorialId) . '"><i class="fas fa-question-circle" aria-hidden="true"></i><span>遊び方</span></button><button type="button" class="btn btn-sm btn-outline-danger mini-game-storage-reset"><i class="fas fa-trash-alt" aria-hidden="true"></i><span>記録を削除</span></button></div>';
                 echo '<div class="mini-game-tutorial" id="' . app_html($gameTutorialId) . '" hidden><p><strong>Icon Quest</strong>は、Treasureを取ってからGoalへ進む5×5の短時間Gameです。</p><ul><li>矢印Key・WASD・方向Button・隣接マスTapで移動</li><li>敵は有効移動2回ごとに1マス接近</li><li>敵に捕まるか20手に達するとGame Over</li></ul><p class="mb-0">Resetは現在Levelだけ、記録を削除はこのWidgetの進行・Best・勝敗を初期化します。</p></div>';
                 echo '<p class="mini-game-storage-note text-muted">進行状態を確認しています...</p>';
-                echo '<p class="sr-only">矢印KeyまたはWASD、隣接マス、方向ButtonでPlayerを移動出来ます。Treasureを取得してからGoalへ進んでください。</p>';
+                echo '<p class="visually-hidden">矢印KeyまたはWASD、隣接マス、方向ButtonでPlayerを移動出来ます。Treasureを取得してからGoalへ進んでください。</p>';
             }
             echo '</div></div></section>';
             continue;
@@ -535,7 +535,7 @@ if (is_int($content_location)) {
                         <div class="bg-' . app_html($widgetStyle) . ' memo-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
                             <small class="memo-title widget-title-text text-white" id="' . app_html($memoTitleId) . '" title="' . app_html($memoTitle) . '">' . app_html($memoTitle) . '</small>
-                            <button type="button" class="btn btn-link memo-edit-trigger" data-widget-id="' . $widgetId . '" data-memo-id="' . $memoId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-toggle="modal" data-target="#changeMemo" aria-label="このMemoを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-link memo-edit-trigger" data-widget-id="' . $widgetId . '" data-memo-id="' . $memoId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-bs-toggle="modal" data-bs-target="#changeMemo" aria-label="このMemoを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
                         </div>
                         <div class="memo-card-body"><div class="memo-body">' . app_html($memoBody) . '</div></div>
                     </div>
@@ -560,7 +560,7 @@ if (is_int($content_location)) {
                         <div class="bg-' . app_html($widgetStyle) . ' task-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
                             <small class="task-widget-title widget-title-text text-white" id="' . app_html($taskTitleId) . '" title="' . app_html($taskWidgetTitle) . '">' . app_html($taskWidgetTitle) . '</small>
-                            <button type="button" class="btn btn-link task-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-task-widget-title="' . app_html($taskWidgetTitle) . '" data-toggle="modal" data-target="#changeTaskWidget" aria-label="このTask Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-link task-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-task-widget-title="' . app_html($taskWidgetTitle) . '" data-bs-toggle="modal" data-bs-target="#changeTaskWidget" aria-label="このTask Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
                         </div>
                         <div class="task-card-body">
                             <ul class="task-list" aria-live="polite">';
@@ -586,20 +586,20 @@ if (is_int($content_location)) {
                         echo '<time class="task-due-date" datetime="' . app_html($taskDueDate) . '"><i class="far fa-calendar-alt" aria-hidden="true"></i> ' . app_html($taskDueDate) . '</time>';
                     }
                     echo '</div></div>';
-                    echo '<button type="button" class="btn btn-link task-item-edit-trigger" data-task-id="' . $taskId . '" data-task-title="' . app_html($taskTitle) . '" data-task-due-date="' . app_html($taskDueDate) . '" data-task-priority="' . app_html($taskPriority) . '" data-toggle="modal" data-target="#changeTaskItem" aria-label="このTaskを編集"><i class="fas fa-ellipsis-v" aria-hidden="true"></i></button>';
+                    echo '<button type="button" class="btn btn-link task-item-edit-trigger" data-task-id="' . $taskId . '" data-task-title="' . app_html($taskTitle) . '" data-task-due-date="' . app_html($taskDueDate) . '" data-task-priority="' . app_html($taskPriority) . '" data-bs-toggle="modal" data-bs-target="#changeTaskItem" aria-label="このTaskを編集"><i class="fas fa-ellipsis-v" aria-hidden="true"></i></button>';
                     echo '</li>';
                 }
             }
             echo '</ul>
                             <form class="task-item-create-form" method="post" action="./" data-widget-id="' . $widgetId . '">
-                                <label class="sr-only" for="task-create-title-' . $widgetId . '">Task名</label>
+                                <label class="visually-hidden" for="task-create-title-' . $widgetId . '">Task名</label>
                                 <input type="text" class="form-control task-create-title" id="task-create-title-' . $widgetId . '" maxlength="128" placeholder="Taskを入力" required>
                                 <div class="task-create-options">
-                                    <label class="sr-only" for="task-create-due-' . $widgetId . '">期限</label>
+                                    <label class="visually-hidden" for="task-create-due-' . $widgetId . '">期限</label>
                                     <input type="date" class="form-control task-create-due" id="task-create-due-' . $widgetId . '">
-                                    <label class="sr-only" for="task-create-priority-' . $widgetId . '">優先度</label>
-                                    <select class="form-control task-create-priority" id="task-create-priority-' . $widgetId . '"><option value="normal" selected>通常</option><option value="high">高</option><option value="low">低</option></select>
-                                    <button type="submit" class="btn btn-outline-primary task-create-submit"><i class="fas fa-plus" aria-hidden="true"></i><span class="sr-only">Taskを追加</span></button>
+                                    <label class="visually-hidden" for="task-create-priority-' . $widgetId . '">優先度</label>
+                                    <select class="form-select task-create-priority" id="task-create-priority-' . $widgetId . '"><option value="normal" selected>通常</option><option value="high">高</option><option value="low">低</option></select>
+                                    <button type="submit" class="btn btn-outline-primary task-create-submit"><i class="fas fa-plus" aria-hidden="true"></i><span class="visually-hidden">Taskを追加</span></button>
                                 </div>
                             </form>
                         </div>
@@ -623,7 +623,7 @@ if (is_int($content_location)) {
                         <div class="bg-' . app_html($widgetStyle) . ' links-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
                             <small class="links-widget-title widget-title-text text-white" id="' . app_html($linksTitleId) . '" title="' . app_html($linksTitle) . '">' . app_html($linksTitle) . '</small>
-                            <button type="button" class="btn btn-link links-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-links-title="' . app_html($linksTitle) . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-toggle="modal" data-target="#changeLinksWidget" aria-label="このLinks Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-link links-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-links-title="' . app_html($linksTitle) . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-bs-toggle="modal" data-bs-target="#changeLinksWidget" aria-label="このLinks Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
                         </div>
                         <div class="links-card-body">
                             <ul class="links-list">';
@@ -639,16 +639,16 @@ if (is_int($content_location)) {
                     }
                     echo '<li class="links-item">';
                     echo '<a class="links-item-link" href="' . app_html($linkUrl) . '" target="_blank" rel="noopener noreferrer" title="' . app_html($linkUrl) . '"><i class="fas fa-external-link-alt text-muted" aria-hidden="true"></i><span>' . app_html($linkTitle) . '</span></a>';
-                    echo '<button type="button" class="btn btn-link text-muted links-item-edit" data-link-id="' . $linkId . '" data-link-title="' . app_html($linkTitle) . '" data-link-url="' . app_html($linkUrl) . '" data-toggle="modal" data-target="#changeLinkItem" aria-label="このリンクを編集"><i class="fas fa-ellipsis-v" aria-hidden="true"></i></button>';
+                    echo '<button type="button" class="btn btn-link text-muted links-item-edit" data-link-id="' . $linkId . '" data-link-title="' . app_html($linkTitle) . '" data-link-url="' . app_html($linkUrl) . '" data-bs-toggle="modal" data-bs-target="#changeLinkItem" aria-label="このリンクを編集"><i class="fas fa-ellipsis-v" aria-hidden="true"></i></button>';
                     echo '</li>';
                 }
             }
             echo '</ul>
                             <form class="links-create-form" method="post" action="./" data-widget-id="' . $widgetId . '">
                                 <div class="links-create-row">
-                                    <label class="sr-only" for="links-create-title-' . $widgetId . '">リンク名</label>
+                                    <label class="visually-hidden" for="links-create-title-' . $widgetId . '">リンク名</label>
                                     <input type="text" class="form-control links-create-title" id="links-create-title-' . $widgetId . '" maxlength="128" placeholder="名前" required>
-                                    <label class="sr-only" for="links-create-url-' . $widgetId . '">URL</label>
+                                    <label class="visually-hidden" for="links-create-url-' . $widgetId . '">URL</label>
                                     <input type="url" class="form-control links-create-url" id="links-create-url-' . $widgetId . '" maxlength="2048" placeholder="https://..." required>
                                     <button type="submit" class="btn btn-sm btn-outline-primary" aria-label="リンクを追加"><i class="fas fa-plus" aria-hidden="true"></i></button>
                                 </div>
@@ -677,7 +677,7 @@ if (is_int($content_location)) {
                         <div class="bg-' . app_html($widgetStyle) . ' weather-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
                             <small class="weather-widget-title widget-title-text text-white" id="' . app_html($weatherTitleId) . '" title="' . app_html($weatherLocationName !== '' ? $weatherLocationName : $weatherTitle) . '">' . app_html($weatherTitle) . '</small>
-                            <button type="button" class="btn btn-link weather-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-weather-title="' . app_html($weatherTitle) . '" data-weather-location-query="' . app_html($weatherLocationQuery) . '" data-weather-forecast-days="' . $weatherForecastDays . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-toggle="modal" data-target="#changeWeatherWidget" aria-label="このWeather Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-link weather-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-weather-title="' . app_html($weatherTitle) . '" data-weather-location-query="' . app_html($weatherLocationQuery) . '" data-weather-forecast-days="' . $weatherForecastDays . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-bs-toggle="modal" data-bs-target="#changeWeatherWidget" aria-label="このWeather Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
                             <button type="button" class="btn btn-link weather-refresh-trigger" aria-label="天気を更新" title="天気を更新"><i class="fas fa-sync-alt text-white" aria-hidden="true"></i></button>
                         </div>
                         <div class="weather-card-body" aria-live="polite"><div class="weather-status text-muted"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i> 天気を取得しています</div></div>
@@ -702,7 +702,7 @@ if (is_int($content_location)) {
                         <div class="bg-' . app_html($widgetStyle) . ' calendar-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines text-white" aria-hidden="true"></i></button>
                             <small class="calendar-widget-title widget-title-text text-white" id="' . app_html($calendarTitleId) . '" title="' . app_html($calendarTitle) . '">' . app_html($calendarTitle) . '</small>
-                            <button type="button" class="btn btn-link calendar-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" data-toggle="modal" data-target="#changeCalendarWidget" aria-label="このCalendar Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-link calendar-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" data-bs-toggle="modal" data-bs-target="#changeCalendarWidget" aria-label="このCalendar Widgetを編集"><i class="fas fa-edit text-white" aria-hidden="true"></i></button>
                         </div>
                         <div class="calendar-card-body">
                             <div class="calendar-toolbar">
@@ -710,7 +710,7 @@ if (is_int($content_location)) {
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-today">今月</button>
                                 <strong class="calendar-month-label" aria-live="polite">----</strong>
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-next-month" aria-label="次の月"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
-                                <button type="button" class="btn btn-sm btn-primary calendar-event-add-trigger" data-toggle="modal" data-target="#registerCalendarEvent"><i class="fas fa-plus" aria-hidden="true"></i><span class="sr-only">予定を追加</span></button>
+                                <button type="button" class="btn btn-sm btn-primary calendar-event-add-trigger" data-bs-toggle="modal" data-bs-target="#registerCalendarEvent"><i class="fas fa-plus" aria-hidden="true"></i><span class="visually-hidden">予定を追加</span></button>
                             </div>
                             <div class="calendar-weekdays" aria-hidden="true"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
                             <div class="calendar-days" role="grid" aria-label="月間Calendar" aria-busy="true"><div class="calendar-loading" role="status"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>Calendarを読み込んでいます</span></span></div></div>
@@ -772,10 +772,10 @@ if (is_int($content_location)) {
     };
 
     echo '<section class="stock-filter-panel mb-3" aria-labelledby="stock-filter-title">';
-    echo '<h2 id="stock-filter-title" class="sr-only">Stock検索、Tag絞り込み、並び替え</h2>';
+    echo '<h2 id="stock-filter-title" class="visually-hidden">Stock検索、Tag絞り込み、並び替え</h2>';
     if ($stockTags !== []) {
         echo '<div class="stock-tag-manager-wrap">';
-        echo '<button type="button" class="btn btn-sm btn-outline-secondary stock-tag-manager-toggle collapsed" data-toggle="collapse" data-target="#stockTagManager" aria-expanded="false" aria-controls="stockTagManager"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>Tag管理</button>';
+        echo '<button type="button" class="btn btn-sm btn-outline-secondary stock-tag-manager-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#stockTagManager" aria-expanded="false" aria-controls="stockTagManager"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>Tag管理</button>';
         echo '<div class="collapse stock-tag-manager" id="stockTagManager"><div class="stock-tag-manager-inner">';
         echo '<div class="stock-tag-manager-head"><strong>Tag管理</strong><span class="small text-muted">名前変更 / 削除</span></div>';
         echo '<div class="stock-tag-manager-list">';
@@ -785,29 +785,29 @@ if (is_int($content_location)) {
             $usageCount = max(0, (int) $tag['usage_count']);
             echo '<div class="stock-tag-manager-row" data-tag-id="' . $tagId . '">';
             echo '<div class="stock-tag-manager-meta"><span class="stock-tag-chip stock-tag-manager-chip"><i class="fas fa-tag" aria-hidden="true"></i>' . app_html($tagName) . '</span><span class="small text-muted">' . $usageCount . '件</span></div>';
-            echo '<form class="stock-tag-rename-form" autocomplete="off" data-tag-id="' . $tagId . '"><label class="sr-only" for="stockTagRename' . $tagId . '">' . app_html($tagName) . ' の名前変更</label><div class="input-group input-group-sm"><input type="text" class="form-control stock-tag-rename-input" id="stockTagRename' . $tagId . '" value="' . app_html($tagName) . '" maxlength="40"><div class="input-group-append"><button type="submit" class="btn btn-outline-primary">変更</button></div></div></form>';
-            echo '<button type="button" class="btn btn-sm btn-outline-danger stock-tag-delete" data-tag-id="' . $tagId . '" data-tag-name="' . app_html($tagName) . '" data-usage-count="' . $usageCount . '"><i class="far fa-trash-alt" aria-hidden="true"></i><span class="sr-only">' . app_html($tagName) . ' を削除</span></button>';
+            echo '<form class="stock-tag-rename-form" autocomplete="off" data-tag-id="' . $tagId . '"><label class="visually-hidden" for="stockTagRename' . $tagId . '">' . app_html($tagName) . ' の名前変更</label><div class="input-group input-group-sm"><input type="text" class="form-control stock-tag-rename-input" id="stockTagRename' . $tagId . '" value="' . app_html($tagName) . '" maxlength="40"><button type="submit" class="btn btn-outline-primary">変更</button></div></form>';
+            echo '<button type="button" class="btn btn-sm btn-outline-danger stock-tag-delete" data-tag-id="' . $tagId . '" data-tag-name="' . app_html($tagName) . '" data-usage-count="' . $usageCount . '"><i class="far fa-trash-alt" aria-hidden="true"></i><span class="visually-hidden">' . app_html($tagName) . ' を削除</span></button>';
             echo '</div>';
         }
         echo '</div></div></div></div>';
     }
-    echo '<form method="get" action="./stock" class="form-row align-items-end stock-filter-form" role="search">';
-    echo '<div class="form-group col-12 col-md-5 mb-2"><label for="stockSearchQuery" class="mb-1"><small>Stock検索</small></label><input type="search" class="form-control" id="stockSearchQuery" name="q" value="' . app_html($stockSearchQuery) . '" maxlength="128" placeholder="記事タイトル / URL / Tag"></div>';
-    echo '<div class="form-group col-6 col-md-3 mb-2"><label for="stockTagFilter" class="mb-1"><small>Tag</small></label><select class="form-control" id="stockTagFilter" name="tag"><option value="">すべて</option>';
+    echo '<form method="get" action="./stock" class="row g-2 align-items-end stock-filter-form" role="search">';
+    echo '<div class="col-12 col-md-5 mb-2"><label for="stockSearchQuery" class="form-label mb-1"><small>Stock検索</small></label><input type="search" class="form-control" id="stockSearchQuery" name="q" value="' . app_html($stockSearchQuery) . '" maxlength="128" placeholder="記事タイトル / URL / Tag"></div>';
+    echo '<div class="col-6 col-md-3 mb-2"><label for="stockTagFilter" class="form-label mb-1"><small>Tag</small></label><select class="form-select" id="stockTagFilter" name="tag"><option value="">すべて</option>';
     foreach ($stockTags as $tag) {
         $tagId = (int) $tag['tag_id'];
         $selected = $stockTagFilter === $tagId ? ' selected' : '';
         echo '<option value="' . $tagId . '"' . $selected . '>' . app_html($tag['tag_name']) . ' (' . (int) $tag['usage_count'] . ')</option>';
     }
     echo '</select></div>';
-    echo '<div class="form-group col-6 col-md-2 mb-2"><label for="stockSort" class="mb-1"><small>並び順</small></label><select class="form-control" id="stockSort" name="sort">';
+    echo '<div class="col-6 col-md-2 mb-2"><label for="stockSort" class="form-label mb-1"><small>並び順</small></label><select class="form-select" id="stockSort" name="sort">';
     echo '<option value="newest"' . ($stockSort === 'newest' ? ' selected' : '') . '>新しい順</option>';
     echo '<option value="oldest"' . ($stockSort === 'oldest' ? ' selected' : '') . '>古い順</option>';
     echo '<option value="title"' . ($stockSort === 'title' ? ' selected' : '') . '>タイトル順</option>';
     echo '</select></div>';
-    echo '<div class="form-group col-12 col-md-2 mb-2 d-flex"><button type="submit" class="btn btn-primary flex-fill">表示</button>';
+    echo '<div class="col-12 col-md-2 mb-2 d-flex"><button type="submit" class="btn btn-primary flex-fill">表示</button>';
     if ($stockSearchQuery !== '' || $stockSort !== 'newest' || $stockTagFilter !== null) {
-        echo '<a class="btn btn-outline-secondary ml-2" href="./stock">クリア</a>';
+        echo '<a class="btn btn-outline-secondary ms-2" href="./stock">クリア</a>';
     }
     echo '</div></form>';
 
@@ -905,9 +905,9 @@ if (is_int($content_location)) {
             }
             echo '</div></div>';
         }
-        echo '<form class="stock-tag-add-form" autocomplete="off"><label class="sr-only" for="stockTagInput' . $stockId . '">新しいTag</label>'
+        echo '<form class="stock-tag-add-form" autocomplete="off"><label class="visually-hidden" for="stockTagInput' . $stockId . '">新しいTag</label>'
             . '<div class="input-group input-group-sm"><input type="text" class="form-control stock-tag-name-input" id="stockTagInput' . $stockId . '" maxlength="40" placeholder="新しいTagを入力">'
-            . '<div class="input-group-append"><button type="submit" class="btn btn-outline-primary"><i class="fas fa-plus" aria-hidden="true"></i><span class="sr-only">Tagを追加</span></button></div></div></form>';
+            . '<button type="submit" class="btn btn-outline-primary"><i class="fas fa-plus" aria-hidden="true"></i><span class="visually-hidden">Tagを追加</span></button></div></form>';
         echo '</div>';
 
         echo '          </div>
@@ -978,13 +978,13 @@ if (is_int($content_location)) {
 }
 /* 登録直後 or コンテンツ無し時 */
 if ($result_content_cnt === 0 && $content_location !== 'stock') {
-    echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary mr-2" data-toggle="modal" data-target="#registerClock">Clockを追加する</button><button type="button" class="btn btn-outline-secondary mr-2" data-toggle="modal" data-target="#registerMemo">Memoを追加する</button><button type="button" class="btn btn-outline-dark mr-2" data-toggle="modal" data-target="#registerTaskWidget">Taskを追加する</button><button type="button" class="btn btn-outline-info mr-2" data-toggle="modal" data-target="#registerCalendarWidget">Calendarを追加する</button><button type="button" class="btn btn-outline-secondary mr-2" data-toggle="modal" data-target="#registerLinksWidget">Linksを追加する</button><button type="button" class="btn btn-outline-info mr-2" data-toggle="modal" data-target="#registerWeatherWidget">Weatherを追加する</button><button type="button" class="btn btn-outline-warning" data-toggle="modal" data-target="#registerSearchFeed">Search Feedを追加する</button></div>';
+    echo '<div class="empty-state text-center" role="status"><i class="fas fa-th-large fa-2x text-muted" aria-hidden="true"></i><p>このタブにはWidgetが登録されていません。</p><button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#registerContent">RSSを追加する</button><button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#registerClock">Clockを追加する</button><button type="button" class="btn btn-outline-secondary me-2" data-bs-toggle="modal" data-bs-target="#registerMemo">Memoを追加する</button><button type="button" class="btn btn-outline-dark me-2" data-bs-toggle="modal" data-bs-target="#registerTaskWidget">Taskを追加する</button><button type="button" class="btn btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#registerCalendarWidget">Calendarを追加する</button><button type="button" class="btn btn-outline-secondary me-2" data-bs-toggle="modal" data-bs-target="#registerLinksWidget">Linksを追加する</button><button type="button" class="btn btn-outline-info me-2" data-bs-toggle="modal" data-bs-target="#registerWeatherWidget">Weatherを追加する</button><button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#registerSearchFeed">Search Feedを追加する</button></div>';
 }
 ?>
 </main><!-- /igcontainer -->
 
 <!-- 追加モーダルボタン -->
-<!-- <button type="button" class="btn btn-info" data-toggle="modal" data-target="#registerContent"><i class="fas fa-edit fa-fw fa-2x" ></i></button> -->
+<!-- <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#registerContent"><i class="fas fa-edit fa-fw fa-2x" ></i></button> -->
 <!-- 追加モーダル本体 -->
 <div class="modal fade" id="registerContent" tabindex="-1" role="dialog" aria-labelledby="registerContentTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -992,37 +992,31 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="registerContentForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="registerContentTitle">RSSを追加</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
-                    <span aria-hidden="true" style="color: #ccc;">&times;</span>
-                </button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
 
-                <label for="registerContentValue"><small class="text-dark">RSSのアドレス</small></label>
-                <div class="input-group mb-2 mr-sm-2">
-                <div class="input-group-prepend">
-                    <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
-                </div>
+                <label class="form-label" for="registerContentValue"><small class="text-dark">RSSのアドレス</small></label>
+                <div class="input-group mb-2 me-sm-2">
+                <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
                 <input type="url" class="form-control registerContentValue" id="registerContentValue" name="registerContentValue" placeholder="https://example.com/feed.xml" required inputmode="url">
                 <input type="hidden" id="content_location" class="content_location" value="<?php echo app_html((string) $addTargetLocation); ?>">
                 </div>
                 <hr>
-                <div class="form-row">
-                    <div class="form-group col-6"><label for="registerContentWidth"><small class="text-dark">横幅</small></label><select class="form-control registerContentWidth" id="registerContentWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                    <div class="form-group col-6"><label for="registerContentHeight"><small class="text-dark">縦幅</small></label><select class="form-control registerContentHeight" id="registerContentHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                <div class="row g-2">
+                    <div class="mb-3 col-6"><label class="form-label" for="registerContentWidth"><small class="text-dark">横幅</small></label><select class="form-select registerContentWidth" id="registerContentWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="mb-3 col-6"><label class="form-label" for="registerContentHeight"><small class="text-dark">縦幅</small></label><select class="form-select registerContentHeight" id="registerContentHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
                 </div>
-                <div class="form-group">
-                    <label for="registerContentItemLimit"><small class="text-dark">表示件数</small></label>
+                <div class="mb-3">
+                    <label class="form-label" for="registerContentItemLimit"><small class="text-dark">表示件数</small></label>
                     <input type="number" class="form-control registerContentItemLimit" id="registerContentItemLimit" min="1" max="30" step="1" inputmode="numeric" placeholder="自動" aria-describedby="registerContentItemLimitHelp">
                     <small id="registerContentItemLimitHelp" class="form-text text-muted">空欄はカードの高さに合わせて自動調整します。1～30件を指定できます。</small>
                 </div>
-                <div class="form-group">
-                    <label for="style_select"><small class="text-dark">コンテンツデザイン指定</small></label>
-                    <div class="input-group mb-2 mr-sm-2">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="far fa-images" aria-hidden="true"></i></div>
-                    </div>
-                    <select class="form-control style_select" id="style_select" name="content_style" aria-describedby="adddesignHelp">
+                <div class="mb-3">
+                    <label class="form-label" for="style_select"><small class="text-dark">コンテンツデザイン指定</small></label>
+                    <div class="input-group mb-2 me-sm-2">
+                    <div class="input-group-text"><i class="far fa-images" aria-hidden="true"></i></div>
+                    <select class="form-select style_select" id="style_select" name="content_style" aria-describedby="adddesignHelp">
                         <option value="success">success</option>
                         <option value="primary">primary</option>
                         <option value="info">info</option>
@@ -1038,7 +1032,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
                 <button type="submit" class="btn btn-primary submit_content">このタブに追加する</button>
             </div>
             </form>
@@ -1053,38 +1047,32 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="changeContentForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="changeContentTitle">RSSを変更</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
-                    <span aria-hidden="true" style="color: #ccc;">&times;</span>
-                </button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
 
-                <label for="changeContentValue"><small class="text-dark">RSSのアドレス</small></label>
-                <div class="input-group mb-2 mr-sm-2">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
-                    </div>
+                <label class="form-label" for="changeContentValue"><small class="text-dark">RSSのアドレス</small></label>
+                <div class="input-group mb-2 me-sm-2">
+                    <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
                     <input type="hidden" class="changeContentId" id="changeContentId" name="changeContentId">
                     <input type="url" class="form-control changeContentValue" id="changeContentValue" name="changeContentValue" aria-describedby="changeContentHelp" placeholder="https://example.com/feed.xml" required inputmode="url">
                 </div>
                 <small id="changeContentHelp" class="form-text text-muted">アドレスまたは見出し色を変更できます</small>
                 <hr>
-                <div class="form-row">
-                    <div class="form-group col-6"><label for="changeContentWidth"><small class="text-dark">横幅</small></label><select class="form-control changeContentWidth" id="changeContentWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                    <div class="form-group col-6"><label for="changeContentHeight"><small class="text-dark">縦幅</small></label><select class="form-control changeContentHeight" id="changeContentHeight"><option value="1">標準</option><option value="2">縦2段</option></select></div>
+                <div class="row g-2">
+                    <div class="mb-3 col-6"><label class="form-label" for="changeContentWidth"><small class="text-dark">横幅</small></label><select class="form-select changeContentWidth" id="changeContentWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="mb-3 col-6"><label class="form-label" for="changeContentHeight"><small class="text-dark">縦幅</small></label><select class="form-select changeContentHeight" id="changeContentHeight"><option value="1">標準</option><option value="2">縦2段</option></select></div>
                 </div>
-                <div class="form-group">
-                    <label for="changeContentItemLimit"><small class="text-dark">表示件数</small></label>
+                <div class="mb-3">
+                    <label class="form-label" for="changeContentItemLimit"><small class="text-dark">表示件数</small></label>
                     <input type="number" class="form-control changeContentItemLimit" id="changeContentItemLimit" min="1" max="30" step="1" inputmode="numeric" placeholder="自動" aria-describedby="changeContentItemLimitHelp">
                     <small id="changeContentItemLimitHelp" class="form-text text-muted">空欄はカードの高さに合わせて自動調整します。1～30件を指定できます。</small>
                 </div>
-                <div class="form-group">
-                    <label for="changeContentStyle"><small class="text-dark">コンテンツデザイン指定</small></label>
-                    <div class="input-group mb-2 mr-sm-2">
-                    <div class="input-group-prepend">
-                        <div class="input-group-text"><i class="far fa-images"></i></div>
-                    </div>
-                    <select class="form-control changeContentStyle" id="changeContentStyle" aria-describedby="designHelp">
+                <div class="mb-3">
+                    <label class="form-label" for="changeContentStyle"><small class="text-dark">コンテンツデザイン指定</small></label>
+                    <div class="input-group mb-2 me-sm-2">
+                    <div class="input-group-text"><i class="far fa-images"></i></div>
+                    <select class="form-select changeContentStyle" id="changeContentStyle" aria-describedby="designHelp">
                         <option value="success">success</option>
                         <option value="primary">primary</option>
                         <option value="info">info</option>
@@ -1099,7 +1087,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
                 <button type="button" class="btn btn-outline-danger delete_content">削除する</button>
                 <button type="submit" class="btn btn-primary change_content">変更する</button>
             </div>
@@ -1110,9 +1098,9 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 
 
 <!-- Search Feed追加モーダル -->
-<div class="modal fade" id="registerSearchFeed" tabindex="-1" role="dialog" aria-labelledby="registerSearchFeedTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="registerSearchFeedForm"><div class="modal-header" style="color:#fff;background-color:#333;"><h5 class="modal-title" id="registerSearchFeedTitle"><i class="fas fa-search" aria-hidden="true"></i> Search Feedを追加</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color:#ccc;">&times;</span></button></div><div class="modal-body"><input type="hidden" class="registerSearchLocation" value="<?php echo app_html((string) $addTargetLocation); ?>"><?php echo search_feed_form_fields('register'); ?></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加</button></div></form></div></div></div>
+<div class="modal fade" id="registerSearchFeed" tabindex="-1" role="dialog" aria-labelledby="registerSearchFeedTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="registerSearchFeedForm"><div class="modal-header" style="color:#fff;background-color:#333;"><h5 class="modal-title" id="registerSearchFeedTitle"><i class="fas fa-search" aria-hidden="true"></i> Search Feedを追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div><div class="modal-body"><input type="hidden" class="registerSearchLocation" value="<?php echo app_html((string) $addTargetLocation); ?>"><?php echo search_feed_form_fields('register'); ?></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加</button></div></form></div></div></div>
 <!-- Search Feed変更モーダル -->
-<div class="modal fade" id="changeSearchFeed" tabindex="-1" role="dialog" aria-labelledby="changeSearchFeedTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="changeSearchFeedForm"><div class="modal-header" style="color:#fff;background-color:#333;"><h5 class="modal-title" id="changeSearchFeedTitle"><i class="fas fa-search" aria-hidden="true"></i> Search Feedを変更</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color:#ccc;">&times;</span></button></div><div class="modal-body"><input type="hidden" class="changeSearchId"><?php echo search_feed_form_fields('change'); ?></div><div class="modal-footer"><button type="button" class="btn btn-outline-danger mr-auto delete-search-feed">削除</button><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">変更</button></div></form></div></div></div>
+<div class="modal fade" id="changeSearchFeed" tabindex="-1" role="dialog" aria-labelledby="changeSearchFeedTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="changeSearchFeedForm"><div class="modal-header" style="color:#fff;background-color:#333;"><h5 class="modal-title" id="changeSearchFeedTitle"><i class="fas fa-search" aria-hidden="true"></i> Search Feedを変更</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div><div class="modal-body"><input type="hidden" class="changeSearchId"><?php echo search_feed_form_fields('change'); ?></div><div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto delete-search-feed">削除</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">変更</button></div></form></div></div></div>
 
 <!-- Clock追加モーダル -->
 <div class="modal fade" id="registerClock" tabindex="-1" role="dialog" aria-labelledby="registerClockTitle" aria-hidden="true">
@@ -1121,41 +1109,39 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="registerClockForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="registerClockTitle"><i class="far fa-clock" aria-hidden="true"></i> Clockを追加</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
-                    <span aria-hidden="true" style="color: #ccc;">&times;</span>
-                </button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="registerClockLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
-                <div class="form-group">
-                    <label for="registerClockName"><small class="text-dark">見出し</small></label>
+                <div class="mb-3">
+                    <label class="form-label" for="registerClockName"><small class="text-dark">見出し</small></label>
                     <input type="text" class="form-control registerClockName" id="registerClockName" value="Clock" maxlength="32" required>
                 </div>
-                <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label for="registerClockHourFormat"><small class="text-dark">時刻表示</small></label>
-                        <select class="form-control registerClockHourFormat" id="registerClockHourFormat">
+                <div class="row g-2">
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label" for="registerClockHourFormat"><small class="text-dark">時刻表示</small></label>
+                        <select class="form-select registerClockHourFormat" id="registerClockHourFormat">
                             <option value="24" selected>24時間</option>
                             <option value="12">12時間</option>
                         </select>
                     </div>
-                    <div class="form-group col-md-4">
-                        <label for="registerClockWidth"><small class="text-dark">横幅</small></label>
-                        <select class="form-control registerClockWidth" id="registerClockWidth">
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label" for="registerClockWidth"><small class="text-dark">横幅</small></label>
+                        <select class="form-select registerClockWidth" id="registerClockWidth">
                             <option value="1" selected>1列</option>
                             <option value="2">2列</option>
                             <option value="3">3列</option>
                             <option value="4">全幅</option>
                         </select>
                     </div>
-                    <div class="form-group col-md-4">
-                        <label for="registerClockHeight"><small class="text-dark">縦幅</small></label>
-                        <select class="form-control registerClockHeight" id="registerClockHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select>
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label" for="registerClockHeight"><small class="text-dark">縦幅</small></label>
+                        <select class="form-select registerClockHeight" id="registerClockHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="registerClockStyle"><small class="text-dark">見出し色</small></label>
-                    <select class="form-control registerClockStyle" id="registerClockStyle">
+                <div class="mb-3">
+                    <label class="form-label" for="registerClockStyle"><small class="text-dark">見出し色</small></label>
+                    <select class="form-select registerClockStyle" id="registerClockStyle">
                         <option value="success">success</option>
                         <option value="primary" selected>primary</option>
                         <option value="info">info</option>
@@ -1165,19 +1151,19 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
                         <option value="danger">danger</option>
                     </select>
                 </div>
-                <div class="custom-control custom-checkbox mb-2">
-                    <input type="checkbox" class="custom-control-input registerClockShowDate" id="registerClockShowDate" checked>
-                    <label class="custom-control-label" for="registerClockShowDate">日付を表示する</label>
+                <div class="form-check mb-2">
+                    <input type="checkbox" class="form-check-input registerClockShowDate" id="registerClockShowDate" checked>
+                    <label class="form-check-label" for="registerClockShowDate">日付を表示する</label>
                 </div>
-                <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input registerClockShowSeconds" id="registerClockShowSeconds">
-                    <label class="custom-control-label" for="registerClockShowSeconds">秒を表示する</label>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input registerClockShowSeconds" id="registerClockShowSeconds">
+                    <label class="form-check-label" for="registerClockShowSeconds">秒を表示する</label>
                 </div>
                 <small class="form-text text-muted mt-3">時刻はBrowserを使用している端末の設定で表示します。</small>
                 <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
                 <button type="submit" class="btn btn-primary">このタブに追加する</button>
             </div>
             </form>
@@ -1192,41 +1178,39 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="changeClockForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="changeClockTitle"><i class="far fa-clock" aria-hidden="true"></i> Clockを変更</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
-                    <span aria-hidden="true" style="color: #ccc;">&times;</span>
-                </button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="changeClockId">
-                <div class="form-group">
-                    <label for="changeClockName"><small class="text-dark">見出し</small></label>
+                <div class="mb-3">
+                    <label class="form-label" for="changeClockName"><small class="text-dark">見出し</small></label>
                     <input type="text" class="form-control changeClockName" id="changeClockName" maxlength="32" required>
                 </div>
-                <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label for="changeClockHourFormat"><small class="text-dark">時刻表示</small></label>
-                        <select class="form-control changeClockHourFormat" id="changeClockHourFormat">
+                <div class="row g-2">
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label" for="changeClockHourFormat"><small class="text-dark">時刻表示</small></label>
+                        <select class="form-select changeClockHourFormat" id="changeClockHourFormat">
                             <option value="24">24時間</option>
                             <option value="12">12時間</option>
                         </select>
                     </div>
-                    <div class="form-group col-md-4">
-                        <label for="changeClockWidth"><small class="text-dark">横幅</small></label>
-                        <select class="form-control changeClockWidth" id="changeClockWidth">
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label" for="changeClockWidth"><small class="text-dark">横幅</small></label>
+                        <select class="form-select changeClockWidth" id="changeClockWidth">
                             <option value="1">1列</option>
                             <option value="2">2列</option>
                             <option value="3">3列</option>
                             <option value="4">全幅</option>
                         </select>
                     </div>
-                    <div class="form-group col-md-4">
-                        <label for="changeClockHeight"><small class="text-dark">縦幅</small></label>
-                        <select class="form-control changeClockHeight" id="changeClockHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select>
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label" for="changeClockHeight"><small class="text-dark">縦幅</small></label>
+                        <select class="form-select changeClockHeight" id="changeClockHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="changeClockStyle"><small class="text-dark">見出し色</small></label>
-                    <select class="form-control changeClockStyle" id="changeClockStyle">
+                <div class="mb-3">
+                    <label class="form-label" for="changeClockStyle"><small class="text-dark">見出し色</small></label>
+                    <select class="form-select changeClockStyle" id="changeClockStyle">
                         <option value="success">success</option>
                         <option value="primary">primary</option>
                         <option value="info">info</option>
@@ -1236,17 +1220,17 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
                         <option value="danger">danger</option>
                     </select>
                 </div>
-                <div class="custom-control custom-checkbox mb-2">
-                    <input type="checkbox" class="custom-control-input changeClockShowDate" id="changeClockShowDate">
-                    <label class="custom-control-label" for="changeClockShowDate">日付を表示する</label>
+                <div class="form-check mb-2">
+                    <input type="checkbox" class="form-check-input changeClockShowDate" id="changeClockShowDate">
+                    <label class="form-check-label" for="changeClockShowDate">日付を表示する</label>
                 </div>
-                <div class="custom-control custom-checkbox">
-                    <input type="checkbox" class="custom-control-input changeClockShowSeconds" id="changeClockShowSeconds">
-                    <label class="custom-control-label" for="changeClockShowSeconds">秒を表示する</label>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input changeClockShowSeconds" id="changeClockShowSeconds">
+                    <label class="form-check-label" for="changeClockShowSeconds">秒を表示する</label>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
                 <button type="button" class="btn btn-outline-danger delete_clock">削除する</button>
                 <button type="submit" class="btn btn-primary">変更する</button>
             </div>
@@ -1262,30 +1246,30 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="registerMemoForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="registerMemoTitle"><i class="far fa-sticky-note" aria-hidden="true"></i> Memoを追加</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="registerMemoLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
-                <div class="form-group">
-                    <label for="registerMemoTitleValue"><small class="text-dark">見出し</small></label>
+                <div class="mb-3">
+                    <label class="form-label" for="registerMemoTitleValue"><small class="text-dark">見出し</small></label>
                     <input type="text" class="form-control registerMemoTitleValue" id="registerMemoTitleValue" value="Memo" maxlength="32" required>
                 </div>
-                <div class="form-group">
-                    <label for="registerMemoBody"><small class="text-dark">本文</small></label>
+                <div class="mb-3">
+                    <label class="form-label" for="registerMemoBody"><small class="text-dark">本文</small></label>
                     <textarea class="form-control memo-textarea registerMemoBody" id="registerMemoBody" maxlength="4000" rows="8" required></textarea>
                     <small class="form-text text-muted">改行を含めて4,000文字まで保存できます。</small>
                 </div>
-                <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label for="registerMemoWidth"><small class="text-dark">横幅</small></label>
-                        <select class="form-control registerMemoWidth" id="registerMemoWidth">
+                <div class="row g-2">
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label" for="registerMemoWidth"><small class="text-dark">横幅</small></label>
+                        <select class="form-select registerMemoWidth" id="registerMemoWidth">
                             <option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option>
                         </select>
                     </div>
-                    <div class="form-group col-md-4"><label for="registerMemoHeight"><small class="text-dark">縦幅</small></label><select class="form-control registerMemoHeight" id="registerMemoHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
-                    <div class="form-group col-md-4">
-                        <label for="registerMemoStyle"><small class="text-dark">見出し色</small></label>
-                        <select class="form-control registerMemoStyle" id="registerMemoStyle">
+                    <div class="mb-3 col-md-4"><label class="form-label" for="registerMemoHeight"><small class="text-dark">縦幅</small></label><select class="form-select registerMemoHeight" id="registerMemoHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label" for="registerMemoStyle"><small class="text-dark">見出し色</small></label>
+                        <select class="form-select registerMemoStyle" id="registerMemoStyle">
                             <option value="success" selected>success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option>
                         </select>
                     </div>
@@ -1293,7 +1277,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
                 <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
                 <button type="submit" class="btn btn-primary">このタブに追加する</button>
             </div>
             </form>
@@ -1308,37 +1292,37 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="changeMemoForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="changeMemoTitle"><i class="far fa-sticky-note" aria-hidden="true"></i> Memoを変更</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="changeMemoWidgetId">
                 <input type="hidden" class="changeMemoId">
-                <div class="form-group">
-                    <label for="changeMemoTitleValue"><small class="text-dark">見出し</small></label>
+                <div class="mb-3">
+                    <label class="form-label" for="changeMemoTitleValue"><small class="text-dark">見出し</small></label>
                     <input type="text" class="form-control changeMemoTitleValue" id="changeMemoTitleValue" maxlength="32" required>
                 </div>
-                <div class="form-group">
-                    <label for="changeMemoBody"><small class="text-dark">本文</small></label>
+                <div class="mb-3">
+                    <label class="form-label" for="changeMemoBody"><small class="text-dark">本文</small></label>
                     <textarea class="form-control memo-textarea changeMemoBody" id="changeMemoBody" maxlength="4000" rows="8" required></textarea>
                 </div>
-                <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label for="changeMemoWidth"><small class="text-dark">横幅</small></label>
-                        <select class="form-control changeMemoWidth" id="changeMemoWidth">
+                <div class="row g-2">
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label" for="changeMemoWidth"><small class="text-dark">横幅</small></label>
+                        <select class="form-select changeMemoWidth" id="changeMemoWidth">
                             <option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option>
                         </select>
                     </div>
-                    <div class="form-group col-md-4"><label for="changeMemoHeight"><small class="text-dark">縦幅</small></label><select class="form-control changeMemoHeight" id="changeMemoHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
-                    <div class="form-group col-md-4">
-                        <label for="changeMemoStyle"><small class="text-dark">見出し色</small></label>
-                        <select class="form-control changeMemoStyle" id="changeMemoStyle">
+                    <div class="mb-3 col-md-4"><label class="form-label" for="changeMemoHeight"><small class="text-dark">縦幅</small></label><select class="form-select changeMemoHeight" id="changeMemoHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label" for="changeMemoStyle"><small class="text-dark">見出し色</small></label>
+                        <select class="form-select changeMemoStyle" id="changeMemoStyle">
                             <option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option>
                         </select>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
                 <button type="button" class="btn btn-outline-danger delete_memo">削除する</button>
                 <button type="submit" class="btn btn-primary">変更する</button>
             </div>
@@ -1354,28 +1338,28 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="registerTaskWidgetForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="registerTaskWidgetTitle"><i class="fas fa-tasks" aria-hidden="true"></i> Taskを追加</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="registerTaskWidgetLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
-                <div class="form-group">
-                    <label for="registerTaskWidgetTitleValue"><small class="text-dark">見出し</small></label>
+                <div class="mb-3">
+                    <label class="form-label" for="registerTaskWidgetTitleValue"><small class="text-dark">見出し</small></label>
                     <input type="text" class="form-control registerTaskWidgetTitleValue" id="registerTaskWidgetTitleValue" value="Task" maxlength="32" required>
                 </div>
-                <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label for="registerTaskWidgetWidth"><small class="text-dark">横幅</small></label>
-                        <select class="form-control registerTaskWidgetWidth" id="registerTaskWidgetWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select>
+                <div class="row g-2">
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label" for="registerTaskWidgetWidth"><small class="text-dark">横幅</small></label>
+                        <select class="form-select registerTaskWidgetWidth" id="registerTaskWidgetWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select>
                     </div>
-                    <div class="form-group col-md-4"><label for="registerTaskWidgetHeight"><small class="text-dark">縦幅</small></label><select class="form-control registerTaskWidgetHeight" id="registerTaskWidgetHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
-                    <div class="form-group col-md-4">
-                        <label for="registerTaskWidgetStyle"><small class="text-dark">見出し色</small></label>
-                        <select class="form-control registerTaskWidgetStyle" id="registerTaskWidgetStyle"><option value="primary" selected>primary</option><option value="success">success</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select>
+                    <div class="mb-3 col-md-4"><label class="form-label" for="registerTaskWidgetHeight"><small class="text-dark">縦幅</small></label><select class="form-select registerTaskWidgetHeight" id="registerTaskWidgetHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="mb-3 col-md-4">
+                        <label class="form-label" for="registerTaskWidgetStyle"><small class="text-dark">見出し色</small></label>
+                        <select class="form-select registerTaskWidgetStyle" id="registerTaskWidgetStyle"><option value="primary" selected>primary</option><option value="success">success</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select>
                     </div>
                 </div>
                 <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">このタブに追加する</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">このタブに追加する</button></div>
             </form>
         </div>
     </div>
@@ -1388,19 +1372,19 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="changeTaskWidgetForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="changeTaskWidgetTitle"><i class="fas fa-tasks" aria-hidden="true"></i> Task Widgetを変更</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="changeTaskWidgetId">
-                <div class="form-group"><label for="changeTaskWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeTaskWidgetTitleValue" id="changeTaskWidgetTitleValue" maxlength="32" required></div>
-                <div class="form-row">
-                    <div class="form-group col-md-4"><label for="changeTaskWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-control changeTaskWidgetWidth" id="changeTaskWidgetWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                    <div class="form-group col-md-4"><label for="changeTaskWidgetHeight"><small class="text-dark">縦幅</small></label><select class="form-control changeTaskWidgetHeight" id="changeTaskWidgetHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
-                    <div class="form-group col-md-4"><label for="changeTaskWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeTaskWidgetStyle" id="changeTaskWidgetStyle"><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                <div class="mb-3"><label class="form-label" for="changeTaskWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeTaskWidgetTitleValue" id="changeTaskWidgetTitleValue" maxlength="32" required></div>
+                <div class="row g-2">
+                    <div class="mb-3 col-md-4"><label class="form-label" for="changeTaskWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-select changeTaskWidgetWidth" id="changeTaskWidgetWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="mb-3 col-md-4"><label class="form-label" for="changeTaskWidgetHeight"><small class="text-dark">縦幅</small></label><select class="form-select changeTaskWidgetHeight" id="changeTaskWidgetHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="mb-3 col-md-4"><label class="form-label" for="changeTaskWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-select changeTaskWidgetStyle" id="changeTaskWidgetStyle"><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
                 </div>
                 <small class="form-text text-muted">Widgetを削除すると、このWidget内のTaskも論理削除されます。</small>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_task_widget">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_task_widget">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
             </form>
         </div>
     </div>
@@ -1413,17 +1397,17 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="changeTaskItemForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="changeTaskItemTitle"><i class="fas fa-check-square" aria-hidden="true"></i> Taskを変更</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="changeTaskItemId">
-                <div class="form-group"><label for="changeTaskItemTitleValue"><small class="text-dark">Task</small></label><input type="text" class="form-control changeTaskItemTitleValue" id="changeTaskItemTitleValue" maxlength="128" required></div>
-                <div class="form-row">
-                    <div class="form-group col-7"><label for="changeTaskItemDueDate"><small class="text-dark">期限</small></label><input type="date" class="form-control changeTaskItemDueDate" id="changeTaskItemDueDate"></div>
-                    <div class="form-group col-5"><label for="changeTaskItemPriority"><small class="text-dark">優先度</small></label><select class="form-control changeTaskItemPriority" id="changeTaskItemPriority"><option value="normal">通常</option><option value="high">高</option><option value="low">低</option></select></div>
+                <div class="mb-3"><label class="form-label" for="changeTaskItemTitleValue"><small class="text-dark">Task</small></label><input type="text" class="form-control changeTaskItemTitleValue" id="changeTaskItemTitleValue" maxlength="128" required></div>
+                <div class="row g-2">
+                    <div class="mb-3 col-7"><label class="form-label" for="changeTaskItemDueDate"><small class="text-dark">期限</small></label><input type="date" class="form-control changeTaskItemDueDate" id="changeTaskItemDueDate"></div>
+                    <div class="mb-3 col-5"><label class="form-label" for="changeTaskItemPriority"><small class="text-dark">優先度</small></label><select class="form-select changeTaskItemPriority" id="changeTaskItemPriority"><option value="normal">通常</option><option value="high">高</option><option value="low">低</option></select></div>
                 </div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_task_item">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_task_item">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
             </form>
         </div>
     </div>
@@ -1433,20 +1417,20 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="registerGameWidget" tabindex="-1" role="dialog" aria-labelledby="registerGameWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="registerGameWidgetForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Gameを追加</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Gameを追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
-            <div class="form-group"><label for="registerGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerGameTitleValue" id="registerGameTitleValue" maxlength="32" value="Icon Quest" required></div>
-            <div class="form-group"><label for="registerGameType"><small class="text-dark">Game</small></label><select class="form-control registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option></select></div>
+            <div class="mb-3"><label class="form-label" for="registerGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerGameTitleValue" id="registerGameTitleValue" maxlength="32" value="Icon Quest" required></div>
+            <div class="mb-3"><label class="form-label" for="registerGameType"><small class="text-dark">Game</small></label><select class="form-select registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option></select></div>
             <input type="hidden" class="registerGameLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
-            <div class="form-row">
-                <div class="form-group col-md-4"><label for="registerGameWidth"><small class="text-dark">横幅</small></label><select class="form-control registerGameWidth" id="registerGameWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                <div class="form-group col-md-4"><label for="registerGameHeight"><small class="text-dark">縦幅</small></label><select class="form-control registerGameHeight" id="registerGameHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
-                    <div class="form-group col-md-4"><label for="registerGameStyle"><small class="text-dark">見出し色</small></label><select class="form-control registerGameStyle" id="registerGameStyle"><option value="secondary" selected>secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+            <div class="row g-2">
+                <div class="mb-3 col-md-4"><label class="form-label" for="registerGameWidth"><small class="text-dark">横幅</small></label><select class="form-select registerGameWidth" id="registerGameWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                <div class="mb-3 col-md-4"><label class="form-label" for="registerGameHeight"><small class="text-dark">縦幅</small></label><select class="form-select registerGameHeight" id="registerGameHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="mb-3 col-md-4"><label class="form-label" for="registerGameStyle"><small class="text-dark">見出し色</small></label><select class="form-select registerGameStyle" id="registerGameStyle"><option value="secondary" selected>secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
             </div>
             <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
             <small class="form-text text-muted">Gameの進行状態はこのBrowserへ保存され、ServerやDBには保存されません。</small>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">このタブに追加する</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">このタブに追加する</button></div>
         </form>
     </div></div>
 </div>
@@ -1455,19 +1439,19 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="changeGameWidget" tabindex="-1" role="dialog" aria-labelledby="changeGameWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="changeGameWidgetForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Game Widgetを変更</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Game Widgetを変更</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <input type="hidden" class="changeGameWidgetId">
-            <div class="form-group"><label for="changeGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeGameTitleValue" id="changeGameTitleValue" maxlength="32" required></div>
-            <div class="form-group"><label for="changeGameType"><small class="text-dark">Game</small></label><select class="form-control changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option></select></div>
-            <div class="form-row">
-                <div class="form-group col-md-4"><label for="changeGameWidth"><small class="text-dark">横幅</small></label><select class="form-control changeGameWidth" id="changeGameWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                <div class="form-group col-md-4"><label for="changeGameHeight"><small class="text-dark">縦幅</small></label><select class="form-control changeGameHeight" id="changeGameHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
-                    <div class="form-group col-md-4"><label for="changeGameStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeGameStyle" id="changeGameStyle"><option value="secondary">secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+            <div class="mb-3"><label class="form-label" for="changeGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeGameTitleValue" id="changeGameTitleValue" maxlength="32" required></div>
+            <div class="mb-3"><label class="form-label" for="changeGameType"><small class="text-dark">Game</small></label><select class="form-select changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option></select></div>
+            <div class="row g-2">
+                <div class="mb-3 col-md-4"><label class="form-label" for="changeGameWidth"><small class="text-dark">横幅</small></label><select class="form-select changeGameWidth" id="changeGameWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                <div class="mb-3 col-md-4"><label class="form-label" for="changeGameHeight"><small class="text-dark">縦幅</small></label><select class="form-select changeGameHeight" id="changeGameHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="mb-3 col-md-4"><label class="form-label" for="changeGameStyle"><small class="text-dark">見出し色</small></label><select class="form-select changeGameStyle" id="changeGameStyle"><option value="secondary">secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
             </div>
             <small class="form-text text-muted">Widget削除時は、このWidgetのBrowser保存状態も削除します。</small>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_game_widget">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_game_widget">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
         </form>
     </div></div>
 </div>
@@ -1477,18 +1461,18 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="registerLinksWidget" tabindex="-1" role="dialog" aria-labelledby="registerLinksWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="registerLinksWidgetForm" method="post" action="./">
-            <div class="modal-header" style="color:#fff;background-color:#555;"><h5 class="modal-title" id="registerLinksWidgetTitle"><i class="fas fa-link" aria-hidden="true"></i> Linksを追加</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color:#ccc;">&times;</span></button></div>
+            <div class="modal-header" style="color:#fff;background-color:#555;"><h5 class="modal-title" id="registerLinksWidgetTitle"><i class="fas fa-link" aria-hidden="true"></i> Linksを追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
             <div class="modal-body">
                 <input type="hidden" class="registerLinksLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
-                <div class="form-group"><label for="registerLinksTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerLinksTitleValue" id="registerLinksTitleValue" value="Links" maxlength="32" required></div>
-                <div class="form-row">
-                    <div class="form-group col-md-4"><label for="registerLinksWidth"><small class="text-dark">横幅</small></label><select class="form-control registerLinksWidth" id="registerLinksWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                    <div class="form-group col-md-4"><label for="registerLinksHeight"><small class="text-dark">縦幅</small></label><select class="form-control registerLinksHeight" id="registerLinksHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
-                    <div class="form-group col-md-4"><label for="registerLinksStyle"><small class="text-dark">見出し色</small></label><select class="form-control registerLinksStyle" id="registerLinksStyle"><option value="secondary" selected>secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                <div class="mb-3"><label class="form-label" for="registerLinksTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerLinksTitleValue" id="registerLinksTitleValue" value="Links" maxlength="32" required></div>
+                <div class="row g-2">
+                    <div class="mb-3 col-md-4"><label class="form-label" for="registerLinksWidth"><small class="text-dark">横幅</small></label><select class="form-select registerLinksWidth" id="registerLinksWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="mb-3 col-md-4"><label class="form-label" for="registerLinksHeight"><small class="text-dark">縦幅</small></label><select class="form-select registerLinksHeight" id="registerLinksHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="mb-3 col-md-4"><label class="form-label" for="registerLinksStyle"><small class="text-dark">見出し色</small></label><select class="form-select registerLinksStyle" id="registerLinksStyle"><option value="secondary" selected>secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
                 </div>
                 <p class="small text-muted mb-0">Widget追加後、カード下部から名前とURLを登録出来ます。</p>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加</button></div>
         </form>
     </div></div>
 </div>
@@ -1496,17 +1480,17 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="changeLinksWidget" tabindex="-1" role="dialog" aria-labelledby="changeLinksWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="changeLinksWidgetForm" method="post" action="./">
-            <div class="modal-header" style="color:#fff;background-color:#555;"><h5 class="modal-title" id="changeLinksWidgetTitle"><i class="fas fa-link" aria-hidden="true"></i> Linksを編集</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color:#ccc;">&times;</span></button></div>
+            <div class="modal-header" style="color:#fff;background-color:#555;"><h5 class="modal-title" id="changeLinksWidgetTitle"><i class="fas fa-link" aria-hidden="true"></i> Linksを編集</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
             <div class="modal-body">
                 <input type="hidden" class="changeLinksWidgetId">
-                <div class="form-group"><label for="changeLinksTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeLinksTitleValue" id="changeLinksTitleValue" maxlength="32" required></div>
-                <div class="form-row">
-                    <div class="form-group col-md-4"><label for="changeLinksWidth"><small class="text-dark">横幅</small></label><select class="form-control changeLinksWidth" id="changeLinksWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                    <div class="form-group col-md-4"><label for="changeLinksHeight"><small class="text-dark">縦幅</small></label><select class="form-control changeLinksHeight" id="changeLinksHeight"><option value="1">標準</option><option value="2">縦2段</option></select></div>
-                    <div class="form-group col-md-4"><label for="changeLinksStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeLinksStyle" id="changeLinksStyle"><option value="secondary">secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                <div class="mb-3"><label class="form-label" for="changeLinksTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeLinksTitleValue" id="changeLinksTitleValue" maxlength="32" required></div>
+                <div class="row g-2">
+                    <div class="mb-3 col-md-4"><label class="form-label" for="changeLinksWidth"><small class="text-dark">横幅</small></label><select class="form-select changeLinksWidth" id="changeLinksWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="mb-3 col-md-4"><label class="form-label" for="changeLinksHeight"><small class="text-dark">縦幅</small></label><select class="form-select changeLinksHeight" id="changeLinksHeight"><option value="1">標準</option><option value="2">縦2段</option></select></div>
+                    <div class="mb-3 col-md-4"><label class="form-label" for="changeLinksStyle"><small class="text-dark">見出し色</small></label><select class="form-select changeLinksStyle" id="changeLinksStyle"><option value="secondary">secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
                 </div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline-danger mr-auto delete-links-widget"><i class="fas fa-trash-alt" aria-hidden="true"></i> 削除</button><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">保存</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto delete-links-widget"><i class="fas fa-trash-alt" aria-hidden="true"></i> 削除</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">保存</button></div>
         </form>
     </div></div>
 </div>
@@ -1514,13 +1498,13 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="changeLinkItem" tabindex="-1" role="dialog" aria-labelledby="changeLinkItemTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="changeLinkItemForm" method="post" action="./">
-            <div class="modal-header" style="color:#fff;background-color:#555;"><h5 class="modal-title" id="changeLinkItemTitle"><i class="fas fa-link" aria-hidden="true"></i> リンクを編集</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color:#ccc;">&times;</span></button></div>
+            <div class="modal-header" style="color:#fff;background-color:#555;"><h5 class="modal-title" id="changeLinkItemTitle"><i class="fas fa-link" aria-hidden="true"></i> リンクを編集</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
             <div class="modal-body">
                 <input type="hidden" class="changeLinkItemId">
-                <div class="form-group"><label for="changeLinkItemTitleValue"><small class="text-dark">名前</small></label><input type="text" class="form-control changeLinkItemTitleValue" id="changeLinkItemTitleValue" maxlength="128" required></div>
-                <div class="form-group"><label for="changeLinkItemUrlValue"><small class="text-dark">URL</small></label><input type="url" class="form-control changeLinkItemUrlValue" id="changeLinkItemUrlValue" maxlength="2048" required></div>
+                <div class="mb-3"><label class="form-label" for="changeLinkItemTitleValue"><small class="text-dark">名前</small></label><input type="text" class="form-control changeLinkItemTitleValue" id="changeLinkItemTitleValue" maxlength="128" required></div>
+                <div class="mb-3"><label class="form-label" for="changeLinkItemUrlValue"><small class="text-dark">URL</small></label><input type="url" class="form-control changeLinkItemUrlValue" id="changeLinkItemUrlValue" maxlength="2048" required></div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline-danger mr-auto delete-link-item"><i class="fas fa-trash-alt" aria-hidden="true"></i> 削除</button><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">保存</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto delete-link-item"><i class="fas fa-trash-alt" aria-hidden="true"></i> 削除</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">保存</button></div>
         </form>
     </div></div>
 </div>
@@ -1529,19 +1513,19 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="registerWeatherWidget" tabindex="-1" role="dialog" aria-labelledby="registerWeatherWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="registerWeatherWidgetForm" method="post" action="./">
-            <div class="modal-header" style="color:#fff;background-color:#17a2b8;"><h5 class="modal-title" id="registerWeatherWidgetTitle"><i class="fas fa-cloud-sun" aria-hidden="true"></i> Weatherを追加</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color:#fff;">&times;</span></button></div>
+            <div class="modal-header" style="color:#fff;background-color:#17a2b8;"><h5 class="modal-title" id="registerWeatherWidgetTitle"><i class="fas fa-cloud-sun" aria-hidden="true"></i> Weatherを追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
             <div class="modal-body">
                 <input type="hidden" class="registerWeatherLocationValue" value="<?php echo app_html((string) $addTargetLocation); ?>">
-                <div class="form-group"><label for="registerWeatherTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerWeatherTitleValue" id="registerWeatherTitleValue" value="Weather" maxlength="32" required></div>
-                <div class="form-group"><label for="registerWeatherLocation"><small class="text-dark">地域</small></label><input type="text" class="form-control registerWeatherLocation" id="registerWeatherLocation" maxlength="80" placeholder="例: 広島市" required><small class="form-text text-muted">地域名から位置を検索して保存します。</small></div>
-                <div class="form-row">
-                    <div class="form-group col-md-3"><label for="registerWeatherForecastDays"><small class="text-dark">予報</small></label><select class="form-control registerWeatherForecastDays" id="registerWeatherForecastDays"><option value="3" selected>3日</option><option value="5">5日</option><option value="7">7日</option></select></div>
-                    <div class="form-group col-md-3"><label for="registerWeatherWidth"><small class="text-dark">横幅</small></label><select class="form-control registerWeatherWidth" id="registerWeatherWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                    <div class="form-group col-md-3"><label for="registerWeatherHeight"><small class="text-dark">縦幅</small></label><select class="form-control registerWeatherHeight" id="registerWeatherHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
-                    <div class="form-group col-md-3"><label for="registerWeatherStyle"><small class="text-dark">見出し色</small></label><select class="form-control registerWeatherStyle" id="registerWeatherStyle"><option value="info" selected>info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                <div class="mb-3"><label class="form-label" for="registerWeatherTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerWeatherTitleValue" id="registerWeatherTitleValue" value="Weather" maxlength="32" required></div>
+                <div class="mb-3"><label class="form-label" for="registerWeatherLocation"><small class="text-dark">地域</small></label><input type="text" class="form-control registerWeatherLocation" id="registerWeatherLocation" maxlength="80" placeholder="例: 広島市" required><small class="form-text text-muted">地域名から位置を検索して保存します。</small></div>
+                <div class="row g-2">
+                    <div class="mb-3 col-md-3"><label class="form-label" for="registerWeatherForecastDays"><small class="text-dark">予報</small></label><select class="form-select registerWeatherForecastDays" id="registerWeatherForecastDays"><option value="3" selected>3日</option><option value="5">5日</option><option value="7">7日</option></select></div>
+                    <div class="mb-3 col-md-3"><label class="form-label" for="registerWeatherWidth"><small class="text-dark">横幅</small></label><select class="form-select registerWeatherWidth" id="registerWeatherWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="mb-3 col-md-3"><label class="form-label" for="registerWeatherHeight"><small class="text-dark">縦幅</small></label><select class="form-select registerWeatherHeight" id="registerWeatherHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="mb-3 col-md-3"><label class="form-label" for="registerWeatherStyle"><small class="text-dark">見出し色</small></label><select class="form-select registerWeatherStyle" id="registerWeatherStyle"><option value="info" selected>info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
                 </div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加</button></div>
         </form>
     </div></div>
 </div>
@@ -1549,19 +1533,19 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="changeWeatherWidget" tabindex="-1" role="dialog" aria-labelledby="changeWeatherWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="changeWeatherWidgetForm" method="post" action="./">
-            <div class="modal-header" style="color:#fff;background-color:#17a2b8;"><h5 class="modal-title" id="changeWeatherWidgetTitle"><i class="fas fa-cloud-sun" aria-hidden="true"></i> Weatherを編集</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color:#fff;">&times;</span></button></div>
+            <div class="modal-header" style="color:#fff;background-color:#17a2b8;"><h5 class="modal-title" id="changeWeatherWidgetTitle"><i class="fas fa-cloud-sun" aria-hidden="true"></i> Weatherを編集</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
             <div class="modal-body">
                 <input type="hidden" class="changeWeatherWidgetId">
-                <div class="form-group"><label for="changeWeatherTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeWeatherTitleValue" id="changeWeatherTitleValue" maxlength="32" required></div>
-                <div class="form-group"><label for="changeWeatherLocation"><small class="text-dark">地域</small></label><input type="text" class="form-control changeWeatherLocation" id="changeWeatherLocation" maxlength="80" required></div>
-                <div class="form-row">
-                    <div class="form-group col-md-3"><label for="changeWeatherForecastDays"><small class="text-dark">予報</small></label><select class="form-control changeWeatherForecastDays" id="changeWeatherForecastDays"><option value="3">3日</option><option value="5">5日</option><option value="7">7日</option></select></div>
-                    <div class="form-group col-md-3"><label for="changeWeatherWidth"><small class="text-dark">横幅</small></label><select class="form-control changeWeatherWidth" id="changeWeatherWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                    <div class="form-group col-md-3"><label for="changeWeatherHeight"><small class="text-dark">縦幅</small></label><select class="form-control changeWeatherHeight" id="changeWeatherHeight"><option value="1">標準</option><option value="2">縦2段</option></select></div>
-                    <div class="form-group col-md-3"><label for="changeWeatherStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeWeatherStyle" id="changeWeatherStyle"><option value="info">info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                <div class="mb-3"><label class="form-label" for="changeWeatherTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeWeatherTitleValue" id="changeWeatherTitleValue" maxlength="32" required></div>
+                <div class="mb-3"><label class="form-label" for="changeWeatherLocation"><small class="text-dark">地域</small></label><input type="text" class="form-control changeWeatherLocation" id="changeWeatherLocation" maxlength="80" required></div>
+                <div class="row g-2">
+                    <div class="mb-3 col-md-3"><label class="form-label" for="changeWeatherForecastDays"><small class="text-dark">予報</small></label><select class="form-select changeWeatherForecastDays" id="changeWeatherForecastDays"><option value="3">3日</option><option value="5">5日</option><option value="7">7日</option></select></div>
+                    <div class="mb-3 col-md-3"><label class="form-label" for="changeWeatherWidth"><small class="text-dark">横幅</small></label><select class="form-select changeWeatherWidth" id="changeWeatherWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="mb-3 col-md-3"><label class="form-label" for="changeWeatherHeight"><small class="text-dark">縦幅</small></label><select class="form-select changeWeatherHeight" id="changeWeatherHeight"><option value="1">標準</option><option value="2">縦2段</option></select></div>
+                    <div class="mb-3 col-md-3"><label class="form-label" for="changeWeatherStyle"><small class="text-dark">見出し色</small></label><select class="form-select changeWeatherStyle" id="changeWeatherStyle"><option value="info">info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
                 </div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline-danger mr-auto delete-weather-widget"><i class="fas fa-trash-alt" aria-hidden="true"></i> 削除</button><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">保存</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto delete-weather-widget"><i class="fas fa-trash-alt" aria-hidden="true"></i> 削除</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">保存</button></div>
         </form>
     </div></div>
 </div>
@@ -1569,19 +1553,19 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="registerCalendarWidget" tabindex="-1" role="dialog" aria-labelledby="registerCalendarWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="registerCalendarWidgetForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerCalendarWidgetTitle"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendarを追加</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerCalendarWidgetTitle"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendarを追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <input type="hidden" class="registerCalendarWidgetLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
-            <div class="form-group"><label for="registerCalendarWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerCalendarWidgetTitleValue" id="registerCalendarWidgetTitleValue" value="Calendar" maxlength="32" required></div>
-            <div class="form-row">
-                <div class="form-group col-md-4"><label for="registerCalendarWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-control registerCalendarWidgetWidth" id="registerCalendarWidgetWidth"><option value="1">1列</option><option value="2" selected>2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                <div class="form-group col-md-4"><label for="registerCalendarWidgetHeight"><small class="text-dark">縦幅</small></label><select class="form-control registerCalendarWidgetHeight" id="registerCalendarWidgetHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
-                    <div class="form-group col-md-4"><label for="registerCalendarWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-control registerCalendarWidgetStyle" id="registerCalendarWidgetStyle"><option value="info" selected>info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+            <div class="mb-3"><label class="form-label" for="registerCalendarWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerCalendarWidgetTitleValue" id="registerCalendarWidgetTitleValue" value="Calendar" maxlength="32" required></div>
+            <div class="row g-2">
+                <div class="mb-3 col-md-4"><label class="form-label" for="registerCalendarWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-select registerCalendarWidgetWidth" id="registerCalendarWidgetWidth"><option value="1">1列</option><option value="2" selected>2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                <div class="mb-3 col-md-4"><label class="form-label" for="registerCalendarWidgetHeight"><small class="text-dark">縦幅</small></label><select class="form-select registerCalendarWidgetHeight" id="registerCalendarWidgetHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="mb-3 col-md-4"><label class="form-label" for="registerCalendarWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-select registerCalendarWidgetStyle" id="registerCalendarWidgetStyle"><option value="info" selected>info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
             </div>
-            <div class="custom-control custom-checkbox"><input type="checkbox" class="custom-control-input registerCalendarShowCompletedTasks" id="registerCalendarShowCompletedTasks"><label class="custom-control-label" for="registerCalendarShowCompletedTasks">完了済みTaskも表示する</label></div>
+            <div class="form-check"><input type="checkbox" class="form-check-input registerCalendarShowCompletedTasks" id="registerCalendarShowCompletedTasks"><label class="form-check-label" for="registerCalendarShowCompletedTasks">完了済みTaskも表示する</label></div>
             <small class="form-text text-muted add-target-note">追加先：<?php echo app_html($addTargetName); ?></small>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">このタブに追加する</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">このタブに追加する</button></div>
         </form>
     </div></div>
 </div>
@@ -1590,19 +1574,19 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="changeCalendarWidget" tabindex="-1" role="dialog" aria-labelledby="changeCalendarWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="changeCalendarWidgetForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeCalendarWidgetTitle"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendar Widgetを変更</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeCalendarWidgetTitle"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendar Widgetを変更</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <input type="hidden" class="changeCalendarWidgetId">
-            <div class="form-group"><label for="changeCalendarWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeCalendarWidgetTitleValue" id="changeCalendarWidgetTitleValue" maxlength="32" required></div>
-            <div class="form-row">
-                <div class="form-group col-md-4"><label for="changeCalendarWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-control changeCalendarWidgetWidth" id="changeCalendarWidgetWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
-                <div class="form-group col-md-4"><label for="changeCalendarWidgetHeight"><small class="text-dark">縦幅</small></label><select class="form-control changeCalendarWidgetHeight" id="changeCalendarWidgetHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
-                    <div class="form-group col-md-4"><label for="changeCalendarWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-control changeCalendarWidgetStyle" id="changeCalendarWidgetStyle"><option value="info">info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+            <div class="mb-3"><label class="form-label" for="changeCalendarWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeCalendarWidgetTitleValue" id="changeCalendarWidgetTitleValue" maxlength="32" required></div>
+            <div class="row g-2">
+                <div class="mb-3 col-md-4"><label class="form-label" for="changeCalendarWidgetWidth"><small class="text-dark">横幅</small></label><select class="form-select changeCalendarWidgetWidth" id="changeCalendarWidgetWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                <div class="mb-3 col-md-4"><label class="form-label" for="changeCalendarWidgetHeight"><small class="text-dark">縦幅</small></label><select class="form-select changeCalendarWidgetHeight" id="changeCalendarWidgetHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
+                    <div class="mb-3 col-md-4"><label class="form-label" for="changeCalendarWidgetStyle"><small class="text-dark">見出し色</small></label><select class="form-select changeCalendarWidgetStyle" id="changeCalendarWidgetStyle"><option value="info">info</option><option value="primary">primary</option><option value="success">success</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
             </div>
-            <div class="custom-control custom-checkbox"><input type="checkbox" class="custom-control-input changeCalendarShowCompletedTasks" id="changeCalendarShowCompletedTasks"><label class="custom-control-label" for="changeCalendarShowCompletedTasks">完了済みTaskも表示する</label></div>
+            <div class="form-check"><input type="checkbox" class="form-check-input changeCalendarShowCompletedTasks" id="changeCalendarShowCompletedTasks"><label class="form-check-label" for="changeCalendarShowCompletedTasks">完了済みTaskも表示する</label></div>
             <small class="form-text text-muted">Widgetを削除しても、登録済みの予定は残ります。</small>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_calendar_widget">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_calendar_widget">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
         </form>
     </div></div>
 </div>
@@ -1611,13 +1595,13 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="registerCalendarEvent" tabindex="-1" role="dialog" aria-labelledby="registerCalendarEventTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="registerCalendarEventForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerCalendarEventTitle"><i class="fas fa-calendar-plus" aria-hidden="true"></i> 予定を追加</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerCalendarEventTitle"><i class="fas fa-calendar-plus" aria-hidden="true"></i> 予定を追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
-            <div class="form-group"><label for="registerCalendarEventTitleValue"><small class="text-dark">予定</small></label><input type="text" class="form-control registerCalendarEventTitleValue" id="registerCalendarEventTitleValue" maxlength="128" required></div>
-            <div class="form-row"><div class="form-group col-6"><label for="registerCalendarEventStartDate"><small class="text-dark">開始日</small></label><input type="date" class="form-control registerCalendarEventStartDate" id="registerCalendarEventStartDate" required></div><div class="form-group col-6"><label for="registerCalendarEventEndDate"><small class="text-dark">終了日</small></label><input type="date" class="form-control registerCalendarEventEndDate" id="registerCalendarEventEndDate" required></div></div>
-            <div class="form-group"><label for="registerCalendarEventNote"><small class="text-dark">メモ</small></label><textarea class="form-control registerCalendarEventNote" id="registerCalendarEventNote" maxlength="2000" rows="4"></textarea></div>
+            <div class="mb-3"><label class="form-label" for="registerCalendarEventTitleValue"><small class="text-dark">予定</small></label><input type="text" class="form-control registerCalendarEventTitleValue" id="registerCalendarEventTitleValue" maxlength="128" required></div>
+            <div class="row g-2"><div class="mb-3 col-6"><label class="form-label" for="registerCalendarEventStartDate"><small class="text-dark">開始日</small></label><input type="date" class="form-control registerCalendarEventStartDate" id="registerCalendarEventStartDate" required></div><div class="mb-3 col-6"><label class="form-label" for="registerCalendarEventEndDate"><small class="text-dark">終了日</small></label><input type="date" class="form-control registerCalendarEventEndDate" id="registerCalendarEventEndDate" required></div></div>
+            <div class="mb-3"><label class="form-label" for="registerCalendarEventNote"><small class="text-dark">メモ</small></label><textarea class="form-control registerCalendarEventNote" id="registerCalendarEventNote" maxlength="2000" rows="4"></textarea></div>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加する</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加する</button></div>
         </form>
     </div></div>
 </div>
@@ -1626,14 +1610,14 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="changeCalendarEvent" tabindex="-1" role="dialog" aria-labelledby="changeCalendarEventTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="changeCalendarEventForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeCalendarEventTitle"><i class="far fa-calendar-check" aria-hidden="true"></i> 予定を変更</h5><button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button></div>
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeCalendarEventTitle"><i class="far fa-calendar-check" aria-hidden="true"></i> 予定を変更</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <input type="hidden" class="changeCalendarEventId">
-            <div class="form-group"><label for="changeCalendarEventTitleValue"><small class="text-dark">予定</small></label><input type="text" class="form-control changeCalendarEventTitleValue" id="changeCalendarEventTitleValue" maxlength="128" required></div>
-            <div class="form-row"><div class="form-group col-6"><label for="changeCalendarEventStartDate"><small class="text-dark">開始日</small></label><input type="date" class="form-control changeCalendarEventStartDate" id="changeCalendarEventStartDate" required></div><div class="form-group col-6"><label for="changeCalendarEventEndDate"><small class="text-dark">終了日</small></label><input type="date" class="form-control changeCalendarEventEndDate" id="changeCalendarEventEndDate" required></div></div>
-            <div class="form-group"><label for="changeCalendarEventNote"><small class="text-dark">メモ</small></label><textarea class="form-control changeCalendarEventNote" id="changeCalendarEventNote" maxlength="2000" rows="4"></textarea></div>
+            <div class="mb-3"><label class="form-label" for="changeCalendarEventTitleValue"><small class="text-dark">予定</small></label><input type="text" class="form-control changeCalendarEventTitleValue" id="changeCalendarEventTitleValue" maxlength="128" required></div>
+            <div class="row g-2"><div class="mb-3 col-6"><label class="form-label" for="changeCalendarEventStartDate"><small class="text-dark">開始日</small></label><input type="date" class="form-control changeCalendarEventStartDate" id="changeCalendarEventStartDate" required></div><div class="mb-3 col-6"><label class="form-label" for="changeCalendarEventEndDate"><small class="text-dark">終了日</small></label><input type="date" class="form-control changeCalendarEventEndDate" id="changeCalendarEventEndDate" required></div></div>
+            <div class="mb-3"><label class="form-label" for="changeCalendarEventNote"><small class="text-dark">メモ</small></label><textarea class="form-control changeCalendarEventNote" id="changeCalendarEventNote" maxlength="2000" rows="4"></textarea></div>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_calendar_event">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_calendar_event">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
         </form>
     </div></div>
 </div>
@@ -1644,30 +1628,30 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
         <div class="modal-content">
             <div class="modal-header" style="color: #fff; background-color: #555;">
                 <h5 class="modal-title" id="accountSettingsTitle"><i class="fas fa-user-cog" aria-hidden="true"></i> アカウント設定</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <section aria-labelledby="accountEmailTitle">
                     <h6 id="accountEmailTitle">メールアドレス変更</h6>
                     <p class="small text-muted">現在のメールアドレスは画面には表示していません。変更後は新しいメールアドレスでLoginしてください。</p>
                     <form id="accountEmailForm" method="post" action="./" autocomplete="on">
-                        <div class="form-group"><label for="accountNewEmail"><small class="text-dark">新しいメールアドレス</small></label><input type="email" class="form-control accountNewEmail" id="accountNewEmail" name="new_email" maxlength="254" autocomplete="email" required></div>
-                        <div class="form-group"><label for="accountCurrentPasswordEmail"><small class="text-dark">現在のパスワード</small></label><input type="password" class="form-control accountCurrentPasswordEmail" id="accountCurrentPasswordEmail" name="current_password" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="current-password" required></div>
-                        <div class="text-right"><button type="submit" class="btn btn-primary">メールアドレスを変更</button></div>
+                        <div class="mb-3"><label class="form-label" for="accountNewEmail"><small class="text-dark">新しいメールアドレス</small></label><input type="email" class="form-control accountNewEmail" id="accountNewEmail" name="new_email" maxlength="254" autocomplete="email" required></div>
+                        <div class="mb-3"><label class="form-label" for="accountCurrentPasswordEmail"><small class="text-dark">現在のパスワード</small></label><input type="password" class="form-control accountCurrentPasswordEmail" id="accountCurrentPasswordEmail" name="current_password" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="current-password" required></div>
+                        <div class="text-end"><button type="submit" class="btn btn-primary">メールアドレスを変更</button></div>
                     </form>
                 </section>
                 <hr>
                 <section aria-labelledby="accountPasswordTitle">
                     <h6 id="accountPasswordTitle">パスワード変更</h6>
                     <form id="accountPasswordForm" method="post" action="./" autocomplete="on">
-                        <div class="form-group"><label for="accountCurrentPassword"><small class="text-dark">現在のパスワード</small></label><input type="password" class="form-control accountCurrentPassword" id="accountCurrentPassword" name="current_password" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="current-password" required></div>
-                        <div class="form-group"><label for="accountNewPassword"><small class="text-dark">新しいパスワード</small></label><input type="password" class="form-control accountNewPassword" id="accountNewPassword" name="new_password" minlength="<?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="new-password" aria-describedby="accountPasswordHelp" required><small id="accountPasswordHelp" class="form-text text-muted"><?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>文字以上<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>文字以下で入力してください。</small></div>
-                        <div class="form-group"><label for="accountNewPasswordConfirmation"><small class="text-dark">新しいパスワード（確認）</small></label><input type="password" class="form-control accountNewPasswordConfirmation" id="accountNewPasswordConfirmation" name="new_password_confirmation" minlength="<?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="new-password" required></div>
-                        <div class="text-right"><button type="submit" class="btn btn-primary">パスワードを変更</button></div>
+                        <div class="mb-3"><label class="form-label" for="accountCurrentPassword"><small class="text-dark">現在のパスワード</small></label><input type="password" class="form-control accountCurrentPassword" id="accountCurrentPassword" name="current_password" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="current-password" required></div>
+                        <div class="mb-3"><label class="form-label" for="accountNewPassword"><small class="text-dark">新しいパスワード</small></label><input type="password" class="form-control accountNewPassword" id="accountNewPassword" name="new_password" minlength="<?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="new-password" aria-describedby="accountPasswordHelp" required><small id="accountPasswordHelp" class="form-text text-muted"><?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>文字以上<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>文字以下で入力してください。</small></div>
+                        <div class="mb-3"><label class="form-label" for="accountNewPasswordConfirmation"><small class="text-dark">新しいパスワード（確認）</small></label><input type="password" class="form-control accountNewPasswordConfirmation" id="accountNewPasswordConfirmation" name="new_password_confirmation" minlength="<?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="new-password" required></div>
+                        <div class="text-end"><button type="submit" class="btn btn-primary">パスワードを変更</button></div>
                     </form>
                 </section>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button></div>
         </div>
     </div>
 </div>
@@ -1678,9 +1662,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
         <div class="modal-content">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="saveContentTitle"><i class="fas fa-bookmark" aria-hidden="true"></i> Stockへ保存</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる">
-                    <span aria-hidden="true" style="color: #ccc;">&times;</span>
-                </button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
 
@@ -1706,12 +1688,12 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="stockTaskTargetTitle"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i> Taskへ追加</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="form-group mb-0">
-                        <label for="stockTaskTargetSelect">追加先Task Widget</label>
-                        <select class="form-control" id="stockTaskTargetSelect" required>
+                    <div class="mb-0">
+                        <label class="form-label" for="stockTaskTargetSelect">追加先Task Widget</label>
+                        <select class="form-select" id="stockTaskTargetSelect" required>
 <?php foreach ($stockTaskTargets as $target): ?>
 <?php
     $targetLocation = (int) $target['widget_location'];
@@ -1727,7 +1709,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
                     <button type="submit" class="btn btn-primary stock-task-target-submit">追加する</button>
                 </div>
             </div>
@@ -1785,15 +1767,15 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 
         <!-- Widget -->
         <li class="drawer-section-title"><i class="fas fa-th-large fa-fw" aria-hidden="true"></i><span>Widget追加</span></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerContent"><span class="drawer-item-icon"><i class="fas fa-rss fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">RSS追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerSearchFeed"><span class="drawer-item-icon"><i class="fas fa-search fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Search Feed追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerTaskWidget"><span class="drawer-item-icon"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Task追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerCalendarWidget"><span class="drawer-item-icon"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Calendar追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerLinksWidget"><span class="drawer-item-icon"><i class="fas fa-link fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Links追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerWeatherWidget"><span class="drawer-item-icon"><i class="fas fa-cloud-sun fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Weather追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerGameWidget"><span class="drawer-item-icon"><i class="fas fa-chess-knight fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Game追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerClock"><span class="drawer-item-icon"><i class="far fa-clock fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Clock追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerMemo"><span class="drawer-item-icon"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Memo追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerContent"><span class="drawer-item-icon"><i class="fas fa-rss fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">RSS追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerSearchFeed"><span class="drawer-item-icon"><i class="fas fa-search fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Search Feed追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerTaskWidget"><span class="drawer-item-icon"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Task追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerCalendarWidget"><span class="drawer-item-icon"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Calendar追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerLinksWidget"><span class="drawer-item-icon"><i class="fas fa-link fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Links追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerWeatherWidget"><span class="drawer-item-icon"><i class="fas fa-cloud-sun fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Weather追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerGameWidget"><span class="drawer-item-icon"><i class="fas fa-chess-knight fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Game追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerClock"><span class="drawer-item-icon"><i class="far fa-clock fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Clock追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerMemo"><span class="drawer-item-icon"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Memo追加</span></button></li>
 
         <!-- Customize -->
         <li class="drawer-section-title"><i class="fas fa-sliders-h fa-fw" aria-hidden="true"></i><span>カスタマイズ</span></li>
@@ -1830,7 +1812,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 
         <!-- Account -->
         <li class="drawer-section-title"><i class="fas fa-user fa-fw" aria-hidden="true"></i><span>Account</span></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#accountSettings"><span class="drawer-item-icon"><i class="fas fa-user-cog fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">アカウント設定</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#accountSettings"><span class="drawer-item-icon"><i class="fas fa-user-cog fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">アカウント設定</span></button></li>
         <li>
             <form method="post" action="./logout.php" class="drawer-logout-form">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -1845,8 +1827,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 
 <!-- Bootstrap -->
 <script src="<?php echo htmlspecialchars(app_asset_url('js/jquery-3.7.1.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
-<script src="<?php echo htmlspecialchars(app_asset_url('js/popper.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
-<script src="<?php echo htmlspecialchars(app_asset_url('js/bootstrap.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/bootstrap.bundle-5.3.8.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <!-- Drawer -->
 <script src="<?php echo htmlspecialchars(app_asset_url('js/iscroll.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/drawer.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>

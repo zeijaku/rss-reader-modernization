@@ -70,7 +70,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
       <span class="app-navbar-brand-label">iGuguru</span>
     </a>
     <span class="app-navbar-separator" aria-hidden="true"></span>
-    <span class="app-navbar-current"><span class="sr-only">現在の表示：</span><span class="app-navbar-current-label">Settings</span></span>
+    <span class="app-navbar-current"><span class="visually-hidden">現在の表示：</span><span class="app-navbar-current-label">Settings</span></span>
   </div>
 
   <button class="navbar-toggler drawer-toggle app-navbar-menu-button" type="button" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
@@ -78,7 +78,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
   </button>
 
   <div class="collapse navbar-collapse app-navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav ml-auto app-navbar-links">
+    <ul class="navbar-nav ms-auto app-navbar-links">
     <?php
         for ($navIndex = 1; $navIndex <= 4; $navIndex++) {
             $link = (string) $ui['conf_style_navlink' . $navIndex];
@@ -107,11 +107,11 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                 <div class="card-header"><strong id="displaySettingsTitle">表示設定</strong></div>
                 <div class="card-body">
                     <form id="settingsForm" method="post" action="./">
-                        <div class="form-group">
-                            <label for="conf_style"><small class="text-dark">全体デザイン指定</small></label>
-                            <div class="input-group mb-2 mr-sm-2">
-                                <div class="input-group-prepend"><div class="input-group-text"><i class="fas fa-file-signature" aria-hidden="true"></i></div></div>
-                                <select class="form-control conf_style" name="conf_style" id="conf_style" aria-describedby="conf_designHelp">
+                        <div class="mb-3">
+                            <label class="form-label" for="conf_style"><small class="text-dark">全体デザイン指定</small></label>
+                            <div class="input-group mb-2 me-sm-2">
+                                <div class="input-group-text"><i class="fas fa-file-signature" aria-hidden="true"></i></div>
+                                <select class="form-select conf_style" name="conf_style" id="conf_style" aria-describedby="conf_designHelp">
                                 <?php
                                 $themeLabels = [
                                     'bootstrap' => 'Normal',
@@ -132,11 +132,11 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                             <small id="conf_designHelp" class="form-text text-muted">サイト全体のベースになるデザインを指定します</small>
                         </div>
 
-                        <div class="form-group">
-                            <label for="conf_style_nav"><small class="text-dark">Navbarデザイン指定</small></label>
-                            <div class="input-group mb-2 mr-sm-2">
-                                <div class="input-group-prepend"><div class="input-group-text"><i class="fas fa-file-signature" aria-hidden="true"></i></div></div>
-                                <select class="form-control conf_style_nav" name="conf_style_nav" id="conf_style_nav" aria-describedby="conf_navDesignHelp">
+                        <div class="mb-3">
+                            <label class="form-label" for="conf_style_nav"><small class="text-dark">Navbarデザイン指定</small></label>
+                            <div class="input-group mb-2 me-sm-2">
+                                <div class="input-group-text"><i class="fas fa-file-signature" aria-hidden="true"></i></div>
+                                <select class="form-select conf_style_nav" name="conf_style_nav" id="conf_style_nav" aria-describedby="conf_navDesignHelp">
                                     <?php foreach (['dark' => 'Dark', 'primary' => 'Primary', 'light' => 'Light'] as $navStyleValue => $navStyleLabel): ?>
                                         <option value="<?php echo app_html($navStyleValue); ?>"<?php echo app_selected_attr($ui['conf_style_nav'] ?? '', $navStyleValue); ?>><?php echo app_html($navStyleLabel); ?></option>
                                     <?php endforeach; ?>
@@ -153,31 +153,31 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                             ?>
                             <fieldset class="navbar-link-setting">
                                 <legend class="h6 text-dark">Navbarリンク[<?php echo $navIndex; ?>]</legend>
-                                <label for="<?php echo app_html($linkKey); ?>"><small class="text-dark">リンクURL</small></label>
-                                <div class="input-group mb-2 mr-sm-2">
-                                    <div class="input-group-prepend"><div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div></div>
+                                <label class="form-label" for="<?php echo app_html($linkKey); ?>"><small class="text-dark">リンクURL</small></label>
+                                <div class="input-group mb-2 me-sm-2">
+                                    <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
                                     <input type="text" class="form-control <?php echo app_html($linkKey); ?>" id="<?php echo app_html($linkKey); ?>" name="<?php echo app_html($linkKey); ?>" value="<?php echo app_html($ui[$linkKey] ?? ''); ?>" placeholder="Input Type NavbarLink">
                                 </div>
-                                <label for="<?php echo app_html($viewKey); ?>"><small class="text-dark">表示名</small></label>
-                                <div class="input-group mb-2 mr-sm-2">
-                                    <div class="input-group-prepend"><div class="input-group-text"><i class="far fa-edit" aria-hidden="true"></i></div></div>
+                                <label class="form-label" for="<?php echo app_html($viewKey); ?>"><small class="text-dark">表示名</small></label>
+                                <div class="input-group mb-2 me-sm-2">
+                                    <div class="input-group-text"><i class="far fa-edit" aria-hidden="true"></i></div>
                                     <input type="text" class="form-control <?php echo app_html($viewKey); ?>" id="<?php echo app_html($viewKey); ?>" name="<?php echo app_html($viewKey); ?>" value="<?php echo app_html($ui[$viewKey] ?? ''); ?>" placeholder="Input Type Nav Name">
                                 </div>
                                 <fieldset class="navbar-icon-setting">
                                     <legend class="small text-dark">アイコンを選択</legend>
                                     <?php foreach (app_allowed_nav_icons() as $iconOption): ?>
                                         <?php $radioId = $iconKey . '_' . $iconOption; ?>
-                                        <label for="<?php echo app_html($radioId); ?>" class="navbar-icon-option">
+                                        <label class="form-label" for="<?php echo app_html($radioId); ?>" class="navbar-icon-option">
                                             <input id="<?php echo app_html($radioId); ?>" type="radio" name="<?php echo app_html($iconKey); ?>" value="<?php echo app_html($iconOption); ?>"<?php echo app_checked_attr($ui[$iconKey] ?? '', $iconOption); ?>>
                                             <i class="fas fa-<?php echo app_html($iconOption); ?> fa-fw" aria-hidden="true"></i>
-                                            <span class="sr-only"><?php echo app_html($iconOption); ?></span>
+                                            <span class="visually-hidden"><?php echo app_html($iconOption); ?></span>
                                         </label>
                                     <?php endforeach; ?>
                                 </fieldset>
                             </fieldset>
                             <?php if ($navIndex < 4): ?><hr><?php endif; ?>
                         <?php endfor; ?>
-                        <div class="text-right mt-3"><button type="submit" class="btn btn-primary submit_setting">変更する</button></div>
+                        <div class="text-end mt-3"><button type="submit" class="btn btn-primary submit_setting">変更する</button></div>
                     </form>
                 </div>
             </section>
@@ -188,13 +188,13 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                     <form id="tabsForm" method="post" action="./">
                         <?php for ($tabIndex = 1; $tabIndex <= 4; $tabIndex++): ?>
                             <?php $tabNameKey = 'conf_style_tabname' . $tabIndex; ?>
-                            <label for="<?php echo app_html($tabNameKey); ?>"><small class="text-dark">タブ名<?php echo $tabIndex; ?>入力</small></label>
-                            <div class="input-group mb-2 mr-sm-2">
-                                <div class="input-group-prepend"><div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div></div>
+                            <label class="form-label" for="<?php echo app_html($tabNameKey); ?>"><small class="text-dark">タブ名<?php echo $tabIndex; ?>入力</small></label>
+                            <div class="input-group mb-2 me-sm-2">
+                                <div class="input-group-text"><i class="fas fa-file-import" aria-hidden="true"></i></div>
                                 <input type="text" class="form-control <?php echo app_html($tabNameKey); ?>" id="<?php echo app_html($tabNameKey); ?>" name="<?php echo app_html($tabNameKey); ?>" value="<?php echo app_html($ui[$tabNameKey] ?? ''); ?>" placeholder="Input Type Tab Name<?php echo $tabIndex; ?>"<?php echo $tabIndex === 1 ? ' required' : ''; ?>>
                             </div>
                         <?php endfor; ?>
-                        <div class="text-right mt-3"><button type="submit" class="btn btn-primary submit_tab">タブ名を変更する</button></div>
+                        <div class="text-end mt-3"><button type="submit" class="btn btn-primary submit_tab">タブ名を変更する</button></div>
                     </form>
                 </div>
             </section>
@@ -207,10 +207,10 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                         <div class="alert alert-warning small" role="alert">Keywordを読み込めませんでした。V1.12-BのDB Migration適用状況を確認してください。</div>
                     <?php endif; ?>
                     <form id="rssHighlightKeywordForm" method="post" action="./">
-                        <label for="rssHighlightKeywordInput"><small class="text-dark">Keyword</small></label>
+                        <label class="form-label" for="rssHighlightKeywordInput"><small class="text-dark">Keyword</small></label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="rssHighlightKeywordInput" maxlength="<?php echo FEED_KEYWORD_MAX_VALUE_LENGTH; ?>" autocomplete="off" placeholder="OpenAI / PHP など"<?php echo $feedKeywordLoadFailed ? ' disabled' : ''; ?>>
-                            <div class="input-group-append"><button type="submit" class="btn btn-primary rss-highlight-keyword-add"<?php echo $feedKeywordLoadFailed ? ' disabled' : ''; ?>><i class="fas fa-plus" aria-hidden="true"></i><span class="sr-only">Keywordを追加</span></button></div>
+                            <button type="submit" class="btn btn-primary rss-highlight-keyword-add"<?php echo $feedKeywordLoadFailed ? ' disabled' : ''; ?>><i class="fas fa-plus" aria-hidden="true"></i><span class="visually-hidden">Keywordを追加</span></button>
                         </div>
                         <small class="form-text text-muted">最大<?php echo FEED_KEYWORD_MAX_PER_USER; ?>件 / 1件<?php echo FEED_KEYWORD_MAX_VALUE_LENGTH; ?>文字まで。大文字小文字は区別せず同じKeywordとして扱います。</small>
                     </form>
@@ -225,8 +225,8 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                         <?php else: ?>
                             <?php foreach ($feedKeywords as $feedKeyword): ?>
                                 <div class="list-group-item d-flex align-items-center rss-highlight-keyword-item" data-keyword-id="<?php echo (int) $feedKeyword['keyword_id']; ?>">
-                                    <span class="rss-highlight-keyword-value mr-2"><?php echo app_html((string) $feedKeyword['keyword_value']); ?></span>
-                                    <button type="button" class="btn btn-sm btn-outline-danger ml-auto rss-highlight-keyword-delete" data-keyword-id="<?php echo (int) $feedKeyword['keyword_id']; ?>" aria-label="<?php echo app_html((string) $feedKeyword['keyword_value']); ?> を削除"><i class="fas fa-times" aria-hidden="true"></i></button>
+                                    <span class="rss-highlight-keyword-value me-2"><?php echo app_html((string) $feedKeyword['keyword_value']); ?></span>
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-auto rss-highlight-keyword-delete" data-keyword-id="<?php echo (int) $feedKeyword['keyword_id']; ?>" aria-label="<?php echo app_html((string) $feedKeyword['keyword_value']); ?> を削除"><i class="fas fa-times" aria-hidden="true"></i></button>
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -278,7 +278,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
         <?php endif; ?>
 
         <li class="drawer-section-title"><i class="fas fa-user fa-fw" aria-hidden="true"></i><span>Account</span></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#accountSettings"><span class="drawer-item-icon"><i class="fas fa-user-cog fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">アカウント設定</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#accountSettings"><span class="drawer-item-icon"><i class="fas fa-user-cog fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">アカウント設定</span></button></li>
         <li><form method="post" action="./logout.php" class="drawer-logout-form"><input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>"><button type="submit" class="btn btn-link text-muted drawer-logout-button drawer-item"><span class="drawer-item-icon"><i class="fas fa-sign-out-alt fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">ログアウト</span></button></form></li>
     </ul>
 </nav>
@@ -289,38 +289,37 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
         <div class="modal-content">
             <div class="modal-header" style="color: #fff; background-color: #555;">
                 <h5 class="modal-title" id="accountSettingsTitle"><i class="fas fa-user-cog" aria-hidden="true"></i> アカウント設定</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="閉じる"><span aria-hidden="true" style="color: #ccc;">&times;</span></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <section aria-labelledby="accountEmailTitle">
                     <h6 id="accountEmailTitle">メールアドレス変更</h6>
                     <p class="small text-muted">現在のメールアドレスは画面には表示していません。変更後は新しいメールアドレスでLoginしてください。</p>
                     <form id="accountEmailForm" method="post" action="./" autocomplete="on">
-                        <div class="form-group"><label for="accountNewEmail"><small class="text-dark">新しいメールアドレス</small></label><input type="email" class="form-control accountNewEmail" id="accountNewEmail" name="new_email" maxlength="254" autocomplete="email" required></div>
-                        <div class="form-group"><label for="accountCurrentPasswordEmail"><small class="text-dark">現在のパスワード</small></label><input type="password" class="form-control accountCurrentPasswordEmail" id="accountCurrentPasswordEmail" name="current_password" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="current-password" required></div>
-                        <div class="text-right"><button type="submit" class="btn btn-primary">メールアドレスを変更</button></div>
+                        <div class="mb-3"><label class="form-label" for="accountNewEmail"><small class="text-dark">新しいメールアドレス</small></label><input type="email" class="form-control accountNewEmail" id="accountNewEmail" name="new_email" maxlength="254" autocomplete="email" required></div>
+                        <div class="mb-3"><label class="form-label" for="accountCurrentPasswordEmail"><small class="text-dark">現在のパスワード</small></label><input type="password" class="form-control accountCurrentPasswordEmail" id="accountCurrentPasswordEmail" name="current_password" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="current-password" required></div>
+                        <div class="text-end"><button type="submit" class="btn btn-primary">メールアドレスを変更</button></div>
                     </form>
                 </section>
                 <hr>
                 <section aria-labelledby="accountPasswordTitle">
                     <h6 id="accountPasswordTitle">パスワード変更</h6>
                     <form id="accountPasswordForm" method="post" action="./" autocomplete="on">
-                        <div class="form-group"><label for="accountCurrentPassword"><small class="text-dark">現在のパスワード</small></label><input type="password" class="form-control accountCurrentPassword" id="accountCurrentPassword" name="current_password" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="current-password" required></div>
-                        <div class="form-group"><label for="accountNewPassword"><small class="text-dark">新しいパスワード</small></label><input type="password" class="form-control accountNewPassword" id="accountNewPassword" name="new_password" minlength="<?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="new-password" aria-describedby="accountPasswordHelp" required><small id="accountPasswordHelp" class="form-text text-muted"><?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>文字以上<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>文字以下で入力してください。</small></div>
-                        <div class="form-group"><label for="accountNewPasswordConfirmation"><small class="text-dark">新しいパスワード（確認）</small></label><input type="password" class="form-control accountNewPasswordConfirmation" id="accountNewPasswordConfirmation" name="new_password_confirmation" minlength="<?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="new-password" required></div>
-                        <div class="text-right"><button type="submit" class="btn btn-primary">パスワードを変更</button></div>
+                        <div class="mb-3"><label class="form-label" for="accountCurrentPassword"><small class="text-dark">現在のパスワード</small></label><input type="password" class="form-control accountCurrentPassword" id="accountCurrentPassword" name="current_password" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="current-password" required></div>
+                        <div class="mb-3"><label class="form-label" for="accountNewPassword"><small class="text-dark">新しいパスワード</small></label><input type="password" class="form-control accountNewPassword" id="accountNewPassword" name="new_password" minlength="<?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="new-password" aria-describedby="accountPasswordHelp" required><small id="accountPasswordHelp" class="form-text text-muted"><?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>文字以上<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>文字以下で入力してください。</small></div>
+                        <div class="mb-3"><label class="form-label" for="accountNewPasswordConfirmation"><small class="text-dark">新しいパスワード（確認）</small></label><input type="password" class="form-control accountNewPasswordConfirmation" id="accountNewPasswordConfirmation" name="new_password_confirmation" minlength="<?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="new-password" required></div>
+                        <div class="text-end"><button type="submit" class="btn btn-primary">パスワードを変更</button></div>
                     </form>
                 </section>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">閉じる</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button></div>
         </div>
     </div>
 </div>
 
 <script type="application/json" id="rssHighlightKeywordData"><?php echo $feedKeywordJson; ?></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/jquery-3.7.1.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
-<script src="<?php echo htmlspecialchars(app_asset_url('js/popper.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
-<script src="<?php echo htmlspecialchars(app_asset_url('js/bootstrap.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/bootstrap.bundle-5.3.8.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/iscroll.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/drawer.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>

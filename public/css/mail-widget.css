@@ -16,7 +16,7 @@
 .mail-loading, .mail-empty, .mail-error { padding: 1rem; text-align: center; font-size: .85rem; }
 .mail-error { color: #b21f2d; }
 .mail-modal-header { color: #fff; background: #333; }
-.mail-modal-header .close { color: #ccc; text-shadow: none; }
+.mail-modal-header .btn-close { opacity: .75; }
 .dashboard-widget[data-widget-height="2"].mail-card .mail-list { max-height: 690px; }
 @media (max-width: 767.98px) {
     .mail-list { max-height: 380px; }

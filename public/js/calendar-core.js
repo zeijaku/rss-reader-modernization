@@ -327,8 +327,8 @@
                 .attr('data-task-title', item.title)
                 .attr('data-task-due-date', item.due_date)
                 .attr('data-task-priority', item.priority)
-                .attr('data-toggle', 'modal')
-                .attr('data-target', '#changeTaskItem')
+                .attr('data-bs-toggle', 'modal')
+                .attr('data-bs-target', '#changeTaskItem')
                 .attr('title', 'Task: ' + item.title)
                 .append($('<i>').addClass(item.completed ? 'fas fa-check-circle' : 'fas fa-check-square').attr('aria-hidden', 'true'))
                 .append($('<span>').text(item.title));
@@ -341,8 +341,8 @@
             .attr('data-event-start-date', item.start_date)
             .attr('data-event-end-date', item.end_date)
             .attr('data-event-note', item.note || '')
-            .attr('data-toggle', 'modal')
-            .attr('data-target', '#changeCalendarEvent')
+            .attr('data-bs-toggle', 'modal')
+            .attr('data-bs-target', '#changeCalendarEvent')
             .attr('title', item.note ? item.title + ': ' + item.note : item.title)
             .append($('<i>').addClass('far fa-calendar').attr('aria-hidden', 'true'))
             .append($('<span>').text(item.title));
@@ -398,8 +398,8 @@
                 .attr('type', 'button')
                 .addClass('calendar-day-number calendar-day-add-trigger')
                 .attr('data-calendar-date', date)
-                .attr('data-toggle', 'modal')
-                .attr('data-target', '#registerCalendarEvent')
+                .attr('data-bs-toggle', 'modal')
+                .attr('data-bs-target', '#registerCalendarEvent')
                 .attr('aria-label', holidayName !== '' ? date + ' ' + holidayName + '。予定を追加' : date + 'に予定を追加')
                 .attr('title', holidayName !== '' ? holidayName : null)
                 .text(String(dayNumber));

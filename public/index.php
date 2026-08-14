@@ -238,10 +238,10 @@ function search_feed_form_fields(string $prefix): string
     foreach (search_feed_common_categories() as $category) {
         $categories .= '<option value="' . app_html($category) . '">' . app_html($category) . '</option>';
     }
-    return '<div class="form-group"><label for="searchQuery' . $id . '">検索語句</label><input type="text" id="searchQuery' . $id . '" class="form-control ' . $p . 'SearchQuery" maxlength="128" required></div>'
-        . '<div class="form-row"><div class="form-group col-6"><label>検索範囲</label><select class="form-control ' . $p . 'SearchScope"><option value="owned">自分の登録RSS</option><option value="common">共通RSS</option><option value="both">両方</option></select></div><div class="form-group col-6"><label>検索条件</label><select class="form-control ' . $p . 'SearchCondition"><option value="or">いずれかを含む（OR）</option><option value="and">すべて含む（AND）</option></select></div></div>'
-        . '<div class="form-row"><div class="form-group col-6"><label>表示件数</label><select class="form-control ' . $p . 'SearchLimit"><option value="5">5件</option><option value="10" selected>10件</option><option value="20">20件</option><option value="30">30件</option></select></div><div class="form-group col-6"><label>共通RSSカテゴリー</label><select class="form-control ' . $p . 'SearchCategory">' . $categories . '</select></div></div>'
-        . '<div class="form-row"><div class="form-group col-md-4"><label for="' . $p . 'SearchWidth">横幅</label><select id="' . $p . 'SearchWidth" class="form-control ' . $p . 'SearchWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div><div class="form-group col-md-4"><label for="' . $p . 'SearchHeight">縦幅</label><select id="' . $p . 'SearchHeight" class="form-control ' . $p . 'SearchHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div><div class="form-group col-md-4"><label for="' . $p . 'SearchStyle">見出し色</label><select id="' . $p . 'SearchStyle" class="form-control ' . $p . 'SearchStyle"><option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary" selected>secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div></div>';
+    return '<div class="mb-3"><label class="form-label" for="searchQuery' . $id . '">検索語句</label><input type="text" id="searchQuery' . $id . '" class="form-control ' . $p . 'SearchQuery" maxlength="128" required></div>'
+        . '<div class="row g-2"><div class="mb-3 col-6"><label class="form-label">検索範囲</label><select class="form-select ' . $p . 'SearchScope"><option value="owned">自分の登録RSS</option><option value="common">共通RSS</option><option value="both">両方</option></select></div><div class="mb-3 col-6"><label class="form-label">検索条件</label><select class="form-select ' . $p . 'SearchCondition"><option value="or">いずれかを含む（OR）</option><option value="and">すべて含む（AND）</option></select></div></div>'
+        . '<div class="row g-2"><div class="mb-3 col-6"><label class="form-label">表示件数</label><select class="form-select ' . $p . 'SearchLimit"><option value="5">5件</option><option value="10" selected>10件</option><option value="20">20件</option><option value="30">30件</option></select></div><div class="mb-3 col-6"><label class="form-label">共通RSSカテゴリー</label><select class="form-select ' . $p . 'SearchCategory">' . $categories . '</select></div></div>'
+        . '<div class="row g-2"><div class="mb-3 col-md-4"><label class="form-label" for="' . $p . 'SearchWidth">横幅</label><select id="' . $p . 'SearchWidth" class="form-select ' . $p . 'SearchWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div><div class="mb-3 col-md-4"><label class="form-label" for="' . $p . 'SearchHeight">縦幅</label><select id="' . $p . 'SearchHeight" class="form-select ' . $p . 'SearchHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div><div class="mb-3 col-md-4"><label class="form-label" for="' . $p . 'SearchStyle">見出し色</label><select id="' . $p . 'SearchStyle" class="form-select ' . $p . 'SearchStyle"><option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary" selected>secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div></div>';
 }
 ?>
 
@@ -255,7 +255,7 @@ function search_feed_form_fields(string $prefix): string
     </a>
     <span class="app-navbar-separator" aria-hidden="true"></span>
     <span class="app-navbar-current">
-      <span class="sr-only">現在の表示：</span>
+      <span class="visually-hidden">現在の表示：</span>
       <span class="app-navbar-current-label"><?php echo app_html($currentViewName); ?></span>
     </span>
   </div>
@@ -265,7 +265,7 @@ function search_feed_form_fields(string $prefix): string
   </button>
 
   <div class="collapse navbar-collapse app-navbar-collapse" id="navbarSupportedContent">
-    <ul class="navbar-nav ml-auto app-navbar-links">
+    <ul class="navbar-nav ms-auto app-navbar-links">
     <?php
         for ($navIndex = 1; $navIndex <= 4; $navIndex++) {
             $link = (string) $ui['conf_style_navlink' . $navIndex];
@@ -358,15 +358,15 @@ function search_feed_form_fields(string $prefix): string
 
         <!-- Widget -->
         <li class="drawer-section-title"><i class="fas fa-th-large fa-fw" aria-hidden="true"></i><span>Widget追加</span></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerContent"><span class="drawer-item-icon"><i class="fas fa-rss fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">RSS追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerSearchFeed"><span class="drawer-item-icon"><i class="fas fa-search fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Search Feed追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerTaskWidget"><span class="drawer-item-icon"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Task追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerCalendarWidget"><span class="drawer-item-icon"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Calendar追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerLinksWidget"><span class="drawer-item-icon"><i class="fas fa-link fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Links追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerWeatherWidget"><span class="drawer-item-icon"><i class="fas fa-cloud-sun fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Weather追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerGameWidget"><span class="drawer-item-icon"><i class="fas fa-chess-knight fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Game追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerClock"><span class="drawer-item-icon"><i class="far fa-clock fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Clock追加</span></button></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#registerMemo"><span class="drawer-item-icon"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Memo追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerContent"><span class="drawer-item-icon"><i class="fas fa-rss fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">RSS追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerSearchFeed"><span class="drawer-item-icon"><i class="fas fa-search fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Search Feed追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerTaskWidget"><span class="drawer-item-icon"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Task追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerCalendarWidget"><span class="drawer-item-icon"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Calendar追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerLinksWidget"><span class="drawer-item-icon"><i class="fas fa-link fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Links追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerWeatherWidget"><span class="drawer-item-icon"><i class="fas fa-cloud-sun fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Weather追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerGameWidget"><span class="drawer-item-icon"><i class="fas fa-chess-knight fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Game追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerClock"><span class="drawer-item-icon"><i class="far fa-clock fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Clock追加</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#registerMemo"><span class="drawer-item-icon"><i class="far fa-sticky-note fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Memo追加</span></button></li>
 
         <!-- Customize -->
         <li class="drawer-section-title"><i class="fas fa-sliders-h fa-fw" aria-hidden="true"></i><span>カスタマイズ</span></li>
@@ -403,7 +403,7 @@ function search_feed_form_fields(string $prefix): string
 
         <!-- Account -->
         <li class="drawer-section-title"><i class="fas fa-user fa-fw" aria-hidden="true"></i><span>Account</span></li>
-        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-toggle="modal" data-target="#accountSettings"><span class="drawer-item-icon"><i class="fas fa-user-cog fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">アカウント設定</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-bs-toggle="modal" data-bs-target="#accountSettings"><span class="drawer-item-icon"><i class="fas fa-user-cog fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">アカウント設定</span></button></li>
         <li>
             <form method="post" action="./logout.php" class="drawer-logout-form">
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(app_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -418,8 +418,7 @@ function search_feed_form_fields(string $prefix): string
 
 <!-- Bootstrap -->
 <script src="<?php echo htmlspecialchars(app_asset_url('js/jquery-3.7.1.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
-<script src="<?php echo htmlspecialchars(app_asset_url('js/popper.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
-<script src="<?php echo htmlspecialchars(app_asset_url('js/bootstrap.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/bootstrap.bundle-5.3.8.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <!-- Drawer -->
 <script src="<?php echo htmlspecialchars(app_asset_url('js/iscroll.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/drawer.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>

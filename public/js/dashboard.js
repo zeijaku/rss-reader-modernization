@@ -294,7 +294,7 @@
                         .addClass('list-group-item d-flex align-items-center rss-highlight-keyword-item')
                         .attr('data-keyword-id', String(item.keyword_id));
                     $('<span>')
-                        .addClass('rss-highlight-keyword-value mr-2')
+                        .addClass('rss-highlight-keyword-value me-2')
                         .text(item.keyword_value)
                         .appendTo($row);
                     $('<button>')
@@ -303,7 +303,7 @@
                             'data-keyword-id': String(item.keyword_id),
                             'aria-label': item.keyword_value + ' を削除'
                         })
-                        .addClass('btn btn-sm btn-outline-danger ml-auto rss-highlight-keyword-delete')
+                        .addClass('btn btn-sm btn-outline-danger ms-auto rss-highlight-keyword-delete')
                         .append($('<i>').addClass('fas fa-times').attr('aria-hidden', 'true'))
                         .appendTo($row);
                     $row.appendTo($list);
@@ -3419,7 +3419,7 @@
         }
         $body.data('iguguru-dashboard-initialized', true);
 
-        $('[data-toggle="popover"]').popover();
+        $('[data-bs-toggle="popover"]').popover();
         readFeedKeywordState();
         renderFeedKeywordManager();
         bindEvents();

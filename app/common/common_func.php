@@ -61,14 +61,14 @@ require_once dirname(__DIR__) . '/feed/feed_parser.php';
     function resolve_theme_stylesheet(?string $style): string
     {
         $themes = [
-            'bootstrap' => 'bootstrap.min.css',
-            'bootstrap-yeti' => 'bootstrap-yeti.min.css',
-            'bootstrap-minty' => 'bootstrap-minty.min.css',
-            'bootstrap-flatly' => 'bootstrap-flatly.min.css',
-            'bootstrap-journal' => 'bootstrap-journal.min.css',
-            'bootstrap-sketchy' => 'bootstrap-sketchy.min.css',
-            'bootstrap-solar' => 'bootstrap-solar.min.css',
-            'bootstrap-slate' => 'bootstrap-slate.min.css',
+            'bootstrap' => 'bootstrap-5.3.8.min.css',
+            'bootstrap-yeti' => 'bootstrap-yeti-5.3.8.min.css',
+            'bootstrap-minty' => 'bootstrap-minty-5.3.8.min.css',
+            'bootstrap-flatly' => 'bootstrap-flatly-5.3.8.min.css',
+            'bootstrap-journal' => 'bootstrap-journal-5.3.8.min.css',
+            'bootstrap-sketchy' => 'bootstrap-sketchy-5.3.8.min.css',
+            'bootstrap-solar' => 'bootstrap-solar-5.3.8.min.css',
+            'bootstrap-slate' => 'bootstrap-slate-5.3.8.min.css',
         ];
 
         return $themes[$style ?? ''] ?? $themes['bootstrap'];
