@@ -47,7 +47,7 @@ check('data-clock-hour-format' in index and 'data-clock-show-seconds' in index a
 check('class="clock-time"' in index and 'class="clock-date"' in index, 'Clock has semantic time and date output hooks')
 check('class="btn btn-link widget-drag-handle"' in index and 'clock-edit-trigger' in index, 'Clock supports the existing reorder handle and a separate edit control')
 check('id="registerClockForm"' in index and 'id="changeClockForm"' in index, 'Clock add and edit forms are explicit')
-check('Clock追加' in index and 'data-target="#registerClock"' in index, 'Drawer exposes Clock addition without changing the four tabs')
+check('Clock追加' in index and 'data-drawer-modal-target="#registerClock"' in index, 'Offcanvas menu exposes Clock addition without changing the four tabs')
 check('app_html($clockTitle)' in index, 'Clock title is escaped at HTML output')
 
 check("apiRequest('widget.clock.create'" in js and "apiRequest('widget.clock.update'" in js and "apiRequest('widget.clock.delete'" in js, 'Frontend uses the protected API for all Clock mutations')
