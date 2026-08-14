@@ -57,12 +57,18 @@ The phase-specific workflow checks:
 1. npm package versions are exactly Bootstrap 5.3.8 and Bootswatch 5.3.8.
 2. All eight staged CSS files and the Bootstrap bundle are present.
 3. The staged core files identify Bootstrap 5.3.8 / Bootswatch 5.3.8.
-4. `bootstrap.bundle-5.3.8.min.js` contains Popper through the Bootstrap bundle package.
+4. `bootstrap.bundle-5.3.8.min.js` is taken from the Bootstrap bundle package that includes Popper.
 5. Current PHP pages still reference the existing unversioned Bootstrap 4 runtime files.
 6. No V1.14-B staged asset has accidentally been enabled from production PHP markup.
 7. PHP source syntax remains valid.
 8. `git diff --check` passes.
 9. A production verification ZIP containing `app/`, `public/`, this note, and the asset checksum manifest is generated as a workflow artifact.
+
+## Generated asset checkpoint
+
+- Vendor asset commit: `6b3a41222504950fe3d8c9c981df00c0f55fb61a`
+- Initial focused CI run: `31785280208` — success
+- Exact asset hashes are recorded in `FRONTEND_ASSETS_V1_14_B.sha256`.
 
 ## Deferred to V1.14-C
 
