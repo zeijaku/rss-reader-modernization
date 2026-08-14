@@ -88,12 +88,13 @@ class Wrapper {
 }
 
 const handlers = new Map();
-const body = new Element('body', {class: 'drawer'});
+const body = new Element('body');
+const drawerNav = new Element('nav', {class: 'drawer-nav offcanvas offcanvas-end'});
 const main = new Element('main', {id: 'main-content', 'data-dashboard-current-tab': '1', 'data-dashboard-tab-count': '4'});
 const surface = new Element('div', {class: 'swipe-surface'});
 const calendar = new Element('section', {'data-dashboard-widget-type': 'calendar'});
 const button = new Element('button');
-main.appendChild(surface); main.appendChild(calendar); main.appendChild(button); body.appendChild(main);
+main.appendChild(surface); main.appendChild(calendar); main.appendChild(button); body.appendChild(main); body.appendChild(drawerNav);
 const pageTop = new Element('div', {id: 'page-top'});
 const notice = new Element('div', {id: 'app-notice'});
 body.appendChild(pageTop); body.appendChild(notice);
@@ -119,7 +120,7 @@ function $(arg) {
     if (arg === '#main-content') return new Wrapper([main]);
     if (arg === '#page-top') return new Wrapper([pageTop]);
     if (arg === '#app-notice') return new Wrapper([notice]);
-    if (arg === '.drawer') return new Wrapper([body]);
+    if (arg === '.drawer-nav') return new Wrapper([drawerNav]);
     if (arg === '.modal.show') return new Wrapper();
     if (arg === '#drawerMenu' || arg === '[data-toggle="popover"]' || arg === '[data-feed-content-id]' || arg === '[data-dashboard-widget-type="clock"]') return new Wrapper();
     return new Wrapper();
@@ -210,11 +211,11 @@ cancel.call(main, {});
 end.call(main, touchEvent(surface, 100, 420, true));
 check(assigned.length === beforeCancel, 'touch cancellation clears pending swipe state');
 
-body.classes.add('drawer-open');
+drawerNav.classes.add('show');
 const beforeDrawer = assigned.length;
 swipe(surface, 320, 420, 100, 420);
-check(assigned.length === beforeDrawer, 'open Drawer blocks tab swipe');
-body.classes.delete('drawer-open');
+check(assigned.length === beforeDrawer, 'open Offcanvas blocks tab swipe');
+drawerNav.classes.delete('show');
 
 if (failures) process.exit(1);
 console.log('All V1.1-I / R2 mobile swipe runtime checks passed.');
