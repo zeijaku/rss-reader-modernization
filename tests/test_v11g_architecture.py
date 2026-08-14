@@ -50,7 +50,7 @@ check("app_html($memoBody)" in index and "app_html($memoTitle)" in index, 'Memo 
 check('class="btn btn-link memo-edit-trigger"' in index, 'Memo has a separate edit control')
 check('id="registerMemoForm"' in index and 'id="changeMemoForm"' in index, 'Memo add and edit forms render')
 check('maxlength="4000"' in index and 'maxlength="32"' in index, 'Memo form bounds match server validation')
-check('data-target="#registerMemo"' in index and 'Memo追加' in index, 'Drawer exposes Memo addition')
+check('data-drawer-modal-target="#registerMemo"' in index and 'Memo追加' in index, 'Offcanvas menu exposes Memo addition')
 for name in ['addMemo','editMemo','changeMemo','deleteMemo','memoFormPayload']:
     check(f'function {name}' in js, f'Frontend implements {name}')
 for action in ['widget.memo.create','widget.memo.update','widget.memo.delete']:
