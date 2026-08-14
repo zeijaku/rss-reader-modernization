@@ -77,22 +77,18 @@ try:
     check(s==200 and len(favicon)>0,'favicon asset is served without a 404 redirect')
 
     retained_http_assets = [
-        '/css/bootstrap.min.css',
-        '/css/bootstrap-yeti.min.css',
-        '/css/bootstrap-minty.min.css',
-        '/css/bootstrap-flatly.min.css',
-        '/css/bootstrap-journal.min.css',
-        '/css/bootstrap-sketchy.min.css',
-        '/css/bootstrap-solar.min.css',
-        '/css/bootstrap-slate.min.css',
+        '/css/bootstrap-5.3.8.min.css',
+        '/css/bootstrap-yeti-5.3.8.min.css',
+        '/css/bootstrap-minty-5.3.8.min.css',
+        '/css/bootstrap-flatly-5.3.8.min.css',
+        '/css/bootstrap-journal-5.3.8.min.css',
+        '/css/bootstrap-sketchy-5.3.8.min.css',
+        '/css/bootstrap-solar-5.3.8.min.css',
+        '/css/bootstrap-slate-5.3.8.min.css',
         '/css/all.css',
-        '/css/drawer.min.css',
         '/css/auth.css',
         '/js/jquery-3.7.1.min.js',
-        '/js/popper.min.js',
-        '/js/bootstrap.min.js',
-        '/js/iscroll.js',
-        '/js/drawer.min.js',
+        '/js/bootstrap.bundle-5.3.8.min.js',
         '/js/auth.js',
         '/webfonts/fa-brands-400.woff2',
         '/webfonts/fa-regular-400.woff2',
@@ -101,7 +97,27 @@ try:
     ]
     for asset_path in retained_http_assets:
         s,_,asset_body=req(p,'GET',asset_path)
-        check(s==200 and len(asset_body)>0,'retained asset is served: '+asset_path)
+        check(s==200 and len(asset_body)>0,'Version 1.14 asset is served: '+asset_path)
+
+    removed_http_assets = [
+        '/css/bootstrap.min.css',
+        '/css/bootstrap-yeti.min.css',
+        '/css/bootstrap-minty.min.css',
+        '/css/bootstrap-flatly.min.css',
+        '/css/bootstrap-journal.min.css',
+        '/css/bootstrap-sketchy.min.css',
+        '/css/bootstrap-solar.min.css',
+        '/css/bootstrap-slate.min.css',
+        '/css/drawer.min.css',
+        '/js/popper.min.js',
+        '/js/bootstrap.min.js',
+        '/js/iscroll.js',
+        '/js/drawer.min.js',
+    ]
+    for asset_path in removed_http_assets:
+        s,_,_=req(p,'GET',asset_path)
+        check(s==404,'removed legacy asset is not served: '+asset_path)
+
     s,_,dashboard_css=req(p,'GET','/css/dashboard.css')
     check(s==200 and '#page-top' in dashboard_css,'dashboard stylesheet is served')
     s,_,dashboard_js=req(p,'GET','/js/dashboard.js')
