@@ -41,6 +41,12 @@ jobs:
             cat tools/v1.14-f-visual.css >> public/css/dashboard.css
           fi
 
+      - name: Apply idempotent card header contrast fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/v1.14-f-card-contrast.py
+
       - name: Validate Bootstrap and Bootswatch assets
         shell: bash
         run: |
@@ -51,6 +57,11 @@ jobs:
           grep -Fq 'Bootstrap v5.3.8' public/js/bootstrap.bundle-5.3.8.min.js
           for theme in flatly journal minty sketchy slate solar yeti; do
             grep -Fq 'Bootswatch v5.3.8' "public/css/bootstrap-${theme}-5.3.8.min.css"
+          done
+          for css in public/css/bootstrap-5.3.8.min.css public/css/bootstrap-*-5.3.8.min.css; do
+            for style in primary secondary success info warning danger dark; do
+              grep -Fq ".text-bg-${style}" "${css}"
+            done
           done
 
       - name: Validate all Theme resolver targets
@@ -68,7 +79,7 @@ jobs:
             }
           '
 
-      - name: Validate V1.14-F visual markers
+      - name: Validate V1.14-F visual and card contrast markers
         shell: bash
         run: |
           set -euo pipefail
@@ -80,6 +91,7 @@ jobs:
           dashboard = Path('public/css/dashboard.css').read_text()
           dashboard_markers = [
               'V1.14-F: Bootstrap 5 / Bootswatch visual finishing.',
+              'V1.14-F/R1: Card header background and text contrast follow Bootstrap 5 text-bg-* utilities.',
               '.form-label .text-dark,',
               'legend.text-dark',
               '.navbar-light.app-navbar',
@@ -89,6 +101,7 @@ jobs:
               'var(--bs-body-bg, #fff)',
               'var(--bs-body-color, #212529)',
               '--bs-offcanvas-width: min(16.25rem, 86vw);',
+              '.dashboard-widget [class*="text-bg-"] .btn-link,',
           ]
           for marker in dashboard_markers:
               ok = marker in dashboard
@@ -116,6 +129,24 @@ jobs:
               print(f'{page}: Bootstrap 5 / Offcanvas: {"OK" if ok else "FAIL"}')
               failed = failed or not ok
 
+          for file_name in ['app/view/dashboard_widgets.php', 'public/stock.php']:
+              source = Path(file_name).read_text()
+              ok = source.count('text-bg-') == 9 and 'text-white' not in source
+              search_ok = '<thead><tr><th colspan="3" class="content-header feed-card-header text-bg-' in source
+              print(f'{file_name}: 9 automatic-contrast card headers: {"OK" if ok else "FAIL"}')
+              print(f'{file_name}: Search Feed color is on th: {"OK" if search_ok else "FAIL"}')
+              failed = failed or not ok or not search_ok
+
+          dashboard_js = Path('public/js/dashboard.js').read_text()
+          dashboard_js_ok = 'text-white feed-title-text' not in dashboard_js and 'feed-title-text text-white' not in dashboard_js
+          print(f'public/js/dashboard.js: dynamic feed titles inherit header color: {"OK" if dashboard_js_ok else "FAIL"}')
+          failed = failed or not dashboard_js_ok
+
+          mail_js = Path('public/js/mail-widget.js').read_text()
+          mail_ok = "mail-card-header text-bg-" in mail_js and 'text-white' not in mail_js
+          print(f'public/js/mail-widget.js: Mail header automatic contrast: {"OK" if mail_ok else "FAIL"}')
+          failed = failed or not mail_ok
+
           if failed:
               sys.exit(1)
           PY
@@ -127,7 +158,11 @@ jobs:
           git fetch origin v1.14-e:refs/remotes/origin/v1.14-e
           mapfile -t changed < <(git diff --name-only origin/v1.14-e...HEAD -- app public | sort)
           expected=(
+            app/view/dashboard_widgets.php
             public/css/dashboard.css
+            public/js/dashboard.js
+            public/js/mail-widget.js
+            public/stock.php
           )
           printf 'Changed app/public files:\n%s\n' "${changed[*]}"
           if [[ "${changed[*]}" != "${expected[*]}" ]]; then
@@ -155,13 +190,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git add public/css/dashboard.css
+          git add app/view/dashboard_widgets.php public/css/dashboard.css public/js/dashboard.js public/js/mail-widget.js public/stock.php
           if git diff --cached --quiet; then
             echo 'created=false' >> "${GITHUB_OUTPUT}"
           else
             git config user.name 'github-actions[bot]'
             git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git commit -m 'style(v1.14-f): apply visual finishing CSS'
+            git commit -m 'fix(v1.14-f): use automatic card header contrast'
             git push origin HEAD:v1.14-f
             echo 'created=true' >> "${GITHUB_OUTPUT}"
           fi
@@ -188,7 +223,7 @@ jobs:
           printf '%s\n' \
             'RSS Reader Modernization V1.14-F' \
             'Baseline: V1.14-E / application version 1.13.0' \
-            'Checkpoint: PC/SP and all-theme visual finishing after Bootstrap 5 / Offcanvas migration.' \
+            'Checkpoint: PC/SP, all-theme visual finishing, and automatic card-header contrast after Bootstrap 5 / Offcanvas migration.' \
             "Source commit: ${source_sha}" \
             > "${package_root}/SOURCE_BUILD.txt"
           cd "${RUNNER_TEMP}"
