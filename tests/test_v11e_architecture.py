@@ -45,7 +45,7 @@ check("showNotice('Widgetの並び順を保存しました', 'success', 2500)" i
 check("attr('draggable', 'false')" in js, 'Feed links are not mistaken for Drag sources')
 check('touch-action: none' in css and '.widget-drag-handle' in css, 'only the reorder handle captures Touch movement')
 check('width: 28px' in css and 'height: 32px' in css and 'border: 1px solid' in css and '.content-title' in css and 'flex: 1 1 auto' in css, 'compact icon-only Drag button leaves flexible title width')
-check("addClass('text-white feed-title-text')" in js and "addClass('fas fa-bell')" in js and "addClass('feed-new-count')" in js, 'Feed heading uses a Bell and count instead of the large NEW badge')
+check("addClass('feed-title-text')" in js and "addClass('fas fa-bell')" in js and "addClass('feed-new-count')" in js, 'Feed heading uses a Bell and count while title color inherits automatic header contrast')
 check(".text('NEW ' + newCount)" not in js and "badge badge-warning feed-new-clear" not in js, 'large Feed heading NEW badge is removed')
 check("badge badge-warning feed-item-new" not in js and ".text('NEW')" not in js and js.count("addClass('fas fa-bell')") >= 2, 'article NEW label is replaced by a compact Bell-only control')
 check('height: 44px' in css and '.feed-title-text' in css and 'text-overflow: ellipsis' in css and 'white-space: nowrap' in css, 'Feed headings keep one compact and even title row')
