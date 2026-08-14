@@ -5,6 +5,8 @@ import re
 import sys
 from urllib.parse import unquote
 
+from dashboard_source_utils import dashboard_source
+
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC = ROOT / 'public'
 
@@ -67,10 +69,10 @@ check(actual_fonts == expected_fonts, 'Font Awesome webfont formats required by 
 for directory in ['less', 'scss', 'metadata', 'sprites']:
     check(not (PUBLIC / directory).exists(), f'unused public/{directory} directory is removed')
 
-index = (PUBLIC / 'index.php').read_text(encoding='utf-8')
+dashboard_markup = dashboard_source(ROOT)
 login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
 func = (ROOT / 'app/common/common_func.php').read_text(encoding='utf-8')
-all_php = '\n'.join(p.read_text(encoding='utf-8', errors='replace') for p in [PUBLIC / 'index.php', ROOT / 'app/common/common_login.php'])
+all_php = dashboard_markup + '\n' + login
 
 direct_static_refs = {ref.split('?', 1)[0].split('#', 1)[0] for ref in re.findall(r'(?:href|src)="\./((?:css|js)/[^"]+|favicon\.png)"', all_php) if '<?php' not in ref}
 helper_static_refs = set(re.findall(r"app_asset_url\('((?:css|js)/[^']+|favicon\.png)'\)", all_php))
@@ -120,7 +122,7 @@ check({p.name for p in map_refs} == {'bootstrap.min.css.map', 'bootstrap.min.js.
 check('sourceMappingURL=popper.min.js.map' not in (PUBLIC / 'js/popper.min.js').read_text(encoding='utf-8', errors='replace'), 'stale Popper Source Map hint is removed')
 
 # Every Font Awesome icon used by PHP markup should still be defined by all.css.
-markup = '\n'.join(p.read_text(encoding='utf-8', errors='replace') for p in [PUBLIC / 'index.php', ROOT / 'app/common/common_login.php'])
+markup = dashboard_markup + '\n' + login
 icons = sorted(icon for icon in set(re.findall(r'\bfa-([a-z0-9-]+)\b', markup)) if icon not in {'fw', 'spin'} and not re.fullmatch(r'\d+x', icon))
 fa_css = (PUBLIC / 'css/all.css').read_text(encoding='utf-8', errors='replace')
 for icon in icons:

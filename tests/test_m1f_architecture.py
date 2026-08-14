@@ -1,6 +1,8 @@
 from pathlib import Path
 import re
 
+from dashboard_source_utils import dashboard_source
+
 ROOT = Path(__file__).resolve().parents[1]
 FEED = ROOT / 'app' / 'feed'
 headers = (FEED / 'feed_http_headers.php').read_text(encoding='utf-8')
@@ -15,7 +17,7 @@ bootstrap = (ROOT / 'app' / 'bootstrap.php').read_text(encoding='utf-8')
 env_example = (ROOT / 'config' / '.env.example').read_text(encoding='utf-8')
 local_example = (ROOT / 'config' / 'local.php.example').read_text(encoding='utf-8')
 api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8')
-index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 schema = (ROOT / 'database' / 'schema.sql').read_text(encoding='utf-8')
 
 checks = []

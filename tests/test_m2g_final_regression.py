@@ -4,6 +4,8 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
+from dashboard_source_utils import dashboard_source
+
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC = ROOT / 'public'
 checks = 0
@@ -23,7 +25,7 @@ roadmap = (ROOT / 'docs/roadmap.md').read_text(encoding='utf-8')
 versioning = (ROOT / 'docs/versioning.md').read_text(encoding='utf-8')
 changelog = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
 checklist = (ROOT / 'CHECKLIST_FOR_USER.md').read_text(encoding='utf-8')
-index = (PUBLIC / 'index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 login = (ROOT / 'app/common/common_login.php').read_text(encoding='utf-8')
 dashboard_css = (PUBLIC / 'css/dashboard.css').read_text(encoding='utf-8')
 dashboard_js = (PUBLIC / 'js/dashboard.js').read_text(encoding='utf-8')

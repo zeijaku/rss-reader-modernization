@@ -1,6 +1,8 @@
 from pathlib import Path
 import re
 
+from dashboard_source_utils import dashboard_source
+
 ROOT = Path(__file__).resolve().parents[1]
 FEED = ROOT / 'app' / 'feed'
 parser = (FEED / 'feed_parser.php').read_text(encoding='utf-8')
@@ -16,7 +18,7 @@ api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8')
 fetcher = (FEED / 'feed_fetcher.php').read_text(encoding='utf-8')
 service = (FEED / 'feed_fetch_service.php').read_text(encoding='utf-8')
 source = (FEED / 'feed_source.php').read_text(encoding='utf-8')
-index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
+index = dashboard_source(ROOT)
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
 schema = (ROOT / 'database' / 'schema.sql').read_text(encoding='utf-8')
 

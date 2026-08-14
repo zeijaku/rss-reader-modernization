@@ -2,9 +2,11 @@ from pathlib import Path
 import re
 import sys
 
+from dashboard_source_utils import dashboard_source
+
 ROOT = Path(__file__).resolve().parents[1]
 CSS = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
-INDEX = (ROOT / 'public/index.php').read_text(encoding='utf-8')
+INDEX = dashboard_source(ROOT)
 VERSION = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 checks: list[bool] = []
 

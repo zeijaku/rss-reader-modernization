@@ -5,7 +5,6 @@ root = Path(__file__).resolve().parents[1]
 helper = (root / 'app/feed/feed_xml_helper.php').read_text(encoding='utf-8')
 selector = (root / 'app/feed/feed_link_selector.php').read_text(encoding='utf-8')
 api = (root / 'app/api.php').read_text(encoding='utf-8')
-index = (root / 'public/index.php').read_text(encoding='utf-8')
 dashboard = (root / 'public/js/dashboard.js').read_text(encoding='utf-8')
 version = (root / 'app/version.php').read_text(encoding='utf-8')
 

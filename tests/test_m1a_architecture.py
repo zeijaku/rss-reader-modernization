@@ -13,7 +13,6 @@ helper = (ROOT / 'app' / 'feed' / 'feed_xml_helper.php').read_text(encoding='utf
 selector = (ROOT / 'app' / 'feed' / 'feed_link_selector.php').read_text(encoding='utf-8')
 date_normalizer = (ROOT / 'app' / 'feed' / 'feed_date_normalizer.php').read_text(encoding='utf-8')
 adapters = ''.join((ROOT / 'app' / 'feed' / 'adapters' / name).read_text(encoding='utf-8') for name in ['rss2_adapter.php', 'rss1_adapter.php', 'atom_adapter.php'])
-index = (ROOT / 'public' / 'index.php').read_text(encoding='utf-8')
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
 
 checks = []
