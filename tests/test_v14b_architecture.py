@@ -48,7 +48,7 @@ check('data-dashboard-user-id' in index, 'authenticated User ID is available onl
 check('fa-user-shield' in index and 'fa-skull-crossbones' in index and 'fa-gem' in index and 'fa-door-open' in index, 'Game board uses bundled Font Awesome icons')
 check('role="grid"' in index and 'role="gridcell"' in index and 'aria-rowindex' in index and 'aria-colindex' in index, 'Game board has grid accessibility semantics')
 check('id="registerGameWidgetForm"' in index and 'id="changeGameWidgetForm"' in index, 'Game add and edit forms are explicit')
-check('Game追加' in index and 'data-target="#registerGameWidget"' in index, 'Drawer exposes Game Widget addition')
+check('Game追加' in index and 'data-drawer-modal-target="#registerGameWidget"' in index, 'Drawer exposes Game Widget addition')
 check('mini-game.css' in index and 'mini-game.js' in index, 'Mini Game assets are loaded separately')
 check("apiRequest('widget.game.create'" in dashboard_js and "apiRequest('widget.game.update'" in dashboard_js and "apiRequest('widget.game.delete'" in dashboard_js, 'Frontend mutations use protected API actions')
 check('window.RssMiniGame.removeWidgetState(widgetId)' in dashboard_js, 'successful Widget deletion removes its Browser state')
