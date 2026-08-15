@@ -59,4 +59,21 @@ jobs:
           node --version
 
       - name: Run regression tests
-        run: bash tests/run.sh
+        shell: bash
+        run: |
+          bash tests/run.sh 2>&1 | tee "${RUNNER_TEMP}/regression.log"
+
+      - name: Capture regression failure tail
+        if: failure()
+        shell: bash
+        run: |
+          tail -n 200 "${RUNNER_TEMP}/regression.log" > "${RUNNER_TEMP}/regression-tail.txt"
+
+      - name: Upload regression failure tail
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-failure-php-${{ matrix.php }}
+          path: ${{ runner.temp }}/regression-tail.txt
+          if-no-files-found: error
+          retention-days: 3
