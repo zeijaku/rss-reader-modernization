@@ -43,7 +43,7 @@
 .clock-timer-display {
     display: block;
     margin: 2px 0 4px;
-    color: #212529;
+    color: var(--bs-body-color, #212529);
     font-size: clamp(2rem, 5vw, 3.15rem);
     font-variant-numeric: tabular-nums;
     font-weight: 300;
@@ -55,7 +55,7 @@
 .clock-timer-status {
     min-height: 1.5em;
     margin: 0 0 10px;
-    color: #495057;
+    color: var(--bs-secondary-color, #495057);
     font-size: 0.85rem;
     line-height: 1.35;
 }
@@ -98,11 +98,11 @@
     min-height: 44px;
     padding: 0 10px;
     align-items: center;
-    border: 1px solid #ced4da;
+    border: 1px solid rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.28);
     border-right: 0;
     border-left: 0;
-    background: #f8f9fa;
-    color: #495057;
+    background: rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.06);
+    color: var(--bs-body-color, #495057);
 }
 
 .clock-timer-custom-apply {
@@ -128,7 +128,7 @@
 }
 
 .clock-timer-completed .clock-timer-status {
-    color: #9f1c2f;
+    color: var(--bs-danger, #9f1c2f);
     font-weight: 600;
 }
 
@@ -137,7 +137,7 @@
 }
 
 .clock-timer-completed-recent .clock-timer-display {
-    color: #9f1c2f;
+    color: var(--bs-danger, #9f1c2f);
     font-weight: 600;
 }
 
@@ -146,57 +146,19 @@
 .clock-timer-custom-minutes:focus-visible,
 .clock-timer-custom-apply:focus-visible,
 .clock-timer-actions .btn:focus-visible {
-    outline: 3px solid rgba(0, 123, 255, 0.55);
+    outline: 3px solid rgba(var(--bs-primary-rgb, 0, 123, 255), 0.55);
     outline-offset: 2px;
 }
 
 @keyframes clock-timer-completed-pulse {
     0%, 100% {
         background-color: transparent;
-        box-shadow: inset 0 0 0 0 rgba(220, 53, 69, 0);
+        box-shadow: inset 0 0 0 0 rgba(var(--bs-danger-rgb, 220, 53, 69), 0);
     }
     50% {
-        background-color: rgba(220, 53, 69, 0.18);
-        box-shadow: inset 0 0 0 2px rgba(220, 53, 69, 0.42);
+        background-color: rgba(var(--bs-danger-rgb, 220, 53, 69), 0.18);
+        box-shadow: inset 0 0 0 2px rgba(var(--bs-danger-rgb, 220, 53, 69), 0.42);
     }
-}
-
-#main-content[data-dashboard-theme="bootstrap-solar"] .clock-card-inner,
-#main-content[data-dashboard-theme="bootstrap-slate"] .clock-card-inner {
-    background: #2b3035;
-    color: #f8f9fa;
-    border-color: rgba(255, 255, 255, 0.18);
-}
-
-#main-content[data-dashboard-theme="bootstrap-solar"] .clock-time,
-#main-content[data-dashboard-theme="bootstrap-slate"] .clock-time,
-#main-content[data-dashboard-theme="bootstrap-solar"] .clock-timer-display,
-#main-content[data-dashboard-theme="bootstrap-slate"] .clock-timer-display {
-    color: #f8f9fa;
-}
-
-#main-content[data-dashboard-theme="bootstrap-solar"] .clock-date,
-#main-content[data-dashboard-theme="bootstrap-slate"] .clock-date,
-#main-content[data-dashboard-theme="bootstrap-solar"] .clock-timer-status,
-#main-content[data-dashboard-theme="bootstrap-slate"] .clock-timer-status {
-    color: #ced4da;
-}
-
-#main-content[data-dashboard-theme="bootstrap-solar"] .clock-timer-completed .clock-timer-status,
-#main-content[data-dashboard-theme="bootstrap-slate"] .clock-timer-completed .clock-timer-status {
-    color: #ffb8c0;
-}
-
-#main-content[data-dashboard-theme="bootstrap-solar"] .clock-timer-completed-recent .clock-timer-display,
-#main-content[data-dashboard-theme="bootstrap-slate"] .clock-timer-completed-recent .clock-timer-display {
-    color: #ffb8c0;
-}
-
-#main-content[data-dashboard-theme="bootstrap-solar"] .clock-timer-custom-unit,
-#main-content[data-dashboard-theme="bootstrap-slate"] .clock-timer-custom-unit {
-    background: rgba(255, 255, 255, 0.08);
-    color: #f8f9fa;
-    border-color: rgba(255, 255, 255, 0.3);
 }
 
 @media (max-width: 767.98px) {
