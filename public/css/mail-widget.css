@@ -1,20 +1,20 @@
 .mail-card { margin-bottom: 1rem; }
-.mail-card-inner { height: 100%; border: 1px solid rgba(0,0,0,.12); background: #fff; }
+.mail-card-inner { height: 100%; border: 1px solid rgba(var(--bs-body-color-rgb,33,37,41),.12); background: var(--bs-body-bg,#fff); color: var(--bs-body-color,#212529); }
 .mail-card-header { min-height: 42px; display: flex; align-items: center; gap: .25rem; padding: .2rem .35rem; }
 .mail-card-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .95rem; }
 .mail-card-actions { display: flex; flex: 0 0 auto; }
 .mail-card-header .btn-link { padding: .35rem .45rem; line-height: 1; }
 .mail-list { min-height: 84px; max-height: 330px; overflow-y: auto; }
-.mail-row { padding: .55rem .7rem; border-top: 1px solid rgba(0,0,0,.08); }
+.mail-row { padding: .55rem .7rem; border-top: 1px solid rgba(var(--bs-body-color-rgb,33,37,41),.08); }
 .mail-row:first-child { border-top: 0; }
 .mail-from-line { display: flex; align-items: center; gap: .35rem; min-width: 0; }
 .mail-from { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .85rem; }
-.mail-date { flex: 0 0 auto; color: #777; font-size: .72rem; }
-.mail-subject { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; color: #333; }
+.mail-date { flex: 0 0 auto; color: var(--bs-secondary-color,#777); font-size: .72rem; }
+.mail-subject { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; color: var(--bs-body-color,#333); }
 .mail-unread .mail-from, .mail-unread .mail-subject { font-weight: 700; }
 .mail-unread-dot { width: .48rem; height: .48rem; border-radius: 50%; background: currentColor; flex: 0 0 auto; }
 .mail-loading, .mail-empty, .mail-error { padding: 1rem; text-align: center; font-size: .85rem; }
-.mail-error { color: #b21f2d; }
+.mail-error { color: var(--bs-danger,#b21f2d); }
 .mail-modal-header { color: #fff; background: #333; }
 .mail-modal-header .btn-close { opacity: .75; }
 .dashboard-widget[data-widget-height="2"].mail-card .mail-list { max-height: 690px; }
@@ -25,13 +25,13 @@
 .mail-subject-line { display: flex; align-items: center; gap: .25rem; min-width: 0; }
 .mail-subject-line .mail-subject { flex: 1 1 auto; min-width: 0; }
 .mail-message-toggle { flex: 0 0 auto; padding: .05rem .2rem; line-height: 1.2; font-size: .78rem; text-decoration: none !important; }
-.mail-message-body { margin-top: .45rem; padding: .55rem .6rem; border-top: 1px dashed rgba(0,0,0,.12); background: rgba(0,0,0,.025); font-size: .82rem; line-height: 1.5; }
+.mail-message-body { margin-top: .45rem; padding: .55rem .6rem; border-top: 1px dashed rgba(var(--bs-body-color-rgb,33,37,41),.12); background: rgba(var(--bs-body-color-rgb,33,37,41),.025); font-size: .82rem; line-height: 1.5; }
 .mail-message-body-text { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; max-height: 260px; overflow-y: auto; }
 .mail-message-body-loading, .mail-message-body-empty, .mail-message-body-error { padding: .25rem 0; }
-.mail-message-body-error { color: #b21f2d; }
-.mail-message-body-note { margin-top: .35rem; font-size: .75rem; }
+.mail-message-body-error { color: var(--bs-danger,#b21f2d); }
+.mail-message-body-note { margin-top: .35rem; color: var(--bs-secondary-color,#6c757d); font-size: .75rem; }
 
-.mail-account-manage-item { display: flex; align-items: center; gap: .75rem; padding: .7rem 0; border-top: 1px solid rgba(0,0,0,.08); }
+.mail-account-manage-item { display: flex; align-items: center; gap: .75rem; padding: .7rem 0; border-top: 1px solid rgba(var(--bs-body-color-rgb,33,37,41),.08); }
 .mail-account-manage-item:first-child { border-top: 0; }
 .mail-account-manage-main { flex: 1 1 auto; min-width: 0; }
 .mail-account-manage-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -43,9 +43,9 @@
 }
 
 .mail-unread-count { flex: 0 0 auto; margin-left: .2rem; font-size: .68rem; font-weight: 600; }
-.mail-toolbar { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .35rem .55rem; border-bottom: 1px solid rgba(0,0,0,.08); background: rgba(0,0,0,.018); }
+.mail-toolbar { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .35rem .55rem; border-bottom: 1px solid rgba(var(--bs-body-color-rgb,33,37,41),.08); background: rgba(var(--bs-body-color-rgb,33,37,41),.018); }
 .mail-filter-group .btn { padding: .15rem .45rem; font-size: .72rem; line-height: 1.35; }
-.mail-last-updated { flex: 0 0 auto; font-size: .7rem; white-space: nowrap; }
+.mail-last-updated { flex: 0 0 auto; color: var(--bs-secondary-color,#6c757d); font-size: .7rem; white-space: nowrap; }
 @media (max-width: 575.98px) {
     .mail-toolbar { padding: .35rem .45rem; }
     .mail-filter-group .btn { padding-left: .38rem; padding-right: .38rem; }
@@ -54,7 +54,7 @@
 
 
 /* V1.12-H: read-only Mail search / sender filtering */
-.mail-search-bar { display: flex; align-items: center; gap: .35rem; padding: .4rem .55rem; border-bottom: 1px solid rgba(0,0,0,.08); background: rgba(0,0,0,.012); }
+.mail-search-bar { display: flex; align-items: center; gap: .35rem; padding: .4rem .55rem; border-bottom: 1px solid rgba(var(--bs-body-color-rgb,33,37,41),.08); background: rgba(var(--bs-body-color-rgb,33,37,41),.012); }
 .mail-search-type { flex: 0 0 5.2rem; max-width: 5.2rem; }
 .mail-search-query { flex: 1 1 auto; min-width: 0; }
 .mail-search-submit, .mail-search-clear { flex: 0 0 auto; }
@@ -67,7 +67,7 @@
 }
 
 /* V1.12-I: read-only IMAP Folder switching */
-.mail-folder-bar { display: flex; align-items: center; gap: .4rem; padding: .35rem .55rem; border-bottom: 1px solid rgba(0,0,0,.08); background: rgba(0,0,0,.01); }
+.mail-folder-bar { display: flex; align-items: center; gap: .4rem; padding: .35rem .55rem; border-bottom: 1px solid rgba(var(--bs-body-color-rgb,33,37,41),.08); background: rgba(var(--bs-body-color-rgb,33,37,41),.01); }
 .mail-folder-bar > i { flex: 0 0 auto; font-size: .82rem; }
 .mail-folder-select { flex: 1 1 auto; min-width: 0; height: calc(1.5em + .35rem + 2px); padding-top: .1rem; padding-bottom: .1rem; font-size: .76rem; }
 @media (max-width: 575.98px) {
