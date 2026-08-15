@@ -104,11 +104,12 @@ check("apiRequest('stock.delete'" in js, 'Stock removal still uses central API c
 check("apiRequest('stock.tag." in js, 'Stock Tag mutations still use central API client')
 check('app_csrf_is_valid' in api and 'api_dispatch' in api, 'central API retains CSRF-before-dispatch boundary')
 
-# Asset set is intentionally unchanged in B. Removal is deferred to measured Performance work.
+# V1.13-B preserved the shared Asset set at that checkpoint. Later frontend modernization
+# may replace legacy dependencies, so assert the current shared runtime contract instead.
 for asset in [
     'css/dashboard.css', 'css/utility-widgets.css', 'css/mini-game.css', 'css/clock-timer.css',
-    'js/jquery-3.7.1.min.js', 'js/popper.min.js', 'js/bootstrap.min.js', 'js/iscroll.js',
-    'js/drawer.min.js', 'js/mini-game.js', 'js/lights-out.js', 'js/clock-timer.js',
+    'js/jquery-3.7.1.min.js', 'js/bootstrap.bundle-5.3.8.min.js',
+    'js/mini-game.js', 'js/lights-out.js', 'js/clock-timer.js',
     'js/dashboard.js', 'js/utility-widgets.js', 'js/calendar.js',
 ]:
     check(asset in stock, 'Stock page intentionally retains asset: ' + asset)
