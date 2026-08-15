@@ -1,5 +1,18 @@
 # Changelog
 
+## RSS Reader Modernization 1.15.0 — 2026-08-16
+
+### Information Widgets / Add Widget Catalog
+
+- DrawerのWidget追加をRSS／Information／Utility／GameのCatalogへ整理し、既存Modal起動契約を維持したまま2列Tile表示へ変更。
+- Earthquake Widgetを追加し、気象庁防災情報XMLの高頻度Feed＋長期Feed fallbackから最新地震、最大震度、M、深さ、津波文言を表示。
+- Sun / Moon Widgetを追加し、Weatherと同じ地域検索、`date_sun_info()`、Dashboard向け月齢／月相計算で日の出・日の入り・月情報を表示。
+- Air Quality / UV Widgetを追加し、Open-Meteo Air Quality APIからUS AQI、PM2.5、PM10、UV Indexを15分Cache＋stale fallback付きで表示。
+- Weather／Earthquake／Sun / Moon／Air QualityのLocation Validation、Widget保存、Cache、Frontend状態表示を必要範囲だけ共通化。
+- PC／Smartphone、Height 1／2、Solar／Slateを含むBootstrap 5 ThemeでInformation WidgetのHeader、操作領域、本文Scroll、Footer、Modal表示を調整。
+- Dashboard空白領域をMouseでClickした際の不要な青いFocus outlineを抑制し、Keyboardの`:focus-visible`表示は維持。
+- DB Table／Column、Migration、SQL、必須configの追加変更はなし。Application Versionを`1.15.0`へ更新。
+
 ## RSS Reader Modernization 1.14.1 — 2026-08-15
 
 ### Bootstrap / Bootswatch Theme alignment

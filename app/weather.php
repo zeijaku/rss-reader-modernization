@@ -27,12 +27,12 @@ function weather_widget_validate_title(mixed $value): ?string
 
 function weather_widget_validate_location_query(mixed $value): ?string
 {
-    return app_validate_text($value, 80, false);
+    return information_widget_validate_location_query($value);
 }
 
 function weather_widget_validate_location_name(mixed $value): ?string
 {
-    return app_validate_text($value, 80, false);
+    return information_widget_validate_location_name($value);
 }
 
 function weather_widget_validate_forecast_days(mixed $value): ?int
@@ -43,33 +43,17 @@ function weather_widget_validate_forecast_days(mixed $value): ?int
 
 function weather_validate_latitude(mixed $value): ?float
 {
-    if (!is_numeric($value)) {
-        return null;
-    }
-    $number = (float) $value;
-    return is_finite($number) && $number >= -90.0 && $number <= 90.0 ? $number : null;
+    return information_widget_validate_latitude($value);
 }
 
 function weather_validate_longitude(mixed $value): ?float
 {
-    if (!is_numeric($value)) {
-        return null;
-    }
-    $number = (float) $value;
-    return is_finite($number) && $number >= -180.0 && $number <= 180.0 ? $number : null;
+    return information_widget_validate_longitude($value);
 }
 
 function weather_validate_timezone(mixed $value): ?string
 {
-    if (!is_string($value) || $value === '' || strlen($value) > 64 || preg_match('/\A[A-Za-z0-9_+\-\/]+\z/D', $value) !== 1) {
-        return null;
-    }
-    try {
-        new DateTimeZone($value);
-    } catch (Throwable) {
-        return null;
-    }
-    return $value;
+    return information_widget_validate_timezone($value);
 }
 
 /** @return array{schema:int,title:string,location_query:string,location_name:string,latitude:float,longitude:float,timezone:string,forecast_days:int} */
@@ -239,52 +223,27 @@ function weather_cache_path(array $config): string
 /** @return array<string,mixed>|null */
 function weather_cache_read(array $config, bool $allowStale = false): ?array
 {
-    $path = weather_cache_path($config);
-    if (!is_file($path) || filesize($path) === false || filesize($path) > 131072) {
-        return null;
-    }
-    $raw = @file_get_contents($path);
-    if (!is_string($raw) || $raw === '') {
-        return null;
-    }
-    try {
-        $cache = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
-    } catch (JsonException) {
-        return null;
-    }
-    if (!is_array($cache) || !is_int($cache['cached_at'] ?? null) || !is_array($cache['forecast'] ?? null)) {
-        return null;
-    }
-    $age = time() - $cache['cached_at'];
-    if ($age < 0 || (!$allowStale && $age > APP_WEATHER_CACHE_TTL_SECONDS) || ($allowStale && $age > 86400)) {
-        return null;
-    }
-    return $cache['forecast'];
+    return information_widget_cache_read(
+        weather_cache_path($config),
+        'forecast',
+        APP_WEATHER_CACHE_TTL_SECONDS,
+        86400,
+        131072,
+        $allowStale
+    );
 }
 
 /** @param array<string,mixed> $forecast */
 function weather_cache_write(array $config, array $forecast): void
 {
-    $dir = (string) APP_WEATHER_CACHE_DIR;
-    if (!is_dir($dir) && !@mkdir($dir, 0750, true) && !is_dir($dir)) {
-        return;
-    }
-    $payload = json_encode(['schema' => 1, 'cached_at' => time(), 'forecast' => $forecast], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    if (!is_string($payload) || strlen($payload) > 131072) {
-        return;
-    }
-    $path = weather_cache_path($config);
-    $tmp = tempnam($dir, '.weather-');
-    if (!is_string($tmp)) {
-        return;
-    }
-    if (file_put_contents($tmp, $payload . "\n", LOCK_EX) !== false) {
-        @chmod($tmp, 0640);
-        @rename($tmp, $path);
-    }
-    if (is_file($tmp)) {
-        @unlink($tmp);
-    }
+    information_widget_cache_write(
+        (string) APP_WEATHER_CACHE_DIR,
+        weather_cache_path($config),
+        '.weather-',
+        'forecast',
+        $forecast,
+        131072
+    );
 }
 
 /** @return array<string,mixed>|null */
@@ -390,24 +349,23 @@ function weather_forecast(array $config, bool $force = false, ?callable $fetcher
 function weather_widget_config_from_input(array $input, ?callable $geocoder = null): ?array
 {
     $title = weather_widget_validate_title($input['weather_title'] ?? null);
-    $locationQuery = weather_widget_validate_location_query($input['weather_location'] ?? null);
+    $locationQuery = information_widget_validate_location_query($input['weather_location'] ?? null);
     $days = weather_widget_validate_forecast_days($input['weather_forecast_days'] ?? null);
     if ($title === null || $locationQuery === null || $days === null) {
         return null;
     }
-    $resolver = $geocoder ?? 'weather_resolve_location';
-    $location = $resolver($locationQuery);
-    if (!is_array($location)) {
+    $location = information_widget_resolve_location($locationQuery, $geocoder);
+    if ($location === null) {
         return null;
     }
     return [
         'schema' => 1,
         'title' => $title,
         'location_query' => $locationQuery,
-        'location_name' => (string) $location['name'],
-        'latitude' => (float) $location['latitude'],
-        'longitude' => (float) $location['longitude'],
-        'timezone' => (string) $location['timezone'],
+        'location_name' => $location['name'],
+        'latitude' => $location['latitude'],
+        'longitude' => $location['longitude'],
+        'timezone' => $location['timezone'],
         'forecast_days' => $days,
     ];
 }
@@ -416,38 +374,11 @@ function weather_widget_create(int $ownerId, int $location, string $style, int $
 {
     if ($ownerId <= 0 || dashboard_widget_validate_location($location) === null
         || app_normalize_content_style($style) === null || dashboard_widget_validate_width($width) === null
-        || dashboard_widget_validate_height($height) === null || weather_widget_config_from_storage(dashboard_widget_encode_config($config))['location_name'] === '') {
+        || dashboard_widget_validate_height($height) === null
+        || weather_widget_config_from_storage(dashboard_widget_encode_config($config))['location_name'] === '') {
         throw new InvalidArgumentException('Weather Widget settings are invalid.');
     }
-    $pdo = conn_db();
-    $started = !$pdo->inTransaction();
-    if ($started) {
-        $pdo->beginTransaction();
-    }
-    try {
-        $now = app_now();
-        $stmt = $pdo->prepare(
-            'INSERT INTO ' . db_table_identifier('dashboard_widget') . ' '
-            . '(widget_owner, widget_location, widget_type, widget_reference_id, widget_sort_order, widget_width, widget_height, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
-            . "VALUES (:owner, :location, 'weather', NULL, :sort_order, :width, :height, :style, :config, 0, :created_at, :updated_at)"
-        );
-        $stmt->execute([
-            ':owner' => $ownerId, ':location' => $location,
-            ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
-            ':width' => $width, ':height' => $height, ':style' => $style,
-            ':config' => dashboard_widget_encode_config($config), ':created_at' => $now, ':updated_at' => $now,
-        ]);
-        $widgetId = (int) $pdo->lastInsertId();
-        if ($started) {
-            $pdo->commit();
-        }
-        return $widgetId;
-    } catch (Throwable $exception) {
-        if ($started && $pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        throw $exception;
-    }
+    return information_widget_create_record($ownerId, $location, 'weather', $style, $width, $height, $config);
 }
 
 function weather_widget_update(int $ownerId, int $widgetId, string $style, int $width, array $config, int $height = 1): bool
@@ -457,89 +388,16 @@ function weather_widget_update(int $ownerId, int $widgetId, string $style, int $
         || weather_widget_config_from_storage(dashboard_widget_encode_config($config))['location_name'] === '') {
         throw new InvalidArgumentException('Weather Widget settings are invalid.');
     }
-    $pdo = conn_db();
-    $started = !$pdo->inTransaction();
-    if ($started) {
-        $pdo->beginTransaction();
-    }
-    try {
-        if (dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'weather') === null) {
-            if ($started) {
-                $pdo->rollBack();
-            }
-            return false;
-        }
-        $stmt = $pdo->prepare(
-            'UPDATE ' . db_table_identifier('dashboard_widget') . ' SET widget_width = :width, widget_height = :height, '
-            . 'widget_style = :style, widget_config = :config, widget_updated_at = :updated_at '
-            . "WHERE widget_id = :widget_id AND widget_owner = :owner AND widget_type = 'weather' AND widget_flag = 0"
-        );
-        $stmt->execute([
-            ':width' => $width, ':height' => $height, ':style' => $style,
-            ':config' => dashboard_widget_encode_config($config), ':updated_at' => app_now(),
-            ':widget_id' => $widgetId, ':owner' => $ownerId,
-        ]);
-        if ($started) {
-            $pdo->commit();
-        }
-        return true;
-    } catch (Throwable $exception) {
-        if ($started && $pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        throw $exception;
-    }
+    return information_widget_update_record($ownerId, $widgetId, 'weather', $style, $width, $height, $config);
 }
 
 function weather_widget_delete(int $ownerId, int $widgetId): bool
 {
-    if ($ownerId <= 0 || $widgetId <= 0) {
-        return false;
-    }
-    $pdo = conn_db();
-    $started = !$pdo->inTransaction();
-    if ($started) {
-        $pdo->beginTransaction();
-    }
-    try {
-        if (dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'weather') === null) {
-            if ($started) {
-                $pdo->rollBack();
-            }
-            return false;
-        }
-        $stmt = $pdo->prepare(
-            'UPDATE ' . db_table_identifier('dashboard_widget') . ' SET widget_flag = 1, widget_updated_at = :updated_at '
-            . "WHERE widget_id = :widget_id AND widget_owner = :owner AND widget_type = 'weather' AND widget_flag = 0"
-        );
-        $stmt->execute([':updated_at' => app_now(), ':widget_id' => $widgetId, ':owner' => $ownerId]);
-        if ($started) {
-            $pdo->commit();
-        }
-        return true;
-    } catch (Throwable $exception) {
-        if ($started && $pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        throw $exception;
-    }
+    return information_widget_delete_record($ownerId, $widgetId, 'weather');
 }
 
 /** @return array<string,mixed>|null */
 function weather_widget_owned_config(int $ownerId, int $widgetId): ?array
 {
-    if ($ownerId <= 0 || $widgetId <= 0) {
-        return null;
-    }
-    $stmt = conn_db()->prepare(
-        'SELECT widget_config FROM ' . db_table_identifier('dashboard_widget') . ' '
-        . "WHERE widget_id = :widget_id AND widget_owner = :owner AND widget_type = 'weather' AND widget_flag = 0"
-    );
-    $stmt->execute([':widget_id' => $widgetId, ':owner' => $ownerId]);
-    $config = $stmt->fetchColumn();
-    if (!is_string($config)) {
-        return null;
-    }
-    $normalized = weather_widget_config_from_storage($config);
-    return $normalized['location_name'] === '' ? null : $normalized;
+    return information_widget_owned_config($ownerId, $widgetId, 'weather', 'weather_widget_config_from_storage');
 }
