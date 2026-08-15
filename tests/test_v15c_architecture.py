@@ -30,7 +30,7 @@ check('clock-timer-completed-recent' in timer and 'highlightCompletion' in timer
 check('@keyframes clock-timer-completed-pulse' in css, 'completion emphasis animation is defined')
 check('@media (prefers-reduced-motion: reduce)' in css and 'animation: none !important' in css, 'completion emphasis respects reduced motion')
 check(':focus-visible' in css and 'outline: 3px solid' in css, 'Timer controls keep an explicit keyboard Focus indicator')
-check('bootstrap-solar' in css and 'bootstrap-slate' in css and '#ffb8c0' in css, 'dark Themes retain readable completion status')
+check("color: var(--bs-danger, #9f1c2f);" in css and "rgba(var(--bs-danger-rgb, 220, 53, 69), 0.18)" in css and 'bootstrap-solar' not in css and 'bootstrap-slate' not in css, 'dark Themes retain readable completion status through Bootstrap Theme variables')
 check('aria-live="polite"' in index and 'aria-atomic="true"' in index, 'Timer retains bounded Screen Reader announcements')
 check('Audio(' not in timer and 'new Audio' not in timer and 'Notification' not in timer, 'V1.5-C still adds no sound or Browser notification')
 check(not any('v15' in path.name.lower() for path in (ROOT / 'database/migrations').glob('*')), 'V1.5-C adds no DB migration')
