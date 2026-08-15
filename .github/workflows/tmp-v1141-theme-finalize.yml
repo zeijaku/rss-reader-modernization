@@ -1,0 +1,106 @@
+name: V1.14.1 Theme Round2 Materialize
+
+on:
+  push:
+    branches:
+      - tmp/v1141-theme-finalize
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply validated Round2 transformation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          def one(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected 1, found {count}')
+              return text.replace(old, new, 1)
+
+          p = Path('public/css/dashboard.css')
+          s = p.read_text(encoding='utf-8')
+          s = one(s,
+              '.task-card-body {\n    min-height: calc(13rem - 44px);\n    padding: 8px;\n    background: #fff;\n}',
+              '.task-card-body {\n    min-height: calc(13rem - 44px);\n    padding: 8px;\n    background: var(--bs-body-bg, #fff);\n    color: var(--bs-body-color, #212529);\n}', 'task body')
+          s = one(s,
+              '.task-item-create-form {\n    padding-top: 8px;\n    border-top: 1px solid rgba(0, 0, 0, 0.1);\n}',
+              '.task-item-create-form {\n    padding-top: 8px;\n    border-top: 1px solid rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.1);\n}', 'task create border')
+          s = s.replace('outline: 3px solid rgba(23, 162, 184, 0.42);', 'outline: 3px solid rgba(var(--bs-info-rgb, 23, 162, 184), 0.42);')
+          s = one(s,
+              '.feed-item-action:hover,\n.feed-item-action:focus {\n    background: rgba(0, 0, 0, 0.07);',
+              '.feed-item-action:hover,\n.feed-item-action:focus {\n    background: rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.07);', 'feed action hover')
+          s = s.replace('border: 1px solid rgba(23, 162, 184, 0.28);', 'border: 1px solid rgba(var(--bs-info-rgb, 23, 162, 184), 0.28);')
+          s = s.replace('background: rgba(23, 162, 184, 0.08);', 'background: rgba(var(--bs-info-rgb, 23, 162, 184), 0.08);')
+          s = s.replace('.stock-tag-chip > i {\n    color: #17a2b8;', '.stock-tag-chip > i {\n    color: var(--bs-info, #17a2b8);')
+          s = s.replace('background: rgba(220, 53, 69, 0.1);\n    color: #dc3545;', 'background: rgba(var(--bs-danger-rgb, 220, 53, 69), 0.1);\n    color: var(--bs-danger, #dc3545);')
+          s = s.replace('.stock-tag-editor-toggle:hover,\n.stock-tag-editor-toggle:focus {\n    color: #17a2b8;', '.stock-tag-editor-toggle:hover,\n.stock-tag-editor-toggle:focus {\n    color: var(--bs-link-color, #17a2b8);')
+          s = one(s,
+              '.stock-actions-trigger {\n    display: inline-flex;\n    width: 44px;\n    min-width: 44px;\n    height: 44px;\n    min-height: 44px;\n    padding: 0;\n    align-items: center;\n    justify-content: center;\n    color: #6c757d;',
+              '.stock-actions-trigger {\n    display: inline-flex;\n    width: 44px;\n    min-width: 44px;\n    height: 44px;\n    min-height: 44px;\n    padding: 0;\n    align-items: center;\n    justify-content: center;\n    color: var(--bs-secondary-color, #6c757d);', 'stock action base')
+          s = one(s, '.stock-actions-trigger:hover,\n.stock-actions-trigger:focus {\n    color: #17a2b8;', '.stock-actions-trigger:hover,\n.stock-actions-trigger:focus {\n    color: var(--bs-link-color, #17a2b8);', 'stock action hover')
+          s = one(s, 'border: 1px dashed #adb5bd;', 'border: 1px dashed var(--bs-border-color, #adb5bd);', 'empty state border')
+          s = one(s, '.calendar-day-today {\n    box-shadow: inset 0 0 0 2px #17a2b8;\n}', '.calendar-day-today {\n    box-shadow: inset 0 0 0 2px var(--bs-info, #17a2b8);\n}', 'calendar today')
+          s = one(s, '.calendar-day-number:hover,\n.calendar-day-number:focus {\n    background: rgba(23, 162, 184, 0.14);', '.calendar-day-number:hover,\n.calendar-day-number:focus {\n    background: rgba(var(--bs-info-rgb, 23, 162, 184), 0.14);', 'calendar day hover')
+          s = one(s, '    .feed-item-summary-icon {\n        color: #6c757d;\n        -webkit-text-fill-color: #6c757d;', '    .feed-item-summary-icon {\n        color: var(--bs-secondary-color, #6c757d);\n        -webkit-text-fill-color: var(--bs-secondary-color, #6c757d);', 'mobile summary icon')
+          s = one(s, '    .feed-item-summary-toggle:disabled .feed-item-summary-icon {\n        color: #adb5bd;\n        -webkit-text-fill-color: #adb5bd;', '    .feed-item-summary-toggle:disabled .feed-item-summary-icon {\n        color: var(--bs-secondary-color, #adb5bd);\n        -webkit-text-fill-color: var(--bs-secondary-color, #adb5bd);', 'mobile disabled summary icon')
+          p.write_text(s, encoding='utf-8')
+
+          p = Path('public/css/mini-game.css')
+          s = p.read_text(encoding='utf-8')
+          s = one(s, '.mini-game-cell:focus,.mini-game-cell:focus-visible,.mini-game-reset:focus,.mini-game-reset:focus-visible,.mini-game-new-game:focus,.mini-game-new-game:focus-visible,.mini-game-direction:focus,.mini-game-direction:focus-visible,.mini-game-tutorial-toggle:focus,.mini-game-tutorial-toggle:focus-visible,.mini-game-storage-reset:focus,.mini-game-storage-reset:focus-visible { outline: 3px solid #0b5ed7; outline-offset: 2px; }', '.mini-game-cell:focus,.mini-game-cell:focus-visible,.mini-game-reset:focus,.mini-game-reset:focus-visible,.mini-game-new-game:focus,.mini-game-new-game:focus-visible,.mini-game-direction:focus,.mini-game-direction:focus-visible,.mini-game-tutorial-toggle:focus,.mini-game-tutorial-toggle:focus-visible,.mini-game-storage-reset:focus,.mini-game-storage-reset:focus-visible { outline: 3px solid var(--bs-primary,#0b5ed7); outline-offset: 2px; }', 'game focus')
+          s = one(s, '.mini-game-cell-wall { background: rgba(52,58,64,.22); color: #495057; }', '.mini-game-cell-wall { background: rgba(var(--bs-body-color-rgb,33,37,41),.22); color: var(--bs-secondary-color,#495057); }', 'game wall')
+          s = one(s, '.mini-game-storage-note { width: min(100%,232px); margin: .4rem 0 0; font-size: .7rem; }', '.mini-game-storage-note { width: min(100%,232px); margin: .4rem 0 0; color: var(--bs-secondary-color,#6c757d); font-size: .7rem; }', 'game storage note')
+          for old in [
+              '#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-card-inner,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-card-inner { background: #2b3035; color: #f8f9fa; border-color: rgba(255,255,255,.18); }\n',
+              '#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-summary-label,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-summary-label,#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-storage-note,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-storage-note { color: #ced4da !important; }\n',
+              '#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-cell,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-cell { background: rgba(255,255,255,.1); color: #f8f9fa; border-color: rgba(255,255,255,.3); }\n',
+              '#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-cell-wall,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-cell-wall { background: rgba(0,0,0,.35); color: #dee2e6; }\n',
+              '#main-content[data-dashboard-theme="bootstrap-solar"] .mini-game-tutorial,#main-content[data-dashboard-theme="bootstrap-slate"] .mini-game-tutorial { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.2); }\n',
+          ]:
+              if old not in s: raise SystemExit('expected neutral game override missing')
+              s = s.replace(old, '', 1)
+          s = one(s, '.lights-out-cell { position: relative; overflow: hidden; background: rgba(33,37,41,.12); }', '.lights-out-cell { position: relative; overflow: hidden; background: rgba(var(--bs-body-color-rgb,33,37,41),.12); }', 'lights off cell')
+          s = one(s, ".lights-out-cell::before { content: ''; width: 18px; height: 18px; border-radius: 50%; background: rgba(108,117,125,.28); box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); }", ".lights-out-cell::before { content: ''; width: 18px; height: 18px; border-radius: 50%; background: rgba(var(--bs-body-color-rgb,33,37,41),.28); box-shadow: inset 0 0 0 1px rgba(var(--bs-body-color-rgb,33,37,41),.12); }", 'lights off dot')
+          for old in [
+              '#main-content[data-dashboard-theme="bootstrap-solar"] .lights-out-cell,#main-content[data-dashboard-theme="bootstrap-slate"] .lights-out-cell { background: rgba(255,255,255,.08); }\n',
+              '#main-content[data-dashboard-theme="bootstrap-solar"] .lights-out-cell::before,#main-content[data-dashboard-theme="bootstrap-slate"] .lights-out-cell::before { background: rgba(222,226,230,.3); box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }\n',
+          ]:
+              if old not in s: raise SystemExit('expected Lights Out neutral override missing')
+              s = s.replace(old, '', 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Verify exact validated artifact hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s  %s\n' \
+            '2e3fac83f19543a70308f692918f06a19f2209389509f2bd169c889c36e9916f' public/css/clock-timer.css \
+            'a4214eb568c74def2be220a1b7945c95fccbbfcc9af11c37b10eaf2eef277faf' public/css/dashboard.css \
+            '2b798d4a4cbc66482c226c59bea62a1dbb4b702636f4d5544651cb8fde5825e8' public/css/mail-widget.css \
+            '23d931249f4cb6402485973876226a9e90daa00eec168ff0f1ba4344c164f378' public/css/mini-game.css \
+            '114cc79869fbc6c1c3a448bfbcc876c7b9ba3451a60cdb74bb8233c03e5485f7' public/css/utility-widgets.css \
+            | sha256sum -c -
+          git diff --check
+      - name: Commit exact CSS and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/css/dashboard.css public/css/utility-widgets.css public/css/mail-widget.css public/css/clock-timer.css public/css/mini-game.css
+          git rm .github/workflows/tmp-v1141-theme-finalize.yml
+          git diff --cached --check
+          git commit -m 'fix(v1.14.1): materialize validated Bootstrap theme alignment'
+          git push origin HEAD:tmp/v1141-theme-finalize
