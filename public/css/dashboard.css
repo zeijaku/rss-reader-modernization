@@ -437,7 +437,7 @@
     min-width: 0;
     max-height: 2.9em;
     overflow: hidden;
-    color: #343a40;
+    color: var(--bs-table-color, var(--bs-body-color, #343a40));
     line-height: 1.45;
     overflow-wrap: anywhere;
     text-overflow: ellipsis;
@@ -450,12 +450,13 @@
     flex: 1 1 auto;
 }
 
-/* V1.12-D: RSS / Search Feed共通のKeyword強調。Title自体の文字色は継承する。 */
+/* V1.12-D / V1.14.1: RSS / Search Feed共通のKeyword強調。
+ * 黄色背景ではTheme本文色を継承せず、明暗ThemeのどちらでもContrastを維持する。 */
 .feed-keyword-highlight {
     padding: 0 0.08em;
     border-radius: 2px;
     background: #ffe69c;
-    color: inherit;
+    color: #343a40;
 }
 
 .feed-item-title-text[data-feed-title-truncated="1"] {
