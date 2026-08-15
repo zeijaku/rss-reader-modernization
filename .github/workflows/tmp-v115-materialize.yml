@@ -10,7 +10,7 @@ permissions:
 
 concurrency:
   group: tmp-v115-materialize-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   materialize:
@@ -27,7 +27,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .v115-stage/part-* > /tmp/v115.patch.gz.b64
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('.v115-stage/part-00b2b2')
+          text = path.read_text(encoding='utf-8')
+          if len(text) != 749:
+              raise SystemExit(f'unexpected repair chunk length: {len(text)}')
+          text = text[:194] + 'l' + text[194:]
+          Path('/tmp/part-00b2b2-fixed').write_text(text, encoding='utf-8')
+          PY
+          cat \
+            .v115-stage/part-00a \
+            .v115-stage/part-00b1 \
+            .v115-stage/part-00b2a \
+            /tmp/part-00b2b2-fixed \
+            .v115-stage/part-01 \
+            .v115-stage/part-02 \
+            .v115-stage/part-03 \
+            .v115-stage/part-04 \
+            .v115-stage/part-05 \
+            .v115-stage/part-06 \
+            > /tmp/v115.patch.gz.b64
           base64 -d /tmp/v115.patch.gz.b64 > /tmp/v115.patch.gz
           gzip -dc /tmp/v115.patch.gz > /tmp/v115.patch
           echo 'f118639b03f356172f593c692f9161600a7b78dca9f5de50e2c29c45f479d1d7  /tmp/v115.patch' | sha256sum -c -
