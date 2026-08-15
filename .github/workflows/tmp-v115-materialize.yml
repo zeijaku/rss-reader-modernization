@@ -1,0 +1,54 @@
+name: Temporary V1.15.0 materialize
+
+on:
+  push:
+    branches:
+      - v1.15.0-release
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tmp-v115-materialize-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    if: ${{ !contains(github.event.head_commit.message, 'release(v1.15.0): information widgets and catalog') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Reassemble and verify patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .v115-stage/part-* > /tmp/v115.patch.gz.b64
+          base64 -d /tmp/v115.patch.gz.b64 > /tmp/v115.patch.gz
+          gzip -dc /tmp/v115.patch.gz > /tmp/v115.patch
+          echo 'f118639b03f356172f593c692f9161600a7b78dca9f5de50e2c29c45f479d1d7  /tmp/v115.patch' | sha256sum -c -
+          git apply --check /tmp/v115.patch
+
+      - name: Materialize V1.15.0 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git apply /tmp/v115.patch
+          rm -rf .v115-stage
+          git status --short
+
+      - name: Commit V1.15.0 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --stat
+          git commit -m 'release(v1.15.0): information widgets and catalog'
+          git push origin HEAD:v1.15.0-release
