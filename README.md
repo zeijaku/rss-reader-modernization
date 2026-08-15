@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.14.0`
-Release tag: `v1.14.0`
+**Stable release:** `RSS Reader Modernization 1.14.1`
+Release tag: `v1.14.1`
+
+Version 1.14.1では、Bootstrap / Bootswatch Themeに合わせて通常RSS／Search Feed、Task、Stock、Calendar、Mail、Links、Weather、Clock、Mini Game等の中立Surface・本文色・補助色をTheme変数へ追従させました。Keyword Highlight、休日、Timer終了、Game状態色など意味を持つ色は従来仕様を維持しています。DB schema、Migration、必須configの変更はありません。
 
 Version 1.14.0では、Frontend dependencyをBootstrap / Bootswatch 5.3.8へ更新し、Bootstrap 4時代のmarkup / Data APIを5系へ移行しました。右DrawerはBootstrap Offcanvasへ置換し、jquery-drawer / iScroll / standalone Popperと旧Bootstrap 4配布Assetを削除しています。PC / Smartphoneと全8 Themeの表示を調整し、Card見出しは`text-bg-*`で背景色に応じた文字色へ自動追従します。DB schema、Migration、必須configの追加変更はありません。
 

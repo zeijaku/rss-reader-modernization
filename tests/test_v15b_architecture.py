@@ -41,7 +41,7 @@ check('Browserに保存されたTimer状態も削除します' in dashboard, 'Cl
 check('Audio(' not in timer_js and 'new Audio' not in timer_js and 'Notification' not in timer_js, 'V1.5-B adds no sound or Browser notification')
 check('min-height: 44px' in timer_css, 'Timer controls preserve 44px interaction targets')
 check('@media (prefers-reduced-motion: reduce)' in timer_css, 'Timer styling supports reduced motion')
-check('bootstrap-solar' in timer_css and 'bootstrap-slate' in timer_css, 'existing dark Themes have Timer surface adjustments')
+check('var(--bs-body-color' in timer_css and 'var(--bs-secondary-color' in timer_css and 'bootstrap-solar' not in timer_css and 'bootstrap-slate' not in timer_css, 'Timer neutral surfaces follow active Bootstrap / Bootswatch Theme variables')
 check("'clock'" in widget and 'dashboard_widget_clock_defaults' in widget, 'Timer remains inside the existing Clock Widget type')
 check('CREATE TABLE' in schema and 'dashboard_widget' in schema, 'existing generic Widget table remains the storage for Clock placement')
 check(not any('v15' in path.name.lower() for path in (ROOT / 'database/migrations').glob('*')), 'V1.5-B adds no DB migration')

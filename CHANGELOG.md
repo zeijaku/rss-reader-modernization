@@ -1,5 +1,17 @@
 # Changelog
 
+## RSS Reader Modernization 1.14.1 — 2026-08-15
+
+### Bootstrap / Bootswatch Theme alignment
+
+- 通常RSS／Search Feedの記事Titleと概要を`--bs-body-color`／`--bs-body-bg`へ追従させ、Solar／Slate等のDark Themeで本文が同化する問題を修正。
+- 記事Actions、Task、Stock、Calendar、Mail、Links、Weather、Clock Timer、Mini Game／Lights Outの中立Surface・補助色・BorderをBootstrap 5 Theme変数へ整理。
+- Stock Tag管理PanelやSmartphoneのRSS概要Iconなど、後勝ちしていた固定色もTheme連動へ修正。
+- Keyword Highlight、休日／週末、Timer終了、GameのPlayer／敵／宝／Goal、Lights Out ON等の意味を持つ状態色は明示色を維持。
+- Solar／Slate専用の中立色上書きを減らし、Bootstrap / Bootswatch 5.3.8のTheme変数を共通契約として利用。
+- PHP、JavaScript、HTML、API、DB schema、Migration、必須configの変更はなし。
+- Application Versionを`1.14.1`へ更新。
+
 ## RSS Reader Modernization 1.14.0 — 2026-08-14
 
 ### Version 1.14.0 frontend modernization finalization

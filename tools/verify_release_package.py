@@ -80,8 +80,8 @@ def main() -> int:
 
         build = archive.read(relative['RELEASE_BUILD.txt']).decode('utf-8')
         metadata = dict(line.split('=', 1) for line in build.splitlines() if '=' in line)
-        check(metadata.get('intended_release') == '1.14.0', 'release build metadata targets 1.14.0')
-        check(metadata.get('intended_tag') == 'v1.14.0', 'release build metadata targets v1.14.0')
+        check(metadata.get('intended_release') == '1.14.1', 'release build metadata targets 1.14.1')
+        check(metadata.get('intended_tag') == 'v1.14.1', 'release build metadata targets v1.14.1')
         check(metadata.get('package_status') in {'PREVIEW', 'RELEASE_CANDIDATE', 'FINAL'}, 'release build status is recognized')
         check(metadata.get('publishable') in {'yes', 'no'}, 'release build publishable flag is explicit')
         check(metadata.get('validation_scope') == 'automated-regression-and-package', 'release build validation scope is explicit')
@@ -118,7 +118,7 @@ def main() -> int:
             check('正式Releaseではありません' in notes, 'release candidate notes contain non-release warning')
         if metadata.get('package_status') == 'FINAL':
             check(metadata.get('publishable') == 'yes', 'final package is marked publishable')
-            check("APP_VERSION = '1.14.0'" in version_text, 'final package has exact 1.14.0 version')
+            check("APP_VERSION = '1.14.1'" in version_text, 'final package has exact 1.14.1 version')
             check('正式Releaseではありません' not in notes, 'final release notes contain no RC non-release warning')
             check('Verification limits' in notes, 'final release notes disclose verification limits')
 
