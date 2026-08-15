@@ -20,16 +20,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat >> public/css/dashboard.css <<'CSS'
-
-/* V1.14.1: Stock Tag manager is a neutral surface and follows the active Theme. */
-.stock-tag-manager-inner {
-    border-color: var(--bs-border-color-translucent, rgba(0, 0, 0, 0.1));
-    background-color: rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.045);
-    color: var(--bs-body-color, #212529);
-}
-CSS
-          grep -Fq '.stock-tag-manager-inner {' public/css/dashboard.css
+          python -c "from pathlib import Path; p=Path('public/css/dashboard.css'); s=p.read_text(encoding='utf-8'); s += '\n\n/* V1.14.1: Stock Tag manager is a neutral surface and follows the active Theme. */\n.stock-tag-manager-inner {\n    border-color: var(--bs-border-color-translucent, rgba(0, 0, 0, 0.1));\n    background-color: rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.045);\n    color: var(--bs-body-color, #212529);\n}\n'; p.write_text(s, encoding='utf-8')"
           grep -Fq 'background-color: rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.045);' public/css/dashboard.css
           grep -Fq 'color: var(--bs-body-color, #212529);' public/css/dashboard.css
           for css in public/css/bootstrap-5.3.8.min.css public/css/bootstrap-*-5.3.8.min.css; do
@@ -37,11 +28,7 @@ CSS
             grep -Fq -- '--bs-body-color' "$css"
             grep -Fq -- '--bs-border-color-translucent' "$css"
           done
-          python - <<'PY'
-          from pathlib import Path
-          s=Path('public/css/dashboard.css').read_text(encoding='utf-8')
-          assert s.count('{') == s.count('}')
-          PY
+          python -c "from pathlib import Path; s=Path('public/css/dashboard.css').read_text(encoding='utf-8'); assert s.count('{') == s.count('}')"
           git diff --check
       - name: Commit CSS and remove temporary workflow
         shell: bash
