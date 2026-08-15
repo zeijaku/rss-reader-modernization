@@ -22,11 +22,11 @@ require $root . '/app/version.php';
 require $root . '/app/asset.php';
 require $root . '/app/common/common_func.php';
 $paths = [
-    'favicon.png', 'css/all.css', 'css/drawer.min.css', 'css/dashboard.css',
+    'favicon.png', 'css/all.css', 'css/dashboard.css', 'css/utility-widgets.css',
     'css/mini-game.css', 'css/clock-timer.css', 'css/auth.css',
-    'js/jquery-3.7.1.min.js', 'js/popper.min.js', 'js/bootstrap.min.js',
-    'js/iscroll.js', 'js/drawer.min.js', 'js/mini-game.js', 'js/lights-out.js',
-    'js/clock-timer.js', 'js/dashboard.js', 'js/calendar.js', 'js/auth.js',
+    'js/jquery-3.7.1.min.js', 'js/bootstrap.bundle-5.3.8.min.js',
+    'js/mini-game.js', 'js/lights-out.js', 'js/clock-timer.js',
+    'js/dashboard.js', 'js/utility-widgets.js', 'js/calendar.js', 'js/auth.js',
 ];
 foreach ($paths as $path) {
     echo app_asset_url($path) . "\n";
@@ -44,7 +44,7 @@ with tempfile.TemporaryDirectory(prefix='v17c-assets-') as temp:
 check(result.returncode == 0, 'Asset render worker exits successfully')
 check(result.stderr.strip() == '', 'Asset render worker has no PHP warning')
 urls = [line.strip() for line in result.stdout.splitlines() if line.strip()]
-check(len(urls) == 26, 'All static and Theme Asset URLs are rendered')
+check(len(urls) == 24, 'All static and Theme Asset URLs are rendered')
 check(active_version != '' and all(url.startswith('./') and url.endswith('?v=' + active_version) for url in urls), 'Every rendered Asset URL uses the active shared Version token')
 check(len(set(urls[-8:])) == 8, 'Eight Theme URLs remain distinct after centralization')
 check(all('..' not in url and '://' not in url for url in urls), 'Rendered Asset URLs remain local and traversal-free')

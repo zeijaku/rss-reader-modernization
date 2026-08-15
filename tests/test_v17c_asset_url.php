@@ -15,7 +15,7 @@ $version = rawurlencode(APP_VERSION);
 $check(app_asset_url('css/dashboard.css') === './css/dashboard.css?v=' . $version, 'CSS URL uses the application version');
 $check(app_asset_url('js/dashboard.js') === './js/dashboard.js?v=' . $version, 'JavaScript URL uses the application version');
 $check(app_asset_url('favicon.png') === './favicon.png?v=' . $version, 'favicon URL uses the application version');
-$check(app_asset_url('css/bootstrap-solar.min.css') === './css/bootstrap-solar.min.css?v=' . $version, 'allowlisted Theme CSS is supported');
+$check(app_asset_url('css/bootstrap-solar-5.3.8.min.css') === './css/bootstrap-solar-5.3.8.min.css?v=' . $version, 'allowlisted Theme CSS is supported');
 
 $invalid = [
     '', '../config/local.php', 'css/../config.css', '/css/dashboard.css',

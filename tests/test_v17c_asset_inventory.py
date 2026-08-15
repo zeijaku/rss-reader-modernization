@@ -33,11 +33,11 @@ check('./css/' not in combined and './js/' not in combined and 'href="./favicon.
 
 calls = re.findall(r"app_asset_url\('([^']+)'\)", combined)
 expected = {
-    'favicon.png', 'css/all.css', 'css/drawer.min.css', 'css/dashboard.css',
+    'favicon.png', 'css/all.css', 'css/dashboard.css', 'css/utility-widgets.css',
     'css/mini-game.css', 'css/clock-timer.css', 'css/auth.css',
-    'js/jquery-3.7.1.min.js', 'js/popper.min.js', 'js/bootstrap.min.js',
-    'js/iscroll.js', 'js/drawer.min.js', 'js/mini-game.js', 'js/lights-out.js',
-    'js/clock-timer.js', 'js/dashboard.js', 'js/calendar.js', 'js/auth.js',
+    'js/jquery-3.7.1.min.js', 'js/bootstrap.bundle-5.3.8.min.js',
+    'js/mini-game.js', 'js/lights-out.js', 'js/clock-timer.js',
+    'js/dashboard.js', 'js/utility-widgets.js', 'js/calendar.js', 'js/auth.js',
 }
 check(expected <= set(calls), 'All static CSS, JavaScript and favicon references use app_asset_url()')
 check("app_asset_url('css/' . resolve_theme_stylesheet" in index, 'Dynamic Theme CSS uses app_asset_url() after the existing allowlist resolver')
