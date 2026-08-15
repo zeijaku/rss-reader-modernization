@@ -59,7 +59,7 @@ jobs:
           out="${RUNNER_TEMP}/v115-release"
           mkdir -p "$out"
           python tools/build_complete_package.py --output-dir "$out"
-          python tools/build_release_package.py --output-dir "$out"
+          python tools/build_release_package.py --mode final --output-dir "$out"
           python tools/verify_complete_package.py \
             "$out/rss-reader-modernization-1.15.0-complete.zip" \
             "$out/rss-reader-modernization-1.15.0-complete.zip.sha256"
