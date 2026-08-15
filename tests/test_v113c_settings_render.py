@@ -83,7 +83,7 @@ check('id="changeConf"' not in html and 'id="tabContent"' not in html and 'id="r
 check('id="display"' in html and 'id="tabs"' in html and 'id="highlight"' in html,'three Settings anchors render')
 check('Settings' in ''.join(parser.text),'Settings page has visible current-view label/title')
 
-check('bootstrap-minty.min.css' in html,'saved theme controls Settings page theme asset')
+check('bootstrap-minty-5.3.8.min.css' in html,'saved theme controls Settings page theme asset')
 check('navbar-dark' in html and 'bg-primary' in html,'saved Navbar style is applied')
 check('value="bootstrap-minty" selected' in html,'saved theme is selected in form')
 check('value="primary" selected' in html,'saved Navbar style is selected in form')
@@ -102,7 +102,7 @@ check('method="post" action="./logout.php"' in html and 'name="csrf_token"' in h
 check('meta name="csrf-token"' in html,'Settings renders API CSRF meta')
 check('<meta name="robots" content="noindex,nofollow">' in html,'Settings render stays noindex/nofollow')
 check('js/mini-game.js' not in html and 'js/clock-timer.js' not in html and 'js/calendar.js' not in html,'Settings omits unrelated Dashboard scripts')
-check('js/dashboard.js' in html and 'js/drawer.min.js' in html,'Settings loads shared interaction scripts')
+check('js/dashboard.js' in html and 'js/bootstrap.bundle-5.3.8.min.js' in html,'Settings loads shared interaction scripts')
 check(len(ids)==len(set(ids)),'Settings output contains no duplicate IDs')
 
 if failures:
