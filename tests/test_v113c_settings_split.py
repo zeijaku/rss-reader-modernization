@@ -95,7 +95,7 @@ check('JSON_HEX_TAG' in settings and 'JSON_HEX_AMP' in settings and 'JSON_HEX_AP
 # Settings page intentionally avoids Dashboard-only game/timer/calendar assets.
 for asset in ['js/mini-game.js', 'js/lights-out.js', 'js/clock-timer.js', 'js/utility-widgets.js', 'js/calendar.js', 'css/mini-game.css', 'css/clock-timer.css', 'css/utility-widgets.css']:
     check(asset not in settings, 'Settings does not load unrelated asset: ' + asset)
-for asset in ['js/jquery-3.7.1.min.js', 'js/bootstrap.min.js', 'js/drawer.min.js', 'js/dashboard.js', 'css/dashboard.css']:
+for asset in ['js/jquery-3.7.1.min.js', 'js/bootstrap.bundle-5.3.8.min.js', 'js/dashboard.js', 'css/dashboard.css']:
     check(asset in settings, 'Settings retains required shared asset: ' + asset)
 
 # No schema or direct DB mutation added by the page split.
