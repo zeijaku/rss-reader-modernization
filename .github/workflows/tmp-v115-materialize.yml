@@ -40,6 +40,7 @@ jobs:
             .v115-stage/part-00a \
             .v115-stage/part-00b1 \
             .v115-stage/part-00b2a \
+            .v115-stage/part-00b2b1 \
             /tmp/part-00b2b2-fixed \
             .v115-stage/part-01 \
             .v115-stage/part-02 \
