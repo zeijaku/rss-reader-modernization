@@ -2741,3 +2741,11 @@ legend.text-dark {
 .dashboard-widget [class*="text-bg-"] .widget-drag-handle:focus-visible {
     outline-color: currentColor;
 }
+
+
+/* V1.14.1: Stock Tag manager is a neutral surface and follows the active Theme. */
+.stock-tag-manager-inner {
+    border-color: var(--bs-border-color-translucent, rgba(0, 0, 0, 0.1));
+    background-color: rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.045);
+    color: var(--bs-body-color, #212529);
+}
