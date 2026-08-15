@@ -52,13 +52,13 @@ jobs:
           base64 -d /tmp/v115.patch.gz.b64 > /tmp/v115.patch.gz
           gzip -dc /tmp/v115.patch.gz > /tmp/v115.patch
           echo 'f118639b03f356172f593c692f9161600a7b78dca9f5de50e2c29c45f479d1d7  /tmp/v115.patch' | sha256sum -c -
-          git apply --check /tmp/v115.patch
+          git apply --check --exclude=SOURCE_BUILD.txt --exclude=SOURCE_MANIFEST.sha256 /tmp/v115.patch
 
       - name: Materialize V1.15.0 source
         shell: bash
         run: |
           set -euo pipefail
-          git apply /tmp/v115.patch
+          git apply --exclude=SOURCE_BUILD.txt --exclude=SOURCE_MANIFEST.sha256 /tmp/v115.patch
           rm -rf .v115-stage
           git status --short
 
