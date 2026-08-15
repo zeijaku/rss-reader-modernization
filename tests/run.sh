@@ -551,3 +551,8 @@ if grep -Fq "const APP_VERSION = '1.8.0';" "$ROOT/app/version.php"; then
 else
     echo 'SKIP: Version 1.8.0 release gate requires APP_VERSION 1.8.0.'
 fi
+
+
+echo '== Version 1.15 Information Widget checks =='
+php "$ROOT/tests/test_v115_information_widgets.php"
+python3 "$ROOT/tests/test_v115_information_widgets.py"

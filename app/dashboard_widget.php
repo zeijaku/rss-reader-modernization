@@ -10,7 +10,7 @@ declare(strict_types=1);
 /** @return list<string> */
 function dashboard_widget_types(): array
 {
-    return ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game', 'links', 'weather'];
+    return ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game', 'links', 'weather', 'sun_moon', 'air_quality', 'earthquake'];
 }
 
 function dashboard_widget_validate_type(mixed $value): ?string
@@ -403,6 +403,8 @@ function dashboard_widget_normalize_row(array $row): ?array
         'feed' => dashboard_widget_feed_config_from_storage($row['widget_config'] ?? null),
         'links' => links_widget_config_from_storage($row['widget_config'] ?? null),
         'weather' => weather_widget_config_from_storage($row['widget_config'] ?? null),
+        'sun_moon' => sun_moon_widget_config_from_storage($row['widget_config'] ?? null),
+        'air_quality' => air_quality_widget_config_from_storage($row['widget_config'] ?? null),
         default => dashboard_widget_decode_config($row['widget_config'] ?? null),
     };
     $row['widget_width_class'] = dashboard_widget_width_class($width);

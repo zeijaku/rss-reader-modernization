@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.14.1`
-Release tag: `v1.14.1`
+**Stable release:** `RSS Reader Modernization 1.15.0`
+Release tag: `v1.15.0`
+
+Version 1.15.0では、DrawerのWidget追加をCatalog化し、InformationカテゴリへEarthquake、Sun / Moon、Air Quality / UVを追加しました。Earthquakeは気象庁防災情報XML、Sun / Moonは既存Weatherの地域検索とPHP標準の日照計算、Air Quality / UVはOpen-Meteo Air Quality APIを利用します。Weatherを含むInformation WidgetのLocation・保存・Cache・UI共通処理を整理し、PC／Smartphone、Height 1／2、Solar／Slateを含むTheme表示も調整しました。DB schema、Migration、必須configの追加変更はありません。
 
 Version 1.14.1では、Bootstrap / Bootswatch Themeに合わせて通常RSS／Search Feed、Task、Stock、Calendar、Mail、Links、Weather、Clock、Mini Game等の中立Surface・本文色・補助色をTheme変数へ追従させました。Keyword Highlight、休日、Timer終了、Game状態色など意味を持つ色は従来仕様を維持しています。DB schema、Migration、必須configの変更はありません。
 
@@ -43,6 +45,10 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Memo Widgetの追加・変更・削除、改行を保持した本文表示
 - Task Widgetの追加・変更・削除、完了切替、期限、優先度
 - Calendar Widgetの月表示、通常予定、Task期限連動
+- Weather Widgetの地域別天気表示
+- Earthquake Widgetの気象庁最新地震情報表示
+- Sun / Moon Widgetの日の出・日の入り・月齢・月相表示
+- Air Quality / UV WidgetのUS AQI、PM2.5、PM10、UV表示
 - スマートフォンでの左右スワイプによるタブ切り替え
 - Feed／Calendar読込中のSpinner表示
 - 記事リンクのStock保存と一覧表示
