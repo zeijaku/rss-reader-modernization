@@ -51,6 +51,10 @@ Version 1.15.0からDB Migrationは不要です。更新前にCodeをBackupし�
 
 V1.16正式候補はGitHub ActionsでPHP 8.1／8.4の両方についてV1.16専用Contractと`tests/run.sh` Full RegressionをPASSしています。mainへのsquash merge後も通常CI Run #95でPHP 8.1／8.4ともFull RegressionがGREENであることを確認しています。実Hosting Server、外部Feed、Browser／Device固有の描画差はProduction環境で最終確認しています。
 
+## Verification limits
+
+Automated verification covers PHP 8.1／8.4 regression, package structure, manifests, checksums, and high-signal secret scans. External RSS endpoint availability, hosting-provider differences, browser rendering, and device-specific behavior are not fully reproducible in GitHub Actions and are confirmed separately in the Production environment.
+
 ## License
 
 Project LicenseおよびThird-party noticeを維持します。Frontend dependencyはVersion 1.15.0と同じBootstrap / Bootswatch 5.3.8、jQuery 3.7.1、Font Awesome Free 6.7.2です。

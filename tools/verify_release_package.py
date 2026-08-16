@@ -114,7 +114,7 @@ def main() -> int:
             check('正式Releaseではありません' in notes, 'preview release notes contain non-release warning')
         if metadata.get('package_status') == 'RELEASE_CANDIDATE':
             check(metadata.get('publishable') == 'no', 'release candidate package is not final-publishable')
-            check(bool(re.fullmatch(r'1\.15\.0-rc[1-9][0-9]*', metadata.get('application_version', ''))), 'release candidate version format is valid')
+            check(bool(re.fullmatch(r'1\.16\.0-rc[1-9][0-9]*', metadata.get('application_version', ''))), 'release candidate version format is valid')
             check('正式Releaseではありません' in notes, 'release candidate notes contain non-release warning')
         if metadata.get('package_status') == 'FINAL':
             check(metadata.get('publishable') == 'yes', 'final package is marked publishable')

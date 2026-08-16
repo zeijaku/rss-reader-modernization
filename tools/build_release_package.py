@@ -70,13 +70,13 @@ def read_version() -> tuple[str, str]:
 
 def validate_mode(mode: str, version: str, label: str) -> tuple[str, str, str]:
     if mode == 'preview':
-        if not re.fullmatch(r'1\.15\.0-dev\.[1-9][0-9]*', version):
+        if not re.fullmatch(r'1\.16\.0-dev\.[1-9][0-9]*', version):
             fail('preview mode requires APP_VERSION such as 1.16.0-dev.9')
         if label != f'RSS Reader Modernization {version}':
             fail('preview mode label does not match APP_VERSION')
         return 'PREVIEW', 'no', 'rss-reader-modernization-1.16.0-preview'
     if mode == 'rc':
-        if not re.fullmatch(r'1\.15\.0-rc[1-9][0-9]*', version):
+        if not re.fullmatch(r'1\.16\.0-rc[1-9][0-9]*', version):
             fail('rc mode requires APP_VERSION such as 1.16.0-rc1')
         if label != f'RSS Reader Modernization {version.upper()}':
             fail('rc mode label does not match APP_VERSION')
