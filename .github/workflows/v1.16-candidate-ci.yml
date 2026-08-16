@@ -82,4 +82,21 @@ jobs:
           python tests/test_v116_candidate.py
 
       - name: Run full regression
-        run: bash tests/run.sh
+        shell: bash
+        run: |
+          set +e
+          bash tests/run.sh 2>&1 | tee /tmp/v116-regression-php-${{ matrix.php }}.log
+          status=${PIPESTATUS[0]}
+          echo "Regression exit status: ${status}"
+          echo "--- Failure-oriented tail ---"
+          grep -E '(^|[^A-Z])(FAIL|ERROR|Traceback|Assertion|RESULT:|FAILED|Fatal error|Parse error)' /tmp/v116-regression-php-${{ matrix.php }}.log | tail -n 250 || true
+          exit "${status}"
+
+      - name: Upload regression log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: v116-regression-php-${{ matrix.php }}
+          path: /tmp/v116-regression-php-${{ matrix.php }}.log
+          if-no-files-found: error
+          retention-days: 1
