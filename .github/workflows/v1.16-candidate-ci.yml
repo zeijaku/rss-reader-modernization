@@ -86,10 +86,7 @@ jobs:
 
           candidate = Path('tests/test_v116_candidate.py')
           release = Path('tests/test_v116_release.py')
-          release.write_text(
-              candidate.read_text(encoding='utf-8').replace('candidate', 'release').replace('Candidate', 'Release'),
-              encoding='utf-8'
-          )
+          release.write_text(candidate.read_text(encoding='utf-8'), encoding='utf-8')
           candidate.unlink()
 
           run = Path('tests/run.sh')
@@ -171,10 +168,7 @@ jobs:
 
           candidate = Path('tests/test_v116_candidate.py')
           release = Path('tests/test_v116_release.py')
-          release.write_text(
-              candidate.read_text(encoding='utf-8').replace('candidate', 'release').replace('Candidate', 'Release'),
-              encoding='utf-8'
-          )
+          release.write_text(candidate.read_text(encoding='utf-8'), encoding='utf-8')
           candidate.unlink()
 
           run = Path('tests/run.sh')
