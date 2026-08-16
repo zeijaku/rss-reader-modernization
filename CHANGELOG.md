@@ -1,5 +1,19 @@
 # Changelog
 
+## RSS Reader Modernization 1.16.0 — 2026-08-17
+
+### Calculator / Blind Spot Discovery / Dashboard UI
+
+- UtilityへCalculator Widgetを追加。四則演算、Decimal、Percent、Sign、Backspace、Keyboard操作に対応し、計算はBrowser側のみで行い`eval()`は使用しない。
+- Dashboard WidgetのTitle Barを44pxへ揃え、Drag Handleの実操作領域を44pxへ統一。
+- InformationへBlind Spot / Discovery Widgetを追加し、20カテゴリ・国内向け40 Feedから普段見ない分野の記事を最大3件表示。
+- Blind Spotは直前カテゴリを避け、24時間・最大18件の最近記事履歴で同一記事の連続表示を抑制。既存のSSRF Validation、FeedFetchService、Cache、Parserを再利用。
+- Blind Spotの記事概要を「＋／－」で展開し、既存RSSと同じ右端配置へ統一。本文は`content`優先、未取得時は`description`を使用。
+- Blind Spotへ既存Article Actionsを接続し、Stock保存、URL Copy、X投稿、Task追加を共通処理で利用。
+- Smartphone、Height 1／2、Width 1〜4、Solar／Slateを含むThemeでBlind Spotの操作領域、内部Scroll、Title行数、Focus表示を調整。
+- V1.16-F Full RegressionでClock Timer単体runtimeのjQuery非依存契約を確認し、Calculator／Blind Spot追加部をjQuery未定義環境では安全にskipするよう修正。
+- DB Table／Column、Migration、SQL、必須configの追加変更はなし。Application Versionを`1.16.0`へ更新。
+
 ## RSS Reader Modernization 1.15.0 — 2026-08-16
 
 ### Information Widgets / Add Widget Catalog

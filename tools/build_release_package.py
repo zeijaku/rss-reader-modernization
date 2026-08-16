@@ -11,8 +11,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXED_TIME = (1980, 1, 1, 0, 0, 0)
-INTENDED_RELEASE = '1.15.0'
-INTENDED_TAG = 'v1.15.0'
+INTENDED_RELEASE = '1.16.0'
+INTENDED_TAG = 'v1.16.0'
 
 ROOT_FILES = (
     '.htaccess',
@@ -71,20 +71,20 @@ def read_version() -> tuple[str, str]:
 def validate_mode(mode: str, version: str, label: str) -> tuple[str, str, str]:
     if mode == 'preview':
         if not re.fullmatch(r'1\.15\.0-dev\.[1-9][0-9]*', version):
-            fail('preview mode requires APP_VERSION such as 1.15.0-dev.9')
+            fail('preview mode requires APP_VERSION such as 1.16.0-dev.9')
         if label != f'RSS Reader Modernization {version}':
             fail('preview mode label does not match APP_VERSION')
-        return 'PREVIEW', 'no', 'rss-reader-modernization-1.15.0-preview'
+        return 'PREVIEW', 'no', 'rss-reader-modernization-1.16.0-preview'
     if mode == 'rc':
         if not re.fullmatch(r'1\.15\.0-rc[1-9][0-9]*', version):
-            fail('rc mode requires APP_VERSION such as 1.15.0-rc1')
+            fail('rc mode requires APP_VERSION such as 1.16.0-rc1')
         if label != f'RSS Reader Modernization {version.upper()}':
             fail('rc mode label does not match APP_VERSION')
         return 'RELEASE_CANDIDATE', 'no', f'rss-reader-modernization-{version}'
     if mode == 'final':
-        if version != INTENDED_RELEASE or label != 'RSS Reader Modernization 1.15.0':
-            fail('final mode requires the exact 1.15.0 version and label')
-        return 'FINAL', 'yes', 'rss-reader-modernization-1.15.0'
+        if version != INTENDED_RELEASE or label != 'RSS Reader Modernization 1.16.0':
+            fail('final mode requires the exact 1.16.0 version and label')
+        return 'FINAL', 'yes', 'rss-reader-modernization-1.16.0'
     fail('unsupported mode')
 
 

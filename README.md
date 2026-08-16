@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.15.0`
-Release tag: `v1.15.0`
+**Stable release:** `RSS Reader Modernization 1.16.0`
+Release tag: `v1.16.0`
+
+Version 1.16.0では、UtilityへCalculator Widgetを追加し、InformationへBlind Spot / Discovery Widgetを追加しました。Blind Spotは国内向け40 Feedを20カテゴリに分け、直前カテゴリ回避と24時間・最大18件の最近記事履歴で同じ内容の連続表示を抑えます。記事概要の展開とStock／URL Copy／X／Taskの既存Article Actionsも再利用します。Dashboard Widget HeaderとDrag Handleの操作領域も共通化しました。DB schema、Migration、必須configの追加変更はありません。
 
 Version 1.15.0では、DrawerのWidget追加をCatalog化し、InformationカテゴリへEarthquake、Sun / Moon、Air Quality / UVを追加しました。Earthquakeは気象庁防災情報XML、Sun / Moonは既存Weatherの地域検索とPHP標準の日照計算、Air Quality / UVはOpen-Meteo Air Quality APIを利用します。Weatherを含むInformation WidgetのLocation・保存・Cache・UI共通処理を整理し、PC／Smartphone、Height 1／2、Solar／Slateを含むTheme表示も調整しました。DB schema、Migration、必須configの追加変更はありません。
 
