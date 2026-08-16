@@ -556,3 +556,6 @@ fi
 echo '== Version 1.15 Information Widget checks =='
 php "$ROOT/tests/test_v115_information_widgets.php"
 python3 "$ROOT/tests/test_v115_information_widgets.py"
+
+echo '== V1.16 Calculator / Blind Spot / UI regression checks =='
+python3 "$ROOT/tests/test_v116_release.py"

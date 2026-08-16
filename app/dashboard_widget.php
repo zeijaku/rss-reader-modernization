@@ -10,7 +10,7 @@ declare(strict_types=1);
 /** @return list<string> */
 function dashboard_widget_types(): array
 {
-    return ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game', 'links', 'weather', 'sun_moon', 'air_quality', 'earthquake'];
+    return ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game', 'links', 'weather', 'sun_moon', 'air_quality', 'earthquake', 'calculator', 'blind_spot'];
 }
 
 function dashboard_widget_validate_type(mixed $value): ?string
@@ -405,6 +405,7 @@ function dashboard_widget_normalize_row(array $row): ?array
         'weather' => weather_widget_config_from_storage($row['widget_config'] ?? null),
         'sun_moon' => sun_moon_widget_config_from_storage($row['widget_config'] ?? null),
         'air_quality' => air_quality_widget_config_from_storage($row['widget_config'] ?? null),
+        'blind_spot' => dashboard_widget_blind_spot_config_from_storage($row['widget_config'] ?? null),
         default => dashboard_widget_decode_config($row['widget_config'] ?? null),
     };
     $row['widget_width_class'] = dashboard_widget_width_class($width);
@@ -1031,6 +1032,460 @@ function dashboard_widget_delete_clock(int $ownerId, int $widgetId): bool
             . 'SET widget_flag = 1, widget_updated_at = :updated_at '
             . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
             . "AND widget_type = 'clock' AND widget_flag = 0"
+        );
+        $stmt->execute([
+            ':updated_at' => app_now(),
+            ':widget_id' => $widgetId,
+            ':owner' => $ownerId,
+        ]);
+        if ($started) {
+            $pdo->commit();
+        }
+        return true;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+/** @return array{schema:int} */
+function dashboard_widget_calculator_config(): array
+{
+    return ['schema' => 1];
+}
+
+function dashboard_widget_create_calculator(
+    int $ownerId,
+    int $location,
+    string $style,
+    int $width,
+    int $height = 1
+): int {
+    if ($ownerId <= 0
+        || dashboard_widget_validate_location($location) === null
+        || app_normalize_content_style($style) === null
+        || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null) {
+        throw new InvalidArgumentException('Calculator Widget settings are invalid.');
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        $now = app_now();
+        $stmt = $pdo->prepare(
+            'INSERT INTO ' . db_table_identifier('dashboard_widget') . ' '
+            . '(widget_owner, widget_location, widget_type, widget_reference_id, widget_sort_order, '
+            . 'widget_width, widget_height, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
+            . "VALUES (:owner, :location, 'calculator', NULL, :sort_order, :width, :height, :style, :config, 0, :created_at, :updated_at)"
+        );
+        $stmt->execute([
+            ':owner' => $ownerId,
+            ':location' => $location,
+            ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
+            ':width' => $width,
+            ':height' => $height,
+            ':style' => $style,
+            ':config' => dashboard_widget_encode_config(dashboard_widget_calculator_config()),
+            ':created_at' => $now,
+            ':updated_at' => $now,
+        ]);
+        $widgetId = (int) $pdo->lastInsertId();
+        if ($started) {
+            $pdo->commit();
+        }
+        return $widgetId;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+function dashboard_widget_update_calculator(
+    int $ownerId,
+    int $widgetId,
+    string $style,
+    int $width,
+    int $height = 1
+): bool {
+    if ($ownerId <= 0
+        || $widgetId <= 0
+        || app_normalize_content_style($style) === null
+        || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null) {
+        throw new InvalidArgumentException('Calculator Widget settings are invalid.');
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        if (dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'calculator') === null) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+        $stmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_width = :width, widget_height = :height, widget_style = :style, '
+            . 'widget_config = :config, widget_updated_at = :updated_at '
+            . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+            . "AND widget_type = 'calculator' AND widget_flag = 0"
+        );
+        $stmt->execute([
+            ':width' => $width,
+            ':height' => $height,
+            ':style' => $style,
+            ':config' => dashboard_widget_encode_config(dashboard_widget_calculator_config()),
+            ':updated_at' => app_now(),
+            ':widget_id' => $widgetId,
+            ':owner' => $ownerId,
+        ]);
+        if ($started) {
+            $pdo->commit();
+        }
+        return true;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+function dashboard_widget_delete_calculator(int $ownerId, int $widgetId): bool
+{
+    if ($ownerId <= 0 || $widgetId <= 0) {
+        return false;
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        if (dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'calculator') === null) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+        $stmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_flag = 1, widget_updated_at = :updated_at '
+            . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+            . "AND widget_type = 'calculator' AND widget_flag = 0"
+        );
+        $stmt->execute([
+            ':updated_at' => app_now(),
+            ':widget_id' => $widgetId,
+            ':owner' => $ownerId,
+        ]);
+        if ($started) {
+            $pdo->commit();
+        }
+        return true;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+/** @return array{schema:int,last_category:string,recent_items:list<array{key:string,seen_at:int}>} */
+function dashboard_widget_blind_spot_config(): array
+{
+    return [
+        'schema' => 2,
+        'last_category' => '',
+        'recent_items' => [],
+    ];
+}
+
+function dashboard_widget_blind_spot_recent_limit(): int
+{
+    return 18;
+}
+
+function dashboard_widget_blind_spot_recent_ttl_seconds(): int
+{
+    return 86400;
+}
+
+/** @return array{schema:int,last_category:string,recent_items:list<array{key:string,seen_at:int}>} */
+function dashboard_widget_blind_spot_config_from_storage(mixed $value, ?int $now = null): array
+{
+    $config = dashboard_widget_decode_config($value);
+    $lastCategory = app_validate_text($config['last_category'] ?? '', 32, true);
+    if ($lastCategory === null) {
+        $lastCategory = '';
+    }
+
+    $now ??= time();
+    $oldest = $now - dashboard_widget_blind_spot_recent_ttl_seconds();
+    $recent = [];
+    $seen = [];
+    $rawItems = is_array($config['recent_items'] ?? null) ? $config['recent_items'] : [];
+    foreach ($rawItems as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        $key = strtolower(trim((string) ($entry['key'] ?? '')));
+        $seenAt = filter_var($entry['seen_at'] ?? null, FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1],
+        ]);
+        if (preg_match('/^[a-f0-9]{64}$/', $key) !== 1 || $seenAt === false || $seenAt < $oldest || isset($seen[$key])) {
+            continue;
+        }
+        $seen[$key] = true;
+        $recent[] = ['key' => $key, 'seen_at' => (int) $seenAt];
+        if (count($recent) >= dashboard_widget_blind_spot_recent_limit()) {
+            break;
+        }
+    }
+
+    return [
+        'schema' => 2,
+        'last_category' => $lastCategory,
+        'recent_items' => $recent,
+    ];
+}
+
+/** @param list<string> $itemKeys */
+function dashboard_widget_blind_spot_remember(
+    int $ownerId,
+    int $widgetId,
+    string $category,
+    array $itemKeys,
+    ?int $now = null
+): bool {
+    if ($ownerId <= 0 || $widgetId <= 0) {
+        return false;
+    }
+    $category = app_validate_text($category, 32, false) ?? '';
+    if ($category === '') {
+        return false;
+    }
+
+    $validatedKeys = [];
+    foreach ($itemKeys as $key) {
+        $key = strtolower(trim((string) $key));
+        if (preg_match('/^[a-f0-9]{64}$/', $key) === 1 && !in_array($key, $validatedKeys, true)) {
+            $validatedKeys[] = $key;
+        }
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        $row = dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'blind_spot');
+        if ($row === null) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+
+        $now ??= time();
+        $config = dashboard_widget_blind_spot_config_from_storage($row['widget_config'] ?? null, $now);
+        $recent = [];
+        $seen = [];
+        foreach ($validatedKeys as $key) {
+            $seen[$key] = true;
+            $recent[] = ['key' => $key, 'seen_at' => $now];
+        }
+        foreach ($config['recent_items'] as $entry) {
+            $key = $entry['key'];
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $recent[] = $entry;
+            if (count($recent) >= dashboard_widget_blind_spot_recent_limit()) {
+                break;
+            }
+        }
+
+        $config['last_category'] = $category;
+        $config['recent_items'] = array_slice($recent, 0, dashboard_widget_blind_spot_recent_limit());
+        $stmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_config = :config, widget_updated_at = :updated_at '
+            . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+            . "AND widget_type = 'blind_spot' AND widget_flag = 0"
+        );
+        $stmt->execute([
+            ':config' => dashboard_widget_encode_config($config),
+            ':updated_at' => app_now(),
+            ':widget_id' => $widgetId,
+            ':owner' => $ownerId,
+        ]);
+        if ($started) {
+            $pdo->commit();
+        }
+        return $stmt->rowCount() > 0;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+function dashboard_widget_create_blind_spot(
+    int $ownerId,
+    int $location,
+    string $style,
+    int $width,
+    int $height = 1
+): int {
+    if ($ownerId <= 0
+        || dashboard_widget_validate_location($location) === null
+        || app_normalize_content_style($style) === null
+        || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null) {
+        throw new InvalidArgumentException('Blind Spot Widget settings are invalid.');
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        $now = app_now();
+        $stmt = $pdo->prepare(
+            'INSERT INTO ' . db_table_identifier('dashboard_widget') . ' '
+            . '(widget_owner, widget_location, widget_type, widget_reference_id, widget_sort_order, '
+            . 'widget_width, widget_height, widget_style, widget_config, widget_flag, widget_created_at, widget_updated_at) '
+            . "VALUES (:owner, :location, 'blind_spot', NULL, :sort_order, :width, :height, :style, :config, 0, :created_at, :updated_at)"
+        );
+        $stmt->execute([
+            ':owner' => $ownerId,
+            ':location' => $location,
+            ':sort_order' => dashboard_widget_next_sort_order($pdo, $ownerId, $location),
+            ':width' => $width,
+            ':height' => $height,
+            ':style' => $style,
+            ':config' => dashboard_widget_encode_config(dashboard_widget_blind_spot_config()),
+            ':created_at' => $now,
+            ':updated_at' => $now,
+        ]);
+        $widgetId = (int) $pdo->lastInsertId();
+        if ($started) {
+            $pdo->commit();
+        }
+        return $widgetId;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+function dashboard_widget_update_blind_spot(
+    int $ownerId,
+    int $widgetId,
+    string $style,
+    int $width,
+    int $height = 1
+): bool {
+    if ($ownerId <= 0
+        || $widgetId <= 0
+        || app_normalize_content_style($style) === null
+        || dashboard_widget_validate_width($width) === null
+        || dashboard_widget_validate_height($height) === null) {
+        throw new InvalidArgumentException('Blind Spot Widget settings are invalid.');
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        $row = dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'blind_spot');
+        if ($row === null) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+        $config = dashboard_widget_blind_spot_config_from_storage($row['widget_config'] ?? null);
+        $stmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_width = :width, widget_height = :height, widget_style = :style, '
+            . 'widget_config = :config, widget_updated_at = :updated_at '
+            . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+            . "AND widget_type = 'blind_spot' AND widget_flag = 0"
+        );
+        $stmt->execute([
+            ':width' => $width,
+            ':height' => $height,
+            ':style' => $style,
+            ':config' => dashboard_widget_encode_config($config),
+            ':updated_at' => app_now(),
+            ':widget_id' => $widgetId,
+            ':owner' => $ownerId,
+        ]);
+        if ($started) {
+            $pdo->commit();
+        }
+        return true;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
+function dashboard_widget_delete_blind_spot(int $ownerId, int $widgetId): bool
+{
+    if ($ownerId <= 0 || $widgetId <= 0) {
+        return false;
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+
+    try {
+        if (dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'blind_spot') === null) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+        $stmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('dashboard_widget') . ' '
+            . 'SET widget_flag = 1, widget_updated_at = :updated_at '
+            . 'WHERE widget_id = :widget_id AND widget_owner = :owner '
+            . "AND widget_type = 'blind_spot' AND widget_flag = 0"
         );
         $stmt->execute([
             ':updated_at' => app_now(),
