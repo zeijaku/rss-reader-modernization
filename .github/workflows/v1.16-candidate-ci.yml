@@ -69,6 +69,25 @@ jobs:
           echo "95eb7751b1b342f476baf2df7c780343204b5f1379c0e0ac22df986640d35d23  /tmp/v116-candidate-overlay.zip" | sha256sum -c -
           unzip -o /tmp/v116-candidate-overlay.zip -d .
           rm -f /tmp/v116-candidate-overlay.zip
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('public/js/clock-timer.js')
+          source = path.read_text(encoding='utf-8')
+          calculator_old = """(function ($, window, document) {\n    'use strict';\n\n    var namespace = '.iguguruCalculatorWidget';"""
+          calculator_new = """(function ($, window, document) {\n    'use strict';\n\n    if (!$) {\n        return;\n    }\n\n    var namespace = '.iguguruCalculatorWidget';"""
+          blind_old = """}(jQuery, window, document));\n\n/* V1.16-B Blind Spot / Discovery Widget. Feed transport stays on the existing server-side safe fetch path. */\n(function ($, window, document) {\n    'use strict';\n\n    var namespace = '.iguguruBlindSpotWidget';"""
+          blind_new = """}(typeof window.jQuery === 'function' ? window.jQuery : null, window, document));\n\n/* V1.16-B Blind Spot / Discovery Widget. Feed transport stays on the existing server-side safe fetch path. */\n(function ($, window, document) {\n    'use strict';\n\n    if (!$) {\n        return;\n    }\n\n    var namespace = '.iguguruBlindSpotWidget';"""
+          if calculator_old not in source or blind_old not in source:
+              raise SystemExit('V1.16 jQuery guard patch target not found')
+          source = source.replace(calculator_old, calculator_new, 1)
+          source = source.replace(blind_old, blind_new, 1)
+          final_old = '}(jQuery, window, document));\n'
+          final_new = "}(typeof window.jQuery === 'function' ? window.jQuery : null, window, document));\n"
+          if final_old not in source:
+              raise SystemExit('Blind Spot jQuery invocation target not found')
+          source = source.replace(final_old, final_new, 1)
+          path.write_text(source, encoding='utf-8')
+          PY
 
       - name: Candidate syntax and contract
         shell: bash
@@ -80,6 +99,9 @@ jobs:
           php -l config/common_feeds.php
           node --check public/js/clock-timer.js
           python tests/test_v116_candidate.py
+          test "$(grep -cF '}(jQuery, window, document));' public/js/clock-timer.js || true)" = "0"
+          test "$(grep -cF 'if (!$) {' public/js/clock-timer.js)" -ge "2"
+          test "$(grep -cF "typeof window.jQuery === 'function' ? window.jQuery : null" public/js/clock-timer.js)" -ge "2"
 
       - name: Run full regression
         shell: bash
