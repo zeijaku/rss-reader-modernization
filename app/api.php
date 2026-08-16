@@ -151,6 +151,13 @@ function api_dispatch(string $action, int $userId, array $input): array
         'widget.clock.create' => api_widget_clock_create($userId, $input),
         'widget.clock.update' => api_widget_clock_update($userId, $input),
         'widget.clock.delete' => api_widget_clock_delete($userId, $input),
+        'widget.calculator.create' => api_widget_calculator_create($userId, $input),
+        'widget.calculator.update' => api_widget_calculator_update($userId, $input),
+        'widget.calculator.delete' => api_widget_calculator_delete($userId, $input),
+        'widget.blindspot.create' => api_widget_blind_spot_create($userId, $input),
+        'widget.blindspot.update' => api_widget_blind_spot_update($userId, $input),
+        'widget.blindspot.delete' => api_widget_blind_spot_delete($userId, $input),
+        'blindspot.fetch' => api_blind_spot_fetch($userId, $input),
         'widget.memo.create' => api_widget_memo_create($userId, $input),
         'widget.memo.update' => api_widget_memo_update($userId, $input),
         'widget.memo.delete' => api_widget_memo_delete($userId, $input),
@@ -467,6 +474,156 @@ function api_widget_clock_delete(int $userId, array $input): array
     }
 
     return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_calculator_create(int $userId, array $input): array
+{
+    $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
+    if ($location === null || $style === null || $width === null || $height === null) {
+        return api_validation_error('Calculator Widget settings are invalid.');
+    }
+
+    try {
+        $widgetId = dashboard_widget_create_calculator($userId, $location, $style, $width, $height);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Calculator Widget create failed: ' . $exception->getMessage());
+        return api_error('calculator_unavailable', 'Calculator Widget could not be created.', 503);
+    }
+    return api_success(['widget_id' => $widgetId], 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_calculator_update(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
+    if ($widgetId === null || $style === null || $width === null || $height === null) {
+        return api_validation_error('Calculator Widget settings are invalid.');
+    }
+
+    try {
+        if (!dashboard_widget_update_calculator($userId, $widgetId, $style, $width, $height)) {
+            return api_error('not_found', 'Calculator Widget was not found.', 404);
+        }
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Calculator Widget update failed: ' . $exception->getMessage());
+        return api_error('calculator_unavailable', 'Calculator Widget could not be updated.', 503);
+    }
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_calculator_delete(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+
+    try {
+        if (!dashboard_widget_delete_calculator($userId, $widgetId)) {
+            return api_error('not_found', 'Calculator Widget was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Calculator Widget delete failed: ' . $exception->getMessage());
+        return api_error('calculator_unavailable', 'Calculator Widget could not be deleted.', 503);
+    }
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_blind_spot_create(int $userId, array $input): array
+{
+    $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
+    if ($location === null || $style === null || $width === null || $height === null) {
+        return api_validation_error('Blind Spot Widget settings are invalid.');
+    }
+
+    try {
+        $widgetId = dashboard_widget_create_blind_spot($userId, $location, $style, $width, $height);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Blind Spot Widget create failed: ' . $exception->getMessage());
+        return api_error('blind_spot_unavailable', 'Blind Spot Widget could not be created.', 503);
+    }
+    return api_success(['widget_id' => $widgetId], 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_blind_spot_update(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
+    if ($widgetId === null || $style === null || $width === null || $height === null) {
+        return api_validation_error('Blind Spot Widget settings are invalid.');
+    }
+
+    try {
+        if (!dashboard_widget_update_blind_spot($userId, $widgetId, $style, $width, $height)) {
+            return api_error('not_found', 'Blind Spot Widget was not found.', 404);
+        }
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Blind Spot Widget update failed: ' . $exception->getMessage());
+        return api_error('blind_spot_unavailable', 'Blind Spot Widget could not be updated.', 503);
+    }
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_blind_spot_delete(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+
+    try {
+        if (!dashboard_widget_delete_blind_spot($userId, $widgetId)) {
+            return api_error('not_found', 'Blind Spot Widget was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Blind Spot Widget delete failed: ' . $exception->getMessage());
+        return api_error('blind_spot_unavailable', 'Blind Spot Widget could not be deleted.', 503);
+    }
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_blind_spot_fetch(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+
+    try {
+        $result = blind_spot_execute($userId, $widgetId);
+    } catch (PDOException $exception) {
+        error_log('Blind Spot Widget read failed: ' . $exception->getMessage());
+        return api_error('blind_spot_unavailable', 'Blind Spot Widget could not be read.', 503);
+    }
+    if (($result['ok'] ?? false) !== true) {
+        return api_error('not_found', 'Blind Spot Widget was not found.', 404);
+    }
+    return api_success(['blind_spot' => $result]);
 }
 
 /** @return array{status:int,body:array<string,mixed>} */

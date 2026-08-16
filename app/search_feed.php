@@ -29,9 +29,19 @@ function search_feed_validate_category(mixed $v): ?string
     if (!is_string($v) || app_text_length($v)>32) return null;
     return $v==='all' || in_array($v,search_feed_common_categories(),true) ? $v : null;
 }
+/** @return list<array<string,mixed>> */
+function search_feed_common_catalog(): array
+{
+    $out=[];
+    foreach(app_common_feed_list() as $r){
+        if(!is_array($r)||(($r['discovery']??false)===true))continue;
+        $out[]=$r;
+    }
+    return $out;
+}
 function search_feed_common_categories(): array
 {
-    $out=[]; foreach(app_common_feed_list() as $r){$c=(string)($r['category']??''); if($c!==''&&!in_array($c,$out,true))$out[]=$c;} return $out;
+    $out=[]; foreach(search_feed_common_catalog() as $r){$c=(string)($r['category']??''); if($c!==''&&!in_array($c,$out,true))$out[]=$c;} return $out;
 }
 function search_feed_config_from_input(array $in): ?array
 {
@@ -82,7 +92,7 @@ function search_feed_owned_sources(int $ownerId): array
 function search_feed_common_sources(int $ownerId,string $category): array
 {
     $out=[]; $i=1;
-    foreach(app_common_feed_list() as $r){if($category!=='all'&&($r['category']??'')!==$category)continue; $url=app_validate_feed_url($r['url']??null); if($url===null)continue; $out[]=['source_id'=>900000000+$i,'url'=>$url,'name'=>(string)($r['name']??'')]; $i++;}
+    foreach(search_feed_common_catalog() as $r){if($category!=='all'&&($r['category']??'')!==$category)continue; $url=app_validate_feed_url($r['url']??null); if($url===null)continue; $out[]=['source_id'=>900000000+$i,'url'=>$url,'name'=>(string)($r['name']??'')]; $i++;}
     return $out;
 }
 function search_feed_owned_widget(int $ownerId,int $widgetId): ?array
@@ -117,4 +127,134 @@ function search_feed_execute(int $ownerId,int $widgetId): array
     foreach($unique as $s){try{$source=FeedSource::fromValidatedValues((int)$s['source_id'],$ownerId,(string)$s['url']);$loaded=$service->load($source);if(($loaded['ok']??false)!==true){$failed++;continue;}$rawFeed=is_array($loaded['result_feed']??null)?$loaded['result_feed']:[];$effective=is_string($loaded['effective_url']??null)?$loaded['effective_url']:(string)$s['url'];$feed=api_safe_feed_payload($rawFeed,$effective);$channel=is_array($feed['channel']??null)?$feed['channel']:[];foreach(is_array($feed['item']??null)?$feed['item']:[] as $item){if(!is_array($item)||!search_feed_item_matches($item,$terms,$cfg['condition']))continue;$link=(string)($item['link']??'');$key=hash('sha256',$link."\n".(string)($item['title']??''));if(isset($items[$key]))continue;$item['source_title']=(string)($channel['title']??$s['name']);$items[$key]=$item;}}catch(Throwable){$failed++;}}
     $items=array_slice(array_values($items),0,$cfg['limit']);
     return ['ok'=>true,'query'=>$cfg['query'],'items'=>$items,'source_count'=>count($unique),'failed_count'=>$failed,'limit'=>$cfg['limit']];
+}
+
+/** @return list<array{source_id:int,name:string,category:string,url:string}> */
+function blind_spot_feed_catalog(): array
+{
+    $out=[];$index=0;
+    foreach(app_common_feed_list() as $feed){
+        if(!is_array($feed)||(($feed['discovery']??false)!==true))continue;
+        $name=app_validate_text($feed['name']??null,128,false);
+        $category=app_validate_text($feed['category']??null,32,false);
+        $url=app_validate_feed_url($feed['url']??null);
+        if($name===null||$category===null||$url===null)continue;
+        $index++;
+        $out[]=['source_id'=>910000000+$index,'name'=>$name,'category'=>$category,'url'=>$url];
+    }
+    return $out;
+}
+
+/** @return array<string,list<array{source_id:int,name:string,category:string,url:string}>> */
+function blind_spot_feed_groups(): array
+{
+    $groups=[];
+    foreach(blind_spot_feed_catalog() as $feed){
+        $category=$feed['category'];
+        if(!isset($groups[$category]))$groups[$category]=[];
+        $groups[$category][]=$feed;
+    }
+    return $groups;
+}
+
+/** @return array<string,mixed>|null */
+function blind_spot_owned_widget(int $ownerId,int $widgetId): ?array
+{
+    $stmt=conn_db()->prepare('SELECT * FROM '.db_table_identifier('dashboard_widget')." WHERE widget_id=:id AND widget_owner=:owner AND widget_type='blind_spot' AND widget_flag=0");
+    $stmt->execute([':id'=>$widgetId,':owner'=>$ownerId]);
+    $row=$stmt->fetch();
+    return is_array($row)?$row:null;
+}
+
+/**
+ * V1.16-C: Rotate away from the previous category and suppress recently shown
+ * articles while keeping the V1.16-B request budget and safe Feed pipeline.
+ *
+ * @return array<string,mixed>
+ */
+function blind_spot_execute(int $ownerId,int $widgetId): array
+{
+    $row=blind_spot_owned_widget($ownerId,$widgetId);
+    if($row===null)return ['ok'=>false,'code'=>'not_found'];
+    $config=dashboard_widget_blind_spot_config_from_storage($row['widget_config']??null);
+    $groups=blind_spot_feed_groups();
+    $categories=array_keys($groups);
+    if($categories===[])return ['ok'=>true,'category'=>'','items'=>[],'sources'=>[],'source_count'=>0,'failed_count'=>0,'category_count'=>0];
+
+    $previousCategory=(string)($config['last_category']??'');
+    $categoryCandidates=$categories;
+    if(count($categories)>1&&$previousCategory!==''){
+        $withoutPrevious=array_values(array_filter(
+            $categories,
+            static fn(string $candidate): bool=>$candidate!==$previousCategory
+        ));
+        if($withoutPrevious!==[])$categoryCandidates=$withoutPrevious;
+    }
+    try{$category=$categoryCandidates[random_int(0,count($categoryCandidates)-1)];}
+    catch(Throwable){$category=$categoryCandidates[0];}
+
+    $recentKeys=[];
+    foreach(is_array($config['recent_items']??null)?$config['recent_items']:[] as $entry){
+        if(!is_array($entry))continue;
+        $key=(string)($entry['key']??'');
+        if(preg_match('/^[a-f0-9]{64}$/',$key)===1)$recentKeys[$key]=true;
+    }
+
+    $sources=$groups[$category]??[];
+    if(count($sources)>1)shuffle($sources);
+    $service=FeedFetchService::fromRuntimeConfiguration();
+    $candidates=[];$candidateKeys=[];$failed=0;$sourceNames=[];$attempted=0;
+
+    foreach($sources as $sourceRow){
+        if(count($candidates)>=3)break;
+        $attempted++;
+        try{
+            $source=FeedSource::fromValidatedValues((int)$sourceRow['source_id'],$ownerId,(string)$sourceRow['url']);
+            $loaded=$service->load($source);
+            if(($loaded['ok']??false)!==true){$failed++;continue;}
+            $rawFeed=is_array($loaded['result_feed']??null)?$loaded['result_feed']:[];
+            $effective=is_string($loaded['effective_url']??null)?$loaded['effective_url']:(string)$sourceRow['url'];
+            $feed=api_safe_feed_payload($rawFeed,$effective);
+            $channel=is_array($feed['channel']??null)?$feed['channel']:[];
+            $sourceTitle=trim((string)($channel['title']??''));
+            if($sourceTitle==='')$sourceTitle=(string)$sourceRow['name'];
+            if(!in_array($sourceTitle,$sourceNames,true))$sourceNames[]=$sourceTitle;
+            foreach(is_array($feed['item']??null)?$feed['item']:[] as $item){
+                if(!is_array($item))continue;
+                $title=trim((string)($item['title']??''));
+                $link=trim((string)($item['link']??''));
+                if($title===''||$link==='')continue;
+                $key=hash('sha256',$link."\n".$title);
+                if(isset($candidateKeys[$key]))continue;
+                $candidateKeys[$key]=true;
+                if(isset($recentKeys[$key]))continue;
+                $item['source_title']=$sourceTitle;
+                $candidates[]=['key'=>$key,'item'=>$item];
+                if(count($candidates)>=12)break;
+            }
+        }catch(Throwable){$failed++;}
+    }
+
+    if(count($candidates)>1)shuffle($candidates);
+    $selected=array_slice($candidates,0,3);
+    $items=[];$selectedKeys=[];
+    foreach($selected as $entry){
+        if(!is_array($entry)||!is_array($entry['item']??null))continue;
+        $items[]=$entry['item'];
+        $selectedKeys[]=(string)$entry['key'];
+    }
+
+    if(!dashboard_widget_blind_spot_remember($ownerId,$widgetId,$category,$selectedKeys)){
+        return ['ok'=>false,'code'=>'not_found'];
+    }
+
+    return [
+        'ok'=>true,
+        'category'=>$category,
+        'items'=>$items,
+        'sources'=>$sourceNames,
+        'source_count'=>$attempted,
+        'failed_count'=>$failed,
+        'category_count'=>count($categories),
+    ];
 }
