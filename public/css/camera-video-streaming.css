@@ -1,0 +1,83 @@
+.camera-video-streaming-stage {
+    position: relative;
+    width: 100%;
+    min-height: 180px;
+    padding: 0;
+    overflow: hidden;
+    border-style: solid;
+    border-color: rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.16);
+    background: #111;
+}
+
+.camera-video-hls-player,
+.camera-video-mjpeg-image {
+    display: block;
+    width: 100%;
+    min-height: 180px;
+    max-height: 420px;
+    background: #111;
+    object-fit: contain;
+}
+
+.camera-video-hls-player {
+    aspect-ratio: 16 / 9;
+}
+
+.camera-video-mjpeg-image {
+    height: auto;
+}
+
+.camera-video-streaming-status {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    min-height: 38px;
+    padding: 8px 12px;
+    background: rgba(17, 17, 17, 0.78);
+    color: #f8f9fa;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.camera-video-streaming-status.is-warning {
+    background: rgba(102, 77, 3, 0.9);
+}
+
+.camera-video-streaming-status.is-error {
+    background: rgba(132, 32, 41, 0.92);
+}
+
+.camera-video-streaming-hint {
+    font-size: 0.76rem;
+    line-height: 1.45;
+}
+
+.camera-video-stream-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.dashboard-grid > .camera-video-card[data-widget-height="2"] .camera-video-streaming-stage,
+.dashboard-grid > .camera-video-card[data-widget-height="2"] .camera-video-hls-player,
+.dashboard-grid > .camera-video-card[data-widget-height="2"] .camera-video-mjpeg-image {
+    min-height: 340px;
+    max-height: 640px;
+}
+
+@media (max-width: 767.98px) {
+    .camera-video-streaming-stage,
+    .camera-video-hls-player,
+    .camera-video-mjpeg-image {
+        min-height: 180px;
+        max-height: 70vh;
+    }
+
+    .dashboard-grid > .camera-video-card[data-widget-height="2"] .camera-video-streaming-stage,
+    .dashboard-grid > .camera-video-card[data-widget-height="2"] .camera-video-hls-player,
+    .dashboard-grid > .camera-video-card[data-widget-height="2"] .camera-video-mjpeg-image {
+        min-height: 280px;
+    }
+}

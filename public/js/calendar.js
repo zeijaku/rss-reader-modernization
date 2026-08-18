@@ -16,4 +16,6 @@
     loadScript('./js/camera-video.js?v=1.17-c');
     // V1.17-D: YouTube and direct Video playback stay isolated from Snapshot.
     loadScript('./js/camera-video-playback.js?v=1.17-d');
+    // V1.17-E: MJPEG and HLS streaming stay isolated from the other renderers.
+    loadScript('./js/camera-video-streaming.js?v=1.17-e');
 })(document);
