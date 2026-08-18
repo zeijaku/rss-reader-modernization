@@ -11,11 +11,13 @@ $check = static function (bool $condition, string $message) use (&$checks): void
     echo ($condition ? 'PASS' : 'FAIL') . ': ' . $message . PHP_EOL;
 };
 
-$version = rawurlencode(APP_VERSION);
-$check(app_asset_url('css/dashboard.css') === './css/dashboard.css?v=' . $version, 'CSS URL uses the application version');
-$check(app_asset_url('js/dashboard.js') === './js/dashboard.js?v=' . $version, 'JavaScript URL uses the application version');
-$check(app_asset_url('favicon.png') === './favicon.png?v=' . $version, 'favicon URL uses the application version');
-$check(app_asset_url('css/bootstrap-solar-5.3.8.min.css') === './css/bootstrap-solar-5.3.8.min.css?v=' . $version, 'allowlisted Theme CSS is supported');
+$revision = defined('APP_ASSET_REVISION') && trim((string) APP_ASSET_REVISION) !== ''
+    ? rawurlencode((string) APP_ASSET_REVISION)
+    : rawurlencode(APP_VERSION);
+$check(app_asset_url('css/dashboard.css') === './css/dashboard.css?v=' . $revision, 'CSS URL uses the active asset revision');
+$check(app_asset_url('js/dashboard.js') === './js/dashboard.js?v=' . $revision, 'JavaScript URL uses the active asset revision');
+$check(app_asset_url('favicon.png') === './favicon.png?v=' . $revision, 'favicon URL uses the active asset revision');
+$check(app_asset_url('css/bootstrap-solar-5.3.8.min.css') === './css/bootstrap-solar-5.3.8.min.css?v=' . $revision, 'allowlisted Theme CSS is supported');
 
 $invalid = [
     '', '../config/local.php', 'css/../config.css', '/css/dashboard.css',
