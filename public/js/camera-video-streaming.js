@@ -14,24 +14,9 @@
         }
         var link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = './css/camera-video-streaming.css?v=1.17-e';
+        link.href = './css/camera-video-streaming.css?v=1.17-f';
         link.setAttribute('data-camera-video-streaming-style', 'true');
         document.head.appendChild(link);
-    }
-
-    function updateModalHelp() {
-        $('#registerCameraVideoUrl, #changeCameraVideoUrl').each(function () {
-            var $help = $(this).closest('.mb-3').find('.form-text').first();
-            if ($help.length > 0) {
-                $help.text('Snapshot / YouTube / Video File / MJPEG / HLSを表示出来ます。HLSは.m3u8、MJPEGは.mjpg/.mjpegまたは配信元のMJPEG URLを指定してください。');
-            }
-        });
-        $('#registerCameraVideoSourceType, #changeCameraVideoSourceType').each(function () {
-            var $help = $(this).closest('.mb-3').find('.form-text').first();
-            if ($help.length > 0) {
-                $help.text('Autoは代表的なURL形式を判定します。判定出来ないMJPEG等は形式を手動指定してください。HLSのhls.js再生では配信元のCORS許可が必要です。');
-            }
-        });
     }
 
     function addStatus($stage, message, type) {
@@ -349,7 +334,6 @@
 
     function init() {
         injectStylesheet();
-        updateModalHelp();
         scan(document);
         observeCards();
         $(document).off('click.iguguruCameraStreaming', '.camera-video-mjpeg-reconnect')

@@ -25,7 +25,7 @@ checks = {
     'Streaming module performs no server proxy request': 'api_v1.php' not in streaming and 'app_safe_http_fetch' not in streaming,
     'Streaming CSS remains responsive': 'object-fit: contain' in css and 'max-height: 70vh' in css,
     'Height 2 has a larger streaming area': '[data-widget-height="2"] .camera-video-streaming-stage' in css,
-    'Calendar loader includes V1.17-E module': './js/camera-video-streaming.js?v=1.17-e' in calendar,
+    'Calendar loader keeps the Version 1.17 streaming module': './js/camera-video-streaming.js?v=1.17-' in calendar,
     'hls.js notice is documented': '| hls.js | 1.6.16 | Apache-2.0 |' in notices and 'Subresource Integrity' in notices,
     'hls.js upstream license copy is retained': 'Licensed under the Apache License, Version 2.0' in license_text and 'Copyright (c) 2017 Dailymotion' in license_text,
     'No npm runtime dependency is introduced': not (root / 'package.json').exists() and not (root / 'node_modules').exists(),

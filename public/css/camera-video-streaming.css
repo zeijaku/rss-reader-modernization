@@ -71,8 +71,18 @@
     .camera-video-streaming-stage,
     .camera-video-hls-player,
     .camera-video-mjpeg-image {
-        min-height: 180px;
+        min-height: 170px;
         max-height: 70vh;
+    }
+
+    .camera-video-stream-actions .btn {
+        min-width: 7rem;
+        min-height: 40px;
+    }
+
+    .camera-video-streaming-status {
+        padding: 7px 9px;
+        font-size: 0.75rem;
     }
 
     .dashboard-grid > .camera-video-card[data-widget-height="2"] .camera-video-streaming-stage,

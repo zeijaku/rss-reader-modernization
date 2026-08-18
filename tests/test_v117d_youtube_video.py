@@ -8,7 +8,7 @@ playback_css = (root / 'public/css/camera-video-playback.css').read_text(encodin
 calendar_js = (root / 'public/js/calendar.js').read_text(encoding='utf-8')
 
 checks = {
-    'Playback stays isolated from Snapshot module': 'camera-video-playback.js' not in base_js and 'camera-video-playback.js?v=1.17-d' in calendar_js,
+    'Playback stays isolated from Snapshot module': 'camera-video-playback.js' not in base_js and 'camera-video-playback.js?v=1.17-' in calendar_js,
     'YouTube URL parser accepts explicit known hosts only': all(host in playback_js for host in ['www.youtube.com', 'm.youtube.com', 'youtu.be', 'www.youtube-nocookie.com']),
     'YouTube URL parser supports watch/live/embed/shorts': all(token in playback_js for token in ["'/watch'", "['live', 'embed', 'shorts']", "searchParams.get('v')"]),
     'YouTube Video ID is restricted to eleven safe characters': '/^[A-Za-z0-9_-]{11}$/' in playback_js,

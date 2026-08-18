@@ -15,21 +15,6 @@
         document.head.appendChild(link);
     }
 
-    function updateModalHelp() {
-        $('#registerCameraVideoUrl, #changeCameraVideoUrl').each(function () {
-            var $help = $(this).closest('.mb-3').find('.form-text').first();
-            if ($help.length > 0) {
-                $help.text('Snapshot / YouTube / Video Fileを表示出来ます。YouTubeはwatch・live・youtu.be等のURL、Video FileはMP4/WebM等の直接URLを指定してください。');
-            }
-        });
-        $('#registerCameraVideoSourceType, #changeCameraVideoSourceType').each(function () {
-            var $help = $(this).closest('.mb-3').find('.form-text').first();
-            if ($help.length > 0) {
-                $help.text('AutoはYouTubeと代表的なVideo拡張子を判定します。MPEG等のBrowser依存形式はVideo Fileを手動指定してください。');
-            }
-        });
-    }
-
     function youtubeHostAllowed(hostname) {
         var host = String(hostname || '').toLowerCase();
         return [
@@ -230,7 +215,6 @@
 
     function init() {
         injectStylesheet();
-        updateModalHelp();
         scan(document);
         observeCards();
     }

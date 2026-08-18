@@ -59,7 +59,7 @@
         if (document.querySelector('link[data-camera-video-style]')) { return; }
         var link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = './css/camera-video.css?v=1.17-c';
+        link.href = './css/camera-video.css?v=1.17-f';
         link.setAttribute('data-camera-video-style', 'true');
         document.head.appendChild(link);
     }
@@ -70,9 +70,9 @@
             ['snapshot', 'Snapshot'],
             ['youtube', 'YouTube'],
             ['video', 'Video File'],
-            ['mjpeg', 'MJPEG（V1.17-E候補）'],
-            ['hls', 'HLS（V1.17-E以降で再判定）'],
-            ['iframe', 'iframe（V1.17-E以降で再判定）']
+            ['mjpeg', 'MJPEG'],
+            ['hls', 'HLS'],
+            ['iframe', 'iframe（未対応）']
         ];
     }
 
@@ -111,18 +111,23 @@
         $('<button>').attr({type: 'button', 'data-bs-dismiss': 'modal', 'aria-label': '閉じる'}).addClass('btn-close btn-close-white').appendTo($header);
 
         var $body = $('<div>').addClass('modal-body');
+        var $sourceField;
         $('<input>').attr('type', 'hidden').addClass(register ? 'registerCameraVideoLocation' : 'changeCameraVideoId').appendTo($body);
         field($body, '見出し', prefix + 'CameraVideoTitleValue',
             $('<input>').attr({type: 'text', id: prefix + 'CameraVideoTitleValue', maxlength: '64', required: 'required'}).addClass('form-control ' + prefix + 'CameraVideoTitleValue').val(register ? 'Camera / Video' : ''), '');
         field($body, 'Media URL', prefix + 'CameraVideoUrl',
             $('<input>').attr({type: 'url', id: prefix + 'CameraVideoUrl', maxlength: '2048', required: 'required', inputmode: 'url', placeholder: 'https://...'}).addClass('form-control ' + prefix + 'CameraVideoUrl'),
-            'Snapshot（JPEG/PNG）はV1.17-Cで直接表示します。YouTube / Video FileはV1.17-D以降で対応します。');
-        field($body, '形式', prefix + 'CameraVideoSourceType',
+            'Snapshot / YouTube / Video File / MJPEG / HLSに対応します。配信元の直接Media URLを指定してください。');
+        $sourceField = field($body, '形式', prefix + 'CameraVideoSourceType',
             selectControl(prefix + 'CameraVideoSourceType', prefix + 'CameraVideoSourceType', sourceOptions(), 'auto'),
-            'AutoはURLから判別し、判別出来ないURLはSnapshotとして表示を試みます。');
+            'AutoはURLから明確に判定出来る形式だけを選びます。判定出来ない場合は形式を手動指定してください。');
+        $('<small>')
+            .addClass('form-text d-block camera-video-auto-detect-note ' + prefix + 'CameraVideoAutoDetect')
+            .attr({'aria-live': 'polite'})
+            .appendTo($sourceField);
         field($body, '更新間隔', prefix + 'CameraVideoRefreshSeconds',
             selectControl(prefix + 'CameraVideoRefreshSeconds', prefix + 'CameraVideoRefreshSeconds', [['0','OFF'],['10','10秒'],['30','30秒'],['60','1分'],['300','5分'],['600','10分']], '600'),
-            'Snapshot向けです。配信元の更新周期より極端に短くしないでください。').addClass('camera-video-refresh-field');
+            'Snapshot専用です。配信元の更新周期より極端に短くしないでください。').addClass('camera-video-refresh-field');
         field($body, '元サイトURL（任意）', prefix + 'CameraVideoSourcePageUrl',
             $('<input>').attr({type: 'url', id: prefix + 'CameraVideoSourcePageUrl', maxlength: '2048', inputmode: 'url', placeholder: 'https://...'}).addClass('form-control ' + prefix + 'CameraVideoSourcePageUrl'),
             '出典・配信元ページへ戻るためのURLです。');
@@ -192,7 +197,15 @@
     }
 
     function sourceLabel(type) {
-        return {snapshot:'Snapshot', youtube:'YouTube', video:'Video File', mjpeg:'MJPEG', hls:'HLS', iframe:'iframe'}[type] || 'Auto';
+        return {
+            snapshot: 'Snapshot',
+            youtube: 'YouTube',
+            video: 'Video File',
+            mjpeg: 'MJPEG',
+            hls: 'HLS',
+            iframe: 'iframe',
+            unknown: '判定不能'
+        }[type] || 'Auto';
     }
 
     function refreshLabel(seconds) {
@@ -209,20 +222,27 @@
         var parsed;
         var host = '';
         var path = '';
+        var query = '';
         try {
             parsed = new window.URL(source, window.location.href);
             host = String(parsed.hostname || '').toLowerCase();
             path = String(parsed.pathname || '').toLowerCase();
+            query = String(parsed.search || '').toLowerCase();
         } catch (error) {
-            return 'snapshot';
+            return 'unknown';
         }
         if (host === 'youtu.be' || host === 'youtube.com' || host.endsWith('.youtube.com') || host === 'youtube-nocookie.com' || host.endsWith('.youtube-nocookie.com')) {
             return 'youtube';
         }
-        if (/\.(?:mp4|webm|ogv|ogg)$/.test(path)) { return 'video'; }
+        if (/\.(?:mp4|webm|ogv|ogg|m4v)$/.test(path)) { return 'video'; }
         if (/\.m3u8$/.test(path)) { return 'hls'; }
-        if (/\.(?:mjpg|mjpeg)$/.test(path)) { return 'mjpeg'; }
-        return 'snapshot';
+        if (/\.(?:mjpg|mjpeg)$/.test(path)
+            || /(?:^|\/)(?:mjpeg|mjpg)(?:\/|$)/.test(path)
+            || /(?:^|[?&])(?:format|type|mode)=(?:mjpeg|mjpg)(?:&|$)/.test(query)) {
+            return 'mjpeg';
+        }
+        if (/\.(?:jpe?g|png|gif|webp|bmp|avif)$/.test(path)) { return 'snapshot'; }
+        return 'unknown';
     }
 
     function effectiveSourceType(sourceType, mediaUrl) {
@@ -341,9 +361,17 @@
     }
 
     function buildDeferredStage($stage, sourceType) {
-        $('<i>').addClass('fas fa-video camera-video-placeholder-icon').attr('aria-hidden', 'true').appendTo($stage);
+        var message = '読み込み準備中…';
+        var icon = 'fa-video';
+        if (sourceType === 'unknown') {
+            message = 'Autoでは形式を判定出来ません。編集から形式を手動指定してください。';
+            icon = 'fa-circle-question';
+        } else if (sourceType === 'iframe') {
+            message = 'iframeはV1.17では未対応です。元のMedia URLまたは対応形式を指定してください。';
+        }
+        $('<i>').addClass('fas ' + icon + ' camera-video-placeholder-icon').attr('aria-hidden', 'true').appendTo($stage);
         $('<strong>').addClass('camera-video-source-type').text(sourceLabel(sourceType)).appendTo($stage);
-        $('<span>').addClass('camera-video-foundation-note').text('この形式の表示はV1.17-D以降で対応予定です').appendTo($stage);
+        $('<span>').addClass('camera-video-foundation-note').text(message).appendTo($stage);
     }
 
     function buildCard(widget) {
@@ -393,8 +421,8 @@
 
         var $meta = $('<div>').addClass('camera-video-meta text-muted small').appendTo($body);
         $('<span>').text('形式: ' + (sourceType === 'auto' ? 'Auto → ' + sourceLabel(renderType) : sourceLabel(sourceType))).appendTo($meta);
-        $('<span>').text('更新間隔: ' + refreshLabel(refreshSeconds)).appendTo($meta);
         if (renderType === 'snapshot') {
+            $('<span>').text('更新間隔: ' + refreshLabel(refreshSeconds)).appendTo($meta);
             $('<span>').addClass('camera-video-last-updated').text('最終更新: --:--:--').appendTo($meta);
         }
 
@@ -483,7 +511,7 @@
         $('.changeCameraVideoWidth').val(String($trigger.attr('data-widget-width') || '2'));
         $('.changeCameraVideoHeight').val(String($trigger.attr('data-widget-height') || '1'));
         $('.changeCameraVideoStyle').val(String($trigger.attr('data-widget-style') || 'dark'));
-        syncRefreshField('change');
+        syncSourceUi('change');
     }
 
     function updateWidget($form) {
@@ -503,11 +531,26 @@
             .fail(function (xhr, textStatus) { showNotice(apiErrorMessage(xhr, textStatus), 'danger'); }).always(function () { requestEnd($button); });
     }
 
-    function syncRefreshField(prefix) {
-        var type = String($('.' + prefix + 'CameraVideoSourceType').val() || 'auto');
-        var disabled = ['youtube','video','mjpeg','hls','iframe'].indexOf(type) >= 0;
-        $('.' + prefix + 'CameraVideoRefreshSeconds').prop('disabled', disabled);
+    function syncSourceUi(prefix) {
+        var sourceType = String($('.' + prefix + 'CameraVideoSourceType').val() || 'auto');
+        var mediaUrl = String($('.' + prefix + 'CameraVideoUrl').val() || '');
+        var renderType = sourceType === 'auto' ? autoSourceType(mediaUrl) : sourceType;
+        var $refresh = $('.' + prefix + 'CameraVideoRefreshSeconds');
+        var $note = $('.' + prefix + 'CameraVideoAutoDetect');
+        var disabled = renderType !== 'snapshot';
+
+        $refresh.prop('disabled', disabled);
         $('#' + prefix + 'CameraVideoRefreshSeconds').closest('.camera-video-refresh-field').toggleClass('is-disabled', disabled);
+        $note.removeClass('text-muted text-warning');
+        if (sourceType !== 'auto') {
+            $note.text('').addClass('text-muted');
+        } else if (mediaUrl === '') {
+            $note.text('Media URLを入力するとAuto判定結果を表示します。').addClass('text-muted');
+        } else if (renderType === 'unknown') {
+            $note.text('Auto判定: 判定出来ません。Snapshot / MJPEG / Video Fileなどを手動指定してください。').addClass('text-warning');
+        } else {
+            $note.text('Auto判定: ' + sourceLabel(renderType)).addClass('text-muted');
+        }
     }
 
     function bindEvents() {
@@ -517,8 +560,10 @@
             .off('submit' + eventNamespace, '#changeCameraVideoForm').on('submit' + eventNamespace, '#changeCameraVideoForm', function (e) { e.preventDefault(); updateWidget($(this)); })
             .off('click' + eventNamespace, '.delete-camera-video').on('click' + eventNamespace, '.delete-camera-video', function () { deleteWidget($(this)); })
             .off('click' + eventNamespace, '.camera-video-refresh-trigger').on('click' + eventNamespace, '.camera-video-refresh-trigger', function () { loadSnapshot($(this).closest('.camera-video-card'), true); })
-            .off('change' + eventNamespace, '.registerCameraVideoSourceType').on('change' + eventNamespace, '.registerCameraVideoSourceType', function () { syncRefreshField('register'); })
-            .off('change' + eventNamespace, '.changeCameraVideoSourceType').on('change' + eventNamespace, '.changeCameraVideoSourceType', function () { syncRefreshField('change'); });
+            .off('change' + eventNamespace, '.registerCameraVideoSourceType').on('change' + eventNamespace, '.registerCameraVideoSourceType', function () { syncSourceUi('register'); })
+            .off('change' + eventNamespace, '.changeCameraVideoSourceType').on('change' + eventNamespace, '.changeCameraVideoSourceType', function () { syncSourceUi('change'); })
+            .off('input' + eventNamespace + ' change' + eventNamespace, '.registerCameraVideoUrl').on('input' + eventNamespace + ' change' + eventNamespace, '.registerCameraVideoUrl', function () { syncSourceUi('register'); })
+            .off('input' + eventNamespace + ' change' + eventNamespace, '.changeCameraVideoUrl').on('input' + eventNamespace + ' change' + eventNamespace, '.changeCameraVideoUrl', function () { syncSourceUi('change'); });
     }
 
     function init() {
@@ -526,7 +571,7 @@
         injectStylesheet();
         injectUi();
         bindEvents();
-        syncRefreshField('register');
+        syncSourceUi('register');
         loadWidgets();
     }
 
