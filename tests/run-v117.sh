@@ -10,3 +10,7 @@ echo '== V1.17-C Snapshot Camera checks =='
 node --check "$ROOT/public/js/camera-video.js"
 node --check "$ROOT/public/js/calendar.js"
 python3 "$ROOT/tests/test_v117c_snapshot_camera.py"
+
+echo '== V1.17-D YouTube / Video playback checks =='
+node --check "$ROOT/public/js/camera-video-playback.js"
+python3 "$ROOT/tests/test_v117d_youtube_video.py"

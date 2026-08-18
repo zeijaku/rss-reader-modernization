@@ -12,6 +12,8 @@
 
     loadScript('./js/calendar-core.js?v=1.9.0');
     loadScript('./js/mail-widget.js?v=1.14-d');
-    // V1.17-C: Camera / Video stays isolated so later renderers can extend it safely.
+    // V1.17-C: Camera / Video base and Snapshot renderer.
     loadScript('./js/camera-video.js?v=1.17-c');
+    // V1.17-D: YouTube and direct Video playback stay isolated from Snapshot.
+    loadScript('./js/camera-video-playback.js?v=1.17-d');
 })(document);

@@ -28,6 +28,7 @@ expected_css = {
     'bootstrap-solar-5.3.8.min.css',
     'bootstrap-slate-5.3.8.min.css',
     'camera-video.css',
+    'camera-video-playback.css',
     'dashboard.css',
     'mini-game.css',
     'clock-timer.css',
@@ -38,6 +39,7 @@ expected_js = {
     'jquery-3.7.1.min.js',
     'bootstrap.bundle-5.3.8.min.js',
     'camera-video.js',
+    'camera-video-playback.js',
     'dashboard.js',
     'calendar-core.js',
     'calendar.js',
@@ -171,8 +173,8 @@ for rel in sorted(legacy_assets):
 
 public_files = [p for p in PUBLIC.rglob('*') if p.is_file()]
 public_size = sum(p.stat().st_size for p in public_files)
-check(len(public_files) == 44, 'public inventory contains the 44 retained files including Camera / Video assets')
-check(public_size < 4_100_000, 'public inventory remains below 4.1 MB after legacy asset cleanup')
+check(len(public_files) == 46, 'public inventory contains the 46 retained files including Camera / Video playback assets')
+check(public_size < 4_200_000, 'public inventory remains below 4.2 MB after Camera / Video playback assets')
 check(not (ROOT / 'package.json').exists(), 'asset cleanup adds no npm dependency')
 check(not (ROOT / 'node_modules').exists(), 'asset cleanup adds no node_modules directory')
 
