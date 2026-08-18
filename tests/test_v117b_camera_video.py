@@ -12,8 +12,8 @@ checks = {
     'Add/Edit modal IDs are present': 'registerCameraVideo' in js and 'changeCameraVideo' in js,
     'Widget uses generic Dashboard hooks': 'dashboard-widget camera-video-card' in js and 'widget-drag-handle' in js,
     'Width and Height data attributes are present': 'data-widget-width' in js and 'data-widget-height' in js,
-    'B renderer is a placeholder': 'V1.17-B 設定保存・配置確認' in js,
-    'No iframe element is created in B': "'<iframe>'" not in js and "createElement('iframe')" not in js,
+    'No iframe renderer exists through C': "'<iframe>'" not in js and "createElement('iframe')" not in js,
+    'No video renderer exists through C': "'<video>'" not in js and "createElement('video')" not in js,
     'Header height stays 44px': 'height: 44px;' in css and 'min-height: 44px;' in css,
     'PHP does not fetch external media': 'app_safe_http_fetch(' not in php and 'curl_' not in php,
 }
@@ -23,4 +23,4 @@ for name, passed in checks.items():
     print(('PASS' if passed else 'FAIL') + ': ' + name)
 if failed:
     raise SystemExit(1)
-print('PASS: V1.17-B frontend/security contract')
+print('PASS: V1.17-B Camera / Video foundation contract remains intact')
