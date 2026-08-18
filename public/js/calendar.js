@@ -12,4 +12,6 @@
 
     loadScript('./js/calendar-core.js?v=1.9.0');
     loadScript('./js/mail-widget.js?v=1.14-d');
+    // V1.17-B: Camera / Video remains a separate module for later renderers.
+    loadScript('./js/camera-video.js?v=1.17-b');
 })(document);

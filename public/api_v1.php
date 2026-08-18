@@ -6,6 +6,7 @@ define('APP_RESPONSE_FORMAT', 'json');
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/api.php';
+require_once dirname(__DIR__) . '/app/camera_video.php';
 
 // V1.9-C R2: Mail dependencies are loaded at the API boundary so the V1.8
 // bootstrap/api core does not need to be rewritten just to enable Mail Widget.
@@ -82,6 +83,9 @@ if ($action === '' || strlen($action) > 64 || preg_match('/^[a-z]+(?:\.[a-z]+)+$
 }
 
 try {
+    if (str_starts_with($action, 'camera.widget.')) {
+        api_emit(camera_video_api_dispatch($action, $userId, $_POST));
+    }
     if (str_starts_with($action, 'mail.account.')) {
         api_emit(api_mail_account_dispatch($action, $userId, $_POST));
     }
