@@ -4,7 +4,7 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 SCRIPT_DIR="$ROOT/tests"
 
-# V1.17-G / TEST-1
+# V1.17-G / TEST-1 + TEST-2
 # Default CI should protect the current product contract, not every historical
 # implementation detail accumulated during earlier phased releases.
 #
@@ -63,7 +63,7 @@ if grep -RInE --exclude-dir=.git --exclude='*.md' --exclude='.env.example' '(BEG
     exit 1
 fi
 echo 'PASS: secret pattern scan'
-python3 "$SCRIPT_DIR/test_version_marker.py"
+python3 "$SCRIPT_DIR/test_current_version_contract.py"
 
 echo '== Current regression: RSS engine / fetch / cache =='
 php "$SCRIPT_DIR/test_m1a_feed_engine.php"
@@ -85,8 +85,7 @@ node "$SCRIPT_DIR/test_m2a_dashboard_runtime.js"
 node "$SCRIPT_DIR/test_m2b_feed_runtime.js"
 node "$SCRIPT_DIR/test_m2c_accessibility_runtime.js"
 node "$SCRIPT_DIR/test_m2d_mutation_runtime.js"
-python3 "$SCRIPT_DIR/test_m2e_asset_inventory.py"
-python3 "$SCRIPT_DIR/test_m2f_dependency_inventory.py"
+python3 "$SCRIPT_DIR/test_current_asset_contract.py"
 python3 "$SCRIPT_DIR/test_m2f_browser_smoke.py"
 
 echo '== Current regression: Dashboard / Widget core =='
@@ -130,7 +129,7 @@ node "$SCRIPT_DIR/test_v16d_storage_runtime.js"
 
 echo '== Current regression: Assets / Login / Grid / Calendar =='
 php "$SCRIPT_DIR/test_v17c_asset_url.php"
-python3 "$SCRIPT_DIR/test_v17d_cache_security.py"
+python3 "$SCRIPT_DIR/test_current_cache_security.py"
 python3 "$SCRIPT_DIR/test_v17d_response_headers.py"
 php "$SCRIPT_DIR/test_v17e_remember_token.php"
 php "$SCRIPT_DIR/test_v17f_persistent_login.php"
@@ -152,6 +151,6 @@ python3 "$SCRIPT_DIR/test_v113c_settings_browser.py"
 
 echo '== Current regression: Information Widgets =='
 php "$SCRIPT_DIR/test_v115_information_widgets.php"
-python3 "$SCRIPT_DIR/test_v115_information_widgets.py"
+python3 "$SCRIPT_DIR/test_current_information_widget_contract.py"
 
 echo 'PASS: current regression suite completed'
