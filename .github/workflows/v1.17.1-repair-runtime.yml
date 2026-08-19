@@ -1,0 +1,66 @@
+name: V1.17.1 Repair No-Reload Runtime
+
+on:
+  push:
+    branches:
+      - release/v1.17.1-final
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v1.17.1-repair-runtime-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    name: Repair production no-reload runtime
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Repair malformed selectors only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('public/js/widget-settings-no-reload.js')
+          source = path.read_text(encoding='utf-8')
+          replacements = {
+              "val('.changeGameHeight))": "val('.changeGameHeight')",
+              "val('.changeMemoHeight))": "val('.changeMemoHeight')",
+              "val('.changeTaskWidgetHeight))": "val('.changeTaskWidgetHeight')",
+              "val('.changeWeatherHeight))": "val('.changeWeatherHeight')",
+              "val('.changeEarthquakeHeight))": "val('.changeEarthquakeHeight')",
+          }
+          for old, new in replacements.items():
+              count = source.count(old)
+              if count not in (0, 1):
+                  raise SystemExit(f'unexpected occurrence count for {old}: {count}')
+              source = source.replace(old, new)
+          path.write_text(source, encoding='utf-8', newline='\n')
+          PY
+
+      - name: Validate repaired runtime
+        run: |
+          node --check public/js/widget-settings-no-reload.js
+          git diff --check -- public/js/widget-settings-no-reload.js
+
+      - name: Commit repair when needed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- public/js/widget-settings-no-reload.js; then
+            echo 'No repair needed.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/js/widget-settings-no-reload.js
+          git commit -m 'fix: restore production no-reload settings runtime'
+          git push origin HEAD:release/v1.17.1-final
