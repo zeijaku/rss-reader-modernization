@@ -67,7 +67,6 @@ def main() -> int:
         check(all('..' not in PurePosixPath(name).parts for name in names), 'ZIP contains no parent traversal path')
         top = {PurePosixPath(name).parts[0] for name in names}
         check(len(top) == 1, 'ZIP contains one top-level directory')
-        top_name = next(iter(top))
         relative = {'/'.join(PurePosixPath(name).parts[1:]): name for name in names}
         check(REQUIRED <= set(relative), 'release package contains all required files')
         check(not any(rel in FORBIDDEN_EXACT for rel in relative), 'release package excludes private and legacy exact files')
