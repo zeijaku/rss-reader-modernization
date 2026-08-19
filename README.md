@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.17.1`
-Release tag: `v1.17.1`
+**Stable release:** `RSS Reader Modernization 1.17.2`
+Release tag: `v1.17.2`
+
+Version 1.17.2では、Dashboardへ上級者向けのX Timeline Widgetを追加しました。Server側のX API Bearer Tokenを使い、明示した公開Accountの最近の投稿をRead Onlyで表示します。表示件数3／5／10件、Reply／Repostの含有設定、短時間Cacheと期限付きstale fallbackに対応し、Bearer TokenはBrowserへ渡しません。追加ModalではX Developer Platform、Pay Per Use、`APP_X_BEARER_TOKEN`が必要なことを案内し、Tokenの未設定／形式不正／未確認／確認済み／認証失敗を区別して表示します。X本体の「おすすめ / For You」Feedは公式APIで同じものを取得出来ないため対象外とし、将来課題へ分離しています。DB schemaとMigrationの追加変更はありません。
 
 Version 1.17.1では、Version 1.17.0で追加したCamera / Video Widgetと、Mail／Information Widget／各種設定変更の安定性を改善しました。通常API Actionでは認証・CSRF・Action validation後にSession lockを早期解放し、Camera / Video、Mail、Earthquake、Sun / Moon、Air QualityへClient-side watchdogを追加しています。Widget設定保存は対象Card中心の更新へ変更し、他Widgetの設定変更で再生中のYouTubeが停止する問題や、通知が残り続ける問題、hls.js 1.6.16のSRI不一致も修正しました。DB schema、Migration、必須configの追加変更はありません。
 
@@ -56,6 +58,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Sun / Moon Widgetの日の出・日の入り・月齢・月相表示
 - Air Quality / UV WidgetのUS AQI、PM2.5、PM10、UV表示
 - Camera / Video WidgetのSnapshot、YouTube、Video File、MJPEG、HLS表示
+- X Timeline Widgetによる指定した公開X Accountの最近の投稿表示（上級者向け、X Developer Platform／Pay Per Use／Server-side Bearer Tokenが必要）
 - スマートフォンでの左右スワイプによるタブ切り替え
 - Feed／Calendar読込中のSpinner表示
 - 記事リンクのStock保存と一覧表示
@@ -308,6 +311,7 @@ Migration前に必ずDB全体をバックアップしてください。Duplicate
 - `config/local.php` はGit管理外・DocumentRoot外
 - `REGISTRATION_ENABLED` は運用方針に合わせて設定
 - `var/session/`、`var/security/login-throttle/`、`var/cache/feed/` がPHPから書込み可能
+- X Timelineを利用する場合は`APP_X_BEARER_TOKEN`をServer側Secretとして設定し、`var/cache/x/`をPHPから書込み可能にする。利用しない場合は空のままでよい
 - Feed cacheは `APP_FEED_CACHE_ENABLED=true`、`APP_FEED_CONDITIONAL_REQUEST_ENABLED=true`、`APP_FEED_CACHE_TTL_SECONDS=60`、`APP_FEED_CACHE_LOCK_TIMEOUT_MS=9000` が初期値
 - Retryは `APP_FEED_RETRY_ENABLED=true`、最大待機 `3600` 秒、stale-if-errorは有効・最大 `86400` 秒が初期値
 - `var/log/` を利用する場合もDocumentRoot外
@@ -364,6 +368,7 @@ Secure Baseline以降も、M2-G完了時点では次を残しています。
 - Dashboard固有JS/CSS、Feed描画、semantic HTML、Keyboard / Focus / ARIA、Responsive layout、基本的な表示文言と通知は整理済み
 - 未使用Frontend配布物はM2-Eで整理済み。jQueryとFont AwesomeはM2-Fで互換更新済み。Bootstrap / Bootswatch 4.1.3、Popper 1系、Drawer、iScrollのmajor migrationと、全Themeのcontrast最終調整は別途検討
 - Source abstractionはFetcher / FeedSource / Parser dispatcher / RSS 2.0・RSS 1.0・Atom Adapter / Normalized Item / deterministic Item identity / cache-aware Feed serviceまで導入済み
+- X Timelineは公開Accountの最近の投稿をRead Onlyで表示する範囲に限定。X本体の「おすすめ / For You」Feedの再現と、User Context OAuthを使うHome Timelineは将来課題
 
 これらはM2完了後の別工程へ意図的に分離しています。
 

@@ -1,10 +1,14 @@
 from pathlib import Path
 import sys
+import re
 
 root = Path(__file__).resolve().parents[1]
 streaming = (root / 'public/js/camera-video-streaming.js').read_text(encoding='utf-8')
 css = (root / 'public/css/camera-video-streaming.css').read_text(encoding='utf-8')
 calendar = (root / 'public/js/calendar.js').read_text(encoding='utf-8')
+version_php = (root / 'app/version.php').read_text(encoding='utf-8')
+asset_match = re.search(r"APP_ASSET_REVISION\s*=\s*'([^']+)'", version_php)
+asset_revision = asset_match.group(1) if asset_match else ''
 notices = (root / 'THIRD_PARTY_NOTICES.md').read_text(encoding='utf-8')
 license_text = (root / 'licenses/hls.js-1.6.16-Apache-2.0.txt').read_text(encoding='utf-8')
 
@@ -26,7 +30,7 @@ checks = {
     'Streaming module performs no server proxy request': 'api_v1.php' not in streaming and 'app_safe_http_fetch' not in streaming,
     'Streaming CSS remains responsive': 'object-fit: contain' in css and 'max-height: 70vh' in css,
     'Height 2 has a larger streaming area': '[data-widget-height="2"] .camera-video-streaming-stage' in css,
-    'Calendar loader keeps the stable Version 1.17.1 streaming module': './js/camera-video-streaming.js?v=1.17.1' in calendar,
+    'Calendar loader keeps the streaming module on the active asset revision': bool(asset_revision) and f'./js/camera-video-streaming.js?v={asset_revision}' in calendar,
     'hls.js notice is documented': '| hls.js | 1.6.16 | Apache-2.0 |' in notices and 'Subresource Integrity' in notices,
     'hls.js upstream license copy is retained': 'Licensed under the Apache License, Version 2.0' in license_text and 'Copyright (c) 2017 Dailymotion' in license_text,
     'No npm runtime dependency is introduced': not (root / 'package.json').exists() and not (root / 'node_modules').exists(),

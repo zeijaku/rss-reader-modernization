@@ -1,101 +1,126 @@
-# RSS Reader Modernization 1.17.1 Release Notes
+# RSS Reader Modernization 1.17.2 Release Notes
 
 ## Overview
 
-Version 1.17.1は、Version 1.17.0で追加したCamera / Video Widgetと、Dashboard上で同時に動くMail／Information Widget／各種設定変更の安定性を改善するMaintenance Releaseです。
+Version 1.17.2では、Dashboardへ**X Timeline Widget**を追加します。
 
-新しいDB TableやColumnは追加せず、既存の機能・データ構造を維持したまま、Session lock、Timeout時の復旧、Widget設定保存時の画面更新、通知表示、hls.js読込みを整理しています。
+指定した公開X Accountの最近の投稿をX APIからRead Onlyで取得し、RSS Reader内のCardとして表示します。X APIはServer側からだけ呼び出し、Bearer TokenをBrowserへ渡しません。
 
-## Main changes
+このWidgetはX Developer Platform、Pay Per Use Credit、Bearer TokenのServer設定が必要なため、通常Widgetとは分けて**上級者向け機能**として案内します。DB Table／Column／Migrationの追加変更はありません。
 
-- APIでAuthentication、CSRF、Action validationを完了した後、通常Actionではfile-backed PHP Session lockを早期解放し、RSS／Mail／Weather等の遅いI/Oによって別のDashboard API Requestが直列待ちしにくい構成へ変更。
-- Account email／password変更はSession IDとCSRF Tokenを更新するため、従来どおりSessionを開いた状態で処理。
-- Session lock解放処理をAPIの`Throwable` boundary内へ移し、稀な`session_write_close()`失敗時も通常のJSON 500 responseとReference IDへ収めるよう修正。
-- Camera / VideoへClient-side watchdogを追加。Snapshotは12秒、Video metadataは15秒、MJPEGは12秒を目安に、固まった表示を復旧可能な状態へ戻す。
-- Mail Widgetへ13.5秒のClient-side watchdogを追加し、`aria-busy`、Spinner、本文Loading等が残り続けた場合に更新／再試行可能な状態へ戻す。
-- Earthquakeは10.5秒、Sun / Moonは6.5秒、Air Qualityは8.5秒のClient-side watchdogを追加し、Server／XHR側のbounded timeout後もLoading表示だけが残り続ける状態を回避。
-- RSS、Clock、Game、Memo、Task、Search Feed、Links、Weather、Earthquake、Sun / Moon、Air Quality、Calendar、Camera / Video、Mailの設定変更を、ページ全体Reloadではなく対象Card中心の更新へ変更。
-- Weatherの見出し色／Title／Width／Heightだけを変更した場合はWeather dataを再取得せず、表示だけ更新。地域／表示日数を変更した場合のみDataを再取得。
-- Camera / Video設定変更時は対象Camera Cardだけを置換し、無関係なCardを並べ直さない。Mail設定変更も対象Mail Cardだけを更新。
-- 他Widgetの設定変更時に、再生中のYouTube iframe等をページReloadで作り直して再生停止させる問題を解消。
-- Dashboard共通通知を`success: 約2.5秒`、`info: 約3秒`、`danger: 約6秒`で自動消去し、「設定を更新しました」が残り続ける問題を修正。
-- hls.js 1.6.16の固定Versionとanonymous CORSを維持しつつ、Browserで不一致となっていたSubresource Integrity値を正しいSHA-384へ修正。
-- `APP_VERSION`、`APP_VERSION_LABEL`、`APP_ASSET_REVISION`を正式な`1.17.1`へ統一。
+## X Timeline Widget
+
+- 公開Accountのusernameを指定して最近の投稿を表示。
+- 表示件数は3／5／10件。
+- Replyを含める／除外する設定。
+- Repostを含める／除外する設定。
+- Widget Title、Header color、Width／Heightを既存Dashboard Widget設定として保存。
+- 手動Refreshに対応。
+- 設定変更／削除はページ全体Reloadを前提にせず、他Widgetの状態を不要に失わない。
+- 投稿本文、投稿時刻、元投稿へのLinkをRSS Reader側のHTMLとして描画。
+
+## Advanced configuration / Pay Per Use
+
+X Timelineを利用するには、X Developer Platform側でApp／Projectを準備し、Pay Per UseのCreditを利用可能な状態にしたうえでBearer TokenをServerへ設定します。
+
+```php
+'APP_X_BEARER_TOKEN' => 'your-server-side-secret',
+```
+
+実Tokenは`config/local.php`またはEnvironment variableだけへ置き、Git、Release ZIP、Browser、Support用Screenshot等へ含めません。
+
+Tokenを設定しない場合でも、X Timeline以外の既存機能は利用出来ます。
+
+## Bearer Token state guidance
+
+X Timeline追加Modalは、Raw TokenをBrowserへ渡さず次の状態だけを表示します。
+
+- `missing`: Token未設定。目立つ警告を表示し、X Timeline追加を無効化。
+- `invalid_format`: 改行／制御文字等を含むLocal設定不正。警告を表示し、追加を無効化。
+- `unverified`: Tokenは設定済みだが、現在TokenによるX API認証成功をまだ確認していない。
+- `verified`: 現在Tokenで直近のX API認証成功を確認済み。
+- `auth_failed`: 現在TokenでHTTP 401を確認。Tokenの再発行、失効、Server設定を確認するよう案内。
+
+Modal表示のためだけにX APIへ検証Requestは送りません。Pay Per Useの不要な消費を避け、実Timeline取得の認証結果を状態へ反映します。
+
+Local connection stateにはTokenのSHA-256 fingerprintと状態／確認時刻だけを保存し、Raw Tokenは保存しません。Server設定のTokenが変わるとfingerprintが一致しなくなるため、古い確認状態は再利用しません。
+
+## X API / Cache behavior
+
+- username lookupとUser posts取得はServer側X API clientだけから実行。
+- X API hostは固定し、任意URLをBrowser／User inputからProxyする構成にしない。
+- 通常取得結果は短時間Cacheし、不要なAPI RequestとPay Per Use消費を抑制。
+- 許可された一時障害では期限付きstale fallbackを利用。
+- HTTP 401／403等の認証・権限Errorはstaleで隠さずfail closed。
+- Browserから`api.x.com`へ直接接続せず、Bearer TokenをJavaScript、HTML、RSS Reader API responseへ含めない。
+
+Defaultは`APP_X_CACHE_TTL_SECONDS=300`、`APP_X_STALE_MAX_AGE_SECONDS=3600`、`APP_X_TIMEOUT_MS=5000`です。
 
 ## Database and configuration
 
-Version 1.17.1でDB Table／Column、Migration、SQLの追加変更はありません。
+Version 1.17.2でDB Table／Column／Migrationの追加変更はありません。X Timelineの設定は既存`dashboard_widget.widget_config`へ保存します。
 
-必須Configurationの追加もありません。Server固有の`config/local.php`、`.env`、実DB、`var/`配下のRuntime Dataは更新対象外です。
+`APP_X_BEARER_TOKEN`はX Timelineを利用する場合だけ必要なOptional Secretです。利用しない環境では空のままで構いません。
 
-Version 1.17.0適用済み環境ではCode差し替えのみです。
+Server固有`config/local.php`、`.env`、実DB、`var/`配下のRuntime Dataは更新対象外です。
 
-## Session / API behavior
+## Security / privacy boundary
 
-Dashboardは起動時やWidget更新時に複数API Requestを並行して送る場合があります。file-backed PHP Sessionを外部I/O中も保持すると、1つの遅いRequestによって他Requestまで待たされるため、Version 1.17.1ではAuthentication／CSRF／Action validation後に通常ActionのSession lockを解放します。
-
-Account email／password変更はSession stateを変更するため例外としてSessionを維持します。Session解放自体が失敗した場合もAPI exception boundaryで処理し、HTML errorへ崩さずJSON API contractを維持します。
-
-## Widget settings update behavior
-
-設定変更は、対象Widgetだけを更新することを基本とします。
-
-- RSS／Clock／Game／Memo／Task／Search Feed／Calendar: 保存後に対象Cardを再取得・差し替え。
-- Links／Weather／Earthquake／Sun / Moon／Air Quality: 表示設定を対象Cardへ反映し、Data条件が変わった場合だけ既存Refresh経路を利用。
-- Camera / Video: 対象Camera Cardだけを再構築。無関係なYouTube／Video Cardへ触れない。
-- Mail: 対象Mail Cardの設定を更新し、そのCardの既存Refresh経路を利用。
-
-新規追加、削除、並び替え等のすべてを無理に同じ仕組みへ変更せず、Version 1.17.1は設定更新の全画面Reload解消に範囲を限定しています。
-
-## Camera / Video stability
-
-Snapshot／Video File／MJPEG／HLS／YouTubeというVersion 1.17.0のSource Type構成は変更しません。
-
-Client-side watchdogは、Browserや外部配信元が応答しない場合に画面が永久にLoading／disabledのまま残ることを避けるための補助です。無制限Retryは行いません。
-
-hls.jsはVersion 1.17.0と同じ1.6.16を必要時だけjsDelivrから遅延読込みします。SRIと`crossorigin="anonymous"`を維持します。
+- Bearer TokenはServer-side Secretとしてのみ使用。
+- Raw Token／fingerprintをBrowser APIへ返さない。
+- connection status CacheにもRaw Tokenを保存しない。
+- X API responseをそのままHTMLとして挿入せず、必要なFieldを既存Frontend境界で描画。
+- Widget ownershipは既存の認証済み`user_id` scopeを維持。
+- X Timeline追加時もServer側でToken未設定／Local形式不正を拒否。
+- `config/local.php`、実Token、`var/cache/x/`をRuntime／Complete Release ZIPへ含めない。
 
 ## Distribution files
 
-- `rss-reader-modernization-1.17.1.zip` — Server配置用Runtime成果物。
-- `rss-reader-modernization-1.17.1.zip.sha256` — Runtime ZIPのSHA-256。
-- `rss-reader-modernization-1.17.1-complete.zip` — Repository／Testsを含む完全Source成果物。
-- `rss-reader-modernization-1.17.1-complete.zip.sha256` — 完全Source ZIPのSHA-256。
+- `rss-reader-modernization-1.17.2.zip` — Server配置用Runtime成果物。
+- `rss-reader-modernization-1.17.2.zip.sha256` — Runtime ZIPのSHA-256。
+- `rss-reader-modernization-1.17.2-complete.zip` — Repository／Testsを含む完全Source成果物。
+- `rss-reader-modernization-1.17.2-complete.zip.sha256` — 完全Source ZIPのSHA-256。
 
-Runtime配布物には`config/local.php`、`.env`、実DB、Dump、Backup、Log、Session、Cache、Throttle Data、GitHub metadata、Testsを含めません。
+Runtime ZIPはProductionで必要なApplication fileを更新済み実ファイルとして含みます。Production側でPHP／Python／PowerShell等のPatch適用Scriptを実行して完成させる方式は使用しません。
 
-完全Source成果物にもPrivate設定、実DB、Runtime Data、別Release ZIP等を含めません。
+## Update notes from Version 1.17.1
 
-## Update notes
+DB Migrationは不要です。
 
-Version 1.17.0からDB Migrationは不要です。
+更新前にCodeをBackupし、Server固有の`config/local.php`、DB、`var/`を置換しないでください。
 
-更新前にCodeをBackupし、Server固有の`config/local.php`、DB、`var/`を置換しないでください。Runtime ZIPは必要なApplication fileを実ファイルとして含み、Production側でPHP／Python／PowerShell等の適用Scriptを実行して完成させる方式は使用しません。
+X Timelineを使う場合だけ、Server固有設定へ`APP_X_BEARER_TOKEN`を追加してください。実TokenをGitや配布ZIPへ入れないでください。
 
 更新後はBrowserを強制再読込し、少なくとも次を確認してください。
 
-- Footer等のVersion表示が`RSS Reader Modernization 1.17.1`。
-- YouTube再生中にWeatherの見出し色を変更してもページ全体がReloadされず、YouTube再生が継続する。
-- Clock Timer等の動作中に別Widgetの設定を変更しても、その状態が不要に失われない。
-- 「設定を更新しました」が約2.5秒後に消える。
-- Camera / Video／Mail／Earthquake／Sun / Moon／Air Qualityが失敗時に永久Loadingへ残らず再試行可能になる。
-- HLS利用時、hls.jsの`integrity` mismatchがConsoleへ出ない。
-- 既存のRSS、Stock、Task、Calendar、Mail等に大きな回帰がない。
+- Footer等のVersion表示が`RSS Reader Modernization 1.17.2`。
+- Widget追加CatalogからX Timeline Modalを開くと「上級者向け機能」の案内が表示される。
+- Token未設定では赤い警告となり、X Timelineを追加出来ない。
+- 有効なTokenで公開Accountの投稿を取得出来る。
+- 実取得成功後は現在Tokenが確認済みと表示される。
+- 無効なTokenでHTTP 401を受けた場合は認証失敗の案内になる。
+- X設定変更中も無関係なYouTube再生やClock Timer等が不要に停止しない。
+- Browser NetworkでX APIへ直接接続せず、Bearer TokenがHTML／JavaScript／RSS Reader API responseへ出ていない。
+- 既存RSS、Stock、Task、Calendar、Mail、Camera / Video等に大きな回帰がない。
 
 ## Verification
 
-Version 1.17.1 Release Gateでは、GitHub Actions上のPHP 8.1／8.4 MatrixでCurrent Regression、Version 1.17 focused tests、Version 1.17.1 focused testsを実行する構成とします。
+Version 1.17.2 Release Gateでは、Current Regression、Version 1.17 focused tests、Version 1.17.1 compatibility tests、Version 1.17.2 focused testsを実行します。
 
-Focused testsではSession release policy、Camera／Mail watchdog、Information Widget watchdog、設定変更のno-reload contract、hls.js SRI、Version／Asset revision、PHP／JavaScript syntaxを確認します。
+V1.17.2 focused testsではX API request boundary、Cache／stale、Validation、owner scope、Frontend／Server contractに加え、Bearer Tokenのmissing／invalid format／unverified／verified／auth failed、Token fingerprint、Browser非露出、Release Version／Package contractを確認します。
 
 Runtime／Complete packageはdeterministic builderで生成し、SHA-256 sidecar、ZIP CRC、Path traversal、重複Path、Manifest、Version marker、Private file／Runtime data除外、高Signal Secret patternをVerifierで確認します。
 
 ## Verification limits
 
-Automated verificationでは、外部RSS／Camera／Video／Mail providerの可用性、配信元CORS、Mixed Content、Codec、YouTube埋め込み可否、CDNの将来可用性、Browser／Device固有描画、実Production DB／Network条件を完全には再現出来ません。
+Automated Testへ実Bearer Tokenは登録しません。そのため、X側のPay Per Use残高、実Account／Postの可用性、X API側の将来仕様変更、Rate limit、権限条件はProduction／StagingのSmoke確認を併用します。
 
-そのため、外部Serviceを伴う代表Sourceと、今回修正した「他Widget設定変更中のYouTube再生継続」「通知自動消去」はProduction環境でのSmoke確認を併用します。
+## Deferred: X For You / Home Timeline
+
+Version 1.17.2は指定した公開AccountのTimelineだけを対象とします。
+
+X本体の「おすすめ / For You」画面と同じRecommendation結果は公式APIからそのまま取得出来ないため実装しません。また、自分のHome Timelineを扱うUser Context OAuthはApp-only Bearer Tokenより認証／Token管理の範囲が大きくなるため、将来Versionの検討事項へ分離します。
 
 ## License
 
-Project LicenseおよびThird-party noticeを維持します。Version 1.17.1でもhls.js 1.6.16（Apache-2.0）、Bootstrap / Bootswatch 5.3.8、jQuery 3.7.1、Font Awesome Free 6.7.2の既存Dependency構成を維持します。
+Project LicenseおよびThird-party noticeを維持します。Bootstrap / Bootswatch 5.3.8、jQuery 3.7.1、Font Awesome Free 6.7.2、hls.js 1.6.16等の既存Dependency構成を維持します。

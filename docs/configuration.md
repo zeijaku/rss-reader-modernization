@@ -84,6 +84,34 @@ TimeoutやSize上限を緩めても、private address拒否、redirect再検証�
 
 Cache / Lock / Fetch stateは `var/cache/feed/` に置きます。このPathはRuntimeで固定され、`public/` 外です。
 
+
+## X API Widget（上級者向け / Optional）
+
+X Timeline Widgetは、X Developer Platformで発行したServer-side Bearer Tokenを使って、指定した公開Accountの最近の投稿をRead Onlyで取得します。X APIはPay Per Useのため、利用量とCredit残高はX Developer Console側でも確認してください。
+
+| Key | Default | Runtime制約 / 補足 |
+|---|---:|---|
+| `APP_X_BEARER_TOKEN` | 空 | X Timelineを利用する場合だけ設定。Secretとして扱い、Git／配布ZIP／Browserへ出さない |
+| `APP_X_CACHE_TTL_SECONDS` | `300` | 60〜3600秒。通常取得結果の短時間Cache |
+| `APP_X_STALE_MAX_AGE_SECONDS` | `3600` | Cache TTL以上、最大86400秒。許可された一時障害時のstale上限 |
+| `APP_X_TIMEOUT_MS` | `5000` | 1000〜10000ms。X API requestのTimeout |
+
+`APP_X_BEARER_TOKEN`の状態は、追加Modalで次のように案内します。
+
+| State | 意味 | 追加操作 |
+|---|---|---|
+| `missing` | Token未設定 | 無効 |
+| `invalid_format` | 改行／制御文字等を含むLocal設定不正 | 無効 |
+| `unverified` | Tokenは設定済みだが、現在のTokenでX API認証成功をまだ確認していない | 可 |
+| `verified` | 現在のTokenで直近のX API認証成功を確認済み | 可 |
+| `auth_failed` | 現在のTokenでHTTP 401を確認 | 可。ただしToken再発行／設定確認が必要 |
+
+Modalを開くだけではX APIへ検証Requestを送りません。Pay Per Useの不要な消費を避けるため、実際のTimeline取得で得た認証結果だけをLocal connection stateへ反映します。状態保存にはTokenのSHA-256 fingerprintだけを使い、Raw TokenやfingerprintをBrowser API responseへ含めません。
+
+`auth_failed`は、TokenをX Developer Console側で再発行したあとServer設定が古い場合などにも発生します。Server設定を更新するとfingerprintが変わるため、以前の確認状態は再利用せず`unverified`へ戻ります。
+
+X Timelineは公開Accountの最近の投稿を対象とします。X本体の「おすすめ / For You」Feedは同じRecommendation結果を公式APIから取得出来ないため、このVersionの対象外です。
+
 ## `config/local.php` と環境変数
 
 Shared hosting等で環境変数が使いにくい場合は `config/local.php` を使用します。ContainerやPHP-FPMでSecret管理を分離できる場合は環境変数を使用できます。

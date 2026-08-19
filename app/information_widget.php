@@ -14,7 +14,7 @@ declare(strict_types=1);
 /** @return list<string> */
 function information_widget_types(): array
 {
-    return ['weather', 'earthquake', 'sun_moon', 'air_quality'];
+    return ['weather', 'earthquake', 'sun_moon', 'air_quality', 'x_timeline'];
 }
 
 function information_widget_validate_type(mixed $value): ?string

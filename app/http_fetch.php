@@ -420,6 +420,15 @@ function app_curl_single_hop(array $request): array
         }
     }
 
+    // V1.17.2-A: authenticated server-to-server clients may opt into one
+    // explicit Bearer header. Keep arbitrary request headers blocked so the
+    // existing safe fetch boundary is not widened by caller-controlled input.
+    $bearer = $request['authorization_bearer'] ?? null;
+    if (is_string($bearer) && $bearer !== '' && strlen($bearer) <= 4096
+        && preg_match('/[\x00-\x1F\x7F]/', $bearer) !== 1) {
+        $httpHeaders[] = 'Authorization: Bearer ' . $bearer;
+    }
+
     $options = [
         CURLOPT_URL => $request['url'],
         CURLOPT_FOLLOWLOCATION => false,

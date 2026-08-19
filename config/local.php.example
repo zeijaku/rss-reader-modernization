@@ -56,6 +56,13 @@ return [
     'APP_WEATHER_CACHE_TTL_SECONDS' => '1800',
     'APP_WEATHER_TIMEOUT_MS' => '5000',
 
+
+    // V1.17.2 X API Widget. Keep this token private; never expose it under public/.
+    'APP_X_BEARER_TOKEN' => 'replace-with-your-x-api-bearer-token',
+    'APP_X_CACHE_TTL_SECONDS' => '300',
+    'APP_X_STALE_MAX_AGE_SECONDS' => '3600',
+    'APP_X_TIMEOUT_MS' => '5000',
+
     'DB_DRIVER' => 'mysql',
     'DB_HOST' => 'replace-with-your-db-host',
     'DB_PORT' => '3306',

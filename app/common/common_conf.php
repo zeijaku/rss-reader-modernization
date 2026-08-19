@@ -196,6 +196,23 @@ if (!defined('APP_WEATHER_CACHE_DIR')) {
     define('APP_WEATHER_CACHE_DIR', dirname(__DIR__, 2) . '/var/cache/weather');
 }
 
+// V1.17.2 X API Widget. Bearer Token remains private server configuration.
+if (!defined('APP_X_BEARER_TOKEN')) {
+    define('APP_X_BEARER_TOKEN', app_env('APP_X_BEARER_TOKEN', ''));
+}
+if (!defined('APP_X_CACHE_TTL_SECONDS')) {
+    define('APP_X_CACHE_TTL_SECONDS', max(60, min(3600, (int) app_env('APP_X_CACHE_TTL_SECONDS', '300'))));
+}
+if (!defined('APP_X_STALE_MAX_AGE_SECONDS')) {
+    define('APP_X_STALE_MAX_AGE_SECONDS', max(APP_X_CACHE_TTL_SECONDS, min(86400, (int) app_env('APP_X_STALE_MAX_AGE_SECONDS', '3600'))));
+}
+if (!defined('APP_X_TIMEOUT_MS')) {
+    define('APP_X_TIMEOUT_MS', max(1000, min(10000, (int) app_env('APP_X_TIMEOUT_MS', '5000'))));
+}
+if (!defined('APP_X_CACHE_DIR')) {
+    define('APP_X_CACHE_DIR', dirname(__DIR__, 2) . '/var/cache/x');
+}
+
 if (!defined('DB_DRIVER')) {
     define('DB_DRIVER', app_env('DB_DRIVER', 'mysql'));
 }

@@ -1,5 +1,21 @@
 # Changelog
 
+## RSS Reader Modernization 1.17.2 — 2026-08-19
+
+### X Timeline Widget / Bearer Token guidance / Release Gate
+
+- Dashboardへ上級者向けX Timeline Widgetを追加し、指定した公開X Accountの最近の投稿をRead Onlyで表示。既存`dashboard_widget.widget_config`へ設定を保存し、新規Table／Column／Migrationは追加しない。
+- username、3／5／10件表示、Reply／Repostの含有設定、Title／Header color／Width／Height、手動Refreshに対応。
+- X API requestはServer側だけで実行し、Browserから`api.x.com`へ直接接続しない。`APP_X_BEARER_TOKEN`はServer-side Secretとして保持し、HTML／JavaScript／API responseへ渡さない。
+- X API host固定、TLS検証、bounded timeout、短時間Cache、期限付きstale fallbackを追加し、401／403等の認証・権限Errorをstaleで隠さない。
+- X Timeline追加Modalへ「上級者向け機能」の案内を追加し、X Developer Platform、Pay Per Use、Server-side Bearer Tokenが必要なことを明示。
+- Bearer Token状態を`missing`／`invalid_format`／`unverified`／`verified`／`auth_failed`へ分離。未設定／Local形式不正ではFrontendとServerの両方で追加を拒否し、HTTP 401を受けた現在Tokenは認証失敗として案内。
+- Modal表示だけではX APIへToken検証Requestを送らず、実Timeline取得の結果で接続状態を更新。状態CacheにはSHA-256 fingerprintだけを保存し、Raw Tokenは保存しない。
+- X設定変更／削除も全画面Reloadを前提にせず、無関係なYouTube／Clock Timer等の状態を不要に失わない既存V1.17.1契約を維持。
+- X本体の「おすすめ / For You」Feed再現とUser Context OAuthを使うHome Timelineは対象外とし、将来課題へ分離。
+- `APP_VERSION`、`APP_VERSION_LABEL`、`APP_ASSET_REVISION`を`1.17.2`へ統一。Runtime／Complete builderとVerifier、GitHub Actions Release Gateを1.17.2へ更新し、`var/cache/`全体を配布対象外へ整理。
+- X Timelineを利用しない環境では新しい必須Secretはなく、DB Migrationも不要。
+
 ## RSS Reader Modernization 1.17.1 — 2026-08-19
 
 ### Stability / Session lock / Widget settings update

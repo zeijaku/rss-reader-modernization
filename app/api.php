@@ -196,6 +196,11 @@ function api_dispatch(string $action, int $userId, array $input): array
         'widget.earthquake.update' => api_widget_earthquake_update($userId, $input),
         'widget.earthquake.delete' => api_widget_earthquake_delete($userId, $input),
         'earthquake.latest' => api_earthquake_latest($userId, $input),
+        'widget.x.create' => api_widget_x_create($userId, $input),
+        'widget.x.update' => api_widget_x_update($userId, $input),
+        'widget.x.delete' => api_widget_x_delete($userId, $input),
+        'x.config.status' => api_x_config_status($userId, $input),
+        'x.timeline.fetch' => api_x_timeline_fetch($userId, $input),
         'calendar.month.list' => api_calendar_month_list($userId, $input),
         'calendar.holiday.refresh' => api_calendar_holiday_refresh($userId, $input),
         'calendar.event.create' => api_calendar_event_create($userId, $input),
@@ -1013,6 +1018,122 @@ function api_widget_game_delete(int $userId, array $input): array
         return api_error('game_widget_unavailable', 'Game Widget could not be deleted.', 503);
     }
     return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_x_create(int $userId, array $input): array
+{
+    $connection = x_widget_connection_status();
+    if (($connection['state'] ?? '') === 'missing') {
+        return api_error('x_not_configured', 'X API Bearer Tokenが設定されていません。Server側のAPP_X_BEARER_TOKENを設定してください。', 503);
+    }
+    if (($connection['state'] ?? '') === 'invalid_format') {
+        return api_error('x_token_invalid_format', 'APP_X_BEARER_TOKENの設定値を確認してください。', 503);
+    }
+
+    $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
+    $config = x_widget_config_from_input($input);
+    if ($location === null || $style === null || $width === null || $height === null || $config === null) {
+        return api_validation_error('X Widget settings are invalid. Usernameは英数字とunderscoreの1〜15文字で指定してください。');
+    }
+    try {
+        $widgetId = x_widget_create($userId, $location, $style, $width, $height, $config);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('X Widget create failed: ' . $exception->getMessage());
+        return api_error('x_widget_unavailable', 'X Widgetを追加出来ませんでした。', 503);
+    }
+    return api_success(['widget_id' => $widgetId], 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_x_update(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
+    $config = x_widget_config_from_input($input);
+    if ($widgetId === null || $style === null || $width === null || $height === null || $config === null) {
+        return api_validation_error('X Widget settings are invalid. Usernameは英数字とunderscoreの1〜15文字で指定してください。');
+    }
+    try {
+        if (!x_widget_update($userId, $widgetId, $style, $width, $height, $config)) {
+            return api_error('not_found', 'X Widget was not found.', 404);
+        }
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('X Widget update failed: ' . $exception->getMessage());
+        return api_error('x_widget_unavailable', 'X Widgetを更新出来ませんでした。', 503);
+    }
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_x_delete(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+    try {
+        if (!x_widget_delete($userId, $widgetId)) {
+            return api_error('not_found', 'X Widget was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('X Widget delete failed: ' . $exception->getMessage());
+        return api_error('x_widget_unavailable', 'X Widgetを削除出来ませんでした。', 503);
+    }
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_x_config_status(int $userId, array $input): array
+{
+    return api_success(['x_api' => x_widget_connection_status()]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_x_timeline_fetch(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $force = dashboard_widget_validate_boolean($input['force'] ?? '0');
+    if ($widgetId === null || $force === null) {
+        return api_validation_error('X timeline request is invalid.');
+    }
+    try {
+        $config = x_widget_owned_config($userId, $widgetId);
+        if ($config === null) {
+            return api_error('not_found', 'X Widget was not found.', 404);
+        }
+        return api_success([
+            'timeline' => x_widget_fetch_timeline($config, $force),
+            'x_api' => x_widget_connection_status(),
+        ]);
+    } catch (XApiRequestException $exception) {
+        error_log('X timeline fetch failed: ' . $exception->reasonCode() . ' status=' . $exception->responseStatus());
+        return match ($exception->reasonCode()) {
+            'x_not_configured' => api_error('x_not_configured', 'X API Bearer Tokenが設定されていません。Server側のAPP_X_BEARER_TOKENを設定してください。', 503),
+            'x_token_invalid_format' => api_error('x_token_invalid_format', 'APP_X_BEARER_TOKENの設定値を確認してください。', 503),
+            'x_user_not_found', 'x_not_found' => api_error('x_user_not_found', '指定したXアカウントを確認出来ませんでした。', 404),
+            'x_auth_failed' => api_error('x_auth_failed', 'X API認証に失敗しました。Bearer Tokenを確認してください。', 502),
+            'x_access_forbidden' => api_error('x_access_forbidden', 'X APIの利用権限またはDeveloper Consoleの状態を確認してください。', 502),
+            'x_protected_account' => api_error('x_protected_account', '非公開Xアカウントの投稿はApp-only認証では表示出来ません。', 403),
+            'x_rate_or_usage_limited' => api_error('x_rate_or_usage_limited', 'X APIのRate LimitまたはUsage上限に達しました。しばらく待つかDeveloper Consoleを確認してください。', 429),
+            'x_credit_required' => api_error('x_credit_required', 'X APIの利用Creditを確認してください。', 502),
+            default => api_error('x_fetch_failed', 'Xの投稿を取得出来ませんでした。', 503),
+        };
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('X timeline widget load failed: ' . $exception->getMessage());
+        return api_error('x_widget_unavailable', 'X Widgetを確認出来ませんでした。', 503);
+    }
 }
 
 /** @return array{status:int,body:array<string,mixed>} */
