@@ -13,4 +13,4 @@ const APP_VERSION_LABEL = 'RSS Reader Modernization 1.17.0';
  * Cache key for public assets.
  * Stable releases keep this aligned with APP_VERSION.
  */
-const APP_ASSET_REVISION = '1.17.0';
+const APP_ASSET_REVISION = '1.17.1-a';
