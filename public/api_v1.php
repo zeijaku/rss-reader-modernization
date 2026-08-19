@@ -94,14 +94,16 @@ if ($action === '' || strlen($action) > 64 || preg_match('/^[a-z]+(?:\.[a-z]+)+$
     api_emit(api_error('invalid_request', 'A valid action is required.', 400));
 }
 
-// V1.17.1-A: authentication and CSRF are already fixed above. Release the
-// file-session lock before DB/outbound I/O so parallel Dashboard requests do
-// not queue behind a slow RSS, Mail, Weather, or other external fetch.
-if (!api_action_requires_open_session($action)) {
-    app_session_release();
-}
-
 try {
+    // V1.17.1-A/E: authentication and CSRF are already fixed above. Release
+    // the file-session lock before DB/outbound I/O so parallel Dashboard
+    // requests do not queue behind a slow RSS, Mail, Weather, or other
+    // external fetch. Keep the release inside the API exception boundary so a
+    // rare session_write_close() failure still returns the normal JSON error.
+    if (!api_action_requires_open_session($action)) {
+        app_session_release();
+    }
+
     if (str_starts_with($action, 'camera.widget.')) {
         api_emit(camera_video_api_dispatch($action, $userId, $_POST));
     }
