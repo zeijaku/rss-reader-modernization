@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - automation/v1.17.2-import
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
