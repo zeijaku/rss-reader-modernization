@@ -1,0 +1,66 @@
+.camera-video-playback-stage {
+    min-height: 200px;
+    padding: 0;
+    border-style: solid;
+    border-color: rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.16);
+    background: #000;
+}
+
+.camera-video-youtube-frame,
+.camera-video-file-player {
+    display: block;
+    width: 100%;
+    min-height: 200px;
+    aspect-ratio: 16 / 9;
+    border: 0;
+    background: #000;
+}
+
+.camera-video-file-player {
+    height: auto;
+    max-height: 640px;
+    object-fit: contain;
+}
+
+.camera-video-playback-status {
+    width: 100%;
+    padding: 8px 10px;
+    background: rgba(33, 37, 41, 0.88);
+    color: #f8f9fa;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.camera-video-playback-status.is-warning {
+    background: rgba(255, 193, 7, 0.95);
+    color: #212529;
+}
+
+.camera-video-playback-status.is-error {
+    background: rgba(220, 53, 69, 0.95);
+    color: #fff;
+}
+
+.camera-video-playback-hint {
+    margin-top: -4px;
+    font-size: 0.75rem;
+    line-height: 1.45;
+}
+
+.dashboard-grid > .camera-video-card[data-widget-height="2"] .camera-video-youtube-frame,
+.dashboard-grid > .camera-video-card[data-widget-height="2"] .camera-video-file-player {
+    min-height: 340px;
+}
+
+@media (max-width: 767.98px) {
+    .camera-video-youtube-frame,
+    .camera-video-file-player {
+        min-height: 200px;
+    }
+
+    .dashboard-grid > .camera-video-card[data-widget-height="2"] .camera-video-youtube-frame,
+    .dashboard-grid > .camera-video-card[data-widget-height="2"] .camera-video-file-player {
+        min-height: 280px;
+    }
+}

@@ -12,4 +12,8 @@
 
     loadScript('./js/calendar-core.js?v=1.9.0');
     loadScript('./js/mail-widget.js?v=1.14-d');
+    // V1.17-F R1: refresh Camera / Video assets after production cache issues.
+    loadScript('./js/camera-video.js?v=1.17-f-r1');
+    loadScript('./js/camera-video-playback.js?v=1.17-f-r1');
+    loadScript('./js/camera-video-streaming.js?v=1.17-f-r1');
 })(document);

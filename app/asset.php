@@ -44,5 +44,10 @@ function app_asset_url(string $path): string
         throw new InvalidArgumentException('Asset path is outside the public asset allowlist.');
     }
 
-    return './' . $path . '?v=' . rawurlencode(APP_VERSION);
+    $revision = defined('APP_ASSET_REVISION') ? trim((string) APP_ASSET_REVISION) : '';
+    if ($revision === '') {
+        $revision = APP_VERSION;
+    }
+
+    return './' . $path . '?v=' . rawurlencode($revision);
 }

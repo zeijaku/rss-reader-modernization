@@ -27,6 +27,9 @@ expected_css = {
     'bootstrap-sketchy-5.3.8.min.css',
     'bootstrap-solar-5.3.8.min.css',
     'bootstrap-slate-5.3.8.min.css',
+    'camera-video.css',
+    'camera-video-playback.css',
+    'camera-video-streaming.css',
     'dashboard.css',
     'mini-game.css',
     'clock-timer.css',
@@ -36,6 +39,9 @@ expected_css = {
 expected_js = {
     'jquery-3.7.1.min.js',
     'bootstrap.bundle-5.3.8.min.js',
+    'camera-video.js',
+    'camera-video-playback.js',
+    'camera-video-streaming.js',
     'dashboard.js',
     'calendar-core.js',
     'calendar.js',
@@ -56,8 +62,8 @@ expected_fonts.update({'fa-v4compatibility.ttf', 'fa-v4compatibility.woff2'})
 actual_css = {p.name for p in (PUBLIC / 'css').iterdir() if p.is_file()}
 actual_js = {p.name for p in (PUBLIC / 'js').iterdir() if p.is_file()}
 actual_fonts = {p.name for p in (PUBLIC / 'webfonts').iterdir() if p.is_file()}
-check(actual_css == expected_css, 'CSS directory matches the Version 1.14 retained inventory')
-check(actual_js == expected_js, 'JavaScript directory matches the Version 1.14 retained inventory')
+check(actual_css == expected_css, 'CSS directory matches the retained application inventory')
+check(actual_js == expected_js, 'JavaScript directory matches the retained application inventory')
 check(actual_fonts == expected_fonts, 'Font Awesome webfont formats required by all.css remain present')
 
 for directory in ['less', 'scss', 'metadata', 'sprites']:
@@ -169,8 +175,8 @@ for rel in sorted(legacy_assets):
 
 public_files = [p for p in PUBLIC.rglob('*') if p.is_file()]
 public_size = sum(p.stat().st_size for p in public_files)
-check(len(public_files) == 42, 'public inventory contains the 42 Version 1.14 retained files')
-check(public_size < 4_100_000, 'public inventory remains below 4.1 MB after legacy asset cleanup')
+check(len(public_files) == 48, 'public inventory contains the 48 retained files including Camera / Video streaming assets')
+check(public_size < 4_300_000, 'public inventory remains below 4.3 MB after Camera / Video streaming assets')
 check(not (ROOT / 'package.json').exists(), 'asset cleanup adds no npm dependency')
 check(not (ROOT / 'node_modules').exists(), 'asset cleanup adds no node_modules directory')
 
