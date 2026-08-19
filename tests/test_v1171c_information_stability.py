@@ -75,7 +75,7 @@ if not args.overlay_only:
         ],
         'app/earthquake.php': [
             'APP_EARTHQUAKE_TIMEOUT_MS',
-            "'status' => 'stale'",
+            "$stale['stale'] = true",
             'earthquake_cache_read',
         ],
         'app/air_quality.php': [
