@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - release/v1.17.1-final
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -16,6 +19,7 @@ concurrency:
 jobs:
   release-gate:
     name: V1.17.1 package / release gate
+    if: github.event_name != 'pull_request' || github.head_ref == 'release/v1.17.1-final'
     runs-on: ubuntu-latest
     timeout-minutes: 35
 
