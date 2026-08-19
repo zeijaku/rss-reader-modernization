@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import sys
 
 root = Path(__file__).resolve().parents[1]
@@ -6,6 +7,9 @@ js = (root / 'public/js/camera-video.js').read_text(encoding='utf-8')
 css = (root / 'public/css/camera-video.css').read_text(encoding='utf-8')
 php = (root / 'app/camera_video.php').read_text(encoding='utf-8')
 calendar = (root / 'public/js/calendar.js').read_text(encoding='utf-8')
+version = (root / 'app/version.php').read_text(encoding='utf-8')
+revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
+active_revision = revision_match.group(1) if revision_match else ''
 
 checks = {
     'Snapshot uses browser image loading': 'new window.Image()' in js and 'camera-video-snapshot-image' in js,
@@ -23,7 +27,8 @@ checks = {
     'Core Snapshot module still avoids video element rendering': "'<video>'" not in js and "createElement('video')" not in js,
     'Snapshot stage preserves responsive width': 'width: 100%;' in css and 'object-fit: contain;' in css,
     'Height 2 receives a larger Snapshot stage': '[data-widget-height="2"] .camera-video-snapshot-stage' in css,
-    'Camera asset markers remain Version 1.17 cache-busted': './js/camera-video.js?v=1.17-' in calendar and './css/camera-video.css?v=1.17-' in js,
+    'Camera JavaScript uses the active release cache revision': active_revision != '' and './js/camera-video.js?v=' + active_revision in calendar,
+    'Camera CSS is preloaded with the active release cache revision': active_revision != '' and './css/camera-video.css?v=' + active_revision in calendar,
     'HTTP-on-HTTPS mixed-content risk is surfaced': "window.location.protocol === 'https:'" in js and 'HTTP画像' in js,
     'Background tabs skip automatic image refresh': 'document.hidden' in js,
 }
