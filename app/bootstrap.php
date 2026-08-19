@@ -76,6 +76,7 @@ require_once __DIR__ . '/weather.php';
 require_once __DIR__ . '/sun_moon.php';
 require_once __DIR__ . '/air_quality.php';
 require_once __DIR__ . '/earthquake.php';
+require_once __DIR__ . '/x_widget.php';
 require_once __DIR__ . '/holiday.php';
 require_once __DIR__ . '/feed/feed_source.php';
 require_once __DIR__ . '/feed/feed_http_headers.php';

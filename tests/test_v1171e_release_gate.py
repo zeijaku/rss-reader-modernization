@@ -22,9 +22,16 @@ interceptor = read('public/js/widget-settings-no-reload.js')
 streaming = read('public/js/camera-video-streaming.js')
 app_notice = read('public/js/app-notice.js')
 
-check('APP_VERSION finalized', "const APP_VERSION = '1.17.1';" in version)
-check('APP_VERSION_LABEL finalized', "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.17.1';" in version)
-check('APP_ASSET_REVISION finalized', "const APP_ASSET_REVISION = '1.17.1';" in version)
+version_match = re.search(r"const APP_VERSION = '(\d+)\.(\d+)\.(\d+)(?:-[^']+)?';", version)
+version_tuple = tuple(int(part) for part in version_match.groups()) if version_match else (0, 0, 0)
+version_value_match = re.search(r"const APP_VERSION = '([^']+)';", version)
+version_value = version_value_match.group(1) if version_value_match else ''
+label_match = re.search(r"const APP_VERSION_LABEL = '([^']+)';", version)
+revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
+active_revision = revision_match.group(1) if revision_match else ''
+check('APP_VERSION keeps V1.17.1-or-later release behavior', version_tuple >= (1, 17, 1))
+check('APP_VERSION_LABEL matches current version', bool(label_match) and label_match.group(1) == 'RSS Reader Modernization ' + version_value)
+check('APP_ASSET_REVISION is present', bool(active_revision))
 
 stable_assets = [
     './css/mail-widget.css', './css/camera-video.css', './css/camera-video-playback.css', './css/camera-video-streaming.css',
@@ -33,12 +40,12 @@ stable_assets = [
     './js/camera-video-playback.js', './js/camera-video-streaming.js', './js/widget-settings-no-reload.js',
 ]
 for asset in stable_assets:
-    check(f'loader finalizes {asset}', asset + '?v=1.17.1' in calendar)
+    check(f'loader finalizes {asset}', asset + '?v=' + active_revision in calendar)
 check('no staged V1.17.1 asset token remains in loader', re.search(r'1\.17\.1-[a-z]', calendar) is None)
-check('D helper loads before Information watchdog', calendar.find('widget-card-refresh.js?v=1.17.1') < calendar.find('information-widget-watchdog.js?v=1.17.1'))
-check('Mail watchdog loads before Mail feature', calendar.find('mail-widget-watchdog.js?v=1.17.1') < calendar.find('mail-widget.js?v=1.17.1'))
-check('Camera watchdog loads before Camera feature', calendar.find('camera-video-watchdog.js?v=1.17.1') < calendar.find('camera-video.js?v=1.17.1'))
-check('settings interceptor loads after media feature stack', calendar.find('widget-settings-no-reload.js?v=1.17.1') > calendar.find('camera-video-streaming.js?v=1.17.1'))
+check('D helper loads before Information watchdog', calendar.find('widget-card-refresh.js?v=' + active_revision) < calendar.find('information-widget-watchdog.js?v=' + active_revision))
+check('Mail watchdog loads before Mail feature', calendar.find('mail-widget-watchdog.js?v=' + active_revision) < calendar.find('mail-widget.js?v=' + active_revision))
+check('Camera watchdog loads before Camera feature', calendar.find('camera-video-watchdog.js?v=' + active_revision) < calendar.find('camera-video.js?v=' + active_revision))
+check('settings interceptor loads after media feature stack', calendar.find('widget-settings-no-reload.js?v=' + active_revision) > calendar.find('camera-video-streaming.js?v=' + active_revision))
 
 csrf_pos = api.find('app_csrf_is_valid($csrfToken)')
 action_pos = api.find("preg_match('/^[a-z]+(?:\\.[a-z]+)+$/', $action)")
@@ -61,7 +68,7 @@ check('Mail settings keep target card', 'function refreshMailTarget(widgetId)' i
 check('shared notices remain bounded', "success: 2500" in app_notice and "info: 3000" in app_notice and "danger: 6000" in app_notice and 'MutationObserver' in app_notice)
 check('hls.js SRI matches browser-computed SHA-384 observed during release review', 'sha384-5E8B0pTLZZJMabWpCOfyYf60UpeI5jJij34BqBAh4NXoHALLNOjCPRrwtOX0QFAn' in streaming)
 check('old rejected hls.js SRI is removed', 'sha384-iZBI1/lW9u8FcBjxuQ8nPTsU7TXhZNtzkV8H3gQHSTgz+VYQoKWqGlBHqhO84alJ' not in streaming)
-check('streaming fallback stylesheet uses stable revision', "camera-video-streaming.css?v=1.17.1" in streaming)
+check('streaming fallback stylesheet uses active revision', 'camera-video-streaming.css?v=' + active_revision in streaming)
 
 for path in [
     'app/session.php', 'app/version.php', 'public/api_v1.php', 'public/js/app-notice.js', 'public/js/calendar.js',

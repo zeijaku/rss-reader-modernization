@@ -26,10 +26,14 @@ calendar = text('public/js/calendar.js')
 camera_watchdog = text('public/js/camera-video-watchdog.js')
 mail_watchdog = text('public/js/mail-widget-watchdog.js')
 
-check('visible APP_VERSION is finalized at 1.17.1', "const APP_VERSION = '1.17.1';" in version)
+version_match = re.search(r"const APP_VERSION = '(\d+)\.(\d+)\.(\d+)(?:-[^']+)?';", version)
+version_tuple = tuple(int(part) for part in version_match.groups()) if version_match else (0, 0, 0)
+check('visible APP_VERSION keeps V1.17.1-B-or-later behavior', version_tuple >= (1, 17, 1))
 revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
 active_revision = revision_match.group(1) if revision_match else ''
-check('V1.17.1-B-or-later asset revision is active', active_revision == '1.17.1' or bool(re.fullmatch(r'1\.17\.1-[b-z][A-Za-z0-9._-]*', active_revision)))
+revision_prefix = re.match(r'^(\d+)\.(\d+)\.(\d+)', active_revision)
+revision_tuple = tuple(int(part) for part in revision_prefix.groups()) if revision_prefix else (0, 0, 0)
+check('V1.17.1-B-or-later asset revision is active', revision_tuple >= (1, 17, 1))
 
 for path in [
     './css/mail-widget.css',

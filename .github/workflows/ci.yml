@@ -66,3 +66,6 @@ jobs:
 
       - name: Run Version 1.17.1 focused tests
         run: bash tests/run-v1171.sh
+
+      - name: Run Version 1.17.2 focused tests
+        run: bash tests/run-v1172.sh

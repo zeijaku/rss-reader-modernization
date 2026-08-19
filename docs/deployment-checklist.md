@@ -29,6 +29,7 @@
 - [ ] `var/session/`が書込み可能
 - [ ] `var/security/login-throttle/`が書込み可能
 - [ ] `var/cache/feed/`が書込み可能
+- [ ] X Timelineを利用する場合は`var/cache/x/`が書込み可能
 - [ ] Log有効時は`var/log/`または指定Pathが書込み可能
 - [ ] 無条件な`777`を設定していない
 
@@ -59,6 +60,7 @@
 - [ ] Search Feed追加 / 変更 / 削除 / 検索 / 個別更新
 - [ ] 新着Bellの個別解除 / Feed単位解除
 - [ ] 記事ActionsのStock / URL Copy / X / Task追加
+- [ ] X Timelineを利用する場合は「上級者向け」案内、Bearer Token状態、公開Accountの投稿取得を確認
 - [ ] Clock追加 / 変更 / 削除
 - [ ] Memo追加 / 変更 / 削除 / 改行表示
 - [ ] Task Widget追加 / 変更 / 削除
