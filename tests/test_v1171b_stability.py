@@ -36,6 +36,11 @@ for path in [
     './css/camera-video.css',
     './css/camera-video-playback.css',
     './css/camera-video-streaming.css',
+]:
+    asset = path + '?v=' + active_revision
+    check(f'calendar loader stages style {asset}', f"loadStyle('{asset}'," in calendar)
+
+for path in [
     './js/app-notice.js',
     './js/mail-widget-watchdog.js',
     './js/camera-video-watchdog.js',
@@ -45,7 +50,7 @@ for path in [
     './js/camera-video-streaming.js',
 ]:
     asset = path + '?v=' + active_revision
-    check(f'calendar loader stages {asset}', asset in calendar)
+    check(f'calendar loader stages script {asset}', f"loadScript('{asset}');" in calendar)
 
 mail_watchdog_pos = calendar.find('./js/mail-widget-watchdog.js?v=' + active_revision)
 mail_feature_pos = calendar.find('./js/mail-widget.js?v=' + active_revision)
