@@ -1,0 +1,73 @@
+name: V1.17.2 Import
+
+on:
+  push:
+    branches:
+      - automation/v1.17.2-import
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout import payload
+        uses: actions/checkout@v4
+        with:
+          ref: automation/v1.17.2-import
+          path: import
+          persist-credentials: false
+
+      - name: Checkout clean release branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/v1.17.2-final
+          path: repo
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Rebuild and apply release patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat import/.github/v1172-import/chunk-*.b64 > /tmp/v1172.patch.gz.b64
+          test "$(sha256sum /tmp/v1172.patch.gz.b64 | awk '{print $1}')" = "5e6b283c80866e6b0fa69182afc0179b3c9cf8456bad22f5ce3c233ed1deb275"
+          base64 -d /tmp/v1172.patch.gz.b64 > /tmp/v1172.patch.gz
+          test "$(sha256sum /tmp/v1172.patch.gz | awk '{print $1}')" = "0313ebc2f19202f7c48d4f69af0fac8333081ffd075f0219906b4847009f1737"
+          gzip -dc /tmp/v1172.patch.gz > /tmp/v1172.patch
+          test "$(sha256sum /tmp/v1172.patch | awk '{print $1}')" = "3b153cb77ec74fd3d206ada0c0062a4399d567563bb6c05b6d0872e14ebab0b3"
+          cd repo
+          git apply --check /tmp/v1172.patch
+          git apply --index /tmp/v1172.patch
+          git diff --cached --check
+
+      - name: Verify safe release change set
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd repo
+          test ! -e config/local.php
+          test "$(git diff --cached --name-only | wc -l)" -eq 50
+          ! git diff --cached --name-only | grep -E '(^|/)(config/local\.php|\.env)$|(^|/)var/(cache|session|log)/'
+          ! git diff --cached --name-only | grep -E '^\.github/v1172-import/'
+          ! git diff --cached --name-only | grep -E '^SOURCE_(BUILD\.txt|MANIFEST\.sha256)$'
+
+      - name: Run V1.17.2 focused tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd repo
+          bash tests/run-v1172.sh
+
+      - name: Commit final V1.17.2 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "release: Version 1.17.2"
+          git push origin HEAD:release/v1.17.2-final
