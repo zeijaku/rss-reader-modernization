@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from pathlib import Path
-import re
 
 from dashboard_source_utils import dashboard_source
 
@@ -35,7 +34,13 @@ check("frame-ancestors 'self'" in public_ht and "base-uri 'self'" in public_ht a
       'CSP keeps framing/base/form protections')
 
 # Static assets may be long-lived only because their URL carries a revision.
-check(re.search(r'<FilesMatch "\\\.\(\?:css\\\|js\)\\\$">.*?Cache-Control.*?immutable', public_ht, re.S) is not None,
+# Check the semantic contract without binding the test to regex escaping or the
+# exact order/spacing of Apache directives.
+static_marker = '<FilesMatch "\\.(?:css|js)$">'
+static_block = ''
+if static_marker in public_ht:
+    static_block = public_ht.split(static_marker, 1)[1].split('</FilesMatch>', 1)[0]
+check(bool(static_block) and 'Cache-Control' in static_block and 'immutable' in static_block,
       'CSS/JavaScript cache policy remains immutable/versioned')
 
 # Private/dynamic responses must stay non-cacheable.
