@@ -153,7 +153,7 @@
                     game_type: val('.changeGameType'),
                     widget_style: val('.changeGameStyle'),
                     widget_width: val('.changeGameWidth'),
-                    widget_height: val('.changeGameHeight))
+                    widget_height: val('.changeGameHeight')
                 }
             };
         }
@@ -166,7 +166,7 @@
                     memo_body: val('.changeMemoBody'),
                     widget_style: val('.changeMemoStyle'),
                     widget_width: val('.changeMemoWidth'),
-                    widget_height: val('.changeMemoHeight))
+                    widget_height: val('.changeMemoHeight')
                 }
             };
         }
@@ -178,7 +178,7 @@
                     task_widget_title: val('.changeTaskWidgetTitleValue'),
                     widget_style: val('.changeTaskWidgetStyle'),
                     widget_width: val('.changeTaskWidgetWidth'),
-                    widget_height: val('.changeTaskWidgetHeight))
+                    widget_height: val('.changeTaskWidgetHeight')
                 }
             };
         }
@@ -220,7 +220,7 @@
                     weather_forecast_days: val('.changeWeatherForecastDays'),
                     widget_style: val('.changeWeatherStyle'),
                     widget_width: val('.changeWeatherWidth'),
-                    widget_height: val('.changeWeatherHeight))
+                    widget_height: val('.changeWeatherHeight')
                 }
             };
         }
@@ -231,7 +231,7 @@
                     widget_id: val('.changeEarthquakeWidgetId'),
                     widget_style: val('.changeEarthquakeStyle'),
                     widget_width: val('.changeEarthquakeWidth'),
-                    widget_height: val('.changeEarthquakeHeight))
+                    widget_height: val('.changeEarthquakeHeight')
                 }
             };
         }
