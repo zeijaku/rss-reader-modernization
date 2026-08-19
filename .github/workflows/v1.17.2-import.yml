@@ -32,7 +32,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Rebuild and apply release patch
+      - name: Rebuild and apply non-workflow release patch
         shell: bash
         run: |
           set -euo pipefail
@@ -43,8 +43,14 @@ jobs:
           gzip -dc /tmp/v1172.patch.gz > /tmp/v1172.patch
           test "$(sha256sum /tmp/v1172.patch | awk '{print $1}')" = "3b153cb77ec74fd3d206ada0c0062a4399d567563bb6c05b6d0872e14ebab0b3"
           cd repo
-          git apply --check /tmp/v1172.patch
-          git apply --index /tmp/v1172.patch
+          git apply --check \
+            --exclude=.github/workflows/ci.yml \
+            --exclude=.github/workflows/v1.17.2-release.yml \
+            /tmp/v1172.patch
+          git apply --index \
+            --exclude=.github/workflows/ci.yml \
+            --exclude=.github/workflows/v1.17.2-release.yml \
+            /tmp/v1172.patch
           git diff --cached --check
 
       - name: Verify safe release change set
@@ -53,7 +59,8 @@ jobs:
           set -euo pipefail
           cd repo
           test ! -e config/local.php
-          test "$(git diff --cached --name-only | wc -l)" -eq 50
+          test "$(git diff --cached --name-only | wc -l)" -eq 48
+          ! git diff --cached --name-only | grep -E '^\.github/workflows/'
           ! git diff --cached --name-only | grep -E '(^|/)(config/local\.php|\.env)$|(^|/)var/(cache|session|log)/'
           ! git diff --cached --name-only | grep -E '^\.github/v1172-import/'
           ! git diff --cached --name-only | grep -E '^SOURCE_(BUILD\.txt|MANIFEST\.sha256)$'
