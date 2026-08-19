@@ -58,8 +58,8 @@ jobs:
           python --version
           node --version
 
-      - name: Run regression tests
-        run: bash tests/run.sh
+      - name: Run current regression tests
+        run: bash tests/run-current.sh
 
       - name: Run Version 1.17 focused tests
         run: bash tests/run-v117.sh
