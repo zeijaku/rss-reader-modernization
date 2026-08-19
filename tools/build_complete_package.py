@@ -29,6 +29,14 @@ def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def is_generated_runtime_file(rel: str) -> bool:
+    posix = PurePosixPath(rel)
+    return any(
+        rel.startswith(runtime + '/') and posix.name != '.gitkeep'
+        for runtime in RUNTIME_DIRS
+    )
+
+
 def collect() -> dict[str, bytes]:
     payload: dict[str, bytes] = {}
     for path in sorted(ROOT.rglob('*')):
@@ -43,14 +51,22 @@ def collect() -> dict[str, bytes]:
             continue
         if '__pycache__' in posix.parts or lower.endswith(('.pyc', '.pyo')):
             continue
+        # Tests run before packaging and may create logs, sessions, cache, and
+        # migration state. Those files are never source artifacts; retain only
+        # the repository placeholders for runtime directories.
+        if is_generated_runtime_file(rel):
+            continue
         if rel in FORBIDDEN_EXACT or lower.endswith(FORBIDDEN_SUFFIXES):
             fail(f'forbidden file in complete package: {rel}')
         if posix.is_absolute() or '..' in posix.parts or '\\' in rel:
             fail(f'unsafe path: {rel}')
-        for runtime in RUNTIME_DIRS:
-            if rel.startswith(runtime + '/') and posix.name != '.gitkeep':
-                fail(f'generated runtime file found: {rel}')
         payload[rel] = path.read_bytes()
+
+    # Defense in depth if the collection rules are changed later.
+    generated = [rel for rel in payload if is_generated_runtime_file(rel)]
+    if generated:
+        fail('generated runtime files entered complete package: ' + ', '.join(generated[:5]))
+
     required = {'.github/workflows/ci.yml', 'tests/run.sh', 'app/version.php', 'database/schema.sql'}
     if not required <= set(payload):
         fail('complete package is missing source/test/repository files')
