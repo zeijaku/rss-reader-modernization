@@ -11,6 +11,9 @@ const streamingCss = fs.readFileSync(path.join(root, 'public/css/camera-video-st
 const playback = fs.readFileSync(path.join(root, 'public/js/camera-video-playback.js'), 'utf8');
 const streaming = fs.readFileSync(path.join(root, 'public/js/camera-video-streaming.js'), 'utf8');
 const calendar = fs.readFileSync(path.join(root, 'public/js/calendar.js'), 'utf8');
+const version = fs.readFileSync(path.join(root, 'app/version.php'), 'utf8');
+const revisionMatch = version.match(/const APP_ASSET_REVISION = '([^']+)';/);
+const activeRevision = revisionMatch ? revisionMatch[1] : '';
 
 function check(condition, message) {
     if (!condition) {
@@ -65,11 +68,11 @@ check(camera.includes("['mjpeg', 'MJPEG']") && camera.includes("['hls', 'HLS']")
 check(camera.includes("['iframe', 'iframe（未対応）']"), 'Unsupported iframe remains clearly labeled');
 check(!playback.includes('function updateModalHelp()'), 'Playback module no longer overwrites final modal help');
 check(!streaming.includes('function updateModalHelp()'), 'Streaming module no longer overwrites final modal help');
-check(calendar.includes('./js/camera-video.js?v=1.17-f-r1'), 'Camera base cache marker is V1.17-F R1');
-check(calendar.includes('./js/camera-video-playback.js?v=1.17-f-r1'), 'Playback cache marker is V1.17-F R1');
-check(calendar.includes('./js/camera-video-streaming.js?v=1.17-f-r1'), 'Streaming cache marker is V1.17-F R1');
-check(camera.includes('./css/camera-video.css?v=1.17-f'), 'Camera CSS cache marker remains V1.17-F');
-check(streaming.includes('./css/camera-video-streaming.css?v=1.17-f'), 'Streaming CSS cache marker remains V1.17-F');
+check(activeRevision !== '' && calendar.includes('./js/camera-video.js?v=' + activeRevision), 'Camera base uses the active release cache marker');
+check(activeRevision !== '' && calendar.includes('./js/camera-video-playback.js?v=' + activeRevision), 'Playback uses the active release cache marker');
+check(activeRevision !== '' && calendar.includes('./js/camera-video-streaming.js?v=' + activeRevision), 'Streaming uses the active release cache marker');
+check(activeRevision !== '' && calendar.includes('./css/camera-video.css?v=' + activeRevision), 'Camera CSS is preloaded with the active release cache marker');
+check(activeRevision !== '' && calendar.includes('./css/camera-video-streaming.css?v=' + activeRevision), 'Streaming CSS is preloaded with the active release cache marker');
 check(cameraCss.includes('.camera-video-links .btn') && cameraCss.includes('min-height: 40px;'), 'Mobile Camera actions keep a touch-friendly height');
 check(streamingCss.includes('.camera-video-stream-actions .btn') && streamingCss.includes('min-height: 40px;'), 'Mobile MJPEG reconnect keeps a touch-friendly height');
 check(cameraCss.includes('#registerCameraVideo .modal-dialog') && cameraCss.includes('margin: 0.5rem;'), 'Camera modal fits narrow mobile screens');

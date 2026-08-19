@@ -1,83 +1,101 @@
-# RSS Reader Modernization 1.17.0 Release Notes
+# RSS Reader Modernization 1.17.1 Release Notes
 
 ## Overview
 
-Version 1.17.0は、DashboardへCamera / Video Widgetを追加するReleaseです。Snapshot、YouTube、Browser標準Video、MJPEG、HLSを1つのWidgetから扱い、Source TypeはAutoまたは手動指定に対応します。V1.17ではServer-side media proxyを追加せず、Mediaの取得・再生はBrowserから配信元へ直接行います。
+Version 1.17.1は、Version 1.17.0で追加したCamera / Video Widgetと、Dashboard上で同時に動くMail／Information Widget／各種設定変更の安定性を改善するMaintenance Releaseです。
+
+新しいDB TableやColumnは追加せず、既存の機能・データ構造を維持したまま、Session lock、Timeout時の復旧、Widget設定保存時の画面更新、通知表示、hls.js読込みを整理しています。
 
 ## Main changes
 
-- Camera / Video Widgetを追加。既存`dashboard_widget`へ設定を保存し、新しいDB Table／Columnは追加しません。
-- Snapshot画像をBrowserの`<img>`で表示し、OFF／10秒／30秒／1分／5分／10分の更新間隔と手動「今すぐ更新」に対応。
-- Snapshot更新失敗時は直前に正常表示出来た画像を残し、読込中／Error／最終成功時刻を表示。
-- YouTubeのwatch／live／shorts／embed／youtu.be URLを既知Hostと11文字Video IDで検証し、YouTube標準Playerで表示。
-- MP4／WebM等のVideo FileをBrowser標準`<video controls playsinline>`で再生。Codec対応可否はBrowser側へ委ねます。
-- MJPEGを連続`<img>`として表示し、手動再接続に対応。通常Video PlayerのSeek等は行いません。
-- HLSはNative HLSを利用出来るBrowserではNative再生し、それ以外ではhls.js 1.6.16を必要時だけ読込みます。hls.jsはVersion固定＋SRI付きです。
-- HLSのFatal errorはNetwork recovery 1回、Media recovery 1回に限定し、無制限Retryは行いません。
-- Auto判定はYouTube、Video extension、`.m3u8`、MJPEG extension／`/mjpeg` path／明示Query、Snapshot画像extensionを判定し、曖昧なURLはSnapshotへ決め打ちせず「判定不能」として手動選択を促します。
-- SmartphoneでCamera / Videoの操作領域とModal余白を調整。
-- 長期`immutable` Cache環境でも段階確認中のFrontend変更を確実に取得出来るよう、Application Versionとは別に`APP_ASSET_REVISION`を導入。正式Releaseでは`APP_VERSION`と同じ`1.17.0`へ確定。
-- TEST-1／TEST-2でDefault CIを「現行Product Contract＋現行Version専用Focused Test」へ整理し、過去Version番号や過去Asset完全一致を固定する履歴Testを通常CIから分離。
-
-## Camera / Video source types
-
-- `Auto` — URL文字列だけから安全に判定出来る形式を選択。Network probingは行いません。
-- `Snapshot` — JPEG／PNG／GIF／WebP／BMP／AVIF等の静止画。
-- `YouTube` — YouTube標準埋め込みPlayer。
-- `Video File` — Browser標準Video Playerで直接再生出来るMedia URL。
-- `MJPEG` — BrowserのImageとして直接接続するMJPEG stream。
-- `HLS` — `.m3u8` Playlist。Native HLSまたはhls.jsで再生。
-- `iframe` — Version 1.17では未対応です。
-
-Autoは配信元へProbeしないため、ExtensionやURL patternから判断出来ないEndpointは「判定不能」になります。その場合はSource Typeを手動指定してください。
-
-## Network / security boundary
-
-Camera / VideoのMedia URLはHTTP／HTTPSのみを受け付け、Credential付きURLや不正なURL形式を拒否します。V1.17ではMediaをServer側で代理取得しません。Snapshot／Video／MJPEG／HLS／YouTubeはBrowserから各配信元へ直接接続するため、CORS、Mixed Content、YouTubeの埋め込み制限、Browser Codec対応等は配信元・Browser側の制約を受けます。
-
-HLSでhls.jsが必要な場合のみ、jsDelivrからVersion固定`1.6.16`をSubresource Integrity付きで遅延読込みします。Licenseは`licenses/hls.js-1.6.16-Apache-2.0.txt`と`THIRD_PARTY_NOTICES.md`へ記録しています。
+- APIでAuthentication、CSRF、Action validationを完了した後、通常Actionではfile-backed PHP Session lockを早期解放し、RSS／Mail／Weather等の遅いI/Oによって別のDashboard API Requestが直列待ちしにくい構成へ変更。
+- Account email／password変更はSession IDとCSRF Tokenを更新するため、従来どおりSessionを開いた状態で処理。
+- Session lock解放処理をAPIの`Throwable` boundary内へ移し、稀な`session_write_close()`失敗時も通常のJSON 500 responseとReference IDへ収めるよう修正。
+- Camera / VideoへClient-side watchdogを追加。Snapshotは12秒、Video metadataは15秒、MJPEGは12秒を目安に、固まった表示を復旧可能な状態へ戻す。
+- Mail Widgetへ13.5秒のClient-side watchdogを追加し、`aria-busy`、Spinner、本文Loading等が残り続けた場合に更新／再試行可能な状態へ戻す。
+- Earthquakeは10.5秒、Sun / Moonは6.5秒、Air Qualityは8.5秒のClient-side watchdogを追加し、Server／XHR側のbounded timeout後もLoading表示だけが残り続ける状態を回避。
+- RSS、Clock、Game、Memo、Task、Search Feed、Links、Weather、Earthquake、Sun / Moon、Air Quality、Calendar、Camera / Video、Mailの設定変更を、ページ全体Reloadではなく対象Card中心の更新へ変更。
+- Weatherの見出し色／Title／Width／Heightだけを変更した場合はWeather dataを再取得せず、表示だけ更新。地域／表示日数を変更した場合のみDataを再取得。
+- Camera / Video設定変更時は対象Camera Cardだけを置換し、無関係なCardを並べ直さない。Mail設定変更も対象Mail Cardだけを更新。
+- 他Widgetの設定変更時に、再生中のYouTube iframe等をページReloadで作り直して再生停止させる問題を解消。
+- Dashboard共通通知を`success: 約2.5秒`、`info: 約3秒`、`danger: 約6秒`で自動消去し、「設定を更新しました」が残り続ける問題を修正。
+- hls.js 1.6.16の固定Versionとanonymous CORSを維持しつつ、Browserで不一致となっていたSubresource Integrity値を正しいSHA-384へ修正。
+- `APP_VERSION`、`APP_VERSION_LABEL`、`APP_ASSET_REVISION`を正式な`1.17.1`へ統一。
 
 ## Database and configuration
 
-DB Table／Column、Migration、SQL、必須configの追加変更はありません。Camera / Video設定は既存`dashboard_widget.widget_config`へ保存します。Version 1.16.0適用済み環境ではCode差し替えのみです。
+Version 1.17.1でDB Table／Column、Migration、SQLの追加変更はありません。
+
+必須Configurationの追加もありません。Server固有の`config/local.php`、`.env`、実DB、`var/`配下のRuntime Dataは更新対象外です。
+
+Version 1.17.0適用済み環境ではCode差し替えのみです。
+
+## Session / API behavior
+
+Dashboardは起動時やWidget更新時に複数API Requestを並行して送る場合があります。file-backed PHP Sessionを外部I/O中も保持すると、1つの遅いRequestによって他Requestまで待たされるため、Version 1.17.1ではAuthentication／CSRF／Action validation後に通常ActionのSession lockを解放します。
+
+Account email／password変更はSession stateを変更するため例外としてSessionを維持します。Session解放自体が失敗した場合もAPI exception boundaryで処理し、HTML errorへ崩さずJSON API contractを維持します。
+
+## Widget settings update behavior
+
+設定変更は、対象Widgetだけを更新することを基本とします。
+
+- RSS／Clock／Game／Memo／Task／Search Feed／Calendar: 保存後に対象Cardを再取得・差し替え。
+- Links／Weather／Earthquake／Sun / Moon／Air Quality: 表示設定を対象Cardへ反映し、Data条件が変わった場合だけ既存Refresh経路を利用。
+- Camera / Video: 対象Camera Cardだけを再構築。無関係なYouTube／Video Cardへ触れない。
+- Mail: 対象Mail Cardの設定を更新し、そのCardの既存Refresh経路を利用。
+
+新規追加、削除、並び替え等のすべてを無理に同じ仕組みへ変更せず、Version 1.17.1は設定更新の全画面Reload解消に範囲を限定しています。
+
+## Camera / Video stability
+
+Snapshot／Video File／MJPEG／HLS／YouTubeというVersion 1.17.0のSource Type構成は変更しません。
+
+Client-side watchdogは、Browserや外部配信元が応答しない場合に画面が永久にLoading／disabledのまま残ることを避けるための補助です。無制限Retryは行いません。
+
+hls.jsはVersion 1.17.0と同じ1.6.16を必要時だけjsDelivrから遅延読込みします。SRIと`crossorigin="anonymous"`を維持します。
 
 ## Distribution files
 
-- `rss-reader-modernization-1.17.0.zip` — Server配置用Runtime成果物。
-- `rss-reader-modernization-1.17.0.zip.sha256` — Runtime ZIPのSHA-256。
-- `rss-reader-modernization-1.17.0-complete.zip` — Repository / Testsを含む完全Source成果物。
-- `rss-reader-modernization-1.17.0-complete.zip.sha256` — 完全Source ZIPのSHA-256。
-- `rss-reader-modernization-1.17.0-production-update.zip` — 1.16.0からのProduction更新差分。
-- `rss-reader-modernization-1.17.0-production-update.zip.sha256` — Production Update ZIPのSHA-256。
+- `rss-reader-modernization-1.17.1.zip` — Server配置用Runtime成果物。
+- `rss-reader-modernization-1.17.1.zip.sha256` — Runtime ZIPのSHA-256。
+- `rss-reader-modernization-1.17.1-complete.zip` — Repository／Testsを含む完全Source成果物。
+- `rss-reader-modernization-1.17.1-complete.zip.sha256` — 完全Source ZIPのSHA-256。
 
-Runtime配布物には`config/local.php`、`.env`、実DB、Log、Session、Cache、Release ZIP等を含めません。
+Runtime配布物には`config/local.php`、`.env`、実DB、Dump、Backup、Log、Session、Cache、Throttle Data、GitHub metadata、Testsを含めません。
+
+完全Source成果物にもPrivate設定、実DB、Runtime Data、別Release ZIP等を含めません。
 
 ## Update notes
 
-Version 1.16.0からDB Migrationは不要です。更新前にCodeをBackupしてください。Server固有の`config/local.php`、DB、`var/`は置換しません。
+Version 1.17.0からDB Migrationは不要です。
 
-主な確認項目:
+更新前にCodeをBackupし、Server固有の`config/local.php`、DB、`var/`を置換しないでください。Runtime ZIPは必要なApplication fileを実ファイルとして含み、Production側でPHP／Python／PowerShell等の適用Scriptを実行して完成させる方式は使用しません。
 
-- Version表示が`RSS Reader Modernization 1.17.0`であること。
-- Camera / Videoの追加・変更・削除と既存Drag & Drop。
-- Snapshotの表示、手動更新、自動更新、失敗時の直前画像維持。
-- YouTubeと直接Videoの再生。
-- MJPEGのAuto判定、表示、再接続。
-- HLSのAuto判定と再生。
-- Autoで判定出来ないURLが「判定不能」となり、手動Source Typeを選択出来ること。
-- PC／SmartphoneでWidgetとModalに大きな表示崩れがないこと。
-- Calendar等の既存Widgetが従来どおり利用出来ること。
+更新後はBrowserを強制再読込し、少なくとも次を確認してください。
+
+- Footer等のVersion表示が`RSS Reader Modernization 1.17.1`。
+- YouTube再生中にWeatherの見出し色を変更してもページ全体がReloadされず、YouTube再生が継続する。
+- Clock Timer等の動作中に別Widgetの設定を変更しても、その状態が不要に失われない。
+- 「設定を更新しました」が約2.5秒後に消える。
+- Camera / Video／Mail／Earthquake／Sun / Moon／Air Qualityが失敗時に永久Loadingへ残らず再試行可能になる。
+- HLS利用時、hls.jsの`integrity` mismatchがConsoleへ出ない。
+- 既存のRSS、Stock、Task、Calendar、Mail等に大きな回帰がない。
 
 ## Verification
 
-V1.17のCamera / Video各StageはGitHub ActionsのPHP 8.1／8.4でFocused TestとRegressionを確認しています。TEST-1／TEST-2ではDefault CIを現行Product Contract中心へ整理し、Release Candidate markerを`1.17.0`へ更新したCI Run #128でもPHP 8.1／8.4のCurrent RegressionとV1.17 focused testsがすべてPASSしました。
+Version 1.17.1 Release Gateでは、GitHub Actions上のPHP 8.1／8.4 MatrixでCurrent Regression、Version 1.17 focused tests、Version 1.17.1 focused testsを実行する構成とします。
 
-Productionでは1.16.0→1.17.0の13ファイル差分を適用し、Version表示、Camera / Videoの主要Source、Smartphoneを含むSmoke確認でReleaseを止める問題がないことを確認しました。細かな表示・個別配信元差異は今後の改善課題として扱います。
+Focused testsではSession release policy、Camera／Mail watchdog、Information Widget watchdog、設定変更のno-reload contract、hls.js SRI、Version／Asset revision、PHP／JavaScript syntaxを確認します。
+
+Runtime／Complete packageはdeterministic builderで生成し、SHA-256 sidecar、ZIP CRC、Path traversal、重複Path、Manifest、Version marker、Private file／Runtime data除外、高Signal Secret patternをVerifierで確認します。
 
 ## Verification limits
 
-Automated verification covers PHP 8.1／8.4 current regression, V1.17 focused contracts, package structure, manifests, checksums, and high-signal secret scans. External Camera／Video endpoint availability、CORS、Mixed Content、Codec、YouTube埋め込み可否、CDN availability、Browser／Device固有描画はGitHub Actionsでは完全再現出来ないため、Production環境で代表Sourceを確認します。
+Automated verificationでは、外部RSS／Camera／Video／Mail providerの可用性、配信元CORS、Mixed Content、Codec、YouTube埋め込み可否、CDNの将来可用性、Browser／Device固有描画、実Production DB／Network条件を完全には再現出来ません。
+
+そのため、外部Serviceを伴う代表Sourceと、今回修正した「他Widget設定変更中のYouTube再生継続」「通知自動消去」はProduction環境でのSmoke確認を併用します。
 
 ## License
 
-Project LicenseおよびThird-party noticeを維持します。Version 1.17ではhls.js 1.6.16（Apache-2.0）を必要時に外部CDNから遅延読込みします。既存Frontend dependencyはBootstrap / Bootswatch 5.3.8、jQuery 3.7.1、Font Awesome Free 6.7.2を維持します。
+Project LicenseおよびThird-party noticeを維持します。Version 1.17.1でもhls.js 1.6.16（Apache-2.0）、Bootstrap / Bootswatch 5.3.8、jQuery 3.7.1、Font Awesome Free 6.7.2の既存Dependency構成を維持します。

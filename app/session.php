@@ -99,6 +99,18 @@ function app_session_start(): void
     app_csrf_token();
 }
 
+/** Persist the current session and release the file-session lock. */
+function app_session_release(): void
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        return;
+    }
+
+    if (!session_write_close()) {
+        throw new RuntimeException('Unable to write and release the application session.');
+    }
+}
+
 function app_session_is_authenticated(): bool
 {
     return isset($_SESSION['user_id']) && (int) $_SESSION['user_id'] > 0;

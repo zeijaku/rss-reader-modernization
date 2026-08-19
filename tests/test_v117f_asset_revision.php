@@ -5,11 +5,14 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/app/version.php';
 require_once dirname(__DIR__) . '/app/asset.php';
 
+$revision = defined('APP_ASSET_REVISION') ? (string) APP_ASSET_REVISION : (string) APP_VERSION;
+$encodedRevision = rawurlencode($revision);
+
 $checks = [
-    'Visible APP_VERSION is final Version 1.17.0 at Release Gate' => APP_VERSION === '1.17.0',
-    'Stable release asset revision matches APP_VERSION' => defined('APP_ASSET_REVISION') && APP_ASSET_REVISION === APP_VERSION,
-    'Calendar URL uses the final asset revision' => app_asset_url('js/calendar.js') === './js/calendar.js?v=1.17.0',
-    'CSS URL uses the same final asset revision' => app_asset_url('css/dashboard.css') === './css/dashboard.css?v=1.17.0',
+    'Visible APP_VERSION remains a semantic version' => preg_match('/^\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?$/', APP_VERSION) === 1,
+    'Asset revision is available for cache busting' => $revision !== '',
+    'Calendar URL uses the active asset revision' => app_asset_url('js/calendar.js') === './js/calendar.js?v=' . $encodedRevision,
+    'CSS URL uses the same active asset revision' => app_asset_url('css/dashboard.css') === './css/dashboard.css?v=' . $encodedRevision,
 ];
 
 $failed = [];
@@ -24,4 +27,4 @@ if ($failed !== []) {
     exit(1);
 }
 
-echo 'PASS: V1.17 final asset revision cache checks passed' . PHP_EOL;
+echo 'PASS: asset revision cache contract checks passed' . PHP_EOL;

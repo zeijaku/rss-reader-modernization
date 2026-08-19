@@ -60,6 +60,18 @@ function api_mail_account_dispatch(string $action, int $userId, array $input): a
     };
 }
 
+/**
+ * Account credential changes rotate the authenticated session and issue a new
+ * CSRF token, so only those actions must keep the file-backed session open.
+ */
+function api_action_requires_open_session(string $action): bool
+{
+    return in_array($action, [
+        'account.email.update',
+        'account.password.update',
+    ], true);
+}
+
 app_session_start();
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -83,6 +95,15 @@ if ($action === '' || strlen($action) > 64 || preg_match('/^[a-z]+(?:\.[a-z]+)+$
 }
 
 try {
+    // V1.17.1-A/E: authentication and CSRF are already fixed above. Release
+    // the file-session lock before DB/outbound I/O so parallel Dashboard
+    // requests do not queue behind a slow RSS, Mail, Weather, or other
+    // external fetch. Keep the release inside the API exception boundary so a
+    // rare session_write_close() failure still returns the normal JSON error.
+    if (!api_action_requires_open_session($action)) {
+        app_session_release();
+    }
+
     if (str_starts_with($action, 'camera.widget.')) {
         api_emit(camera_video_api_dispatch($action, $userId, $_POST));
     }

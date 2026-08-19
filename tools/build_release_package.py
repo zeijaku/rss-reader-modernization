@@ -11,8 +11,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXED_TIME = (1980, 1, 1, 0, 0, 0)
-INTENDED_RELEASE = '1.17.0'
-INTENDED_TAG = 'v1.17.0'
+INTENDED_RELEASE = '1.17.1'
+INTENDED_TAG = 'v1.17.1'
 
 ROOT_FILES = (
     '.htaccess',
@@ -70,22 +70,30 @@ def read_version() -> tuple[str, str]:
 
 def validate_mode(mode: str, version: str, label: str) -> tuple[str, str, str]:
     if mode == 'preview':
-        if not re.fullmatch(r'1\.17\.0-dev\.[1-9][0-9]*', version):
-            fail('preview mode requires APP_VERSION such as 1.17.0-dev.9')
+        if not re.fullmatch(r'1\.17\.1-dev\.[1-9][0-9]*', version):
+            fail('preview mode requires APP_VERSION such as 1.17.1-dev.9')
         if label != f'RSS Reader Modernization {version}':
             fail('preview mode label does not match APP_VERSION')
-        return 'PREVIEW', 'no', 'rss-reader-modernization-1.17.0-preview'
+        return 'PREVIEW', 'no', 'rss-reader-modernization-1.17.1-preview'
     if mode == 'rc':
-        if not re.fullmatch(r'1\.17\.0-rc[1-9][0-9]*', version):
-            fail('rc mode requires APP_VERSION such as 1.17.0-rc1')
+        if not re.fullmatch(r'1\.17\.1-rc[1-9][0-9]*', version):
+            fail('rc mode requires APP_VERSION such as 1.17.1-rc1')
         if label != f'RSS Reader Modernization {version.upper()}':
             fail('rc mode label does not match APP_VERSION')
         return 'RELEASE_CANDIDATE', 'no', f'rss-reader-modernization-{version}'
     if mode == 'final':
-        if version != INTENDED_RELEASE or label != 'RSS Reader Modernization 1.17.0':
-            fail('final mode requires the exact 1.17.0 version and label')
-        return 'FINAL', 'yes', 'rss-reader-modernization-1.17.0'
+        if version != INTENDED_RELEASE or label != 'RSS Reader Modernization 1.17.1':
+            fail('final mode requires the exact 1.17.1 version and label')
+        return 'FINAL', 'yes', 'rss-reader-modernization-1.17.1'
     fail('unsupported mode')
+
+
+def is_generated_runtime_file(rel: str) -> bool:
+    posix = PurePosixPath(rel)
+    return any(
+        rel.startswith(runtime + '/') and posix.name != '.gitkeep'
+        for runtime in RUNTIME_DIRS
+    )
 
 
 def collect_source_files() -> dict[str, Path]:
@@ -106,6 +114,10 @@ def collect_source_files() -> dict[str, Path]:
             rel = path.relative_to(ROOT).as_posix()
             if path.is_symlink():
                 fail(f'symlink is not allowed in release package: {rel}')
+            # Runtime tests can legitimately create session/cache/log files before
+            # packaging. They are never distribution inputs; keep only .gitkeep.
+            if is_generated_runtime_file(rel):
+                continue
             files[rel] = path
 
     docs = ROOT / 'docs'
@@ -133,13 +145,11 @@ def collect_source_files() -> dict[str, Path]:
         if '__pycache__' in posix.parts or lower.endswith(('.pyc', '.pyo')):
             fail(f'Python cache file is not allowed: {rel}')
 
-    for runtime in RUNTIME_DIRS:
-        generated = [
-            rel for rel in files
-            if rel.startswith(runtime + '/') and PurePosixPath(rel).name != '.gitkeep'
-        ]
-        if generated:
-            fail(f'runtime directory contains generated files: {runtime}')
+    # Defense in depth: generated runtime files must never enter the payload,
+    # even if collection logic changes later.
+    generated = [rel for rel in files if is_generated_runtime_file(rel)]
+    if generated:
+        fail('generated runtime files entered release payload: ' + ', '.join(generated[:5]))
 
     return dict(sorted(files.items()))
 
@@ -170,6 +180,7 @@ def build(mode: str, output_dir: Path) -> tuple[Path, Path]:
         f'publishable={publishable}',
         'validation_scope=automated-regression-and-package',
         'manual_evidence=not-recorded-in-distribution',
+        'runtime_data=excluded',
         'manifest=RELEASE_MANIFEST.sha256',
         '',
     ]).encode('utf-8')
