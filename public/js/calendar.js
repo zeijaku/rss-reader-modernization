@@ -10,6 +10,8 @@
         document.body.appendChild(script);
     }
 
+    // V1.17.1-A: keep shared danger notices from remaining on screen forever.
+    loadScript('./js/app-notice.js?v=1.17.1-a');
     loadScript('./js/calendar-core.js?v=1.9.0');
     loadScript('./js/mail-widget.js?v=1.14-d');
     // V1.17-F R1: refresh Camera / Video assets after production cache issues.
