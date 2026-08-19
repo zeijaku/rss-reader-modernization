@@ -88,6 +88,14 @@ def validate_mode(mode: str, version: str, label: str) -> tuple[str, str, str]:
     fail('unsupported mode')
 
 
+def is_generated_runtime_file(rel: str) -> bool:
+    posix = PurePosixPath(rel)
+    return any(
+        rel.startswith(runtime + '/') and posix.name != '.gitkeep'
+        for runtime in RUNTIME_DIRS
+    )
+
+
 def collect_source_files() -> dict[str, Path]:
     files: dict[str, Path] = {}
     for rel in ROOT_FILES + DOC_FILES:
@@ -106,6 +114,10 @@ def collect_source_files() -> dict[str, Path]:
             rel = path.relative_to(ROOT).as_posix()
             if path.is_symlink():
                 fail(f'symlink is not allowed in release package: {rel}')
+            # Runtime tests can legitimately create session/cache/log files before
+            # packaging. They are never distribution inputs; keep only .gitkeep.
+            if is_generated_runtime_file(rel):
+                continue
             files[rel] = path
 
     docs = ROOT / 'docs'
@@ -133,13 +145,11 @@ def collect_source_files() -> dict[str, Path]:
         if '__pycache__' in posix.parts or lower.endswith(('.pyc', '.pyo')):
             fail(f'Python cache file is not allowed: {rel}')
 
-    for runtime in RUNTIME_DIRS:
-        generated = [
-            rel for rel in files
-            if rel.startswith(runtime + '/') and PurePosixPath(rel).name != '.gitkeep'
-        ]
-        if generated:
-            fail(f'runtime directory contains generated files: {runtime}')
+    # Defense in depth: generated runtime files must never enter the payload,
+    # even if collection logic changes later.
+    generated = [rel for rel in files if is_generated_runtime_file(rel)]
+    if generated:
+        fail('generated runtime files entered release payload: ' + ', '.join(generated[:5]))
 
     return dict(sorted(files.items()))
 
@@ -170,6 +180,7 @@ def build(mode: str, output_dir: Path) -> tuple[Path, Path]:
         f'publishable={publishable}',
         'validation_scope=automated-regression-and-package',
         'manual_evidence=not-recorded-in-distribution',
+        'runtime_data=excluded',
         'manifest=RELEASE_MANIFEST.sha256',
         '',
     ]).encode('utf-8')
