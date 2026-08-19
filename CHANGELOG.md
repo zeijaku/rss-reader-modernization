@@ -1,5 +1,22 @@
 # Changelog
 
+## RSS Reader Modernization 1.17.1 — 2026-08-19
+
+### Stability / Session lock / Widget settings update
+
+- 通常API ActionはAuthentication、CSRF、Action validation完了後にfile-backed PHP Session lockを早期解放し、遅い外部I/OによるDashboard API Requestの直列待ちを抑制。Account email／password変更はSession更新のため従来どおりLockを維持。
+- Session解放処理をAPIの`Throwable` boundary内へ移し、`session_write_close()`失敗時も通常のJSON 500 responseとReference IDへ収めるよう修正。
+- Camera / VideoへSnapshot 12秒、Video metadata 15秒、MJPEG 12秒のClient-side watchdogを追加し、固まった表示を再試行可能な状態へ復旧。
+- Mailへ13.5秒、Earthquakeへ10.5秒、Sun / Moonへ6.5秒、Air Qualityへ8.5秒のClient-side watchdogを追加。
+- RSS、Clock、Game、Memo、Task、Search Feed、Links、Weather、Earthquake、Sun / Moon、Air Quality、Calendar、Camera / Video、Mailの設定保存を、ページ全体Reloadではなく対象Card中心の更新へ変更。
+- WeatherのTitle／色／Width／Heightのみの変更ではDataを再取得せず、地域／表示日数を変更した場合のみ再取得。
+- Camera / VideoとMailは対象Widgetだけを再構築し、他Widgetの設定変更で再生中のYouTube iframe等が作り直されて停止する問題を解消。
+- Dashboard共通通知をsuccess約2.5秒、info約3秒、danger約6秒で自動消去し、設定更新通知が残り続ける問題を修正。
+- hls.js 1.6.16のVersion固定とanonymous CORSを維持したまま、Subresource IntegrityのSHA-384を実配布Assetと一致する値へ修正。
+- `APP_VERSION`、`APP_VERSION_LABEL`、`APP_ASSET_REVISION`を`1.17.1`へ統一。
+- DB Table／Column、Migration、SQL、必須configの追加変更はなし。
+- GitHub Actions PHP 8.1／8.4のCurrent Regression、V1.17 focused tests、V1.17.1 focused tests、およびV1.17.1 Release GateをPASS。
+
 ## RSS Reader Modernization 1.17.0 — 2026-08-19
 
 ### Camera / Video Widget / Asset revision / Current test policy
