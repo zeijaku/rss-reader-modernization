@@ -8,7 +8,7 @@ import re
 import sys
 import zipfile
 
-VERSION = '1.16.0'
+VERSION = '1.17.0'
 TOP = f'rss-reader-modernization-{VERSION}-complete'
 FORBIDDEN_EXACT = {'config/local.php', '.env', 'rss.sql', 'rss.zip'}
 FORBIDDEN_SUFFIXES = ('.sqlite', '.sqlite3', '.db', '.dump', '.bak', '.backup', '.log', '.pid', '.zip')
@@ -27,7 +27,7 @@ def check(ok: bool, message: str) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description='Verify complete Version 1.16.0 source package.')
+    parser = argparse.ArgumentParser(description='Verify complete Version 1.17.0 source package.')
     parser.add_argument('zip_path', type=Path)
     parser.add_argument('sha256_sidecar', type=Path)
     args = parser.parse_args()
@@ -51,9 +51,9 @@ def main() -> int:
         generated = [rel for rel in relative for runtime in RUNTIME_DIRS if rel.startswith(runtime + '/') and PurePosixPath(rel).name != '.gitkeep']
         check(not generated, 'complete ZIP excludes generated runtime data')
         build = archive.read(relative['SOURCE_BUILD.txt']).decode('utf-8')
-        check('application_version=1.16.0' in build and 'intended_tag=v1.16.0' in build, 'source build metadata targets Version 1.16.0')
+        check('application_version=1.17.0' in build and 'intended_tag=v1.17.0' in build, 'source build metadata targets Version 1.17.0')
         version = archive.read(relative['app/version.php']).decode('utf-8')
-        check("APP_VERSION = '1.16.0'" in version and "APP_VERSION_LABEL = 'RSS Reader Modernization 1.16.0'" in version, 'complete ZIP has exact release marker')
+        check("APP_VERSION = '1.17.0'" in version and "APP_VERSION_LABEL = 'RSS Reader Modernization 1.17.0'" in version, 'complete ZIP has exact release marker')
         manifest_text = archive.read(relative['SOURCE_MANIFEST.sha256']).decode('utf-8')
         manifest: dict[str, str] = {}
         for line in manifest_text.splitlines():
