@@ -2,7 +2,11 @@
     'use strict';
 
     var timer = null;
-    var delayMs = 6000;
+    var delayMs = {
+        success: 2500,
+        info: 3000,
+        danger: 6000
+    };
 
     function cancelTimer() {
         if (timer !== null) {
@@ -11,17 +15,29 @@
         }
     }
 
-    function scheduleDangerNoticeClose() {
+    function scheduleNoticeClose() {
         var notice = document.getElementById('app-notice');
         var text;
+        var noticeType;
+        var closeDelay;
         if (!notice) {
             return;
         }
 
         cancelTimer();
-        if (notice.hidden || !notice.classList.contains('alert-danger')) {
+        if (notice.hidden) {
             return;
         }
+
+        noticeType = notice.classList.contains('alert-success')
+            ? 'success'
+            : (notice.classList.contains('alert-info')
+                ? 'info'
+                : (notice.classList.contains('alert-danger') ? 'danger' : ''));
+        if (noticeType === '') {
+            return;
+        }
+        closeDelay = delayMs[noticeType];
 
         text = String(notice.textContent || '');
         if (text === '') {
@@ -33,13 +49,13 @@
             timer = null;
             if (!current
                 || current.hidden
-                || !current.classList.contains('alert-danger')
+                || !current.classList.contains('alert-' + noticeType)
                 || String(current.textContent || '') !== text) {
                 return;
             }
             current.hidden = true;
             current.textContent = '';
-        }, delayMs);
+        }, closeDelay);
     }
 
     function init() {
@@ -49,7 +65,7 @@
             return;
         }
 
-        observer = new window.MutationObserver(scheduleDangerNoticeClose);
+        observer = new window.MutationObserver(scheduleNoticeClose);
         observer.observe(notice, {
             attributes: true,
             attributeFilter: ['class', 'hidden'],
@@ -57,7 +73,7 @@
             characterData: true,
             subtree: true
         });
-        scheduleDangerNoticeClose();
+        scheduleNoticeClose();
     }
 
     if (document.readyState === 'loading') {
