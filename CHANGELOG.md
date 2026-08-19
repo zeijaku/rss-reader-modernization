@@ -1,5 +1,21 @@
 # Changelog
 
+## RSS Reader Modernization 1.17.0 — 2026-08-19
+
+### Camera / Video Widget / Asset revision / Current test policy
+
+- DashboardへCamera / Video Widgetを追加し、既存`dashboard_widget.widget_config`へ設定を保存。新規Table／Column／Migrationは追加しない。
+- SnapshotをBrowserのImageとして表示し、手動更新とOFF／10秒／30秒／1分／5分／10分の自動更新、失敗時の直前成功画像維持に対応。
+- YouTube watch／live／shorts／embed／youtu.be URLを既知HostとVideo IDで検証し、YouTube標準Playerで表示。
+- MP4／WebM等をBrowser標準`<video>`で再生し、MJPEGはImage streamとして直接表示、HLSはNative HLSまたはhls.js 1.6.16で再生。
+- hls.jsはVersion固定＋SRI付きで必要時だけ読込み、Apache-2.0 License noticeを追加。
+- Auto Source判定へYouTube、Video extension、HLS、MJPEG endpoint、Snapshot画像extensionを追加し、曖昧なURLはSnapshotへ決め打ちせず「判定不能」として手動選択を案内。
+- Smartphone向けにCamera / VideoのActionとModal余白を調整し、Width 1〜4／Height 1〜2と既存Drag & Dropを維持。
+- 長期`immutable` Cache環境で段階配布Assetが古いまま残る問題に対応するため`APP_ASSET_REVISION`を導入し、正式Releaseでは`1.17.0`へ確定。
+- TEST-1／TEST-2でDefault CIを現行Product Contract中心へ整理し、過去Version番号や過去Asset完全一致を固定する履歴Testを通常CIから分離。
+- GitHub Actions PHP 8.1／8.4でCurrent Regression＋V1.17 focused testsをPASSし、Production smoke確認後にApplication Versionを`1.17.0`へ確定。
+- DB Table／Column、Migration、SQL、必須configの追加変更はなし。
+
 ## RSS Reader Modernization 1.16.0 — 2026-08-17
 
 ### Calculator / Blind Spot Discovery / Dashboard UI

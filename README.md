@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.16.0`
-Release tag: `v1.16.0`
+**Stable release:** `RSS Reader Modernization 1.17.0`
+Release tag: `v1.17.0`
+
+Version 1.17.0では、DashboardへCamera / Video Widgetを追加しました。Snapshot、YouTube、Browser標準Video、MJPEG、HLSに対応し、URLから安全に判断出来る場合はAutoでSource Typeを選択します。MediaはServer proxyを経由せずBrowserから配信元へ直接接続し、曖昧なAuto URLはSnapshotへ決め打ちせず手動指定を促します。長期`immutable` Cache環境向けに`APP_ASSET_REVISION`を追加し、正式ReleaseではApplication Versionと同じ`1.17.0`へ確定しました。DB schema、Migration、必須configの追加変更はありません。
 
 Version 1.16.0では、UtilityへCalculator Widgetを追加し、InformationへBlind Spot / Discovery Widgetを追加しました。Blind Spotは国内向け40 Feedを20カテゴリに分け、直前カテゴリ回避と24時間・最大18件の最近記事履歴で同じ内容の連続表示を抑えます。記事概要の展開とStock／URL Copy／X／Taskの既存Article Actionsも再利用します。Dashboard Widget HeaderとDrag Handleの操作領域も共通化しました。DB schema、Migration、必須configの追加変更はありません。
 
@@ -51,6 +53,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Earthquake Widgetの気象庁最新地震情報表示
 - Sun / Moon Widgetの日の出・日の入り・月齢・月相表示
 - Air Quality / UV WidgetのUS AQI、PM2.5、PM10、UV表示
+- Camera / Video WidgetのSnapshot、YouTube、Video File、MJPEG、HLS表示
 - スマートフォンでの左右スワイプによるタブ切り替え
 - Feed／Calendar読込中のSpinner表示
 - 記事リンクのStock保存と一覧表示
