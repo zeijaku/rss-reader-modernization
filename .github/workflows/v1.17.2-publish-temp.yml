@@ -1,0 +1,74 @@
+name: V1.17.2 Publish Prep
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  publish-prep:
+    if: github.head_ref == 'automation/v1.17.2-publish'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout final main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Verify final main commit and version
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "62b58a0dcbfe3a9684f343db824fd8a143b68089"
+          grep -F "const APP_VERSION = '1.17.2';" app/version.php
+          grep -F "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.17.2';" app/version.php
+          grep -F "const APP_ASSET_REVISION = '1.17.2';" app/version.php
+          test -z "$(git ls-remote --tags origin refs/tags/v1.17.2)"
+
+      - name: Build and verify release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          python tools/build_release_package.py --mode final --output-dir dist
+          python tools/verify_release_package.py \
+            dist/rss-reader-modernization-1.17.2.zip \
+            dist/rss-reader-modernization-1.17.2.zip.sha256
+          python tools/build_complete_package.py --output-dir dist
+          python tools/verify_complete_package.py \
+            dist/rss-reader-modernization-1.17.2-complete.zip \
+            dist/rss-reader-modernization-1.17.2-complete.zip.sha256
+          grep -F "f1117d49430b75462d22e2cb5d474d81fcaad914aa1956ef1b3500b5a17abf13" dist/rss-reader-modernization-1.17.2.zip.sha256
+          grep -F "42939d7db4777ab0690c28f8354547e701e61eac240208dad4a68ee40d8ee1d2" dist/rss-reader-modernization-1.17.2-complete.zip.sha256
+
+      - name: Create annotated tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "zeijaku"
+          git config user.email "zeijaku.net@gmail.com"
+          git tag -a v1.17.2 62b58a0dcbfe3a9684f343db824fd8a143b68089 -m "RSS Reader Modernization 1.17.2"
+          git push origin refs/tags/v1.17.2
+
+      - name: Create draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create v1.17.2 \
+            dist/rss-reader-modernization-1.17.2.zip \
+            dist/rss-reader-modernization-1.17.2.zip.sha256 \
+            dist/rss-reader-modernization-1.17.2-complete.zip \
+            dist/rss-reader-modernization-1.17.2-complete.zip.sha256 \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "RSS Reader Modernization 1.17.2" \
+            --notes-file RELEASE_NOTES.md \
+            --verify-tag \
+            --draft
