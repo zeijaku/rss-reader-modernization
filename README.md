@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.17.0`
-Release tag: `v1.17.0`
+**Stable release:** `RSS Reader Modernization 1.17.1`
+Release tag: `v1.17.1`
+
+Version 1.17.1では、Version 1.17.0で追加したCamera / Video Widgetと、Mail／Information Widget／各種設定変更の安定性を改善しました。通常API Actionでは認証・CSRF・Action validation後にSession lockを早期解放し、Camera / Video、Mail、Earthquake、Sun / Moon、Air QualityへClient-side watchdogを追加しています。Widget設定保存は対象Card中心の更新へ変更し、他Widgetの設定変更で再生中のYouTubeが停止する問題や、通知が残り続ける問題、hls.js 1.6.16のSRI不一致も修正しました。DB schema、Migration、必須configの追加変更はありません。
 
 Version 1.17.0では、DashboardへCamera / Video Widgetを追加しました。Snapshot、YouTube、Browser標準Video、MJPEG、HLSに対応し、URLから安全に判断出来る場合はAutoでSource Typeを選択します。MediaはServer proxyを経由せずBrowserから配信元へ直接接続し、曖昧なAuto URLはSnapshotへ決め打ちせず手動指定を促します。長期`immutable` Cache環境向けに`APP_ASSET_REVISION`を追加し、正式ReleaseではApplication Versionと同じ`1.17.0`へ確定しました。DB schema、Migration、必須configの追加変更はありません。
 
