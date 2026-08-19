@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 import sys
 
 root = Path(__file__).resolve().parents[1]
@@ -6,9 +7,12 @@ base_js = (root / 'public/js/camera-video.js').read_text(encoding='utf-8')
 playback_js = (root / 'public/js/camera-video-playback.js').read_text(encoding='utf-8')
 playback_css = (root / 'public/css/camera-video-playback.css').read_text(encoding='utf-8')
 calendar_js = (root / 'public/js/calendar.js').read_text(encoding='utf-8')
+version = (root / 'app/version.php').read_text(encoding='utf-8')
+revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
+active_revision = revision_match.group(1) if revision_match else ''
 
 checks = {
-    'Playback stays isolated from Snapshot module': 'camera-video-playback.js' not in base_js and 'camera-video-playback.js?v=1.17-' in calendar_js,
+    'Playback stays isolated from Snapshot module': 'camera-video-playback.js' not in base_js and active_revision != '' and 'camera-video-playback.js?v=' + active_revision in calendar_js,
     'YouTube URL parser accepts explicit known hosts only': all(host in playback_js for host in ['www.youtube.com', 'm.youtube.com', 'youtu.be', 'www.youtube-nocookie.com']),
     'YouTube URL parser supports watch/live/embed/shorts': all(token in playback_js for token in ["'/watch'", "['live', 'embed', 'shorts']", "searchParams.get('v')"]),
     'YouTube Video ID is restricted to eleven safe characters': '/^[A-Za-z0-9_-]{11}$/' in playback_js,
