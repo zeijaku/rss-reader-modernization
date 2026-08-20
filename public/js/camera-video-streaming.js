@@ -15,7 +15,7 @@
         }
         var link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = './css/camera-video-streaming.css?v=1.17.2';
+        link.href = './css/camera-video-streaming.css?v=1.18.0-r2';
         link.setAttribute('data-camera-video-streaming-style', 'true');
         document.head.appendChild(link);
     }

@@ -10,7 +10,7 @@ declare(strict_types=1);
 /** @return list<string> */
 function dashboard_widget_types(): array
 {
-    return ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game', 'links', 'weather', 'sun_moon', 'air_quality', 'earthquake', 'calculator', 'blind_spot', 'x_timeline'];
+    return ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game', 'links', 'weather', 'sun_moon', 'air_quality', 'earthquake', 'health_probe', 'calculator', 'blind_spot', 'x_timeline'];
 }
 
 function dashboard_widget_validate_type(mixed $value): ?string

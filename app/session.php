@@ -82,7 +82,10 @@ function app_session_start(): void
             if (!session_regenerate_id(true)) {
                 throw new RuntimeException('Unable to rotate an expired session identifier.');
             }
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            // Keep the current CSRF token until Remember Me restoration decides
+            // whether the browser can be re-authenticated. If restoration succeeds,
+            // persistent_login_restore_session() rotates to a fresh token and keeps
+            // this token only as a short grace token for an already-open page.
         } else {
             $_SESSION['last_activity'] = $now;
         }
@@ -173,14 +176,51 @@ function app_csrf_token(): string
     return $token;
 }
 
+/** Return the current CSRF token without creating or rotating it. */
+function app_csrf_current_token(): ?string
+{
+    $token = $_SESSION['csrf_token'] ?? null;
+    return is_string($token) && preg_match('/^[a-f0-9]{64}$/', $token) === 1 ? $token : null;
+}
+
+/**
+ * Allow the token held by an already-open page for a short overlap after
+ * silent Remember Me restoration. The normal current token remains primary.
+ */
+function app_csrf_allow_previous_token(string $token, int $graceSeconds = 300): void
+{
+    if (preg_match('/^[a-f0-9]{64}$/', $token) !== 1 || $graceSeconds <= 0) {
+        return;
+    }
+
+    $_SESSION['csrf_previous_token'] = $token;
+    $_SESSION['csrf_previous_expires_at'] = time() + min($graceSeconds, 600);
+}
+
 function app_csrf_is_valid(?string $submittedToken): bool
 {
     if (!is_string($submittedToken) || $submittedToken === '') {
         return false;
     }
 
-    $sessionToken = $_SESSION['csrf_token'] ?? null;
-    return is_string($sessionToken) && hash_equals($sessionToken, $submittedToken);
+    $sessionToken = app_csrf_current_token();
+    if ($sessionToken !== null && hash_equals($sessionToken, $submittedToken)) {
+        return true;
+    }
+
+    $previousToken = $_SESSION['csrf_previous_token'] ?? null;
+    $previousExpiresAt = isset($_SESSION['csrf_previous_expires_at'])
+        ? (int) $_SESSION['csrf_previous_expires_at']
+        : 0;
+
+    if ($previousExpiresAt <= time()) {
+        unset($_SESSION['csrf_previous_token'], $_SESSION['csrf_previous_expires_at']);
+        return false;
+    }
+
+    return is_string($previousToken)
+        && preg_match('/^[a-f0-9]{64}$/', $previousToken) === 1
+        && hash_equals($previousToken, $submittedToken);
 }
 
 

@@ -166,11 +166,17 @@ $firstCookie = persistent_login_cookie_value();
 $check(is_string($firstCookie) && remember_token_parse($firstCookie) !== null, 'Issued browser cookie uses strict selector.validator format');
 $check(count($pdo->tokens) === 1, 'Issued persistent login creates one database token');
 
+$stalePageCsrf = app_csrf_token();
 app_session_clear_authentication();
 $oldSessionId = session_id();
 $check(persistent_login_restore_session(), 'Valid Remember Token restores an anonymous session');
 $check(app_session_user_id() === 1, 'Restored session is authenticated as the token owner');
 $check(session_id() !== $oldSessionId, 'Automatic login regenerates the session identifier');
+$currentCsrf = app_csrf_current_token();
+$check(is_string($currentCsrf) && $currentCsrf !== $stalePageCsrf, 'Automatic login rotates the current CSRF token');
+$check(app_csrf_is_valid($stalePageCsrf), 'Already-open page CSRF token has a short restoration grace period');
+$_SESSION['csrf_previous_expires_at'] = time() - 1;
+$check(!app_csrf_is_valid($stalePageCsrf) && is_string($currentCsrf) && app_csrf_is_valid($currentCsrf), 'Expired grace token is rejected while the current CSRF token remains valid');
 $rotatedCookie = persistent_login_cookie_value();
 $check(is_string($rotatedCookie) && $rotatedCookie !== $firstCookie, 'Automatic login rotates the browser validator');
 $check(count($pdo->tokens) === 1, 'Validator rotation keeps one current-browser token');

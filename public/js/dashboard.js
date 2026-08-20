@@ -10,6 +10,36 @@
         return $('meta[name="csrf-token"]').attr('content') || '';
     }
 
+    function initCsrfSessionSync() {
+        var reloadingForAuth = false;
+
+        $(document)
+            .off('ajaxComplete' + eventNamespace)
+            .on('ajaxComplete' + eventNamespace, function (event, xhr, settings) {
+                var url = settings && typeof settings.url === 'string' ? settings.url : '';
+                if (url.indexOf('api_v1.php') === -1 || !xhr || typeof xhr.getResponseHeader !== 'function') {
+                    return;
+                }
+
+                var token = xhr.getResponseHeader('X-CSRF-Token') || '';
+                if (/^[a-f0-9]{64}$/.test(token)) {
+                    $('meta[name="csrf-token"]').attr('content', token);
+                }
+            })
+            .off('ajaxError' + eventNamespace)
+            .on('ajaxError' + eventNamespace, function (event, xhr, settings) {
+                var url = settings && typeof settings.url === 'string' ? settings.url : '';
+                var code = xhr && xhr.responseJSON && xhr.responseJSON.error
+                    ? String(xhr.responseJSON.error.code || '')
+                    : '';
+
+                if (!reloadingForAuth && url.indexOf('api_v1.php') !== -1 && xhr && xhr.status === 401 && code === 'unauthenticated') {
+                    reloadingForAuth = true;
+                    window.location.reload();
+                }
+            });
+    }
+
     function apiErrorMessage(xhr, textStatus) {
         if (textStatus === 'timeout') {
             return '通信がタイムアウトしました';
@@ -3405,6 +3435,7 @@
         readFeedKeywordState();
         renderFeedKeywordManager();
         bindEvents();
+        initCsrfSessionSync();
         initFeeds();
         initClocks();
         initTabSwipe();

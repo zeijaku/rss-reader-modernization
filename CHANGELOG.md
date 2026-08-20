@@ -1,5 +1,24 @@
 # Changelog
 
+## RSS Reader Modernization 1.18.0 — 2026-08-20
+
+### Connection Monitor / latency history / outage state / Release Gate
+
+- DashboardのInformationカテゴリへConnection Monitor Widgetを追加し、Browser／DeviceからこのRSS Reader自身への接続状態を可視化。任意URLや第三者Monitorではなく、同一Originの`connection_probe.php`だけを測定対象とする。
+- 軽量GET ProbeはHTTP 204・empty body・no-storeで返し、Session／DB／Application bootstrap／外部通信を通さない。GET以外は405とし、Client IPやLocal IP等の収集は行わない。
+- Foregroundでは約5秒間隔で前回Request完了後に次回を予約し、Request overlapを防止。Background tabでは定期Probeを停止し、表示復帰時に即時確認する。
+- Connection Monitorを複数配置してもPage内で1本のProbe streamを共有し、Widget数に応じて通信量が増えないようにする。
+- 現在Latencyに加え、30秒／60秒／5分のIn-memory履歴、SVG Graph、Avg、Max、HTTP RTT差分を使ったJitter表示を追加。Offline／長時間空白を巨大Latencyとして扱わず、GraphとJitter計算を分断する。
+- 2回連続の到達不能でOfflineを確定し、Last Disconnect、進行中Downtime、復旧後Last Downtime、約15秒のRecovered表示を追加。HTTP 500等は到達不能と混同せずProbe Errorとして分離する。
+- 品質判定をExcellent（79ms以下）／Good（80–149ms）／Fair（150–299ms）／Slow（300ms以上）／Offlineへ整理。直近5分の成功値中央値をBaselineとして、十分な差が2回連続した場合だけ「通常より遅い」を表示する。
+- PC／TabletのHeight 1は主要情報を残したCompact表示、Height 2はBaseline／経路／端末判定を含む詳細表示とし、SmartphoneではHeight差による情報欠落を避ける。Bootstrap／Bootswatch Theme変数へ追従する表示へ調整。
+- 履歴、Baseline、切断状態はBrowser memoryだけに保持し、DB／localStorage／sessionStorageへ永続化しない。
+- V1.18-Fで外部Internet Probe、固定Google／Cloudflare等へのProbe、任意Probe URL、Speed Test、WebRTC等によるIP探索をV1.18の非対象として固定。
+- `APP_VERSION`／`APP_VERSION_LABEL`は`1.18.0`へ確定。実機確認後のCalendar／Dashboard CSS修正を確実に取得させるため、最終Asset Cache keyは`APP_ASSET_REVISION=1.18.0-r2`とし、動的Asset loaderも同じRevisionへ統一。Runtime／Complete package builder・verifier、CI／Release Gate、Release Documentationは1.18.0を対象とする。
+- Release前確認で、長時間放置後にRemember MeからSessionを自動復旧した際、開いたままのPageが旧CSRF Tokenを保持してAPI更新が403になるCaseを修正。復旧時だけ旧Tokenを短時間Graceとして受け入れ、API Response Headerから新TokenへPage側を同期する。Remember Meが無効で認証自体が失効した場合は通常のLogin画面へ戻す。
+- Smartphone Calendarが`min-width: 500px`を強制してCard幅を超えるCaseを修正。575.98px以下では7列GridをCard幅へ収め、Desktopの狭いCalendarは必要な横OverflowをCard内へ閉じ込める。
+- DB Table／Column／Migration、必須config、外部JavaScript Libraryの追加変更はなし。
+
 ## RSS Reader Modernization 1.17.2 — 2026-08-19
 
 ### X Timeline Widget / Bearer Token guidance / Release Gate

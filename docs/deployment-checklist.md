@@ -61,6 +61,10 @@
 - [ ] 新着Bellの個別解除 / Feed単位解除
 - [ ] 記事ActionsのStock / URL Copy / X / Task追加
 - [ ] X Timelineを利用する場合は「上級者向け」案内、Bearer Token状態、公開Accountの投稿取得を確認
+- [ ] Connection MonitorのOnline／Latency／30s・60s・5m／Avg・Max・Jitter／Qualityを確認
+- [ ] Connection MonitorのOffline→Recovery／Downtime／Last Disconnectを確認
+- [ ] 複数Connection MonitorでもProbeがPage全体で約5秒に1回であることを確認
+- [ ] Background tabでProbe停止、復帰時に即時再開することを確認
 - [ ] Clock追加 / 変更 / 削除
 - [ ] Memo追加 / 変更 / 削除 / 改行表示
 - [ ] Task Widget追加 / 変更 / 削除

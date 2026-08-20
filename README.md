@@ -2,8 +2,11 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.17.2`
-Release tag: `v1.17.2`
+**Stable release:** `RSS Reader Modernization 1.18.0`
+Release tag: `v1.18.0`
+
+Version 1.18.0では、DashboardのInformationカテゴリへConnection Monitor Widgetを追加しました。BrowserからこのRSS Reader自身の軽量Endpointへ同一Originで定期Probeを送り、現在Latency、30秒／60秒／5分履歴、Avg／Max／Jitter、切断／復旧、Downtime、Last Disconnect、Excellent／Good／Fair／Slow／Offlineを表示します。複数WidgetでもPage内のProbeは1本を共有し、Background tabでは停止、復帰時に即時確認します。履歴とBaselineはBrowser memoryだけで保持し、DB／localStorageへ保存しません。外部Internet ProbeやSpeed Testは測定対象・通信量・外部依存が変わるためV1.18の対象外としました。DB schema、Migration、必須configの追加変更はありません。
+Release前の実機確認では、Remember MeによるSession自動復旧後も開いたままのDashboardが旧CSRF Tokenで失敗しないよう短時間Grace＋Response Header同期を追加し、Smartphone Calendarの固定Minimum Widthを解除してCard幅へ収めています。
 
 Version 1.17.2では、Dashboardへ上級者向けのX Timeline Widgetを追加しました。Server側のX API Bearer Tokenを使い、明示した公開Accountの最近の投稿をRead Onlyで表示します。表示件数3／5／10件、Reply／Repostの含有設定、短時間Cacheと期限付きstale fallbackに対応し、Bearer TokenはBrowserへ渡しません。追加ModalではX Developer Platform、Pay Per Use、`APP_X_BEARER_TOKEN`が必要なことを案内し、Tokenの未設定／形式不正／未確認／確認済み／認証失敗を区別して表示します。X本体の「おすすめ / For You」Feedは公式APIで同じものを取得出来ないため対象外とし、将来課題へ分離しています。DB schemaとMigrationの追加変更はありません。
 
@@ -57,6 +60,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Earthquake Widgetの気象庁最新地震情報表示
 - Sun / Moon Widgetの日の出・日の入り・月齢・月相表示
 - Air Quality / UV WidgetのUS AQI、PM2.5、PM10、UV表示
+- Connection Monitor Widgetの同一Origin監視、Latency履歴、Avg／Max／Jitter、切断／復旧、Downtime、品質判定
 - Camera / Video WidgetのSnapshot、YouTube、Video File、MJPEG、HLS表示
 - X Timeline Widgetによる指定した公開X Accountの最近の投稿表示（上級者向け、X Developer Platform／Pay Per Use／Server-side Bearer Tokenが必要）
 - スマートフォンでの左右スワイプによるタブ切り替え
@@ -175,7 +179,7 @@ M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4
 
 詳細は [`docs/m4-f-implementation.md`](docs/m4-f-implementation.md)、[`docs/m4-f-validation.md`](docs/m4-f-validation.md)、[`docs/m4-e-implementation.md`](docs/m4-e-implementation.md)、[`docs/release-package.md`](docs/release-package.md)、[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
 
-## Version 1.2.0 release package
+## Version 1.18.0 release package
 
 GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分けて生成します。
 
@@ -183,11 +187,11 @@ GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分
 python tools/build_complete_package.py --output-dir ../release-output
 python tools/build_release_package.py --mode final --output-dir ../release-output
 python tools/verify_complete_package.py \
-  ../release-output/rss-reader-modernization-1.2.0-complete.zip \
-  ../release-output/rss-reader-modernization-1.2.0-complete.zip.sha256
+  ../release-output/rss-reader-modernization-1.18.0-complete.zip \
+  ../release-output/rss-reader-modernization-1.18.0-complete.zip.sha256
 python tools/verify_release_package.py \
-  ../release-output/rss-reader-modernization-1.2.0.zip \
-  ../release-output/rss-reader-modernization-1.2.0.zip.sha256
+  ../release-output/rss-reader-modernization-1.18.0.zip \
+  ../release-output/rss-reader-modernization-1.18.0.zip.sha256
 ```
 
 Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、検証限界は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)を参照してください。

@@ -3,12 +3,12 @@
 Application Versionと画面表示Labelは`app/version.php`で管理します。
 
 ```php
-const APP_VERSION = '1.15.0';
-const APP_VERSION_LABEL = 'RSS Reader Modernization 1.15.0';
+const APP_VERSION = '1.18.0';
+const APP_VERSION_LABEL = 'RSS Reader Modernization 1.18.0';
 ```
 
-- Stable release: `RSS Reader Modernization 1.15.0`
-- Git Tag: `v1.15.0`
+- Stable release: `RSS Reader Modernization 1.18.0`
+- Git Tag: `v1.18.0`
 - Release commit: Version 1.15正式化の最終Commit
 
 正式Releaseでは開発中表記を残さず、Application Version、Label、Runtime ZIP、完全Source ZIP、Release Notes、Tagを同じVersionへ揃えます。
