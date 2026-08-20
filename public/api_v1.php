@@ -42,6 +42,12 @@ function api_emit(array $response): never
 
     http_response_code($status);
     header('Content-Type: application/json; charset=UTF-8');
+    if (app_session_is_authenticated()) {
+        $csrfToken = app_csrf_current_token();
+        if ($csrfToken !== null) {
+            header('X-CSRF-Token: ' . $csrfToken);
+        }
+    }
     app_send_no_store_headers();
     echo json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
     exit;

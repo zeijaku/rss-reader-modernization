@@ -1,0 +1,64 @@
+name: V1.18.0 Finalize Source
+
+on:
+  push:
+    branches:
+      - release/v1.18.0-final
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.repository == 'zeijaku/rss-reader-modernization'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/v1.18.0-final
+          fetch-depth: 0
+
+      - name: Apply final source patch once
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -f .github/v118-final.patch ]; then
+            echo 'Final patch already applied; nothing to do.'
+            exit 0
+          fi
+
+          # Normalize the single separator line introduced while staging this
+          # temporary patch, then require byte-for-byte equality with the patch
+          # generated from the reviewed local final source.
+          sed -i 's/^ diff --git /diff --git /' .github/v118-final.patch
+          echo '4820ef02532b15cfc4495aa191b999eadc2ec11b885bf69c489f69869f3d44f5  .github/v118-final.patch' | sha256sum -c -
+
+          git apply --check .github/v118-final.patch
+          git apply .github/v118-final.patch
+
+          declare -A expected=(
+            [CHANGELOG.md]=782024e2718ec264b8fb07a776c8d92c7753f300
+            [README.md]=620d59ed4df00d51b27f7f5947a608a6ebce48ee
+            [app/api.php]=6248e06e9f72efaf4b4ac27a8a0828db25f8f30d
+            [app/dashboard_widget.php]=6f6d120da79ba88c95ccb60b3125f72ef8d35082
+            [public/css/dashboard.css]=b23fd52b59eec8e77171cf97b7e397f6a509a758
+            [public/index.php]=f08554cfc3c879db9a6f85f123d729d774380017
+            [public/js/dashboard.js]=e59dc39b4d506eb84516b7a6e6b5b80649370ff1
+          )
+          for path in "${!expected[@]}"; do
+            actual="$(git hash-object "$path")"
+            if [ "$actual" != "${expected[$path]}" ]; then
+              echo "Blob SHA mismatch: $path expected=${expected[$path]} actual=$actual" >&2
+              exit 1
+            fi
+          done
+
+          rm .github/v118-final.patch
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'chore: finalize Version 1.18.0 source'
+          git push origin HEAD:release/v1.18.0-final

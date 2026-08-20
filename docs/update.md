@@ -15,6 +15,29 @@ Releaseごとに次を確認します。
 - Release NotesとSHA-256
 
 
+
+## Version 1.17.2からVersion 1.18.0
+
+Version 1.18.0はConnection Monitor追加とFrontend表示の更新で、DB構造変更、Migration、SQL、必須設定追加はありません。
+
+1. Code、`config/local.php`、実DB、`var/`をBackupする。
+2. Runtime ZIPを別Folderへ展開し、SHA-256を確認する。
+3. `config/local.php`、実DB、`var/`の生成Dataを上書きせずCodeを更新する。
+4. SQL、Migration、`schema.sql`は実行しない。
+5. BrowserをReloadする。`APP_ASSET_REVISION=1.18.0-r2`により旧1.18.0候補とはAsset URLが変わるため、通常Reloadで新Assetを取得出来る。Hard ReloadはTroubleshooting時のみでよい。
+6. Add Widget → Information → Connection Monitorを追加し、Online／Latency／History／Qualityを確認する。
+7. DevTools Offline等でOffline→Recovery、Downtimeを確認する。
+8. 複数Connection Monitorでも`connection_probe.php`がPage全体で約5秒に1回であることを確認する。
+
+```text
+DB schema / Migration       変更なし
+Public API                  widget.healthprobe.create / update / delete
+必須設定                    追加なし
+外部API Key                 追加なし
+Browser Cache               Hard Reload推奨
+削除file                    なし
+```
+
 ## Version 1.1.0からVersion 1.2.0
 
 Version 1.2.0はCodeとFrontendの更新で、DB構造変更、Migration、SQL、必須設定追加はありません。

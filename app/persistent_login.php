@@ -132,7 +132,11 @@ function persistent_login_restore_session(): bool
             return false;
         }
 
+        $previousCsrfToken = app_csrf_current_token();
         app_session_login($userId);
+        if ($previousCsrfToken !== null) {
+            app_csrf_allow_previous_token($previousCsrfToken);
+        }
         if (!persistent_login_set_cookie($rotatedCookie, $expiresAt)) {
             // The session remains valid for this browser session, but the
             // rotated persistent token must not remain active without a cookie.

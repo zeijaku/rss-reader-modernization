@@ -6,14 +6,11 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[tuple[str, bool]] = []
 
-
 def check(name: str, condition: bool) -> None:
     checks.append((name, bool(condition)))
 
-
 def text(rel: str) -> str:
     return (ROOT / rel).read_text(encoding='utf-8')
-
 
 version = text('app/version.php')
 calendar = text('public/js/calendar.js')
@@ -27,14 +24,21 @@ complete_builder = text('tools/build_complete_package.py')
 verify_runtime = text('tools/verify_release_package.py')
 verify_complete = text('tools/verify_complete_package.py')
 ci = text('.github/workflows/ci.yml')
-release_workflow = text('.github/workflows/v1.17.2-release.yml') if (ROOT / '.github/workflows/v1.17.2-release.yml').exists() else ''
 
-check('APP_VERSION finalized at 1.17.2', "const APP_VERSION = '1.17.2';" in version)
-check('APP_VERSION_LABEL finalized at 1.17.2', "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.17.2';" in version)
-check('APP_ASSET_REVISION finalized at 1.17.2', "const APP_ASSET_REVISION = '1.17.2';" in version)
-check('X Widget JS uses the final asset revision', './js/x-widget.js?v=1.17.2' in calendar)
-check('X Widget CSS uses the final asset revision', './css/x-widget.css?v=1.17.2' in calendar)
-check('dynamic V1.17 assets use the final cache key', '?v=1.17.1' not in calendar)
+version_match = re.search(r"const APP_VERSION = '(\d+)\.(\d+)\.(\d+)(?:-[^']+)?';", version)
+version_tuple = tuple(int(part) for part in version_match.groups()) if version_match else (0, 0, 0)
+version_value_match = re.search(r"const APP_VERSION = '([^']+)';", version)
+version_value = version_value_match.group(1) if version_value_match else ''
+label_match = re.search(r"const APP_VERSION_LABEL = '([^']+)';", version)
+revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
+active_revision = revision_match.group(1) if revision_match else ''
+
+check('APP_VERSION keeps V1.17.2-or-later behavior', version_tuple >= (1, 17, 2))
+check('APP_VERSION_LABEL matches current version', bool(label_match) and label_match.group(1) == 'RSS Reader Modernization ' + version_value)
+check('APP_ASSET_REVISION is present', bool(active_revision))
+check('X Widget JS uses the active release revision', bool(active_revision) and './js/x-widget.js?v=' + active_revision in calendar)
+check('X Widget CSS uses the active release revision', bool(active_revision) and './css/x-widget.css?v=' + active_revision in calendar)
+check('no staged V1.17.2 asset token remains', re.search(r'1\.17\.2-[a-z]', calendar) is None)
 
 check('X modal explicitly labels the feature as advanced', '上級者向け機能' in x_js)
 check('X modal explains Developer Platform and Pay Per Use requirements', 'X Developer Platform' in x_js and 'Pay Per Use' in x_js)
@@ -51,22 +55,19 @@ check('server blocks create when token format is invalid', "api_error('x_token_i
 check('HTTP 401 records auth_failed state', "x_widget_connection_status_mark('auth_failed')" in x_php)
 check('valid X API JSON records verified state', "x_widget_connection_status_mark('verified')" in x_php)
 check('connection state cache compares token fingerprint with hash_equals', 'x_widget_token_fingerprint' in x_php and 'hash_equals' in x_php)
-check('connection state cache stores a SHA-256 fingerprint rather than raw token', "hash('sha256', $token)" in x_php and "'token_fingerprint'" in x_php)
-check('public connection status shape excludes fingerprint/token fields', "return ['state' => 'unverified', 'configured' => true, 'can_add' => true, 'checked_at' => null]" in x_php)
+check('connection state cache stores SHA-256 fingerprint rather than raw token', "hash('sha256', $token)" in x_php and "'token_fingerprint'" in x_php)
+check('public connection status excludes secret fields', "return ['state' => 'unverified', 'configured' => true, 'can_add' => true, 'checked_at' => null]" in x_php)
 
 check('configuration examples use placeholder token only', 'replace-with-your-x-api-bearer-token' in local_example and 'replace-with-your-x-api-bearer-token' in env_example)
 check('real local.php is not part of repository source', not (ROOT / 'config/local.php').exists())
-check('X feature adds no SQL migration', not any('1_17_2' in p.name for p in (ROOT / 'database/migrations').glob('*')) if (ROOT / 'database/migrations').is_dir() else True)
+check('later release adds no V1.17.2 SQL migration', not any('1_17_2' in q.name for q in (ROOT / 'database/migrations').glob('*')) if (ROOT / 'database/migrations').is_dir() else True)
 
-for content, name in [(builder, 'runtime builder'), (complete_builder, 'complete builder'), (verify_runtime, 'runtime verifier'), (verify_complete, 'complete verifier')]:
-    check(f'{name} targets 1.17.2', '1.17.2' in content and '1.17.1' not in content)
+check('runtime builder targets the current visible release', version_value in builder and ('v' + version_value) in builder)
+check('complete builder targets the current visible release', version_value in complete_builder)
+check('runtime verifier targets the current visible release', version_value in verify_runtime)
+check('complete verifier targets the current visible release', version_value in verify_complete)
 check('release builders exclude all generated var/cache data', "'var/cache'" in builder and "'var/cache'" in complete_builder)
-check('CI runs V1.17.2 focused tests', 'bash tests/run-v1172.sh' in ci)
-check('V1.17.2 release workflow exists', bool(release_workflow))
-check('V1.17.2 release workflow runs current and focused suites', all(cmd in release_workflow for cmd in [
-    'bash tests/run-current.sh', 'bash tests/run-v117.sh', 'bash tests/run-v1171.sh', 'bash tests/run-v1172.sh'
-]))
-check('V1.17.2 release workflow builds final runtime and complete ZIPs', 'rss-reader-modernization-1.17.2.zip' in release_workflow and 'rss-reader-modernization-1.17.2-complete.zip' in release_workflow)
+check('CI continues to run V1.17.2 compatibility tests', 'bash tests/run-v1172.sh' in ci)
 
 failed = [name for name, ok in checks if not ok]
 for name, ok in checks:

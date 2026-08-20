@@ -63,6 +63,7 @@ require_once __DIR__ . '/validation.php';
 require_once dirname(__DIR__) . '/config/common_feeds.php';
 require_once __DIR__ . '/dashboard_widget.php';
 require_once __DIR__ . '/information_widget.php';
+require_once __DIR__ . '/health_probe.php';
 require_once __DIR__ . '/links.php';
 require_once __DIR__ . '/stock_tag.php';
 require_once __DIR__ . '/feed_keyword.php';

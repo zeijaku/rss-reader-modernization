@@ -1,0 +1,310 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index c638df2..782024e 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,24 @@
+ # Changelog
+ 
++## RSS Reader Modernization 1.18.0 — 2026-08-20
++
++### Connection Monitor / latency history / outage state / Release Gate
++
++- DashboardのInformationカテゴリへConnection Monitor Widgetを追加し、Browser／DeviceからこのRSS Reader自身への接続状態を可視化。任意URLや第三者Monitorではなく、同一Originの`connection_probe.php`だけを測定対象とする。
++- 軽量GET ProbeはHTTP 204・empty body・no-storeで返し、Session／DB／Application bootstrap／外部通信を通さない。GET以外は405とし、Client IPやLocal IP等の収集は行わない。
++- Foregroundでは約5秒間隔で前回Request完了後に次回を予約し、Request overlapを防止。Background tabでは定期Probeを停止し、表示復帰時に即時確認する。
++- Connection Monitorを複数配置してもPage内で1本のProbe streamを共有し、Widget数に応じて通信量が増えないようにする。
++- 現在Latencyに加え、30秒／60秒／5分のIn-memory履歴、SVG Graph、Avg、Max、HTTP RTT差分を使ったJitter表示を追加。Offline／長時間空白を巨大Latencyとして扱わず、GraphとJitter計算を分断する。
++- 2回連続の到達不能でOfflineを確定し、Last Disconnect、進行中Downtime、復旧後Last Downtime、約15秒のRecovered表示を追加。HTTP 500等は到達不能と混同せずProbe Errorとして分離する。
++- 品質判定をExcellent（79ms以下）／Good（80–149ms）／Fair（150–299ms）／Slow（300ms以上）／Offlineへ整理。直近5分の成功値中央値をBaselineとして、十分な差が2回連続した場合だけ「通常より遅い」を表示する。
++- PC／TabletのHeight 1は主要情報を残したCompact表示、Height 2はBaseline／経路／端末判定を含む詳細表示とし、SmartphoneではHeight差による情報欠落を避ける。Bootstrap／Bootswatch Theme変数へ追従する表示へ調整。
++- 履歴、Baseline、切断状態はBrowser memoryだけに保持し、DB／localStorage／sessionStorageへ永続化しない。
++- V1.18-Fで外部Internet Probe、固定Google／Cloudflare等へのProbe、任意Probe URL、Speed Test、WebRTC等によるIP探索をV1.18の非対象として固定。
++- `APP_VERSION`／`APP_VERSION_LABEL`は`1.18.0`へ確定。実機確認後のCalendar／Dashboard CSS修正を確実に取得させるため、最終Asset Cache keyは`APP_ASSET_REVISION=1.18.0-r2`とし、動的Asset loaderも同じRevisionへ統一。Runtime／Complete package builder・verifier、CI／Release Gate、Release Documentationは1.18.0を対象とする。
++- Release前確認で、長時間放置後にRemember MeからSessionを自動復旧した際、開いたままのPageが旧CSRF Tokenを保持してAPI更新が403になるCaseを修正。復旧時だけ旧Tokenを短時間Graceとして受け入れ、API Response Headerから新TokenへPage側を同期する。Remember Meが無効で認証自体が失効した場合は通常のLogin画面へ戻す。
++- Smartphone Calendarが`min-width: 500px`を強制してCard幅を超えるCaseを修正。575.98px以下では7列GridをCard幅へ収め、Desktopの狭いCalendarは必要な横OverflowをCard内へ閉じ込める。
++- DB Table／Column／Migration、必須config、外部JavaScript Libraryの追加変更はなし。
++
+ ## RSS Reader Modernization 1.17.2 — 2026-08-19
+ 
+ ### X Timeline Widget / Bearer Token guidance / Release Gate
+diff --git a/README.md b/README.md
+index 6f6eb59..620d59e 100644
+--- a/README.md
++++ b/README.md
+@@ -2,8 +2,11 @@
+ 
+ [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
+ 
+-**Stable release:** `RSS Reader Modernization 1.17.2`
+-Release tag: `v1.17.2`
++**Stable release:** `RSS Reader Modernization 1.18.0`
++Release tag: `v1.18.0`
++
++Version 1.18.0では、DashboardのInformationカテゴリへConnection Monitor Widgetを追加しました。BrowserからこのRSS Reader自身の軽量Endpointへ同一Originで定期Probeを送り、現在Latency、30秒／60秒／5分履歴、Avg／Max／Jitter、切断／復旧、Downtime、Last Disconnect、Excellent／Good／Fair／Slow／Offlineを表示します。複数WidgetでもPage内のProbeは1本を共有し、Background tabでは停止、復帰時に即時確認します。履歴とBaselineはBrowser memoryだけで保持し、DB／localStorageへ保存しません。外部Internet ProbeやSpeed Testは測定対象・通信量・外部依存が変わるためV1.18の対象外としました。DB schema、Migration、必須configの追加変更はありません。
++Release前の実機確認では、Remember MeによるSession自動復旧後も開いたままのDashboardが旧CSRF Tokenで失敗しないよう短時間Grace＋Response Header同期を追加し、Smartphone Calendarの固定Minimum Widthを解除してCard幅へ収めています。
+ 
+ Version 1.17.2では、Dashboardへ上級者向けのX Timeline Widgetを追加しました。Server側のX API Bearer Tokenを使い、明示した公開Accountの最近の投稿をRead Onlyで表示します。表示件数3／5／10件、Reply／Repostの含有設定、短時間Cacheと期限付きstale fallbackに対応し、Bearer TokenはBrowserへ渡しません。追加ModalではX Developer Platform、Pay Per Use、`APP_X_BEARER_TOKEN`が必要なことを案内し、Tokenの未設定／形式不正／未確認／確認済み／認証失敗を区別して表示します。X本体の「おすすめ / For You」Feedは公式APIで同じものを取得出来ないため対象外とし、将来課題へ分離しています。DB schemaとMigrationの追加変更はありません。
+ 
+@@ -57,6 +60,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
+ - Earthquake Widgetの気象庁最新地震情報表示
+ - Sun / Moon Widgetの日の出・日の入り・月齢・月相表示
+ - Air Quality / UV WidgetのUS AQI、PM2.5、PM10、UV表示
++- Connection Monitor Widgetの同一Origin監視、Latency履歴、Avg／Max／Jitter、切断／復旧、Downtime、品質判定
+ - Camera / Video WidgetのSnapshot、YouTube、Video File、MJPEG、HLS表示
+ - X Timeline Widgetによる指定した公開X Accountの最近の投稿表示（上級者向け、X Developer Platform／Pay Per Use／Server-side Bearer Tokenが必要）
+ - スマートフォンでの左右スワイプによるタブ切り替え
+@@ -175,7 +179,7 @@ M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4
+ 
+ 詳細は [`docs/m4-f-implementation.md`](docs/m4-f-implementation.md)、[`docs/m4-f-validation.md`](docs/m4-f-validation.md)、[`docs/m4-e-implementation.md`](docs/m4-e-implementation.md)、[`docs/release-package.md`](docs/release-package.md)、[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
+ 
+-## Version 1.2.0 release package
++## Version 1.18.0 release package
+ 
+ GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分けて生成します。
+ 
+@@ -183,11 +187,11 @@ GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分
+ python tools/build_complete_package.py --output-dir ../release-output
+ python tools/build_release_package.py --mode final --output-dir ../release-output
+ python tools/verify_complete_package.py \
+-  ../release-output/rss-reader-modernization-1.2.0-complete.zip \
+-  ../release-output/rss-reader-modernization-1.2.0-complete.zip.sha256
++  ../release-output/rss-reader-modernization-1.18.0-complete.zip \
++  ../release-output/rss-reader-modernization-1.18.0-complete.zip.sha256
+ python tools/verify_release_package.py \
+-  ../release-output/rss-reader-modernization-1.2.0.zip \
+-  ../release-output/rss-reader-modernization-1.2.0.zip.sha256
++  ../release-output/rss-reader-modernization-1.18.0.zip \
++  ../release-output/rss-reader-modernization-1.18.0.zip.sha256
+ ```
+ 
+ Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、検証限界は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)を参照してください。
+diff --git a/app/api.php b/app/api.php
+index 36eba36..6248e06 100644
+--- a/app/api.php
++++ b/app/api.php
+@@ -196,6 +196,9 @@ function api_dispatch(string $action, int $userId, array $input): array
+         'widget.earthquake.update' => api_widget_earthquake_update($userId, $input),
+         'widget.earthquake.delete' => api_widget_earthquake_delete($userId, $input),
+         'earthquake.latest' => api_earthquake_latest($userId, $input),
++        'widget.healthprobe.create' => api_widget_health_probe_create($userId, $input),
++        'widget.healthprobe.update' => api_widget_health_probe_update($userId, $input),
++        'widget.healthprobe.delete' => api_widget_health_probe_delete($userId, $input),
+         'widget.x.create' => api_widget_x_create($userId, $input),
+         'widget.x.update' => api_widget_x_update($userId, $input),
+         'widget.x.delete' => api_widget_x_delete($userId, $input),
+@@ -1548,7 +1551,11 @@ function api_account_settings_remote_ip(): string
+ function api_account_settings_rotate_session(int $userId): string
+ {
+     if (session_status() === PHP_SESSION_ACTIVE && app_session_user_id() === $userId) {
++        $previousCsrfToken = app_csrf_current_token();
+         app_session_login($userId);
++        if ($previousCsrfToken !== null) {
++            app_csrf_allow_previous_token($previousCsrfToken);
++        }
+         return app_csrf_token();
+     }
+     return '';
+@@ -2338,3 +2345,71 @@ function api_earthquake_latest(int $userId, array $input): array
+     }
+ }
+ 
++/** @return array{status:int,body:array<string,mixed>} */
++function api_widget_health_probe_create(int $userId, array $input): array
++{
++    $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
++    $style = app_normalize_content_style($input['widget_style'] ?? null);
++    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
++    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
++    if ($location === null || $style === null || $width === null || $height === null) {
++        return api_validation_error('Connection Monitor settings are invalid.');
++    }
++
++    try {
++        $widgetId = health_probe_widget_create($userId, $location, $style, $width, $height);
++    } catch (InvalidArgumentException $exception) {
++        return api_validation_error($exception->getMessage());
++    } catch (PDOException $exception) {
++        error_log('Connection Monitor create failed: ' . $exception->getMessage());
++        return api_error('health_probe_unavailable', 'Connection Monitor could not be created.', 503);
++    }
++
++    return api_success(['widget_id' => $widgetId], 201);
++}
++
++/** @return array{status:int,body:array<string,mixed>} */
++function api_widget_health_probe_update(int $userId, array $input): array
++{
++    $widgetId = api_positive_int($input, 'widget_id');
++    $style = app_normalize_content_style($input['widget_style'] ?? null);
++    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
++    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
++    if ($widgetId === null || $style === null || $width === null || $height === null) {
++        return api_validation_error('Connection Monitor settings are invalid.');
++    }
++
++    try {
++        if (!health_probe_widget_update($userId, $widgetId, $style, $width, $height)) {
++            return api_error('not_found', 'Connection Monitor was not found.', 404);
++        }
++    } catch (InvalidArgumentException $exception) {
++        return api_validation_error($exception->getMessage());
++    } catch (PDOException $exception) {
++        error_log('Connection Monitor update failed: ' . $exception->getMessage());
++        return api_error('health_probe_unavailable', 'Connection Monitor could not be updated.', 503);
++    }
++
++    return api_success(['widget_id' => $widgetId]);
++}
++
++/** @return array{status:int,body:array<string,mixed>} */
++function api_widget_health_probe_delete(int $userId, array $input): array
++{
++    $widgetId = api_positive_int($input, 'widget_id');
++    if ($widgetId === null) {
++        return api_validation_error('widget_id must be a positive integer.');
++    }
++
++    try {
++        if (!health_probe_widget_delete($userId, $widgetId)) {
++            return api_error('not_found', 'Connection Monitor was not found.', 404);
++        }
++    } catch (PDOException $exception) {
++        error_log('Connection Monitor delete failed: ' . $exception->getMessage());
++        return api_error('health_probe_unavailable', 'Connection Monitor could not be deleted.', 503);
++    }
++
++    return api_success(['widget_id' => $widgetId]);
++}
++
+diff --git a/app/dashboard_widget.php b/app/dashboard_widget.php
+index 2db7263..6f6d120 100644
+--- a/app/dashboard_widget.php
++++ b/app/dashboard_widget.php
+@@ -10,7 +10,7 @@ declare(strict_types=1);
+ /** @return list<string> */
+ function dashboard_widget_types(): array
+ {
+-    return ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game', 'links', 'weather', 'sun_moon', 'air_quality', 'earthquake', 'calculator', 'blind_spot', 'x_timeline'];
++    return ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game', 'links', 'weather', 'sun_moon', 'air_quality', 'earthquake', 'health_probe', 'calculator', 'blind_spot', 'x_timeline'];
+ }
+ 
+ function dashboard_widget_validate_type(mixed $value): ?string
+diff --git a/public/css/dashboard.css b/public/css/dashboard.css
+index 4dc36b8..b23fd52 100644
+--- a/public/css/dashboard.css
++++ b/public/css/dashboard.css
+@@ -2198,12 +2198,39 @@ select:focus,
+ @media (max-width: 575.98px) {
+     .calendar-card-body {
+         padding: 6px;
++        overflow-x: hidden;
+     }
+ 
++    /* V1.18 pre-release fix: fit all seven columns inside the mobile card.
++     * The previous 500px minimum width could widen the layout on iPhone. */
+     .calendar-toolbar,
+     .calendar-weekdays,
+     .calendar-days {
+-        min-width: 500px;
++        width: 100%;
++        min-width: 0;
++        max-width: 100%;
++    }
++
++    .calendar-month-label {
++        min-width: 0;
++    }
++
++    .calendar-day {
++        min-height: 72px;
++        padding: 1px;
++    }
++
++    .calendar-day-number {
++        width: 26px;
++        min-width: 26px;
++        min-height: 26px;
++        font-size: 0.74rem;
++    }
++
++    .calendar-entry {
++        min-height: 22px;
++        padding: 2px 3px;
++        font-size: 0.62rem;
+     }
+ }
+ 
+@@ -2321,6 +2348,12 @@ select:focus,
+     overflow-x: hidden;
+ }
+ 
++/* Calendar may be narrower than its desktop month grid. Keep any desktop
++ * overflow inside the card instead of allowing it to affect page width. */
++.dashboard-grid .calendar-card-body {
++    overflow-x: auto;
++}
++
+ /* V1.7-H / R3: Feedの自動表示は高さ1=5件、高さ2=10件を基準にする。
+  * 指定件数が収まらない場合と概要展開時だけ縦Scrollを許可する。 */
+ .dashboard-grid .feed-card-inner {
+diff --git a/public/index.php b/public/index.php
+index 6a5dae6..f08554c 100644
+--- a/public/index.php
++++ b/public/index.php
+@@ -423,6 +423,7 @@ function search_feed_form_fields(string $prefix): string
+ <script src="<?php echo htmlspecialchars(app_asset_url('js/clock-timer.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+ <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+ <script src="<?php echo htmlspecialchars(app_asset_url('js/utility-widgets.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
++<script src="<?php echo htmlspecialchars(app_asset_url('js/connection-monitor.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+ <script src="<?php echo htmlspecialchars(app_asset_url('js/calendar.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+ 
+ 
+ diff --git a/public/js/dashboard.js b/public/js/dashboard.js
+index b55ad14..e59dc39 100644
+--- a/public/js/dashboard.js
++++ b/public/js/dashboard.js
+@@ -10,6 +10,36 @@
+         return $('meta[name="csrf-token"]').attr('content') || '';
+     }
+ 
++    function initCsrfSessionSync() {
++        var reloadingForAuth = false;
++
++        $(document)
++            .off('ajaxComplete' + eventNamespace)
++            .on('ajaxComplete' + eventNamespace, function (event, xhr, settings) {
++                var url = settings && typeof settings.url === 'string' ? settings.url : '';
++                if (url.indexOf('api_v1.php') === -1 || !xhr || typeof xhr.getResponseHeader !== 'function') {
++                    return;
++                }
++
++                var token = xhr.getResponseHeader('X-CSRF-Token') || '';
++                if (/^[a-f0-9]{64}$/.test(token)) {
++                    $('meta[name="csrf-token"]').attr('content', token);
++                }
++            })
++            .off('ajaxError' + eventNamespace)
++            .on('ajaxError' + eventNamespace, function (event, xhr, settings) {
++                var url = settings && typeof settings.url === 'string' ? settings.url : '';
++                var code = xhr && xhr.responseJSON && xhr.responseJSON.error
++                    ? String(xhr.responseJSON.error.code || '')
++                    : '';
++
++                if (!reloadingForAuth && url.indexOf('api_v1.php') !== -1 && xhr && xhr.status === 401 && code === 'unauthenticated') {
++                    reloadingForAuth = true;
++                    window.location.reload();
++                }
++            });
++    }
++
+     function apiErrorMessage(xhr, textStatus) {
+         if (textStatus === 'timeout') {
+             return '通信がタイムアウトしました';
+@@ -3405,6 +3435,7 @@
+         readFeedKeywordState();
+         renderFeedKeywordManager();
+         bindEvents();
++        initCsrfSessionSync();
+         initFeeds();
+         initClocks();
+         initTabSwipe();
