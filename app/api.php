@@ -196,6 +196,9 @@ function api_dispatch(string $action, int $userId, array $input): array
         'widget.earthquake.update' => api_widget_earthquake_update($userId, $input),
         'widget.earthquake.delete' => api_widget_earthquake_delete($userId, $input),
         'earthquake.latest' => api_earthquake_latest($userId, $input),
+        'widget.healthprobe.create' => api_widget_health_probe_create($userId, $input),
+        'widget.healthprobe.update' => api_widget_health_probe_update($userId, $input),
+        'widget.healthprobe.delete' => api_widget_health_probe_delete($userId, $input),
         'widget.x.create' => api_widget_x_create($userId, $input),
         'widget.x.update' => api_widget_x_update($userId, $input),
         'widget.x.delete' => api_widget_x_delete($userId, $input),
@@ -1548,7 +1551,11 @@ function api_account_settings_remote_ip(): string
 function api_account_settings_rotate_session(int $userId): string
 {
     if (session_status() === PHP_SESSION_ACTIVE && app_session_user_id() === $userId) {
+        $previousCsrfToken = app_csrf_current_token();
         app_session_login($userId);
+        if ($previousCsrfToken !== null) {
+            app_csrf_allow_previous_token($previousCsrfToken);
+        }
         return app_csrf_token();
     }
     return '';
@@ -2336,5 +2343,73 @@ function api_earthquake_latest(int $userId, array $input): array
         error_log('Earthquake information fetch failed: ' . $exception->getMessage());
         return api_error('earthquake_fetch_failed', '地震情報を取得出来ませんでした。', 503);
     }
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_health_probe_create(int $userId, array $input): array
+{
+    $location = dashboard_widget_validate_location($input['widget_location'] ?? null);
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
+    if ($location === null || $style === null || $width === null || $height === null) {
+        return api_validation_error('Connection Monitor settings are invalid.');
+    }
+
+    try {
+        $widgetId = health_probe_widget_create($userId, $location, $style, $width, $height);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Connection Monitor create failed: ' . $exception->getMessage());
+        return api_error('health_probe_unavailable', 'Connection Monitor could not be created.', 503);
+    }
+
+    return api_success(['widget_id' => $widgetId], 201);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_health_probe_update(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $style = app_normalize_content_style($input['widget_style'] ?? null);
+    $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+    $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
+    if ($widgetId === null || $style === null || $width === null || $height === null) {
+        return api_validation_error('Connection Monitor settings are invalid.');
+    }
+
+    try {
+        if (!health_probe_widget_update($userId, $widgetId, $style, $width, $height)) {
+            return api_error('not_found', 'Connection Monitor was not found.', 404);
+        }
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Connection Monitor update failed: ' . $exception->getMessage());
+        return api_error('health_probe_unavailable', 'Connection Monitor could not be updated.', 503);
+    }
+
+    return api_success(['widget_id' => $widgetId]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_health_probe_delete(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    if ($widgetId === null) {
+        return api_validation_error('widget_id must be a positive integer.');
+    }
+
+    try {
+        if (!health_probe_widget_delete($userId, $widgetId)) {
+            return api_error('not_found', 'Connection Monitor was not found.', 404);
+        }
+    } catch (PDOException $exception) {
+        error_log('Connection Monitor delete failed: ' . $exception->getMessage());
+        return api_error('health_probe_unavailable', 'Connection Monitor could not be deleted.', 503);
+    }
+
+    return api_success(['widget_id' => $widgetId]);
 }
 

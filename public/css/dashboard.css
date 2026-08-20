@@ -2198,12 +2198,39 @@ select:focus,
 @media (max-width: 575.98px) {
     .calendar-card-body {
         padding: 6px;
+        overflow-x: hidden;
     }
 
+    /* V1.18 pre-release fix: fit all seven columns inside the mobile card.
+     * The previous 500px minimum width could widen the layout on iPhone. */
     .calendar-toolbar,
     .calendar-weekdays,
     .calendar-days {
-        min-width: 500px;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .calendar-month-label {
+        min-width: 0;
+    }
+
+    .calendar-day {
+        min-height: 72px;
+        padding: 1px;
+    }
+
+    .calendar-day-number {
+        width: 26px;
+        min-width: 26px;
+        min-height: 26px;
+        font-size: 0.74rem;
+    }
+
+    .calendar-entry {
+        min-height: 22px;
+        padding: 2px 3px;
+        font-size: 0.62rem;
     }
 }
 
@@ -2319,6 +2346,12 @@ select:focus,
     max-width: 100%;
     min-height: 0;
     overflow-x: hidden;
+}
+
+/* Calendar may be narrower than its desktop month grid. Keep any desktop
+ * overflow inside the card instead of allowing it to affect page width. */
+.dashboard-grid .calendar-card-body {
+    overflow-x: auto;
 }
 
 /* V1.7-H / R3: Feedの自動表示は高さ1=5件、高さ2=10件を基準にする。
