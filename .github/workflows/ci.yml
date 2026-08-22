@@ -1,138 +1,77 @@
-# Temporary V1.19.0 verified source importer. Replaced by the release CI before merge.
 name: CI
 
 on:
   push:
     branches:
-      - release/v1.19.0-final-clean2
+      - main
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: v1.19.0-source-import-via-ci
-  cancel-in-progress: false
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  import-v119-source:
-    name: Import verified V1.19.0 source
+  regression:
+    name: PHP ${{ matrix.php }} regression
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
+
+    strategy:
+      fail-fast: false
+      matrix:
+        php:
+          - '8.1'
+          - '8.4'
 
     steps:
-      - name: Checkout release branch
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: release/v1.19.0-final-clean2
-          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Verify, apply, test, and commit non-workflow source
-        shell: bash
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
+          coverage: none
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Show runtime versions
         run: |
-          set -euo pipefail
+          php -v
+          python --version
+          node --version
 
-          trigger_text='trigger verified V1.19.0 source import'
-          commit_message="$(git log -1 --pretty=%B)"
-          if [[ "${commit_message}" != *"${trigger_text}"* ]]; then
-            echo 'This is not the one-shot import trigger commit; nothing to do.'
-            exit 0
-          fi
+      - name: Run current regression tests
+        run: bash tests/run-current.sh
 
-          expected_base='59d6b89971867202da808592a157fc1c2b44c16a'
-          expected_xz='3cfa6b6c60ae3551a221f6f49d0504f03a8f10994c439993aae3f51c35852d09'
-          expected_patch='de50d63b3253ef01508a6edd28089604ca1a6e5326020af68a3482ffbeb0b729'
-          temp_ci='.github/workflows/ci.yml'
-          final_release_workflow='.github/workflows/v1.19.0-release.yml'
+      - name: Run Version 1.17 focused tests
+        run: bash tests/run-v117.sh
 
-          git cat-file -e "${expected_base}^{commit}"
+      - name: Run Version 1.17.1 focused tests
+        run: bash tests/run-v1171.sh
 
-          if ! git diff --quiet "${expected_base}" -- . \
-            ':(exclude).github/workflows/ci.yml' \
-            ':(exclude).v119-import-bin/**'; then
-            echo 'Unexpected source changes exist before V1.19.0 import.' >&2
-            git diff --name-status "${expected_base}" -- . \
-              ':(exclude).github/workflows/ci.yml' \
-              ':(exclude).v119-import-bin/**' >&2
-            exit 1
-          fi
+      - name: Run Version 1.17.2 compatibility tests
+        run: bash tests/run-v1172.sh
 
-          cat \
-            .v119-import-bin/chunk-00.bin \
-            .v119-import-bin/chunk-01.bin \
-            .v119-import-bin/chunk-02.bin \
-            .v119-import-bin/chunk-03.bin \
-            .v119-import-bin/chunk-04.bin \
-            .v119-import-bin/chunk-05.bin \
-            .v119-import-bin/chunk-06.bin \
-            .v119-import-bin/chunk-07.bin \
-            .v119-import-bin/chunk-08.bin \
-            .v119-import-bin/chunk-09.bin \
-            .v119-import-bin/chunk-10.bin \
-            .v119-import-bin/chunk-11.bin > /tmp/v119.patch.xz
+      - name: Run Version 1.18 focused tests
+        run: bash tests/run-v118.sh
 
-          echo "${expected_xz}  /tmp/v119.patch.xz" | sha256sum -c -
-          xz --test /tmp/v119.patch.xz
-          xz --decompress --stdout /tmp/v119.patch.xz > /tmp/v119.patch
-          echo "${expected_patch}  /tmp/v119.patch" | sha256sum -c -
-
-          cp "${temp_ci}" /tmp/v119-import-ci.yml
-          git checkout "${expected_base}" -- "${temp_ci}"
-
-          git apply --check --whitespace=nowarn /tmp/v119.patch
-          git apply --whitespace=nowarn /tmp/v119.patch
-
-          grep -Fq "const APP_VERSION = '1.19.0';" app/version.php
-          grep -Fq "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.19.0';" app/version.php
-          grep -Fq "const APP_ASSET_REVISION = '1.19.0';" app/version.php
-          python3 tests/test_v119f_release_final.py
-          test ! -e .github/workflows/v1.18.0-publish.yml
-
-          python3 - <<'PY'
-          from pathlib import Path
-          patch = Path('/tmp/v119.patch').read_text(encoding='utf-8')
-          paths = []
-          for line in patch.splitlines():
-              if line.startswith('diff --git a/'):
-                  left = line[len('diff --git a/'):].split(' b/', 1)[0]
-                  paths.append(left)
-          if len(paths) != 95 or len(set(paths)) != 95:
-              raise SystemExit(f'unexpected patch path count: {len(paths)} / {len(set(paths))}')
-          Path('/tmp/v119.paths').write_text('\n'.join(paths) + '\n', encoding='utf-8')
-          PY
-
-          cp /tmp/v119-import-ci.yml "${temp_ci}"
-          rm -f "${final_release_workflow}"
-          git restore --staged -- "${temp_ci}"
-
-          while IFS= read -r path; do
-            case "${path}" in
-              .github/workflows/ci.yml|.github/workflows/v1.19.0-release.yml)
-                continue
-                ;;
-            esac
-            if [ -e "${path}" ]; then
-              git add -- "${path}"
-            else
-              git rm --ignore-unmatch -- "${path}"
-            fi
-          done < /tmp/v119.paths
-
-          git rm -r -- .v119-import-bin
-
-          if git diff --cached --name-only | grep -Eq '^\.github/workflows/'; then
-            echo 'Workflow files must not be included in the Actions-authored commit.' >&2
-            git diff --cached --name-status >&2
-            exit 1
-          fi
-
-          git diff --quiet -- "${temp_ci}"
-          test ! -e "${final_release_workflow}"
-
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git status --short
-          git commit -m 'Prepare RSS Reader Modernization 1.19.0 release source (non-workflow files)'
-          git push origin HEAD:release/v1.19.0-final-clean2
+      - name: Run Version 1.19 final release tests
+        run: bash tests/run-v119f.sh
