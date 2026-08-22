@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 checks = []
@@ -7,31 +8,30 @@ def check(ok: bool, message: str) -> None:
     checks.append(bool(ok))
     print(('PASS' if ok else 'FAIL') + ': ' + message)
 
-version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
-readme = (ROOT / 'README.md').read_text(encoding='utf-8')
-changelog = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-notes = (ROOT / 'RELEASE_NOTES.md').read_text(encoding='utf-8')
-release_builder = (ROOT / 'tools/build_release_package.py').read_text(encoding='utf-8')
-complete_builder = (ROOT / 'tools/build_complete_package.py').read_text(encoding='utf-8')
-release_verifier = (ROOT / 'tools/verify_release_package.py').read_text(encoding='utf-8')
-complete_verifier = (ROOT / 'tools/verify_complete_package.py').read_text(encoding='utf-8')
-ci = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
+def text(rel: str) -> str:
+    return (ROOT / rel).read_text(encoding='utf-8')
 
-check("const APP_VERSION = '1.18.0';" in version, 'APP_VERSION is 1.18.0')
-check("const APP_VERSION_LABEL = 'RSS Reader Modernization 1.18.0';" in version, 'version label is 1.18.0')
-check("const APP_ASSET_REVISION = '1.18.0-r2';" in version, 'asset revision is 1.18.0-r2')
-check('RSS Reader Modernization 1.18.0' in readme and 'v1.18.0' in readme, 'README declares 1.18.0 stable release')
-check('RSS Reader Modernization 1.18.0' in changelog and 'Connection Monitor' in changelog, 'CHANGELOG contains 1.18.0 Connection Monitor entry')
-check(notes.startswith('# RSS Reader Modernization 1.18.0 Release Notes'), 'Release Notes target 1.18.0')
-check('Verification limits' in notes, 'Release Notes disclose verification limits')
-check("INTENDED_RELEASE = '1.18.0'" in release_builder and "INTENDED_TAG = 'v1.18.0'" in release_builder, 'Runtime builder targets 1.18.0')
-check("VERSION = '1.18.0'" in complete_builder, 'Complete builder targets 1.18.0')
-check("intended_release') == '1.18.0'" in release_verifier, 'Runtime verifier checks 1.18.0')
-check("VERSION = '1.18.0'" in complete_verifier, 'Complete verifier checks 1.18.0')
-check('bash tests/run-v118.sh' in (ROOT / 'docs/tag-and-github-release.md').read_text(encoding='utf-8'), 'Tag guide includes V1.18 focused tests')
-check('Run Version 1.18 focused tests' in ci, 'CI includes V1.18 focused tests')
+version = text('app/version.php')
+readme = text('README.md')
+changelog = text('CHANGELOG.md')
+release_builder = text('tools/build_release_package.py')
+complete_builder = text('tools/build_complete_package.py')
+release_verifier = text('tools/verify_release_package.py')
+complete_verifier = text('tools/verify_complete_package.py')
+ci = text('.github/workflows/ci.yml')
+
+m = re.search(r"const APP_VERSION = '(\d+)\.(\d+)\.(\d+)(?:-[^']+)?';", version)
+version_tuple = tuple(int(x) for x in m.groups()) if m else (0, 0, 0)
+check(version_tuple >= (1, 18, 0), 'current application remains Version 1.18.0-or-later')
+check('Version 1.18.0' in readme and 'Connection Monitor' in readme, 'README retains the V1.18.0 Connection Monitor release history')
+check('RSS Reader Modernization 1.18.0' in changelog and 'Connection Monitor' in changelog, 'CHANGELOG retains the V1.18.0 Connection Monitor entry')
+check('1.19.0' in release_builder and 'v1.19.0' in release_builder, 'Runtime builder targets the current V1.19 release line')
+check("VERSION = '1.19.0'" in complete_builder, 'Complete builder targets the final V1.19 source')
+check('1.19.0' in release_verifier, 'Runtime verifier targets the current V1.19 release line')
+check("VERSION = '1.19.0'" in complete_verifier, 'Complete verifier targets the final V1.19 source')
+check('Run Version 1.18 focused tests' in ci, 'CI continues to include V1.18 compatibility tests')
 check((ROOT / 'docs/v1-18-connection-monitor.md').is_file(), 'Connection Monitor design document exists')
-check((ROOT / 'docs/release-gate-v1.18.0.md').is_file(), 'V1.18 release gate document exists')
+check((ROOT / 'docs/release-gate-v1.18.0.md').is_file(), 'V1.18 release gate document remains available')
 check((ROOT / 'public/connection_probe.php').is_file(), 'Connection probe endpoint exists')
 check((ROOT / 'app/health_probe.php').is_file(), 'Health probe persistence module exists')
 

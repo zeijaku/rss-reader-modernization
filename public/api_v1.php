@@ -78,6 +78,22 @@ function api_action_requires_open_session(string $action): bool
     ], true);
 }
 
+function api_request_content_length(): ?int
+{
+    $raw = $_SERVER['CONTENT_LENGTH'] ?? null;
+    if (!is_string($raw) && !is_int($raw)) {
+        return null;
+    }
+
+    $raw = trim((string) $raw);
+    if ($raw === '' || preg_match('/^[0-9]{1,20}$/', $raw) !== 1) {
+        return null;
+    }
+
+    $length = (int) $raw;
+    return $length >= 0 ? $length : null;
+}
+
 app_session_start();
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
@@ -93,6 +109,11 @@ if ($userId === null) {
 $csrfToken = isset($_POST['csrf_token']) && is_string($_POST['csrf_token']) ? $_POST['csrf_token'] : null;
 if (!app_csrf_is_valid($csrfToken)) {
     api_emit(api_error('csrf_invalid', 'CSRF validation failed.', 403));
+}
+
+$contentLength = api_request_content_length();
+if ($contentLength !== null && $contentLength > APP_API_MAX_REQUEST_BYTES) {
+    api_emit(api_error('request_too_large', 'Request body is too large.', 413));
 }
 
 $action = isset($_POST['action']) && is_string($_POST['action']) ? trim($_POST['action']) : '';

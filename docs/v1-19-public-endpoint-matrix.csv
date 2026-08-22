@@ -1,0 +1,8 @@
+﻿Endpoint,Anonymous,Allowed / intended method,CSRF,Authentication,Authorization,DB access,External access,Notes
+/,Yes,GET; POST(Login/Registration),POST auth forms: Yes,Optional (page); POST establishes session,Authenticated dashboard data is Session-user scoped,Yes,No direct outbound request at entry page,Other methods are unsupported but do not perform mutation.
+/stock,Yes (login view),GET; POST(Login/Registration),POST auth forms: Yes,Required for Stock data,Stock/tag queries are Session-user scoped,Yes,No direct outbound request at page entry,Anonymous request renders login view; mutation stays in API.
+/settings,No (redirects to /),GET (page); POST is not a mutation endpoint,API mutations: Yes at /api_v1.php,Required,Settings/keywords use Session user,Yes,No direct outbound request at page entry,Forms are intercepted by JS and write through API.
+/api_v1.php,No,POST only,Yes,Required,Session user + owner-scoped handlers,Action dependent,Action dependent,1 MiB default application request-size guard after Auth/CSRF.
+/logout.php,No meaningful anonymous action,POST only,Yes,Current session/remember state,Current session only,Remember-token path may access DB,No,GET/other method => 405.
+/connection_probe.php,Yes,GET only,No,No,N/A,No,No,Returns empty 204; no bootstrap/session.
+/error.php,Yes (ErrorDocument),Error subrequest/direct GET,No,No,N/A,No,No,Generic 403/404/500/503 rendering only.

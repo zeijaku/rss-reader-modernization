@@ -19,7 +19,7 @@ checks = {
     'HLS uses browser native video controls': "document.createElement('video')" in streaming and "controls: 'controls'" in streaming and "playsinline: 'playsinline'" in streaming,
     'HLS autoplay remains disabled': 'autoplay' not in streaming.lower(),
     'hls.js is pinned to 1.6.16': "HLS_LIBRARY_VERSION = '1.6.16'" in streaming and 'hls.js@1.6.16/dist/hls.min.js' in streaming,
-    'hls.js has corrected SRI and anonymous CORS mode': 'sha384-5E8B0pTLZZJMabWpCOfyYf60UpeI5jJij34BqBAh4NXoHALLNOjCPRrwtOX0QFAn' in streaming and "script.crossOrigin = 'anonymous'" in streaming,
+    'hls.js has corrected SRI and anonymous CORS mode': 'sha384-5E8B0pTlZZJMabWpC0fyYf6OUpe15jJij34BqBAh4NXoHAlLNOjCPRrwtOXOQFAn' in streaming and "script.crossOrigin = 'anonymous'" in streaming,
     'rejected V1.17.0 SRI is removed': 'sha384-iZBI1/lW9u8FcBjxuQ8nPTsU7TXhZNtzkV8H3gQHSTgz+VYQoKWqGlBHqhO84alJ' not in streaming,
     'hls.js is lazy-loaded only by the streaming module': "document.createElement('script')" in streaming and 'data-camera-hls-library' in streaming,
     'hls.js support check precedes native fallback in HLS setup': streaming.find('Hls.isSupported()') < streaming.find("if (!useNativeHls($card, video, mediaUrl, $status))"),

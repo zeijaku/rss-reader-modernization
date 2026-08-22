@@ -281,6 +281,55 @@ Productionでは次をHosting / Web server側で確認します。
 
 `APP_HASH_KEY`、DB password、Mail credential等の実値はHealthcheckへ出力しません。
 
+## V1.19 Security boundary update
+
+### Deployment boundary
+
+最も単純で安全な構成は、従来どおりWeb ServerのDocumentRootを`public/`へ向ける構成です。この場合、`app/`、`config/`、`var/`、`database/`、`tests/`、`tools/`、`docs/`はURL空間へ直接出しません。
+
+既存のRental Server互換としてApplication RootがWebから見える構成も維持しています。この構成ではRoot `.htaccess` がPrivate pathを拒否し、実在する公開Assetだけを`public/`へ内部Rewriteします。この互換防御はApache / `.htaccess` / `mod_rewrite`が有効であることが前提です。Nginx等へ移す場合はRuleを自動継承しないため、同等の拒否RuleをServer設定へ移してください。
+
+`public/.htaccess`では、直接実行可能なPHPを次の7 Endpointへ明示的に限定します。
+
+- `index.php`
+- `stock.php`
+- `settings.php`
+- `api_v1.php`
+- `logout.php`
+- `connection_probe.php`
+- `error.php`
+
+新しいPHP Endpointを追加する場合は、実装Fileを置くだけでは公開されません。Method、Anonymous可否、Authentication、CSRF、Authorization、DB / External accessを確認してPublic Endpoint MatrixとWhitelistを同時に更新します。
+
+### API request size
+
+`public/api_v1.php`は`APP_API_MAX_REQUEST_BYTES`（Default 1 MiB）をApplication-level guardとして使用します。AuthenticationとCSRFを先に確認するため、未認証RequestやInvalid CSRFへSize情報を優先して返しません。
+
+PHPは通常のPOST bodyをApplication code実行前にParseするため、このGuardだけでRequest-body DoSを完全には防げません。ProductionではHosting / PHPの`post_max_size`とWeb Server側上限も別途確認します。
+
+### Registration abuse
+
+Registrationが有効な環境では、IP単位のfile-backed throttleを`var/security/login-throttle/`配下で使用します。Defaultは15分Window、IPあたり10試行、到達後15分Blockです。Raw IP、Email、Password、Honeypot値をThrottle stateへ保存しません。
+
+限定利用で新規登録が不要な環境は、`REGISTRATION_ENABLED=false`を運用設定として選択できます。Repository側Defaultは既存互換のため`true`のままです。
+
+### Browser security headers
+
+CSPは段階導入を維持し、現在は次を強制します。
+
+- `frame-ancestors 'self'`
+- `base-uri 'self'`
+- `form-action 'self'`
+- `object-src 'none'`
+
+`script-src` / `style-src` / `connect-src`の全面制限は、既存Inline Style、動的Style、CDN HLS、各Widget通信の棚卸しなしには追加しません。HSTSも完全HTTPS運用をHosting側で確認してから導入します。
+
+### HTTPS detection / proxy
+
+Session / Remember Me cookieの`Secure`判定はApplicationが直接認識するHTTPS状態を基準にします。Reverse Proxy配下だからという理由だけで、任意の`X-Forwarded-Proto`を信頼する変更は行いません。TLS termination構成を採用する場合は、信頼するProxy範囲とHeader上書き保証をServer側で確定してからApplication側対応を検討します。
+
+Public Endpoint一覧は[`v1-19-public-endpoints.md`](v1-19-public-endpoints.md)、今後の追加機能Reviewは[`v1-19-security-checklist.md`](v1-19-security-checklist.md)を参照してください。
+
 ## Production checklist
 
 - HTTPSを使用。

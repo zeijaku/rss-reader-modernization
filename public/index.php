@@ -59,9 +59,20 @@ if ($token === 'login' && !$authCsrfInvalid) {
 } elseif ($token === 'regist' && !$authCsrfInvalid) {
     $email = isset($_POST['email']) && is_string($_POST['email']) ? $_POST['email'] : '';
     $password = isset($_POST['password']) && is_string($_POST['password']) ? $_POST['password'] : '';
-    $registration = $authTrapFilled
-        ? ['ok' => false, 'reason' => 'registration_failed']
-        : auth_register($email, $password);
+    $ipAddress = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    $registrationThrottle = REGISTRATION_ENABLED
+        ? registration_throttle_consume($ipAddress)
+        : ['allowed' => true, 'retry_after' => 0];
+
+    if (!$registrationThrottle['allowed']) {
+        // Keep the existing generic registration failure response. Do not
+        // disclose whether an IP bucket is currently throttled.
+        $registration = ['ok' => false, 'reason' => 'registration_failed'];
+    } else {
+        $registration = $authTrapFilled
+            ? ['ok' => false, 'reason' => 'registration_failed']
+            : auth_register($email, $password);
+    }
 
     if (($registration['ok'] ?? false) === true) {
         header('Location: ./?result=regist', true, 303);

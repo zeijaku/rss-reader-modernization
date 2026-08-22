@@ -13,7 +13,7 @@ active_revision = revision_match.group(1) if revision_match else ''
 checks = {
     'hls.js stays pinned to 1.6.16': "HLS_LIBRARY_VERSION = '1.6.16'" in streaming and 'hls.js@1.6.16/dist/hls.min.js' in streaming,
     'rejected SRI from V1.17.0 is removed': 'sha384-iZBI1/lW9u8FcBjxuQ8nPTsU7TXhZNtzkV8H3gQHSTgz+VYQoKWqGlBHqhO84alJ' not in streaming,
-    'browser-computed SHA-384 is installed': 'sha384-5E8B0pTLZZJMabWpCOfyYf60UpeI5jJij34BqBAh4NXoHALLNOjCPRrwtOX0QFAn' in streaming,
+    'browser-computed SHA-384 is installed': 'sha384-5E8B0pTlZZJMabWpC0fyYf6OUpe15jJij34BqBAh4NXoHAlLNOjCPRrwtOXOQFAn' in streaming,
     'anonymous CORS remains enabled for SRI': "script.crossOrigin = 'anonymous'" in streaming,
     'stable loader refreshes streaming module': './js/camera-video-streaming.js?v=' + active_revision in calendar,
     'streaming fallback stylesheet uses stable cache key': './css/camera-video-streaming.css?v=' + active_revision in streaming,

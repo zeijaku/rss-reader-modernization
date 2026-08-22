@@ -13,6 +13,7 @@ common_func = (ROOT / 'app/common/common_func.php').read_text(encoding='utf-8')
 feed_parser = (ROOT / 'app/feed/feed_parser.php').read_text(encoding='utf-8')
 feed_helper = (ROOT / 'app/feed/feed_xml_helper.php').read_text(encoding='utf-8')
 validation = (ROOT / 'app/validation.php').read_text(encoding='utf-8')
+api_source = (ROOT / 'app/api.php').read_text(encoding='utf-8') + ''.join(path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api').glob('*.php')))
 
 def check(cond: bool, msg: str) -> None:
     print(('PASS' if cond else 'FAIL') + ': ' + msg)
@@ -29,7 +30,7 @@ check("$token === 'login' || $token === 'regist'" in index and 'app_csrf_is_vali
 check("'csrf_token': appCsrfToken()" in dashboard, 'AJAX helper injects CSRF token into every API request')
 
 for action in ['content.create', 'content.update', 'content.delete', 'stock.create', 'stock.delete', 'settings.update', 'tabs.update', 'feed.fetch', 'feed.new.clear']:
-    check(action in frontend or action in (ROOT / 'app/api.php').read_text(encoding='utf-8'), f'expected API action remains represented: {action}')
+    check(action in frontend or action in api_source, f'expected API action remains represented: {action}')
 
 # 4-tab regression mapping is generated from location 0..3.
 check('for ($tabLocation = 0; $tabLocation <= 3; $tabLocation++)' in index, 'drawer renders exactly locations 0 through 3')

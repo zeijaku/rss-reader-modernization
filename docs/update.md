@@ -1,3 +1,16 @@
+## Version 1.18.0からVersion 1.19.0
+
+V1.19.0はArchitecture / Security / Documentation中心のMaintenance Releaseです。DB Migration、SQL、新規必須Config / Secretはありません。
+
+1. 現在のApplication codeと`config/local.php`をBackupする。
+2. 正式Runtime ZIPのSHA-256を確認し、別Folderへ展開する。
+3. Runtime ZIPのCodeをApplication Rootへ相対Pathで上書きする。
+4. `config/local.php`、実DB、生成済み`var/`Dataは維持する。
+5. BrowserをReloadし、Footerが`RSS Reader Modernization 1.19.0`であることを確認する。
+6. Login / Dashboard / Stock / Settings / Logoutと主要Widgetを確認する。
+7. Camera / Videoを使用する場合はConsoleにhls.js SRI Errorがなく、Asset URLが`?v=1.19.0`になっていることを確認する。
+8. 問題があればV1.18.0 BackupへCodeを戻す。DB MigrationがないためDB rollbackは不要。
+
 # 更新手順
 
 ## 基本方針

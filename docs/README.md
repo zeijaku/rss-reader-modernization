@@ -9,6 +9,18 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`change-map.md`](change-map.md) — Legacy issue → work unit → implementation → testの対応表
 
 
+## Version 1.19 development
+
+- [`v1-19-architecture.md`](v1-19-architecture.md) — API / Dashboard Widgetの大分類境界
+- [`v1-19-public-endpoints.md`](v1-19-public-endpoints.md) — Public Endpoint Matrix
+- [`v1-19-public-endpoint-matrix.csv`](v1-19-public-endpoint-matrix.csv) — Matrix CSV
+- [`v1-19-security-boundary.md`](v1-19-security-boundary.md) — Deployment / HTTP / Runtime Security境界
+- [`v1-19-security-checklist.md`](v1-19-security-checklist.md) — 今後の機能追加時Security Checklist
+- [`v1-19-d-implementation.md`](v1-19-d-implementation.md) — Cleanup / Documentation実施内容
+- [`v1-19-d-production-checklist.md`](v1-19-d-production-checklist.md) — 本番確認項目
+- [`v1-19-d-updated-files.md`](v1-19-d-updated-files.md) — V1.19-D変更File
+- [`test-report-v1-19-d.md`](test-report-v1-19-d.md) — V1.19-D Focused Test結果
+
 ## Version 1.1
 
 - [`v1-1-b-implementation.md`](v1-1-b-implementation.md) — Tracking Parameter除去
@@ -163,3 +175,16 @@ Secure Baseline初期のdeployment / login / session / logout等のhotfix記録�
 - [`release-gate-v1.0.0.md`](release-gate-v1.0.0.md) — Version 1.0.0 Quality Gate
 - [`release-artifact-inventory-v1.0.0.md`](release-artifact-inventory-v1.0.0.md) — GitHub / ZIP inventory
 - [`test-report-m4-a.md`](test-report-m4-a.md) — M4-A test report
+
+## Version 1.19
+
+- [`v1-19-architecture.md`](v1-19-architecture.md) — API / Dashboard Widget責務分割
+- [`v1-19-public-endpoints.md`](v1-19-public-endpoints.md) — Public Endpoint Matrix
+- [`v1-19-security-boundary.md`](v1-19-security-boundary.md) — 公開境界とDeployment Security
+- [`v1-19-security-checklist.md`](v1-19-security-checklist.md) — 新機能追加時Security Checklist
+- [`v1-19-e-release-candidate.md`](v1-19-e-release-candidate.md) — V1.19.0-RC1 Release Candidate
+- [`test-report-v1-19-e.md`](test-report-v1-19-e.md) — RC1 Release Gate結果
+- [`v1-19-f-final-release.md`](v1-19-f-final-release.md) — V1.19.0正式化
+- [`v1-19-f-production-checklist.md`](v1-19-f-production-checklist.md) — 正式版本番確認
+- [`v1-19-f-updated-files.md`](v1-19-f-updated-files.md) — V1.19-F変更File
+- [`test-report-v1-19-f.md`](test-report-v1-19-f.md) — V1.19.0 Final Release Gate結果

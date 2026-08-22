@@ -108,6 +108,21 @@ if (!defined('LOGIN_RATE_MAX_IP')) {
 if (!defined('LOGIN_RATE_BLOCK_SECONDS')) {
     define('LOGIN_RATE_BLOCK_SECONDS', max(60, (int) app_env('LOGIN_RATE_BLOCK_SECONDS', '900')));
 }
+if (!defined('REGISTRATION_RATE_WINDOW')) {
+    define('REGISTRATION_RATE_WINDOW', max(60, (int) app_env('REGISTRATION_RATE_WINDOW', '900')));
+}
+if (!defined('REGISTRATION_RATE_MAX_IP')) {
+    define('REGISTRATION_RATE_MAX_IP', max(1, (int) app_env('REGISTRATION_RATE_MAX_IP', '10')));
+}
+if (!defined('REGISTRATION_RATE_BLOCK_SECONDS')) {
+    define('REGISTRATION_RATE_BLOCK_SECONDS', max(60, (int) app_env('REGISTRATION_RATE_BLOCK_SECONDS', '900')));
+}
+if (!defined('APP_API_MAX_REQUEST_BYTES')) {
+    // Application-level guard. Keep the Web server/PHP post_max_size at or
+    // below an appropriate deployment limit as PHP parses normal POST data
+    // before userland code runs.
+    define('APP_API_MAX_REQUEST_BYTES', max(65536, min(4194304, (int) app_env('APP_API_MAX_REQUEST_BYTES', '1048576'))));
+}
 
 
 if (!defined('APP_HTTP_CONNECT_TIMEOUT_MS')) {

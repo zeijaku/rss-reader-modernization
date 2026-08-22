@@ -53,8 +53,19 @@ Logには運用情報が含まれるため、Gitや配布ZIPへ含めません�
 | `LOGIN_RATE_MAX_PAIR` | `5` | 最小2 |
 | `LOGIN_RATE_MAX_IP` | `30` | Pair上限以上 |
 | `LOGIN_RATE_BLOCK_SECONDS` | `900` | 最小60秒 |
+| `REGISTRATION_RATE_WINDOW` | `900` | Registration IP throttleのWindow。最小60秒 |
+| `REGISTRATION_RATE_MAX_IP` | `10` | Window内のIP単位Registration試行上限。最小1 |
+| `REGISTRATION_RATE_BLOCK_SECONDS` | `900` | 上限到達後のBlock時間。最小60秒 |
 
-Session fileは `var/session/`、Login throttle stateは `var/security/login-throttle/` に保存します。
+Session fileは `var/session/`、Login throttle stateは `var/security/login-throttle/` に保存します。Registration throttleも同じPrivate security directory内で、Raw IPをFile名へ出さないHMAC keyとして保存します。
+
+## API request boundary
+
+| Key | Default | Runtime制約 / 補足 |
+|---|---:|---|
+| `APP_API_MAX_REQUEST_BYTES` | `1048576` | APIのApplication-level `Content-Length`上限。65536〜4194304 bytes |
+
+`APP_API_MAX_REQUEST_BYTES`はAuthenticationとCSRF確認後に適用します。通常利用のPOSTを壊さず、認証済みAPIへの過大RequestをHTTP 413で停止するための上限です。PHPは通常POSTをApplication codeより前にParseするため、Hosting側の`post_max_size`やWeb Server request-body limitも別途適切に設定してください。
 
 ## Outbound HTTP / SSRF boundary
 

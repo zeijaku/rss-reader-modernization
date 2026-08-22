@@ -7,7 +7,7 @@ DirectoryIndex index.php
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
-    Header always set Content-Security-Policy "frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+    Header always set Content-Security-Policy "frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
 
     # Versioned CSS and JavaScript URLs can be cached for a long period.
     <FilesMatch "\.(?:css|js)$">
@@ -27,6 +27,10 @@ DirectoryIndex index.php
 Options -Indexes
 
 RewriteEngine On
+
+# V1.19-C: public/で直接実行可能なPHPはPublic Endpoint Matrixの7本だけに固定する。
+# 将来PHPを追加する場合は、認証・Method・CSRF・直接Access方針を確認してから明示的に追加する。
+RewriteRule ^(?!api_v1\.php$|connection_probe\.php$|error\.php$|index\.php$|logout\.php$|settings\.php$|stock\.php$).*\.php$ - [F,L,NC]
 
 # V1.13-B R2: DocumentRootがpublic/直下の場合も /stock をCanonical URLとする。
 # Application Root配下の /public/stock.php が直接指定された場合も /stock へ戻す。

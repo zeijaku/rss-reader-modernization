@@ -7,7 +7,7 @@
     var HLS_LIBRARY_VERSION = '1.6.16';
     var HLS_LIBRARY_URL = 'https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js';
     // Browser-reported SHA-384 for the pinned jsDelivr 1.6.16 minified asset.
-    var HLS_LIBRARY_INTEGRITY = 'sha384-5E8B0pTLZZJMabWpCOfyYf60UpeI5jJij34BqBAh4NXoHALLNOjCPRrwtOX0QFAn';
+    var HLS_LIBRARY_INTEGRITY = 'sha384-5E8B0pTlZZJMabWpC0fyYf6OUpe15jJij34BqBAh4NXoHAlLNOjCPRrwtOXOQFAn';
 
     function injectStylesheet() {
         if (document.querySelector('link[data-camera-video-streaming-style]')) {
@@ -15,7 +15,7 @@
         }
         var link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = './css/camera-video-streaming.css?v=1.18.0-r2';
+        link.href = './css/camera-video-streaming.css?v=1.19.0';
         link.setAttribute('data-camera-video-streaming-style', 'true');
         document.head.appendChild(link);
     }
