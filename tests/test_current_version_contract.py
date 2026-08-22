@@ -22,7 +22,8 @@ label = label_match.group(1) if label_match else ''
 
 check(bool(re.fullmatch(r'\d+\.\d+\.\d+(?:-(?:rc[1-9][0-9]*|dev\.[1-9][0-9]*))?', version)),
       'APP_VERSION uses the supported semantic version format')
-check(label == f'RSS Reader Modernization {version}', 'APP_VERSION_LABEL matches APP_VERSION')
+expected_label = f'RSS Reader Modernization {version.upper()}' if '-rc' in version else f'RSS Reader Modernization {version}'
+check(label == expected_label, 'APP_VERSION_LABEL matches APP_VERSION')
 check("require_once __DIR__ . '/version.php';" in bootstrap, 'bootstrap loads version.php')
 
 if asset_match:

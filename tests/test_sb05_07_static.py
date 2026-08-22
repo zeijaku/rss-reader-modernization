@@ -5,7 +5,7 @@ import sys
 from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 api_endpoint = (ROOT/'public/api_v1.php').read_text()
-api = (ROOT/'app/api.php').read_text()
+api = (ROOT/'app/api.php').read_text(encoding='utf-8') + ''.join(path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api').glob('*.php')))
 index = dashboard_source(ROOT)
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
 frontend = index + '\n' + dashboard

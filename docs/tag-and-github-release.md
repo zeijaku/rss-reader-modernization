@@ -1,81 +1,51 @@
-# Git Tag / GitHub Release手順
+# V1.19 Tag / GitHub Release
 
-GitHubへの正式反映は、Version 1.18.0 Release Gateと成果物確認後に実行します。
+V1.19-FでSourceと正式Packageを確定しますが、Commit / Push / Tag / GitHub Releaseはユーザーの明示的なGitHub反映指示があるまで実行しません。
 
-## 1. 差分とTest確認
+想定する正式Tagは`v1.19.0`です。既存Tagは上書きしません。
 
-```bash
-git status --short
+## Git登録前
+
+```powershell
+# 現在Branchと変更状態を確認します。
+git status
+
+# 既存v1.19.0 TagがRemoteに存在しないことを確認します。
+$ExistingTag = git ls-remote --tags origin refs/tags/v1.19.0
+if ($ExistingTag) { throw "v1.19.0 already exists on origin. Do not overwrite it." }
+
+# 変更内容を確認します。
 git diff --check
-bash tests/run-current.sh
-bash tests/run-v117.sh
-bash tests/run-v1171.sh
-bash tests/run-v1172.sh
-bash tests/run-v118.sh
+git diff --stat
 ```
 
-`config/local.php`、実Bearer Token、実DB、Log、Session、Cache、Throttle Data、Release ZIPそのものが意図せずStage対象になっていないことを確認します。
+## Commit / Push
 
-## 2. Release Artifact生成
+実際のGitHub反映時は、まず`git status`と`git diff --name-status`でV1.19対象Pathを確定します。その確認結果を基に**対象Pathだけ**を`git add -- <path...>`でStageし、無関係なLocal変更を含めません。`git add .`、`git add -A`、`git add --all`は使用しません。
 
-```bash
-python tools/build_complete_package.py --output-dir ../release-output
-python tools/build_release_package.py --mode final --output-dir ../release-output
-python tools/verify_complete_package.py \
-  ../release-output/rss-reader-modernization-1.18.0-complete.zip \
-  ../release-output/rss-reader-modernization-1.18.0-complete.zip.sha256
-python tools/verify_release_package.py \
-  ../release-output/rss-reader-modernization-1.18.0.zip \
-  ../release-output/rss-reader-modernization-1.18.0.zip.sha256
+Stage後は次を確認します。
+
+```powershell
+# Stage済み差分にWhitespace Errorがないことを確認します。
+git diff --cached --check
+
+# StageしたFile一覧と差分量を確認します。
+git diff --cached --stat
 ```
 
-## 3. PR / CI確認
+Commit / Pushコマンドは、実際の差分確認後にユーザーから明示的なGitHub反映指示があった時点で確定します。
 
-Release branchのPull Requestで、PHP 8.1／8.4のCurrent Regression、V1.17 focused tests、V1.17.1／V1.17.2 compatibility tests、V1.18 focused testsがすべてGreenであることを確認します。
+## Tag
 
-V1.18.0 Release workflowではRuntime／Complete packageのBuild／Verifierも実行し、生成ArtifactのSHA-256を控えます。
-
-Connection Monitorは外部Credentialを必要としません。Production／Stagingでは同一Originの`connection_probe.php`、Offline→Recovery、複数Widget shared pollingをBrowserで確認します。
-
-## 4. Merge
-
-Release Gateと成果物確認が完了してから、`release/v1.18.0-final`を`main`へMergeします。
-
-MergeはRelease準備とは分離し、明示的に承認してから実行します。
-
-## 5. Annotated Tag
-
-```bash
-git status --short
+```powershell
+# Push後のHEADを確認します。
 git log -1 --oneline
-git tag -a v1.18.0 -m "RSS Reader Modernization 1.18.0"
-git show --no-patch --decorate v1.18.0
-git push origin v1.18.0
+
+# Annotated Tagを作成します。
+git tag -a v1.19.0 -m "RSS Reader Modernization 1.19.0"
+
+# TagだけをRemoteへPushします。
+git push origin refs/tags/v1.19.0
 ```
 
-TagはRelease commitと同じCommitを指すことを確認します。既存Tagがある場合は上書きしません。
-
-## 6. GitHub Release
-
-- Tag: `v1.18.0`
-- Title: `RSS Reader Modernization 1.18.0`
-- 本文: `RELEASE_NOTES.md`
-- 添付:
-  - `rss-reader-modernization-1.18.0.zip`
-  - `rss-reader-modernization-1.18.0.zip.sha256`
-  - `rss-reader-modernization-1.18.0-complete.zip`
-  - `rss-reader-modernization-1.18.0-complete.zip.sha256`
-- Pre-release: OFF
-- Latest release: ON
-
-## 7. 公開後確認
-
-- main、Tag、GitHub ReleaseのVersionが1.18.0で一致する。
-- SHA-256がRelease Gateで生成したArtifactと一致する。
-- Runtime ZIPへPrivate設定、Bearer Token、X API Cache、その他Runtime Dataがない。
-- 展開後Footerが`RSS Reader Modernization 1.18.0`。
-- Connection MonitorがInformation catalogへ表示され、Online／Latency／History／Qualityを表示する。
-- Offline→RecoveryとDowntime表示が動作する。
-- 複数Connection MonitorでもPage全体のProbeが約5秒に1回である。
-- GitHub ActionsがGreenのままである。
-- Version 1.17.2からDB Migrationが不要であることを再確認する。
+GitHub Releaseを作成する場合は、Tagが意図したCommitを指していることを確認した後、正式Runtime ZIP、Runtime SHA-256、Complete ZIP、Complete SHA-256を添付します。

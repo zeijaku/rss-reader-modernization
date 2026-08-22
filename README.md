@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.18.0`
-Release tag: `v1.18.0`
+**Stable release:** `RSS Reader Modernization 1.19.0`  
+Release tag: `v1.19.0`
+
+Version 1.19.0は、新機能追加ではなくArchitecture / Security / Maintainabilityを中心に整理したMaintenance Releaseです。大きかったAPIとDashboard Widget処理を責務単位へ分割し、API request size guard、Registration throttle、Public PHP endpoint whitelist、CSP `object-src 'none'`を追加しました。Public Endpoint Matrix、Security Boundary、新機能追加時Checklistも文書化しています。V1.19.0-RC1の本番互換確認後に正式化しており、DB schema、Migration、SQL、新規必須Secretの追加はありません。
 
 Version 1.18.0では、DashboardのInformationカテゴリへConnection Monitor Widgetを追加しました。BrowserからこのRSS Reader自身の軽量Endpointへ同一Originで定期Probeを送り、現在Latency、30秒／60秒／5分履歴、Avg／Max／Jitter、切断／復旧、Downtime、Last Disconnect、Excellent／Good／Fair／Slow／Offlineを表示します。複数WidgetでもPage内のProbeは1本を共有し、Background tabでは停止、復帰時に即時確認します。履歴とBaselineはBrowser memoryだけで保持し、DB／localStorageへ保存しません。外部Internet ProbeやSpeed Testは測定対象・通信量・外部依存が変わるためV1.18の対象外としました。DB schema、Migration、必須configの追加変更はありません。
 Release前の実機確認では、Remember MeによるSession自動復旧後も開いたままのDashboardが旧CSRF Tokenで失敗しないよう短時間Grace＋Response Header同期を追加し、Smartphone Calendarの固定Minimum Widthを解除してCard幅へ収めています。
@@ -179,7 +181,7 @@ M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4
 
 詳細は [`docs/m4-f-implementation.md`](docs/m4-f-implementation.md)、[`docs/m4-f-validation.md`](docs/m4-f-validation.md)、[`docs/m4-e-implementation.md`](docs/m4-e-implementation.md)、[`docs/release-package.md`](docs/release-package.md)、[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
 
-## Version 1.18.0 release package
+## Version 1.19.0 release package
 
 GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分けて生成します。
 
@@ -187,11 +189,11 @@ GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分
 python tools/build_complete_package.py --output-dir ../release-output
 python tools/build_release_package.py --mode final --output-dir ../release-output
 python tools/verify_complete_package.py \
-  ../release-output/rss-reader-modernization-1.18.0-complete.zip \
-  ../release-output/rss-reader-modernization-1.18.0-complete.zip.sha256
+  ../release-output/rss-reader-modernization-1.19.0-complete.zip \
+  ../release-output/rss-reader-modernization-1.19.0-complete.zip.sha256
 python tools/verify_release_package.py \
-  ../release-output/rss-reader-modernization-1.18.0.zip \
-  ../release-output/rss-reader-modernization-1.18.0.zip.sha256
+  ../release-output/rss-reader-modernization-1.19.0.zip \
+  ../release-output/rss-reader-modernization-1.19.0.zip.sha256
 ```
 
 Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、検証限界は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)を参照してください。
@@ -322,6 +324,13 @@ Migration前に必ずDB全体をバックアップしてください。Duplicate
 - HTTPSを使用
 
 詳細: [`docs/security.md`](docs/security.md)
+
+V1.19では、Fat fileの大分類分割と公開境界Audit/Hardeningを行い、Architecture・Public Endpoint・Security BoundaryをDocumentationとして固定しました。V1.19.0-RC1の本番互換確認とRelease Gateを経て、Application Versionを1.19.0へ正式化しています。
+
+- Architecture: [`docs/v1-19-architecture.md`](docs/v1-19-architecture.md)
+- Public endpoints: [`docs/v1-19-public-endpoints.md`](docs/v1-19-public-endpoints.md)
+- Security boundary: [`docs/v1-19-security-boundary.md`](docs/v1-19-security-boundary.md)
+- New feature security checklist: [`docs/v1-19-security-checklist.md`](docs/v1-19-security-checklist.md)
 
 ## Tests
 

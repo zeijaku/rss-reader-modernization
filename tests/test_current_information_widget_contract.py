@@ -11,7 +11,7 @@ def check(condition: bool, message: str) -> None:
 
 
 bootstrap = (ROOT / 'app/bootstrap.php').read_text(encoding='utf-8')
-api = (ROOT / 'app/api.php').read_text(encoding='utf-8')
+api = (ROOT / 'app/api.php').read_text(encoding='utf-8') + ''.join(path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api').glob('*.php')))
 widgets = (ROOT / 'app/dashboard_widget.php').read_text(encoding='utf-8')
 api_entry = (ROOT / 'public/api_v1.php').read_text(encoding='utf-8')
 

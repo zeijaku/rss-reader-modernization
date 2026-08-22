@@ -2,9 +2,9 @@
 
 ## Supported version
 
-Version 1.0.0の正式Release前は、GitHub `main` の最新Checkpointだけを確認対象とします。正式Release後は、原則として最新Releaseを対象にします。
+原則として、GitHubで公開している**最新の正式Release**をSecurity確認・修正の対象とします。次期Versionの開発中CheckpointはProduction確認用であり、正式Releaseになるまでは最新正式版の代替とは扱いません。
 
-古いCheckpoint、Legacy evidence、利用者が独自変更した環境は、修正対象外になる場合があります。
+古いRelease、過去Checkpoint、Legacy evidence、利用者が独自変更した環境は、修正対象外になる場合があります。
 
 ## Reporting a vulnerability
 

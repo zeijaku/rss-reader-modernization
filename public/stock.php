@@ -59,9 +59,20 @@ if ($token === 'login' && !$authCsrfInvalid) {
 } elseif ($token === 'regist' && !$authCsrfInvalid) {
     $email = isset($_POST['email']) && is_string($_POST['email']) ? $_POST['email'] : '';
     $password = isset($_POST['password']) && is_string($_POST['password']) ? $_POST['password'] : '';
-    $registration = $authTrapFilled
-        ? ['ok' => false, 'reason' => 'registration_failed']
-        : auth_register($email, $password);
+    $ipAddress = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
+    $registrationThrottle = REGISTRATION_ENABLED
+        ? registration_throttle_consume($ipAddress)
+        : ['allowed' => true, 'retry_after' => 0];
+
+    if (!$registrationThrottle['allowed']) {
+        // Keep the existing generic registration failure response. Do not
+        // disclose whether an IP bucket is currently throttled.
+        $registration = ['ok' => false, 'reason' => 'registration_failed'];
+    } else {
+        $registration = $authTrapFilled
+            ? ['ok' => false, 'reason' => 'registration_failed']
+            : auth_register($email, $password);
+    }
 
     if (($registration['ok'] ?? false) === true) {
         header('Location: ./?result=regist', true, 303);
@@ -1641,6 +1652,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
                 <section aria-labelledby="accountPasswordTitle">
                     <h6 id="accountPasswordTitle">パスワード変更</h6>
                     <form id="accountPasswordForm" method="post" action="./" autocomplete="on">
+                        <input type="text" name="username" value="" autocomplete="username" class="visually-hidden" tabindex="-1" aria-hidden="true">
                         <div class="mb-3"><label class="form-label" for="accountCurrentPassword"><small class="text-dark">現在のパスワード</small></label><input type="password" class="form-control accountCurrentPassword" id="accountCurrentPassword" name="current_password" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="current-password" required></div>
                         <div class="mb-3"><label class="form-label" for="accountNewPassword"><small class="text-dark">新しいパスワード</small></label><input type="password" class="form-control accountNewPassword" id="accountNewPassword" name="new_password" minlength="<?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="new-password" aria-describedby="accountPasswordHelp" required><small id="accountPasswordHelp" class="form-text text-muted"><?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>文字以上<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>文字以下で入力してください。</small></div>
                         <div class="mb-3"><label class="form-label" for="accountNewPasswordConfirmation"><small class="text-dark">新しいパスワード（確認）</small></label><input type="password" class="form-control accountNewPasswordConfirmation" id="accountNewPasswordConfirmation" name="new_password_confirmation" minlength="<?php echo (int) AUTH_PASSWORD_MIN_LENGTH; ?>" maxlength="<?php echo (int) AUTH_PASSWORD_MAX_LENGTH; ?>" autocomplete="new-password" required></div>

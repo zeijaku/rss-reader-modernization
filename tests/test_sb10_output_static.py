@@ -8,7 +8,8 @@ index = dashboard_source(ROOT)
 stock = (ROOT / 'public/stock.php').read_text()
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
 frontend = index + '\n' + dashboard
-api = (ROOT / 'app/api.php').read_text()
+api = (ROOT / 'app/api.php').read_text(encoding='utf-8') + ''.join(path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api').glob('*.php')))
+api_content = (ROOT / 'app/api/content.php').read_text(encoding='utf-8')
 validation = (ROOT / 'app/validation.php').read_text()
 http_fetch = (ROOT / 'app/http_fetch.php').read_text()
 common_func = (ROOT / 'app/common/common_func.php').read_text()
@@ -65,7 +66,9 @@ check("CURLOPT_USERAGENT" in http_fetch and "$_SERVER['HTTP_USER_AGENT']" not in
 check("LIBXML_NONET" in feed_parser, 'XML parser forbids network access')
 check("@simplexml_load_string" not in feed_parser, 'XML parse errors are not hidden with @')
 check("steal_contents($url)" not in api, 'API no longer calls Legacy generic fetch helper')
-check("api_stock_create" in api and "app_safe_http_fetch" not in api[api.index('function api_stock_create'):api.index('function api_settings_update')], 'Stock create performs no server-side article fetch')
+stock_match = re.search(r'function api_stock_create\b.*?(?=\nfunction \w+|\Z)', api_content, flags=re.S)
+stock_create = stock_match.group(0) if stock_match else ''
+check(bool(stock_create) and "app_safe_http_fetch" not in stock_create, 'Stock create performs no server-side article fetch')
 
 check("require_once __DIR__ . '/validation.php';" in bootstrap and "require_once __DIR__ . '/http_fetch.php';" in bootstrap, 'validation and safe-fetch modules load centrally')
 check('const APP_VERSION =' in version and 'const APP_VERSION_LABEL =' in version, 'visible release marker infrastructure remains present')

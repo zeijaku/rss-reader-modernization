@@ -10,7 +10,9 @@ stock = (ROOT / 'public' / 'stock.php').read_text(encoding='utf-8')
 settings = (ROOT / 'public' / 'settings.php').read_text(encoding='utf-8')
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
 frontend = index + '\n' + dashboard
-api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8')
+api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8') + ''.join(path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api').glob('*.php')))
+api_content = (ROOT / 'app/api/content.php').read_text(encoding='utf-8')
+api_account = (ROOT / 'app/api/account.php').read_text(encoding='utf-8')
 feed_service = (ROOT / 'app' / 'feed' / 'feed_fetch_service.php').read_text(encoding='utf-8')
 common_func = (ROOT / 'app' / 'common' / 'common_func.php').read_text(encoding='utf-8')
 feed_parser = (ROOT / 'app' / 'feed' / 'feed_parser.php').read_text(encoding='utf-8')
@@ -55,7 +57,7 @@ check('$row_cnt' not in index and '$row_cnt' not in stock and 'row content-grid 
 check('rsort($result_stock)' not in stock, 'Stock order is not re-sorted incorrectly after ordered DB query')
 
 # SB-11-05/06: tab update is isolated and one request path.
-match = re.search(r'function api_tabs_update\([^)]*\): array\s*\{(?P<body>.*?)\n\}', api, re.S)
+match = re.search(r'function api_tabs_update\([^)]*\): array\s*\{(?P<body>.*?)(?=\nfunction \w+|\Z)', api_account, re.S)
 body = match.group('body') if match else ''
 check(bool(match), 'tabs.update handler exists')
 check('update_content' not in body and 'delete_content' not in body, 'tabs.update contains no stray content mutation logic')
@@ -78,10 +80,9 @@ check('id="exampleModalCenterTitle"' not in index and 'aria-labelledby="changeCo
 check('class="nav-link disabled"' not in index, 'configured navbar links are no longer rendered disabled')
 
 # SB-11-09/10: previous fixes remain present.
-stock_start = api.find('function api_stock_create')
-stock_end = api.find('function api_settings_update')
-stock_body = api[stock_start:stock_end] if stock_start >= 0 and stock_end > stock_start else ''
-check('app_safe_http_fetch' not in stock_body and 'preg_match' not in stock_body, 'Stock title save does not refetch/scrape article page')
+stock_match = re.search(r'function api_stock_create\b.*?(?=\nfunction \w+|\Z)', api_content, re.S)
+stock_body = stock_match.group(0) if stock_match else ''
+check(bool(stock_body) and 'app_safe_http_fetch' not in stock_body and 'preg_match' not in stock_body, 'Stock title save does not refetch/scrape article page')
 check("$_SERVER['HTTP_USER_AGENT'] ?? '-'" in common_func, 'missing HTTP_USER_AGENT is handled without warning in access log')
 
 # SB-12-01/02: signatures/runtime settings.
@@ -100,7 +101,7 @@ check('PHP_VERSION_ID < 80100' in common_conf, 'runtime health check enforces PH
 check('strtotime($date)' not in feed_parser + feed_date, 'parser no longer passes nullable dates through strtotime/date')
 check('mb_internal_encoding(' not in feed_parser and 'mb_detect_order(' not in feed_parser and 'mb_language(' not in feed_parser, 'Feed parser no longer mutates global mbstring runtime settings')
 check(bool(re.search(r'mb_detect_encoding\([^;]+?true\s*\)', feed_parser, re.S)), 'Feed encoding detection uses strict failure-aware detection')
-check(bool(re.search(r"const APP_VERSION = '(?:(?:SB-(?:1[2-9]|[2-9]\d+)|M\d+-[A-Z]) R\d+|1\.0\.0(?:-rc\d+)?|1\.[1-9][0-9]*\.\d+(?:-dev\.\d+)?)';", version)), 'visible release marker is SB-12 or later / M-series / supported SemVer development')
+check(bool(re.search(r"const APP_VERSION = '(?:(?:SB-(?:1[2-9]|[2-9]\d+)|M\d+-[A-Z]) R\d+|1\.0\.0(?:-rc\d+)?|1\.[1-9][0-9]*\.\d+(?:-(?:dev\.\d+|rc\d+))?)';", version)), 'visible release marker is SB-12 or later / M-series / supported SemVer development')
 
 if not all(checks):
     sys.exit(1)

@@ -11,7 +11,7 @@ def check(condition, message):
 session = (ROOT / "app/session.php").read_text(encoding="utf-8")
 persistent = (ROOT / "app/persistent_login.php").read_text(encoding="utf-8")
 api = (ROOT / "public/api_v1.php").read_text(encoding="utf-8")
-api_core = (ROOT / "app/api.php").read_text(encoding="utf-8")
+api_core = (ROOT / "app/api.php").read_text(encoding="utf-8") + "".join(path.read_text(encoding="utf-8") for path in sorted((ROOT / "app/api").glob("*.php")))
 dashboard = (ROOT / "public/js/dashboard.js").read_text(encoding="utf-8")
 css = (ROOT / "public/css/dashboard.css").read_text(encoding="utf-8")
 version = (ROOT / "app/version.php").read_text(encoding="utf-8")
@@ -41,7 +41,9 @@ check("width: 100%" in mobile_css and "min-width: 0" in mobile_css and "max-widt
 check(".dashboard-grid .calendar-card-body" in css and "overflow-x: auto" in css, "Narrow desktop Calendar overflow remains contained inside the card")
 check("overflow-x: hidden" in mobile_css, "Mobile Calendar does not create a document-level horizontal overflow path")
 
-check("const APP_ASSET_REVISION = '1.18.0-r2';" in version, "Final pre-Git Asset Revision busts the immutable 1.18.0 cache")
+revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
+active_revision = revision_match.group(1) if revision_match else ''
+check(bool(active_revision), "Current release exposes an explicit asset revision")
 for asset in [
     './css/mail-widget.css', './css/camera-video.css', './css/camera-video-playback.css',
     './css/camera-video-streaming.css', './css/x-widget.css', './js/app-notice.js',
@@ -50,8 +52,9 @@ for asset in [
     './js/camera-video.js', './js/camera-video-playback.js', './js/camera-video-streaming.js',
     './js/x-widget.js', './js/widget-settings-no-reload.js'
 ]:
-    check(asset + '?v=1.18.0-r2' in calendar, f"Dynamic asset loader uses final revision: {asset}")
-check("./css/camera-video-streaming.css?v=1.18.0-r2" in camera_streaming, "Camera streaming fallback CSS uses final revision")
+    check(bool(active_revision) and asset + '?v=' + active_revision in calendar, f"Dynamic asset loader uses current revision: {asset}")
+check(bool(active_revision) and "./css/camera-video-streaming.css?v=" + active_revision in camera_streaming, "Camera streaming fallback CSS uses current revision")
+check('sha384-5E8B0pTlZZJMabWpC0fyYf6OUpe15jJij34BqBAh4NXoHAlLNOjCPRrwtOXOQFAn' in camera_streaming, "hls.js SRI retains the browser-computed SHA-384 digest")
 
 failed = [m for ok, m in checks if not ok]
 print(f"RESULT: PASS {len(checks)-len(failed)} / FAIL {len(failed)} / SKIP 0")

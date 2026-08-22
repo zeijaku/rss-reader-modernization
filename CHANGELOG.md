@@ -1,5 +1,27 @@
 # Changelog
 
+## RSS Reader Modernization 1.19.0 — 2026-08-22
+
+### Architecture / Security / Documentation Maintenance Release
+
+- `app/api.php`と`app/dashboard_widget.php`をFacade/Coreとして残し、API 4分類・Dashboard Widget 3分類へ責務単位で最小分割。既存API Action / Function contract、DB、公開Endpointを維持。
+- Registration IP throttle、Authenticated API request-size guard、CSP `object-src 'none'`、Public PHP endpoint whitelistを追加。
+- hls.js 1.6.16のSRI値を実CDN bytesからSHA-384計算して修正し、V1.19 final Asset Revisionを`1.19.0`へ確定。
+- Architecture、Public Endpoint Matrix、Deployment/Security Boundary、新機能追加時Security ChecklistをDocumentation化。
+- Account Password Formへ非表示`autocomplete="username"`補助Fieldを追加し、BrowserのPassword Form構造警告をCleanup。Raw login emailの保存・表示は追加しない。
+- V1.19.0-RC1でCurrent full regression、V1.17～V1.18 compatibility、V1.19 focused/security/package gateを実施し、本番互換確認で目立った機能問題がないことを確認して正式化。
+- `APP_VERSION=1.19.0`、`APP_VERSION_LABEL=RSS Reader Modernization 1.19.0`、`APP_ASSET_REVISION=1.19.0`へ確定。
+- DB Migration、SQL、新規必須config/secret、主要機能追加はなし。
+
+## RSS Reader Modernization 1.19.0-RC1 — 2026-08-21
+
+- V1.19-B: `app/api.php`と`app/dashboard_widget.php`をFacade/Coreとして残し、API 4分類・Dashboard Widget 3分類へ責務単位で分割。Action名、DB、公開Endpointは維持。
+- V1.19-C: 認証済みAPIへ1MiBのrequest size guard、RegistrationへIP単位Throttle、CSPへ`object-src 'none'`、`public/`直下PHPへ明示Whitelistを追加。
+- V1.19-C follow-up: hls.js 1.6.16のSRIをBrowser実取得bytesからSHA-384計算して修正。
+- V1.19-D: Architecture / Public Endpoint Matrix / Security Boundary / Security Checklistを文書化し、Account Password FormのPassword Manager向けusername hintを追加。
+- V1.19-E: `APP_VERSION=1.19.0-rc1`、`APP_ASSET_REVISION=1.19.0-rc1`へ切替。V1.18までの回帰とV1.19 focused/security/package gateをまとめて実行するRelease Candidate工程へ移行。
+- DB Migration、SQL、新規必須config/secret、主要機能追加はなし。
+
 ## RSS Reader Modernization 1.18.0 — 2026-08-20
 
 ### Connection Monitor / latency history / outage state / Release Gate

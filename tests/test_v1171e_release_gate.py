@@ -30,7 +30,8 @@ label_match = re.search(r"const APP_VERSION_LABEL = '([^']+)';", version)
 revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
 active_revision = revision_match.group(1) if revision_match else ''
 check('APP_VERSION keeps V1.17.1-or-later release behavior', version_tuple >= (1, 17, 1))
-check('APP_VERSION_LABEL matches current version', bool(label_match) and label_match.group(1) == 'RSS Reader Modernization ' + version_value)
+expected_label = 'RSS Reader Modernization ' + (version_value.upper() if '-rc' in version_value else version_value)
+check('APP_VERSION_LABEL matches current version', bool(label_match) and label_match.group(1) == expected_label)
 check('APP_ASSET_REVISION is present', bool(active_revision))
 
 stable_assets = [
@@ -66,7 +67,7 @@ check('Weather visual-only changes are in-place', 'weatherDataChanged' in helper
 check('Camera update replaces only target Camera card', '$old.replaceWith($next)' in interceptor and 'sortGrid(' not in interceptor)
 check('Mail settings keep target card', 'function refreshMailTarget(widgetId)' in interceptor and '.mail-widget-refresh' in interceptor)
 check('shared notices remain bounded', "success: 2500" in app_notice and "info: 3000" in app_notice and "danger: 6000" in app_notice and 'MutationObserver' in app_notice)
-check('hls.js SRI matches browser-computed SHA-384 observed during release review', 'sha384-5E8B0pTLZZJMabWpCOfyYf60UpeI5jJij34BqBAh4NXoHALLNOjCPRrwtOX0QFAn' in streaming)
+check('hls.js SRI matches browser-computed SHA-384 observed during release review', 'sha384-5E8B0pTlZZJMabWpC0fyYf6OUpe15jJij34BqBAh4NXoHAlLNOjCPRrwtOXOQFAn' in streaming)
 check('old rejected hls.js SRI is removed', 'sha384-iZBI1/lW9u8FcBjxuQ8nPTsU7TXhZNtzkV8H3gQHSTgz+VYQoKWqGlBHqhO84alJ' not in streaming)
 check('streaming fallback stylesheet uses active revision', 'camera-video-streaming.css?v=' + active_revision in streaming)
 
