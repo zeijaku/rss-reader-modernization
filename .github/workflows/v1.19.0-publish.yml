@@ -1,0 +1,126 @@
+name: Publish V1.19.0
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v1.19.0-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Tag and publish V1.19.0
+    if: github.head_ref == 'release/v1.19.0-publish-final'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_MAIN: c0b39e6061f4a522ebc95dfe319c6e8af7b64486
+      RELEASE_TAG: v1.19.0
+      PUBLISH_BRANCH: release/v1.19.0-publish-final
+
+    steps:
+      - name: Checkout exact merged release commit
+        uses: actions/checkout@v4
+        with:
+          ref: c0b39e6061f4a522ebc95dfe319c6e8af7b64486
+          fetch-depth: 0
+
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
+          coverage: none
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify exact release source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "${EXPECTED_MAIN}"
+          test "$(git rev-parse origin/main)" = "${EXPECTED_MAIN}"
+          grep -Fq "const APP_VERSION = '1.19.0';" app/version.php
+          grep -Fq "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.19.0';" app/version.php
+          grep -Fq "const APP_ASSET_REVISION = '1.19.0';" app/version.php
+          test ! -e .github/workflows/v1.18.0-publish.yml
+          test ! -e .github/workflows/v1.19.0-publish.yml
+          bash tests/run-v119f.sh
+
+      - name: Build and verify release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          python tools/build_release_package.py --mode final --output-dir dist
+          python tools/verify_release_package.py \
+            dist/rss-reader-modernization-1.19.0.zip \
+            dist/rss-reader-modernization-1.19.0.zip.sha256
+          python tools/build_complete_package.py --output-dir dist
+          python tools/verify_complete_package.py \
+            dist/rss-reader-modernization-1.19.0-complete.zip \
+            dist/rss-reader-modernization-1.19.0-complete.zip.sha256
+          sha256sum \
+            dist/rss-reader-modernization-1.19.0.zip \
+            dist/rss-reader-modernization-1.19.0-complete.zip
+
+      - name: Create exact release tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote_tag="$(git ls-remote --tags origin "refs/tags/${RELEASE_TAG}" | awk '{print $1}')"
+          if [ -n "${remote_tag}" ] && [ "${remote_tag}" != "${EXPECTED_MAIN}" ]; then
+            echo "${RELEASE_TAG} already points to unexpected commit ${remote_tag}. Refusing to overwrite." >&2
+            exit 1
+          fi
+          if [ -z "${remote_tag}" ]; then
+            git tag "${RELEASE_TAG}" "${EXPECTED_MAIN}"
+            git push origin "refs/tags/${RELEASE_TAG}"
+          fi
+          remote_tag="$(git ls-remote --tags origin "refs/tags/${RELEASE_TAG}" | awk '{print $1}')"
+          test "${remote_tag}" = "${EXPECTED_MAIN}"
+
+      - name: Create or complete GitHub Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          assets=(
+            dist/rss-reader-modernization-1.19.0.zip
+            dist/rss-reader-modernization-1.19.0.zip.sha256
+            dist/rss-reader-modernization-1.19.0-complete.zip
+            dist/rss-reader-modernization-1.19.0-complete.zip.sha256
+          )
+          if gh release view "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release edit "${RELEASE_TAG}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title 'RSS Reader Modernization 1.19.0' \
+              --notes-file RELEASE_NOTES.md
+            gh release upload "${RELEASE_TAG}" "${assets[@]}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --clobber
+          else
+            gh release create "${RELEASE_TAG}" "${assets[@]}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --verify-tag \
+              --title 'RSS Reader Modernization 1.19.0' \
+              --notes-file RELEASE_NOTES.md
+          fi
+          gh release view "${RELEASE_TAG}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --json url,tagName,name,isDraft,isPrerelease
+
+      - name: Remove temporary publisher branch
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git push origin --delete "${PUBLISH_BRANCH}" || echo 'Publisher branch cleanup did not complete; release itself is already published.'
