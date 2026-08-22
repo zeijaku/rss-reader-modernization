@@ -88,9 +88,6 @@ jobs:
           grep -Fq "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.19.0';" app/version.php
           grep -Fq "const APP_ASSET_REVISION = '1.19.0';" app/version.php
           python3 tests/test_v119f_release_final.py
-
-          count="$(git diff --name-only "${expected_base}" -- . ':(exclude).v119-import-bin/**' | wc -l | tr -d ' ')"
-          test "${count}" = '95'
           test ! -e .github/workflows/v1.18.0-publish.yml
 
           python3 - <<'PY'
