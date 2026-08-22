@@ -105,6 +105,7 @@ jobs:
 
           cp /tmp/v119-import-ci.yml "${temp_ci}"
           rm -f "${final_release_workflow}"
+          git restore --staged -- "${temp_ci}"
 
           while IFS= read -r path; do
             case "${path}" in
