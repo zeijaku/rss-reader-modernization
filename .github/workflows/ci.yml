@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - release/v1.19.0-final-clean2
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
