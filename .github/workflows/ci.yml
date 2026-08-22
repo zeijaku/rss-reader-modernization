@@ -18,7 +18,6 @@ concurrency:
 
 jobs:
   import-v119-source:
-    if: contains(github.event.head_commit.message, 'trigger verified V1.19.0 source import')
     name: Import verified V1.19.0 source
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -34,6 +33,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          trigger_text='trigger verified V1.19.0 source import'
+          commit_message="$(git log -1 --pretty=%B)"
+          if [[ "${commit_message}" != *"${trigger_text}"* ]]; then
+            echo 'This is not the one-shot import trigger commit; nothing to do.'
+            exit 0
+          fi
 
           expected_base='59d6b89971867202da808592a157fc1c2b44c16a'
           expected_xz='3cfa6b6c60ae3551a221f6f49d0504f03a8f10994c439993aae3f51c35852d09'
