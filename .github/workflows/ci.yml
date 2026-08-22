@@ -69,6 +69,10 @@ jobs:
           xz --decompress --stdout /tmp/v119.patch.xz > /tmp/v119.patch
           echo "${expected_patch}  /tmp/v119.patch" | sha256sum -c -
 
+          # The temporary CI workflow occupies a path changed by V1.19.0.
+          # Restore the formal V1.18.0 file before applying the verified patch.
+          git checkout "${expected_base}" -- .github/workflows/ci.yml
+
           git apply --check --whitespace=nowarn /tmp/v119.patch
           git apply --whitespace=nowarn /tmp/v119.patch
 
