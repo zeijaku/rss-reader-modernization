@@ -1,0 +1,147 @@
+name: V1.20.0 temporary formal publish gate
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v1.20.0-formal-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.head_ref == 'release/v1.20.0-publish'
+    name: Publish verified V1.20.0 release
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_COMMIT: 9946a677e464c7268ace135f3aa23b48a037f47e
+      PRODUCTION_SHA256: eede7efe648a24d4cbd99764425679b5b01ee91f49add15b61c8bc42c7356b1d
+      COMPLETE_SHA256: 327a8b25dae97b7b91453a6c231e02f78d78a34a3db525eb20d2976349905e20
+
+    steps:
+      - name: Checkout verified main release commit
+        uses: actions/checkout@v4
+        with:
+          ref: 9946a677e464c7268ace135f3aa23b48a037f47e
+          fetch-depth: 0
+
+      - name: Verify release target and non-existence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
+          grep -Fq "const APP_VERSION = '1.20.0';" app/version.php
+          grep -Fq "const APP_ASSET_REVISION = '1.20.0';" app/version.php
+          if git ls-remote --exit-code --tags origin refs/tags/v1.20.0 >/dev/null 2>&1; then
+            echo 'v1.20.0 tag already exists; refusing to overwrite.' >&2
+            exit 1
+          fi
+          if gh release view v1.20.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'v1.20.0 release already exists; refusing to overwrite.' >&2
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build and verify final packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          python tools/build_release_package.py --mode final --output-dir dist
+          python tools/verify_release_package.py \
+            dist/rss-reader-modernization-1.20.0.zip \
+            dist/rss-reader-modernization-1.20.0.zip.sha256
+          python tools/build_complete_package.py --output-dir dist
+          python tools/verify_complete_package.py \
+            dist/rss-reader-modernization-1.20.0-complete.zip \
+            dist/rss-reader-modernization-1.20.0-complete.zip.sha256
+
+          echo "$PRODUCTION_SHA256  dist/rss-reader-modernization-1.20.0.zip" | sha256sum -c -
+          echo "$COMPLETE_SHA256  dist/rss-reader-modernization-1.20.0-complete.zip" | sha256sum -c -
+
+          grep -Fq "$PRODUCTION_SHA256" dist/rss-reader-modernization-1.20.0.zip.sha256
+          grep -Fq "$COMPLETE_SHA256" dist/rss-reader-modernization-1.20.0-complete.zip.sha256
+
+      - name: Create formal GitHub Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > /tmp/v120-release-notes.md <<'EOF'
+          # RSS Reader Modernization 1.20.0
+
+          V1.20 adds the Card Header Compact improvements, RSS Typing Game, Wire Defense Game, and All RSS Recent widget while preserving the existing authentication, CSRF, SSRF, XSS, validation, PDO, session, and deployment boundaries.
+
+          ## Main changes
+          - Card Header Compact
+          - RSS Typing Game
+          - Wire Defense Game with interceptor missile, explosion/chain mechanics, reload gauge, CORE damage states, and route variants
+          - All RSS Recent widget for a publication-time-sorted view across owned active RSS sources
+          - V1.20 integration, regression, package, and compatibility gates
+
+          ## Compatibility
+          - DB migration / SQL: none
+          - New required configuration / secret: none
+          - Production-verified before formal publication
+
+          ## Verified package SHA-256
+          - `rss-reader-modernization-1.20.0.zip`: `eede7efe648a24d4cbd99764425679b5b01ee91f49add15b61c8bc42c7356b1d`
+          - `rss-reader-modernization-1.20.0-complete.zip`: `327a8b25dae97b7b91453a6c231e02f78d78a34a3db525eb20d2976349905e20`
+          EOF
+
+          gh release create v1.20.0 \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$RELEASE_COMMIT" \
+            --title 'RSS Reader Modernization 1.20.0' \
+            --notes-file /tmp/v120-release-notes.md \
+            dist/rss-reader-modernization-1.20.0.zip \
+            dist/rss-reader-modernization-1.20.0.zip.sha256 \
+            dist/rss-reader-modernization-1.20.0-complete.zip \
+            dist/rss-reader-modernization-1.20.0-complete.zip.sha256
+
+      - name: Verify published tag and release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          remote_tag="$(git ls-remote origin refs/tags/v1.20.0 | awk '{print $1}')"
+          test "$remote_tag" = "$RELEASE_COMMIT"
+
+          gh release view v1.20.0 --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease,tagName,targetCommitish,name > /tmp/release.json
+          python - <<'PY'
+          import json
+          with open('/tmp/release.json', 'r', encoding='utf-8') as fh:
+              data = json.load(fh)
+          assert data['tagName'] == 'v1.20.0', data
+          assert data['name'] == 'RSS Reader Modernization 1.20.0', data
+          assert data['isDraft'] is False, data
+          assert data['isPrerelease'] is False, data
+          PY
+
+          rm -rf /tmp/v120-release-download
+          mkdir -p /tmp/v120-release-download
+          gh release download v1.20.0 --repo "$GITHUB_REPOSITORY" --dir /tmp/v120-release-download
+
+          test -f /tmp/v120-release-download/rss-reader-modernization-1.20.0.zip
+          test -f /tmp/v120-release-download/rss-reader-modernization-1.20.0.zip.sha256
+          test -f /tmp/v120-release-download/rss-reader-modernization-1.20.0-complete.zip
+          test -f /tmp/v120-release-download/rss-reader-modernization-1.20.0-complete.zip.sha256
+
+          echo "$PRODUCTION_SHA256  /tmp/v120-release-download/rss-reader-modernization-1.20.0.zip" | sha256sum -c -
+          echo "$COMPLETE_SHA256  /tmp/v120-release-download/rss-reader-modernization-1.20.0-complete.zip" | sha256sum -c -
+          grep -Fq "$PRODUCTION_SHA256" /tmp/v120-release-download/rss-reader-modernization-1.20.0.zip.sha256
+          grep -Fq "$COMPLETE_SHA256" /tmp/v120-release-download/rss-reader-modernization-1.20.0-complete.zip.sha256
+
+          echo 'PASS: v1.20.0 formal GitHub Release published and verified'
