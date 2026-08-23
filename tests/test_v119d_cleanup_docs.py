@@ -92,7 +92,7 @@ for rel in links:
 check('V1.19-D test report exists', (ROOT / 'docs/test-report-v1-19-d.md').is_file() and 'test-report-v1-19-d.md' in docs_index)
 
 # D stays non-schema/non-version-changing.
-check('E transition keeps V1.19-or-later visible version', re.search(r"const APP_VERSION = '1\.19\.0(?:-rc[1-9][0-9]*)?';", version) is not None)
+check('V1.19 cleanup remains valid on the V1.19 or later V1.20 release line', re.search(r"const APP_VERSION = '(?:1\.19\.0(?:-rc[1-9][0-9]*)?|1\.20\.0(?:-rc[1-9][0-9]*)?)';", version) is not None)
 check('D adds no V1.19 database migration', not any(re.search(r'1[_\.-]19', p.name, re.I) for p in (ROOT / 'database/migrations').glob('*')) if (ROOT / 'database/migrations').is_dir() else True)
 
 failed = [name for name, ok in checks if not ok]

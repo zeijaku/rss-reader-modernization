@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.19.0`  
-Release tag: `v1.19.0`
+**Stable release:** `RSS Reader Modernization 1.20.0`
+Release tag: `v1.20.0`
+
+Version 1.20.0は、V1.20-B〜Eを統合した機能Releaseです。RSS／Search FeedのCard Header Compact、通常RSSタイトルを使う60秒のRSS Typing、Network防衛型のWire Defense、所有RSSを横断して新着記事をまとめる「全RSS新着」を含みます。V1.20-F RC1でCurrent Full Regression、V1.17〜V1.19互換Gate、V1.20専用Game／全RSS新着Test、Security／Syntax／Package検証を実施し、本番環境でのRC確認後にV1.20-Gで正式化しました。DB schema、Migration、SQL、新規必須Secret／Configの追加はありません。
 
 Version 1.19.0は、新機能追加ではなくArchitecture / Security / Maintainabilityを中心に整理したMaintenance Releaseです。大きかったAPIとDashboard Widget処理を責務単位へ分割し、API request size guard、Registration throttle、Public PHP endpoint whitelist、CSP `object-src 'none'`を追加しました。Public Endpoint Matrix、Security Boundary、新機能追加時Checklistも文書化しています。V1.19.0-RC1の本番互換確認後に正式化しており、DB schema、Migration、SQL、新規必須Secretの追加はありません。
 
@@ -45,6 +47,9 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - RSS内の`content`／`description`を記事単位で安全に展開
 - Feedカード単位の個別更新（現在の記事を保持、既存Cache／Retry経路を再利用）
 - Search Feed Widgetによる検索語句ベースの記事表示
+- 全RSS新着 Widgetによる所有RSS横断の新着記事集約（5／10／20／30件）
+- 通常RSS CardのRSS Typing（60秒、IME対応、Browser内Best保存）
+- Game WidgetのWire Defense（Network防衛、Sound OFF、Browser内Best保存）
 - 記事ActionsからStock保存、URL Copy、X投稿画面、Task追加
 - 正常Feed本文の短時間Server-side cache（初期TTL 60秒）
 - 同一Feed URLへの同時Fetch抑制

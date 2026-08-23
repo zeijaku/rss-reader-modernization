@@ -73,5 +73,11 @@ jobs:
       - name: Run Version 1.18 focused tests
         run: bash tests/run-v118.sh
 
-      - name: Run Version 1.19 final release tests
-        run: bash tests/run-v119f.sh
+      - name: Run Version 1.19 compatibility tests
+        run: |
+          bash tests/run-v119.sh
+          bash tests/run-v119c.sh
+          bash tests/run-v119d.sh
+
+      - name: Run Version 1.20 final release gate
+        run: bash tests/run-v120g.sh

@@ -117,6 +117,57 @@
 <!-- Search Feed変更モーダル -->
 <div class="modal fade" id="changeSearchFeed" tabindex="-1" role="dialog" aria-labelledby="changeSearchFeedTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="changeSearchFeedForm"><div class="modal-header" style="color:#fff;background-color:#333;"><h5 class="modal-title" id="changeSearchFeedTitle"><i class="fas fa-search" aria-hidden="true"></i> Search Feedを変更</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div><div class="modal-body"><input type="hidden" class="changeSearchId"><?php echo search_feed_form_fields('change'); ?></div><div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto delete-search-feed">削除</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">変更</button></div></form></div></div></div>
 
+
+<!-- V1.20-E 全RSS新着追加モーダル -->
+<div class="modal fade" id="registerAllRssRecent" tabindex="-1" role="dialog" aria-labelledby="registerAllRssRecentTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
+        <form id="registerAllRssRecentForm" method="post" action="./">
+            <div class="modal-header" style="color:#fff;background-color:#333;">
+                <h5 class="modal-title" id="registerAllRssRecentTitle"><i class="fas fa-list" aria-hidden="true"></i> 全RSS新着を追加</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" class="registerAllRssRecentLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
+                <p class="small text-muted">登録しているRSSを横断し、公開日時の新しい順に表示します。既存のRSS Widgetは変更しません。</p>
+                <div class="row g-2">
+                    <div class="mb-3 col-6"><label class="form-label" for="registerAllRssRecentLimit">表示件数</label><select id="registerAllRssRecentLimit" class="form-select registerAllRssRecentLimit"><option value="5">5件</option><option value="10" selected>10件</option><option value="20">20件</option><option value="30">30件</option></select></div>
+                    <div class="mb-3 col-6"><label class="form-label" for="registerAllRssRecentStyle">見出し色</label><select id="registerAllRssRecentStyle" class="form-select registerAllRssRecentStyle"><option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary" selected>secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                </div>
+                <div class="row g-2">
+                    <div class="mb-3 col-6"><label class="form-label" for="registerAllRssRecentWidth">横幅</label><select id="registerAllRssRecentWidth" class="form-select registerAllRssRecentWidth"><option value="1">1列</option><option value="2" selected>2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="mb-3 col-6"><label class="form-label" for="registerAllRssRecentHeight">縦幅</label><select id="registerAllRssRecentHeight" class="form-select registerAllRssRecentHeight"><option value="1">標準</option><option value="2" selected>縦2段</option></select></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加</button></div>
+        </form>
+    </div></div>
+</div>
+
+<!-- V1.20-E 全RSS新着変更モーダル -->
+<div class="modal fade" id="changeAllRssRecent" tabindex="-1" role="dialog" aria-labelledby="changeAllRssRecentTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
+        <form id="changeAllRssRecentForm" method="post" action="./">
+            <div class="modal-header" style="color:#fff;background-color:#333;">
+                <h5 class="modal-title" id="changeAllRssRecentTitle"><i class="fas fa-list" aria-hidden="true"></i> 全RSS新着を変更</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" class="changeAllRssRecentId">
+                <p class="small text-muted">全RSS新着の表示件数とカードサイズを変更します。</p>
+                <div class="row g-2">
+                    <div class="mb-3 col-6"><label class="form-label" for="changeAllRssRecentLimit">表示件数</label><select id="changeAllRssRecentLimit" class="form-select changeAllRssRecentLimit"><option value="5">5件</option><option value="10">10件</option><option value="20">20件</option><option value="30">30件</option></select></div>
+                    <div class="mb-3 col-6"><label class="form-label" for="changeAllRssRecentStyle">見出し色</label><select id="changeAllRssRecentStyle" class="form-select changeAllRssRecentStyle"><option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
+                </div>
+                <div class="row g-2">
+                    <div class="mb-3 col-6"><label class="form-label" for="changeAllRssRecentWidth">横幅</label><select id="changeAllRssRecentWidth" class="form-select changeAllRssRecentWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
+                    <div class="mb-3 col-6"><label class="form-label" for="changeAllRssRecentHeight">縦幅</label><select id="changeAllRssRecentHeight" class="form-select changeAllRssRecentHeight"><option value="1">標準</option><option value="2">縦2段</option></select></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto delete-all-rss-recent">削除</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">変更</button></div>
+        </form>
+    </div></div>
+</div>
+
 <!-- Clock追加モーダル -->
 <div class="modal fade" id="registerClock" tabindex="-1" role="dialog" aria-labelledby="registerClockTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -435,7 +486,7 @@
         <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Gameを追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <div class="mb-3"><label class="form-label" for="registerGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerGameTitleValue" id="registerGameTitleValue" maxlength="32" value="Icon Quest" required></div>
-            <div class="mb-3"><label class="form-label" for="registerGameType"><small class="text-dark">Game</small></label><select class="form-select registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option></select></div>
+            <div class="mb-3"><label class="form-label" for="registerGameType"><small class="text-dark">Game</small></label><select class="form-select registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="wire_defense">Wire Defense（Network防衛）</option></select></div>
             <input type="hidden" class="registerGameLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
             <div class="row g-2">
                 <div class="mb-3 col-md-4"><label class="form-label" for="registerGameWidth"><small class="text-dark">横幅</small></label><select class="form-select registerGameWidth" id="registerGameWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
@@ -458,7 +509,7 @@
         <div class="modal-body">
             <input type="hidden" class="changeGameWidgetId">
             <div class="mb-3"><label class="form-label" for="changeGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeGameTitleValue" id="changeGameTitleValue" maxlength="32" required></div>
-            <div class="mb-3"><label class="form-label" for="changeGameType"><small class="text-dark">Game</small></label><select class="form-select changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option></select></div>
+            <div class="mb-3"><label class="form-label" for="changeGameType"><small class="text-dark">Game</small></label><select class="form-select changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="wire_defense">Wire Defense（Network防衛）</option></select></div>
             <div class="row g-2">
                 <div class="mb-3 col-md-4"><label class="form-label" for="changeGameWidth"><small class="text-dark">横幅</small></label><select class="form-select changeGameWidth" id="changeGameWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
                 <div class="mb-3 col-md-4"><label class="form-label" for="changeGameHeight"><small class="text-dark">縦幅</small></label><select class="form-select changeGameHeight" id="changeGameHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
@@ -695,3 +746,5 @@
         </div>
     </div>
 </div>
+<!-- V1.20-E: 全RSS新着 Widget bootstrap -->
+<script src="<?php echo htmlspecialchars(app_asset_url('js/all-rss-recent.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>

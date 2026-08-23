@@ -207,3 +207,18 @@
     .links-create-title { grid-column: 1 / -1; }
     .weather-days { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* V1.20-E: All RSS Recent Widget uses the existing Feed table and adds only source/time metadata. */
+.all-rss-recent-card .all-rss-recent-meta {
+    margin: 0 0 .12rem;
+    overflow: hidden;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .66rem;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.all-rss-recent-card .feed-item-title-cell {
+    min-width: 0;
+}
