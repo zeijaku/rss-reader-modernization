@@ -64,7 +64,7 @@ check('generic public projection remains in Dashboard facade', 'function dashboa
 
 # Structural phase intentionally does not add a public endpoint or migration.
 check('no V1.19 API PHP file is placed under public', not (ROOT / 'public/api').exists() and not (ROOT / 'public/dashboard').exists())
-check('later V1.19 phase keeps a valid V1.19 release-line version', re.search(r"const APP_VERSION = '1\.19\.0(?:-rc[1-9][0-9]*)?';", version) is not None)
+check('V1.19 architecture remains valid on the V1.19 or later V1.20 release line', re.search(r"const APP_VERSION = '(?:1\.19\.0(?:-rc[1-9][0-9]*)?|1\.20\.0(?:-rc[1-9][0-9]*)?)';", version) is not None)
 check('V1.19-B adds no V1.19 DB migration', not any(re.search(r'1[_\.-]19', p.name, re.I) for p in (ROOT / 'database/migrations').glob('*')) if (ROOT / 'database/migrations').is_dir() else True)
 
 # Modules are implementation-only and must not create a dependency back to public entrypoints.

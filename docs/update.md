@@ -19,6 +19,29 @@ V1.19.0はArchitecture / Security / Documentation中心のMaintenance Releaseで
 
 Releaseごとに次を確認します。
 
+## Version 1.19.0からVersion 1.20.0
+
+V1.20.0はCard Header Compact、RSS Typing、Wire Defense、全RSS新着を統合した正式Releaseです。DB構造変更、Migration、SQL、新規必須Config／Secretはありません。
+
+1. Application code、`config/local.php`、実DB、必要な`var/`DataをBackupする。
+2. Production ZIPのSHA-256を確認し、別Folderへ展開する。
+3. `config/local.php`、実DB、生成済み`var/`Dataを上書きせずCodeをApplication Rootへ相対Pathで配置する。
+4. SQL、Migration、`schema.sql`は実行しない。
+5. BrowserをReloadし、Footerが`RSS Reader Modernization 1.20.0`であることを確認する。
+6. Login／Dashboard／Stock／Settings／Logoutと通常RSS／Search Feedを確認する。
+7. RSS Typing、Wire Defense、全RSS新着を各1回確認する。
+8. SmartphoneまたはDevice modeで40px Header、Drawer、Game、全RSS新着を確認する。
+9. 問題があればV1.19.0 BackupへCodeを戻す。DB MigrationがないためDB rollbackは不要。
+
+```text
+DB schema / Migration       変更なし
+Public API                  widget.allrss.create / update / delete / fetch を追加
+必須設定                    追加なし
+Browser Cache               APP_ASSET_REVISION=1.20.0
+正式Tag / GitHub Release    v1.20.0
+```
+
+
 - 変更file
 - 新規file
 - 削除file

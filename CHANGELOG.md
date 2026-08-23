@@ -1,5 +1,29 @@
 # Changelog
 
+## RSS Reader Modernization 1.20.0 — 2026-08-23
+
+### Card Header Compact / RSS Typing / Wire Defense / All RSS Recent
+
+- V1.20-B: Dashboard Widget Headerを40pxへCompact化。通常RSS／Search Feedは`thead`内の各Layerも40pxへ揃え、既存操作領域を維持。
+- V1.20-C: 通常RSS Cardへ60秒のRSS Typingを追加。Japanese IME、Score／Best、hidden-tab pause、Browser storage fallbackに対応し、Search Feedは対象外。
+- V1.20-D: Wire Defenseを追加。六角形＋Server風CORE、クリック地点へのinterceptor missile、着弾爆発／chain、1秒reload gauge、Lives別の緑→Orange→赤、straight／curve／wave routeを実装。
+- V1.20-E: 「全RSS新着」を追加。所有RSSだけを既存FeedFetchService経由で取得し、重複source／記事を除外してpublication date順に集約。5／10／20／30件表示に対応。
+- V1.20-F: 正式v1.19.0 Complete SourceへB〜Eを統合し`1.20.0-RC1`としてFull Regression／Compatibility／Security／Package Gateを実施。本番環境で主要機能を確認。
+- V1.20-G: `APP_VERSION`、Label、Asset Revisionを`1.20.0`へ確定し、Final Package tooling／Release Gate／Documentationを正式版へ昇格。
+- DB Table／Column、Migration、SQL、新規必須Config／Secretの追加変更はなし。
+
+## RSS Reader Modernization 1.20.0-RC1 — 2026-08-23
+
+### Card Header Compact / RSS Typing / Wire Defense / All RSS Recent / RC integration
+
+- V1.20-B: Dashboard Widget Headerを40pxへCompact化。通常RSS／Search Feedは`thead`内の各Layerも40pxへ揃え、記事本文・Article Actions等の既存操作領域は維持。
+- V1.20-C: 通常RSS CardへRSS Typingを追加。表示済みRSS titleを使う60秒Game、Japanese IME、Score／Best／Round／Miss、hidden-tab pause、localStorage→sessionStorage→memory fallbackに対応。Search Feedは対象外。
+- V1.20-D: GameへWire Defenseを追加。COREへ向かうpacketをinterceptor missileで防衛し、1秒Reload gauge、Lives別CORE palette、straight／curve／wave route、Best／Max ChainをBrowser側へ保存。Sound／Network requestは追加しない。
+- V1.20-E: RSS Catalogへ「全RSS新着」を追加。所有RSSだけを既存FeedFetchService経由で取得し、重複source／記事を除外してpublication date順に集約。5／10／20／30件表示。既存Search Feedの`dashboard_widget` schemaを再利用しDB Migrationを追加しない。
+- V1.20-F: B〜Eを正式v1.19.0 Complete Sourceへ統合し、`APP_VERSION=1.20.0-rc1`、`APP_ASSET_REVISION=1.20.0-rc1`へ切替。動的Asset loaderもRC revisionへ統一。
+- Current Full Regression、V1.17／1.17.1／1.17.2／1.18／V1.19 Architecture・Security互換Gate、V1.20専用Game／全RSS新着Test、Syntax／Secret scan／Package integrityをRelease Candidate Gateとして実施。
+- DB Table／Column、Migration、SQL、新規必須Config／Secretの追加変更はなし。RCは`publishable=no`で、正式Tag／GitHub Releaseは作成しない。
+
 ## RSS Reader Modernization 1.19.0 — 2026-08-22
 
 ### Architecture / Security / Documentation Maintenance Release

@@ -184,3 +184,138 @@
         animation: none !important;
     }
 }
+
+/* V1.20-B R2: Card Header Compact.
+ * Keep this block in the last loaded dashboard stylesheet so later widget CSS
+ * cannot restore the former 44px header height. Article/action touch targets
+ * outside card headers intentionally remain unchanged. */
+#main-content .dashboard-widget [class*="-card-header"],
+#main-content .dashboard-widget .information-widget-header,
+#main-content .dashboard-widget .x-widget-header {
+    box-sizing: border-box;
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+    overflow: hidden;
+}
+
+/* Feed / Search Feed use a table header with nested flex containers. */
+#main-content .dashboard-widget .feed-card-header-inner,
+#main-content .dashboard-widget .content-title,
+#main-content .dashboard-widget .feed-card-actions,
+#main-content .dashboard-widget.search-feed-card .content-actions {
+    box-sizing: border-box;
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+/* The drag handle itself stays 32px high; compact only its vertical margin. */
+#main-content .dashboard-widget [class*="-card-header"] .widget-drag-handle,
+#main-content .dashboard-widget .information-widget-header .widget-drag-handle,
+#main-content .dashboard-widget .x-widget-header .widget-drag-handle {
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+/* Header actions keep their existing horizontal target width, but no longer
+ * force the header back to 44px vertically. */
+#main-content .dashboard-widget [class*="-card-header"] button:not(.widget-drag-handle),
+#main-content .dashboard-widget .information-widget-header button:not(.widget-drag-handle),
+#main-content .dashboard-widget .x-widget-header button:not(.widget-drag-handle),
+#main-content .dashboard-widget .content-edit-trigger,
+#main-content .dashboard-widget .feed-refresh-trigger,
+#main-content .dashboard-widget.search-feed-card .search-edit-trigger,
+#main-content .dashboard-widget.search-feed-card .search-feed-refresh,
+#main-content .dashboard-widget .information-widget-action {
+    box-sizing: border-box;
+    height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+}
+
+/* Preserve the former overall widget footprint where body height is calculated
+ * from the header height. */
+#main-content .dashboard-widget .clock-card-body,
+#main-content .dashboard-widget .memo-card-body,
+#main-content .dashboard-widget .task-card-body,
+#main-content .dashboard-widget .calendar-card-body,
+#main-content .dashboard-widget .mini-game-card-body,
+#main-content .dashboard-widget .camera-video-card-body,
+#main-content .dashboard-widget .clock-card-body.clock-timer-enabled {
+    min-height: calc(13rem - 40px);
+}
+
+#main-content .dashboard-grid > .clock-card[data-widget-height="1"] .clock-card-body,
+#main-content .dashboard-grid > .mini-game-card[data-widget-height="1"] .mini-game-card-body {
+    min-height: calc(320px - 40px);
+}
+
+@media (max-width: 767.98px) {
+    #main-content .dashboard-widget .clock-card-body,
+    #main-content .dashboard-widget .memo-card-body,
+    #main-content .dashboard-widget .task-card-body,
+    #main-content .dashboard-widget .clock-card-body.clock-timer-enabled {
+        min-height: calc(11rem - 40px);
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+    #main-content .dashboard-widget .clock-card-body,
+    #main-content .dashboard-widget .memo-card-body,
+    #main-content .dashboard-widget .task-card-body {
+        min-height: calc(12rem - 40px);
+    }
+}
+
+
+/* V1.20-B R3: RSS / Search Feed use table headers, so lock every header
+ * layer to the same compact height. This intentionally applies only to
+ * <thead>; article rows keep their existing 44px touch targets. */
+#main-content .dashboard-widget.feed-card .feed-table > thead,
+#main-content .dashboard-widget.feed-card .feed-table > thead > tr,
+#main-content .dashboard-widget.feed-card .feed-table > thead > tr > th.feed-card-header {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+}
+
+#main-content .dashboard-widget.feed-card .feed-table > thead > tr > th.feed-card-header {
+    box-sizing: border-box !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 1 !important;
+    vertical-align: middle !important;
+}
+
+#main-content .dashboard-widget.feed-card .feed-table > thead .feed-card-header-inner,
+#main-content .dashboard-widget.feed-card .feed-table > thead .content-title,
+#main-content .dashboard-widget.feed-card .feed-table > thead .feed-card-actions,
+#main-content .dashboard-widget.search-feed-card .feed-table > thead .content-actions {
+    box-sizing: border-box !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+}
+
+#main-content .dashboard-widget.feed-card .feed-table > thead .widget-drag-handle {
+    box-sizing: border-box !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    max-height: 32px !important;
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+}
+
+#main-content .dashboard-widget.feed-card .feed-table > thead .content-edit-trigger,
+#main-content .dashboard-widget.feed-card .feed-table > thead .feed-refresh-trigger,
+#main-content .dashboard-widget.search-feed-card .feed-table > thead .search-edit-trigger,
+#main-content .dashboard-widget.search-feed-card .feed-table > thead .search-feed-refresh {
+    box-sizing: border-box !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+}

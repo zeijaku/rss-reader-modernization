@@ -27,13 +27,18 @@ function v16c_check(bool $condition, string $message): void
     }
 }
 
-v16c_check(mini_game_widget_types() === ['icon_quest', 'lights_out'], 'Game subtype order keeps Icon Quest and adds Lights Out');
+v16c_check(mini_game_widget_types() === ['icon_quest', 'lights_out', 'wire_defense'], 'Game subtype order keeps Icon Quest / Lights Out and adds Wire Defense');
 v16c_check(mini_game_widget_validate_type('lights_out') === 'lights_out', 'Lights Out is accepted by the existing Game validator');
 $config = mini_game_widget_config_from_input(['game_title' => 'Lights Out', 'game_type' => 'lights_out']);
 v16c_check($config === ['schema' => 1, 'title' => 'Lights Out', 'game' => 'lights_out'], 'Lights Out uses the existing widget_config schema');
 $stored = mini_game_widget_config_from_storage('{"schema":1,"title":"Lights Out","game":"lights_out"}');
 v16c_check($stored === ['schema' => 1, 'title' => 'Lights Out', 'game' => 'lights_out'], 'stored Lights Out config restores without schema change');
 v16c_check(mini_game_widget_validate_type('lights-out') === null, 'unapproved Lights Out spelling is rejected');
+
+v16c_check(mini_game_widget_validate_type('wire_defense') === 'wire_defense', 'Wire Defense is accepted by the existing Game validator');
+$wireConfig = mini_game_widget_config_from_input(['game_title' => 'Wire Defense', 'game_type' => 'wire_defense']);
+v16c_check($wireConfig === ['schema' => 1, 'title' => 'Wire Defense', 'game' => 'wire_defense'], 'Wire Defense uses the existing widget_config schema');
+v16c_check(mini_game_widget_validate_type('wire-defense') === null, 'unapproved Wire Defense spelling is rejected');
 
 printf("RESULT: %s %d / FAIL %d / SKIP 0\n", $failures === 0 ? 'PASS' : 'FAIL', $checks, $failures);
 exit($failures === 0 ? 0 : 1);

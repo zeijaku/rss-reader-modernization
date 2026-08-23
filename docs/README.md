@@ -9,6 +9,17 @@ RSS Reader Modernization Projectの公開ドキュメント索引です。
 - [`change-map.md`](change-map.md) — Legacy issue → work unit → implementation → testの対応表
 
 
+## Version 1.20 development
+
+- [`v1-20-g-final-release.md`](v1-20-g-final-release.md) — V1.20.0正式化 / Final Gate
+- [`v1-20-g-production-checklist.md`](v1-20-g-production-checklist.md) — V1.20.0本番確認項目
+- [`v1-20-g-updated-files.md`](v1-20-g-updated-files.md) — V1.20-G変更File
+- [`test-report-v1-20-g.md`](test-report-v1-20-g.md) — V1.20-G Final Regression / Package Test結果
+- [`v1-20-f-release-candidate.md`](v1-20-f-release-candidate.md) — V1.20-B〜E統合 / RC Gate
+- [`v1-20-f-production-checklist.md`](v1-20-f-production-checklist.md) — Production RC確認項目
+- [`v1-20-f-updated-files.md`](v1-20-f-updated-files.md) — V1.20-F変更File
+- [`test-report-v1-20-f.md`](test-report-v1-20-f.md) — V1.20-F Full Regression / Package Test結果
+
 ## Version 1.19 development
 
 - [`v1-19-architecture.md`](v1-19-architecture.md) — API / Dashboard Widgetの大分類境界
