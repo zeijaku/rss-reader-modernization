@@ -45,7 +45,7 @@ jobs:
           test "$(wc -l < "$manifest")" -eq 47
 
           : > "$patch_b64"
-          for n in 000 001 002 003; do
+          for n in 000 001a 001b 002 003; do
             chunk="$staging/chunks/${n}.b64"
             test -f "$chunk"
             cat "$chunk" >> "$patch_b64"
