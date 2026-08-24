@@ -46,12 +46,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$TARGET_SHA"
-          test "$(git rev-parse main 2>/dev/null || git rev-parse origin/main)" = "$TARGET_SHA"
-          test "$(git rev-parse HEAD^{tree})" = 'a3980eaf30088e7a48a92058c406e6bdc6d40dff'
+          actual_head="$(git rev-parse HEAD)"
+          actual_main="$(git rev-parse refs/remotes/origin/main)"
+          actual_tree="$(git rev-parse HEAD^{tree})"
+          actual_version="$(php -r "require 'app/version.php'; echo APP_VERSION;")"
+          actual_asset_revision="$(php -r "require 'app/version.php'; echo APP_ASSET_REVISION;")"
+
+          printf 'HEAD=%s\norigin/main=%s\ntree=%s\nversion=%s\nasset=%s\n' \
+            "$actual_head" "$actual_main" "$actual_tree" "$actual_version" "$actual_asset_revision"
+
+          test "$actual_head" = "$TARGET_SHA"
+          test "$actual_main" = "$TARGET_SHA"
+          test "$actual_tree" = 'a3980eaf30088e7a48a92058c406e6bdc6d40dff'
           test ! -e .release-staging
-          test "$(php -r "require 'app/version.php'; echo APP_VERSION;")" = '1.20.1'
-          test "$(php -r "require 'app/version.php'; echo APP_ASSET_REVISION;")" = '1.20.1'
+          test "$actual_version" = '1.20.1'
+          test "$actual_asset_revision" = '1.20.1'
 
       - name: Build exact final packages
         shell: bash
