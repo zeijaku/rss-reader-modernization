@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   reconstruct:
-    if: github.head_ref == 'release/v1.20.1-final'
+    if: github.head_ref == 'release/v1.20.1-final-clean'
     name: Verify and reconstruct final V1.20.1 source
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -27,64 +27,44 @@ jobs:
       - name: Checkout release branch
         uses: actions/checkout@v4
         with:
-          ref: release/v1.20.1-final
+          ref: release/v1.20.1-final-clean
           fetch-depth: 0
 
-      - name: Reconstruct and verify source archive
+      - name: Reconstruct and verify final source patch
         shell: bash
         run: |
           set -euo pipefail
 
           staging='.release-staging/v1201'
           manifest="$staging/manifest.tsv"
-          archive_b64='/tmp/v1201-final.b64'
-          archive='/tmp/v1201-final.tar.xz'
-          extract='/tmp/v1201-final-extract'
+          patch_b64='/tmp/v1201-final.patch.b64'
+          patch_xz='/tmp/v1201-final.patch.xz'
+          patch='/tmp/v1201-final.patch'
 
           test -f "$manifest"
           test "$(wc -l < "$manifest")" -eq 47
 
-          : > "$archive_b64"
-          for n in $(seq -f '%03g' 0 14); do
+          : > "$patch_b64"
+          for n in 000 001 002 003; do
             chunk="$staging/chunks/${n}.b64"
             test -f "$chunk"
-            cat "$chunk" >> "$archive_b64"
+            cat "$chunk" >> "$patch_b64"
           done
-          test "$(wc -c < "$archive_b64")" -eq 113356
 
-          base64 --decode "$archive_b64" > "$archive"
-          echo '0cd13fa2773922046dc913e949667d49665e6f1f5d1db6c4db105365699b79a4  /tmp/v1201-final.tar.xz' | sha256sum -c -
+          base64 --decode "$patch_b64" > "$patch_xz"
+          echo '488c2ec7a679cecec0107cc66eae4e9d968104a87ee39f00a1d4e386410be6ba  /tmp/v1201-final.patch.xz' | sha256sum -c -
+          xz -dc "$patch_xz" > "$patch"
 
-          rm -rf "$extract"
-          mkdir -p "$extract"
-          tar -xJf "$archive" -C "$extract"
-
-          tar -tJf "$archive" | sed '/\/$/d' | LC_ALL=C sort > /tmp/v1201-archive-paths
-          cut -f2 "$manifest" | LC_ALL=C sort > /tmp/v1201-manifest-paths
-          diff -u /tmp/v1201-manifest-paths /tmp/v1201-archive-paths
-          test "$(wc -l < /tmp/v1201-archive-paths)" -eq 47
+          git apply -p2 --check "$patch"
+          git apply -p2 "$patch"
 
           while IFS=$'\t' read -r expected path; do
             test -n "$expected"
             test -n "$path"
-            test -f "$extract/$path"
-            actual="$(git hash-object "$extract/$path")"
-            if [ "$actual" != "$expected" ]; then
-              echo "Blob mismatch before copy: $path expected=$expected actual=$actual" >&2
-              exit 1
-            fi
-          done < "$manifest"
-
-          cut -f2 "$manifest" > /tmp/v1201-paths
-          while IFS= read -r path; do
-            mkdir -p "$(dirname "$path")"
-            cp -f "$extract/$path" "$path"
-          done < /tmp/v1201-paths
-
-          while IFS=$'\t' read -r expected path; do
+            test -f "$path"
             actual="$(git hash-object "$path")"
             if [ "$actual" != "$expected" ]; then
-              echo "Blob mismatch after copy: $path expected=$expected actual=$actual" >&2
+              echo "Blob mismatch after patch: $path expected=$expected actual=$actual" >&2
               exit 1
             fi
           done < "$manifest"
@@ -105,4 +85,4 @@ jobs:
 
           git status --short
           git commit -m 'Prepare RSS Reader Modernization 1.20.1 release source'
-          git push origin HEAD:release/v1.20.1-final
+          git push origin HEAD:release/v1.20.1-final-clean
