@@ -1,0 +1,203 @@
+/* V1.20.1-D3: Block Collapse stability / tension UI. */
+.block-collapse-panel {
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+    flex-direction: column;
+    align-items: center;
+}
+
+.block-collapse-summary {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    width: min(100%, 360px);
+    margin-bottom: .35rem;
+    gap: .3rem;
+}
+
+.block-collapse-stat {
+    min-width: 0;
+    padding: .3rem .24rem;
+    border: 1px solid rgba(var(--bs-body-color-rgb, 33, 37, 41), .14);
+    border-radius: .25rem;
+    background: rgba(var(--bs-body-color-rgb, 33, 37, 41), .035);
+    text-align: center;
+}
+
+.block-collapse-stat span {
+    display: block;
+    overflow: hidden;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .59rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.block-collapse-stat strong {
+    display: block;
+    margin-top: .08rem;
+    overflow: hidden;
+    font-size: .82rem;
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.block-collapse-stability-track {
+    width: min(100%, 360px);
+    height: 6px;
+    margin: 0 0 .4rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(var(--bs-body-color-rgb, 33, 37, 41), .12);
+}
+
+.block-collapse-stability-fill {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--bs-success, #198754);
+    transition: width .16s ease, background-color .16s ease;
+}
+
+.mini-game-card[data-block-collapse-stability="warning"] .block-collapse-stability-stat,
+.mini-game-card[data-block-collapse-stability="warning"] .block-collapse-canvas-wrap {
+    border-color: rgba(var(--bs-warning-rgb, 255, 193, 7), .75);
+}
+
+.mini-game-card[data-block-collapse-stability="warning"] .block-collapse-stability {
+    color: #8a6d00;
+}
+
+.mini-game-card[data-block-collapse-stability="warning"] .block-collapse-stability-fill {
+    background: var(--bs-warning, #ffc107);
+}
+
+.mini-game-card[data-block-collapse-stability="critical"] .block-collapse-stability-stat,
+.mini-game-card[data-block-collapse-stability="collapsed"] .block-collapse-stability-stat,
+.mini-game-card[data-block-collapse-stability="critical"] .block-collapse-canvas-wrap,
+.mini-game-card[data-block-collapse-stability="collapsed"] .block-collapse-canvas-wrap {
+    border-color: rgba(var(--bs-danger-rgb, 220, 53, 69), .85);
+    box-shadow: 0 0 0 2px rgba(var(--bs-danger-rgb, 220, 53, 69), .08);
+}
+
+.mini-game-card[data-block-collapse-stability="critical"] .block-collapse-stability,
+.mini-game-card[data-block-collapse-stability="collapsed"] .block-collapse-stability {
+    color: var(--bs-danger, #dc3545);
+}
+
+.mini-game-card[data-block-collapse-stability="critical"] .block-collapse-stability-fill,
+.mini-game-card[data-block-collapse-stability="collapsed"] .block-collapse-stability-fill {
+    background: var(--bs-danger, #dc3545);
+}
+
+.block-collapse-canvas-wrap {
+    width: min(100%, 360px);
+    overflow: hidden;
+    border: 1px solid rgba(var(--bs-body-color-rgb, 33, 37, 41), .18);
+    border-radius: .3rem;
+    background: rgba(var(--bs-body-color-rgb, 33, 37, 41), .035);
+}
+
+.block-collapse-canvas-wrap.is-shaking {
+    animation: block-collapse-shake .18s linear 2;
+}
+
+@keyframes block-collapse-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+    75% { transform: translateX(-2px); }
+}
+
+.block-collapse-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    cursor: crosshair;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.block-collapse-canvas:focus,
+.block-collapse-canvas:focus-visible,
+.block-collapse-controls .btn:focus,
+.block-collapse-controls .btn:focus-visible {
+    outline: 3px solid var(--bs-primary, #0b5ed7);
+    outline-offset: 2px;
+}
+
+.block-collapse-status {
+    width: min(100%, 360px);
+    min-height: 2.05rem;
+    margin: .45rem 0 0;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .76rem;
+    line-height: 1.35;
+}
+
+.block-collapse-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: min(100%, 360px);
+    margin-top: .45rem;
+    gap: .45rem;
+}
+
+.block-collapse-controls .btn {
+    min-height: 44px;
+}
+
+.block-collapse-help {
+    width: min(100%, 360px);
+    margin: .45rem 0 0;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .7rem;
+    line-height: 1.4;
+}
+
+.mini-game-card[data-block-collapse-status="cleared"] .block-collapse-status {
+    color: var(--bs-success, #198754);
+    font-weight: 700;
+}
+
+.mini-game-card[data-block-collapse-status="gameover"] .block-collapse-status {
+    color: var(--bs-danger, #dc3545);
+    font-weight: 700;
+}
+
+.mini-game-card[data-block-collapse-status="paused"] .block-collapse-canvas {
+    cursor: default;
+    opacity: .78;
+}
+
+@media (max-width: 575.98px) {
+    .block-collapse-summary,
+    .block-collapse-stability-track,
+    .block-collapse-canvas-wrap,
+    .block-collapse-status,
+    .block-collapse-controls,
+    .block-collapse-help {
+        width: 100%;
+    }
+
+    .block-collapse-summary {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .block-collapse-canvas,
+    .block-collapse-stability-fill,
+    .block-collapse-canvas-wrap.is-shaking {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation: none !important;
+    }
+}

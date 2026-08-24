@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.20.0`
-Release tag: `v1.20.0`
+**Stable release:** `RSS Reader Modernization 1.20.1`
+Release tag: `v1.20.1`
+
+Version 1.20.1は、V1.20.0をBaselineにDrag Handle／Navbar Compact、Memo内部Scrollと手動Refresh、Calendar予定の赤／青／緑とTask Priority色、Block Collapseを追加した更新です。既存DBでは`013_v1_20_1_calendar_event_color.sql`を適用し、`calendar_event_color`を追加します。新規必須Config／Secretはありません。
 
 Version 1.20.0は、V1.20-B〜Eを統合した機能Releaseです。RSS／Search FeedのCard Header Compact、通常RSSタイトルを使う60秒のRSS Typing、Network防衛型のWire Defense、所有RSSを横断して新着記事をまとめる「全RSS新着」を含みます。V1.20-F RC1でCurrent Full Regression、V1.17〜V1.19互換Gate、V1.20専用Game／全RSS新着Test、Security／Syntax／Package検証を実施し、本番環境でのRC確認後にV1.20-Gで正式化しました。DB schema、Migration、SQL、新規必須Secret／Configの追加はありません。
 

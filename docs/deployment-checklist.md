@@ -25,7 +25,7 @@
 - [ ] **推奨構成**ではDocumentRootを `public/` にしている
 - [ ] Application RootをWeb公開する互換構成の場合、Root `.htaccess` が有効で `app/` / `config/` / `tools/` / `var/` への直接Accessが403になることを確認した
 - [ ] Apacheでは`mod_rewrite` / `mod_headers`が有効。Nginx等では`.htaccess`と同等のPrivate path拒否・Security Header・Public PHP whitelistをServer側へ設定した
-- [ ] `public/`の直接実行PHPはPublic Endpoint Matrixの7本だけで、追加PHPは403になる
+- [ ] `public/`の直接実行PHPはPublic Endpoint Matrixの明示Whitelistだけで、未登録PHPは403になる
 - [ ] Private runtime data、Secret、DB dump、LogをWeb公開領域へ置いていない
 - [ ] `config/local.php`を上書きしていない
 - [ ] 削除一覧がある場合だけ対象fileを削除した

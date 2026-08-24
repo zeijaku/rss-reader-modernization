@@ -1,5 +1,18 @@
 # Changelog
 
+## RSS Reader Modernization 1.20.1 — 2026-08-25
+
+### Dashboard compact / Memo refresh / Calendar color / Block Collapse
+
+- V1.20.1-A: Widget Drag HandleをCompactな`[=]`表示へ整理し、Runtimeで注入される旧`::before`枠を抑止。Drag / Touch / Keyboard reorderの操作領域は維持。NavbarをDesktop 56px→48pxへCompact化し、coarse pointerの44px操作領域を維持。
+- V1.20.1-B: MemoのHeight 1 / 2範囲内で本文だけをScrollさせ、長文によるCard全体の過伸長を抑制。対象Memoだけを`widget.list`で再取得する手動Refreshと未保存編集確認を追加。
+- V1.20.1-C: Calendar予定へ`red / blue / green`を追加し、既存予定は`blue`をDefault化。Task期限は既存Priorityを`high=赤 / normal=青 / low=緑`で表示。既存DB向けMigration `013_v1_20_1_calendar_event_color.sql`を追加し、新規Install用`database/schema.sql`にも同Columnを統合。
+- V1.20.1-C2: Calendar色専用EndpointをPublic PHP deny-by-default Matrixへ明示追加。POST / Authentication / CSRF / Request Size / Action Allowlist / Owner scopeを維持。
+- V1.20.1-D: Game WidgetへBlock Collapseを追加。Canvas + Vanilla JavaScriptでBreak制限、Score / Combo、Chain、Stability、危険域の弱支持Blockずれ、Mouse / Touch / Keyboard操作へ対応。Sound / Network request / Game状態DB保存は追加しない。
+- V1.20.1-E: `APP_VERSION` / Label / Asset Revisionを`1.20.1`へ確定し、dynamic Asset cache keyとfresh-install schemaを統合。Current / Compatibility / V1.20.1 Gate、Security / Syntax / Package検証を実施。
+- Widget下端の完全統一はDashboard Grid全体へ影響するためV1.20.1では保留し、将来のLayout改善へ分離。
+- 新規必須Config / Secretはなし。DB変更は`calendar_event_color`Column 1つのみ。
+
 ## RSS Reader Modernization 1.20.0 — 2026-08-23
 
 ### Card Header Compact / RSS Typing / Wire Defense / All RSS Recent

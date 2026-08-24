@@ -1,0 +1,74 @@
+/* V1.20.1-B2: Memo body stays inside the configured Widget Height.
+ * Desktop / tablet height follows the actual CSS Grid tracks instead of
+ * assuming every row is exactly 320px. The header stays fixed and only the
+ * Memo body scrolls. */
+.dashboard-grid > .memo-card {
+    min-height: 0;
+    height: 100%;
+    align-self: stretch;
+    overflow: hidden;
+}
+
+.dashboard-grid .memo-card-inner {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.dashboard-grid .memo-card-header {
+    flex: 0 0 auto;
+}
+
+.dashboard-grid .memo-card-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* Smartphone layout uses auto-sized Grid rows, so keep the user-selected
+ * Height meaning explicitly there. Desktop/tablet must not hard-code 648px:
+ * neighbouring cards can make a Grid row taller than the 320px minimum. */
+@media (max-width: 767.98px) {
+    .dashboard-grid > .memo-card[data-widget-height="1"] {
+        height: 320px;
+    }
+
+    .dashboard-grid > .memo-card[data-widget-height="2"] {
+        height: 648px;
+    }
+}
+
+.memo-refresh-trigger {
+    display: inline-flex;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    min-width: 44px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0 4px;
+    line-height: 1;
+    touch-action: manipulation;
+}
+
+.memo-refresh-trigger:disabled {
+    cursor: wait;
+    opacity: 0.72;
+}
+
+.memo-refresh-trigger:focus-visible {
+    outline: 3px solid currentColor;
+    outline-offset: -5px;
+}
+
+@media (pointer: coarse) {
+    .memo-refresh-trigger {
+        width: 44px;
+        min-width: 44px;
+    }
+}

@@ -26,7 +26,7 @@ Application RootがWeb公開される既存構成も維持しています。こ�
 
 ## 3. Public PHP boundary
 
-`public/.htaccess`は直接実行PHPを7本へ限定します。新規PHPは明示的にWhitelistへ加えるまで403です。Current listは[`v1-19-public-endpoints.md`](v1-19-public-endpoints.md)を正本とします。
+`public/.htaccess`は直接実行PHPをPublic Endpoint Matrixの明示Whitelistへ限定します。新規PHPはMatrixとWhitelistへ加えるまで403です。Current listは[`v1-19-public-endpoints.md`](v1-19-public-endpoints.md)を正本とします。
 
 ## 4. Authentication / CSRF / owner scope
 
