@@ -27,7 +27,7 @@ function v16c_check(bool $condition, string $message): void
     }
 }
 
-v16c_check(mini_game_widget_types() === ['icon_quest', 'lights_out', 'wire_defense'], 'Game subtype order keeps Icon Quest / Lights Out and adds Wire Defense');
+v16c_check(mini_game_widget_types() === ['icon_quest', 'lights_out', 'wire_defense', 'block_collapse'], 'Game subtype order keeps existing types and adds Block Collapse');
 v16c_check(mini_game_widget_validate_type('lights_out') === 'lights_out', 'Lights Out is accepted by the existing Game validator');
 $config = mini_game_widget_config_from_input(['game_title' => 'Lights Out', 'game_type' => 'lights_out']);
 v16c_check($config === ['schema' => 1, 'title' => 'Lights Out', 'game' => 'lights_out'], 'Lights Out uses the existing widget_config schema');

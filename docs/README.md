@@ -174,6 +174,7 @@ Secure Baseline初期のdeployment / login / session / logout等のhotfix記録�
 - `database/migrations/010_v1_10_links.sql` — V1.10 Links migration
 - `database/migrations/011_v1_11_stock_tags.sql` — V1.11 Stock Tags migration
 - `database/migrations/012_v1_12_feed_keywords.sql` — V1.12 RSS Highlight migration
+- `database/migrations/013_v1_20_1_calendar_event_color.sql` — V1.20.1 Calendar event color migration
 
 現行の新規環境では `database/schema.sql` をBaseとして投入した後、009〜012を番号順に適用します。詳細は [`installation.md`](installation.md) を参照してください。既存DBを更新する場合は `schema.sql` を再実行せず、Backupと必要なauditを確認して未適用Migrationだけを使用します。
 

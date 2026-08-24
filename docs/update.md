@@ -1,5 +1,17 @@
 ## Version 1.18.0からVersion 1.19.0
 
+## Version 1.20.0から1.20.1
+
+V1.20.1はCalendar予定色のため、既存`calendar_event`TableへColumnを1つ追加します。Codeだけ先に更新すると色APIが503を返すため、Backup後にMigrationを先に適用します。
+
+1. Code / `config/local.php` / Database / 必要な`var/`DataをBackupする。
+2. `database/migrations/013_v1_20_1_calendar_event_color.sql`の`@table_prefix`を実環境と合わせる。
+3. Migrationを実行し、`calendar_event_color`が存在することを確認する。
+4. V1.20.1 Production ZIPを相対Pathで上書きする。
+5. Calendar色、Memo Refresh、Block Collapse、Dashboard操作を確認する。
+
+C段階ですでに013を実行済みの場合は再実行不要です。
+
 V1.19.0はArchitecture / Security / Documentation中心のMaintenance Releaseです。DB Migration、SQL、新規必須Config / Secretはありません。
 
 1. 現在のApplication codeと`config/local.php`をBackupする。
