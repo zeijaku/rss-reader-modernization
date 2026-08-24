@@ -1,0 +1,133 @@
+name: Temporary V1.20.1 release publisher
+
+on:
+  pull_request:
+    branches:
+      - staging/v1.20.1-publish-base
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v1.20.1-temporary-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.head_ref == 'automation/v1.20.1-publish'
+    name: Publish verified V1.20.1 tag and release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_SHA: ac4d265032311d5d41a954b8b9713e9dd3f1e257
+      TAG_NAME: v1.20.1
+      RUNTIME_SHA256: 61e2e3be6449a98a751c0e8838d1f738a0f0f5b98703c6e9af9bbc2ac02da68a
+      COMPLETE_SHA256: 1a457537d6e73b841eba41e8c2a2825575360bd9e47fddae49d2342ad4ceb663
+
+    steps:
+      - name: Checkout exact verified main commit
+        uses: actions/checkout@v4
+        with:
+          ref: ac4d265032311d5d41a954b8b9713e9dd3f1e257
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify target and clean release source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$TARGET_SHA"
+          test "$(git rev-parse main 2>/dev/null || git rev-parse origin/main)" = "$TARGET_SHA"
+          test "$(git rev-parse HEAD^{tree})" = 'a3980eaf30088e7a48a92058c406e6bdc6d40dff'
+          test ! -e .release-staging
+          test "$(php -r "require 'app/version.php'; echo APP_VERSION;")" = '1.20.1'
+          test "$(php -r "require 'app/version.php'; echo APP_ASSET_REVISION;")" = '1.20.1'
+
+      - name: Build exact final packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          python tools/build_release_package.py --mode final --output-dir dist
+          python tools/verify_release_package.py \
+            dist/rss-reader-modernization-1.20.1.zip \
+            dist/rss-reader-modernization-1.20.1.zip.sha256
+          python tools/build_complete_package.py --output-dir dist
+          python tools/verify_complete_package.py \
+            dist/rss-reader-modernization-1.20.1-complete.zip \
+            dist/rss-reader-modernization-1.20.1-complete.zip.sha256
+
+          echo "$RUNTIME_SHA256  dist/rss-reader-modernization-1.20.1.zip" | sha256sum -c -
+          echo "$COMPLETE_SHA256  dist/rss-reader-modernization-1.20.1-complete.zip" | sha256sum -c -
+          test "$(awk '{print $1}' dist/rss-reader-modernization-1.20.1.zip.sha256)" = "$RUNTIME_SHA256"
+          test "$(awk '{print $1}' dist/rss-reader-modernization-1.20.1-complete.zip.sha256)" = "$COMPLETE_SHA256"
+
+      - name: Refuse to overwrite an existing formal release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG_NAME" >/dev/null 2>&1; then
+            echo "Tag $TAG_NAME already exists; refusing to overwrite it." >&2
+            exit 1
+          fi
+          if gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists; refusing to overwrite it." >&2
+            exit 1
+          fi
+
+      - name: Create immutable V1.20.1 tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "$TAG_NAME" "$TARGET_SHA" -m 'RSS Reader Modernization 1.20.1'
+          git push origin "refs/tags/$TAG_NAME"
+          test "$(git rev-list -n 1 "$TAG_NAME")" = "$TARGET_SHA"
+
+      - name: Create GitHub Release with four verified assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$TAG_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title 'RSS Reader Modernization 1.20.1' \
+            --notes-file RELEASE_NOTES.md \
+            dist/rss-reader-modernization-1.20.1.zip \
+            dist/rss-reader-modernization-1.20.1.zip.sha256 \
+            dist/rss-reader-modernization-1.20.1-complete.zip \
+            dist/rss-reader-modernization-1.20.1-complete.zip.sha256
+
+      - name: Re-download and verify published assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/v1201-release-check
+          mkdir -p /tmp/v1201-release-check
+          gh release download "$TAG_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir /tmp/v1201-release-check \
+            --pattern 'rss-reader-modernization-1.20.1*'
+
+          test "$(find /tmp/v1201-release-check -maxdepth 1 -type f | wc -l)" -eq 4
+          echo "$RUNTIME_SHA256  /tmp/v1201-release-check/rss-reader-modernization-1.20.1.zip" | sha256sum -c -
+          echo "$COMPLETE_SHA256  /tmp/v1201-release-check/rss-reader-modernization-1.20.1-complete.zip" | sha256sum -c -
+          test "$(awk '{print $1}' /tmp/v1201-release-check/rss-reader-modernization-1.20.1.zip.sha256)" = "$RUNTIME_SHA256"
+          test "$(awk '{print $1}' /tmp/v1201-release-check/rss-reader-modernization-1.20.1-complete.zip.sha256)" = "$COMPLETE_SHA256"
+
+          test "$(gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft')" = 'false'
+          test "$(gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --json isPrerelease --jq '.isPrerelease')" = 'false'
+          test "$(gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets | length')" -eq 4
+          git fetch origin "refs/tags/$TAG_NAME:refs/tags/$TAG_NAME" --force
+          test "$(git rev-list -n 1 "$TAG_NAME")" = "$TARGET_SHA"
