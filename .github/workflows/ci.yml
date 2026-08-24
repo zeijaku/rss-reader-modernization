@@ -79,5 +79,5 @@ jobs:
           bash tests/run-v119c.sh
           bash tests/run-v119d.sh
 
-      - name: Run Version 1.20 final release gate
-        run: bash tests/run-v120g.sh
+      - name: Run Version 1.20.1 final release gate
+        run: bash tests/run-v1201e.sh

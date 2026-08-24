@@ -222,3 +222,102 @@
 .all-rss-recent-card .feed-item-title-cell {
     min-width: 0;
 }
+
+/* V1.20.1-A14: compact drag-handle visual after V1.16 runtime normalization.
+ * clock-timer.js appends #v116a-r1-dashboard-header-styles on DOM ready and
+ * intentionally restyles every .widget-drag-handle. Keep the existing outer
+ * hit area / D&D behavior, but neutralize only that runtime chrome. The grip
+ * icon itself provides the compact boxed [=]-like visual. */
+#main-content .dashboard-widget.dashboard-widget .widget-drag-handle.widget-drag-handle,
+#main-content .dashboard-widget.dashboard-widget .widget-drag-handle.widget-drag-handle:hover,
+#main-content .dashboard-widget.dashboard-widget .widget-drag-handle.widget-drag-handle:focus {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+/* V1.16 runtime normalization draws the large rounded outer frame here. */
+#main-content .dashboard-widget.dashboard-widget .widget-drag-handle.widget-drag-handle::before {
+    display: none !important;
+    content: none !important;
+}
+
+#main-content .dashboard-widget.dashboard-widget .widget-drag-handle.widget-drag-handle > i.fa-grip-lines,
+#main-content .dashboard-widget.dashboard-widget .widget-drag-handle.widget-drag-handle > svg.fa-grip-lines,
+#main-content .dashboard-widget.dashboard-widget .widget-drag-handle.widget-drag-handle > .svg-inline--fa.fa-grip-lines,
+#main-content .dashboard-widget.dashboard-widget .widget-drag-handle.widget-drag-handle .svg-inline--fa.fa-grip-lines {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    width: 16px !important;
+    min-width: 16px !important;
+    height: 14px !important;
+    min-height: 14px !important;
+    padding: 0 3px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid currentColor !important;
+    border-radius: 2px !important;
+    background: transparent !important;
+    color: inherit !important;
+    box-shadow: none !important;
+    font-size: 11px !important;
+    line-height: 1 !important;
+    pointer-events: none !important;
+}
+
+
+/* V1.20.1-A15: slim the top Navbar independently from the drag-handle work.
+ * Keep the existing navigation model and only reduce desktop vertical chrome.
+ * Coarse pointers retain practical 44px touch targets. */
+.app-navbar {
+    height: 48px;
+    min-height: 48px;
+    padding: 2px 10px;
+}
+
+.app-navbar-brand {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.app-navbar-separator {
+    height: 18px;
+    margin-right: 10px;
+    margin-left: 10px;
+}
+
+.app-navbar-link {
+    min-height: 36px;
+    padding: 6px 8px;
+}
+
+.app-navbar-menu-button {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    margin-left: 6px;
+}
+
+@media (pointer: coarse) {
+    .app-navbar-link {
+        min-height: 44px;
+    }
+
+    .app-navbar-menu-button {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .app-navbar {
+        padding-right: 6px;
+        padding-left: 6px;
+    }
+}

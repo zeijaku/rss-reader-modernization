@@ -157,6 +157,7 @@ SET @sql = CONCAT(
   '`calendar_event_start_date` DATE NOT NULL,',
   '`calendar_event_end_date` DATE NOT NULL,',
   '`calendar_event_note` TEXT NOT NULL,',
+  '`calendar_event_color` VARCHAR(8) NOT NULL DEFAULT ''blue'',',
   'PRIMARY KEY (`calendar_event_id`),',
   'KEY `idx_calendar_event_owner_range` (`calendar_event_owner`, `calendar_event_flag`, `calendar_event_start_date`, `calendar_event_end_date`, `calendar_event_id`)',
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Calendar予定保管'''

@@ -41,10 +41,10 @@ check('architecture documents frontend non-split decision', '`public/js/dashboar
 endpoint_md = text('docs/v1-19-public-endpoints.md')
 with (ROOT / 'docs/v1-19-public-endpoint-matrix.csv').open('r', encoding='utf-8-sig', newline='') as handle:
     matrix = list(csv.DictReader(handle))
-expected = ['/','/stock','/settings','/api_v1.php','/logout.php','/connection_probe.php','/error.php']
-check('endpoint CSV contains exactly seven documented endpoints', [row['Endpoint'] for row in matrix] == expected)
+expected = ['/','/stock','/settings','/api_v1.php','/calendar_color_api.php','/logout.php','/connection_probe.php','/error.php']
+check('endpoint CSV matches the current documented endpoints', [row['Endpoint'] for row in matrix] == expected)
 actual_php = sorted(p.name for p in (ROOT / 'public').glob('*.php'))
-expected_php = sorted(['index.php','stock.php','settings.php','api_v1.php','logout.php','connection_probe.php','error.php'])
+expected_php = sorted(['index.php','stock.php','settings.php','api_v1.php','calendar_color_api.php','logout.php','connection_probe.php','error.php'])
 check('endpoint matrix matches actual public PHP inventory', actual_php == expected_php)
 for endpoint in expected:
     check(f'endpoint markdown documents {endpoint}', f'| {endpoint} |' in endpoint_md)
@@ -92,7 +92,7 @@ for rel in links:
 check('V1.19-D test report exists', (ROOT / 'docs/test-report-v1-19-d.md').is_file() and 'test-report-v1-19-d.md' in docs_index)
 
 # D stays non-schema/non-version-changing.
-check('V1.19 cleanup remains valid on the V1.19 or later V1.20 release line', re.search(r"const APP_VERSION = '(?:1\.19\.0(?:-rc[1-9][0-9]*)?|1\.20\.0(?:-rc[1-9][0-9]*)?)';", version) is not None)
+check('V1.19 cleanup remains valid on the V1.19 or later V1.20 release line', re.search(r"const APP_VERSION = '(?:1\.19\.0(?:-rc[1-9][0-9]*)?|1\.20\.[0-9]+(?:-rc[1-9][0-9]*)?)';", version) is not None)
 check('D adds no V1.19 database migration', not any(re.search(r'1[_\.-]19', p.name, re.I) for p in (ROOT / 'database/migrations').glob('*')) if (ROOT / 'database/migrations').is_dir() else True)
 
 failed = [name for name, ok in checks if not ok]

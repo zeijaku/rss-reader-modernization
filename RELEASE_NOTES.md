@@ -1,59 +1,69 @@
-# RSS Reader Modernization 1.20.0 Release Notes
+# RSS Reader Modernization 1.20.1 Release Notes
 
 ## 目的
 
-Version 1.20.0は、V1.19.0を正式BaselineとしてV1.20-B〜Eの機能を統合し、V1.20-F RC1で全体Regressionと本番確認を行った後に正式化するReleaseです。
+Version 1.20.1は、正式V1.20.0をBaselineとしてDashboardの操作性と日常利用Widgetを小さく改善するMaintenance / Feature Releaseです。Card HeaderのDrag HandleとNavbarをCompact化し、Memoの高さ制御と手動Refresh、Calendar予定色とTask優先度色、Game WidgetのBlock Collapseを追加します。
 
 ## 主な変更
 
-- **Card Header Compact**: Dashboard Widget Headerを40pxへ整理。RSS／Search Feedのtable headerも各Layerを40pxへ揃えます。
-- **RSS Typing**: 通常RSS titleを使う60秒Typing Gameを追加。Japanese IME、Score／Best、hidden-tab pause、Browser storage fallbackに対応し、Search Feedには表示しません。
-- **Wire Defense**: Game categoryへNetwork防衛Gameを追加。六角形＋Server風CORE、interceptor missile、1秒reload gauge、Lives別の緑／Orange／赤CORE表示、straight／curve／wave packet route、Best／Max Chainを実装。SoundはOFFで外部通信を追加しません。
-- **全RSS新着**: 所有する通常RSSを横断して新着記事をpublication date順にまとめるWidgetを追加。重複source／記事を抑制し、5／10／20／30件を選択出来ます。既存Feed fetch／sanitization経路を再利用します。
-- **Release integration**: `APP_VERSION=1.20.0`、`APP_ASSET_REVISION=1.20.0`へ確定し、lazy-loaded Assetも同Revisionへ統一します。
+- **Drag Handle / Navbar Compact**: Widgetの並び替えHandleを小さな`[=]`表示へ整理しつつ、既存のDrag / Touch / Keyboard操作領域を維持。NavbarはDesktopで56pxから48pxへCompact化し、coarse pointerでは44px操作領域を維持します。
+- **Memo**: Height 1 / Height 2の範囲内で本文だけを縦Scrollし、長文でCard全体が伸び続けないようにしました。Headerに対象Memoだけを再取得する手動Refreshを追加し、未保存編集がある場合は置換前に確認します。
+- **Calendar color**: 通常予定へ`red / blue / green`の固定色を追加。既存予定は`blue`をDefaultとし、Task期限は既存Priorityを`high=赤 / normal=青 / low=緑`としてCalendarに反映します。
+- **Block Collapse**: Game WidgetへCanvas + Vanilla JavaScriptの短時間Puzzleを追加。Break回数、Score / Combo、Chain、Stability、危険域での弱支持Blockのずれ、Mouse / Touch / Keyboard操作に対応します。Sound、外部通信、Game状態のDB保存は追加しません。
+- **Release integration**: `APP_VERSION=1.20.1`、`APP_ASSET_REVISION=1.20.1`へ確定し、dynamic / fallback Asset URLも同Revisionへ統一します。
 
-## 互換性
+## Database / Migration
 
-- DB Migration: なし
-- SQL実行: 不要
+V1.20.1では既存`calendar_event`Tableへ次のColumnを1つ追加します。
+
+```text
+calendar_event_color VARCHAR(8) NOT NULL DEFAULT 'blue'
+```
+
+既存DBをV1.20.0から更新する場合は、Backup後に`database/migrations/013_v1_20_1_calendar_event_color.sql`を実行してください。SQL冒頭の`@table_prefix`は実環境の`DB_TABLE_PREFIX`と一致させます。MigrationはColumn存在確認を行い、既存予定を保持したまま未定義色を`blue`へ正規化します。
+
+新規Install用`database/schema.sql`にはこのColumnを取り込み済みです。
+
+## Compatibility / Security boundary
+
 - 新規必須Config / Secret: なし
-- 既存`config/local.php`、DB、生成済み`var/`Data: 維持
-- Public API Endpoint: `public/api_v1.php`のまま
-- 既存API Action名: 維持
-- V1.19.0までのWidget／Feed／Stock／Settings／Security boundary: 維持
-
-「全RSS新着」は新規Tableを作らず、既存`dashboard_widget`のSearch Feed設定schemaをprivate marker付きで再利用します。
+- Task schema変更: なし
+- Memo schema変更: なし
+- Block Collapse用DB Table / Column: なし
+- Calendar色は`red / blue / green`のAllowlistのみ
+- Calendar色EndpointはPOST / Authentication / CSRF / Request Size / Action Allowlist / Owner scopeを維持
+- `public/.htaccess`のPublic PHP deny-by-defaultを維持し、`calendar_color_api.php`だけを明示Allowlistへ追加
+- `config/local.php`、実DB、生成済み`var/`DataはDistributionへ含めません
 
 ## Version / Cache
 
-- Application Version: `1.20.0`
-- Visible label: `RSS Reader Modernization 1.20.0`
-- Asset Revision: `1.20.0`
-- Git tag: `v1.20.0`
+- Application Version: `1.20.1`
+- Visible label: `RSS Reader Modernization 1.20.1`
+- Asset Revision: `1.20.1`
+- Intended Git tag: `v1.20.1`
 - Package status: `FINAL`
-- Publishable: `yes`
+- Publishable metadata: `yes`
 
-V1.19.0、V1.20-B〜E checkpoint、V1.20.0-RC1の`immutable` Cacheを再利用しないため、正式版ではAsset URLを`1.20.0`へ切り替えます。
+V1.20.0およびV1.20.1 A〜D3の`immutable` Cacheを再利用しないよう、正式版ではV1.20.1関連Assetだけでなく既存dynamic loader / Camera streaming fallbackも`?v=1.20.1`へ統一します。
 
 ## Release validation
 
-V1.20-F RC1ではCurrent Full Regressionに加え、V1.17／V1.17.1／V1.17.2／V1.18、V1.19 Architecture／Security／Cleanup compatibility、V1.20 Game runtime、全RSS新着Validation、PHP／JavaScript／Python syntax、secret scan、Runtime／Complete package manifest／CRC／path safetyを確認しました。本番環境でRC1の主要機能が問題なく動作することを確認した後、V1.20-GでVersion／Asset／Package metadataを正式`1.20.0`へ昇格し、Final GateとPackage verifierを再実行します。
+V1.20.1-EではCurrent Regressionを区間実行して全Sectionを確認し、V1.17 / V1.17.1 / V1.17.2 / V1.18 / V1.19 Compatibility Gate、V1.20機能Compatibility、V1.20.1専用Gate、PHP / JavaScript syntax、secret scan、Runtime / Complete packageのCRC / manifest / path safety / SHA-256を確認しました。
 
-旧`tests/run-v119e.sh`／`tests/run-v119f.sh`および`tests/run-v120f.sh`は各Release Candidate／Historical Release Gateとして保持し、V1.20正式CIではV1.19互換GateとV1.20-G Final Gateを使用します。
+A〜D3の各段階はProductionでユーザー確認済みです。Eで追加した正式Version / Cache key / schema統合は、正式Tag / GitHub Release前にProduction packageで最終確認します。
 
 ## Verification limits
 
-Automated regressionではPHP / Python / NodeによるDomain、HTTP、Security、Frontend contract、Package integrityを確認します。ただし次はHosting／外部Service／Browser環境による差があるため、運用中も必要に応じて確認してください。
+Automated testではHosting固有のApache挙動、実Browserの描画感、外部Serviceの実応答までは完全再現出来ません。特に次はProduction確認を残します。
 
-- 実HostingのApache / `.htaccess`挙動
-- 実外部RSSの応答時間・失敗時挙動と全RSS新着の実際の並び順
-- Japanese IMEを使ったRSS Typingの操作感
-- Wire DefenseのCanvas操作、Smartphone touch、長時間play時の描画／停止
-- PC／Smartphoneでの40px Header、Drawer／Modal、全RSS新着表示
-- 実外部Feed / Weather / X / Mail / Camera配信元との接続
-- Browser固有のMedia / HLS / CORS挙動
-- 長時間Session / Remember Meの実時間経過
+- Footerの正式Version表示とAsset cache更新
+- PC / SmartphoneのDrag Handle / Navbar
+- Memo Height 2 / 内部Scroll / 手動Refresh
+- Calendar色の保存とMigration適用済みDBでの表示
+- Task Priority色のCalendar表示
+- Block CollapseのCanvas / Touch / Keyboard / Stabilityの操作感
+- DevTools Console、PHP / Apache Error Log
 
 ## 更新
 
-Version 1.19.0からはCodeの更新のみです。DB Migration、SQL、新規必須設定はありません。`config/local.php`、実DB、生成済み`var/`Dataを維持したまま正式Production ZIPを相対Pathで上書きしてください。詳細は`docs/update.md`と`docs/v1-20-g-production-checklist.md`を参照してください。
+V1.20.0から更新する場合は、`config/local.php`、実DB、必要な`var/`DataをBackupし、`013_v1_20_1_calendar_event_color.sql`を適用した後、Production ZIPのCodeを相対Pathで上書きします。詳細は`docs/v1-20-1-production-checklist.md`を参照してください。
