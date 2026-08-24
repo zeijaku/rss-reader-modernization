@@ -1,0 +1,100 @@
+name: V1.20.1 temporary source reconstruction gate
+
+on:
+  pull_request:
+    branches:
+      - staging/v1.20.1-reconstruct-base
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v1.20.1-temporary-source-reconstruction
+  cancel-in-progress: false
+
+jobs:
+  reconstruct:
+    if: github.head_ref == 'release/v1.20.1-final'
+    name: Verify and reconstruct final V1.20.1 source
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/v1.20.1-final
+          fetch-depth: 0
+
+      - name: Reconstruct and verify source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          staging='.release-staging/v1201'
+          manifest="$staging/manifest.tsv"
+          archive='/tmp/v1201-final.tar.xz'
+          extract='/tmp/v1201-final-extract'
+
+          test -f "$manifest"
+          test -f "$staging/archive.b64"
+          test "$(wc -l < "$manifest")" -eq 47
+
+          base64 --decode "$staging/archive.b64" > "$archive"
+          echo '0cd13fa2773922046dc913e949667d49665e6f1f5d1db6c4db105365699b79a4  /tmp/v1201-final.tar.xz' | sha256sum -c -
+
+          rm -rf "$extract"
+          mkdir -p "$extract"
+          tar -xJf "$archive" -C "$extract"
+
+          tar -tJf "$archive" | sed '/\/$/d' | LC_ALL=C sort > /tmp/v1201-archive-paths
+          cut -f2 "$manifest" | LC_ALL=C sort > /tmp/v1201-manifest-paths
+          diff -u /tmp/v1201-manifest-paths /tmp/v1201-archive-paths
+          test "$(wc -l < /tmp/v1201-archive-paths)" -eq 47
+
+          while IFS=$'\t' read -r expected path; do
+            test -n "$expected"
+            test -n "$path"
+            test -f "$extract/$path"
+            actual="$(git hash-object "$extract/$path")"
+            if [ "$actual" != "$expected" ]; then
+              echo "Blob mismatch before copy: $path expected=$expected actual=$actual" >&2
+              exit 1
+            fi
+          done < "$manifest"
+
+          cut -f2 "$manifest" > /tmp/v1201-paths
+          while IFS= read -r path; do
+            mkdir -p "$(dirname "$path")"
+            cp -f "$extract/$path" "$path"
+          done < /tmp/v1201-paths
+
+          while IFS=$'\t' read -r expected path; do
+            actual="$(git hash-object "$path")"
+            if [ "$actual" != "$expected" ]; then
+              echo "Blob mismatch after copy: $path expected=$expected actual=$actual" >&2
+              exit 1
+            fi
+          done < "$manifest"
+
+      - name: Commit verified final source to release branch
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cut -f2 .release-staging/v1201/manifest.tsv > /tmp/v1201-paths
+          rm -rf .release-staging/v1201
+
+          git add --pathspec-from-file=/tmp/v1201-paths
+          git rm -r --ignore-unmatch -- .release-staging/v1201
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          git status --short
+          git commit -m 'Prepare RSS Reader Modernization 1.20.1 release source'
+          git push origin HEAD:release/v1.20.1-final
