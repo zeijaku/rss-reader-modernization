@@ -74,10 +74,13 @@ jobs:
         run: |
           set -euo pipefail
 
+          migration='database/migrations/013_v1_20_1_calendar_event_color.sql'
           cut -f2 .release-staging/v1201/manifest.tsv > /tmp/v1201-paths
+          grep -Fxv "$migration" /tmp/v1201-paths > /tmp/v1201-normal-paths
           rm -rf .release-staging/v1201
 
-          git add --pathspec-from-file=/tmp/v1201-paths
+          git add --pathspec-from-file=/tmp/v1201-normal-paths
+          git add -f -- "$migration"
           git rm -r --ignore-unmatch -- .release-staging/v1201
 
           git config user.name 'github-actions[bot]'
