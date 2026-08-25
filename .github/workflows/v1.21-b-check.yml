@@ -1,0 +1,51 @@
+name: V1.21-B Focused Check
+
+on:
+  push:
+    branches:
+      - v1.21-b-drawer-visual
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: V1.21-B focused tests
+        run: sh tests/run-v121b.sh
+
+      - name: Build Production overwrite ZIP
+        run: |
+          set -eu
+          ROOT="$GITHUB_WORKSPACE"
+          OUT="$ROOT/build/v1.21-b-overwrite"
+          mkdir -p "$OUT/app" "$OUT/public/js" "$OUT/public/css"
+          cp "$ROOT/app/version.php" "$OUT/app/version.php"
+          cp "$ROOT/public/js/calendar.js" "$OUT/public/js/calendar.js"
+          cp "$ROOT/public/js/drawer-categories.js" "$OUT/public/js/drawer-categories.js"
+          cp "$ROOT/public/css/drawer-v121b.css" "$OUT/public/css/drawer-v121b.css"
+          printf '%s\n' \
+            'RSS Reader Modernization V1.21-B Production Check' \
+            'Baseline: V1.21-A / b37c52506b95b6aaef138602889995369c13726b' \
+            '' \
+            'Apply after the V1.21-A Production check files.' \
+            'Overwrite the files while preserving their paths.' \
+            'No database migration is required.' \
+            'No config/local.php change is required.' \
+            'Hard reload once, then verify Drawer visibility and contrast.' \
+            > "$OUT/V1.21-B_APPLY_NOTE.txt"
+          cd "$OUT"
+          zip -r "$ROOT/build/rss-reader-v1.21-b-overwrite.zip" .
+
+      - name: Upload Production overwrite ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-v1.21-b-overwrite
+          path: build/rss-reader-v1.21-b-overwrite.zip
+          if-no-files-found: error
+          retention-days: 14

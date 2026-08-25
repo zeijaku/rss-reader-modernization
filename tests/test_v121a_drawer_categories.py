@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,13 +26,15 @@ mail = text('public/js/mail-widget.js')
 camera = text('public/js/camera-video.js')
 
 check("const APP_VERSION = '1.20.1';" in version, 'V1.21-A does not change the visible final V1.20.1 marker')
-check("const APP_ASSET_REVISION = '1.21-a1';" in version, 'V1.21-A uses a distinct asset revision for Production verification')
+revision_match = re.search(r"const APP_ASSET_REVISION = '(1\.21-[a-z][0-9]+)';", version)
+check(revision_match is not None, 'V1.21 development keeps a dedicated checkpoint asset revision')
 
-loader = "loadScript('./js/drawer-categories.js?v=1.21-a1');"
-check(loader in calendar, 'Dashboard / Stock loader includes Drawer categories')
-check(calendar.find('./js/mail-widget.js?v=1.20.1') < calendar.find('./js/drawer-categories.js?v=1.21-a1'), 'Mail initializes before Drawer categorization')
-check(calendar.find('./js/camera-video.js?v=1.20.1') < calendar.find('./js/drawer-categories.js?v=1.21-a1'), 'Camera / Video initializes before Drawer categorization')
-check(calendar.find('./js/widget-settings-no-reload.js?v=1.20.1') < calendar.find('./js/drawer-categories.js?v=1.21-a1'), 'Drawer categorization is the final staged Dashboard module')
+loader_match = re.search(r"loadScript\('\./js/drawer-categories\.js\?v=(1\.21-[a-z][0-9]+)'\);", calendar)
+check(loader_match is not None, 'Dashboard / Stock loader includes Drawer categories')
+drawer_loader_pos = loader_match.start() if loader_match else -1
+check(0 <= calendar.find('./js/mail-widget.js?v=1.20.1') < drawer_loader_pos, 'Mail initializes before Drawer categorization')
+check(0 <= calendar.find('./js/camera-video.js?v=1.20.1') < drawer_loader_pos, 'Camera / Video initializes before Drawer categorization')
+check(0 <= calendar.find('./js/widget-settings-no-reload.js?v=1.20.1') < drawer_loader_pos, 'Drawer categorization remains the final staged Dashboard module')
 check("app_asset_url('js/drawer-categories.js')" in settings, 'Settings loads the same Drawer categorizer')
 
 expected_sections = ['DISPLAY', 'FEED', 'PRODUCTIVITY', 'INFORMATION', 'MEDIA', 'GAME', 'SETTINGS', 'USER LINKS', 'ACCOUNT']
@@ -57,17 +60,16 @@ check("mobileOnly: true" in drawer and "addClass('drawer-mobile-links')" in draw
 check("children('.drawer-logout-form')" in drawer, 'Logout form is moved without rebuilding its POST / CSRF form')
 check("detach()" in drawer, 'Existing Drawer nodes are moved rather than recreated')
 check("window.setTimeout(organizeDrawer, 0)" in drawer, 'Categorization waits until existing dynamic ready handlers complete')
-check("data-drawer-categories" in drawer and "data-drawer-section" in drawer, 'V1.21-B/C have stable Drawer hooks without CSS changes in A')
+check("data-drawer-categories" in drawer and "data-drawer-section" in drawer, 'V1.21-B/C have stable Drawer hooks')
 check('.html(' not in drawer and 'innerHTML' not in drawer, 'Drawer categorization does not add raw HTML rendering')
 
 check('>Widget追加<' in index and '>カスタマイズ<' in index, 'Dashboard keeps the pre-V1.21 fallback Drawer HTML when JavaScript is unavailable')
 check('#registerMailWidget' in mail, 'Mail dynamic Drawer action remains available')
 check('#registerCameraVideo' in camera and 'drawerCameraVideoAdd' in camera, 'Camera / Video dynamic Drawer action remains available')
-check('カスタマイズ' in camera, 'Camera / Video keeps its existing insertion contract until V1.21-A categorization runs')
+check('カスタマイズ' in camera, 'Camera / Video keeps its existing insertion contract until categorization runs')
 
 migration_names = [path.name for path in (ROOT / 'database').rglob('*.sql') if 'v1_21' in path.name.lower() or 'v121' in path.name.lower()]
 check(migration_names == [], 'V1.21-A adds no database migration')
-check(not (ROOT / 'public/css/drawer-v121a.css').exists(), 'V1.21-A does not mix V1.21-B visual design changes')
 
 passed = sum(checks)
 failed = len(checks) - passed

@@ -40,6 +40,18 @@
         'settings': ['./settings#tabs', './settings#display', './settings#highlight']
     };
 
+    function injectVisualStyles() {
+        var link;
+        if (document.querySelector('link[data-drawer-v121b-style]')) {
+            return;
+        }
+        link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = './css/drawer-v121b.css?v=1.21-b1';
+        link.setAttribute('data-drawer-v121b-style', 'true');
+        document.head.appendChild(link);
+    }
+
     function itemByModalTarget($menu, target) {
         return $menu.children('li').filter(function () {
             return $(this).children('.drawer-menu-action[data-drawer-modal-target="' + target + '"]').length > 0;
@@ -155,6 +167,7 @@
     }
 
     $(function () {
+        injectVisualStyles();
         // Mail / Camera add their Drawer entries from their own ready handlers.
         // Run one task later so those existing modules remain untouched.
         window.setTimeout(organizeDrawer, 0);

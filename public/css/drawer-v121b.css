@@ -1,0 +1,142 @@
+/* V1.21-B: restrained Drawer visual hierarchy.
+ * Keep the Drawer light across Bootstrap / Bootswatch themes and use one
+ * shared blue accent instead of category-by-category rainbow coloring. */
+.drawer-nav {
+    color: #2f353b;
+    background-color: #f6f7f9;
+    border-left: 1px solid #dfe3e8;
+}
+
+.drawer-menu {
+    padding-bottom: 20px;
+}
+
+.drawer-brand {
+    background-color: #ffffff;
+    border-bottom-color: #dfe3e8;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+}
+
+.drawer-brand-label {
+    color: #495057;
+}
+
+.drawer-section-title {
+    min-height: 34px;
+    margin: 12px 8px 4px;
+    padding: 7px 10px;
+    border: 1px solid #e0e5ea;
+    border-left: 3px solid #0d6efd;
+    border-radius: 6px;
+    background-color: #eef2f6;
+    color: #4b5563;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+}
+
+.drawer-brand + .drawer-section-title {
+    margin-top: 6px;
+}
+
+.drawer-section-title > i {
+    display: inline-flex;
+    width: 1.25rem;
+    margin-right: 7px;
+    align-items: center;
+    justify-content: center;
+    color: #0d6efd;
+}
+
+.drawer-menu > li > a,
+.drawer-menu-action,
+.drawer-logout-button {
+    width: calc(100% - 16px);
+    margin: 2px 8px;
+    border-radius: 6px;
+    color: #495057 !important;
+    transition: background-color 120ms ease, color 120ms ease, box-shadow 120ms ease;
+}
+
+.drawer-item-icon {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    margin-right: 9px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #5f6b76;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.drawer-menu > li > a:hover,
+.drawer-menu > li > a:focus,
+.drawer-menu-action:hover,
+.drawer-menu-action:focus,
+.drawer-logout-button:hover,
+.drawer-logout-button:focus {
+    background-color: #e9eef5;
+    color: #212529 !important;
+}
+
+.drawer-menu > li > a:hover .drawer-item-icon,
+.drawer-menu > li > a:focus .drawer-item-icon,
+.drawer-menu-action:hover .drawer-item-icon,
+.drawer-menu-action:focus .drawer-item-icon {
+    border-color: #b8cee8;
+    background-color: #f8fbff;
+    color: #0d6efd;
+}
+
+.drawer-menu > li > a:focus-visible,
+.drawer-menu-action:focus-visible,
+.drawer-logout-button:focus-visible {
+    outline: 2px solid #0d6efd;
+    outline-offset: -2px;
+}
+
+.drawer-item-current,
+.drawer-item-current:hover,
+.drawer-item-current:focus {
+    border-left-color: #0d6efd !important;
+    background-color: #e7f1ff !important;
+    box-shadow: inset 0 0 0 1px rgba(13, 110, 253, 0.16);
+    color: #163f69 !important;
+    font-weight: 600;
+}
+
+.drawer-item-current .drawer-item-icon,
+.drawer-item-current:hover .drawer-item-icon,
+.drawer-item-current:focus .drawer-item-icon {
+    border-color: #0d6efd;
+    background-color: #0d6efd;
+    color: #ffffff;
+}
+
+.drawer-logout-button {
+    color: #a52834 !important;
+}
+
+.drawer-logout-button .drawer-item-icon {
+    border-color: #f0c2c7;
+    background-color: #fff5f5;
+    color: #b02a37;
+}
+
+.drawer-logout-button:hover,
+.drawer-logout-button:focus {
+    background-color: #f8e7e9;
+    color: #842029 !important;
+}
+
+.drawer-logout-button:hover .drawer-item-icon,
+.drawer-logout-button:focus .drawer-item-icon {
+    border-color: #e2aeb4;
+    background-color: #f8d7da;
+    color: #842029;
+}
+
+.drawer-menu-action:disabled,
+.drawer-menu > li > a[aria-disabled="true"] {
+    opacity: 0.55;
+}
