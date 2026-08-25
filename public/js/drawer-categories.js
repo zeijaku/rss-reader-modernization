@@ -52,6 +52,18 @@
         document.head.appendChild(link);
     }
 
+    function injectMobileStyles() {
+        var link;
+        if (document.querySelector('link[data-drawer-v121c-style]')) {
+            return;
+        }
+        link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = './css/drawer-v121c.css?v=1.21-c1';
+        link.setAttribute('data-drawer-v121c-style', 'true');
+        document.head.appendChild(link);
+    }
+
     function itemByModalTarget($menu, target) {
         return $menu.children('li').filter(function () {
             return $(this).children('.drawer-menu-action[data-drawer-modal-target="' + target + '"]').length > 0;
@@ -168,6 +180,7 @@
 
     $(function () {
         injectVisualStyles();
+        injectMobileStyles();
         // Mail / Camera add their Drawer entries from their own ready handlers.
         // Run one task later so those existing modules remain untouched.
         window.setTimeout(organizeDrawer, 0);
