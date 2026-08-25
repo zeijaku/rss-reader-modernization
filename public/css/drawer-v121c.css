@@ -80,6 +80,24 @@
         margin: 8px auto;
     }
 
+    /* Bootstrap pulls the close icon toward the header edge by default.
+     * On Smartphone keep the icon slightly inward and give the whole control
+     * a stable 44px touch target without changing desktop Modal geometry. */
+    .modal-header > .btn-close {
+        display: inline-flex;
+        flex: 0 0 44px;
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        min-height: 44px;
+        margin: -10px 0 -10px auto;
+        padding: 0;
+        align-items: center;
+        justify-content: center;
+        background-position: center;
+        touch-action: manipulation;
+    }
+
     .modal-content {
         max-height: calc(100vh - 16px);
         max-height: calc(100dvh - 16px);
