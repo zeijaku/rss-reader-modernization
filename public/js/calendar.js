@@ -70,4 +70,7 @@
     // V1.17.1-D/E: production-safe settings interceptor. It runs in the
     // capture phase so legacy delegated update handlers cannot reload the page.
     loadScript('./js/widget-settings-no-reload.js?v=1.20.1');
+    // V1.21-A: reorganize the existing Drawer only after dynamic Mail / Camera
+    // entries have registered. Feature modules remain unchanged.
+    loadScript('./js/drawer-categories.js?v=1.21-a1');
 })(document);

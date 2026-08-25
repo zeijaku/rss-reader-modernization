@@ -11,6 +11,7 @@ const APP_VERSION_LABEL = 'RSS Reader Modernization 1.20.1';
 
 /**
  * Cache key for public assets.
- * Stable V1.20 uses the release version so RC/checkpoint immutable caches are never reused.
+ * V1.21-A keeps the visible V1.20.1 release marker while using a new asset
+ * revision so Production verification cannot reuse the V1.20.1 Calendar loader.
  */
-const APP_ASSET_REVISION = '1.20.1';
+const APP_ASSET_REVISION = '1.21-a1';
