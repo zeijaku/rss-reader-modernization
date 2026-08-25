@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.20.1`
-Release tag: `v1.20.1`
+**Stable release:** `RSS Reader Modernization 1.21.0`
+Release tag: `v1.21.0`
+
+Version 1.21.0は、DrawerをDISPLAY／FEED／PRODUCTIVITY／INFORMATION／MEDIA／GAME／SETTINGS／USER LINKS／ACCOUNTへ整理し、視認性とSmartphone／Touch操作を改善したReleaseです。Bootstrap 5 Offcanvasと既存jQuery補助処理は維持し、DB schema／Migration／config/local.phpの追加変更はありません。
 
 Version 1.20.1は、V1.20.0をBaselineにDrag Handle／Navbar Compact、Memo内部Scrollと手動Refresh、Calendar予定の赤／青／緑とTask Priority色、Block Collapseを追加した更新です。既存DBでは`013_v1_20_1_calendar_event_color.sql`を適用し、`calendar_event_color`を追加します。新規必須Config／Secretはありません。
 
