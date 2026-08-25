@@ -1,42 +1,29 @@
-# V1.20 Tag / GitHub Release
+# Tag and GitHub Release Procedure
 
-V1.20-GでSourceと正式Packageを`1.20.0`へ確定し、V1.20-F RC1の本番確認結果を引き継いで正式公開します。既存Tagは上書きしません。
+## Current formal target
 
-正式Tagは`v1.20.0`です。
+- Version: `1.21.0`
+- Tag: `v1.21.0`
+- Release branch: `release/v1.21.0-final`
 
-## 公開前Gate
+## Safety rules
 
-1. `main`がV1.20.0正式SourceのCommitを指していることを確認する。
-2. Remoteに`v1.20.0`が存在しないことを確認する。存在する場合は上書きせず公開を停止する。
-3. `bash tests/run-current.sh`、V1.17〜V1.19互換Gate、`bash tests/run-v120g.sh`がPASSしていることを確認する。
-4. `python tools/build_release_package.py --mode final`とRuntime verifierをPASSさせる。
-5. Complete Source builder / verifierをPASSさせる。
-6. Production／Complete ZIPのSHA-256を記録する。
+- Never move or overwrite `v1.20.1` or any existing formal release tag.
+- Never force-update `v1.21.0` if it already exists.
+- The final tag must point to the exact commit that passed the Version 1.21 release gate.
+- Production `config/local.php`, runtime data, secrets, and legacy private archives must not be added to release assets.
 
-## Git登録前
+## Gate
 
-```powershell
-# 現在Branchと変更状態を確認します。
-git status
+The Version 1.21 release workflow performs the final release contract, full current regression, historical compatibility gates, high-signal source secret scan, deterministic Runtime / Complete Source package verification, and clean-room package checks.
 
-# 既存v1.20.0 TagがRemoteに存在しないことを確認します。
-$ExistingTag = git ls-remote --tags origin refs/tags/v1.20.0
-if ($ExistingTag) { throw "v1.20.0 already exists on origin. Do not overwrite it." }
+Only after the gate succeeds may `v1.21.0` and the GitHub Release be created.
 
-# 変更内容を確認します。
-git diff --check
-git diff --stat
-```
+## Formal assets
 
-Stageする場合は`git status`と`git diff --name-status`で対象Pathを確定し、`git add -- <path...>`で必要Pathだけを登録します。`git add .`、`git add -A`、`git add --all`は使用しません。
+- `rss-reader-modernization-1.21.0.zip`
+- `rss-reader-modernization-1.21.0.zip.sha256`
+- `rss-reader-modernization-1.21.0-complete.zip`
+- `rss-reader-modernization-1.21.0-complete.zip.sha256`
 
-## GitHub Release
-
-Tag `v1.20.0`は正式Source Commitだけを指します。GitHub Releaseには次の4 Assetを添付します。
-
-- `rss-reader-modernization-1.20.0.zip`
-- `rss-reader-modernization-1.20.0.zip.sha256`
-- `rss-reader-modernization-1.20.0-complete.zip`
-- `rss-reader-modernization-1.20.0-complete.zip.sha256`
-
-Release titleは`RSS Reader Modernization 1.20.0`、本文は`RELEASE_NOTES.md`を使用します。
+After publication, `main` should be fast-forwarded to the same exact commit as `v1.21.0`.

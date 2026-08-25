@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.21.0 - 2026-08-25
+
+### Drawer / Navigation
+- Reorganized the Drawer into DISPLAY, FEED, PRODUCTIVITY, INFORMATION, MEDIA, GAME, SETTINGS, USER LINKS, and ACCOUNT without rebuilding existing actions.
+- Kept Mail in PRODUCTIVITY and Camera / Video in MEDIA while preserving their existing dynamic insertion and feature implementations.
+- Preserved configured user links for Smartphone while keeping the existing PC Navbar presentation.
+
+### Visual hierarchy
+- Added a restrained light-gray Drawer surface, clearer section headers, compact icon tiles, and more visible hover / focus states.
+- Kept a single blue Current indicator and removed the similar blue section-header marker after Production review.
+- Kept Logout in a restrained Danger treatment.
+
+### Smartphone / Touch
+- Kept 44px touch targets, improved Drawer scrolling and dynamic viewport / safe-area handling, and prevented long labels from causing horizontal overflow.
+- Kept tall Modals within the Smartphone viewport without changing the existing Offcanvas-to-Modal lifecycle.
+- Moved the RSS / Information Widget Catalog accordion chevron slightly inward from the right edge for easier touch operation.
+
+### Compatibility / scope
+- Bootstrap 5 Offcanvas and the existing jQuery-assisted behavior remain in place; no unrelated JavaScript modernization was introduced.
+- No database schema or migration changes are required for Version 1.21.0.
+- No `config/local.php` changes are required.
+- File Upload / File Library / Image Viewer, Imgur Widget, and whole-grid Height 2 alignment remain deferred.
+
+### Verification
+- V1.21-A/B/C focused and compatibility tests were completed during development.
+- Version 1.21.0 finalization runs the full current regression suite, compatibility gates, source secret scan, package verification, and clean-room package checks before release publication.
+
 ## RSS Reader Modernization 1.20.1 — 2026-08-25
 
 ### Dashboard compact / Memo refresh / Calendar color / Block Collapse
