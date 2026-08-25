@@ -59,7 +59,7 @@
         }
         link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = './css/drawer-v121c.css?v=1.21-c2';
+        link.href = './css/drawer-v121c.css?v=1.21-c3';
         link.setAttribute('data-drawer-v121c-style', 'true');
         document.head.appendChild(link);
     }

@@ -74,28 +74,20 @@
         touch-action: manipulation;
     }
 
+    /* Widget Catalog accordion rows such as RSS / Information are full-width.
+     * Keep the chevron visibly away from the screen edge on Smartphone and
+     * retain a comfortable touch target for the entire accordion row. */
+    #drawerMenu .widget-catalog-toggle {
+        min-height: 44px;
+        padding-right: 12px;
+        box-sizing: border-box;
+        touch-action: manipulation;
+    }
+
     .modal-dialog {
         width: calc(100% - 16px);
         max-width: calc(100% - 16px);
         margin: 8px auto;
-    }
-
-    /* Bootstrap pulls the close icon toward the header edge by default.
-     * On Smartphone keep the icon slightly inward and give the whole control
-     * a stable 44px touch target without changing desktop Modal geometry. */
-    .modal-header > .btn-close {
-        display: inline-flex;
-        flex: 0 0 44px;
-        width: 44px;
-        min-width: 44px;
-        height: 44px;
-        min-height: 44px;
-        margin: -10px 0 -10px auto;
-        padding: 0;
-        align-items: center;
-        justify-content: center;
-        background-position: center;
-        touch-action: manipulation;
     }
 
     .modal-content {

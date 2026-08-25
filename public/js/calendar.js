@@ -72,5 +72,5 @@
     loadScript('./js/widget-settings-no-reload.js?v=1.20.1');
     // V1.21-C: reload the existing Drawer organizer under the current
     // checkpoint key. It stages both the B visual layer and C mobile layer.
-    loadScript('./js/drawer-categories.js?v=1.21-c2');
+    loadScript('./js/drawer-categories.js?v=1.21-c3');
 })(document);
