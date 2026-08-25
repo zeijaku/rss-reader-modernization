@@ -28,7 +28,8 @@ check("loadScript('./js/drawer-categories.js?v=1.21-b1');" in calendar, 'Dashboa
 check("./css/drawer-v121b.css?v=1.21-b1" in drawer and 'data-drawer-v121b-style' in drawer, 'Drawer organizer stages the B stylesheet once')
 
 check('background-color: #f6f7f9' in css, 'Drawer uses a light gray surface instead of pure white')
-check('border-left: 3px solid #0d6efd' in css and 'background-color: #eef2f6' in css, 'Section headers use one restrained blue accent and neutral background')
+check('background-color: #eef2f6' in css and '.drawer-section-title > i' in css and 'color: #0d6efd' in css, 'Section headers use a neutral surface with restrained blue icon accent')
+check('border-left: 3px solid #0d6efd' not in css, 'Section headers do not reuse the Current-item left blue indicator')
 check('margin: 12px 8px 4px' in css, 'Section spacing is explicit')
 check('width: 28px' in css and 'height: 28px' in css and 'border-radius: 6px' in css, 'Drawer item icons use compact recognition tiles')
 check('background-color: #e9eef5' in css and 'color: #212529 !important' in css, 'Hover / focus state is more visible')
