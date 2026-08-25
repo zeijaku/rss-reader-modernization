@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from pathlib import Path
-import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,16 +24,14 @@ settings = text('public/settings.php')
 mail = text('public/js/mail-widget.js')
 camera = text('public/js/camera-video.js')
 
-check("const APP_VERSION = '1.20.1';" in version, 'V1.21-A does not change the visible final V1.20.1 marker')
-revision_match = re.search(r"const APP_ASSET_REVISION = '(1\.21-[a-z][0-9]+)';", version)
-check(revision_match is not None, 'V1.21 development keeps a dedicated checkpoint asset revision')
+check("const APP_VERSION = '1.21.0';" in version, 'Formal V1.21 release marker is 1.21.0')
+check("const APP_ASSET_REVISION = '1.21.0';" in version, 'Formal V1.21 asset revision is 1.21.0')
 
-loader_match = re.search(r"loadScript\('\./js/drawer-categories\.js\?v=(1\.21-[a-z][0-9]+)'\);", calendar)
-check(loader_match is not None, 'Dashboard / Stock loader includes Drawer categories')
-drawer_loader_pos = loader_match.start() if loader_match else -1
-check(0 <= calendar.find('./js/mail-widget.js?v=1.20.1') < drawer_loader_pos, 'Mail initializes before Drawer categorization')
-check(0 <= calendar.find('./js/camera-video.js?v=1.20.1') < drawer_loader_pos, 'Camera / Video initializes before Drawer categorization')
-check(0 <= calendar.find('./js/widget-settings-no-reload.js?v=1.20.1') < drawer_loader_pos, 'Drawer categorization remains the final staged Dashboard module')
+drawer_loader_pos = calendar.find("loadScript('./js/drawer-categories.js?v=1.21.0');")
+check(drawer_loader_pos >= 0, 'Dashboard / Stock loader includes the finalized Drawer categories module')
+check(0 <= calendar.find('./js/mail-widget.js?v=1.21.0') < drawer_loader_pos, 'Mail initializes before Drawer categorization')
+check(0 <= calendar.find('./js/camera-video.js?v=1.21.0') < drawer_loader_pos, 'Camera / Video initializes before Drawer categorization')
+check(0 <= calendar.find('./js/widget-settings-no-reload.js?v=1.21.0') < drawer_loader_pos, 'Drawer categorization remains the final staged Dashboard module')
 check("app_asset_url('js/drawer-categories.js')" in settings, 'Settings loads the same Drawer categorizer')
 
 expected_sections = ['DISPLAY', 'FEED', 'PRODUCTIVITY', 'INFORMATION', 'MEDIA', 'GAME', 'SETTINGS', 'USER LINKS', 'ACCOUNT']
