@@ -40,6 +40,17 @@
         'settings': ['./settings#tabs', './settings#display', './settings#highlight']
     };
 
+    // V1.21-D: Utility Widgets converts several direct Drawer actions into
+    // accordion catalog rows before this organizer runs. Keep those existing
+    // nodes intact and place each catalog row under the matching V1.21 section
+    // instead of letting the whole catalog fall through to OTHER.
+    var catalogGroups = {
+        'feed': ['rss'],
+        'productivity': ['utility'],
+        'information': ['information'],
+        'game': ['game']
+    };
+
     function injectVisualStyles() {
         var link;
         if (document.querySelector('link[data-drawer-v121b-style]')) {
@@ -76,6 +87,10 @@
         }).first();
     }
 
+    function itemByCatalogCategory($menu, category) {
+        return $menu.children('li.widget-catalog-category[data-widget-catalog-category="' + category + '"]').first();
+    }
+
     function appendUnique(items, $item) {
         var node;
         var exists = false;
@@ -102,6 +117,9 @@
         });
         (modalGroups[key] || []).forEach(function (target) {
             appendUnique(items, itemByModalTarget($menu, target));
+        });
+        (catalogGroups[key] || []).forEach(function (category) {
+            appendUnique(items, itemByCatalogCategory($menu, category));
         });
 
         if (key === 'user-links') {
@@ -181,7 +199,7 @@
     $(function () {
         injectVisualStyles();
         injectMobileStyles();
-        // Mail / Camera add their Drawer entries from their own ready handlers.
+        // Mail / Camera and the Widget Catalog use existing ready handlers.
         // Run one task later so those existing modules remain untouched.
         window.setTimeout(organizeDrawer, 0);
     });

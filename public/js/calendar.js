@@ -70,7 +70,7 @@
     // V1.17.1-D/E: production-safe settings interceptor. It runs in the
     // capture phase so legacy delegated update handlers cannot reload the page.
     loadScript('./js/widget-settings-no-reload.js?v=1.20.1');
-    // V1.21-C: reload the existing Drawer organizer under the current
-    // checkpoint key. It stages both the B visual layer and C mobile layer.
-    loadScript('./js/drawer-categories.js?v=1.21-c3');
+    // V1.21-D: reload the existing Drawer organizer under the integration
+    // checkpoint key. The organizer still stages the B visual and C mobile layers.
+    loadScript('./js/drawer-categories.js?v=1.21-d1');
 })(document);

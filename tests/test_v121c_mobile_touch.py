@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,9 +25,11 @@ base_css = text('public/css/dashboard.css')
 dashboard_js = text('public/js/dashboard.js')
 utility_js = text('public/js/utility-widgets.js')
 
-check("const APP_VERSION = '1.20.1';" in version, 'V1.21-C keeps the visible V1.20.1 marker')
-check("const APP_ASSET_REVISION = '1.21-c3';" in version, 'V1.21-C uses a fresh asset revision')
-check("loadScript('./js/drawer-categories.js?v=1.21-c3');" in calendar, 'Dashboard / Stock reload the Drawer organizer under the C cache key')
+check("const APP_VERSION = '1.20.1';" in version, 'V1.21-C compatibility keeps the visible V1.20.1 marker')
+revision_match = re.search(r"const APP_ASSET_REVISION = '(1\.21-(?:c|d)[0-9]+)';", version)
+check(revision_match is not None, 'V1.21-C/D keeps a compatible checkpoint asset revision')
+loader_match = re.search(r"loadScript\('\./js/drawer-categories\.js\?v=(1\.21-(?:c|d)[0-9]+)'\);", calendar)
+check(loader_match is not None, 'Dashboard / Stock reload the Drawer organizer under a C/D cache key')
 check("./css/drawer-v121c.css?v=1.21-c3" in drawer and 'data-drawer-v121c-style' in drawer, 'Drawer organizer stages the C mobile stylesheet once')
 check(drawer.find('./css/drawer-v121b.css?v=1.21-b1') < drawer.find('./css/drawer-v121c.css?v=1.21-c3'), 'V1.21-B visual layer loads before the C mobile adjustments')
 
@@ -62,7 +65,7 @@ check(0 <= pending_pos < hide_pos < hidden_pos < show_pos, 'Modal transition sou
 check('bootstrap.Offcanvas' not in drawer, 'Drawer organizer does not replace Bootstrap Offcanvas behavior')
 
 migration_names = [path.name for path in (ROOT / 'database').rglob('*.sql') if 'v1_21' in path.name.lower() or 'v121' in path.name.lower()]
-check(migration_names == [], 'V1.21-C adds no database migration')
+check(migration_names == [], 'V1.21-C/D adds no database migration')
 
 passed = sum(checks)
 failed = len(checks) - passed

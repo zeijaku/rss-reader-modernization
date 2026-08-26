@@ -1,0 +1,51 @@
+name: V1.21-D Focused Check
+
+on:
+  push:
+    branches:
+      - v1.21-d-drawer-integration
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: V1.21-D focused tests
+        run: sh tests/run-v121d.sh
+
+      - name: Build Production overwrite ZIP
+        run: |
+          set -eu
+          ROOT="$GITHUB_WORKSPACE"
+          OUT="$ROOT/build/v1.21-d-overwrite"
+          mkdir -p "$OUT/app" "$OUT/public/js"
+          cp "$ROOT/app/version.php" "$OUT/app/version.php"
+          cp "$ROOT/public/js/calendar.js" "$OUT/public/js/calendar.js"
+          cp "$ROOT/public/js/drawer-categories.js" "$OUT/public/js/drawer-categories.js"
+          printf '%s\n' \
+            'RSS Reader Modernization V1.21-D Production Check' \
+            'Baseline: V1.21-C R2 / 04fc549fc4cb8369117cf269eed692a496bdf1b0' \
+            '' \
+            'Apply after the confirmed V1.21-C R2 Production files.' \
+            'Overwrite the files while preserving their paths.' \
+            'V1.21-D integrates the existing RSS / Information / Utility / Game Widget Catalog rows into the matching Drawer sections.' \
+            'No database migration is required.' \
+            'No config/local.php change is required.' \
+            'Hard reload once, then verify Dashboard, Stock, Settings, Current item, Widget Catalog accordions, USER LINKS, Account/Logout, and Drawer-to-Modal transitions.' \
+            > "$OUT/V1.21-D_APPLY_NOTE.txt"
+          cd "$OUT"
+          zip -r "$ROOT/build/rss-reader-v1.21-d-overwrite.zip" .
+
+      - name: Upload Production overwrite ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-v1.21-d-overwrite
+          path: build/rss-reader-v1.21-d-overwrite.zip
+          if-no-files-found: error
+          retention-days: 14
