@@ -11,6 +11,14 @@ def check(ok: bool, message: str) -> None:
 def text(rel: str) -> str:
     return (ROOT / rel).read_text(encoding='utf-8')
 
+def extract(source: str, pattern: str) -> str:
+    match = re.search(pattern, source)
+    return match.group(1) if match else ''
+
+def release_tuple(value: str) -> tuple[int, int, int]:
+    match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)(?:-[A-Za-z0-9.]+)?', value)
+    return tuple(int(part) for part in match.groups()) if match else (0, 0, 0)
+
 version = text('app/version.php')
 readme = text('README.md')
 changelog = text('CHANGELOG.md')
@@ -25,10 +33,18 @@ version_tuple = tuple(int(x) for x in m.groups()) if m else (0, 0, 0)
 check(version_tuple >= (1, 18, 0), 'current application remains Version 1.18.0-or-later')
 check('Version 1.18.0' in readme and 'Connection Monitor' in readme, 'README retains the V1.18.0 Connection Monitor release history')
 check('RSS Reader Modernization 1.18.0' in changelog and 'Connection Monitor' in changelog, 'CHANGELOG retains the V1.18.0 Connection Monitor entry')
-check(('1.19.0' in release_builder and 'v1.19.0' in release_builder) or ('1.20.0' in release_builder and 'v1.20.0' in release_builder) or ('1.20.1' in release_builder and 'v1.20.1' in release_builder) or ('1.21.0' in release_builder and 'v1.21.0' in release_builder), 'Runtime builder targets V1.19 or a later release line')
-check("VERSION = '1.19.0'" in complete_builder or "VERSION = '1.20.0-rc1'" in complete_builder or "VERSION = '1.20.0'" in complete_builder or "VERSION = '1.20.1'" in complete_builder or "VERSION = '1.21.0'" in complete_builder, 'Complete builder targets V1.19 or a later source')
-check('1.19.0' in release_verifier or '1.20.0' in release_verifier or '1.20.1' in release_verifier or '1.21.0' in release_verifier, 'Runtime verifier targets V1.19 or a later release line')
-check("VERSION = '1.19.0'" in complete_verifier or "VERSION = '1.20.0-rc1'" in complete_verifier or "VERSION = '1.20.0'" in complete_verifier or "VERSION = '1.20.1'" in complete_verifier or "VERSION = '1.21.0'" in complete_verifier, 'Complete verifier targets V1.19 or a later source')
+
+runtime_release = extract(release_builder, r"INTENDED_RELEASE\s*=\s*'([^']+)'")
+runtime_tag = extract(release_builder, r"INTENDED_TAG\s*=\s*'v([^']+)'")
+complete_builder_version = extract(complete_builder, r"VERSION\s*=\s*'([^']+)'")
+runtime_verifier_release = extract(release_verifier, r"metadata\.get\('intended_release'\)\s*==\s*'([^']+)'")
+complete_verifier_version = extract(complete_verifier, r"VERSION\s*=\s*'([^']+)'")
+minimum_release = (1, 19, 0)
+
+check(runtime_release == runtime_tag and release_tuple(runtime_release) >= minimum_release, 'Runtime builder targets V1.19 or a later release line')
+check(release_tuple(complete_builder_version) >= minimum_release, 'Complete builder targets V1.19 or a later source')
+check(release_tuple(runtime_verifier_release) >= minimum_release, 'Runtime verifier targets V1.19 or a later release line')
+check(release_tuple(complete_verifier_version) >= minimum_release, 'Complete verifier targets V1.19 or a later source')
 check('Run Version 1.18 focused tests' in ci, 'CI continues to include V1.18 compatibility tests')
 check((ROOT / 'docs/v1-18-connection-monitor.md').is_file(), 'Connection Monitor design document exists')
 check((ROOT / 'docs/release-gate-v1.18.0.md').is_file(), 'V1.18 release gate document remains available')
