@@ -6,7 +6,7 @@ on:
       - release/v1.22.0-finalize-work
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   finalize:
@@ -14,9 +14,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: true
+          persist-credentials: false
           fetch-depth: 0
-      - name: Normalize Changelog anchor for finalizer
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
+          coverage: none
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Normalize Changelog anchor
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -27,12 +38,29 @@ jobs:
           p.write_text(s, encoding='utf-8', newline='\n')
           PY
       - name: Finalize Version 1.22.0 sources
-        run: python3 tools/finalize_v122_temp.py
-      - name: Commit finalized sources
         run: |
+          python3 tools/finalize_v122_temp.py
           rm -f .github/workflows/v122e-finalize-temp.yml tools/finalize_v122_temp.py
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "release(v1.22.0): finalize release candidate"
-          git push origin HEAD:release/v1.22.0-finalize-work
+      - name: Run V1.22.0 final gate
+        run: bash tests/run-v122e.sh
+      - name: Build and verify packages
+        run: |
+          rm -rf dist
+          python3 tools/build_release_package.py --mode final --output-dir dist
+          python3 tools/verify_release_package.py dist/rss-reader-modernization-1.22.0.zip dist/rss-reader-modernization-1.22.0.zip.sha256
+          python3 tools/build_complete_package.py --output-dir dist
+          python3 tools/verify_complete_package.py dist/rss-reader-modernization-1.22.0-complete.zip dist/rss-reader-modernization-1.22.0-complete.zip.sha256
+      - name: Archive finalized source tree
+        run: |
+          tar --exclude=.git --exclude=dist -czf /tmp/v122e-finalized-tree.tar.gz .
+          cp /tmp/v122e-finalized-tree.tar.gz dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: v122e-finalized-output
+          path: |
+            dist/v122e-finalized-tree.tar.gz
+            dist/rss-reader-modernization-1.22.0.zip
+            dist/rss-reader-modernization-1.22.0.zip.sha256
+            dist/rss-reader-modernization-1.22.0-complete.zip
+            dist/rss-reader-modernization-1.22.0-complete.zip.sha256
+          retention-days: 2
