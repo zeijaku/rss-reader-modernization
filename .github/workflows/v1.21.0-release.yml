@@ -200,6 +200,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           TAG='v1.21.0'
           if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
             PEELED="$(git ls-remote origin "refs/tags/${TAG}^{}" | awk '{print $1}')"
