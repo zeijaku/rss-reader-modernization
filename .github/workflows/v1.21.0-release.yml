@@ -139,8 +139,8 @@ jobs:
           python tools/verify_release_package.py dist/rss-reader-modernization-1.21.0.zip dist/rss-reader-modernization-1.21.0.zip.sha256
           python tools/build_complete_package.py --output-dir dist
           python tools/verify_complete_package.py dist/rss-reader-modernization-1.21.0-complete.zip dist/rss-reader-modernization-1.21.0-complete.zip.sha256
-          sha256sum -c dist/rss-reader-modernization-1.21.0.zip.sha256
-          sha256sum -c dist/rss-reader-modernization-1.21.0-complete.zip.sha256
+          (cd dist && sha256sum -c rss-reader-modernization-1.21.0.zip.sha256)
+          (cd dist && sha256sum -c rss-reader-modernization-1.21.0-complete.zip.sha256)
 
       - name: Runtime package clean-room checks
         if: steps.finalize.outputs.changed == 'false'
