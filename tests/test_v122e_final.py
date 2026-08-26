@@ -18,6 +18,7 @@ def check(ok: bool, message: str) -> None:
 
 version = text('app/version.php')
 calendar = text('public/js/calendar.js')
+management = text('public/js/rss-management.js')
 readme = text('README.md')
 changelog = text('CHANGELOG.md')
 notes = text('RELEASE_NOTES.md')
@@ -30,9 +31,10 @@ ci = text('.github/workflows/ci.yml')
 check("const APP_VERSION = '1.22.0';" in version, 'APP_VERSION is final 1.22.0')
 check("const APP_VERSION_LABEL = 'RSS Reader Modernization 1.22.0';" in version, 'APP_VERSION_LABEL is final 1.22.0')
 check("const APP_ASSET_REVISION = '1.22.0';" in version, 'APP_ASSET_REVISION is final 1.22.0')
-check('1.22.0-d' not in version + calendar, 'V1.22-D checkpoint asset key is absent from final runtime loader')
+check('1.22.0-d' not in version + calendar + management, 'V1.22-D checkpoint asset key is absent from final runtime loaders')
 for asset in ('feed-health.js', 'rss-rule-display.js', 'drawer-categories.js', 'mail-widget.css'):
     check(f'{asset}?v=1.22.0' in calendar, f'{asset} uses final asset revision')
+check('rss-rules.js?v=1.22.0' in management and 'rss-rules-integration.js?v=1.22.0' in management, 'RSS Management uses final Rule asset revision')
 
 check('**Stable release:** `RSS Reader Modernization 1.22.0`' in readme, 'README names 1.22.0 as stable')
 check('Release tag: `v1.22.0`' in readme, 'README names v1.22.0')
