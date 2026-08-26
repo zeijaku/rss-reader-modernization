@@ -16,6 +16,16 @@ jobs:
         with:
           persist-credentials: true
           fetch-depth: 0
+      - name: Normalize Changelog anchor for finalizer
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('CHANGELOG.md')
+          s = p.read_text(encoding='utf-8')
+          if '## [Unreleased]' not in s:
+              s = s.replace('# Changelog\n', '# Changelog\n\n## [Unreleased]\n', 1)
+          p.write_text(s, encoding='utf-8', newline='\n')
+          PY
       - name: Finalize Version 1.22.0 sources
         run: python3 tools/finalize_v122_temp.py
       - name: Commit finalized sources
