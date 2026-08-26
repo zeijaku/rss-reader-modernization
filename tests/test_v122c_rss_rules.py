@@ -31,6 +31,7 @@ for action in ['rss.rule.list', 'rss.rule.create', 'rss.rule.update', 'rss.rule.
     check(action in dispatch, f'API dispatcher exposes {action}')
 check('conditions_json' in api and 'JSON_THROW_ON_ERROR' in api, 'Condition JSON is bounded and strictly decoded')
 check('RSS Rules' in ui and 'rssRuleForm' in ui, 'RSS Management UI exposes Rules CRUD')
+# Compatibility: V1.22-C checkpoints use a suffix; the formal V1.22.0 release intentionally does not.
 check(asset_revision == '1.22.0' or asset_revision.startswith('1.22.0-'), 'V1.22 uses a checkpoint or formal release asset revision')
 check(f"rss-rules.js?v={asset_revision}" in loader, 'RSS Management loads Rules UI under the current V1.22 asset key')
 check(f"feed-health.js?v={asset_revision}" in calendar, 'Dashboard assets use the current V1.22 cache key')
