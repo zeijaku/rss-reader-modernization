@@ -41,10 +41,10 @@ check('architecture documents frontend non-split decision', '`public/js/dashboar
 endpoint_md = text('docs/v1-19-public-endpoints.md')
 with (ROOT / 'docs/v1-19-public-endpoint-matrix.csv').open('r', encoding='utf-8-sig', newline='') as handle:
     matrix = list(csv.DictReader(handle))
-expected = ['/','/stock','/settings','/api_v1.php','/calendar_color_api.php','/logout.php','/connection_probe.php','/error.php']
+expected = ['/','/stock','/settings','/rss-management','/api_v1.php','/calendar_color_api.php','/logout.php','/connection_probe.php','/error.php']
 check('endpoint CSV matches the current documented endpoints', [row['Endpoint'] for row in matrix] == expected)
 actual_php = sorted(p.name for p in (ROOT / 'public').glob('*.php'))
-expected_php = sorted(['index.php','stock.php','settings.php','api_v1.php','calendar_color_api.php','logout.php','connection_probe.php','error.php'])
+expected_php = sorted(['index.php','stock.php','settings.php','rss-management.php','api_v1.php','calendar_color_api.php','logout.php','connection_probe.php','error.php'])
 check('endpoint matrix matches actual public PHP inventory', actual_php == expected_php)
 for endpoint in expected:
     check(f'endpoint markdown documents {endpoint}', f'| {endpoint} |' in endpoint_md)
