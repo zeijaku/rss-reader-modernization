@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/rss_rule.php';
+require_once dirname(__DIR__) . '/feed_metadata.php';
+require_once dirname(__DIR__) . '/rss_rule_engine.php';
 
 /** @return list<array{field:string,operator:string,value:string}> */
 function api_rss_rule_conditions(array $input): array

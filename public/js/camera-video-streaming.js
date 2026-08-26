@@ -15,7 +15,7 @@
         }
         var link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = './css/camera-video-streaming.css?v=1.22.0-c';
+        link.href = './css/camera-video-streaming.css?v=1.22.0-d';
         link.setAttribute('data-camera-video-streaming-style', 'true');
         document.head.appendChild(link);
     }
@@ -120,9 +120,7 @@
         var mediaRecovery = 0;
 
         destroyHls($card);
-        hls = new Hls({
-            enableWorker: true
-        });
+        hls = new Hls({enableWorker: true});
         $card.data('camera-hls-instance', hls).attr('data-camera-hls-engine', 'hls.js');
 
         hls.on(Hls.Events.MANIFEST_PARSED, function () {
@@ -168,12 +166,7 @@
         $stage.empty().addClass('camera-video-streaming-stage camera-video-hls-stage');
         $video
             .addClass('camera-video-hls-player')
-            .attr({
-                controls: 'controls',
-                playsinline: 'playsinline',
-                preload: 'metadata',
-                title: title
-            })
+            .attr({controls: 'controls', playsinline: 'playsinline', preload: 'metadata', title: title})
             .appendTo($stage);
         $status = addStatus($stage, 'HLS Playerを準備中…', mixedContent(mediaUrl) ? 'warning' : 'normal');
 
@@ -217,9 +210,7 @@
         }
         setStatus($status, 'MJPEGへ再接続中…', mixedContent(mediaUrl) ? 'warning' : 'normal');
         $image.removeAttr('src');
-        window.setTimeout(function () {
-            $image.attr('src', mediaUrl);
-        }, 80);
+        window.setTimeout(function () {$image.attr('src', mediaUrl);}, 80);
     }
 
     function buildMjpeg($card, $stage, title, mediaUrl) {
@@ -229,11 +220,7 @@
         $stage.empty().addClass('camera-video-streaming-stage camera-video-mjpeg-stage');
         $image = $('<img>')
             .addClass('camera-video-mjpeg-image')
-            .attr({
-                src: mediaUrl,
-                alt: title + ' のMJPEG Stream',
-                decoding: 'async'
-            })
+            .attr({src: mediaUrl, alt: title + ' のMJPEG Stream', decoding: 'async'})
             .appendTo($stage);
         $status = addStatus(
             $stage,

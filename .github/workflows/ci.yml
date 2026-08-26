@@ -87,3 +87,6 @@ jobs:
 
       - name: Run Version 1.22-C RSS Rules focused gate
         run: bash tests/run-v122c.sh
+
+      - name: Run Version 1.22-D RSS Rules integration gate
+        run: bash tests/run-v122d.sh

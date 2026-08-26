@@ -59,13 +59,11 @@
         healthMap = healthMap || {};
         ensureHealthHeader();
         $('#rssManagementCount').text(feeds.length);
-
         if (feeds.length === 0) {
             $('#rssManagementTableWrap').prop('hidden', true);
             setAlert($status, 'light', '登録されているRSSはありません。');
             return;
         }
-
         feeds.forEach(function (feed) {
             var $tr = $('<tr>');
             var contentId = String(feed.content_id || '');
@@ -126,14 +124,12 @@
             setAlert($('#opmlImportResult'), 'warning', 'OPMLファイルは512 KiB以下にしてください。');
             return;
         }
-
         var formData = new FormData();
         formData.append('action', 'opml.import');
         formData.append('csrf_token', csrfToken());
         formData.append('opml_file', file, file.name);
         $('#opmlImportButton').prop('disabled', true);
         setAlert($('#opmlImportResult'), 'info', 'Importしています。');
-
         $.ajax({
             url: apiUrl,
             method: 'POST',
@@ -144,9 +140,7 @@
         }).done(function (response) {
             var data = response && response.data ? response.data : {};
             var message = 'Import結果: 追加 ' + (data.added || 0) + '件 / Duplicate ' + (data.duplicate || 0) + '件 / Failure ' + (data.failure || 0) + '件';
-            if ((data.warning || 0) > 0) {
-                message += ' / Warning ' + data.warning + '件';
-            }
+            if ((data.warning || 0) > 0) message += ' / Warning ' + data.warning + '件';
             setAlert($('#opmlImportResult'), data.failure > 0 ? 'warning' : 'success', message);
             fileInput.value = '';
             loadFeeds();
@@ -185,6 +179,8 @@
         });
     });
 
-    $.getScript('./js/rss-rules.js?v=1.22.0-c');
+    $.getScript('./js/rss-rules.js?v=1.22.0-d').done(function () {
+        $.getScript('./js/rss-rules-integration.js?v=1.22.0-d');
+    });
     $(loadFeeds);
 })(jQuery, document, window);

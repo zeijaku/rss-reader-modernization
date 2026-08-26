@@ -1,0 +1,20 @@
+.feed-item-row.rss-rule-highlight > td {
+    background-color: rgba(255, 193, 7, 0.14);
+}
+
+.feed-item-row.rss-rule-highlight .feed-item-title-wrap::before {
+    content: "";
+    display: inline-block;
+    width: 0.2rem;
+    align-self: stretch;
+    margin-right: 0.35rem;
+    border-radius: 999px;
+    background: currentColor;
+    opacity: 0.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .feed-item-row.rss-rule-highlight > td {
+        transition: none;
+    }
+}

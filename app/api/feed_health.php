@@ -76,6 +76,33 @@ function api_feed_fetch_with_health(int $userId, array $input): array
         ));
     }
 
+    // V1.22-D: Rules run only after the normal Feed fetch, item-state, metadata
+    // and Feed Health paths have completed. Rules never perform outbound I/O.
+    if (($response['body']['ok'] ?? false) === true && function_exists('rss_rule_apply_to_feed')) {
+        try {
+            $feed = $response['body']['data']['result_feed'] ?? null;
+            if (is_array($feed)) {
+                $applied = rss_rule_apply_to_feed($userId, $contentId, $feed, $source->url);
+                $response['body']['data']['result_feed'] = $applied['feed'];
+                $response['body']['data']['rules'] = [
+                    'matched' => $applied['matched'],
+                    'hidden' => $applied['hidden'],
+                    'highlighted' => $applied['highlighted'],
+                    'auto_stocked' => $applied['auto_stocked'],
+                ];
+            }
+        } catch (Throwable $exception) {
+            // Rules are optional enrichment. A Rule failure must not break RSS reading.
+            error_log(sprintf(
+                'RSS Rules apply skipped user_id=%d content_id=%d [%s]: %s',
+                $userId,
+                $contentId,
+                $exception::class,
+                $exception->getMessage()
+            ));
+        }
+    }
+
     return $response;
 }
 

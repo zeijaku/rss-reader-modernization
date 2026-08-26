@@ -1,7 +1,7 @@
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-
 checks = []
 
 def check(condition: bool, message: str) -> None:
@@ -16,6 +16,8 @@ ui = (ROOT / 'public/js/rss-rules.js').read_text(encoding='utf-8')
 loader = (ROOT / 'public/js/rss-management.js').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 calendar = (ROOT / 'public/js/calendar.js').read_text(encoding='utf-8')
+asset_match = re.search(r"APP_ASSET_REVISION\s*=\s*'([^']+)'", version)
+asset_revision = asset_match.group(1) if asset_match else ''
 
 check('rss_rule' in migration and 'rss_rule_condition' in migration, 'Migration creates normalized Rule and Condition tables')
 condition_section = migration.split('CREATE TABLE IF NOT EXISTS ', 2)[-1]
@@ -29,10 +31,9 @@ for action in ['rss.rule.list', 'rss.rule.create', 'rss.rule.update', 'rss.rule.
     check(action in dispatch, f'API dispatcher exposes {action}')
 check('conditions_json' in api and 'JSON_THROW_ON_ERROR' in api, 'Condition JSON is bounded and strictly decoded')
 check('RSS Rules' in ui and 'rssRuleForm' in ui, 'RSS Management UI exposes Rules CRUD')
-check('Highlight / Hide / Auto Stockの実行は次段階' in ui, 'UI explicitly states C does not execute actions yet')
-check("$.getScript('./js/rss-rules.js?v=1.22.0-c')" in loader, 'RSS Management loads Rules UI under C asset key')
-check("APP_ASSET_REVISION = '1.22.0-c'" in version, 'C has a fresh asset revision')
-check("feed-health.js?v=1.22.0-c" in calendar, 'Dashboard staged assets use the C cache key')
+check(asset_revision.startswith('1.22.0-'), 'V1.22 keeps a staged asset revision')
+check(f"rss-rules.js?v={asset_revision}" in loader, 'RSS Management loads Rules UI under the current V1.22 asset key')
+check(f"feed-health.js?v={asset_revision}" in calendar, 'Dashboard staged assets use the current V1.22 cache key')
 check('preg_match' not in ui and 'RegExp' not in ui, 'No client Regex rule mode is introduced')
 
 failed = len(checks) - sum(checks)
