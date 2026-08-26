@@ -17,6 +17,11 @@ def check(condition: bool, message: str) -> None:
     print(('PASS' if ok else 'FAIL') + ': ' + message)
 
 
+def release_tuple(value: str) -> tuple[int, int, int]:
+    match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)(?:-[A-Za-z0-9._-]+)?', value)
+    return tuple(int(part) for part in match.groups()) if match else (0, 0, 0)
+
+
 version = text('app/version.php')
 calendar = text('public/js/calendar.js')
 drawer = text('public/js/drawer-categories.js')
@@ -30,18 +35,22 @@ notes = text('RELEASE_NOTES.md')
 apply_note = text('APPLY_NOTE_V1_21_0.md')
 release_doc = text('docs/v1-21-0-final-release.md')
 
-check("const APP_VERSION = '1.21.0';" in version, 'Formal APP_VERSION remains 1.21.0 during V1.22 checkpoints')
-check("const APP_VERSION_LABEL = 'RSS Reader Modernization 1.21.0';" in version, 'Formal release label remains 1.21.0 during V1.22 checkpoints')
+version_match = re.search(r"const APP_VERSION = '([^']+)';", version)
+current_version = version_match.group(1) if version_match else ''
+check(release_tuple(current_version) >= (1, 21, 0), 'Current application remains on V1.21 or a later formal release line')
+check(f"const APP_VERSION_LABEL = 'RSS Reader Modernization {current_version}';" in version,
+      'Visible release label matches the current application version')
 revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
 active_revision = revision_match.group(1) if revision_match else ''
-check(active_revision == '1.21.0' or re.fullmatch(r'1\.22\.0(?:-[A-Za-z0-9._-]+)?', active_revision) is not None,
-      'Asset revision is the formal V1.21 key or a V1.22 checkpoint/final key')
-check('**Stable release:** `RSS Reader Modernization 1.21.0`' in readme, 'README names Version 1.21.0 as stable')
-check('Release tag: `v1.21.0`' in readme, 'README names the final tag')
+check(release_tuple(active_revision) >= (1, 21, 0), 'Asset revision remains on V1.21 or a later release line')
+check(f'**Stable release:** `RSS Reader Modernization {current_version}`' in readme, 'README names the current formal release as stable')
+check(f'Release tag: `v{current_version}`' in readme, 'README names the current formal release tag')
+check('Version 1.21.0は' in readme, 'README retains the Version 1.21.0 release history')
 check('## 1.21.0 - 2026-08-25' in changelog, 'CHANGELOG contains Version 1.21.0 entry')
-check('# RSS Reader Modernization 1.21.0' in notes, 'Release Notes target Version 1.21.0')
-check('v1.21.0' in apply_note and 'DB Migrationはありません' in apply_note, 'Production apply note records tag and no DB migration')
-check('v1.21.0' in release_doc and 'Version 1.20.1' in release_doc, 'Final release document records baseline and target')
+check(f'# RSS Reader Modernization {current_version}' in notes and f'Release tag: `v{current_version}`' in notes,
+      'Release Notes target the current formal release')
+check('v1.21.0' in apply_note and 'DB Migrationはありません' in apply_note, 'Production apply note records the V1.21 tag and no DB migration')
+check('v1.21.0' in release_doc and 'Version 1.20.1' in release_doc, 'V1.21 final release document records baseline and target')
 
 check("loadScript('./js/drawer-categories.js?v=" + active_revision + "');" in calendar, 'Dashboard loader uses the active Drawer cache key')
 check('./css/drawer-v121b.css?v=1.21.0' in drawer, 'Unchanged V1.21 Drawer visual layer keeps the formal cache key')
@@ -75,7 +84,7 @@ for tool in (
     'tools/verify_complete_package.py',
 ):
     body = text(tool)
-    check(('1.21.0' in body or '1.22.0' in body) and '1.20.1' not in body, f'{tool} retains a supported formal release target')
+    check(current_version in body and '1.20.1' not in body, f'{tool} targets the current formal release')
 
 migration_names = [p.name for p in (ROOT / 'database').rglob('*.sql') if 'v1_21' in p.name.lower() or 'v121' in p.name.lower()]
 check(migration_names == [], 'Version 1.21 adds no database migration')
