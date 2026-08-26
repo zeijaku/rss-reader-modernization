@@ -30,9 +30,12 @@ notes = text('RELEASE_NOTES.md')
 apply_note = text('APPLY_NOTE_V1_21_0.md')
 release_doc = text('docs/v1-21-0-final-release.md')
 
-check("const APP_VERSION = '1.21.0';" in version, 'Formal APP_VERSION is 1.21.0')
-check("const APP_VERSION_LABEL = 'RSS Reader Modernization 1.21.0';" in version, 'Formal release label is 1.21.0')
-check("const APP_ASSET_REVISION = '1.21.0';" in version, 'Formal asset revision is 1.21.0')
+check("const APP_VERSION = '1.21.0';" in version, 'Formal APP_VERSION remains 1.21.0 during V1.22 checkpoints')
+check("const APP_VERSION_LABEL = 'RSS Reader Modernization 1.21.0';" in version, 'Formal release label remains 1.21.0 during V1.22 checkpoints')
+revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
+active_revision = revision_match.group(1) if revision_match else ''
+check(active_revision == '1.21.0' or re.fullmatch(r'1\.22\.0(?:-[A-Za-z0-9._-]+)?', active_revision) is not None,
+      'Asset revision is the formal V1.21 key or a V1.22 checkpoint/final key')
 check('**Stable release:** `RSS Reader Modernization 1.21.0`' in readme, 'README names Version 1.21.0 as stable')
 check('Release tag: `v1.21.0`' in readme, 'README names the final tag')
 check('## 1.21.0 - 2026-08-25' in changelog, 'CHANGELOG contains Version 1.21.0 entry')
@@ -40,11 +43,11 @@ check('# RSS Reader Modernization 1.21.0' in notes, 'Release Notes target Versio
 check('v1.21.0' in apply_note and 'DB Migrationはありません' in apply_note, 'Production apply note records tag and no DB migration')
 check('v1.21.0' in release_doc and 'Version 1.20.1' in release_doc, 'Final release document records baseline and target')
 
-check("loadScript('./js/drawer-categories.js?v=1.21.0');" in calendar, 'Dashboard loader uses formal Drawer cache key')
-check('./css/drawer-v121b.css?v=1.21.0' in drawer, 'Drawer visual layer uses formal cache key')
-check('./css/drawer-v121c.css?v=1.21.0' in drawer, 'Drawer Smartphone layer uses formal cache key')
-check('1.21-c3' not in version + calendar + drawer, 'Checkpoint C cache key is absent from formal runtime loader')
-check('1.21-b1' not in drawer, 'Checkpoint B cache key is absent from formal runtime loader')
+check("loadScript('./js/drawer-categories.js?v=" + active_revision + "');" in calendar, 'Dashboard loader uses the active Drawer cache key')
+check('./css/drawer-v121b.css?v=1.21.0' in drawer, 'Unchanged V1.21 Drawer visual layer keeps the formal cache key')
+check('./css/drawer-v121c.css?v=1.21.0' in drawer, 'Unchanged V1.21 Drawer Smartphone layer keeps the formal cache key')
+check('1.21-c3' not in version + calendar + drawer, 'Checkpoint C cache key is absent from formal/runtime loader')
+check('1.21-b1' not in drawer, 'Checkpoint B cache key is absent from formal/runtime loader')
 
 expected_order = ["'display'", "'feed'", "'productivity'", "'information'", "'media'", "'game'", "'settings'", "'user-links'", "'account'"]
 pos = [drawer.find(item, drawer.find('var sectionOrder')) for item in expected_order]
@@ -72,7 +75,7 @@ for tool in (
     'tools/verify_complete_package.py',
 ):
     body = text(tool)
-    check('1.21.0' in body and '1.20.1' not in body, f'{tool} targets Version 1.21.0')
+    check('1.21.0' in body and '1.20.1' not in body, f'{tool} retains the formal Version 1.21.0 release target')
 
 migration_names = [p.name for p in (ROOT / 'database').rglob('*.sql') if 'v1_21' in p.name.lower() or 'v121' in p.name.lower()]
 check(migration_names == [], 'Version 1.21 adds no database migration')
