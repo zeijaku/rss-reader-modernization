@@ -25,6 +25,11 @@ Version 1.21.0 is the Drawer / Navigation organization and readability release b
 - Imgur Random / Gallery Widget
 - Whole-dashboard Grid alignment for Height 2 Widgets
 
+## Verification limits
+
+- Automated CI verifies the Version 1.21 final contract, current regression suite, Version 1.17 through 1.19 compatibility, source secret scanning, package integrity, and clean-room extraction checks.
+- Production-specific configuration, external services, existing production data, and device/browser behavior cannot be reproduced completely in CI; follow the production update checklist after deployment.
+
 ## Release assets
 
 - Runtime ZIP: `rss-reader-modernization-1.21.0.zip`
