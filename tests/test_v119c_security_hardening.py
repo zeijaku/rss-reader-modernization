@@ -57,7 +57,7 @@ for directive in ["frame-ancestors 'self'", "base-uri 'self'", "form-action 'sel
 php_files = sorted(p.name for p in (ROOT / 'public').glob('*.php'))
 expected_endpoints = sorted([
     'api_v1.php', 'calendar_color_api.php', 'connection_probe.php', 'error.php', 'index.php',
-    'logout.php', 'settings.php', 'stock.php',
+    'logout.php', 'rss-management.php', 'settings.php', 'stock.php',
 ])
 check('public PHP endpoint inventory matches the explicit allowlist', php_files == expected_endpoints)
 whitelist_line = next((line.strip() for line in public_ht.splitlines() if 'V1.19-C' not in line and 'RewriteRule' in line and 'api_v1\\.php' in line), '')
