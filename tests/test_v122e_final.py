@@ -53,7 +53,7 @@ for name in migrations:
     check(name in update, f'update documents migration: {name}')
 check('次の19 table' in install, 'fresh installation documents 19 tables')
 check('014→015→016' in update, 'existing DB update requires numeric migration order')
-check('schema.sql`を再実行' in notes and 'Do not rerun' in notes, 'release notes warn against rerunning schema on existing DB')
+check('Do not rerun `database/schema.sql` against an existing database.' in notes, 'release notes warn against rerunning schema on existing DB')
 
 for tool in (
     'tools/build_release_package.py',
