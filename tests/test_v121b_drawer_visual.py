@@ -23,7 +23,9 @@ drawer = text('public/js/drawer-categories.js')
 css = text('public/css/drawer-v121b.css')
 base_css = text('public/css/dashboard.css')
 
-check("const APP_VERSION = '1.21.0';" in version, 'Formal V1.21 release marker is 1.21.0')
+version_match = re.search(r"const APP_VERSION = '(\d+)\.(\d+)\.(\d+)(?:-[^']+)?';", version)
+version_tuple = tuple(int(part) for part in version_match.groups()) if version_match else (0, 0, 0)
+check(version_tuple >= (1, 21, 0), 'V1.21 visual contract remains valid on V1.21 or a later release line')
 revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
 active_revision = revision_match.group(1) if revision_match else ''
 check(active_revision == '1.21.0' or re.fullmatch(r'1\.22\.0(?:-[A-Za-z0-9._-]+)?', active_revision) is not None,
