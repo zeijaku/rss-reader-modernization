@@ -6,15 +6,16 @@ on:
       - release/v1.22.0-finalize-work
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   finalize:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
           fetch-depth: 0
       - uses: shivammathur/setup-php@v2
         with:
@@ -82,8 +83,6 @@ jobs:
           s = read(p).replace("## [1.22.0] - 2026-08-26", "## 1.22.0 - 2026-08-26")
           write(p, s)
 
-          # py_compile is useful for syntax validation but creates cache files.
-          # Clean them inside the final gate so package security checks stay deterministic.
           p = 'tests/run-v122e.sh'
           s = read(p)
           anchor = "python3 -m py_compile tools/build_release_package.py tools/verify_release_package.py tools/build_complete_package.py tools/verify_complete_package.py tests/test_v122e_final.py\n\necho 'PASS: V1.22.0 final release gate completed'"
@@ -116,3 +115,18 @@ jobs:
             dist/rss-reader-modernization-1.22.0-complete.zip
             dist/rss-reader-modernization-1.22.0-complete.zip.sha256
           retention-days: 2
+      - name: Commit validated non-workflow release files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            app/version.php README.md CHANGELOG.md RELEASE_NOTES.md \
+            docs/README.md docs/installation.md \
+            public/js/calendar.js public/js/rss-management.js \
+            tests/run-v121e.sh tests/run-v122e.sh \
+            tests/test_v122b_feed_health.py tests/test_v122c_rss_rules.py \
+            tests/test_v122d_rss_rules.py tests/test_v122e_final.py \
+            tools/build_release_package.py tools/verify_release_package.py \
+            tools/build_complete_package.py tools/verify_complete_package.py
+          git commit -m "release(v1.22.0): stage validated release files"
+          git push origin HEAD:release/v1.22.0-finalize-work
