@@ -1,0 +1,322 @@
+#!/usr/bin/env python3
+from pathlib import Path
+
+
+def read(path: str) -> str:
+    return Path(path).read_text(encoding='utf-8')
+
+
+def write(path: str, body: str) -> None:
+    Path(path).write_text(body, encoding='utf-8', newline='\n')
+
+
+write('app/version.php', """<?php
+
+declare(strict_types=1);
+
+/**
+ * Visible release marker for deployment verification.
+ * Update these values for every distributed checkpoint/build.
+ */
+const APP_VERSION = '1.22.0';
+const APP_VERSION_LABEL = 'RSS Reader Modernization 1.22.0';
+
+/**
+ * Cache key for public assets.
+ * Formal releases use the application version as the asset revision.
+ */
+const APP_ASSET_REVISION = '1.22.0';
+""")
+
+p = 'tools/build_release_package.py'
+s = read(p)
+s = s.replace("INTENDED_RELEASE = '1.21.0'", "INTENDED_RELEASE = '1.22.0'")
+s = s.replace("INTENDED_TAG = 'v1.21.0'", "INTENDED_TAG = 'v1.22.0'")
+s = s.replace(r"1\.20\.1-dev", r"1\.22\.0-dev")
+s = s.replace(r"1\.20\.1-rc", r"1\.22\.0-rc")
+s = s.replace('rss-reader-modernization-1.21.0-preview', 'rss-reader-modernization-1.22.0-preview')
+s = s.replace('RSS Reader Modernization 1.21.0', 'RSS Reader Modernization 1.22.0')
+s = s.replace('rss-reader-modernization-1.21.0', 'rss-reader-modernization-1.22.0')
+s = s.replace('exact 1.21.0 version', 'exact 1.22.0 version')
+write(p, s)
+
+p = 'tools/verify_release_package.py'
+s = read(p)
+s = s.replace('1.21.0', '1.22.0').replace('v1.21.0', 'v1.22.0')
+s = s.replace(r"1\.20\.1-rc", r"1\.22\.0-rc")
+write(p, s)
+
+p = 'tools/build_complete_package.py'
+s = read(p).replace("VERSION = '1.21.0'", "VERSION = '1.22.0'")
+s = s.replace('RSS Reader Modernization 1.21.0', 'RSS Reader Modernization 1.22.0')
+s = s.replace('intended_release=1.21.0', 'intended_release=1.22.0')
+s = s.replace('intended_tag=v1.21.0', 'intended_tag=v1.22.0')
+s = s.replace('Version 1.21.0 source package', 'Version 1.22.0 source package')
+write(p, s)
+
+p = 'tools/verify_complete_package.py'
+s = read(p).replace("VERSION = '1.21.0'", "VERSION = '1.22.0'")
+s = s.replace('Version 1.21.0 source package', 'Version 1.22.0 source package')
+s = s.replace('application_version=1.21.0', 'application_version=1.22.0')
+s = s.replace('RSS Reader Modernization 1.21.0', 'RSS Reader Modernization 1.22.0')
+s = s.replace('intended_release=1.21.0', 'intended_release=1.22.0')
+s = s.replace('intended_tag=v1.21.0', 'intended_tag=v1.22.0')
+s = s.replace('final Version 1.21.0', 'final Version 1.22.0')
+s = s.replace("APP_VERSION = '1.21.0'", "APP_VERSION = '1.22.0'")
+s = s.replace("APP_VERSION_LABEL = 'RSS Reader Modernization 1.21.0'", "APP_VERSION_LABEL = 'RSS Reader Modernization 1.22.0'")
+s = s.replace("APP_ASSET_REVISION = '1.21.0'", "APP_ASSET_REVISION = '1.22.0'")
+s = s.replace('exact final 1.21.0 marker', 'exact final 1.22.0 marker')
+s = s.replace("'.github/workflows/v1.21.0-release.yml',", "'.github/workflows/v1.21.0-release.yml', '.github/workflows/v1.22.0-release.yml',")
+write(p, s)
+
+p = 'README.md'
+s = read(p)
+old = "**Stable release:** `RSS Reader Modernization 1.21.0`\nRelease tag: `v1.21.0`\n\n"
+new = "**Stable release:** `RSS Reader Modernization 1.22.0`\nRelease tag: `v1.22.0`\n\nVersion 1.22.0では、RSS管理機能を強化し、OPML Import / Export、Feed Health、RSS Rulesとその記事表示・Action連携を追加しました。Feed所有権をSession userから導出する境界、既存のSSRF-safe Feed取得経路、CSRF、出力Escapeを維持し、V1.22用Migration 014〜016を追加しています。Release前にRepository内のCheckpoint Markdownも整理し、今後のDocumentation増殖を抑える方針を追加しました。\n\n"
+if old not in s:
+    raise SystemExit('README release header anchor not found')
+s = s.replace(old, new, 1)
+s = s.replace('rss-reader-modernization-1.21.0-complete.zip', 'rss-reader-modernization-1.22.0-complete.zip')
+s = s.replace('rss-reader-modernization-1.21.0.zip', 'rss-reader-modernization-1.22.0.zip')
+write(p, s)
+
+p = 'CHANGELOG.md'
+s = read(p)
+marker = '## [Unreleased]'
+section = """## [1.22.0] - 2026-08-26
+
+### Added
+- RSS管理画面にOPML Import / Exportを追加し、所有Feedの移行とCategory metadataを扱えるようにしました。
+- Feed Healthを追加し、最終成功、HTTP status、連続失敗、Error理由、手動再確認を所有Feed単位で確認できるようにしました。
+- RSS Rulesを追加し、登録Ruleに基づく記事表示・Action連携を追加しました。
+
+### Changed
+- RSS Rules / Feed Health / RSS管理を既存Article ActionsとDashboard表示へ統合し、V1.22-DでUI / Security境界を最終調整しました。
+- Release前に参照されていないCheckpoint Markdownを整理し、Documentation policyを追加しました。
+- Application Version / asset revision / Release package targetを1.22.0へ正式化しました。
+
+### Database
+- `014_v1_22_opml_feed_metadata.sql`
+- `015_v1_22_feed_health.sql`
+- `016_v1_22_rss_rules.sql`
+
+"""
+if section.strip() not in s:
+    if marker not in s:
+        raise SystemExit('CHANGELOG Unreleased anchor not found')
+    s = s.replace(marker, marker + '\n\n' + section, 1)
+write(p, s)
+
+write('RELEASE_NOTES.md', """# RSS Reader Modernization 1.22.0
+
+Release date: 2026-08-26
+Release tag: `v1.22.0`
+
+## Summary
+
+Version 1.22.0 is the RSS management enhancement release. It integrates OPML Import / Export, Feed Health, and RSS Rules on top of the existing authenticated, CSRF-protected, SSRF-safe RSS pipeline.
+
+## Highlights
+
+- OPML Import / Export for the signed-in user's active feeds.
+- Feed metadata for title, site URL, and imported category path.
+- Feed Health status, last success, latest article date, HTTP status, consecutive failures, error reason, and manual recheck.
+- RSS Rules with ownership-safe management and article display / action integration.
+- V1.22-D integration keeps existing Stock, Task, Calendar, Dashboard, Feed fetch, and Article Actions contracts.
+- Repository documentation cleanup removes obsolete checkpoint notes while keeping referenced release evidence and Git history.
+
+## Security boundaries
+
+- User ownership is derived from the authenticated Session; request-supplied user IDs are not trusted.
+- Feed checks and manual rechecks reuse stored owned Feed URLs and the existing SSRF-safe Feed fetch path. Arbitrary probe URLs are not accepted.
+- OPML import keeps XML size/count/depth limits, rejects DTD/ENTITY input, and performs no outbound HTTP during parsing.
+- Existing CSRF, input validation, output escaping, Session handling, and PDO boundaries remain in effect.
+- Release packages continue to exclude `config/local.php`, runtime DB/cache/log/session data, legacy source archives, and high-signal secret patterns.
+
+## Database migrations
+
+Existing installations must back up the database and apply only migrations not already applied, in numeric order:
+
+- `014_v1_22_opml_feed_metadata.sql`
+- `015_v1_22_feed_health.sql`
+- `016_v1_22_rss_rules.sql`
+
+Do not re-run migrations already applied in the target environment. New installations should follow `docs/installation.md` and the current schema/migration guidance.
+
+## Packages
+
+- Runtime: `rss-reader-modernization-1.22.0.zip`
+- Complete source/test package: `rss-reader-modernization-1.22.0-complete.zip`
+- Each ZIP is accompanied by a `.sha256` sidecar.
+
+## Verification
+
+The V1.22.0 final gate runs the current regression suite, V1.22 A/B/C/D focused and integration checks, release contract checks, PHP/JavaScript syntax checks, deterministic package build, package manifest verification, and secret-pattern checks on PHP 8.1 and PHP 8.4 in GitHub Actions.
+
+## Verification limits
+
+Automated verification cannot replace the final deployment check against the production web server, production database state, browser cache behavior, or external RSS endpoints. The final tag should be created only after the release-candidate package has been verified in the target environment.
+""")
+
+for p in ('docs/installation.md', 'docs/README.md'):
+    s = read(p)
+    s = s.replace('009〜012', '009〜016')
+    if '014_v1_22_opml_feed_metadata.sql' not in s:
+        s += "\n- `database/migrations/014_v1_22_opml_feed_metadata.sql` — V1.22 OPML Feed metadata\n- `database/migrations/015_v1_22_feed_health.sql` — V1.22 Feed Health\n- `database/migrations/016_v1_22_rss_rules.sql` — V1.22 RSS Rules\n"
+    write(p, s)
+
+p = '.github/workflows/ci.yml'
+s = read(p)
+needle = "      - name: Run Version 1.22-D RSS Rules integration gate\n        run: bash tests/run-v122d.sh\n"
+addition = needle + "\n      - name: Run Version 1.22.0 final release gate\n        run: bash tests/run-v122e.sh\n"
+if 'Run Version 1.22.0 final release gate' not in s:
+    if needle not in s:
+        raise SystemExit('ci.yml V1.22-D gate anchor not found')
+    s = s.replace(needle, addition, 1)
+write(p, s)
+
+write('tests/test_v122e_final.py', r'''#!/usr/bin/env python3
+from pathlib import Path
+import re
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+checks = []
+
+def text(path):
+    return (ROOT / path).read_text(encoding='utf-8')
+
+def check(ok, message):
+    ok = bool(ok)
+    checks.append(ok)
+    print(('PASS' if ok else 'FAIL') + ': ' + message)
+
+version = text('app/version.php')
+readme = text('README.md')
+changelog = text('CHANGELOG.md')
+notes = text('RELEASE_NOTES.md')
+ci = text('.github/workflows/ci.yml')
+
+check("APP_VERSION = '1.22.0'" in version, 'APP_VERSION is final 1.22.0')
+check("APP_VERSION_LABEL = 'RSS Reader Modernization 1.22.0'" in version, 'APP_VERSION_LABEL is final 1.22.0')
+check("APP_ASSET_REVISION = '1.22.0'" in version, 'asset revision is final 1.22.0')
+check('**Stable release:** `RSS Reader Modernization 1.22.0`' in readme, 'README stable release is 1.22.0')
+check('Release tag: `v1.22.0`' in readme, 'README release tag is v1.22.0')
+check('## [1.22.0] - 2026-08-26' in changelog, 'CHANGELOG contains 1.22.0')
+check('# RSS Reader Modernization 1.22.0' in notes, 'release notes target 1.22.0')
+check('Verification limits' in notes, 'release notes disclose verification limits')
+
+migrations = [
+    '014_v1_22_opml_feed_metadata.sql',
+    '015_v1_22_feed_health.sql',
+    '016_v1_22_rss_rules.sql',
+]
+for name in migrations:
+    check((ROOT / 'database/migrations' / name).is_file(), f'migration exists: {name}')
+    check(name in notes, f'release notes list migration: {name}')
+
+for tool in (
+    'tools/build_release_package.py',
+    'tools/verify_release_package.py',
+    'tools/build_complete_package.py',
+    'tools/verify_complete_package.py',
+):
+    check('1.22.0' in text(tool), f'{tool} targets Version 1.22.0')
+
+check('bash tests/run-v122e.sh' in ci, 'CI includes V1.22.0 final gate')
+check(not (ROOT / 'config/local.php').exists(), 'repository contains no config/local.php')
+check(not re.findall(r"1\.22\.0-[abcd](?![A-Za-z0-9])", version), 'formal version marker contains no checkpoint suffix')
+
+failed = len(checks) - sum(checks)
+print(f'RESULT: PASS {sum(checks)} / FAIL {failed}')
+sys.exit(1 if failed else 0)
+''')
+
+write('tests/run-v122e.sh', '''#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+echo '== V1.22-A OPML focused checks =='
+php tests/db_table_allowlist_v122a_test.php
+php tests/feed_metadata_title_v122a_test.php
+php tests/opml_v122a_test.php
+
+echo '== V1.22-B Feed Health gate =='
+bash tests/run-v122b.sh
+
+echo '== V1.22-C RSS Rules gate =='
+bash tests/run-v122c.sh
+
+echo '== V1.22-D RSS Rules integration gate =='
+bash tests/run-v122d.sh
+
+echo '== V1.22-E final release contract =='
+python3 tests/test_v122e_final.py
+
+php -l app/version.php
+python3 -m py_compile tools/build_release_package.py tools/verify_release_package.py tools/build_complete_package.py tools/verify_complete_package.py tests/test_v122e_final.py
+
+echo 'PASS: V1.22.0 final release gate completed'
+''')
+
+write('.github/workflows/v1.22.0-release.yml', '''name: V1.22.0 Release Gate
+
+on:
+  push:
+    branches:
+      - release/v1.22.0-final
+    tags:
+      - v1.22.0
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: PHP ${{ matrix.php }} package / release gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.1', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
+          coverage: none
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run V1.22.0 final gate
+        run: bash tests/run-v122e.sh
+      - name: Build and verify runtime package
+        run: |
+          rm -rf dist
+          python3 tools/build_release_package.py --mode final --output-dir dist
+          python3 tools/verify_release_package.py dist/rss-reader-modernization-1.22.0.zip dist/rss-reader-modernization-1.22.0.zip.sha256
+      - name: Build and verify complete package
+        run: |
+          python3 tools/build_complete_package.py --output-dir dist
+          python3 tools/verify_complete_package.py dist/rss-reader-modernization-1.22.0-complete.zip dist/rss-reader-modernization-1.22.0-complete.zip.sha256
+      - name: Upload release candidate artifacts
+        if: matrix.php == '8.4'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-modernization-v1.22.0-rc
+          path: |
+            dist/rss-reader-modernization-1.22.0.zip
+            dist/rss-reader-modernization-1.22.0.zip.sha256
+            dist/rss-reader-modernization-1.22.0-complete.zip
+            dist/rss-reader-modernization-1.22.0-complete.zip.sha256
+          retention-days: 7
+''')
