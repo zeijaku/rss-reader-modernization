@@ -81,3 +81,6 @@ jobs:
 
       - name: Run Version 1.21.0 final release gate
         run: bash tests/run-v121e.sh
+
+      - name: Run Version 1.22-B Feed Health focused gate
+        run: bash tests/run-v122b.sh

@@ -20,13 +20,44 @@
     }
 
     function safeLink(url, label) {
-        var $a = $('<a>').attr({href: url, target: '_blank', rel: 'noopener noreferrer'}).text(label || url);
-        return $a;
+        return $('<a>').attr({href: url, target: '_blank', rel: 'noopener noreferrer'}).text(label || url);
     }
 
-    function renderFeeds(feeds) {
+    function ensureHealthHeader() {
+        var $row = $('#rssManagementTableWrap thead tr').first();
+        if ($row.length > 0 && $row.find('.rss-health-heading').length === 0) {
+            $('<th>').attr('scope', 'col').addClass('rss-health-heading text-nowrap').text('Health').appendTo($row);
+        }
+    }
+
+    function healthCell(health) {
+        var status = health && typeof health.status === 'string' ? health.status : 'unknown';
+        var label = health && health.status_label ? String(health.status_label) : 'Unknown';
+        var classes = 'badge ';
+        var icon = 'far fa-question-circle';
+        if (status === 'normal') {
+            classes += 'text-bg-success';
+            icon = 'fas fa-check-circle';
+        } else if (status === 'warning') {
+            classes += 'text-bg-warning';
+            icon = 'fas fa-exclamation-triangle';
+        } else if (status === 'error') {
+            classes += 'text-bg-danger';
+            icon = 'fas fa-exclamation-circle';
+        } else {
+            classes += 'text-bg-secondary';
+        }
+        return $('<td>').addClass('text-nowrap')
+            .append($('<span>').addClass(classes).attr('title', 'Feed Health: ' + label)
+                .append($('<i>').addClass(icon + ' fa-fw').attr('aria-hidden', 'true'))
+                .append(document.createTextNode(label)));
+    }
+
+    function renderFeeds(feeds, healthMap) {
         var $body = $('#rssManagementTableBody').empty();
         var $status = $('#rssManagementListStatus');
+        healthMap = healthMap || {};
+        ensureHealthHeader();
         $('#rssManagementCount').text(feeds.length);
 
         if (feeds.length === 0) {
@@ -37,6 +68,7 @@
 
         feeds.forEach(function (feed) {
             var $tr = $('<tr>');
+            var contentId = String(feed.content_id || '');
             $('<td>').text(feed.title || '-').appendTo($tr);
             $('<td>').append(safeLink(feed.feed_url, feed.feed_url)).appendTo($tr);
             if (feed.site_url) {
@@ -45,15 +77,36 @@
                 $('<td>').text('-').appendTo($tr);
             }
             $('<td>').text(feed.category_path || '-').appendTo($tr);
+            healthCell(healthMap[contentId]).appendTo($tr);
             $tr.appendTo($body);
         });
         $status.prop('hidden', true);
         $('#rssManagementTableWrap').prop('hidden', false);
     }
 
+    function loadHealthForFeeds(feeds) {
+        return apiPost('feed.health.list').done(function (healthResponse) {
+            var healthRows = healthResponse.data && Array.isArray(healthResponse.data.health) ? healthResponse.data.health : [];
+            var healthMap = {};
+            healthRows.forEach(function (health) {
+                healthMap[String(health.content_id || '')] = health;
+            });
+            renderFeeds(feeds, healthMap);
+        }).fail(function () {
+            if (feeds.length > 0) {
+                setAlert($('#rssManagementListStatus'), 'warning', 'RSS一覧は表示していますが、Feed Healthの取得に失敗しました。');
+                $('#rssManagementTableWrap').prop('hidden', false);
+            }
+        });
+    }
+
     function loadFeeds() {
-        return apiPost('opml.list').done(function (response) {
-            renderFeeds(response && response.data && Array.isArray(response.data.feeds) ? response.data.feeds : []);
+        return apiPost('opml.list').done(function (feedResponse) {
+            var feeds = feedResponse.data && Array.isArray(feedResponse.data.feeds) ? feedResponse.data.feeds : [];
+            renderFeeds(feeds, {});
+            if (feeds.length > 0) {
+                loadHealthForFeeds(feeds);
+            }
         }).fail(function (xhr) {
             var message = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error.message : 'RSS一覧の取得に失敗しました。';
             setAlert($('#rssManagementListStatus'), 'danger', message);

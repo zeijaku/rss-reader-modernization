@@ -11,6 +11,10 @@ final class FeedFetcher implements FeedTransportInterface
     /** @return array<string,mixed> */
     public function fetch(FeedSource $source, array $validators = []): array
     {
-        return app_safe_http_fetch($source->url, null, null, $validators);
+        $result = app_safe_http_fetch($source->url, null, null, $validators);
+        if (function_exists('feed_health_observe_transport')) {
+            feed_health_observe_transport($source, $result);
+        }
+        return $result;
     }
 }

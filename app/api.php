@@ -123,6 +123,7 @@ require_once __DIR__ . '/api/dashboard.php';
 require_once __DIR__ . '/api/account.php';
 require_once __DIR__ . '/api/integrations.php';
 require_once __DIR__ . '/api/opml.php';
+require_once __DIR__ . '/api/feed_health.php';
 
 /** @return array{status:int,body:array<string,mixed>} */
 function api_dispatch(string $action, int $userId, array $input): array
@@ -145,10 +146,13 @@ function api_dispatch(string $action, int $userId, array $input): array
         'account.email.update' => api_account_email_update($userId, $input),
         'account.password.update' => api_account_password_update($userId, $input),
         'tabs.update' => api_tabs_update($userId, $input),
-        'feed.fetch' => api_feed_fetch_with_metadata_title($userId, $input),
+        'feed.fetch' => api_feed_fetch_with_health($userId, $input),
         'feed.new.clear' => api_feed_new_clear($userId, $input),
         'feed.keyword.create' => api_feed_keyword_create($userId, $input),
         'feed.keyword.delete' => api_feed_keyword_delete($userId, $input),
+        'feed.health.get' => api_feed_health_get($userId, $input),
+        'feed.health.list' => api_feed_health_list($userId),
+        'feed.health.recheck' => api_feed_health_recheck($userId, $input),
         'opml.list' => api_opml_dispatch($action, $userId, $input),
         'opml.import' => api_opml_dispatch($action, $userId, $input),
         'opml.export' => api_opml_dispatch($action, $userId, $input),
@@ -222,5 +226,3 @@ function api_dispatch(string $action, int $userId, array $input): array
         default => api_error('unknown_action', 'Unknown API action.', 400),
     };
 }
-
-
