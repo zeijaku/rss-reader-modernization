@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,9 +26,12 @@ dashboard_js = text('public/js/dashboard.js')
 utility_js = text('public/js/utility-widgets.js')
 
 check("const APP_VERSION = '1.21.0';" in version, 'Formal V1.21 release marker is 1.21.0')
-check("const APP_ASSET_REVISION = '1.21.0';" in version, 'Formal V1.21 asset revision is 1.21.0')
-check("loadScript('./js/drawer-categories.js?v=1.21.0');" in calendar, 'Dashboard / Stock reload the Drawer organizer under the final cache key')
-check("./css/drawer-v121c.css?v=1.21.0" in drawer and 'data-drawer-v121c-style' in drawer, 'Drawer organizer stages the finalized C mobile stylesheet once')
+revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
+active_revision = revision_match.group(1) if revision_match else ''
+check(active_revision == '1.21.0' or re.fullmatch(r'1\.22\.0(?:-[A-Za-z0-9._-]+)?', active_revision) is not None,
+      'Asset revision is the formal V1.21 key or a V1.22 checkpoint/final key')
+check("loadScript('./js/drawer-categories.js?v=" + active_revision + "');" in calendar, 'Dashboard / Stock reload the Drawer organizer under the active cache key')
+check("./css/drawer-v121c.css?v=1.21.0" in drawer and 'data-drawer-v121c-style' in drawer, 'Drawer organizer retains the finalized C mobile stylesheet cache key')
 check(drawer.find('./css/drawer-v121b.css?v=1.21.0') < drawer.find('./css/drawer-v121c.css?v=1.21.0'), 'V1.21-B visual layer loads before the C mobile adjustments')
 
 check('@media (max-width: 575.98px)' in mobile_css, 'Small-screen tuning is scoped to the Smartphone breakpoint')
