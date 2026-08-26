@@ -1,0 +1,253 @@
+name: V1.22.0 Final Release
+
+on:
+  push:
+    branches:
+      - release/v1.22.0-final
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: v1.22.0-final-release
+  cancel-in-progress: false
+
+jobs:
+  finalize-and-release:
+    name: V1.22.0 finalization / release gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up PHP 8.4 for finalization
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
+          coverage: none
+
+      - name: Prepare formal Version 1.22.0 files
+        id: finalize
+        shell: bash
+        run: |
+          set -euo pipefail
+          python tools/finalize_v122_release.py
+          if git diff --quiet && [ -z "$(git status --porcelain --untracked-files=all)" ]; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit formal Version 1.22.0 files
+        if: steps.finalize.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/version.php
+          git add public/js/calendar.js
+          git add README.md CHANGELOG.md RELEASE_NOTES.md
+          git add docs/installation.md docs/update.md docs/tag-and-github-release.md docs/v1-22-0-release.md
+          git add tools/build_release_package.py tools/verify_release_package.py
+          git add tools/build_complete_package.py tools/verify_complete_package.py
+          git add tests/test_v121e_final.py
+          git add .github/workflows/ci.yml
+          git diff --cached --check
+          git commit -m 'release(v1.22): finalize Version 1.22.0'
+          git push origin HEAD:release/v1.22.0-final
+
+      - name: Stop after finalization commit
+        if: steps.finalize.outputs.changed == 'true'
+        run: echo 'Formal release files committed. The push-triggered run will execute the release gate.'
+
+      - name: Validate Version 1.22 final contract
+        if: steps.finalize.outputs.changed == 'false'
+        run: bash tests/run-v122e.sh
+
+      - name: Set up PHP 8.1 regression runtime
+        if: steps.finalize.outputs.changed == 'false'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
+          coverage: none
+
+      - name: Run PHP 8.1 current / compatibility regression
+        if: steps.finalize.outputs.changed == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/run-current.sh
+          bash tests/run-v117.sh
+          bash tests/run-v1171.sh
+          bash tests/run-v1172.sh
+          bash tests/run-v118.sh
+          bash tests/run-v119.sh
+          bash tests/run-v119c.sh
+          bash tests/run-v119d.sh
+          bash tests/run-v121e.sh
+          bash tests/run-v122b.sh
+          bash tests/run-v122c.sh
+          bash tests/run-v122d.sh
+          bash tests/run-v122e.sh
+
+      - name: Set up PHP 8.4 regression runtime
+        if: steps.finalize.outputs.changed == 'false'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
+          coverage: none
+
+      - name: Run PHP 8.4 current / compatibility regression
+        if: steps.finalize.outputs.changed == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tests/run-current.sh
+          bash tests/run-v117.sh
+          bash tests/run-v1171.sh
+          bash tests/run-v1172.sh
+          bash tests/run-v118.sh
+          bash tests/run-v119.sh
+          bash tests/run-v119c.sh
+          bash tests/run-v119d.sh
+          bash tests/run-v121e.sh
+          bash tests/run-v122b.sh
+          bash tests/run-v122c.sh
+          bash tests/run-v122d.sh
+          bash tests/run-v122e.sh
+
+      - name: High-signal source secret scan
+        if: steps.finalize.outputs.changed == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=.git --exclude-dir=dist --exclude='*.md' --exclude='.env.example' '(BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|mysql:[^\n]*(password|pwd)=|sk-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16})' app public config tools; then
+            echo 'Potential secret pattern found.' >&2
+            exit 1
+          fi
+          test ! -f config/local.php
+          echo 'PASS: high-signal source secret scan'
+
+      - name: Build and verify formal packages
+        if: steps.finalize.outputs.changed == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          python tools/build_release_package.py --mode final --output-dir dist
+          python tools/verify_release_package.py dist/rss-reader-modernization-1.22.0.zip dist/rss-reader-modernization-1.22.0.zip.sha256
+          python tools/build_complete_package.py --output-dir dist
+          python tools/verify_complete_package.py dist/rss-reader-modernization-1.22.0-complete.zip dist/rss-reader-modernization-1.22.0-complete.zip.sha256
+          (cd dist && sha256sum -c rss-reader-modernization-1.22.0.zip.sha256)
+          (cd dist && sha256sum -c rss-reader-modernization-1.22.0-complete.zip.sha256)
+
+      - name: Runtime package clean-room checks
+        if: steps.finalize.outputs.changed == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf build/v122-runtime-check
+          mkdir -p build/v122-runtime-check
+          unzip -q dist/rss-reader-modernization-1.22.0.zip -d build/v122-runtime-check
+          ROOT_DIR="build/v122-runtime-check/rss-reader-modernization-1.22.0"
+          test -f "$ROOT_DIR/app/version.php"
+          test -f "$ROOT_DIR/database/migrations/014_v1_22_opml_feed_metadata.sql"
+          test -f "$ROOT_DIR/database/migrations/015_v1_22_feed_health.sql"
+          test -f "$ROOT_DIR/database/migrations/016_v1_22_rss_rules.sql"
+          test ! -f "$ROOT_DIR/config/local.php"
+          php -l "$ROOT_DIR/app/version.php"
+          php -l "$ROOT_DIR/public/index.php"
+          php -l "$ROOT_DIR/public/rss-management.php"
+          node --check "$ROOT_DIR/public/js/calendar.js"
+          node --check "$ROOT_DIR/public/js/feed-health.js"
+          node --check "$ROOT_DIR/public/js/rss-rule-display.js"
+          grep -Fq "const APP_VERSION = '1.22.0';" "$ROOT_DIR/app/version.php"
+          grep -Fq "const APP_ASSET_REVISION = '1.22.0';" "$ROOT_DIR/app/version.php"
+          echo 'PASS: Runtime package clean-room checks'
+
+      - name: Complete Source package clean-room checks
+        if: steps.finalize.outputs.changed == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf build/v122-complete-check
+          mkdir -p build/v122-complete-check
+          unzip -q dist/rss-reader-modernization-1.22.0-complete.zip -d build/v122-complete-check
+          ROOT_DIR="build/v122-complete-check/rss-reader-modernization-1.22.0-complete"
+          test -f "$ROOT_DIR/tests/run-current.sh"
+          test -f "$ROOT_DIR/tests/run-v122e.sh"
+          test -f "$ROOT_DIR/.github/workflows/v1.22.0-release.yml"
+          test ! -f "$ROOT_DIR/config/local.php"
+          php -l "$ROOT_DIR/app/version.php"
+          node --check "$ROOT_DIR/public/js/calendar.js"
+          echo 'PASS: Complete Source package clean-room checks'
+
+      - name: Upload Version 1.22.0 release assets
+        if: steps.finalize.outputs.changed == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-modernization-v1.22.0-final
+          path: |
+            dist/rss-reader-modernization-1.22.0.zip
+            dist/rss-reader-modernization-1.22.0.zip.sha256
+            dist/rss-reader-modernization-1.22.0-complete.zip
+            dist/rss-reader-modernization-1.22.0-complete.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish immutable v1.22.0 tag and GitHub Release
+        if: steps.finalize.outputs.changed == 'false'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          TAG='v1.22.0'
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            PEELED="$(git ls-remote origin "refs/tags/${TAG}^{}" | awk '{print $1}')"
+            if [ -z "$PEELED" ]; then
+              PEELED="$(git ls-remote origin "refs/tags/${TAG}" | awk '{print $1}')"
+            fi
+            if [ "$PEELED" != "$GITHUB_SHA" ]; then
+              echo "${TAG} already exists on a different commit. Refusing to overwrite it." >&2
+              exit 1
+            fi
+            echo "${TAG} already points to this release commit."
+          else
+            git tag -a "$TAG" "$GITHUB_SHA" -m 'RSS Reader Modernization 1.22.0'
+            git push origin "refs/tags/${TAG}"
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release ${TAG} already exists; leaving it unchanged."
+          else
+            gh release create "$TAG" \
+              dist/rss-reader-modernization-1.22.0.zip \
+              dist/rss-reader-modernization-1.22.0.zip.sha256 \
+              dist/rss-reader-modernization-1.22.0-complete.zip \
+              dist/rss-reader-modernization-1.22.0-complete.zip.sha256 \
+              --verify-tag \
+              --title 'RSS Reader Modernization 1.22.0' \
+              --notes-file RELEASE_NOTES.md
+          fi
