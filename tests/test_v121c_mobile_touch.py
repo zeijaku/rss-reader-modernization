@@ -25,7 +25,9 @@ base_css = text('public/css/dashboard.css')
 dashboard_js = text('public/js/dashboard.js')
 utility_js = text('public/js/utility-widgets.js')
 
-check("const APP_VERSION = '1.21.0';" in version, 'Formal V1.21 release marker is 1.21.0')
+version_match = re.search(r"const APP_VERSION = '(\d+)\.(\d+)\.(\d+)(?:-[^']+)?';", version)
+version_tuple = tuple(int(part) for part in version_match.groups()) if version_match else (0, 0, 0)
+check(version_tuple >= (1, 21, 0), 'V1.21 mobile/touch contract remains valid on V1.21 or a later release line')
 revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
 active_revision = revision_match.group(1) if revision_match else ''
 check(active_revision == '1.21.0' or re.fullmatch(r'1\.22\.0(?:-[A-Za-z0-9._-]+)?', active_revision) is not None,
