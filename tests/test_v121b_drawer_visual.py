@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,9 +24,12 @@ css = text('public/css/drawer-v121b.css')
 base_css = text('public/css/dashboard.css')
 
 check("const APP_VERSION = '1.21.0';" in version, 'Formal V1.21 release marker is 1.21.0')
-check("const APP_ASSET_REVISION = '1.21.0';" in version, 'Formal V1.21 asset revision is 1.21.0')
-check("loadScript('./js/drawer-categories.js?v=1.21.0');" in calendar, 'Dashboard / Stock reload the Drawer organizer under the final cache key')
-check("./css/drawer-v121b.css?v=1.21.0" in drawer and 'data-drawer-v121b-style' in drawer, 'Drawer organizer stages the finalized B stylesheet once')
+revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
+active_revision = revision_match.group(1) if revision_match else ''
+check(active_revision == '1.21.0' or re.fullmatch(r'1\.22\.0(?:-[A-Za-z0-9._-]+)?', active_revision) is not None,
+      'Asset revision is the formal V1.21 key or a V1.22 checkpoint/final key')
+check("loadScript('./js/drawer-categories.js?v=" + active_revision + "');" in calendar, 'Dashboard / Stock reload the Drawer organizer under the active cache key')
+check("./css/drawer-v121b.css?v=1.21.0" in drawer and 'data-drawer-v121b-style' in drawer, 'Drawer organizer retains the finalized B stylesheet cache key')
 
 check('background-color: #f6f7f9' in css, 'Drawer uses a light gray surface instead of pure white')
 check('background-color: #eef2f6' in css and '.drawer-section-title > i' in css and 'color: #0d6efd' in css, 'Section headers use a neutral surface with restrained blue icon accent')
