@@ -185,5 +185,6 @@
         });
     });
 
+    $.getScript('./js/rss-rules.js?v=1.22.0-c');
     $(loadFeeds);
 })(jQuery, document, window);

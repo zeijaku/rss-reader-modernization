@@ -124,6 +124,7 @@ require_once __DIR__ . '/api/account.php';
 require_once __DIR__ . '/api/integrations.php';
 require_once __DIR__ . '/api/opml.php';
 require_once __DIR__ . '/api/feed_health.php';
+require_once __DIR__ . '/api/rss_rule.php';
 
 /** @return array{status:int,body:array<string,mixed>} */
 function api_dispatch(string $action, int $userId, array $input): array
@@ -153,6 +154,11 @@ function api_dispatch(string $action, int $userId, array $input): array
         'feed.health.get' => api_feed_health_get($userId, $input),
         'feed.health.list' => api_feed_health_list($userId),
         'feed.health.recheck' => api_feed_health_recheck($userId, $input),
+        'rss.rule.list' => api_rss_rule_list($userId),
+        'rss.rule.create' => api_rss_rule_create($userId, $input),
+        'rss.rule.update' => api_rss_rule_update($userId, $input),
+        'rss.rule.toggle' => api_rss_rule_toggle($userId, $input),
+        'rss.rule.delete' => api_rss_rule_delete($userId, $input),
         'opml.list' => api_opml_dispatch($action, $userId, $input),
         'opml.import' => api_opml_dispatch($action, $userId, $input),
         'opml.export' => api_opml_dispatch($action, $userId, $input),

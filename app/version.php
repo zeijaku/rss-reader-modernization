@@ -14,4 +14,4 @@ const APP_VERSION_LABEL = 'RSS Reader Modernization 1.21.0';
  * V1.22 keeps the formal application version at 1.21.0 while using checkpoint
  * asset keys so staged JavaScript/CSS is not served from an older browser cache.
  */
-const APP_ASSET_REVISION = '1.22.0-b';
+const APP_ASSET_REVISION = '1.22.0-c';

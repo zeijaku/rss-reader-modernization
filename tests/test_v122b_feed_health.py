@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,6 +25,8 @@ client = text('public/js/feed-health.js')
 management = text('public/js/rss-management.js')
 calendar = text('public/js/calendar.js')
 version = text('app/version.php')
+asset_match = re.search(r"APP_ASSET_REVISION\s*=\s*'([^']+)'", version)
+asset_revision = asset_match.group(1) if asset_match else ''
 
 check('`user_id`' not in migration.lower(), 'Feed Health child table does not duplicate user_id')
 check('health_content_id' in migration and 'PRIMARY KEY (`health_content_id`)' in migration, 'Feed Health is keyed by content_id')
@@ -51,8 +54,8 @@ check("renderFeeds(feeds, {});" in management and "loadHealthForFeeds(feeds);" i
 check('Feed Healthの取得に失敗しました' in management and "$('#rssManagementTableWrap').prop('hidden', false);" in management,
       'Health failure leaves the RSS list visible with a bounded warning')
 check('$.when(feedsRequest, healthRequest)' not in management, 'Health failure can no longer fail the OPML/RSS list request as one combined promise')
-check("const APP_ASSET_REVISION = '1.22.0-b';" in version, 'V1.22-B has a fresh asset revision')
-check('./js/feed-health.js?v=1.22.0-b' in calendar, 'Dashboard loads Feed Health under the B asset key')
+check(asset_revision.startswith('1.22.0-'), 'V1.22 keeps a staged asset revision')
+check(f'./js/feed-health.js?v={asset_revision}' in calendar, 'Dashboard loads Feed Health under the current V1.22 asset key')
 
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed}')
