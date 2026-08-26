@@ -37,6 +37,7 @@
 
     var hrefGroups = {
         'display': ['./?tab=0', './?tab=1', './?tab=2', './?tab=3', './stock'],
+        'feed': ['./rss-management'],
         'settings': ['./settings#tabs', './settings#display', './settings#highlight']
     };
 
@@ -74,6 +75,23 @@
         return $menu.children('li').filter(function () {
             return $(this).children('a.drawer-item[href="' + href + '"]').length > 0;
         }).first();
+    }
+
+    function ensureRssManagementItem($menu) {
+        var $item;
+        var $link;
+        if (itemByHref($menu, './rss-management').length > 0) {
+            return;
+        }
+        $item = $('<li>');
+        $link = $('<a>')
+            .addClass('text-muted drawer-item')
+            .attr('href', './rss-management');
+        $('<span>').addClass('drawer-item-icon')
+            .append($('<i>').addClass('fas fa-list fa-fw').attr('aria-hidden', 'true'))
+            .appendTo($link);
+        $('<span>').addClass('drawer-item-label').text('RSS管理').appendTo($link);
+        $item.append($link).appendTo($menu);
     }
 
     function appendUnique(items, $item) {
@@ -142,6 +160,7 @@
             return;
         }
 
+        ensureRssManagementItem($menu);
         $brand = $menu.children('.drawer-brand').first().detach();
         sectionOrder.forEach(function (key) {
             groups[key] = collectGroup($menu, key);
@@ -175,7 +194,7 @@
             });
         }
 
-        $menu.attr('data-drawer-categories', 'v1.21-a');
+        $menu.attr('data-drawer-categories', 'v1.22-a');
     }
 
     $(function () {

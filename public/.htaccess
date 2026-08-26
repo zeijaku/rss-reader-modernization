@@ -29,8 +29,8 @@ Options -Indexes
 RewriteEngine On
 
 # V1.19-C: public/で直接実行可能なPHPはPublic Endpoint Matrixで明示的に固定する。
-# V1.20.1-C2: Calendar color endpoint is added after explicit Method/Auth/CSRF/ownership review.
-RewriteRule ^(?!api_v1\.php$|calendar_color_api\.php$|connection_probe\.php$|error\.php$|index\.php$|logout\.php$|settings\.php$|stock\.php$).*\.php$ - [F,L,NC]
+# V1.22-A: authenticated RSS management page is an explicit public endpoint.
+RewriteRule ^(?!api_v1\.php$|calendar_color_api\.php$|connection_probe\.php$|error\.php$|index\.php$|logout\.php$|rss-management\.php$|settings\.php$|stock\.php$).*\.php$ - [F,L,NC]
 
 # V1.13-B R2: DocumentRootがpublic/直下の場合も /stock をCanonical URLとする。
 # Application Root配下の /public/stock.php が直接指定された場合も /stock へ戻す。
@@ -51,6 +51,13 @@ RewriteRule ^settings\.php$ /%1settings [R=302,L,NE]
 
 # 実体settings.phpへ内部Rewrite。
 RewriteRule ^settings/?$ settings.php [L,QSA]
+
+# V1.22-A: RSS management canonical endpoint.
+RewriteCond %{THE_REQUEST} \s/+(.*/)?public/rss-management\.php(?:[?\s]) [NC]
+RewriteRule ^rss-management\.php$ /%1rss-management [R=302,L,NE]
+RewriteCond %{THE_REQUEST} \s/+(.*/)?rss-management\.php(?:[?\s]) [NC]
+RewriteRule ^rss-management\.php$ /%1rss-management [R=302,L,NE]
+RewriteRule ^rss-management/?$ rss-management.php [L,QSA]
 
 # 実在するファイル・ディレクトリはそのまま返す
 RewriteCond %{REQUEST_FILENAME} -f [OR]
