@@ -49,18 +49,15 @@ jobs:
           def write(path, body):
               Path(path).write_text(body, encoding='utf-8', newline='\n')
 
-          # Runtime V1.22 assets converge from checkpoint -d to the formal release key.
           for path in ('public/js/calendar.js', 'public/js/rss-management.js'):
               write(path, read(path).replace('1.22.0-d', '1.22.0'))
 
-          # B/C focused contracts accept both staged V1.22 keys and the exact final key.
           for path in ('tests/test_v122b_feed_health.py', 'tests/test_v122c_rss_rules.py'):
               s = read(path)
               s = s.replace("asset_revision.startswith('1.22.0-')", "asset_revision == '1.22.0' or asset_revision.startswith('1.22.0-')")
               s = s.replace('V1.22 keeps a staged asset revision', 'V1.22 uses a staged or final asset revision')
               write(path, s)
 
-          # D hard-coded checkpoint keys become the exact V1.22.0 final key.
           p = 'tests/test_v122d_rss_rules.py'
           s = read(p).replace('1.22.0-d', '1.22.0')
           s = s.replace('D has a fresh asset revision', 'D assets converge to the final V1.22 revision')
@@ -68,8 +65,6 @@ jobs:
           s = s.replace('loads D Rule display assets', 'loads final Rule display assets')
           write(p, s)
 
-          # V1.21 formal release contract applies only to the V1.21 release itself.
-          # Its Drawer compatibility tests continue to run on later releases.
           p = 'tests/run-v121e.sh'
           s = read(p)
           old = 'python3 "$ROOT/tests/test_v121e_final.py"'
@@ -78,7 +73,6 @@ jobs:
               raise SystemExit('run-v121e final-contract anchor not found')
           write(p, s.replace(old, new, 1))
 
-          # Match the repository's existing CHANGELOG heading style.
           p = 'CHANGELOG.md'
           s = read(p).replace('## [Unreleased]\n\n', '', 1)
           s = s.replace('## [1.22.0] - 2026-08-26', '## 1.22.0 - 2026-08-26', 1)
@@ -87,6 +81,16 @@ jobs:
           p = 'tests/test_v122e_final.py'
           s = read(p).replace("## [1.22.0] - 2026-08-26", "## 1.22.0 - 2026-08-26")
           write(p, s)
+
+          # py_compile is useful for syntax validation but creates cache files.
+          # Clean them inside the final gate so package security checks stay deterministic.
+          p = 'tests/run-v122e.sh'
+          s = read(p)
+          anchor = "python3 -m py_compile tools/build_release_package.py tools/verify_release_package.py tools/build_complete_package.py tools/verify_complete_package.py tests/test_v122e_final.py\n\necho 'PASS: V1.22.0 final release gate completed'"
+          replacement = "python3 -m py_compile tools/build_release_package.py tools/verify_release_package.py tools/build_complete_package.py tools/verify_complete_package.py tests/test_v122e_final.py\nfind tools tests -type d -name '__pycache__' -prune -exec rm -rf {} +\n\necho 'PASS: V1.22.0 final release gate completed'"
+          if anchor not in s:
+              raise SystemExit('run-v122e py_compile anchor not found')
+          write(p, s.replace(anchor, replacement, 1))
           PY
           rm -f .github/workflows/v122e-finalize-temp.yml tools/finalize_v122_temp.py
       - name: Run V1.22.0 final gate
