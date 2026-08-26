@@ -104,7 +104,7 @@ Prefix:   rss_
 
 ## 6. Schemaと現行Migrationを投入
 
-`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`Columnを取り込んでいます。Mail / Links / Stock Tags / RSS Highlightは引き続き009〜012を番号順に適用します。
+`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`Columnを取り込んでいます。Mail / Links / Stock Tags / RSS Highlightに加え、V1.22のFeed Metadata / Feed Health / RSS Rulesは009〜012、014〜016を番号順に適用します。
 
 まず `database/schema.sql` 冒頭の値を、`DB_TABLE_PREFIX` と同じにします。
 
@@ -125,6 +125,9 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\schema.sql
 010_v1_10_links.sql
 011_v1_11_stock_tags.sql
 012_v1_12_feed_keywords.sql
+014_v1_22_opml_feed_metadata.sql
+015_v1_22_feed_health.sql
+016_v1_22_rss_rules.sql
 ```
 
 CLI例:
@@ -134,11 +137,14 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\009
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\010_v1_10_links.sql
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\011_v1_11_stock_tags.sql
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\012_v1_12_feed_keywords.sql
+mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\014_v1_22_opml_feed_metadata.sql
+mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\015_v1_22_feed_health.sql
+mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\016_v1_22_rss_rules.sql
 ```
 
-phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012を同じ順番でImportします。V1.20.1のCalendar色Columnは`schema.sql`へ統合済みのため、新規Installで013を追加実行する必要はありません。
+phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016を同じ順番でImportします。V1.20.1のCalendar色Columnは`schema.sql`へ統合済みのため、新規Installで013を追加実行する必要はありません。
 
-Prefixが `rss_` の場合、最終的に次の15 tableが存在します。
+Prefixが `rss_` の場合、最終的に次の19 tableが存在します。
 
 ```text
 rss_user_info
@@ -156,6 +162,10 @@ rss_link_item
 rss_stock_tag
 rss_stock_tag_map
 rss_feed_keyword
+rss_feed_metadata
+rss_feed_health
+rss_rss_rule
+rss_rss_rule_condition
 ```
 
 **既存Databaseへ `schema.sql` を再実行しないでください。** 既存環境はBackupを取得し、未適用Migrationだけを順番に適用します。

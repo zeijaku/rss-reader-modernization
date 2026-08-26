@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.21.0`
-Release tag: `v1.21.0`
+**Stable release:** `RSS Reader Modernization 1.22.0`
+Release tag: `v1.22.0`
+
+Version 1.22.0は、RSS管理を強化したReleaseです。RSS管理画面とOPML Import / Export、Feed Health、RSS Rulesを追加し、RSS Rulesは通常RSS記事のHighlight／Hide／Stock／Task actionへ統合しました。所有権は既存contentまたはrule ownerから導出し、任意URLへの追加Probeは行わず既存のSSRF-safe Feed fetch経路を維持しています。既存DBはMigration 014〜016を番号順に適用します。
 
 Version 1.21.0は、DrawerをDISPLAY／FEED／PRODUCTIVITY／INFORMATION／MEDIA／GAME／SETTINGS／USER LINKS／ACCOUNTへ整理し、視認性とSmartphone／Touch操作を改善したReleaseです。Bootstrap 5 Offcanvasと既存jQuery補助処理は維持し、DB schema／Migration／config/local.phpの追加変更はありません。
 

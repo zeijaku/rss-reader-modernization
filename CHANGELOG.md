@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.22.0 - 2026-08-26
+
+### RSS Management / OPML
+- Added `/rss-management` with an RSS list and OPML Import / Export for the authenticated user.
+- OPML import validates XML locally without fetching imported URLs, limits size/feed count/depth, rejects DOCTYPE / ENTITY, and preserves optional feed title, site URL, and category path metadata.
+- Existing feed fetches may fill a blank metadata title from the successfully parsed channel title without an extra outbound request.
+
+### Feed Health
+- Added per-feed health state derived from owned content: last check / success, latest article date, HTTP result, failure reason/count, redirect state, and effective URL.
+- Manual recheck reuses the stored owned feed URL and the existing SSRF-safe feed pipeline; arbitrary request URLs are not accepted.
+
+### RSS Rules
+- Added owner-scoped RSS Rules with ordered conditions and explicit match mode / action.
+- Integrated server-evaluated article actions for Highlight, Hide, Stock, and Task while retaining existing Article Actions and ownership boundaries.
+- Rule condition rows do not duplicate user ownership; ownership is derived from the parent rule.
+
+### Database / Security
+- Added `014_v1_22_opml_feed_metadata.sql`, `015_v1_22_feed_health.sql`, and `016_v1_22_rss_rules.sql`. Existing databases apply them in numeric order after backup.
+- No new required secret or external API credential is introduced.
+- Public API authentication, POST/CSRF/request-size/action validation, owner scope, and SSRF-safe feed fetching remain in place.
+
+### Release verification
+- V1.22-A/B/C focused gates and V1.22-D integration gate are retained.
+- V1.22-E adds the formal 1.22.0 contract, PHP 8.1 / 8.4 regression, historical compatibility gates, source secret scan, deterministic Runtime / Complete Source package verification, and clean-room checks before tag publication.
+
 ## 1.21.0 - 2026-08-25
 
 ### Drawer / Navigation

@@ -1,42 +1,57 @@
-# RSS Reader Modernization 1.21.0
+# RSS Reader Modernization 1.22.0
 
-Version 1.21.0 is the Drawer / Navigation organization and readability release based on the formal Version 1.20.1 baseline.
+Release tag: `v1.22.0`
+Release date: 2026-08-26
 
-## Highlights
+## Overview
 
-- Drawer categories are now organized as DISPLAY, FEED, PRODUCTIVITY, INFORMATION, MEDIA, GAME, SETTINGS, USER LINKS, and ACCOUNT where applicable.
-- Existing Mail and Camera / Video functions remain intact while being presented in PRODUCTIVITY and MEDIA.
-- Drawer visual hierarchy is clearer without category-by-category rainbow coloring.
-- Current state remains distinct, Logout retains Danger styling, and keyboard focus remains visible.
-- Smartphone Drawer scrolling, safe-area handling, 44px touch targets, Modal fit, and long-label behavior are refined.
-- RSS / Information Widget Catalog accordion chevrons are moved slightly inward on Smartphone for easier operation.
+Version 1.22.0 strengthens RSS management without replacing the existing feed engine or dashboard architecture. It adds an authenticated RSS management screen, OPML Import / Export, Feed Health, and owner-scoped RSS Rules. RSS Rules are integrated into normal RSS article rendering for Highlight / Hide / Stock / Task actions.
 
-## Compatibility
+## Main changes
 
-- Bootstrap 5 Offcanvas remains the Drawer implementation.
-- Existing jQuery support remains in place.
-- No database migration is required for Version 1.21.0.
-- No `config/local.php` change is required.
-- Existing authentication, CSRF, SSRF, XSS, PDO, Session, and secret-handling protections are not intentionally changed by this release.
+- RSS Management: list owned feeds and access OPML Import / Export from `/rss-management`.
+- OPML Export: exports active feeds owned by the logged-in user only.
+- OPML Import: local XML validation only; imported URLs are not fetched during import. Duplicate detection is scoped to the current user.
+- Feed metadata: optional title / site URL / category path; a blank title can be supplemented by a later successful normal feed fetch without extra network access.
+- Feed Health: Normal / Warning / Error / Unknown-oriented state with last check / success, latest article time, HTTP status, reason, consecutive failure count, redirect state, and effective URL.
+- Manual Feed Health recheck uses the stored owned feed URL through the existing safe feed fetch pipeline.
+- RSS Rules: owner-scoped rules and ordered conditions, integrated into normal RSS article rendering for Highlight / Hide / Stock / Task.
+- Documentation policy: obsolete checkpoint Markdown was reduced before E; historical release contracts still referenced by compatibility tests remain available.
 
-## Deferred from Version 1.21
+## Database migration
 
-- File Upload / File Library / Image Viewer
-- Imgur Random / Gallery Widget
-- Whole-dashboard Grid alignment for Height 2 Widgets
+Version 1.22.0 adds three migrations for existing databases. Back up the database first, set each `@table_prefix` to the deployed `DB_TABLE_PREFIX`, then apply in this order:
 
-## Verification limits
+1. `database/migrations/014_v1_22_opml_feed_metadata.sql`
+2. `database/migrations/015_v1_22_feed_health.sql`
+3. `database/migrations/016_v1_22_rss_rules.sql`
 
-- Automated CI verifies the Version 1.21 final contract, current regression suite, Version 1.17 through 1.19 compatibility, source secret scanning, package integrity, and clean-room extraction checks.
-- Production-specific configuration, external services, existing production data, and device/browser behavior cannot be reproduced completely in CI; follow the production update checklist after deployment.
+Do not rerun `database/schema.sql` against an existing database. Environments that already applied a V1.22 checkpoint migration do not apply that same migration again.
+
+## Security / privacy
+
+- Authenticated user ownership remains authoritative; request-supplied `user_id` is not trusted.
+- Feed metadata and Feed Health ownership are derived from `content.content_owner`.
+- RSS Rule condition ownership is derived from the parent rule owner.
+- OPML import performs no outbound HTTP request.
+- Feed Health does not add an arbitrary-URL network probe; manual recheck uses the owned stored feed and the existing SSRF-safe fetch path.
+- No new required secret or external API key is introduced.
+
+## Upgrade summary
+
+1. Back up application code, `config/local.php`, the database, and required runtime data.
+2. Apply unapplied migrations 014, 015, and 016 in numeric order.
+3. Verify the Runtime ZIP SHA-256, extract it outside the production directory, then update code without overwriting private config/runtime data.
+4. Reload the browser and confirm the footer reports `RSS Reader Modernization 1.22.0`.
+5. Verify login, dashboard/feed refresh, RSS Management/OPML, Feed Health, RSS Rules, Stock, Task, Settings, and logout.
 
 ## Release assets
 
-- Runtime ZIP: `rss-reader-modernization-1.21.0.zip`
-- Runtime SHA-256: `rss-reader-modernization-1.21.0.zip.sha256`
-- Complete Source ZIP: `rss-reader-modernization-1.21.0-complete.zip`
-- Complete Source SHA-256: `rss-reader-modernization-1.21.0-complete.zip.sha256`
+- `rss-reader-modernization-1.22.0.zip`
+- `rss-reader-modernization-1.22.0.zip.sha256`
+- `rss-reader-modernization-1.22.0-complete.zip`
+- `rss-reader-modernization-1.22.0-complete.zip.sha256`
 
-## Production update
+## Verification limits
 
-Back up the current application, extract the Runtime ZIP, preserve the Production `config/local.php` and runtime data, overwrite the application files, and perform one hard reload. See `APPLY_NOTE_V1_21_0.md` and `docs/v1-21-0-production-checklist.md` for the verification points.
+Automated release gates cover regression, compatibility, syntax/security contracts, deterministic package integrity, manifest hashes, clean-room extraction, and high-signal secret scanning. Deployment-specific PHP/Web server/MySQL configuration, real external feed behavior, and production browser rendering still depend on the target environment and should be checked after deployment.

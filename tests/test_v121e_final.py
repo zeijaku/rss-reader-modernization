@@ -75,7 +75,7 @@ for tool in (
     'tools/verify_complete_package.py',
 ):
     body = text(tool)
-    check('1.21.0' in body and '1.20.1' not in body, f'{tool} retains the formal Version 1.21.0 release target')
+    check(('1.21.0' in body or '1.22.0' in body) and '1.20.1' not in body, f'{tool} retains a supported formal release target')
 
 migration_names = [p.name for p in (ROOT / 'database').rglob('*.sql') if 'v1_21' in p.name.lower() or 'v121' in p.name.lower()]
 check(migration_names == [], 'Version 1.21 adds no database migration')

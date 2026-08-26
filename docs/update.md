@@ -1,3 +1,26 @@
+# Version 1.22.0 update
+
+## Version 1.21.0からVersion 1.22.0
+
+V1.22.0はRSS Management / OPML、Feed Health、RSS Rulesを追加するため、既存DBではMigration 014〜016が必要です。Codeより先にBackupと未適用Migrationを確認します。
+
+1. Application code、`config/local.php`、実DB、必要な`var/`DataをBackupする。
+2. `014_v1_22_opml_feed_metadata.sql`、`015_v1_22_feed_health.sql`、`016_v1_22_rss_rules.sql`の`@table_prefix`を実環境へ合わせる。
+3. 未適用のMigrationだけを014→015→016の番号順で実行する。V1.22 checkpointですでに適用済みのものは再実行しない。
+4. Runtime ZIPのSHA-256を確認し、別Folderへ展開する。
+5. `config/local.php`、実DB、生成済み`var/`Dataを上書きせずCodeをApplication Rootへ相対Pathで配置する。
+6. BrowserをReloadし、Footerが`RSS Reader Modernization 1.22.0`であることを確認する。
+7. Login、通常RSS更新、RSS Management / OPML、Feed Health、RSS Rules、Stock、Task、Settings、Logoutを確認する。
+8. 問題があればCodeとDBを同じBackup時点へ戻す。DB Migrationを伴うためCodeだけをV1.21へ戻すRollbackは行わない。
+
+```text
+DB Migration                014 / 015 / 016
+New tables                  feed_metadata / feed_health / rss_rule / rss_rule_condition
+必須設定                    追加なし
+Browser Cache               APP_ASSET_REVISION=1.22.0
+正式Tag / GitHub Release    v1.22.0
+```
+
 ## Version 1.18.0からVersion 1.19.0
 
 ## Version 1.20.0から1.20.1

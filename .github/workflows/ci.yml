@@ -90,3 +90,6 @@ jobs:
 
       - name: Run Version 1.22-D RSS Rules integration gate
         run: bash tests/run-v122d.sh
+
+      - name: Run Version 1.22.0 final release gate
+        run: bash tests/run-v122e.sh
