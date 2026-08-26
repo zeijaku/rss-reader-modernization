@@ -54,7 +54,7 @@ check("renderFeeds(feeds, {});" in management and "loadHealthForFeeds(feeds);" i
 check('Feed Healthの取得に失敗しました' in management and "$('#rssManagementTableWrap').prop('hidden', false);" in management,
       'Health failure leaves the RSS list visible with a bounded warning')
 check('$.when(feedsRequest, healthRequest)' not in management, 'Health failure can no longer fail the OPML/RSS list request as one combined promise')
-check(asset_revision.startswith('1.22.0-'), 'V1.22 keeps a staged asset revision')
+check(asset_revision == '1.22.0' or asset_revision.startswith('1.22.0-'), 'V1.22 uses a checkpoint or formal release asset revision')
 check(f'./js/feed-health.js?v={asset_revision}' in calendar, 'Dashboard loads Feed Health under the current V1.22 asset key')
 
 failed = len(checks) - sum(checks)
