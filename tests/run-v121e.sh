@@ -3,7 +3,11 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 
 printf '%s\n' '== V1.21-E final release contract =='
-python3 "$ROOT/tests/test_v121e_final.py"
+if grep -q "APP_VERSION = '1.21.0'" "$ROOT/app/version.php"; then
+    python3 "$ROOT/tests/test_v121e_final.py"
+else
+    printf '%s\n' 'SKIP: V1.21 formal release contract; running compatibility checks on later release.'
+fi
 
 printf '%s\n' '== V1.21-C Smartphone / Touch compatibility =='
 python3 "$ROOT/tests/test_v121c_mobile_touch.py"

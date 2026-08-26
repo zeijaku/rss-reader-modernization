@@ -176,7 +176,7 @@ Secure Baseline初期のdeployment / login / session / logout等のhotfix記録�
 - `database/migrations/012_v1_12_feed_keywords.sql` — V1.12 RSS Highlight migration
 - `database/migrations/013_v1_20_1_calendar_event_color.sql` — V1.20.1 Calendar event color migration
 
-現行の新規環境では `database/schema.sql` をBaseとして投入した後、009〜012を番号順に適用します。詳細は [`installation.md`](installation.md) を参照してください。既存DBを更新する場合は `schema.sql` を再実行せず、Backupと必要なauditを確認して未適用Migrationだけを使用します。
+現行の新規環境では `database/schema.sql` をBaseとして投入した後、009〜016を番号順に適用します。詳細は [`installation.md`](installation.md) を参照してください。既存DBを更新する場合は `schema.sql` を再実行せず、Backupと必要なauditを確認して未適用Migrationだけを使用します。
 
 ## M4 Release preparation
 
@@ -200,3 +200,7 @@ Secure Baseline初期のdeployment / login / session / logout等のhotfix記録�
 - [`v1-19-f-production-checklist.md`](v1-19-f-production-checklist.md) — 正式版本番確認
 - [`v1-19-f-updated-files.md`](v1-19-f-updated-files.md) — V1.19-F変更File
 - [`test-report-v1-19-f.md`](test-report-v1-19-f.md) — V1.19.0 Final Release Gate結果
+
+- `database/migrations/014_v1_22_opml_feed_metadata.sql` — V1.22 OPML Feed metadata
+- `database/migrations/015_v1_22_feed_health.sql` — V1.22 Feed Health
+- `database/migrations/016_v1_22_rss_rules.sql` — V1.22 RSS Rules

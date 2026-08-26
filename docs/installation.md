@@ -104,7 +104,7 @@ Prefix:   rss_
 
 ## 6. Schemaと現行Migrationを投入
 
-`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`Columnを取り込んでいます。Mail / Links / Stock Tags / RSS Highlightは引き続き009〜012を番号順に適用します。
+`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`Columnを取り込んでいます。Mail / Links / Stock Tags / RSS Highlightは引き続き009〜016を番号順に適用します。
 
 まず `database/schema.sql` 冒頭の値を、`DB_TABLE_PREFIX` と同じにします。
 
@@ -136,7 +136,7 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\011
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\012_v1_12_feed_keywords.sql
 ```
 
-phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012を同じ順番でImportします。V1.20.1のCalendar色Columnは`schema.sql`へ統合済みのため、新規Installで013を追加実行する必要はありません。
+phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜016を同じ順番でImportします。V1.20.1のCalendar色Columnは`schema.sql`へ統合済みのため、新規Installで013を追加実行する必要はありません。
 
 Prefixが `rss_` の場合、最終的に次の15 tableが存在します。
 
@@ -225,3 +225,7 @@ database/audit/postflight.sql または php tools/db_sb13.php verify
 ```
 
 Duplicate identity、orphan、unexpected index等がある場合は自動削除・統合しません。停止して内容を確認します。
+
+- `database/migrations/014_v1_22_opml_feed_metadata.sql` — V1.22 OPML Feed metadata
+- `database/migrations/015_v1_22_feed_health.sql` — V1.22 Feed Health
+- `database/migrations/016_v1_22_rss_rules.sql` — V1.22 RSS Rules

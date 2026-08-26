@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.22.0 - 2026-08-26
+
+### Added
+- RSS管理画面にOPML Import / Exportを追加し、所有Feedの移行とCategory metadataを扱えるようにしました。
+- Feed Healthを追加し、最終成功、HTTP status、連続失敗、Error理由、手動再確認を所有Feed単位で確認できるようにしました。
+- RSS Rulesを追加し、登録Ruleに基づく記事表示・Action連携を追加しました。
+
+### Changed
+- RSS Rules / Feed Health / RSS管理を既存Article ActionsとDashboard表示へ統合し、V1.22-DでUI / Security境界を最終調整しました。
+- Release前に参照されていないCheckpoint Markdownを整理し、Documentation policyを追加しました。
+- Application Version / asset revision / Release package targetを1.22.0へ正式化しました。
+
+### Database
+- `014_v1_22_opml_feed_metadata.sql`
+- `015_v1_22_feed_health.sql`
+- `016_v1_22_rss_rules.sql`
+
+
+
 ## 1.21.0 - 2026-08-25
 
 ### Drawer / Navigation

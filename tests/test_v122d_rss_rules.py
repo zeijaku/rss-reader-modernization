@@ -39,10 +39,10 @@ check("'feed.fetch' => api_feed_fetch_with_health" in dispatch, 'Existing feed.f
 check("require_once dirname(__DIR__) . '/rss_rule_engine.php';" in rules_api, 'Rules API loads the D execution engine')
 check('rule_highlight' in display and 'rss-rule-highlight' in display, 'Client renders server-evaluated Rule Highlight')
 check('renderFeedKeywordTitle' not in display, 'Rule display layer does not replace existing keyword highlight logic')
-check("rss-rules.js?v=1.22.0-d" in management and "rss-rules-integration.js?v=1.22.0-d" in management, 'RSS Management loads D Rule assets')
+check("rss-rules.js?v=1.22.0" in management and "rss-rules-integration.js?v=1.22.0" in management, 'RSS Management loads final Rule assets')
 check('Auto Stockは一致記事を重複を避けてStockへ追加' in guidance, 'Rules UI explains D action behavior')
-check("APP_ASSET_REVISION = '1.22.0-d'" in version, 'D has a fresh asset revision')
-check("rss-rule-display.js?v=1.22.0-d" in calendar and "rss-rule-display.css?v=1.22.0-d" in calendar, 'Dashboard loads D Rule display assets')
+check("APP_ASSET_REVISION = '1.22.0'" in version, 'D assets converge to the final V1.22 revision')
+check("rss-rule-display.js?v=1.22.0" in calendar and "rss-rule-display.css?v=1.22.0" in calendar, 'Dashboard loads final Rule display assets')
 
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed}')

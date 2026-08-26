@@ -1,42 +1,49 @@
-# RSS Reader Modernization 1.21.0
+# RSS Reader Modernization 1.22.0
 
-Version 1.21.0 is the Drawer / Navigation organization and readability release based on the formal Version 1.20.1 baseline.
+Release date: 2026-08-26
+Release tag: `v1.22.0`
+
+## Summary
+
+Version 1.22.0 is the RSS management enhancement release. It integrates OPML Import / Export, Feed Health, and RSS Rules on top of the existing authenticated, CSRF-protected, SSRF-safe RSS pipeline.
 
 ## Highlights
 
-- Drawer categories are now organized as DISPLAY, FEED, PRODUCTIVITY, INFORMATION, MEDIA, GAME, SETTINGS, USER LINKS, and ACCOUNT where applicable.
-- Existing Mail and Camera / Video functions remain intact while being presented in PRODUCTIVITY and MEDIA.
-- Drawer visual hierarchy is clearer without category-by-category rainbow coloring.
-- Current state remains distinct, Logout retains Danger styling, and keyboard focus remains visible.
-- Smartphone Drawer scrolling, safe-area handling, 44px touch targets, Modal fit, and long-label behavior are refined.
-- RSS / Information Widget Catalog accordion chevrons are moved slightly inward on Smartphone for easier operation.
+- OPML Import / Export for the signed-in user's active feeds.
+- Feed metadata for title, site URL, and imported category path.
+- Feed Health status, last success, latest article date, HTTP status, consecutive failures, error reason, and manual recheck.
+- RSS Rules with ownership-safe management and article display / action integration.
+- V1.22-D integration keeps existing Stock, Task, Calendar, Dashboard, Feed fetch, and Article Actions contracts.
+- Repository documentation cleanup removes obsolete checkpoint notes while keeping referenced release evidence and Git history.
 
-## Compatibility
+## Security boundaries
 
-- Bootstrap 5 Offcanvas remains the Drawer implementation.
-- Existing jQuery support remains in place.
-- No database migration is required for Version 1.21.0.
-- No `config/local.php` change is required.
-- Existing authentication, CSRF, SSRF, XSS, PDO, Session, and secret-handling protections are not intentionally changed by this release.
+- User ownership is derived from the authenticated Session; request-supplied user IDs are not trusted.
+- Feed checks and manual rechecks reuse stored owned Feed URLs and the existing SSRF-safe Feed fetch path. Arbitrary probe URLs are not accepted.
+- OPML import keeps XML size/count/depth limits, rejects DTD/ENTITY input, and performs no outbound HTTP during parsing.
+- Existing CSRF, input validation, output escaping, Session handling, and PDO boundaries remain in effect.
+- Release packages continue to exclude `config/local.php`, runtime DB/cache/log/session data, legacy source archives, and high-signal secret patterns.
 
-## Deferred from Version 1.21
+## Database migrations
 
-- File Upload / File Library / Image Viewer
-- Imgur Random / Gallery Widget
-- Whole-dashboard Grid alignment for Height 2 Widgets
+Existing installations must back up the database and apply only migrations not already applied, in numeric order:
+
+- `014_v1_22_opml_feed_metadata.sql`
+- `015_v1_22_feed_health.sql`
+- `016_v1_22_rss_rules.sql`
+
+Do not re-run migrations already applied in the target environment. New installations should follow `docs/installation.md` and the current schema/migration guidance.
+
+## Packages
+
+- Runtime: `rss-reader-modernization-1.22.0.zip`
+- Complete source/test package: `rss-reader-modernization-1.22.0-complete.zip`
+- Each ZIP is accompanied by a `.sha256` sidecar.
+
+## Verification
+
+The V1.22.0 final gate runs the current regression suite, V1.22 A/B/C/D focused and integration checks, release contract checks, PHP/JavaScript syntax checks, deterministic package build, package manifest verification, and secret-pattern checks on PHP 8.1 and PHP 8.4 in GitHub Actions.
 
 ## Verification limits
 
-- Automated CI verifies the Version 1.21 final contract, current regression suite, Version 1.17 through 1.19 compatibility, source secret scanning, package integrity, and clean-room extraction checks.
-- Production-specific configuration, external services, existing production data, and device/browser behavior cannot be reproduced completely in CI; follow the production update checklist after deployment.
-
-## Release assets
-
-- Runtime ZIP: `rss-reader-modernization-1.21.0.zip`
-- Runtime SHA-256: `rss-reader-modernization-1.21.0.zip.sha256`
-- Complete Source ZIP: `rss-reader-modernization-1.21.0-complete.zip`
-- Complete Source SHA-256: `rss-reader-modernization-1.21.0-complete.zip.sha256`
-
-## Production update
-
-Back up the current application, extract the Runtime ZIP, preserve the Production `config/local.php` and runtime data, overwrite the application files, and perform one hard reload. See `APPLY_NOTE_V1_21_0.md` and `docs/v1-21-0-production-checklist.md` for the verification points.
+Automated verification cannot replace the final deployment check against the production web server, production database state, browser cache behavior, or external RSS endpoints. The final tag should be created only after the release-candidate package has been verified in the target environment.
