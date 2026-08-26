@@ -38,8 +38,56 @@ jobs:
           p.write_text(s, encoding='utf-8', newline='\n')
           PY
       - name: Finalize Version 1.22.0 sources
+        run: python3 tools/finalize_v122_temp.py
+      - name: Normalize final asset and compatibility contracts
         run: |
-          python3 tools/finalize_v122_temp.py
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def read(path):
+              return Path(path).read_text(encoding='utf-8')
+          def write(path, body):
+              Path(path).write_text(body, encoding='utf-8', newline='\n')
+
+          # Runtime V1.22 assets converge from checkpoint -d to the formal release key.
+          for path in ('public/js/calendar.js', 'public/js/rss-management.js'):
+              write(path, read(path).replace('1.22.0-d', '1.22.0'))
+
+          # B/C focused contracts accept both staged V1.22 keys and the exact final key.
+          for path in ('tests/test_v122b_feed_health.py', 'tests/test_v122c_rss_rules.py'):
+              s = read(path)
+              s = s.replace("asset_revision.startswith('1.22.0-')", "asset_revision == '1.22.0' or asset_revision.startswith('1.22.0-')")
+              s = s.replace('V1.22 keeps a staged asset revision', 'V1.22 uses a staged or final asset revision')
+              write(path, s)
+
+          # D hard-coded checkpoint keys become the exact V1.22.0 final key.
+          p = 'tests/test_v122d_rss_rules.py'
+          s = read(p).replace('1.22.0-d', '1.22.0')
+          s = s.replace('D has a fresh asset revision', 'D assets converge to the final V1.22 revision')
+          s = s.replace('loads D Rule assets', 'loads final Rule assets')
+          s = s.replace('loads D Rule display assets', 'loads final Rule display assets')
+          write(p, s)
+
+          # V1.21 formal release contract applies only to the V1.21 release itself.
+          # Its Drawer compatibility tests continue to run on later releases.
+          p = 'tests/run-v121e.sh'
+          s = read(p)
+          old = 'python3 "$ROOT/tests/test_v121e_final.py"'
+          new = '''if grep -q "APP_VERSION = '1.21.0'" "$ROOT/app/version.php"; then\n    python3 "$ROOT/tests/test_v121e_final.py"\nelse\n    printf '%s\\n' 'SKIP: V1.21 formal release contract; running compatibility checks on later release.'\nfi'''
+          if old not in s:
+              raise SystemExit('run-v121e final-contract anchor not found')
+          write(p, s.replace(old, new, 1))
+
+          # Match the repository's existing CHANGELOG heading style.
+          p = 'CHANGELOG.md'
+          s = read(p).replace('## [Unreleased]\n\n', '', 1)
+          s = s.replace('## [1.22.0] - 2026-08-26', '## 1.22.0 - 2026-08-26', 1)
+          write(p, s)
+
+          p = 'tests/test_v122e_final.py'
+          s = read(p).replace("## [1.22.0] - 2026-08-26", "## 1.22.0 - 2026-08-26")
+          write(p, s)
+          PY
           rm -f .github/workflows/v122e-finalize-temp.yml tools/finalize_v122_temp.py
       - name: Run V1.22.0 final gate
         run: bash tests/run-v122e.sh
