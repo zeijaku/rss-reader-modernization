@@ -1,0 +1,29 @@
+/* V1.25-C: Calendar event all-day/time/URL UI.
+ * Keep the additions compact and usable inside the existing Bootstrap modal. */
+.calendar-event-detail-fields .calendar-event-time-fields[hidden] {
+    display: none !important;
+}
+
+.calendar-event-detail-fields .calendar-event-url-field .form-text {
+    margin-top: 0.25rem;
+}
+
+.calendar-event-detail-fields .calendar-event-detail-loading {
+    margin-top: -0.25rem;
+    margin-bottom: 0.75rem;
+}
+
+#main-content .calendar-entry .calendar-event-time-label {
+    display: inline-block;
+    margin-right: 0.35rem;
+    font-size: 0.78em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    opacity: 0.82;
+}
+
+@media (max-width: 575.98px) {
+    .calendar-event-detail-fields .calendar-event-time-fields .mb-3 + .mb-3 {
+        margin-top: -0.25rem;
+    }
+}
