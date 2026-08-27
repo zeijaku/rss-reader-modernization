@@ -108,17 +108,7 @@ jobs:
         run: |
           set -euo pipefail
           bash tests/run-current.sh
-          bash tests/run-v117.sh
-          bash tests/run-v1171.sh
-          bash tests/run-v1172.sh
-          bash tests/run-v118.sh
-          bash tests/run-v119.sh
-          bash tests/run-v119c.sh
-          bash tests/run-v119d.sh
-          bash tests/run-v121-compat.sh
-          bash tests/run-v122b.sh
-          bash tests/run-v122c.sh
-          bash tests/run-v122d.sh
+          bash tests/run-current-features.sh
 
       - name: Set up PHP 8.4 regression runtime
         uses: shivammathur/setup-php@v2
@@ -132,17 +122,7 @@ jobs:
         run: |
           set -euo pipefail
           bash tests/run-current.sh
-          bash tests/run-v117.sh
-          bash tests/run-v1171.sh
-          bash tests/run-v1172.sh
-          bash tests/run-v118.sh
-          bash tests/run-v119.sh
-          bash tests/run-v119c.sh
-          bash tests/run-v119d.sh
-          bash tests/run-v121-compat.sh
-          bash tests/run-v122b.sh
-          bash tests/run-v122c.sh
-          bash tests/run-v122d.sh
+          bash tests/run-current-features.sh
 
       - name: High-signal source secret scan
         shell: bash
@@ -208,6 +188,7 @@ jobs:
           unzip -q "dist/${COMPLETE_STEM}.zip" -d "${CHECK_ROOT}"
           ROOT_DIR="${CHECK_ROOT}/${COMPLETE_STEM}"
           test -f "${ROOT_DIR}/tests/run-current.sh"
+          test -f "${ROOT_DIR}/tests/run-current-features.sh"
           test -f "${ROOT_DIR}/.github/workflows/ci.yml"
           test -f "${ROOT_DIR}/.github/workflows/release.yml"
           test ! -f "${ROOT_DIR}/config/local.php"
