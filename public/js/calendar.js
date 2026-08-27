@@ -37,9 +37,9 @@
     // V1.20.1-C: event/Task color cues load after the legacy Calendar styles.
     loadStyle('./css/calendar-colors.css?v=1.23.0', 'data-calendar-colors-style');
     loadStyle('./css/block-collapse.css?v=1.23.0', 'data-block-collapse-style');
-    // V1.24-D: individual Stock state controls use a phase-specific key while
-    // the formal APP_VERSION remains at the V1.23 production checkpoint.
-    loadStyle('./css/stock-state-ui.css?v=1.24-d-r1', 'data-stock-state-ui-style');
+    // V1.24-E: Stock state filters/bulk UI use a phase-specific key while the
+    // formal APP_VERSION remains at the V1.23 production checkpoint.
+    loadStyle('./css/stock-state-ui.css?v=1.24-e-r1', 'data-stock-state-ui-style');
 
     // V1.20.1-D: reserve Block Collapse cards before mini-game.js reaches
     // DOMContentLoaded. Unknown Game types otherwise fall back to Icon Quest.
@@ -49,9 +49,9 @@
 
     // V1.17.1: shared success/info/danger notice auto-dismiss.
     loadScript('./js/app-notice.js?v=1.23.0');
-    // V1.24-D: Stock state UI reads only the Stock IDs already rendered for
-    // the authenticated user and persists changes through stock.state.update.
-    loadScript('./js/stock-state-ui.js?v=1.24-d-r1');
+    // V1.24-E: Stock state UI adds server-backed filters, selection and bulk
+    // workflow while preserving the individual V1.24-D controls.
+    loadScript('./js/stock-state-ui.js?v=1.24-e-r1');
     // V1.22-B: Feed Health observes feed.fetch responses and augments RSS settings.
     loadScript('./js/feed-health.js?v=1.23.0');
     // V1.22-D: visual layer for server-evaluated RSS Rule highlights.
