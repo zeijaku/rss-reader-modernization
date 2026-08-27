@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.22.0`
-Release tag: `v1.22.0`
+**Stable release:** `RSS Reader Modernization 1.23.0`
+Release tag: `v1.23.0`
+
+Version 1.23.0は、Application機能を増やさずRepository／Test／GitHub Actions／Release運用を整理したMaintenance Releaseです。一時的なCheckpoint文書を整理し、Current testのVersion固定依存を減らし、Version固有WorkflowをGit履歴へ退避しました。正式Releaseは共通`release.yml`へ統一し、明示Version入力、main SHA再確認、既存Tag上書き拒否、既存GitHub Release非変更、deterministic Runtime／Complete Package、SHA-256、secret scan、clean-room確認を標準化しています。Application機能、DB schema／Migration、公開API、必須Config／Secretの追加変更はありません。
 
 Version 1.22.0は、RSS管理を強化したReleaseです。RSS管理画面とOPML Import / Export、Feed Health、RSS Rulesを追加し、RSS Rulesは通常RSS記事のHighlight／Hide／Stock／Task actionへ統合しました。所有権は既存contentまたはrule ownerから導出し、任意URLへの追加Probeは行わず既存のSSRF-safe Feed fetch経路を維持しています。既存DBはMigration 014〜016を番号順に適用します。
 

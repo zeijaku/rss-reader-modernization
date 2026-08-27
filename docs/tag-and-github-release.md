@@ -2,8 +2,8 @@
 
 ## Current formal release
 
-- Version: `1.22.0`
-- Tag: `v1.22.0`
+- Version: `1.23.0`
+- Tag: `v1.23.0`
 
 V1.23-E以降は、VersionごとのRelease workflowや `release/vX.Y.Z-final` branchを標準手順として増やしません。
 
