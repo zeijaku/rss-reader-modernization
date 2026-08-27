@@ -1,0 +1,92 @@
+/* V1.24-D: Stock individual state controls. */
+.stock-state-controls {
+    display: flex;
+    min-width: 0;
+    margin-top: 7px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.stock-state-toggle {
+    display: inline-flex;
+    min-height: 30px;
+    padding: 3px 8px;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    line-height: 1.25;
+    touch-action: manipulation;
+}
+
+.stock-state-toggle > i {
+    width: 1em;
+    text-align: center;
+}
+
+.stock-state-toggle:focus-visible {
+    outline: 3px solid rgba(var(--bs-info-rgb, 23, 162, 184), 0.42);
+    outline-offset: 2px;
+}
+
+.stock-state-toggle:disabled {
+    cursor: wait;
+    opacity: 0.64;
+}
+
+.stock-state-processed-toggle.is-active {
+    border-color: var(--bs-success, #198754);
+    background: rgba(var(--bs-success-rgb, 25, 135, 84), 0.1);
+    color: var(--bs-success, #198754);
+}
+
+.stock-state-important-toggle.is-active {
+    border-color: var(--bs-warning, #ffc107);
+    background: rgba(var(--bs-warning-rgb, 255, 193, 7), 0.12);
+    color: var(--bs-body-color, #343a40);
+}
+
+.stock-state-archived-toggle.is-active {
+    border-color: var(--bs-secondary, #6c757d);
+    background: rgba(var(--bs-secondary-rgb, 108, 117, 125), 0.13);
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.stock-card.stock-state-processed .stock-title {
+    opacity: 0.72;
+}
+
+.stock-card.stock-state-important .stock-card-inner {
+    box-shadow: inset 3px 0 0 var(--bs-warning, #ffc107);
+}
+
+.stock-card.stock-state-archived .stock-card-inner {
+    background: rgba(var(--bs-secondary-rgb, 108, 117, 125), 0.06);
+}
+
+.stock-card.stock-state-archived .stock-title,
+.stock-card.stock-state-archived .stock-meta,
+.stock-card.stock-state-archived .stock-tags-row {
+    opacity: 0.7;
+}
+
+@media (pointer: coarse) {
+    .stock-state-toggle {
+        min-height: 44px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .stock-state-controls {
+        gap: 4px;
+    }
+
+    .stock-state-toggle {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+}
