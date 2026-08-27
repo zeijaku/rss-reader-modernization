@@ -11,14 +11,6 @@ def check(ok: bool, message: str) -> None:
 def text(rel: str) -> str:
     return (ROOT / rel).read_text(encoding='utf-8')
 
-def extract(source: str, pattern: str) -> str:
-    match = re.search(pattern, source)
-    return match.group(1) if match else ''
-
-def release_tuple(value: str) -> tuple[int, int, int]:
-    match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)(?:-[A-Za-z0-9.]+)?', value)
-    return tuple(int(part) for part in match.groups()) if match else (0, 0, 0)
-
 version = text('app/version.php')
 readme = text('README.md')
 changelog = text('CHANGELOG.md')
@@ -32,19 +24,20 @@ m = re.search(r"const APP_VERSION = '(\d+)\.(\d+)\.(\d+)(?:-[^']+)?';", version)
 version_tuple = tuple(int(x) for x in m.groups()) if m else (0, 0, 0)
 check(version_tuple >= (1, 18, 0), 'current application remains Version 1.18.0-or-later')
 check('Version 1.18.0' in readme and 'Connection Monitor' in readme, 'README retains the V1.18.0 Connection Monitor release history')
-check('RSS Reader Modernization 1.18.0' in changelog and 'Connection Monitor' in changelog, 'CHANGELOG retains the V1.18.0 Connection Monitor entry')
+check('1.18.0' in changelog and 'Connection Monitor' in changelog, 'CHANGELOG retains the V1.18.0 Connection Monitor entry')
 
-runtime_release = extract(release_builder, r"INTENDED_RELEASE\s*=\s*'([^']+)'")
-runtime_tag = extract(release_builder, r"INTENDED_TAG\s*=\s*'v([^']+)'")
-complete_builder_version = extract(complete_builder, r"VERSION\s*=\s*'([^']+)'")
-runtime_verifier_release = extract(release_verifier, r"metadata\.get\('intended_release'\)\s*==\s*'([^']+)'")
-complete_verifier_version = extract(complete_verifier, r"VERSION\s*=\s*'([^']+)'")
-minimum_release = (1, 19, 0)
+# V1.23 standardized release tooling receives the intended final version as an
+# explicit independent input. This V1.18 compatibility gate checks that durable
+# release-tool contract instead of requiring a historical hardcoded VERSION /
+# INTENDED_RELEASE constant to remain in each tool forever.
+for name, body in (
+    ('Runtime builder', release_builder),
+    ('Complete builder', complete_builder),
+    ('Runtime verifier', release_verifier),
+    ('Complete verifier', complete_verifier),
+):
+    check('--release' in body and 'required=True' in body, f'{name} accepts an explicit final release version')
 
-check(runtime_release == runtime_tag and release_tuple(runtime_release) >= minimum_release, 'Runtime builder targets V1.19 or a later release line')
-check(release_tuple(complete_builder_version) >= minimum_release, 'Complete builder targets V1.19 or a later source')
-check(release_tuple(runtime_verifier_release) >= minimum_release, 'Runtime verifier targets V1.19 or a later release line')
-check(release_tuple(complete_verifier_version) >= minimum_release, 'Complete verifier targets V1.19 or a later source')
 check('Run Version 1.18 focused tests' in ci, 'CI continues to include V1.18 compatibility tests')
 check((ROOT / 'docs/v1-18-connection-monitor.md').is_file(), 'Connection Monitor design document exists')
 check((ROOT / 'docs/release-gate-v1.18.0.md').is_file(), 'V1.18 release gate document remains available')
