@@ -151,6 +151,13 @@
     opacity: 0.7;
 }
 
+@media (min-width: 768px) {
+    .stock-filter-form > .stock-state-filter-fields {
+        flex: 0 0 83.333333%;
+        width: 83.333333%;
+    }
+}
+
 @media (pointer: coarse) {
     .stock-state-toggle,
     .stock-bulk-apply,
