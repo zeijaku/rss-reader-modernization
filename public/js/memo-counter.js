@@ -80,9 +80,25 @@
         }
     }
 
+    function bindCardRefreshCounter() {
+        if (!root || !root.jQuery) {
+            return;
+        }
+
+        root.jQuery(document)
+            .off('iguguru:widget-card-refreshed.v124MemoCounter')
+            .on('iguguru:widget-card-refreshed.v124MemoCounter', function (event, card) {
+                if (!card || !card.classList || !card.classList.contains('memo-card')) {
+                    return;
+                }
+                ensureDashboardCounter(card);
+            });
+    }
+
     function initMemoCounters() {
         document.querySelectorAll('.memo-card').forEach(ensureDashboardCounter);
         document.querySelectorAll('.registerMemoBody, .changeMemoBody').forEach(bindTextarea);
+        bindCardRefreshCounter();
 
         document.addEventListener('click', function (event) {
             if (event.target.closest('.memo-edit-trigger')) {
