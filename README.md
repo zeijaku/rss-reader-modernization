@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.23.0`
-Release tag: `v1.23.0`
+**Stable release:** `RSS Reader Modernization 1.24.0`
+Release tag: `v1.24.0`
+
+Version 1.24.0は、MemoとStockの実用性を強化したReleaseです。Memoは選択したWidget Heightを長文本文で押し広げず内部Scrollし、Dashboard／登録／編集で4000文字上限の現在文字数を表示します。Stockには未処理／処理済み、通常／重要、Archiveの3状態を追加し、個別操作、Server-side Filter、検索／Tag／Sort／Paginationとの併用、現在Pageを対象にした一括状態更新、Smartphone向け操作性を追加しました。Archiveは従来のStock解除とは別状態で、通常一覧ではArchive済みを除外しつつFilterから復元できます。既存DBはMigration `017_v1_24_stock_state.sql`を適用します。
 
 Version 1.23.0は、Application機能を増やさずRepository／Test／GitHub Actions／Release運用を整理したMaintenance Releaseです。一時的なCheckpoint文書を整理し、Current testのVersion固定依存を減らし、Version固有WorkflowをGit履歴へ退避しました。正式Releaseは共通`release.yml`へ統一し、明示Version入力、main SHA再確認、既存Tag上書き拒否、既存GitHub Release非変更、deterministic Runtime／Complete Package、SHA-256、secret scan、clean-room確認を標準化しています。Application機能、DB schema／Migration、公開API、必須Config／Secretの追加変更はありません。
 
@@ -68,7 +70,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - 2回目以降に検出した記事のNEW表示と手動解除
 - Dashboard WidgetのタイトルバーDrag & Drop／Keyboard並び替え
 - Clock Widgetの追加・変更・削除、12／24時間、日付・秒表示
-- Memo Widgetの追加・変更・削除、改行を保持した本文表示
+- Memo Widgetの追加・変更・削除、改行を保持した本文表示、長文のWidget内Scroll、4000文字Counter
 - Task Widgetの追加・変更・削除、完了切替、期限、優先度
 - Calendar Widgetの月表示、通常予定、Task期限連動
 - Weather Widgetの地域別天気表示
@@ -81,6 +83,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - スマートフォンでの左右スワイプによるタブ切り替え
 - Feed／Calendar読込中のSpinner表示
 - 記事リンクのStock保存と一覧表示
+- Stockの未処理／処理済み、通常／重要、Archive状態、状態Filter、一括状態更新
 - Bootstrapテーマ、Navbarリンク、タブ名のユーザー設定
 - MySQL 8系での新規DB構築
 - configurable table prefix（例: `rss_`）
@@ -237,8 +240,9 @@ Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag / Git
 5. `DB_NAME` と `DB_TABLE_PREFIX` を設定する。
 6. `database/schema.sql` 冒頭の `@table_prefix` を同じ接頭辞にする。
 7. phpMyAdminで新DBを選択し `database/schema.sql` を実行する。
-8. アプリから新規ユーザー登録し、ログインして動作確認する。
-9. 必要なら `database/audit/postflight.sql` でSchemaを確認する。
+8. [`docs/installation.md`](docs/installation.md)に記載した後続Migrationを番号順に適用する。
+9. アプリから新規ユーザー登録し、ログインして動作確認する。
+10. 必要なら `database/audit/postflight.sql` でSchemaを確認する。
 
 例:
 
@@ -247,7 +251,6 @@ return [
     'APP_ENV' => 'production',
     'APP_DEBUG' => false,
     'APP_HASH_KEY' => 'replace-with-a-long-random-secret',
-
     'DB_DRIVER' => 'mysql',
     'DB_HOST' => 'db-host',
     'DB_PORT' => '3306',
@@ -264,21 +267,7 @@ return [
 SET @table_prefix = 'rss_';
 ```
 
-Prefix `rss_` の場合、V1.1-I時点では次の9テーブルを作成します。
-
-```text
-rss_user_info
-rss_user_conf
-rss_content
-rss_content_stock
-rss_feed_item_state
-rss_memo
-rss_task
-rss_calendar_event
-rss_dashboard_widget
-```
-
-Clock専用Tableは作成せず、表示設定は`rss_dashboard_widget.widget_config`へ保存します。Memo本文は`rss_memo`、Task項目は`rss_task`、通常予定は`rss_calendar_event`、配置は`rss_dashboard_widget`へ分けて保存します。Task期限はCalendar表示時に`rss_task`から直接読みます。
+Fresh-installの最新Table一覧と後続Migrationは[`docs/installation.md`](docs/installation.md)を正本とします。`schema.sql`にはV1.24のStock状態Columnが統合されています。
 
 SQLファイルはPHP設定を直接参照できないため、**`DB_TABLE_PREFIX` と `@table_prefix` は同じ値にしてください。**
 
