@@ -64,6 +64,9 @@ jobs:
       - name: Check active workflow hygiene
         run: python3 tests/test_workflow_hygiene.py
 
+      - name: Check standard release flow hygiene
+        run: python3 tests/test_release_flow.py
+
       - name: Run current regression tests
         run: bash tests/run-current.sh
 

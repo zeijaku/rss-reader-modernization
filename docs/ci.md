@@ -2,15 +2,16 @@
 
 ## 目的
 
-V1.23では、GitHub Actionsを「現在のApplicationを継続的に検証するCI」と「Release時だけ使うRelease workflow」に分けます。
+V1.23では、GitHub Actionsを次の2本へ整理します。
 
-D完了時点で、現在有効なWorkflowは `.github/workflows/ci.yml` だけです。Versionごとに作成していたFocused Check / Release GateはGit履歴・各Release tagから参照できるため、現在の `.github/workflows/` には残しません。
+- `.github/workflows/ci.yml`
+  - 現在のApplicationを継続的に検証するCI
+- `.github/workflows/release.yml`
+  - 正式Release時だけ手動実行する共通Release workflow
 
-V1.23-Eで、Version番号をファイル名に含めない共通Release workflowとして `.github/workflows/release.yml` を設計する予定です。
+V1.14〜V1.22で使用したVersion固有のFocused Check / Release GateはGit履歴・各Release tagから参照し、現在の `.github/workflows/` には戻しません。
 
 ## Current CI
-
-Workflow: `.github/workflows/ci.yml`
 
 Trigger:
 
@@ -22,27 +23,56 @@ Trigger:
 
 Runtime:
 
-- PHP 8.1: ApplicationのCompatibility floor
-- PHP 8.4: 新しいPHP 8系でのRegression
+- PHP 8.1
+- PHP 8.4
 - Python 3.12
 - Node.js 20
 - PHP extension: curl、mbstring、pdo_mysql、pdo_sqlite、simplexml
 
-## CIの構成
-
-Current CIでは、最初にRepository maintenance上の軽量guardを実行します。
+Current CIでは、Repository maintenance上の軽量guardを先に実行します。
 
 - `tests/test_version_dependency_hygiene.py`
   - Current-following testへの古いasset revision固定を検出
   - 過去Release final gateがCurrent CIへ戻ることを検出
 - `tests/test_workflow_hygiene.py`
-  - Version固有workflowが `.github/workflows/` に再追加されることを検出
-  - 現役workflow名を `ci.yml` と共通 `release.yml` に限定
-  - CI tokenがread-onlyであることを確認
+  - 現役workflowを `ci.yml` / `release.yml` に限定
+  - Version固有workflow、Version固定release branchの再混入を検出
+- `tests/test_release_flow.py`
+  - Release workflowのVersion非依存性
+  - tag上書き禁止
+  - 既存GitHub Releaseを変更しない契約
+  - package toolへの明示Version入力
+  - clean-room / secret scan維持
 
 その後、`tests/run-current.sh` と必要なCompatibility runnerを実行します。
 
 過去VersionのFinal Release testは削除しません。Release当時のimmutable contractを確認する資料として残しますが、Current CIからは実行しません。
+
+## Standard Release workflow
+
+`.github/workflows/release.yml` は `workflow_dispatch` だけで起動します。
+
+正式Releaseでは、GitHub Actions画面で `main` を選択し、対象Versionを `X.Y.Z` 形式で明示入力します。
+
+Release workflowはSourceを書き換えたり、自動commitしたりしません。実行前にSourceをrelease-readyな状態へ整え、`main`へ反映しておく必要があります。
+
+Workflowは次を確認します。
+
+1. 実行元が `main` であること
+2. 入力Versionと `app/version.php` / README / CHANGELOG / RELEASE_NOTESが一致すること
+3. 実行開始時の `main` SHAとRemote `main` SHAが一致すること
+4. 既存Tagがある場合は同じCommitを指していること
+5. PHP 8.1 / 8.4のCurrent / Compatibility regression
+6. 高signal secret scan
+7. Runtime / Complete Source package生成と独立Verifier
+8. SHA-256
+9. clean-room展開確認
+10. 公開直前にRemote `main` SHAとTagを再確認
+11. immutable tag作成とGitHub Release作成
+
+既存Tagが別Commitを指す場合は失敗します。force updateは行いません。
+
+同じCommitを指すTagが既に存在する場合はそのTagを再利用します。GitHub Releaseが既に存在する場合は内容やAssetを変更せず、そのまま残します。
 
 ## Historical workflowの扱い
 
@@ -50,17 +80,11 @@ V1.14〜V1.22で使用したVersion固有workflowは、現在のGitHub Actions�
 
 過去workflowを確認する場合は、該当Release tagまたはGit履歴を参照します。新Versionを作るために古いworkflow YAMLをコピーしてVersion文字列だけ置換する運用には戻しません。
 
-この方針により、次Versionで次のようなファイルが増え続ける状態を避けます。
-
-- `vX.Y.Z-release.yml`
-- `vX.Y-a-check.yml`
-- `vX.Y-b-check.yml`
-
 ## Branch protection / required checks
 
 Branch protectionやrequired status checkはGitHub側のRepository設定であり、Source treeとは別管理です。
 
-Workflow名やJob名を変更・削除する前には、GitHub側でrequired checkに指定されていないことを確認します。V1.23-D実施時点では `main` はprotected branchではなく、required status checkも設定されていません。
+V1.23-D実施時点では `main` はprotected branchではなく、required status checkも設定されていません。
 
 将来Branch protectionを有効化した場合は、Current CIの安定したJob名をrequired checkとして使用します。
 
@@ -71,17 +95,16 @@ Workflow名やJob名を変更・削除する前には、GitHub側でrequired che
 - 実HostingのPermission、DocumentRoot、HTTPS
 - 実BrowserでのTheme / Responsive確認
 - Backupから別DBへのRestore drill
-- GitHub Release / Tag / 配布ZIPの最終確認
+- Production反映後の実環境確認
 
 これらはRelease Candidate / Final release確認として扱います。
 
 ## Failure時
 
-1. 失敗したPHP VersionとStepを確認する。
-2. 最初のFAILを優先し、後続の連鎖FAILと分ける。
-3. 最小の対象Testを先に実行する。
-4. 必要な場合だけCompatibility / Current regressionへ範囲を広げる。
-5. Runtime差の場合は、WorkflowかApplicationのどちらを直すかを判断する。
-6. `continue-on-error` や無条件SKIPで緑にしない。
+1. 最初のFAILを優先する。
+2. 最小の対象Testを先に実行する。
+3. 必要な場合だけCompatibility / Current regressionへ範囲を広げる。
+4. `continue-on-error` や無条件SKIPで緑にしない。
+5. Release workflow失敗時はTag / Releaseの有無を確認し、Sourceを修正した場合は新しい `main` SHAから再実行する。
 
 V1.23では各段階でFull Regressionを繰り返さず、Full regression / Release gateは最終段階でまとめて確認します。

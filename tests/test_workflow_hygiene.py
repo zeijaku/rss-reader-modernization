@@ -17,11 +17,11 @@ workflow_paths = sorted([
     *WORKFLOWS.glob('*.yaml'),
 ])
 workflow_names = {path.name for path in workflow_paths}
-allowed_names = {'ci.yml', 'release.yml'}
+expected_names = {'ci.yml', 'release.yml'}
 
 check((WORKFLOWS / 'ci.yml').is_file(), 'current CI workflow exists')
-unexpected = sorted(workflow_names - allowed_names)
-check(not unexpected, 'active workflows are limited to ci.yml and optional generic release.yml')
+check((WORKFLOWS / 'release.yml').is_file(), 'generic Release workflow exists')
+check(workflow_names == expected_names, 'active workflows are exactly ci.yml and release.yml')
 
 version_named = sorted(
     path.name for path in workflow_paths
@@ -31,14 +31,20 @@ check(not version_named, 'no version-specific workflow file remains active')
 
 release_branch_literal = re.compile(r'release/v\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?')
 for path in workflow_paths:
-    text = path.read_text(encoding='utf-8')
-    check(not release_branch_literal.search(text),
-          f'active workflow has no release branch pinned to one historical version: {path.name}')
+    body = path.read_text(encoding='utf-8')
+    check(
+        not release_branch_literal.search(body),
+        f'active workflow has no release branch pinned to one historical version: {path.name}',
+    )
 
 ci = (WORKFLOWS / 'ci.yml').read_text(encoding='utf-8')
+release = (WORKFLOWS / 'release.yml').read_text(encoding='utf-8')
 check('contents: read' in ci, 'CI token remains read-only')
 check('pull_request_target' not in ci, 'CI does not use pull_request_target')
 check('tests/test_workflow_hygiene.py' in ci, 'CI runs workflow hygiene guard')
+check('workflow_dispatch:' in release, 'Release workflow is manually dispatched')
+check('pull_request:' not in release and '\n  push:' not in release, 'Release workflow is not triggered by PR or push')
+check('contents: write' in release, 'Release workflow has contents write permission for final tag/Release publication')
 
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
