@@ -32,4 +32,17 @@ node --check "$ROOT/public/js/rss-rules.js"
 node --check "$ROOT/public/js/rss-rule-display.js"
 node --check "$ROOT/public/js/rss-rules-integration.js"
 
+echo '== Current feature contracts: V1.24 Memo =='
+python3 "$SCRIPT_DIR/test_v124b_memo_widget.py"
+node --check "$ROOT/public/js/memo-counter.js"
+
+echo '== Current feature contracts: V1.24 Stock state =='
+php "$SCRIPT_DIR/test_v124c_stock_state_api.php"
+python3 "$SCRIPT_DIR/test_v124c_stock_state_static.py"
+php "$SCRIPT_DIR/test_v124d_stock_state_ui.php"
+php "$SCRIPT_DIR/test_v124e_stock_state_filters.php"
+node "$SCRIPT_DIR/test_v124e_stock_state_ui.js"
+python3 "$SCRIPT_DIR/test_v124e_stock_state_workflow_static.py"
+node --check "$ROOT/public/js/stock-state-ui.js"
+
 echo 'PASS: current feature contract suite completed'
