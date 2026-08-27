@@ -24,31 +24,40 @@ current_following.extend([
 
 pinned_asset_patterns = [
     re.compile(r"APP_ASSET_REVISION\s*=\s*['\"]\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?['\"]"),
-    re.compile(r"\?v=\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?"),
     re.compile(r"asset_revision\s*==\s*['\"]\d+\.\d+\.\d+"),
     re.compile(r"asset_revision\.startswith\(\s*['\"]\d+\.\d+\.\d+"),
+    re.compile(r"active_revision\s*==\s*['\"]\d+\.\d+\.\d+"),
+    re.compile(r"active_revision\.startswith\(\s*['\"]\d+\.\d+\.\d+"),
+    re.compile(r"re\.fullmatch\([^\n]*\d+\\\.\d+\\\.\d+[^\n]*active_revision"),
 ]
 
 for path in current_following:
-    text = path.read_text(encoding='utf-8')
-    pinned = any(pattern.search(text) for pattern in pinned_asset_patterns)
-    check(not pinned, f'current-following test has no pinned release asset key: {path.name}')
+    body = path.read_text(encoding='utf-8')
+    pinned = any(pattern.search(body) for pattern in pinned_asset_patterns)
+    check(not pinned, f'current-following test has no pinned active release key: {path.name}')
 
+# Active automation must stay version-neutral. Version-specific runners are
+# retained for historical/targeted investigation but must not accumulate in
+# normal CI or the standard Release workflow.
 ci = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
-check('run-v121e.sh' not in ci, 'current CI does not invoke the historical V1.21 final release gate')
-check('run-v122e.sh' not in ci, 'current CI does not invoke the historical V1.22 final release gate')
-check('run-v121-compat.sh' in ci, 'current CI keeps V1.21 feature compatibility without finalization checks')
-for runner in ['run-v122b.sh', 'run-v122c.sh', 'run-v122d.sh']:
-    check(runner in ci, f'current CI keeps focused compatibility runner: {runner}')
+release = (ROOT / '.github/workflows/release.yml').read_text(encoding='utf-8')
+version_runner = re.compile(r'\b(?:bash|sh)\s+tests/run-v\d', flags=re.IGNORECASE)
 
-# Historical release tests remain in the source tree because they document
-# immutable release contracts. Historical workflow YAML is preserved by Git
-# history/tags rather than kept active under .github/workflows.
+for name, body in [('CI', ci), ('Release', release)]:
+    check(not version_runner.search(body), f'{name} does not invoke version-specific run-v*.sh gates')
+    check('bash tests/run-current.sh' in body, f'{name} runs the current regression suite')
+    check('bash tests/run-current-features.sh' in body, f'{name} runs durable current feature contracts')
+
+# Historical release/compatibility tests remain in the source tree because
+# they document immutable release contracts and support targeted investigation.
 for rel in [
+    'tests/test_v121a_drawer_categories.py',
+    'tests/test_v121b_drawer_visual.py',
+    'tests/test_v121c_mobile_touch.py',
     'tests/test_v121e_final.py',
     'tests/test_v122e_final.py',
 ]:
-    check((ROOT / rel).is_file(), f'historical release test remains preserved: {rel}')
+    check((ROOT / rel).is_file(), f'historical test remains preserved: {rel}')
 
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
