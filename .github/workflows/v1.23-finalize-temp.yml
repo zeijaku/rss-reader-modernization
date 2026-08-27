@@ -1,0 +1,47 @@
+name: V1.23 Finalize Temporary
+
+on:
+  push:
+    branches:
+      - work/v1.23-finalize-run
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Prepare Version 1.23.0 release-ready source
+        run: python3 tools/finalize_v123_release_temp.py
+
+      - name: Validate release-ready source
+        run: |
+          set -euo pipefail
+          python3 tools/check_release_ready.py --release 1.23.0
+          python3 tests/test_version_dependency_hygiene.py
+
+      - name: Commit final source and remove temporary helpers
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/v1.23-finalize-temp.yml
+          rm -f tools/finalize_v123_release_temp.py
+          git add -A
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'release(v1.23): finalize Version 1.23.0 source'
+          git push origin HEAD:work/v1.23-finalize-run
