@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 checks: list[bool] = []
@@ -34,10 +35,11 @@ check('gh release view "${TAG}"' in workflow, 'Release workflow checks existing 
 check('leaving it unchanged.' in workflow, 'Existing GitHub Release is left unchanged')
 check('git tag -f' not in workflow and 'git push --force' not in workflow and 'git push -f' not in workflow, 'Release workflow contains no force tag/ref update')
 check('tools/check_release_ready.py --release "${RELEASE_VERSION}"' in workflow, 'Release workflow validates release-ready source against explicit version')
-check('run-v121e.sh' not in workflow and 'run-v122e.sh' not in workflow, 'Release workflow excludes historical finalization gates')
-check('run-v121-compat.sh' in workflow, 'Release workflow keeps current V1.21 compatibility gate')
-for runner in ('run-v122b.sh', 'run-v122c.sh', 'run-v122d.sh'):
-    check(runner in workflow, f'Release workflow keeps focused compatibility runner: {runner}')
+
+version_runner = re.compile(r'\b(?:bash|sh)\s+tests/run-v\d', flags=re.IGNORECASE)
+check(not version_runner.search(workflow), 'Release workflow does not accumulate historical run-v*.sh gates')
+check(workflow.count('bash tests/run-current.sh') == 2, 'Release workflow runs current regression on PHP 8.1 and 8.4')
+check(workflow.count('bash tests/run-current-features.sh') == 2, 'Release workflow runs durable current feature contracts on PHP 8.1 and 8.4')
 
 for command in (
     'tools/build_release_package.py',
@@ -56,6 +58,7 @@ check('config/local.php' in workflow, 'Release workflow checks private local con
 check('High-signal source secret scan' in workflow, 'Release workflow retains source secret scan')
 check('Runtime package clean-room checks' in workflow, 'Release workflow retains Runtime clean-room checks')
 check('Complete Source package clean-room checks' in workflow, 'Release workflow retains Complete Source clean-room checks')
+check('tests/run-current-features.sh' in workflow, 'Complete Source clean-room checks require the current feature runner')
 check('actions/upload-artifact@v4' in workflow, 'Release workflow retains packaged asset artifact upload')
 check('gh release create "${TAG}"' in workflow, 'Release workflow publishes GitHub Release only after verification')
 
