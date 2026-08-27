@@ -2,9 +2,17 @@
  * Desktop/tablet follow the actual Grid track size. Only the Memo body scrolls. */
 .dashboard-grid > .memo-card {
     min-height: 0;
-    height: 100%;
     align-self: stretch;
     overflow: hidden;
+}
+
+/* The Dashboard Grid intentionally uses minmax(320px, auto) because Clock / Game
+ * may expand a row. Memo content must not participate in that auto track sizing;
+ * otherwise a long Memo enlarges the row before overflow-y can take effect. */
+@media (min-width: 768px) {
+    .dashboard-grid > .memo-card {
+        contain: size;
+    }
 }
 
 .dashboard-grid .memo-card-inner {
