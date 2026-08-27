@@ -61,6 +61,9 @@ jobs:
       - name: Check current version dependency hygiene
         run: python3 tests/test_version_dependency_hygiene.py
 
+      - name: Check active workflow hygiene
+        run: python3 tests/test_workflow_hygiene.py
+
       - name: Run current regression tests
         run: bash tests/run-current.sh
 

@@ -41,14 +41,14 @@ check('run-v121-compat.sh' in ci, 'current CI keeps V1.21 feature compatibility 
 for runner in ['run-v122b.sh', 'run-v122c.sh', 'run-v122d.sh']:
     check(runner in ci, f'current CI keeps focused compatibility runner: {runner}')
 
-# Historical release contracts remain available for release archaeology, but
-# they are not current-version-following checks.
+# Historical release tests remain in the source tree because they document
+# immutable release contracts. Historical workflow YAML is preserved by Git
+# history/tags rather than kept active under .github/workflows.
 for rel in [
     'tests/test_v121e_final.py',
     'tests/test_v122e_final.py',
-    '.github/workflows/v1.22.0-release.yml',
 ]:
-    check((ROOT / rel).is_file(), f'historical release contract remains preserved: {rel}')
+    check((ROOT / rel).is_file(), f'historical release test remains preserved: {rel}')
 
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
