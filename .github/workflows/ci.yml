@@ -58,38 +58,16 @@ jobs:
           python --version
           node --version
 
+      - name: Check current version dependency hygiene
+        run: python3 tests/test_version_dependency_hygiene.py
+
+      - name: Check active workflow hygiene
+        run: python3 tests/test_workflow_hygiene.py
+
+      - name: Check standard release flow hygiene
+        run: python3 tests/test_release_flow.py
+
       - name: Run current regression tests
-        run: bash tests/run-current.sh
-
-      - name: Run Version 1.17 focused tests
-        run: bash tests/run-v117.sh
-
-      - name: Run Version 1.17.1 focused tests
-        run: bash tests/run-v1171.sh
-
-      - name: Run Version 1.17.2 compatibility tests
-        run: bash tests/run-v1172.sh
-
-      - name: Run Version 1.18 focused tests
-        run: bash tests/run-v118.sh
-
-      - name: Run Version 1.19 compatibility tests
         run: |
-          bash tests/run-v119.sh
-          bash tests/run-v119c.sh
-          bash tests/run-v119d.sh
-
-      - name: Run Version 1.21.0 final release gate
-        run: bash tests/run-v121e.sh
-
-      - name: Run Version 1.22-B Feed Health focused gate
-        run: bash tests/run-v122b.sh
-
-      - name: Run Version 1.22-C RSS Rules focused gate
-        run: bash tests/run-v122c.sh
-
-      - name: Run Version 1.22-D RSS Rules integration gate
-        run: bash tests/run-v122d.sh
-
-      - name: Run Version 1.22.0 final release gate
-        run: bash tests/run-v122e.sh
+          bash tests/run-current.sh
+          bash tests/run-current-features.sh

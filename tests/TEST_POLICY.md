@@ -1,6 +1,6 @@
 # Test Policy
 
-V1.17-G で通常CIの目的を整理する。
+V1.17-G で通常CIの目的を整理し、V1.23 で Version 固有Runnerの累積を止める。
 
 ## 基本方針
 
@@ -11,7 +11,7 @@ V1.17-G で通常CIの目的を整理する。
 - PHP / JavaScriptの構文確認を維持する。
 - 現在のVersionで変更した機能は focused test を追加して確認する。
 - 過去Version固有のRelease Gate、文言、コメント、CSSの細かな値、内部関数名、ファイル分割方法だけを固定するテストは通常CIの必須対象にしない。
-- 過去テストファイルは削除せず、必要なときに `tests/run.sh` から従来の詳細Regressionを実行できる状態を残す。
+- 過去テストファイルは削除せず、必要なときに `tests/run.sh` や個別の `run-v*.sh` から従来の詳細Regressionを実行できる状態を残す。
 
 ## Runner
 
@@ -19,14 +19,30 @@ V1.17-G で通常CIの目的を整理する。
 
 通常CIで使用する。現在の機能、Core、Securityを中心にしたRegression。
 
-### `tests/run-v117.sh`
+### `tests/run-current-features.sh`
 
-V1.17で変更したCamera / Video関連のfocused test。V1.17開発中は通常CIに追加して実行する。
+後続Versionで追加された機能のうち、現在も守るべき動作・Security契約を確認するVersion非依存のRunner。
+通常CIと標準Releaseは `run-current.sh` とこのRunnerだけを入口にする。
+
+### `tests/run-v*.sh`
+
+各Version開発時のfocused testや過去Regression調査用として保持する。
+開発中に一時的に利用してもよいが、正式Releaseへ進む前に「今後も守る契約」は `test_current_*.py` または `run-current-features.sh` 側へ移し、activeな `ci.yml` / `release.yml` にはVersion固有Runnerを積み上げない。
 
 ### `tests/run.sh`
 
 Secure Baselineから各Versionで追加した詳細テストを積み上げた従来Runner。
 履歴確認や特定の過去Regression調査用として残すが、通常CIの必須Runnerにはしない。
+
+## 新Version追加時の流れ
+
+1. 開発中は対象機能のfocused testを最小範囲で実行する。
+2. 機能が固まったら、将来も必要な動作・Security契約だけをcurrent契約へ移す。
+3. Version番号、checkpoint文書、当時のCSS値、内部実装順序などの履歴検証はhistorical testとして残す。
+4. `ci.yml` と `release.yml` に新しい `run-v*.sh` を追加しない。
+5. ReleaseはPHP 8.1 / 8.4で同じcurrent契約を再確認し、その後にpackage / clean-room / immutable tag確認へ進む。
+
+この流れにより、V1.24、V1.25と進んでも通常CIとReleaseの実行対象が過去Version数に比例して増えないようにする。
 
 ## 通常CIから外す対象の考え方
 
@@ -50,6 +66,8 @@ Secure Baselineから各Versionで追加した詳細テストを積み上げた�
 - Version: `APP_VERSION` / `APP_VERSION_LABEL` が有効で整合していること。HTMLの特定位置やCSS形状までは固定しない。
 - Cache / Security: 現在必要なSecurityヘッダーとprivate/no-store境界が維持されること。過去Version文書やMigration有無は確認しない。
 - Information Widget: 現行Widget種別とAPI actionが登録され、PHPの動作テストが通ること。内部helper名や44px等のCSS値は固定しない。
+- Drawer: 現在のAsset revisionで読込でき、主要SectionとLogout / Offcanvasの契約が維持されること。V1.21当時のCSS数値やcache keyは固定しない。
+- Feed Health / RSS Rules: 現行API・runtime動作と現在のAsset revisionへの追従を確認し、導入Version番号自体は契約にしない。
 
 ## V1.17-G TEST-1
 
@@ -65,3 +83,7 @@ Secure Baselineから各Versionで追加した詳細テストを積み上げた�
 - `test_v115_information_widgets.py` のhelper名 / CSS値 / 実装形状固定 → `test_current_information_widget_contract.py`
 
 元テストは削除せず `tests/run.sh` に残す。通常CIは現行契約を優先する。
+
+## V1.23 current gate整理
+
+V1.23では、通常CIと標準ReleaseにV1.17〜V1.22のVersion固有Runnerが累積していた状態を解消した。過去Runner/Testは削除せず、現在も必要なDrawer、Security hardening、Feed Health、RSS Rulesの契約をVersion非依存のcurrent gateへ移した。

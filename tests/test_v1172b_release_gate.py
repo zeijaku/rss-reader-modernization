@@ -63,11 +63,17 @@ check('configuration examples use placeholder token only', 'replace-with-your-x-
 check('real local.php is not part of repository source', not (ROOT / 'config/local.php').exists())
 check('later release adds no V1.17.2 SQL migration', not any('1_17_2' in q.name for q in (ROOT / 'database/migrations').glob('*')) if (ROOT / 'database/migrations').is_dir() else True)
 
-base_release = '.'.join(version_value.split('-', 1)[0].split('.')[:3])
-check('runtime builder targets the current release line', base_release in builder and ('v' + base_release) in builder)
-check('complete builder targets the current RC/source version', version_value in complete_builder)
-check('runtime verifier targets the current release line', base_release in verify_runtime)
-check('complete verifier targets the current RC/source version', version_value in verify_complete)
+# V1.23 standardized release tooling: current release identity is supplied as
+# an explicit independent input instead of being hardcoded in each builder /
+# verifier. Keep this V1.17.2 compatibility gate focused on that durable
+# contract rather than one historical release string.
+for name, body in (
+    ('runtime builder', builder),
+    ('complete builder', complete_builder),
+    ('runtime verifier', verify_runtime),
+    ('complete verifier', verify_complete),
+):
+    check(f'{name} accepts explicit release version', "--release" in body and "required=True" in body)
 check('release builders exclude all generated var/cache data', "'var/cache'" in builder and "'var/cache'" in complete_builder)
 check('CI continues to run V1.17.2 compatibility tests', 'bash tests/run-v1172.sh' in ci)
 

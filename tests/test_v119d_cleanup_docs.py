@@ -70,26 +70,33 @@ check('security boundary documents immutable asset revision rule', 'APP_ASSET_RE
 check('new-feature checklist includes SRI digest verification', 'SRI digest' in new_feature and '実bytes' in new_feature)
 check('supported-version policy no longer contains obsolete pre-1.0 wording', 'Version 1.0.0の正式Release前' not in policy and '最新の正式Release' in policy)
 
-# C follow-up documentation and current asset state must agree.
+# C follow-up and current asset state must agree. Transient APPLY_NOTE files were
+# retired in V1.23-B; the durable contract is the current asset state plus Git
+# history/tag evidence rather than a root checkpoint handoff document.
 version = text('app/version.php')
 calendar = text('public/js/calendar.js')
 streaming = text('public/js/camera-video-streaming.js')
-c_apply = text('APPLY_NOTE_V1_19_C.md')
 correct_sri = 'sha384-5E8B0pTlZZJMabWpC0fyYf6OUpe15jJij34BqBAh4NXoHAlLNOjCPRrwtOXOQFAn'
 revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
 active_revision = revision_match.group(1) if revision_match else ''
 check('current asset revision remains explicit after D', bool(active_revision))
 check('Camera Streaming loader follows current asset revision', bool(active_revision) and 'camera-video-streaming.js?v=' + active_revision in calendar)
 check('Camera Streaming SRI matches browser-computed digest', correct_sri in streaming)
-check('C apply note is reconciled to r4', '1.18.0-r4' in c_apply and 'SRI follow-up' in c_apply)
+check('transient V1.19-C apply note is not required in current repository root', not (ROOT / 'APPLY_NOTE_V1_19_C.md').exists())
 
-# Documentation index links should exist.
+# Current documentation index keeps durable V1.19 architecture/security records,
+# while executed checkpoint/test handoffs need not remain indexed.
 docs_index = text('docs/README.md')
-links = re.findall(r'\]\((v1-19-[^)]+)\)', docs_index)
-check('V1.19 documentation index has expected entries', len(links) >= 6)
-for rel in links:
-    check(f'docs index target exists: {rel}', (ROOT / 'docs' / rel).is_file())
-check('V1.19-D test report exists', (ROOT / 'docs/test-report-v1-19-d.md').is_file() and 'test-report-v1-19-d.md' in docs_index)
+for rel in [
+    'v1-19-architecture.md',
+    'v1-19-public-endpoints.md',
+    'v1-19-public-endpoint-matrix.csv',
+    'v1-19-security-boundary.md',
+    'v1-19-security-checklist.md',
+]:
+    check(f'docs index retains durable V1.19 record: {rel}', f'({rel})' in docs_index and (ROOT / 'docs' / rel).is_file())
+check('V1.19-D historical test report remains available when retained', (ROOT / 'docs/test-report-v1-19-d.md').is_file())
+check('current docs index does not require checkpoint/test-report enumeration', 'Test reportを恒久的に列挙する場所にはしません' in docs_index)
 
 # D stays non-schema/non-version-changing.
 version_match = re.search(r"const APP_VERSION = '(\d+)\.(\d+)\.(\d+)(?:-[^']+)?';", version)

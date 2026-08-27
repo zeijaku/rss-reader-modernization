@@ -11,8 +11,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXED_TIME = (1980, 1, 1, 0, 0, 0)
-INTENDED_RELEASE = '1.22.0'
-INTENDED_TAG = 'v1.22.0'
+SEMVER = re.compile(r'[0-9]+\.[0-9]+\.[0-9]+')
 
 ROOT_FILES = (
     '.htaccess',
@@ -59,32 +58,53 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def read_version() -> tuple[str, str]:
+def validate_release(release: str) -> str:
+    if not SEMVER.fullmatch(release):
+        fail('--release must be a final semantic version such as X.Y.Z')
+    return release
+
+
+def read_version() -> tuple[str, str, str]:
     text = (ROOT / 'app/version.php').read_text(encoding='utf-8')
-    version_match = re.search(r"APP_VERSION\s*=\s*'([^']+)'", text)
-    label_match = re.search(r"APP_VERSION_LABEL\s*=\s*'([^']+)'", text)
-    if not version_match or not label_match:
-        fail('app/version.php does not contain readable version constants')
-    return version_match.group(1), label_match.group(1)
+    values: dict[str, str] = {}
+    for name in ('APP_VERSION', 'APP_VERSION_LABEL', 'APP_ASSET_REVISION'):
+        match = re.search(rf"{name}\s*=\s*'([^']+)'", text)
+        if not match:
+            fail(f'app/version.php does not contain readable {name}')
+        values[name] = match.group(1)
+    return values['APP_VERSION'], values['APP_VERSION_LABEL'], values['APP_ASSET_REVISION']
 
 
-def validate_mode(mode: str, version: str, label: str) -> tuple[str, str, str]:
+def validate_mode(
+    mode: str,
+    release: str,
+    version: str,
+    label: str,
+    asset_revision: str,
+) -> tuple[str, str, str]:
     if mode == 'preview':
-        if not re.fullmatch(r'1\.22\.0-dev\.[1-9][0-9]*', version):
-            fail('preview mode requires APP_VERSION such as 1.21.0-dev.9')
+        if not re.fullmatch(re.escape(release) + r'-dev\.[1-9][0-9]*', version):
+            fail(f'preview mode requires APP_VERSION such as {release}-dev.1')
         if label != f'RSS Reader Modernization {version}':
             fail('preview mode label does not match APP_VERSION')
-        return 'PREVIEW', 'no', 'rss-reader-modernization-1.22.0-preview'
+        return 'PREVIEW', 'no', f'rss-reader-modernization-{release}-preview'
+
     if mode == 'rc':
-        if not re.fullmatch(r'1\.22\.0-rc[1-9][0-9]*', version):
-            fail('rc mode requires APP_VERSION such as 1.21.0-rc1')
+        if not re.fullmatch(re.escape(release) + r'-rc[1-9][0-9]*', version):
+            fail(f'rc mode requires APP_VERSION such as {release}-rc1')
         if label != f'RSS Reader Modernization {version.upper()}':
             fail('rc mode label does not match APP_VERSION')
         return 'RELEASE_CANDIDATE', 'no', f'rss-reader-modernization-{version}'
+
     if mode == 'final':
-        if version != INTENDED_RELEASE or label != 'RSS Reader Modernization 1.22.0':
-            fail('final mode requires the exact 1.22.0 version and label')
-        return 'FINAL', 'yes', 'rss-reader-modernization-1.22.0'
+        if version != release:
+            fail(f'final mode requires APP_VERSION={release}')
+        if label != f'RSS Reader Modernization {release}':
+            fail('final mode label does not match the requested release')
+        if asset_revision != release:
+            fail('final mode requires APP_ASSET_REVISION to equal the requested release')
+        return 'FINAL', 'yes', f'rss-reader-modernization-{release}'
+
     fail('unsupported mode')
 
 
@@ -114,8 +134,6 @@ def collect_source_files() -> dict[str, Path]:
             rel = path.relative_to(ROOT).as_posix()
             if path.is_symlink():
                 fail(f'symlink is not allowed in release package: {rel}')
-            # Runtime tests can legitimately create session/cache/log files before
-            # packaging. They are never distribution inputs; keep only .gitkeep.
             if is_generated_runtime_file(rel):
                 continue
             files[rel] = path
@@ -145,8 +163,6 @@ def collect_source_files() -> dict[str, Path]:
         if '__pycache__' in posix.parts or lower.endswith(('.pyc', '.pyo')):
             fail(f'Python cache file is not allowed: {rel}')
 
-    # Defense in depth: generated runtime files must never enter the payload,
-    # even if collection logic changes later.
     generated = [rel for rel in files if is_generated_runtime_file(rel)]
     if generated:
         fail('generated runtime files entered release payload: ' + ', '.join(generated[:5]))
@@ -162,9 +178,13 @@ def zip_info(name: str) -> zipfile.ZipInfo:
     return info
 
 
-def build(mode: str, output_dir: Path) -> tuple[Path, Path]:
-    version, label = read_version()
-    status, publishable, artifact_stem = validate_mode(mode, version, label)
+def build(mode: str, release: str, output_dir: Path) -> tuple[Path, Path]:
+    release = validate_release(release)
+    version, label, asset_revision = read_version()
+    status, publishable, artifact_stem = validate_mode(
+        mode, release, version, label, asset_revision
+    )
+    intended_tag = f'v{release}'
     source_files = collect_source_files()
     output_dir.mkdir(parents=True, exist_ok=True)
     zip_path = output_dir / f'{artifact_stem}.zip'
@@ -175,8 +195,9 @@ def build(mode: str, output_dir: Path) -> tuple[Path, Path]:
         f'package_status={status}',
         f'application_version={version}',
         f'application_label={label}',
-        f'intended_release={INTENDED_RELEASE}',
-        f'intended_tag={INTENDED_TAG}',
+        f'application_asset_revision={asset_revision}',
+        f'intended_release={release}',
+        f'intended_tag={intended_tag}',
         f'publishable={publishable}',
         'validation_scope=automated-regression-and-package',
         'manual_evidence=not-recorded-in-distribution',
@@ -211,10 +232,11 @@ def build(mode: str, output_dir: Path) -> tuple[Path, Path]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description='Build deterministic RSS Reader release package.')
+    parser.add_argument('--release', required=True, help='Intended final version, for example X.Y.Z')
     parser.add_argument('--mode', choices=('preview', 'rc', 'final'), default='preview')
     parser.add_argument('--output-dir', type=Path, default=ROOT / 'dist')
     args = parser.parse_args()
-    build(args.mode, args.output_dir.resolve())
+    build(args.mode, args.release, args.output_dir.resolve())
     return 0
 
 

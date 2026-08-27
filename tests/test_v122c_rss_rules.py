@@ -1,5 +1,6 @@
-import re
 from pathlib import Path
+
+from version_contract_utils import current_asset_revision
 
 ROOT = Path(__file__).resolve().parents[1]
 checks = []
@@ -14,10 +15,8 @@ api = (ROOT / 'app/api/rss_rule.php').read_text(encoding='utf-8')
 dispatch = (ROOT / 'app/api.php').read_text(encoding='utf-8')
 ui = (ROOT / 'public/js/rss-rules.js').read_text(encoding='utf-8')
 loader = (ROOT / 'public/js/rss-management.js').read_text(encoding='utf-8')
-version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 calendar = (ROOT / 'public/js/calendar.js').read_text(encoding='utf-8')
-asset_match = re.search(r"APP_ASSET_REVISION\s*=\s*'([^']+)'", version)
-asset_revision = asset_match.group(1) if asset_match else ''
+asset_revision = current_asset_revision(ROOT)
 
 check('rss_rule' in migration and 'rss_rule_condition' in migration, 'Migration creates normalized Rule and Condition tables')
 condition_section = migration.split('CREATE TABLE IF NOT EXISTS ', 2)[-1]
@@ -31,10 +30,9 @@ for action in ['rss.rule.list', 'rss.rule.create', 'rss.rule.update', 'rss.rule.
     check(action in dispatch, f'API dispatcher exposes {action}')
 check('conditions_json' in api and 'JSON_THROW_ON_ERROR' in api, 'Condition JSON is bounded and strictly decoded')
 check('RSS Rules' in ui and 'rssRuleForm' in ui, 'RSS Management UI exposes Rules CRUD')
-# Compatibility: V1.22-C checkpoints use a suffix; the formal V1.22.0 release intentionally does not.
-check(asset_revision == '1.22.0' or asset_revision.startswith('1.22.0-'), 'V1.22 uses a checkpoint or formal release asset revision')
-check(f"rss-rules.js?v={asset_revision}" in loader, 'RSS Management loads Rules UI under the current V1.22 asset key')
-check(f"feed-health.js?v={asset_revision}" in calendar, 'Dashboard assets use the current V1.22 cache key')
+check(bool(asset_revision), 'Current application asset revision is available')
+check(f"rss-rules.js?v={asset_revision}" in loader, 'RSS Management loads Rules UI under the current application asset key')
+check(f"feed-health.js?v={asset_revision}" in calendar, 'Dashboard assets use the current application cache key')
 check('preg_match' not in ui and 'RegExp' not in ui, 'No client Regex rule mode is introduced')
 
 failed = len(checks) - sum(checks)

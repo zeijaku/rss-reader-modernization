@@ -98,6 +98,8 @@ __pycache__/
 /var/m4f-evidence/*
 !/var/m4f-evidence/.gitkeep
 
-# Distribution/checkpoint handoff notes (kept in ZIP, not needed in repository history)
-/CHECKLIST_FOR_USER.md
-/UPDATED_FILES_SB*.md
+# Transient checkpoint handoff documents belong in commit / PR history, not repository root.
+/APPLY_NOTE*.md
+/CHECKLIST_FOR_USER*.md
+/UPDATED_FILES*.md
+/V*_TEST_REPORT.md
