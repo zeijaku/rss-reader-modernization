@@ -197,11 +197,75 @@ function stock_search_order_by(string $sort): string
     };
 }
 
+/**
+ * V1.24-E Stock state filters.
+ *
+ * public/stock.php keeps the legacy search function signatures.  Until that
+ * page is split into a dedicated controller, the DB boundary reads only these
+ * three allowlisted GET values.  Every value is converted to a fixed SQL
+ * literal below; request text is never interpolated into SQL.
+ *
+ * @return array{processed:string,important:string,archive:string}
+ */
+function stock_state_search_filters_from_request(): array
+{
+    $processed = isset($_GET['processed']) && is_string($_GET['processed']) ? $_GET['processed'] : 'all';
+    if (!in_array($processed, ['all', 'unprocessed', 'processed'], true)) {
+        $processed = 'all';
+    }
+
+    $important = isset($_GET['important']) && is_string($_GET['important']) ? $_GET['important'] : 'all';
+    if (!in_array($important, ['all', 'normal', 'important'], true)) {
+        $important = 'all';
+    }
+
+    $archive = isset($_GET['archive']) && is_string($_GET['archive']) ? $_GET['archive'] : 'active';
+    if (!in_array($archive, ['active', 'archived', 'all'], true)) {
+        // Archive is intentionally fail-closed for the normal Stock list.
+        $archive = 'active';
+    }
+
+    return [
+        'processed' => $processed,
+        'important' => $important,
+        'archive' => $archive,
+    ];
+}
+
+/**
+ * @param array{processed:string,important:string,archive:string} $filters
+ */
+function stock_state_search_filter_sql(array $filters): string
+{
+    $sql = '';
+
+    if ($filters['processed'] === 'unprocessed') {
+        $sql .= ' AND s.stock_processed = 0';
+    } elseif ($filters['processed'] === 'processed') {
+        $sql .= ' AND s.stock_processed = 1';
+    }
+
+    if ($filters['important'] === 'normal') {
+        $sql .= ' AND s.stock_important = 0';
+    } elseif ($filters['important'] === 'important') {
+        $sql .= ' AND s.stock_important = 1';
+    }
+
+    if ($filters['archive'] === 'archived') {
+        $sql .= ' AND s.stock_archived = 1';
+    } elseif ($filters['archive'] !== 'all') {
+        $sql .= ' AND s.stock_archived = 0';
+    }
+
+    return $sql;
+}
+
 function count_stock(int|string|null $stock_owner, string $query = '', ?int $tagId = null): int
 {
     $sql = 'SELECT COUNT(*) FROM ' . db_table_name('content_stock') . ' s '
         . 'WHERE s.stock_flag = 0 AND s.stock_owner = :owner';
     $params = [':owner' => $stock_owner === null ? null : (int) $stock_owner];
+    $sql .= stock_state_search_filter_sql(stock_state_search_filters_from_request());
 
     $query = trim($query);
     if ($query !== '') {
@@ -245,6 +309,7 @@ function search_stock(
     $sql = 'SELECT s.* FROM ' . db_table_name('content_stock') . ' s '
         . 'WHERE s.stock_flag = 0 AND s.stock_owner = :owner';
     $params = [':owner' => $stock_owner === null ? null : (int) $stock_owner];
+    $sql .= stock_state_search_filter_sql(stock_state_search_filters_from_request());
 
     $query = trim($query);
     if ($query !== '') {
