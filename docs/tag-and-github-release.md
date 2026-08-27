@@ -7,7 +7,7 @@
 
 V1.23-E以降は、VersionごとのRelease workflowや `release/vX.Y.Z-final` branchを標準手順として増やしません。
 
-正式Releaseは、release-readyなCommitを `main` に反映した後、共通 `.github/workflows/release.yml` を手動実行します。
+正式Releaseは、release-readyなCommitを `main` に反映した後、共通 `.github/workflows/release.yml` を使用します。
 
 ## Safety rules
 
@@ -38,6 +38,8 @@ Release workflowはSourceを自動修正・自動commitしません。
 
 ## GitHub Actionsでの実行
 
+### A. Run workflowが使用できる場合
+
 1. release-ready commitを `main` へ反映する。
 2. `main` のCI結果を確認する。
 3. GitHubの **Actions** → **Release** を開く。
@@ -45,7 +47,32 @@ Release workflowはSourceを自動修正・自動commitしません。
 5. `version` に正式Versionを `X.Y.Z` 形式で入力する。
 6. Release workflowを実行する。
 
+### B. Browser-only fallback
+
+Run workflowがGitHub UIに表示されない場合や、ローカルGit / GitHub CLIがない環境では `.github/release-request.txt` を使用します。
+
+1. release-ready commitを `main` へ反映する。
+2. `main` のCI結果を確認する。
+3. GitHubのCode画面で `.github/release-request.txt` を開く。
+4. 内容を対象Version `X.Y.Z` の1行だけへ変更する。
+5. `main` へcommitする。Branch protection有効時はPull Request経由でmergeする。
+6. `.github/release-request.txt` のmain pushだけを契機に同じRelease workflowが起動する。
+
+通常のApplication code pushではRelease workflowは起動しません。
+
 Release workflowは、Regression、secret scan、package build / verify、SHA-256、clean-room確認を完了した後でのみTagとGitHub Releaseを作成します。
+
+## Browser request safety
+
+`.github/release-request.txt` の変更はRelease要求として扱いますが、ファイル変更だけで無条件公開はしません。
+
+- 内容が正式SemVer `X.Y.Z` でない場合は停止
+- `app/version.php` / README / CHANGELOG / RELEASE_NOTESと不一致なら停止
+- `main` SHAが実行中に動いた場合は停止
+- 既存Tagが別Commitなら停止
+- PHP 8.1 / 8.4 Current regression、secret scan、package verify、clean-room確認を通過してから公開
+
+このため、ブラウザーだけの操作でも既存のRelease安全条件は維持されます。
 
 ## Immutable tag behavior
 

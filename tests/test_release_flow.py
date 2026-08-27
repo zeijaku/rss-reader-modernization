@@ -24,8 +24,13 @@ tool_paths = [
     'tools/check_release_ready.py',
 ]
 
-check('workflow_dispatch:' in workflow, 'Release workflow is manual dispatch only')
-check('version:' in workflow and 'required: true' in workflow, 'Release workflow requires explicit version input')
+check('workflow_dispatch:' in workflow, 'Release workflow keeps manual dispatch support')
+check('version:' in workflow and 'required: true' in workflow, 'Manual Release requires explicit version input')
+check('\n  push:' in workflow, 'Release workflow has browser-only request-file fallback')
+check("- '.github/release-request.txt'" in workflow, 'Browser fallback watches only the release request file')
+check('RELEASE_REQUEST_FILE: .github/release-request.txt' in workflow, 'Release workflow reads the browser request file')
+check('if [ "${GITHUB_EVENT_NAME}" = \'push\' ]; then' in workflow, 'Release context distinguishes request-file pushes from manual dispatch')
+check("tr -d '[:space:]' < \"${RELEASE_REQUEST_FILE}\"" in workflow, 'Browser request version is read from the request file')
 check('GITHUB_REF_NAME' in workflow and "'main'" in workflow, 'Release workflow requires main as source ref')
 check('main moved after this Release run started' in workflow, 'Release workflow checks main SHA before long verification')
 check('main moved during Release verification' in workflow, 'Release workflow rechecks main SHA before publication')
@@ -34,12 +39,14 @@ check('already exists on a different commit. Refusing to overwrite it.' in workf
 check('gh release view "${TAG}"' in workflow, 'Release workflow checks existing GitHub Release')
 check('leaving it unchanged.' in workflow, 'Existing GitHub Release is left unchanged')
 check('git tag -f' not in workflow and 'git push --force' not in workflow and 'git push -f' not in workflow, 'Release workflow contains no force tag/ref update')
-check('tools/check_release_ready.py --release "${RELEASE_VERSION}"' in workflow, 'Release workflow validates release-ready source against explicit version')
+check('tools/check_release_ready.py --release "${RELEASE_VERSION}"' in workflow, 'Release workflow validates release-ready source against resolved version')
 
 version_runner = re.compile(r'\b(?:bash|sh)\s+tests/run-v\d', flags=re.IGNORECASE)
 check(not version_runner.search(workflow), 'Release workflow does not accumulate historical run-v*.sh gates')
 check(workflow.count('bash tests/run-current.sh') == 2, 'Release workflow runs current regression on PHP 8.1 and 8.4')
 check(workflow.count('bash tests/run-current-features.sh') == 2, 'Release workflow runs durable current feature contracts on PHP 8.1 and 8.4')
+check('group: release-main' in workflow, 'Release workflow serializes final publication runs')
+check('rss-reader-modernization-final-${{ github.run_id }}' in workflow, 'Actions artifact name does not depend on workflow_dispatch-only inputs')
 
 for command in (
     'tools/build_release_package.py',
@@ -51,7 +58,7 @@ for command in (
     nearby = workflow[offset:offset + 220] if offset >= 0 else ''
     check(
         offset >= 0 and '--release "${RELEASE_VERSION}"' in nearby,
-        f'Release workflow passes explicit version to {command}',
+        f'Release workflow passes resolved version to {command}',
     )
 
 check('config/local.php' in workflow, 'Release workflow checks private local config exclusion')
