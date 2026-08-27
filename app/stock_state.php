@@ -114,14 +114,102 @@ function stock_state_update_owned(int $userId, array $stockIds, string $state, i
     }
 }
 
+/**
+ * V1.24-D: return state only for authenticated-owner active Stock rows.
+ * The strict all-or-nothing lookup keeps foreign, missing, and Stock解除 IDs
+ * indistinguishable to the caller.
+ *
+ * @param list<int> $stockIds
+ * @return list<array{stock_id:int,processed:int,important:int,archived:int}>
+ */
+function stock_state_list_owned(int $userId, array $stockIds): array
+{
+    if ($userId <= 0) {
+        throw new InvalidArgumentException('Stock state owner is invalid.');
+    }
+
+    $normalizedIds = stock_state_ids($stockIds);
+    if ($normalizedIds === null) {
+        throw new InvalidArgumentException('Stock IDs are invalid.');
+    }
+
+    $placeholders = [];
+    $params = [':owner' => $userId];
+    foreach ($normalizedIds as $index => $stockId) {
+        $placeholder = ':stock_id_' . $index;
+        $placeholders[] = $placeholder;
+        $params[$placeholder] = $stockId;
+    }
+
+    $sql = 'SELECT stock_id, stock_processed, stock_important, stock_archived '
+        . 'FROM ' . db_table_name('content_stock') . ' '
+        . 'WHERE stock_owner = :owner AND stock_flag = 0 '
+        . 'AND stock_id IN (' . implode(',', $placeholders) . ')';
+    $statement = conn_db()->prepare($sql);
+    $statement->execute($params);
+    $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+    if (count($rows) !== count($normalizedIds)) {
+        throw new RuntimeException('One or more Stock items were not found.');
+    }
+
+    $byId = [];
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $stockId = (int) ($row['stock_id'] ?? 0);
+        if ($stockId <= 0) {
+            continue;
+        }
+        $byId[$stockId] = [
+            'stock_id' => $stockId,
+            'processed' => (int) ($row['stock_processed'] ?? 0) === 1 ? 1 : 0,
+            'important' => (int) ($row['stock_important'] ?? 0) === 1 ? 1 : 0,
+            'archived' => (int) ($row['stock_archived'] ?? 0) === 1 ? 1 : 0,
+        ];
+    }
+
+    if (count($byId) !== count($normalizedIds)) {
+        throw new RuntimeException('One or more Stock states could not be loaded.');
+    }
+
+    $states = [];
+    foreach ($normalizedIds as $stockId) {
+        $states[] = $byId[$stockId];
+    }
+    return $states;
+}
+
 /** @return array{status:int,body:array<string,mixed>} */
 function stock_state_api_dispatch(string $action, int $userId, array $input): array
 {
     return match ($action) {
+        'stock.state.list' => api_stock_state_list($userId, $input),
         'stock.state.update' => api_stock_state_update($userId, $input),
         'stock.state.bulk' => api_stock_state_bulk($userId, $input),
         default => api_error('unknown_action', 'Unknown API action.', 400),
     };
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_stock_state_list(int $userId, array $input): array
+{
+    $stockIds = stock_state_ids($input['stock_ids'] ?? null);
+    if ($stockIds === null) {
+        return api_validation_error('stock_ids must contain 1 to 100 positive integers.');
+    }
+
+    try {
+        $stocks = stock_state_list_owned($userId, $stockIds);
+    } catch (PDOException $exception) {
+        error_log('Stock state list failed: ' . $exception->getMessage());
+        return api_error('stock_state_unavailable', 'Stock state migration is required.', 503);
+    } catch (RuntimeException $exception) {
+        return api_error('not_found', 'One or more Stock items were not found.', 404);
+    }
+
+    return api_success(['stocks' => $stocks]);
 }
 
 /** @return array{status:int,body:array<string,mixed>} */
