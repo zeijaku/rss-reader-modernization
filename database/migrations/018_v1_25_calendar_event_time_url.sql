@@ -19,7 +19,7 @@ SET @sql = IF(
   @column_exists = 0,
   CONCAT(
     'ALTER TABLE ', @quoted_table,
-    ' ADD COLUMN `calendar_event_all_day` TINYINT(1) NOT NULL DEFAULT 1 AFTER `calendar_event_color`'
+    ' ADD COLUMN `calendar_event_all_day` TINYINT UNSIGNED NOT NULL DEFAULT 1 AFTER `calendar_event_color`'
   ),
   'SELECT 1'
 );
@@ -36,7 +36,7 @@ SET @sql = IF(
   @column_exists = 0,
   CONCAT(
     'ALTER TABLE ', @quoted_table,
-    ' ADD COLUMN `calendar_event_start_time` TIME NULL AFTER `calendar_event_all_day`'
+    ' ADD COLUMN `calendar_event_start_time` TIME NULL DEFAULT NULL AFTER `calendar_event_all_day`'
   ),
   'SELECT 1'
 );
@@ -53,7 +53,7 @@ SET @sql = IF(
   @column_exists = 0,
   CONCAT(
     'ALTER TABLE ', @quoted_table,
-    ' ADD COLUMN `calendar_event_end_time` TIME NULL AFTER `calendar_event_start_time`'
+    ' ADD COLUMN `calendar_event_end_time` TIME NULL DEFAULT NULL AFTER `calendar_event_start_time`'
   ),
   'SELECT 1'
 );
@@ -70,7 +70,7 @@ SET @sql = IF(
   @column_exists = 0,
   CONCAT(
     'ALTER TABLE ', @quoted_table,
-    ' ADD COLUMN `calendar_event_url` VARCHAR(2048) NULL AFTER `calendar_event_end_time`'
+    ' ADD COLUMN `calendar_event_url` VARCHAR(2048) NULL DEFAULT NULL AFTER `calendar_event_end_time`'
   ),
   'SELECT 1'
 );
