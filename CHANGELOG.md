@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.23.0 - 2026-08-27
+
+### Repository / Documentation
+- Removed transient root-level checkpoint handoff documents from the current tree while retaining historical evidence in Git history and release tags.
+- Documented the current documentation policy and kept Runtime package scope from expanding through a new archive directory.
+
+### Version / Test maintenance
+- Added a shared current-version contract reader and removed current-following test assertions that froze `APP_ASSET_REVISION` to Version 1.22.0.
+- Kept feature compatibility gates while removing historical finalization gates from Current CI.
+- Added guards against stale current asset keys and version-specific workflow regression.
+
+### GitHub Actions / Release flow
+- Reduced active GitHub Actions to `ci.yml` and the generic `release.yml`; Version-specific historical workflows remain available through Git history and release tags.
+- Added a manual final Release workflow that accepts explicit `X.Y.Z`, requires release-ready `main`, rechecks the remote `main` SHA before publication, and refuses to overwrite an existing tag on another commit.
+- Existing GitHub Releases are left unchanged on rerun.
+
+### Package / Verification
+- Parameterized Runtime and Complete Source package builders/verifiers with explicit `--release X.Y.Z` instead of hardcoded release constants.
+- Retained deterministic ZIP generation, SHA-256 sidecars/manifests, private/runtime file exclusion, high-signal secret scan, and clean-room package checks.
+- No database schema, migration, public API, application feature, UI, or new required configuration/secret changes are introduced in Version 1.23.0.
+
 ## 1.22.0 - 2026-08-26
 
 ### RSS Management / OPML
