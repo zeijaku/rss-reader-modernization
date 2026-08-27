@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.24.0 - 2026-08-27
+
+### Memo
+- Kept long Memo content inside the selected Dashboard Widget Height so only the Memo body scrolls instead of enlarging the Grid row.
+- Added live `current/4000` character counters to Dashboard Memo, register, and edit UI while preserving the existing 4000-character server validation limit.
+
+### Stock state workflow
+- Added independent `stock_processed`, `stock_important`, and `stock_archived` states while keeping `stock_flag` dedicated to Stock解除.
+- Added owner-scoped state list/update controls for 未処理／処理済み, 通常／重要, and Archive／Archive済み.
+- Default Stock list now excludes archived rows; processed, important, and Archive filters coexist with existing text search, Stock Tags, sorting, and pagination.
+- Added current-page selection and bulk state updates for processed/unprocessed, important/normal, and archive/unarchive. Bulk Stock解除 is intentionally not added.
+- Added responsive Smartphone presentation and retained touch-friendly controls.
+
+### Database / Security
+- Added `017_v1_24_stock_state.sql` for existing installations and integrated the same Stock state columns/index into the fresh-install `database/schema.sql`.
+- State API operations remain authenticated POST + CSRF, owner-scoped, active-Stock-only, fixed-state allowlisted, and transactionally all-or-nothing for bulk requests.
+- Bulk submitted IDs are positive integers, deduplicated, and capped at 100 raw IDs; mixed-owner/unavailable requests do not partially update.
+- Invalid Stock filter values are converted to fixed safe defaults rather than interpolated into SQL.
+- No new required secret or external API credential is introduced.
+
+### Release verification
+- Promoted V1.24 Memo and Stock feature contracts into the current CI/release feature suite.
+- Finalized `APP_VERSION`, visible label, and immutable public asset revision to `1.24.0`.
+- Formal release uses the generic full regression, security, deterministic package, clean-room, and secret-scan gates before tag publication.
+
 ## 1.23.0 - 2026-08-27
 
 ### Repository / Documentation
@@ -257,7 +282,6 @@
 ## RSS Reader Modernization 1.13.0 — 2026-08-14
 
 ### Version 1.13.0 structure / performance / security finalization
-
 - Stock一覧を`public/stock.php`へ分離し、Canonical routeを`/stock`へ整理。既存`/?tab=stock`は検索・並び替え・Page・Tag条件を維持して互換Redirect。
 - 表示設定、Tab名、RSS Highlight設定を`public/settings.php`へ分離し、`/settings`へ集約。Account Settingsは従来どおりDashboard Modalを維持。
 - `public/index.php`のDashboard Widget／Modal表示を内部Viewへ分割し、既存DOM／CSS／JavaScript／API契約を変えず可読性を改善。
@@ -964,4 +988,4 @@
 
 
 ## V1.2-C
-Search Feed（登録RSS横断検索、共通RSS、AND/OR、カード個別更新）を追加。DB Schema変更なし。
+Search Feed（登録RSS横断検索、共通RSS、AND/OR、カード個別更新）を追加。DB Schema変更なし.

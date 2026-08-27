@@ -63,7 +63,10 @@ CREATE TABLE ig_content_stock (
  stock_owner INTEGER,
  stock_data TEXT,
  stock_title TEXT,
- stock_flag INTEGER NOT NULL DEFAULT 0
+ stock_flag INTEGER NOT NULL DEFAULT 0,
+ stock_processed INTEGER NOT NULL DEFAULT 0,
+ stock_important INTEGER NOT NULL DEFAULT 0,
+ stock_archived INTEGER NOT NULL DEFAULT 0
 );
 SQL);
 

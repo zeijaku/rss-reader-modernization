@@ -1,8 +1,9 @@
--- RSS Reader Modernization base new-install schema (through migration 008 / V1.7).
+-- RSS Reader Modernization base new-install schema (through migration 008 / V1.7, plus integrated 013 and 017).
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
--- Current fresh installs must also apply migrations 009-012 in numeric order.
--- See docs/installation.md. No table definition is changed by this V1.13-F note update.
+-- Current fresh installs must also apply migrations 009-012 and 014-016 in numeric order.
+-- V1.20.1 Calendar color (013) and V1.24 Stock state (017) are integrated here.
+-- See docs/installation.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
 -- config/local.php. Allowed characters: ASCII letters, digits, underscore;
@@ -104,8 +105,12 @@ SET @sql = CONCAT(
   '`stock_owner` INT UNSIGNED NOT NULL COMMENT ''データオーナー'',',
   '`stock_data` VARCHAR(512) NOT NULL COMMENT ''ストックしたURL'',',
   '`stock_title` VARCHAR(128) NOT NULL DEFAULT ''Not Title...'' COMMENT ''ストック時の記事タイトル'',',
+  '`stock_processed` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:未処理/1:処理済み'',',
+  '`stock_important` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:通常/1:重要'',',
+  '`stock_archived` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:通常/1:Archive'',',
   'PRIMARY KEY (`stock_id`),',
-  'KEY `idx_stock_owner_flag_id` (`stock_owner`, `stock_flag`, `stock_id`)',
+  'KEY `idx_stock_owner_flag_id` (`stock_owner`, `stock_flag`, `stock_id`),',
+  'KEY `idx_stock_owner_flag_archived_id` (`stock_owner`, `stock_flag`, `stock_archived`, `stock_id`)',
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''URLストック一覧'''
 );
 PREPARE sb13_stmt FROM @sql; EXECUTE sb13_stmt; DEALLOCATE PREPARE sb13_stmt;

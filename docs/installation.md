@@ -104,7 +104,7 @@ Prefix:   rss_
 
 ## 6. Schemaと現行Migrationを投入
 
-`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`Columnを取り込んでいます。Mail / Links / Stock Tags / RSS Highlightに加え、V1.22のFeed Metadata / Feed Health / RSS Rulesは009〜012、014〜016を番号順に適用します。
+`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`（Migration 013）とV1.24のStock状態Column（Migration 017）を取り込んでいます。Mail / Links / Stock Tags / RSS Highlightに加え、V1.22のFeed Metadata / Feed Health / RSS Rulesは009〜012、014〜016を番号順に適用します。
 
 まず `database/schema.sql` 冒頭の値を、`DB_TABLE_PREFIX` と同じにします。
 
@@ -142,7 +142,7 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\015
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\016_v1_22_rss_rules.sql
 ```
 
-phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016を同じ順番でImportします。V1.20.1のCalendar色Columnは`schema.sql`へ統合済みのため、新規Installで013を追加実行する必要はありません。
+phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016を同じ順番でImportします。V1.20.1のCalendar色Column（013）とV1.24のStock状態Column（017）は`schema.sql`へ統合済みのため、新規Installで013 / 017を追加実行する必要はありません。
 
 Prefixが `rss_` の場合、最終的に次の19 tableが存在します。
 
@@ -169,6 +169,8 @@ rss_rss_rule_condition
 ```
 
 **既存Databaseへ `schema.sql` を再実行しないでください。** 既存環境はBackupを取得し、未適用Migrationだけを順番に適用します。
+
+V1.23.0からV1.24.0へ更新する既存Databaseでは、Backup取得後に `017_v1_24_stock_state.sql` の `SET @table_prefix` を環境へ合わせて適用します。Migration 017は既存Stockを保持したまま `stock_processed` / `stock_important` / `stock_archived` をDefault 0で追加し、Archive検索用Indexを追加します。`stock_flag` は従来どおりStock解除用で、Archiveとは別状態です。
 
 ## 7. Runtime directory
 
@@ -210,6 +212,7 @@ CLIが使えないHostingでは、Control panelでPHP Version / Extensionを確�
 - Calendarの月移動、通常予定、Task期限表示
 - RSS 2.0 / RSS 1.0 / Atom
 - Stock保存と一覧
+- Stockの未処理 / 処理済み、通常 / 重要、Archive状態とFilter / 一括更新
 - Settings保存
 - Drawer / Modal / Keyboard / Focus
 - JavaScript Console errorなし

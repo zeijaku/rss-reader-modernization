@@ -1,0 +1,230 @@
+/* V1.24-D/E: Stock individual state controls, filters and bulk workflow. */
+.stock-state-filter-fields {
+    display: grid;
+    margin-bottom: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.stock-state-filter-field {
+    min-width: 0;
+}
+
+.stock-state-filter-select {
+    width: 100%;
+    min-width: 0;
+}
+
+.stock-bulk-toolbar {
+    display: flex;
+    min-width: 0;
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px 10px;
+    border: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.125));
+    border-radius: 6px;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    color: var(--bs-body-color, #343a40);
+}
+
+.stock-select-page-label {
+    display: inline-flex;
+    min-height: 32px;
+    margin: 0;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.stock-selected-count {
+    min-width: 5.5em;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.82rem;
+    white-space: nowrap;
+}
+
+.stock-bulk-action {
+    flex: 1 1 190px;
+    width: auto;
+    min-width: 150px;
+    max-width: 260px;
+}
+
+.stock-bulk-apply {
+    flex: 0 0 auto;
+    min-width: 64px;
+}
+
+.stock-card-select {
+    display: flex;
+    flex: 0 0 34px;
+    width: 34px;
+    min-width: 34px;
+    min-height: 44px;
+    margin-right: 4px;
+    align-items: center;
+    justify-content: center;
+}
+
+.stock-select-checkbox,
+.stock-select-page {
+    cursor: pointer;
+}
+
+.stock-state-controls {
+    display: flex;
+    min-width: 0;
+    margin-top: 7px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.stock-state-toggle {
+    display: inline-flex;
+    min-height: 30px;
+    padding: 3px 8px;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    line-height: 1.25;
+    touch-action: manipulation;
+}
+
+.stock-state-toggle > i {
+    width: 1em;
+    text-align: center;
+}
+
+.stock-state-toggle:focus-visible,
+.stock-select-checkbox:focus-visible,
+.stock-select-page:focus-visible {
+    outline: 3px solid rgba(var(--bs-info-rgb, 23, 162, 184), 0.42);
+    outline-offset: 2px;
+}
+
+.stock-state-toggle:disabled,
+.stock-select-checkbox:disabled,
+.stock-select-page:disabled {
+    cursor: wait;
+    opacity: 0.64;
+}
+
+.stock-state-processed-toggle.is-active {
+    border-color: var(--bs-success, #198754);
+    background: rgba(var(--bs-success-rgb, 25, 135, 84), 0.1);
+    color: var(--bs-success, #198754);
+}
+
+.stock-state-important-toggle.is-active {
+    border-color: var(--bs-warning, #ffc107);
+    background: rgba(var(--bs-warning-rgb, 255, 193, 7), 0.12);
+    color: var(--bs-body-color, #343a40);
+}
+
+.stock-state-archived-toggle.is-active {
+    border-color: var(--bs-secondary, #6c757d);
+    background: rgba(var(--bs-secondary-rgb, 108, 117, 125), 0.13);
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.stock-card.stock-state-processed .stock-title {
+    opacity: 0.72;
+}
+
+.stock-card.stock-state-important .stock-card-inner {
+    box-shadow: inset 3px 0 0 var(--bs-warning, #ffc107);
+}
+
+.stock-card.stock-state-archived .stock-card-inner {
+    background: rgba(var(--bs-secondary-rgb, 108, 117, 125), 0.06);
+}
+
+.stock-card.stock-state-archived .stock-title,
+.stock-card.stock-state-archived .stock-meta,
+.stock-card.stock-state-archived .stock-tags-row {
+    opacity: 0.7;
+}
+
+@media (min-width: 768px) {
+    .stock-filter-form > .stock-state-filter-fields {
+        flex: 0 0 83.333333%;
+        width: 83.333333%;
+    }
+}
+
+@media (pointer: coarse) {
+    .stock-state-toggle,
+    .stock-bulk-apply,
+    .stock-select-page-label {
+        min-height: 44px;
+    }
+
+    .stock-state-toggle {
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .stock-card-select {
+        flex-basis: 44px;
+        width: 44px;
+        min-width: 44px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .stock-state-filter-fields {
+        grid-template-columns: 1fr;
+        gap: 5px;
+    }
+
+    .stock-bulk-toolbar {
+        align-items: stretch;
+    }
+
+    .stock-select-page-label,
+    .stock-selected-count {
+        flex: 1 1 auto;
+    }
+
+    .stock-bulk-action {
+        flex: 1 1 calc(100% - 80px);
+        width: auto;
+        max-width: none;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .stock-state-controls {
+        gap: 4px;
+    }
+
+    .stock-state-toggle {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .stock-bulk-toolbar {
+        padding: 8px;
+        gap: 6px;
+    }
+
+    .stock-bulk-action {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .stock-bulk-apply {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .stock-card-select {
+        margin-right: 0;
+    }
+}

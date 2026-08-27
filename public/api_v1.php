@@ -6,6 +6,7 @@ define('APP_RESPONSE_FORMAT', 'json');
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/api.php';
+require_once dirname(__DIR__) . '/app/stock_state.php';
 require_once dirname(__DIR__) . '/app/camera_video.php';
 require_once dirname(__DIR__) . '/app/api/all_rss_recent.php';
 
@@ -143,6 +144,9 @@ try {
     }
     if (str_starts_with($action, 'widget.allrss.')) {
         api_emit(api_all_rss_recent_dispatch($action, $userId, $_POST));
+    }
+    if (str_starts_with($action, 'stock.state.')) {
+        api_emit(stock_state_api_dispatch($action, $userId, $_POST));
     }
     api_emit(api_dispatch($action, $userId, $_POST));
 } catch (Throwable $exception) {
