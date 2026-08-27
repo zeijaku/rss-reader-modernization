@@ -58,6 +58,9 @@ jobs:
           python --version
           node --version
 
+      - name: Check current version dependency hygiene
+        run: python3 tests/test_version_dependency_hygiene.py
+
       - name: Run current regression tests
         run: bash tests/run-current.sh
 
@@ -79,8 +82,8 @@ jobs:
           bash tests/run-v119c.sh
           bash tests/run-v119d.sh
 
-      - name: Run Version 1.21.0 final release gate
-        run: bash tests/run-v121e.sh
+      - name: Run Version 1.21 compatibility tests
+        run: bash tests/run-v121-compat.sh
 
       - name: Run Version 1.22-B Feed Health focused gate
         run: bash tests/run-v122b.sh
@@ -90,6 +93,3 @@ jobs:
 
       - name: Run Version 1.22-D RSS Rules integration gate
         run: bash tests/run-v122d.sh
-
-      - name: Run Version 1.22.0 final release gate
-        run: bash tests/run-v122e.sh

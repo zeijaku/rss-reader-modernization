@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
+from version_contract_utils import current_asset_revision
+
 ROOT = Path(__file__).resolve().parents[1]
 checks = []
 
@@ -20,7 +22,7 @@ display = text('public/js/rss-rule-display.js')
 management = text('public/js/rss-management.js')
 guidance = text('public/js/rss-rules-integration.js')
 calendar = text('public/js/calendar.js')
-version = text('app/version.php')
+asset_revision = current_asset_revision(ROOT)
 
 check("RSS_RULE_AUTO_STOCK_MAX_PER_FETCH = 10" in engine, 'Auto Stock writes are bounded per fetch')
 check("['contains', 'not_contains', 'equals', 'prefix']" not in engine and "'regex'" not in engine, 'D does not add a Regex rule mode')
@@ -39,20 +41,17 @@ check("'feed.fetch' => api_feed_fetch_with_health" in dispatch, 'Existing feed.f
 check("require_once dirname(__DIR__) . '/rss_rule_engine.php';" in rules_api, 'Rules API loads the D execution engine')
 check('rule_highlight' in display and 'rss-rule-highlight' in display, 'Client renders server-evaluated Rule Highlight')
 check('renderFeedKeywordTitle' not in display, 'Rule display layer does not replace existing keyword highlight logic')
+check(bool(asset_revision), 'Current application asset revision is available')
 check(
-    ("rss-rules.js?v=1.22.0-d" in management and "rss-rules-integration.js?v=1.22.0-d" in management)
-    or ("rss-rules.js?v=1.22.0" in management and "rss-rules-integration.js?v=1.22.0" in management),
-    'RSS Management loads D Rule assets with checkpoint or formal release revision'
+    f"rss-rules.js?v={asset_revision}" in management and
+    f"rss-rules-integration.js?v={asset_revision}" in management,
+    'RSS Management loads Rule assets with the current application revision'
 )
 check('Auto Stockは一致記事を重複を避けてStockへ追加' in guidance, 'Rules UI explains D action behavior')
 check(
-    "APP_ASSET_REVISION = '1.22.0-d'" in version or "APP_ASSET_REVISION = '1.22.0'" in version,
-    'D checkpoint or formal release has a fresh V1.22 asset revision'
-)
-check(
-    ("rss-rule-display.js?v=1.22.0-d" in calendar and "rss-rule-display.css?v=1.22.0-d" in calendar)
-    or ("rss-rule-display.js?v=1.22.0" in calendar and "rss-rule-display.css?v=1.22.0" in calendar),
-    'Dashboard loads D Rule display assets with checkpoint or formal release revision'
+    f"rss-rule-display.js?v={asset_revision}" in calendar and
+    f"rss-rule-display.css?v={asset_revision}" in calendar,
+    'Dashboard loads Rule display assets with the current application revision'
 )
 
 failed = len(checks) - sum(checks)
