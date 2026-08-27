@@ -9,9 +9,10 @@ $ui = file_get_contents($root . '/public/js/calendar-recurrence.js');
 $loader = file_get_contents($root . '/public/js/calendar.js');
 $version = file_get_contents($root . '/app/version.php');
 $migration = file_get_contents($root . '/database/migrations/019_v1_25_calendar_recurrence.sql');
+$schema = file_get_contents($root . '/database/schema.sql');
 $css = file_get_contents($root . '/public/css/calendar-recurrence.css');
 
-foreach ([$domain, $api, $ui, $loader, $version, $migration, $css] as $source) {
+foreach ([$domain, $api, $ui, $loader, $version, $migration, $schema, $css] as $source) {
     if (!is_string($source)) {
         fwrite(STDERR, "FAIL: V1.25-D source read\n");
         exit(1);
@@ -25,6 +26,9 @@ $checks = [
     'migration defaults repeat type to none' => str_contains($migration, "DEFAULT ''none''"),
     'migration adds nullable repeat until' => str_contains($migration, 'calendar_event_repeat_until') && str_contains($migration, 'DATE NULL DEFAULT NULL'),
     'migration is idempotent per column' => substr_count($migration, 'information_schema.COLUMNS') === 2,
+    'fresh-install schema integrates recurrence migration' => str_contains($schema, 'integrated 013, 017, 018 and 019'),
+    'fresh-install schema adds repeat type' => str_contains($schema, "`calendar_event_repeat_type` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none''"),
+    'fresh-install schema adds repeat until' => str_contains($schema, '`calendar_event_repeat_until` DATE NULL DEFAULT NULL'),
     'repeat allowlist is fixed' => str_contains($domain, "['none', 'daily', 'weekly', 'monthly', 'yearly']"),
     'active recurring series bound exists' => str_contains($domain, 'CALENDAR_RECURRENCE_MAX_ACTIVE_SERIES = 50'),
     'monthly occurrence bound exists' => str_contains($domain, 'CALENDAR_RECURRENCE_MAX_MONTH_OCCURRENCES = 2000'),
@@ -32,7 +36,7 @@ $checks = [
     'recurrence count is owner scoped' => str_contains($domain, 'calendar_event_owner = :owner AND calendar_event_flag = 0'),
     'recurrence wraps B time/color transaction' => str_contains($domain, 'calendar_event_time_color_create(') && str_contains($domain, 'calendar_event_time_color_update('),
     'API is POST only' => str_contains($api, "REQUEST_METHOD'] ?? 'GET') !== 'POST'"),
-    'API requires authenticated session' => str_contains($api, 'app_session_user_id()') && str_contains($api, 'Authentication is required.'),
+    'API requires authenticated session' => str_contains($api, 'app_session_user_id()') && str_contains($api, "Authentication is required."),
     'API requires CSRF' => str_contains($api, 'app_csrf_is_valid'),
     'API enforces request body limit' => str_contains($api, 'APP_API_MAX_REQUEST_BYTES'),
     'API uses fixed action allowlist' => str_contains($api, "['calendar.recurrence.list', 'calendar.recurrence.create', 'calendar.recurrence.update']"),
@@ -58,7 +62,12 @@ $colorPos = strpos($loader, "loadScript('./js/calendar-colors.js?v=1.24.0');");
 $checks['script order is core -> recurrence -> details -> color'] = is_int($corePos) && is_int($repeatPos) && is_int($detailPos) && is_int($colorPos)
     && $corePos < $repeatPos && $repeatPos < $detailPos && $detailPos < $colorPos;
 
-$forbiddenFetchPatterns = ['curl_exec(', 'file_get_contents($url', 'fopen($url', 'app_http_fetch'];
+$forbiddenFetchPatterns = [
+    'curl_exec(',
+    'file_get_contents($url',
+    'fopen($url',
+    'app_http_fetch',
+];
 $hasOutbound = false;
 foreach ($forbiddenFetchPatterns as $pattern) {
     if (str_contains($domain . $api, $pattern)) {
