@@ -6,6 +6,7 @@ define('APP_RESPONSE_FORMAT', 'json');
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/calendar_color.php';
+require_once dirname(__DIR__) . '/app/calendar_time.php';
 
 /** @param array<string,mixed> $body */
 function calendar_color_emit(int $status, array $body): never
@@ -79,7 +80,7 @@ if ($contentLength !== null && $contentLength > APP_API_MAX_REQUEST_BYTES) {
 }
 
 $action = isset($_POST['action']) && is_string($_POST['action']) ? trim($_POST['action']) : '';
-if (!in_array($action, ['calendar.color.list', 'calendar.color.create', 'calendar.color.update'], true)) {
+if (!in_array($action, ['calendar.color.list', 'calendar.event.meta.list', 'calendar.color.create', 'calendar.color.update'], true)) {
     calendar_color_error('unknown_action', 'Unknown API action.', 400);
 }
 
@@ -88,11 +89,18 @@ if (!in_array($action, ['calendar.color.list', 'calendar.color.create', 'calenda
 app_session_release();
 
 try {
-    if ($action === 'calendar.color.list') {
+    if ($action === 'calendar.color.list' || $action === 'calendar.event.meta.list') {
         $year = calendar_validate_year($_POST['calendar_year'] ?? null);
         $month = calendar_validate_month($_POST['calendar_month'] ?? null);
         if ($year === null || $month === null) {
-            calendar_color_error('validation_error', 'Calendar color month is invalid.', 422);
+            calendar_color_error('validation_error', 'Calendar month is invalid.', 422);
+        }
+        if ($action === 'calendar.event.meta.list') {
+            calendar_color_success([
+                'year' => $year,
+                'month' => $month,
+                'events' => calendar_event_time_month_list($userId, $year, $month),
+            ]);
         }
         calendar_color_success([
             'year' => $year,
@@ -111,26 +119,68 @@ try {
     if ($title === null || $note === null || $range === null || $color === null) {
         calendar_color_error('validation_error', 'Calendar event settings are invalid.', 422);
     }
+    $timeSettings = calendar_event_time_settings(
+        $_POST['calendar_event_all_day'] ?? '1',
+        $_POST['calendar_event_start_time'] ?? '',
+        $_POST['calendar_event_end_time'] ?? '',
+        $_POST['calendar_event_url'] ?? '',
+        $range[0],
+        $range[1]
+    );
+    if ($timeSettings === null) {
+        calendar_color_error('validation_error', 'Calendar event time or URL is invalid.', 422);
+    }
 
     if ($action === 'calendar.color.create') {
-        $eventId = calendar_event_color_create($userId, $title, $range[0], $range[1], $note, $color);
-        calendar_color_success(['event_id' => $eventId, 'color' => $color], 201);
+        $eventId = calendar_event_time_color_create(
+            $userId,
+            $title,
+            $range[0],
+            $range[1],
+            $note,
+            $color,
+            $timeSettings
+        );
+        calendar_color_success([
+            'event_id' => $eventId,
+            'color' => $color,
+            'all_day' => $timeSettings['all_day'],
+            'start_time' => $timeSettings['start_time'] === null ? null : substr($timeSettings['start_time'], 0, 5),
+            'end_time' => $timeSettings['end_time'] === null ? null : substr($timeSettings['end_time'], 0, 5),
+            'url' => $timeSettings['url'],
+        ], 201);
     }
 
     $eventId = calendar_color_positive_int($_POST['event_id'] ?? null);
     if ($eventId === null) {
         calendar_color_error('validation_error', 'event_id must be a positive integer.', 422);
     }
-    if (!calendar_event_color_update($userId, $eventId, $title, $range[0], $range[1], $note, $color)) {
+    if (!calendar_event_time_color_update(
+        $userId,
+        $eventId,
+        $title,
+        $range[0],
+        $range[1],
+        $note,
+        $color,
+        $timeSettings
+    )) {
         calendar_color_error('not_found', 'Calendar event was not found.', 404);
     }
-    calendar_color_success(['event_id' => $eventId, 'color' => $color]);
+    calendar_color_success([
+        'event_id' => $eventId,
+        'color' => $color,
+        'all_day' => $timeSettings['all_day'],
+        'start_time' => $timeSettings['start_time'] === null ? null : substr($timeSettings['start_time'], 0, 5),
+        'end_time' => $timeSettings['end_time'] === null ? null : substr($timeSettings['end_time'], 0, 5),
+        'url' => $timeSettings['url'],
+    ]);
 } catch (LengthException|InvalidArgumentException $exception) {
     calendar_color_error('validation_error', $exception->getMessage(), 422);
 } catch (PDOException $exception) {
     error_log('Calendar color API failed: ' . $exception->getMessage());
-    calendar_color_error('calendar_color_unavailable', 'Calendar color migration is required.', 503);
+    calendar_color_error('calendar_color_unavailable', 'Calendar migration is required.', 503);
 } catch (Throwable $exception) {
     error_log('Calendar color API failed: ' . $exception->getMessage());
-    calendar_color_error('internal_error', 'Calendar color operation failed.', 500);
+    calendar_color_error('internal_error', 'Calendar operation failed.', 500);
 }
