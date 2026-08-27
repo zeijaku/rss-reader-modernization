@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+set -eu
+
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+SCRIPT_DIR="$ROOT/tests"
+
+# Durable feature contracts introduced after the original current-regression
+# split. Keep this runner version-neutral: historical run-v*.sh files remain
+# available for targeted investigation, but active CI/Release must not stack
+# them indefinitely.
+
+echo '== Current feature contracts: Security hardening =='
+python3 "$SCRIPT_DIR/test_v119c_registration_throttle.py"
+python3 "$SCRIPT_DIR/test_v119c_api_request_limit.py"
+
+echo '== Current feature contracts: Drawer / mobile navigation =='
+python3 "$SCRIPT_DIR/test_current_drawer_contract.py"
+node --check "$ROOT/public/js/drawer-categories.js"
+
+echo '== Current feature contracts: Feed Health =='
+python3 "$SCRIPT_DIR/test_v122b_feed_health.py"
+php "$SCRIPT_DIR/test_v122b_feed_health_runtime.php"
+node --check "$ROOT/public/js/feed-health.js"
+node --check "$ROOT/public/js/rss-management.js"
+
+echo '== Current feature contracts: RSS Rules =='
+python3 "$SCRIPT_DIR/test_v122c_rss_rules.py"
+php "$SCRIPT_DIR/test_v122c_rss_rules_runtime.php"
+python3 "$SCRIPT_DIR/test_v122d_rss_rules.py"
+php "$SCRIPT_DIR/test_v122d_rss_rule_engine_runtime.php"
+node --check "$ROOT/public/js/rss-rules.js"
+node --check "$ROOT/public/js/rss-rule-display.js"
+node --check "$ROOT/public/js/rss-rules-integration.js"
+
+echo 'PASS: current feature contract suite completed'
