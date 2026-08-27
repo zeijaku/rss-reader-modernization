@@ -1,8 +1,8 @@
--- RSS Reader Modernization base new-install schema (through migration 008 / V1.7, plus integrated 013, 017 and 018).
+-- RSS Reader Modernization base new-install schema (through migration 008 / V1.7, plus integrated 013, 017, 018 and 019).
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
 -- Current fresh installs must also apply migrations 009-012 and 014-016 in numeric order.
--- V1.20.1 Calendar color (013), V1.24 Stock state (017), and V1.25 Calendar time/URL (018) are integrated here.
+-- V1.20.1 Calendar color (013), V1.24 Stock state (017), V1.25 Calendar time/URL (018), and V1.25 Calendar recurrence (019) are integrated here.
 -- See docs/installation.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
@@ -167,6 +167,8 @@ SET @sql = CONCAT(
   '`calendar_event_start_time` TIME NULL DEFAULT NULL,',
   '`calendar_event_end_time` TIME NULL DEFAULT NULL,',
   '`calendar_event_url` VARCHAR(2048) NULL DEFAULT NULL,',
+  '`calendar_event_repeat_type` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none'',',
+  '`calendar_event_repeat_until` DATE NULL DEFAULT NULL,',
   'PRIMARY KEY (`calendar_event_id`),',
   'KEY `idx_calendar_event_owner_range` (`calendar_event_owner`, `calendar_event_flag`, `calendar_event_start_date`, `calendar_event_end_date`, `calendar_event_id`)',
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Calendar予定保管'''
