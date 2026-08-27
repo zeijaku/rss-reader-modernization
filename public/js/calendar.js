@@ -36,6 +36,8 @@
     loadStyle('./css/memo-refresh.css?v=1.24.0', 'data-memo-refresh-style');
     // V1.20.1-C: event/Task color cues load after the legacy Calendar styles.
     loadStyle('./css/calendar-colors.css?v=1.24.0', 'data-calendar-colors-style');
+    // V1.25-C: all-day/time/URL fields and compact timed-event labels.
+    loadStyle('./css/calendar-event-details.css?v=1.25-c1', 'data-calendar-event-details-style');
     loadStyle('./css/block-collapse.css?v=1.24.0', 'data-block-collapse-style');
     // V1.24: Stock state filters/bulk UI now use the formal release revision.
     loadStyle('./css/stock-state-ui.css?v=1.24.0', 'data-stock-state-ui-style');
@@ -63,6 +65,9 @@
     // outlives the bounded server/XHR path. Utility Widgets are already loaded.
     loadScript('./js/information-widget-watchdog.js?v=1.24.0');
     loadScript('./js/calendar-core.js?v=1.9.0');
+    // V1.25-C: register the detail submit handler before the color overlay so
+    // title/date/color/time/URL are saved through one Calendar transaction.
+    loadScript('./js/calendar-event-details.js?v=1.25-c1');
     // V1.20.1-C: fixed event colors without rewriting the legacy Calendar core.
     loadScript('./js/calendar-colors.js?v=1.24.0');
     // V1.20.1-D: Canvas-only Block Collapse mini game.
