@@ -38,6 +38,8 @@
     loadStyle('./css/calendar-colors.css?v=1.24.0', 'data-calendar-colors-style');
     // V1.25-C: all-day/time/URL fields and compact timed-event labels.
     loadStyle('./css/calendar-event-details.css?v=1.25-c1', 'data-calendar-event-details-style');
+    // V1.25-D: recurring-event controls and compact recurrence marker.
+    loadStyle('./css/calendar-recurrence.css?v=1.25-d1', 'data-calendar-recurrence-style');
     loadStyle('./css/block-collapse.css?v=1.24.0', 'data-block-collapse-style');
     // V1.24: Stock state filters/bulk UI now use the formal release revision.
     loadStyle('./css/stock-state-ui.css?v=1.24.0', 'data-stock-state-ui-style');
@@ -65,6 +67,9 @@
     // outlives the bounded server/XHR path. Utility Widgets are already loaded.
     loadScript('./js/information-widget-watchdog.js?v=1.24.0');
     loadScript('./js/calendar-core.js?v=1.9.0');
+    // V1.25-D: register recurrence save/list handling before the C/color
+    // capture handlers. Normal events also keep using the same combined payload.
+    loadScript('./js/calendar-recurrence.js?v=1.25-d1');
     // V1.25-C: register the detail submit handler before the color overlay so
     // title/date/color/time/URL are saved through one Calendar transaction.
     loadScript('./js/calendar-event-details.js?v=1.25-c1');
