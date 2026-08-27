@@ -1,0 +1,30 @@
+/* V1.25-D: recurring Calendar event controls and marker. */
+.calendar-event-recurrence-fields {
+    margin-bottom: 0.75rem;
+}
+
+.calendar-event-recurrence-fields .calendar-event-repeat-until-field[hidden] {
+    display: none !important;
+}
+
+.calendar-event-recurrence-fields .calendar-event-recurrence-help {
+    margin-top: -0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+.calendar-event-recurrence-fields .calendar-event-recurrence-loading {
+    margin-bottom: 0.75rem;
+}
+
+#main-content .calendar-entry .calendar-event-repeat-label {
+    display: inline-block;
+    margin-right: 0.3rem;
+    font-size: 0.82em;
+    font-weight: 700;
+    line-height: 1;
+    opacity: 0.76;
+}
+
+#main-content .calendar-entry.calendar-event-recurring {
+    position: relative;
+}
