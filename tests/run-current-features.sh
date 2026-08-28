@@ -44,6 +44,21 @@ php "$SCRIPT_DIR/test_v124e_stock_state_filters.php"
 node "$SCRIPT_DIR/test_v124e_stock_state_ui.js"
 python3 "$SCRIPT_DIR/test_v124e_stock_state_workflow_static.py"
 node --check "$ROOT/public/js/stock-state-ui.js"
+
+echo '== Current feature contracts: V1.25 Calendar expansion =='
+php "$SCRIPT_DIR/test_v1_25_b_calendar_time_contract.php"
+php "$SCRIPT_DIR/test_v1_25_b_calendar_time_validation.php"
+php "$SCRIPT_DIR/test_v1_25_c_calendar_event_ui_contract.php"
+php "$SCRIPT_DIR/test_v1_25_d_recurrence_contract.php"
+php "$SCRIPT_DIR/test_v1_25_d_recurrence_validation.php"
+php "$SCRIPT_DIR/test_v1_25_e_calendar_source_actions_contract.php"
+php "$SCRIPT_DIR/test_v1_25_f_calendar_polish_contract.php"
+php "$SCRIPT_DIR/test_v1_25_f_calendar_polish_r3_contract.php"
 node --check "$ROOT/public/js/calendar.js"
+node --check "$ROOT/public/js/calendar-recurrence.js"
+node --check "$ROOT/public/js/calendar-event-details.js"
+node --check "$ROOT/public/js/calendar-source-actions.js"
+node --check "$ROOT/public/js/calendar-polish.js"
+node --check "$ROOT/public/js/calendar-polish-r3.js"
 
 echo 'PASS: current feature contract suite completed'
