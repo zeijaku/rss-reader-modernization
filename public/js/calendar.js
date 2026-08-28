@@ -75,6 +75,8 @@
     loadScript('./js/calendar-event-details.js?v=1.25-c1');
     // V1.20.1-C: fixed event colors without rewriting the legacy Calendar core.
     loadScript('./js/calendar-colors.js?v=1.24.0');
+    // V1.25-E: RSS / Stock article actions pre-fill the existing Calendar form.
+    loadScript('./js/calendar-source-actions.js?v=1.25-e1');
     // V1.20.1-D: Canvas-only Block Collapse mini game.
     loadScript('./js/block-collapse.js?v=1.24.0');
     // Load the watchdogs before feature startup so they can observe the first
