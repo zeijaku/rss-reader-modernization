@@ -1,0 +1,41 @@
+/* V1.25-F R3: compact upcoming list + month-switch layout stabilization. */
+.calendar-upcoming-item[hidden] {
+    display: none !important;
+}
+
+.calendar-upcoming-toggle-wrap {
+    display: flex;
+    min-height: 28px;
+    padding-top: 4px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.calendar-upcoming-toggle {
+    min-height: 28px;
+    padding: 2px 4px;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    text-decoration: none;
+}
+
+.calendar-upcoming-toggle:hover,
+.calendar-upcoming-toggle:focus {
+    text-decoration: underline;
+}
+
+.calendar-days[data-calendar-height-held="1"] {
+    transition: none;
+}
+
+@media (max-width: 575.98px) {
+    .calendar-upcoming-toggle-wrap {
+        min-height: 26px;
+        padding-top: 2px;
+    }
+
+    .calendar-upcoming-toggle {
+        min-height: 26px;
+        font-size: 0.68rem;
+    }
+}
