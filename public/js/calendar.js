@@ -37,13 +37,13 @@
     // V1.20.1-C: event/Task color cues load after the legacy Calendar styles.
     loadStyle('./css/calendar-colors.css?v=1.24.0', 'data-calendar-colors-style');
     // V1.25-C: all-day/time/URL fields and compact timed-event labels.
-    loadStyle('./css/calendar-event-details.css?v=1.25-c1', 'data-calendar-event-details-style');
+    loadStyle('./css/calendar-event-details.css?v=1.25.0', 'data-calendar-event-details-style');
     // V1.25-D: recurring-event controls and compact recurrence marker.
-    loadStyle('./css/calendar-recurrence.css?v=1.25-d1', 'data-calendar-recurrence-style');
+    loadStyle('./css/calendar-recurrence.css?v=1.25.0', 'data-calendar-recurrence-style');
     // V1.25-F: Today / upcoming / modal focus / Smartphone polish.
-    loadStyle('./css/calendar-polish.css?v=1.25-f2', 'data-calendar-polish-style');
+    loadStyle('./css/calendar-polish.css?v=1.25.0', 'data-calendar-polish-style');
     // V1.25-F R3: compact upcoming list and month-switch height stabilization.
-    loadStyle('./css/calendar-polish-r3.css?v=1.25-f3', 'data-calendar-polish-r3-style');
+    loadStyle('./css/calendar-polish-r3.css?v=1.25.0', 'data-calendar-polish-r3-style');
     loadStyle('./css/block-collapse.css?v=1.24.0', 'data-block-collapse-style');
     // V1.24: Stock state filters/bulk UI now use the formal release revision.
     loadStyle('./css/stock-state-ui.css?v=1.24.0', 'data-stock-state-ui-style');
@@ -73,18 +73,18 @@
     loadScript('./js/calendar-core.js?v=1.9.0');
     // V1.25-D: register recurrence save/list handling before the C/color
     // capture handlers. Normal events also keep using the same combined payload.
-    loadScript('./js/calendar-recurrence.js?v=1.25-d1');
+    loadScript('./js/calendar-recurrence.js?v=1.25.0');
     // V1.25-C: register the detail submit handler before the color overlay so
     // title/date/color/time/URL are saved through one Calendar transaction.
-    loadScript('./js/calendar-event-details.js?v=1.25-c1');
+    loadScript('./js/calendar-event-details.js?v=1.25.0');
     // V1.20.1-C: fixed event colors without rewriting the legacy Calendar core.
     loadScript('./js/calendar-colors.js?v=1.24.0');
     // V1.25-E: RSS / Stock article actions pre-fill the existing Calendar form.
-    loadScript('./js/calendar-source-actions.js?v=1.25-e1');
+    loadScript('./js/calendar-source-actions.js?v=1.25.0');
     // V1.25-F: polish Today navigation, upcoming events and Calendar modal focus.
-    loadScript('./js/calendar-polish.js?v=1.25-f2');
+    loadScript('./js/calendar-polish.js?v=1.25.0');
     // V1.25-F R3: compact upcoming list and suppress month-switch layout shifts.
-    loadScript('./js/calendar-polish-r3.js?v=1.25-f3');
+    loadScript('./js/calendar-polish-r3.js?v=1.25.0');
     // V1.20.1-D: Canvas-only Block Collapse mini game.
     loadScript('./js/block-collapse.js?v=1.24.0');
     // Load the watchdogs before feature startup so they can observe the first
