@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__);
 $sourceActions = file_get_contents($root . '/public/js/calendar-source-actions.js');
-$loader = file_get_contents($root . '/public/js/calendar.js');
+$loader = file_get_contents($root . '/public/js/calendar.js';
 $version = file_get_contents($root . '/app/version.php');
 
 foreach ([$sourceActions, $loader, $version] as $source) {
@@ -16,7 +16,7 @@ foreach ([$sourceActions, $loader, $version] as $source) {
 
 $checks = [
     'formal APP_VERSION stays V1.24.0' => str_contains($version, "const APP_VERSION = '1.24.0';"),
-    'asset revision is E staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-e1';"),
+    'asset revision is F staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f1';"),
     'source action module is staged with E cache key' => str_contains($loader, "calendar-source-actions.js?v=1.25-e1"),
     'article action menu is reused' => str_contains($sourceActions, "$('#articleActionsMenu')"),
     'Calendar action is added after Task when available' => str_contains($sourceActions, ".article-action-task")
