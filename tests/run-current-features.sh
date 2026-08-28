@@ -61,4 +61,8 @@ node --check "$ROOT/public/js/calendar-source-actions.js"
 node --check "$ROOT/public/js/calendar-polish.js"
 node --check "$ROOT/public/js/calendar-polish-r3.js"
 
+echo '== Current feature contracts: V1.26 Information Board backend =='
+php "$SCRIPT_DIR/test_v1_26_b_info_board_backend.php"
+python3 "$SCRIPT_DIR/test_v1_26_b_info_board_static.py"
+
 echo 'PASS: current feature contract suite completed'
