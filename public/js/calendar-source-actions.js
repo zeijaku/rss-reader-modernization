@@ -106,8 +106,8 @@
 
             closeArticleActionsMenu($menu);
             resetCalendarAddForm();
-            $('#calendarEventTitle').val(title);
-            $('#calendarEventUrl').val(url);
+            $('.registerCalendarEventTitleValue').val(title);
+            $('.registerCalendarEventUrl').val(url);
             showRegisterModal();
         });
     });
