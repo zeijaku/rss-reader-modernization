@@ -104,7 +104,7 @@ Prefix:   rss_
 
 ## 6. Schemaと現行Migrationを投入
 
-`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`（Migration 013）とV1.24のStock状態Column（Migration 017）を取り込んでいます。Mail / Links / Stock Tags / RSS Highlightに加え、V1.22のFeed Metadata / Feed Health / RSS Rulesは009〜012、014〜016を番号順に適用します。
+`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`（Migration 013）、V1.24のStock状態Column（Migration 017）、V1.25のCalendar終日／時刻／URL（Migration 018）と繰り返し（Migration 019）を取り込んでいます。Mail / Links / Stock Tags / RSS Highlightに加え、V1.22のFeed Metadata / Feed Health / RSS Rulesは009〜012、014〜016を番号順に適用します。
 
 まず `database/schema.sql` 冒頭の値を、`DB_TABLE_PREFIX` と同じにします。
 
@@ -142,7 +142,7 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\015
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\016_v1_22_rss_rules.sql
 ```
 
-phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016を同じ順番でImportします。V1.20.1のCalendar色Column（013）とV1.24のStock状態Column（017）は`schema.sql`へ統合済みのため、新規Installで013 / 017を追加実行する必要はありません。
+phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016を同じ順番でImportします。V1.20.1のCalendar色Column（013）、V1.24のStock状態Column（017）、V1.25のCalendar終日／時刻／URL／繰り返しColumn（018 / 019）は`schema.sql`へ統合済みのため、新規Installで013 / 017 / 018 / 019を追加実行する必要はありません。
 
 Prefixが `rss_` の場合、最終的に次の19 tableが存在します。
 
@@ -171,6 +171,15 @@ rss_rss_rule_condition
 **既存Databaseへ `schema.sql` を再実行しないでください。** 既存環境はBackupを取得し、未適用Migrationだけを順番に適用します。
 
 V1.23.0からV1.24.0へ更新する既存Databaseでは、Backup取得後に `017_v1_24_stock_state.sql` の `SET @table_prefix` を環境へ合わせて適用します。Migration 017は既存Stockを保持したまま `stock_processed` / `stock_important` / `stock_archived` をDefault 0で追加し、Archive検索用Indexを追加します。`stock_flag` は従来どおりStock解除用で、Archiveとは別状態です。
+
+V1.24.0からV1.25.0へ更新する既存Databaseでは、Backup取得後に次を**この順番で1回ずつ**適用します。
+
+```text
+018_v1_25_calendar_event_time_url.sql
+→ 019_v1_25_calendar_recurrence.sql
+```
+
+Migration 018は既存`calendar_event`へ終日Flag、開始／終了時刻、関連URLを追加します。既存予定はDefaultで終日となり、時刻とURLはNULLのままです。Migration 019は繰り返し種別と任意の繰り返し終了日を追加し、既存予定は`none`のまま維持します。両Migrationとも `SET @table_prefix` を実環境の `DB_TABLE_PREFIX` と同じ値へ合わせてから実行してください。V1.25-F R3までの本番確認ですでに018 / 019を適用済みの場合は、正式V1.25.0化で再実行しません。
 
 ## 7. Runtime directory
 
@@ -210,6 +219,10 @@ CLIが使えないHostingでは、Control panelでPHP Version / Extensionを確�
 - Clock、Memo、Task、Calendarの追加、変更、削除
 - Taskの完了切替、期限、優先度
 - Calendarの月移動、通常予定、Task期限表示
+- Calendarの終日／時刻／関連URL、赤／青／緑、毎日／毎週／毎月／毎年の繰り返し
+- CalendarのToday、14日以内の直近予定、3件＋もっと見る、月切替時の表示安定性
+- RSS / Stock記事の「Calendarへ追加」でTitle／URLが登録Modalへ引き継がれる
+- Calendar Modalを背景／×／閉じる／Escで閉じてもConsoleへ新しいFocus／`aria-hidden`警告が出ない
 - RSS 2.0 / RSS 1.0 / Atom
 - Stock保存と一覧
 - Stockの未処理 / 処理済み、通常 / 重要、Archive状態とFilter / 一括更新
