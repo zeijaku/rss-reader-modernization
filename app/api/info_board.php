@@ -85,6 +85,18 @@ function api_widget_info_board_fetch(int $userId, array $input): array
     }
 
     try {
+        // V1.26-C: expose only the already validated presentation settings
+        // required to faithfully refill the edit modal. Ownership is checked
+        // by info_board_owned_widget() before any config is returned.
+        $row = info_board_owned_widget($userId, $widgetId);
+        if ($row === null) {
+            return api_error('not_found', 'Information Board Widget was not found.', 404);
+        }
+        $config = info_board_config_from_storage($row['widget_config'] ?? null);
+        if ($config === null) {
+            return api_error('not_found', 'Information Board Widget was not found.', 404);
+        }
+
         $result = info_board_execute($userId, $widgetId);
     } catch (PDOException $exception) {
         error_log('Information Board Widget read failed: ' . $exception->getMessage());
@@ -93,6 +105,10 @@ function api_widget_info_board_fetch(int $userId, array $input): array
     if (($result['ok'] ?? false) !== true) {
         return api_error('not_found', 'Information Board Widget was not found.', 404);
     }
+
+    $result['speed'] = $config['speed'];
+    $result['show_summary'] = $config['show_summary'];
+    $result['summary_max'] = $config['summary_max'];
 
     return api_success(['info_board' => $result]);
 }
