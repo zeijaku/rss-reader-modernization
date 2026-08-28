@@ -13,4 +13,4 @@ const APP_VERSION_LABEL = 'RSS Reader Modernization 1.24.0';
  * Cache key for public assets.
  * Formal release assets use the same immutable cache key as APP_VERSION.
  */
-const APP_ASSET_REVISION = '1.25-d1';
+const APP_ASSET_REVISION = '1.25-e1';
