@@ -135,3 +135,26 @@
         }
     }
 }(typeof window !== 'undefined' ? window : null));
+
+/* V1.26-C phased Dashboard bootstrap: reuse this always-loaded small asset
+ * instead of widening the main dashboard.js or PHP view surface in C. */
+(function (root, document) {
+    'use strict';
+
+    if (!root || !document || document.querySelector('script[data-info-board-v126c-script]')) {
+        return;
+    }
+
+    var current = document.currentScript;
+    var assetQuery = '';
+    if (current && current.src) {
+        var queryIndex = current.src.indexOf('?');
+        assetQuery = queryIndex >= 0 ? current.src.slice(queryIndex) : '';
+    }
+
+    var script = document.createElement('script');
+    script.src = './js/info-board.js' + assetQuery;
+    script.async = false;
+    script.setAttribute('data-info-board-v126c-script', 'true');
+    document.head.appendChild(script);
+}(typeof window !== 'undefined' ? window : null, typeof document !== 'undefined' ? document : null));
