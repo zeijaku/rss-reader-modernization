@@ -21,7 +21,7 @@ foreach ([$domain, $api, $ui, $loader, $version, $migration, $schema, $css] as $
 
 $checks = [
     'formal version stays 1.24.0' => str_contains($version, "const APP_VERSION = '1.24.0';"),
-    'asset revision is E staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-e1';"),
+    'asset revision is F staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f1';"),
     'migration adds repeat type' => str_contains($migration, 'calendar_event_repeat_type'),
     'migration defaults repeat type to none' => str_contains($migration, "DEFAULT ''none''"),
     'migration adds nullable repeat until' => str_contains($migration, 'calendar_event_repeat_until') && str_contains($migration, 'DATE NULL DEFAULT NULL'),
@@ -39,7 +39,7 @@ $checks = [
     'API requires authenticated session' => str_contains($api, 'app_session_user_id()') && str_contains($api, "Authentication is required."),
     'API requires CSRF' => str_contains($api, 'app_csrf_is_valid'),
     'API enforces request body limit' => str_contains($api, 'APP_API_MAX_REQUEST_BYTES'),
-    'API uses fixed action allowlist' => str_contains($api, "['calendar.recurrence.list', 'calendar.recurrence.create', 'calendar.recurrence.update']"),
+    'API uses fixed action allowlist' => str_contains($api, "['calendar.recurrence.list', 'calendar.upcoming.list', 'calendar.recurrence.create', 'calendar.recurrence.update']"),
     'API releases session before DB work' => str_contains($api, 'app_session_release();'),
     'API ownership comes from session user id' => str_contains($api, 'calendar_event_recurrence_month_list($userId') && str_contains($api, '$userId,'),
     'API validates color/time/repeat settings' => str_contains($api, 'calendar_event_color_validate') && str_contains($api, 'calendar_event_time_settings') && str_contains($api, 'calendar_event_recurrence_settings'),
