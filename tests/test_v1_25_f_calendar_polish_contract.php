@@ -19,7 +19,7 @@ foreach ([$upcoming, $api, $ui, $css, $loader, $version] as $source) {
 
 $checks = [
     'formal APP_VERSION stays V1.24.0' => str_contains($version, "const APP_VERSION = '1.24.0';"),
-    'asset revision is F2 staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f2';"),
+    'asset revision is F R3 staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f3';"),
     'F CSS is staged by Calendar loader' => str_contains($loader, "calendar-polish.css?v=1.25-f2"),
     'F JS is staged by Calendar loader' => str_contains($loader, "calendar-polish.js?v=1.25-f2"),
     'upcoming window is fixed to 14 days' => str_contains($upcoming, 'CALENDAR_UPCOMING_DAYS = 14'),
