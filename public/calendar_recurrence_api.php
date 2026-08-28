@@ -8,6 +8,7 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/calendar_color.php';
 require_once dirname(__DIR__) . '/app/calendar_time.php';
 require_once dirname(__DIR__) . '/app/calendar_recurrence.php';
+require_once dirname(__DIR__) . '/app/calendar_upcoming.php';
 
 /** @param array<string,mixed> $body */
 function calendar_recurrence_emit(int $status, array $body): never
@@ -81,7 +82,7 @@ if ($contentLength !== null && $contentLength > APP_API_MAX_REQUEST_BYTES) {
 }
 
 $action = isset($_POST['action']) && is_string($_POST['action']) ? trim($_POST['action']) : '';
-if (!in_array($action, ['calendar.recurrence.list', 'calendar.recurrence.create', 'calendar.recurrence.update'], true)) {
+if (!in_array($action, ['calendar.recurrence.list', 'calendar.upcoming.list', 'calendar.recurrence.create', 'calendar.recurrence.update'], true)) {
     calendar_recurrence_error('unknown_action', 'Unknown API action.', 400);
 }
 
@@ -89,6 +90,15 @@ if (!in_array($action, ['calendar.recurrence.list', 'calendar.recurrence.create'
 app_session_release();
 
 try {
+    if ($action === 'calendar.upcoming.list') {
+        $today = substr((string) app_now(), 0, 10);
+        calendar_recurrence_success([
+            'today' => $today,
+            'days' => CALENDAR_UPCOMING_DAYS,
+            'events' => calendar_event_upcoming_list($userId, $today),
+        ]);
+    }
+
     if ($action === 'calendar.recurrence.list') {
         $year = calendar_validate_year($_POST['calendar_year'] ?? null);
         $month = calendar_validate_month($_POST['calendar_month'] ?? null);
