@@ -69,4 +69,9 @@ echo '== Current feature contracts: V1.26 Information Board UI =='
 python3 "$SCRIPT_DIR/test_v1_26_c_info_board_ui.py"
 node --check "$ROOT/public/js/info-board.js"
 
+echo '== Current feature contracts: V1.26 Information Board ticker =='
+python3 "$SCRIPT_DIR/test_v1_26_d_info_board_ticker.py"
+node "$SCRIPT_DIR/test_v1_26_d_info_board_ticker.js"
+node --check "$ROOT/public/js/info-board-ticker.js"
+
 echo 'PASS: current feature contract suite completed'

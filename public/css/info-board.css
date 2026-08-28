@@ -1,4 +1,4 @@
-/* V1.26-C Information Board: static NEWS presentation. Animation is intentionally deferred. */
+/* V1.26-D Information Board: static NEWS foundation plus accessible auto-scroll. */
 .info-board-card .feed-card-inner {
     display: flex;
     flex-direction: column;
@@ -20,6 +20,9 @@
     max-height: 20rem;
     overflow: auto;
     overscroll-behavior: contain;
+    scroll-behavior: smooth;
+    scroll-snap-type: y proximity;
+    scrollbar-gutter: stable;
 }
 
 .info-board-card[data-widget-height="2"] .info-board-list {
@@ -33,6 +36,7 @@
     align-items: start;
     padding: .7rem .85rem;
     border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+    scroll-snap-align: start;
 }
 
 .info-board-item:last-child {
@@ -106,6 +110,28 @@ a.info-board-item-title:focus {
     padding: .5rem .75rem;
 }
 
+.info-board-motion-toggle {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    touch-action: manipulation;
+}
+
+.info-board-motion-toggle:disabled {
+    cursor: default;
+    opacity: .72;
+}
+
+.info-board-card[data-info-board-motion="interaction"] .info-board-motion-toggle {
+    opacity: .82;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .info-board-list {
+        scroll-behavior: auto;
+        scroll-snap-type: none;
+    }
+}
+
 @media (max-width: 575.98px) {
     .info-board-item {
         grid-template-columns: 1fr;
@@ -119,9 +145,16 @@ a.info-board-item-title:focus {
 
     .info-board-list {
         max-height: 18rem;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
     }
 
     .info-board-card[data-widget-height="2"] .info-board-list {
         max-height: 36rem;
+    }
+
+    .info-board-motion-toggle {
+        min-width: 44px;
+        min-height: 44px;
     }
 }
