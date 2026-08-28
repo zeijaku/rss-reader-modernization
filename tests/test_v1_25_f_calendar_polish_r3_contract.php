@@ -16,12 +16,12 @@ foreach ([$ui, $css, $loader, $version] as $source) {
 }
 
 $checks = [
-    'formal APP_VERSION stays V1.24.0' => str_contains($version, "const APP_VERSION = '1.24.0';"),
-    'asset revision is F R3 staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f3';"),
-    'R2 Calendar polish remains loaded' => str_contains($loader, "calendar-polish.js?v=1.25-f2"),
-    'R3 CSS is staged' => str_contains($loader, "calendar-polish-r3.css?v=1.25-f3"),
-    'R3 JS is staged' => str_contains($loader, "calendar-polish-r3.js?v=1.25-f3"),
-    'R3 JS loads after R2 polish' => strpos($loader, "calendar-polish.js?v=1.25-f2") < strpos($loader, "calendar-polish-r3.js?v=1.25-f3"),
+    'formal APP_VERSION is V1.25.0' => str_contains($version, "const APP_VERSION = '1.25.0';"),
+    'formal asset revision is V1.25.0' => str_contains($version, "const APP_ASSET_REVISION = '1.25.0';"),
+    'R2 Calendar polish uses release cache key' => str_contains($loader, "calendar-polish.js?v=1.25.0"),
+    'R3 CSS uses release cache key' => str_contains($loader, "calendar-polish-r3.css?v=1.25.0"),
+    'R3 JS uses release cache key' => str_contains($loader, "calendar-polish-r3.js?v=1.25.0"),
+    'R3 JS loads after R2 polish' => strpos($loader, "calendar-polish.js?v=1.25.0") < strpos($loader, "calendar-polish-r3.js?v=1.25.0"),
     'upcoming collapsed limit is three' => str_contains($ui, 'upcomingCollapsedLimit = 3'),
     'upcoming extra items are hidden while collapsed' => str_contains($ui, "index >= upcomingCollapsedLimit")
         && str_contains($ui, ".prop('hidden', !expanded"),
