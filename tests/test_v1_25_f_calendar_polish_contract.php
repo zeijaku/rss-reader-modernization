@@ -19,9 +19,9 @@ foreach ([$upcoming, $api, $ui, $css, $loader, $version] as $source) {
 
 $checks = [
     'formal APP_VERSION stays V1.24.0' => str_contains($version, "const APP_VERSION = '1.24.0';"),
-    'asset revision is F staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f1';"),
-    'F CSS is staged by Calendar loader' => str_contains($loader, "calendar-polish.css?v=1.25-f1"),
-    'F JS is staged by Calendar loader' => str_contains($loader, "calendar-polish.js?v=1.25-f1"),
+    'asset revision is F2 staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f2';"),
+    'F CSS is staged by Calendar loader' => str_contains($loader, "calendar-polish.css?v=1.25-f2"),
+    'F JS is staged by Calendar loader' => str_contains($loader, "calendar-polish.js?v=1.25-f2"),
     'upcoming window is fixed to 14 days' => str_contains($upcoming, 'CALENDAR_UPCOMING_DAYS = 14'),
     'upcoming result is bounded to 8 events' => str_contains($upcoming, 'CALENDAR_UPCOMING_LIMIT = 8')
         && str_contains($upcoming, 'array_slice($events, 0, CALENDAR_UPCOMING_LIMIT)'),
@@ -48,9 +48,11 @@ $checks = [
     'Today cell exposes aria-current date' => str_contains($ui, ".attr('aria-current', 'date')"),
     'Today navigation can restore focus to current day' => str_contains($ui, "data-calendar-focus-today")
         && str_contains($ui, 'focusTodayCell('),
-    'modal focus is moved before Bootstrap hides Calendar modal' => str_contains($ui, "addEventListener('hide.bs.modal', modalHide)")
-        && str_contains($ui, 'focusOutsideModal(event.target)'),
-    'modal focus has hidden-event safety net' => str_contains($ui, "addEventListener('hidden.bs.modal', modalHide)"),
+    'modal active descendant is blurred before Bootstrap hide' => str_contains($ui, "addEventListener('hide.bs.modal', modalHide)")
+        && str_contains($ui, 'releaseModalFocusBeforeHide(event.target)')
+        && str_contains($ui, 'active.blur();'),
+    'modal focus is restored only after hidden event' => str_contains($ui, "addEventListener('hidden.bs.modal', modalHidden)")
+        && str_contains($ui, 'restoreModalFocusAfterHide(event.target)'),
     'focus restoration prefers opening trigger' => str_contains($ui, 'lastModalTrigger')
         && str_contains($ui, 'fallbackFocusTarget()'),
     'F does not manually write aria-hidden or inert' => !preg_match('/setAttribute\([\'\"]aria-hidden[\'\"]/', $ui)
@@ -76,7 +78,7 @@ $checks = [
 ];
 
 $sourcePos = strpos($loader, "loadScript('./js/calendar-source-actions.js?v=1.25-e1');");
-$polishPos = strpos($loader, "loadScript('./js/calendar-polish.js?v=1.25-f1');");
+$polishPos = strpos($loader, "loadScript('./js/calendar-polish.js?v=1.25-f2');");
 $checks['F polish loads after E source actions'] = is_int($sourcePos) && is_int($polishPos) && $sourcePos < $polishPos;
 
 $failed = [];
