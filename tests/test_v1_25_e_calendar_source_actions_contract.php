@@ -15,9 +15,9 @@ foreach ([$sourceActions, $loader, $version] as $source) {
 }
 
 $checks = [
-    'formal APP_VERSION stays V1.24.0' => str_contains($version, "const APP_VERSION = '1.24.0';"),
-    'asset revision is F R3 staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f3';"),
-    'source action module is staged with E cache key' => str_contains($loader, "calendar-source-actions.js?v=1.25-e1"),
+    'formal APP_VERSION is V1.25.0' => str_contains($version, "const APP_VERSION = '1.25.0';"),
+    'formal asset revision is V1.25.0' => str_contains($version, "const APP_ASSET_REVISION = '1.25.0';"),
+    'source action module uses release cache key' => str_contains($loader, "calendar-source-actions.js?v=1.25.0"),
     'article action menu is reused' => str_contains($sourceActions, "$('#articleActionsMenu')"),
     'Calendar action is added after Task when available' => str_contains($sourceActions, ".article-action-task")
         && str_contains($sourceActions, "insertAdjacentElement('afterend', button)"),
@@ -46,10 +46,10 @@ $checks = [
 ];
 
 $corePos = strpos($loader, "loadScript('./js/calendar-core.js?v=1.9.0');");
-$repeatPos = strpos($loader, "loadScript('./js/calendar-recurrence.js?v=1.25-d1');");
-$detailPos = strpos($loader, "loadScript('./js/calendar-event-details.js?v=1.25-c1');");
+$repeatPos = strpos($loader, "loadScript('./js/calendar-recurrence.js?v=1.25.0');");
+$detailPos = strpos($loader, "loadScript('./js/calendar-event-details.js?v=1.25.0');");
 $colorPos = strpos($loader, "loadScript('./js/calendar-colors.js?v=1.24.0');");
-$sourcePos = strpos($loader, "loadScript('./js/calendar-source-actions.js?v=1.25-e1');");
+$sourcePos = strpos($loader, "loadScript('./js/calendar-source-actions.js?v=1.25.0');");
 $checks['source action loads after Calendar core/detail/recurrence/color layers'] = is_int($corePos)
     && is_int($repeatPos)
     && is_int($detailPos)
