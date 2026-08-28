@@ -45,10 +45,10 @@ $checks = [
     'source action does not use eval' => !preg_match('/\\beval\\s*\\(/', $sourceActions),
 ];
 
-$corePos = strpos($loader, "loadScript('./js/calendar-core.js?v=1.9.0');");
+$corePos = strpos($loader, "loadScript('./js/calendar-core.js?v=1.25.0');");
 $repeatPos = strpos($loader, "loadScript('./js/calendar-recurrence.js?v=1.25.0');");
 $detailPos = strpos($loader, "loadScript('./js/calendar-event-details.js?v=1.25.0');");
-$colorPos = strpos($loader, "loadScript('./js/calendar-colors.js?v=1.24.0');");
+$colorPos = strpos($loader, "loadScript('./js/calendar-colors.js?v=1.25.0');");
 $sourcePos = strpos($loader, "loadScript('./js/calendar-source-actions.js?v=1.25.0');");
 $checks['source action loads after Calendar core/detail/recurrence/color layers'] = is_int($corePos)
     && is_int($repeatPos)
