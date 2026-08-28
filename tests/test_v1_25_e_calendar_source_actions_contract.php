@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__);
 $sourceActions = file_get_contents($root . '/public/js/calendar-source-actions.js');
-$loader = file_get_contents($root . '/public/js/calendar.js';
+$loader = file_get_contents($root . '/public/js/calendar.js');
 $version = file_get_contents($root . '/app/version.php');
 
 foreach ([$sourceActions, $loader, $version] as $source) {
