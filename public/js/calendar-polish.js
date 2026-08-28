@@ -103,22 +103,33 @@
         return isUsableFocusTarget(main) ? main : null;
     }
 
-    function focusOutsideModal(modal) {
+    function releaseModalFocusBeforeHide(modal) {
         var active = document.activeElement;
         if (!active || !modal.contains(active)) {
             return;
         }
-        var target = isUsableFocusTarget(lastModalTrigger) ? lastModalTrigger : fallbackFocusTarget();
-        if (target && target !== active) {
-            try {
-                target.focus({preventScroll: true});
-            } catch (error) {
-                target.focus();
-            }
-            return;
-        }
+        // Bootstrap dispatches hide.bs.modal before it deactivates its focus trap.
+        // Moving focus to another element here can therefore be pulled back into
+        // the modal. Blur the active descendant first so aria-hidden is never
+        // applied while a focused descendant remains inside the modal.
         if (typeof active.blur === 'function') {
             active.blur();
+        }
+    }
+
+    function restoreModalFocusAfterHide(modal) {
+        var active = document.activeElement;
+        if (active && active !== document.body && active !== document.documentElement && !modal.contains(active)) {
+            return;
+        }
+        var target = isUsableFocusTarget(lastModalTrigger) ? lastModalTrigger : fallbackFocusTarget();
+        if (!target) {
+            return;
+        }
+        try {
+            target.focus({preventScroll: true});
+        } catch (error) {
+            target.focus();
         }
     }
 
@@ -142,7 +153,13 @@
 
     function modalHide(event) {
         if (isCalendarModal(event.target)) {
-            focusOutsideModal(event.target);
+            releaseModalFocusBeforeHide(event.target);
+        }
+    }
+
+    function modalHidden(event) {
+        if (isCalendarModal(event.target)) {
+            restoreModalFocusAfterHide(event.target);
         }
     }
 
@@ -351,7 +368,7 @@
     document.addEventListener('click', captureModalTrigger, true);
     document.addEventListener('show.bs.modal', modalShow);
     document.addEventListener('hide.bs.modal', modalHide);
-    document.addEventListener('hidden.bs.modal', modalHide);
+    document.addEventListener('hidden.bs.modal', modalHidden);
 
     $(function () {
         $('[data-dashboard-widget-type="calendar"]').each(function () {
