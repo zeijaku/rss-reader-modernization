@@ -19,10 +19,10 @@ if (!is_string($details) || !is_string($loader) || !is_string($style) || !is_str
 }
 
 $checks = [
-    'formal APP_VERSION stays V1.24.0' => str_contains($version, "const APP_VERSION = '1.24.0';"),
-    'current staged asset revision includes V1.25-F R3' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f3';"),
-    'detail CSS is staged by Calendar loader' => str_contains($loader, 'calendar-event-details.css?v=1.25-c1'),
-    'detail JS is staged by Calendar loader' => str_contains($loader, 'calendar-event-details.js?v=1.25-c1'),
+    'formal APP_VERSION is V1.25.0' => str_contains($version, "const APP_VERSION = '1.25.0';"),
+    'formal asset revision is V1.25.0' => str_contains($version, "const APP_ASSET_REVISION = '1.25.0';"),
+    'detail CSS is staged by Calendar loader' => str_contains($loader, 'calendar-event-details.css?v=1.25.0'),
+    'detail JS is staged by Calendar loader' => str_contains($loader, 'calendar-event-details.js?v=1.25.0'),
     'all-day field exists' => str_contains($details, "CalendarEventAllDay"),
     'start time field exists' => str_contains($details, "CalendarEventStartTime"),
     'end time field exists' => str_contains($details, "CalendarEventEndTime"),
@@ -45,7 +45,7 @@ $checks = [
 ];
 
 $corePos = strpos($loader, "loadScript('./js/calendar-core.js?v=1.9.0');");
-$detailPos = strpos($loader, "loadScript('./js/calendar-event-details.js?v=1.25-c1');");
+$detailPos = strpos($loader, "loadScript('./js/calendar-event-details.js?v=1.25.0');");
 $colorPos = strpos($loader, "loadScript('./js/calendar-colors.js?v=1.24.0');");
 $checks['script order is core -> details -> color'] = is_int($corePos) && is_int($detailPos) && is_int($colorPos)
     && $corePos < $detailPos && $detailPos < $colorPos;
