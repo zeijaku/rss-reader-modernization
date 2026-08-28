@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.24.0`
-Release tag: `v1.24.0`
+**Stable release:** `RSS Reader Modernization 1.25.0`
+Release tag: `v1.25.0`
+
+Version 1.25.0は、Calendar Widgetを実用的な予定管理へ拡張したReleaseです。通常予定へ終日／時刻／関連URLを追加し、毎日／毎週／毎月／毎年の繰り返し、Today操作、14日以内の直近予定、Smartphone表示調整、RSS／Stock記事から既存Calendar登録ModalへのTitle／URL引継ぎに対応しました。直近予定はServer側で最大8件に制限し、Widget上では初期3件＋「もっと見る」で表示します。繰り返し予定はシリーズ全体の編集／削除を基本とし、個別Occurrence例外やReminder、外部Calendar同期は今回の対象外です。既存DBはMigration `018_v1_25_calendar_event_time_url.sql`、`019_v1_25_calendar_recurrence.sql`を番号順に適用します。
 
 Version 1.24.0は、MemoとStockの実用性を強化したReleaseです。Memoは選択したWidget Heightを長文本文で押し広げず内部Scrollし、Dashboard／登録／編集で4000文字上限の現在文字数を表示します。Stockには未処理／処理済み、通常／重要、Archiveの3状態を追加し、個別操作、Server-side Filter、検索／Tag／Sort／Paginationとの併用、現在Pageを対象にした一括状態更新、Smartphone向け操作性を追加しました。Archiveは従来のStock解除とは別状態で、通常一覧ではArchive済みを除外しつつFilterから復元できます。既存DBはMigration `017_v1_24_stock_state.sql`を適用します。
 
@@ -72,7 +74,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Clock Widgetの追加・変更・削除、12／24時間、日付・秒表示
 - Memo Widgetの追加・変更・削除、改行を保持した本文表示、長文のWidget内Scroll、4000文字Counter
 - Task Widgetの追加・変更・削除、完了切替、期限、優先度
-- Calendar Widgetの月表示、通常予定、Task期限連動
+- Calendar Widgetの月表示、通常予定、Task期限連動、終日／時刻／URL、赤／青／緑、毎日／毎週／毎月／毎年の繰り返し、Today、14日以内の直近予定、RSS／Stock記事からの予定作成
 - Weather Widgetの地域別天気表示
 - Earthquake Widgetの気象庁最新地震情報表示
 - Sun / Moon Widgetの日の出・日の入り・月齢・月相表示
@@ -267,7 +269,7 @@ return [
 SET @table_prefix = 'rss_';
 ```
 
-Fresh-installの最新Table一覧と後続Migrationは[`docs/installation.md`](docs/installation.md)を正本とします。`schema.sql`にはV1.24のStock状態Columnが統合されています。
+Fresh-installの最新Table一覧と後続Migrationは[`docs/installation.md`](docs/installation.md)を正本とします。`schema.sql`にはV1.24のStock状態ColumnとV1.25のCalendar終日／時刻／URL／繰り返しColumnが統合されています。
 
 SQLファイルはPHP設定を直接参照できないため、**`DB_TABLE_PREFIX` と `@table_prefix` は同じ値にしてください。**
 
