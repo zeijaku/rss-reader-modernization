@@ -55,10 +55,10 @@ $checks = [
     'recurrence layer is loaded with release cache key' => str_contains($loader, 'calendar-recurrence.js?v=1.25.0') && str_contains($loader, 'calendar-recurrence.css?v=1.25.0'),
 ];
 
-$corePos = strpos($loader, "loadScript('./js/calendar-core.js?v=1.9.0');");
+$corePos = strpos($loader, "loadScript('./js/calendar-core.js?v=1.25.0');");
 $repeatPos = strpos($loader, "loadScript('./js/calendar-recurrence.js?v=1.25.0');");
 $detailPos = strpos($loader, "loadScript('./js/calendar-event-details.js?v=1.25.0');");
-$colorPos = strpos($loader, "loadScript('./js/calendar-colors.js?v=1.24.0');");
+$colorPos = strpos($loader, "loadScript('./js/calendar-colors.js?v=1.25.0');");
 $checks['script order is core -> recurrence -> details -> color'] = is_int($corePos) && is_int($repeatPos) && is_int($detailPos) && is_int($colorPos)
     && $corePos < $repeatPos && $repeatPos < $detailPos && $detailPos < $colorPos;
 
