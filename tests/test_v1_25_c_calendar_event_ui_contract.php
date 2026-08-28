@@ -20,7 +20,7 @@ if (!is_string($details) || !is_string($loader) || !is_string($style) || !is_str
 
 $checks = [
     'formal APP_VERSION stays V1.24.0' => str_contains($version, "const APP_VERSION = '1.24.0';"),
-    'current staged asset revision includes V1.25-F' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f1';"),
+    'current staged asset revision includes V1.25-F' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f2';"),
     'detail CSS is staged by Calendar loader' => str_contains($loader, 'calendar-event-details.css?v=1.25-c1'),
     'detail JS is staged by Calendar loader' => str_contains($loader, 'calendar-event-details.js?v=1.25-c1'),
     'all-day field exists' => str_contains($details, "CalendarEventAllDay"),
