@@ -21,7 +21,7 @@ foreach ([$domain, $api, $ui, $loader, $version, $migration, $schema, $css] as $
 
 $checks = [
     'formal version stays 1.24.0' => str_contains($version, "const APP_VERSION = '1.24.0';"),
-    'asset revision is F staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f1';"),
+    'asset revision is F staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f2';"),
     'migration adds repeat type' => str_contains($migration, 'calendar_event_repeat_type'),
     'migration defaults repeat type to none' => str_contains($migration, "DEFAULT ''none''"),
     'migration adds nullable repeat until' => str_contains($migration, 'calendar_event_repeat_until') && str_contains($migration, 'DATE NULL DEFAULT NULL'),
