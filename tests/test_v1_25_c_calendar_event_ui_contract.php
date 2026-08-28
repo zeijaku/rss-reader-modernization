@@ -44,9 +44,9 @@ $checks = [
     'smartphone time inputs can stack' => str_contains($details, 'col-12 col-sm-6'),
 ];
 
-$corePos = strpos($loader, "loadScript('./js/calendar-core.js?v=1.9.0');");
+$corePos = strpos($loader, "loadScript('./js/calendar-core.js?v=1.25.0');");
 $detailPos = strpos($loader, "loadScript('./js/calendar-event-details.js?v=1.25.0');");
-$colorPos = strpos($loader, "loadScript('./js/calendar-colors.js?v=1.24.0');");
+$colorPos = strpos($loader, "loadScript('./js/calendar-colors.js?v=1.25.0');");
 $checks['script order is core -> details -> color'] = is_int($corePos) && is_int($detailPos) && is_int($colorPos)
     && $corePos < $detailPos && $detailPos < $colorPos;
 
