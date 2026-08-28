@@ -1,73 +1,93 @@
-# RSS Reader Modernization 1.24.0
+# RSS Reader Modernization 1.25.0
 
-Release tag: `v1.24.0`
-Release date: 2026-08-27
+Release tag: `v1.25.0`
+Release date: 2026-08-28
 
 ## Overview
 
-Version 1.24.0 strengthens Memo and Stock workflows without changing the existing Stock解除 contract. Memo now stays within the selected Dashboard Widget height and shows a live 4000-character counter. Stock gains independent processed / important / archived states, individual controls, server-backed filters, bulk state updates, and responsive controls for Smartphone use.
+Version 1.25.0 expands the existing Calendar Widget without replacing its established Event / Task model. Calendar events now support all-day or timed schedules, an optional end time, a related HTTP/HTTPS URL, and daily / weekly / monthly / yearly recurrence with an optional repeat-until date. Existing Task due dates continue to be displayed directly from the Task table rather than copied into Calendar events.
 
-The Stock state model is intentionally separate from `stock_flag`: `stock_flag = 1` remains Stock解除, while Archive is stored in `stock_archived` and can be filtered or restored without removing the Stock row.
+RSS and Stock article actions can pre-fill the existing Calendar registration modal with the article title and URL. This does not auto-save the event, does not fetch the article URL on the server, and does not change Stock processed / important / archived / Stock解除 state.
+
+The Calendar UI also adds a clearer Today flow, a server-bounded 14-day upcoming list, compact three-item initial display with a more/close control, Smartphone presentation adjustments, modal focus handling, and month-switch layout stabilization.
 
 ## Main changes
 
-- Memo height fix: long Memo content scrolls inside the Widget instead of growing the Dashboard Grid row.
-- Memo character count: Dashboard and register/edit UI show the current length against the existing 4000-character server limit.
-- Stock state foundation: `stock_processed`, `stock_important`, and `stock_archived` are stored independently.
-- Individual Stock controls: 未処理 / 処理済み, 通常 / 重要, Archive / Archive済み.
-- Default Stock list excludes archived rows while an Archive filter allows archived-only or all-state views.
-- State filters coexist with existing text search, Stock Tags, sorting, and pagination.
-- Current-page selection and bulk state actions support processed/unprocessed, important/normal, and archive/unarchive.
-- Bulk Stock解除 is intentionally not added; Stock解除 remains the existing individual action.
-- Smartphone layout keeps state/filter/bulk controls usable without requiring a horizontal workflow.
-- V1.24 feature contracts are included in the current CI/release feature suite.
+- Calendar events can be all-day or timed.
+- Timed events require a start time; end time is optional. Same-day end-before-start is rejected while a multi-day event may wrap to an earlier clock time on the ending date.
+- Calendar events can store one optional related URL, limited to HTTP/HTTPS and 2048 characters.
+- Repetition supports `none`, `daily`, `weekly`, `monthly`, and `yearly`, with an optional repeat-until date.
+- Recurrence editing/deletion is series-level in V1.25.0. Per-occurrence exceptions are intentionally not implemented.
+- Monthly recurrence skips months that do not contain the anchor day; yearly February 29 recurrence skips non-leap years and resumes on leap years.
+- RSS / Stock article actions add `Calendarへ追加`, reusing the existing Calendar registration modal and pre-filling title + URL without auto-submit.
+- Calendar event creation does not alter or remove the source Stock row.
+- Today is visually emphasized and the Today button returns to the current month/day.
+- Upcoming events cover today through the next 14 days, are server-bounded to eight results, and show the first three initially with `もっと見る` / `閉じる` controls.
+- Calendar modal focus is released before Bootstrap applies its hidden state and restored after the modal is fully hidden, avoiding focused descendants being left inside an `aria-hidden` modal.
+- Month navigation keeps the current Calendar grid height during asynchronous redraw to reduce visible layout shift.
+- V1.25 Calendar contracts are promoted into the current CI/release feature suite.
 
 ## Database migration
 
-Existing Version 1.23.0 installations must back up the database and apply:
+Existing Version 1.24.0 installations must back up the database and apply these migrations in order:
 
-`database/migrations/017_v1_24_stock_state.sql`
+1. `database/migrations/018_v1_25_calendar_event_time_url.sql`
+2. `database/migrations/019_v1_25_calendar_recurrence.sql`
 
-Set `@table_prefix` in the migration to the same value as `DB_TABLE_PREFIX` before execution.
+Set `@table_prefix` in each migration to the same value as `DB_TABLE_PREFIX` before execution.
 
-Migration 017 adds the following columns to `content_stock`, each with default `0`:
+Migration 018 adds these columns to `calendar_event`:
 
-- `stock_processed`
-- `stock_important`
-- `stock_archived`
+- `calendar_event_all_day` — `TINYINT UNSIGNED NOT NULL DEFAULT 1`
+- `calendar_event_start_time` — nullable `TIME`
+- `calendar_event_end_time` — nullable `TIME`
+- `calendar_event_url` — nullable `VARCHAR(2048)`
 
-It also adds `idx_stock_owner_flag_archived_id (stock_owner, stock_flag, stock_archived, stock_id)`. The migration is written to avoid re-adding columns/indexes that already exist. It does not convert Archive into Stock解除 and does not delete existing Stock data.
+Existing events therefore remain all-day by default and do not gain synthetic time/URL values.
 
-For a fresh installation, these V1.24 Stock state columns/index are already integrated into `database/schema.sql`; do not additionally run Migration 017 after importing the fresh schema. Follow `docs/installation.md` for the remaining post-base migrations.
+Migration 019 adds:
+
+- `calendar_event_repeat_type` — fixed recurrence type storage with default `none`
+- `calendar_event_repeat_until` — nullable repeat end date
+
+The migrations check existing schema state before adding their columns and do not delete or rewrite existing Calendar events.
+
+For a fresh installation, `database/schema.sql` already integrates the Calendar columns from Migrations 013, 018, and 019 together with the V1.24 Stock state schema from Migration 017. Do not re-run integrated migrations after importing the fresh schema. Follow `docs/installation.md` for the remaining post-base migrations.
 
 ## Security / privacy
 
-- Stock state read/update/bulk actions stay behind the authenticated POST API boundary and existing CSRF validation.
-- Every state operation is owner-scoped and limited to active Stock rows (`stock_flag = 0`).
-- State names map to a fixed server allowlist; request values are not used as raw SQL column names.
-- Bulk IDs must be positive integers, are deduplicated, and are capped at 100 submitted IDs.
-- Bulk updates pre-check ownership/availability and execute transactionally instead of partially updating a mixed-owner request.
-- Stock list filters are converted to fixed SQL fragments; invalid Archive input falls back to the normal non-archived list.
-- No new required secret or external API credential is introduced.
+- Calendar mutation endpoints remain authenticated POST operations with CSRF validation and request-size limits.
+- Recurrence actions use a fixed server-side action allowlist; client input is not used as a raw action name, SQL identifier, or file path.
+- Calendar event reads/updates remain owner-scoped and limited to active rows.
+- The stored Calendar URL is validation-only. V1.25.0 does not perform server-side outbound fetches to event or article URLs, so the feature does not introduce a new SSRF path.
+- Active recurring series are resource-bounded to 50 per owner for recurrence expansion, and month expansion is bounded to 2000 occurrences.
+- Upcoming event lookup uses a server-derived date window, is fixed to 14 days, returns at most eight events, and bounds its non-recurring source query.
+- RSS / Stock to Calendar pre-fill is client-side and is revalidated by the existing Calendar server boundary on save.
+- No new required secret, external Calendar credential, OAuth integration, reminder service, or background scheduler is introduced.
 
 ## Upgrade summary
 
 1. Back up the application code, `config/local.php`, database, and required runtime data.
-2. Apply `database/migrations/017_v1_24_stock_state.sql` with the deployment's table prefix.
-3. Deploy the Version 1.24.0 application files without overwriting private config/runtime data.
-4. Reload the browser and confirm the footer reports `RSS Reader Modernization 1.24.0`.
-5. Verify Memo long-text scrolling and the 4000-character counters.
-6. Verify Stock individual processed/important/archive controls, state persistence after reload, filters, search/tag/sort/pagination coexistence, and bulk state changes.
-7. Confirm Archive does not change `stock_flag` and that existing Stock解除, Tags, Task action, and 3-dot article actions continue to work.
-8. Check Browser Console and PHP/Web server logs for new errors.
+2. Apply Migration 018 with the deployment table prefix.
+3. Apply Migration 019 with the same table prefix.
+4. Deploy the Version 1.25.0 application files without overwriting private config/runtime data.
+5. Reload the browser and confirm the footer reports `RSS Reader Modernization 1.25.0`.
+6. Verify all-day and timed Calendar event creation/editing, optional URL, event colors, and recurrence.
+7. Verify RSS and Stock article `Calendarへ追加` pre-fill title + URL without changing Stock state.
+8. Verify Today, upcoming events, `もっと見る` / `閉じる`, month navigation, and Smartphone layout.
+9. Open/close Calendar modals by backdrop, close button, X, and Escape and confirm no new focus/`aria-hidden` warning appears.
+10. Confirm existing Task due-date display, Stock actions, RSS article actions, and recurrence endpoint access continue to work.
+11. Check Browser Console and PHP/Web server logs for new errors.
 
 ## Release assets
 
-- `rss-reader-modernization-1.24.0.zip`
-- `rss-reader-modernization-1.24.0.zip.sha256`
-- `rss-reader-modernization-1.24.0-complete.zip`
-- `rss-reader-modernization-1.24.0-complete.zip.sha256`
+- `rss-reader-modernization-1.25.0.zip`
+- `rss-reader-modernization-1.25.0.zip.sha256`
+- `rss-reader-modernization-1.25.0-complete.zip`
+- `rss-reader-modernization-1.25.0-complete.zip.sha256`
 
 ## Verification limits
 
-Automated release gates cover the current full regression suite, current feature contracts including V1.24, syntax/security contracts, release wiring, deterministic package integrity, clean-room extraction, and high-signal secret scanning. Focused V1.24 tests exercise owner scoping, invalid/mixed Stock IDs, state allowlists, filtering, bulk workflow, and Memo presentation contracts. Real production MySQL execution, deployment-specific PHP/Web server configuration, external feed behavior, and browser rendering remain environment-dependent and should be checked in the target environment after deployment.
+The formal release gate runs the full regression suite, compatibility suite, current feature suite including V1.25 Calendar contracts, security suite, version/dependency hygiene, high-signal secret scanning, deterministic package rebuild comparison, package verification, and clean-room extraction. Focused V1.25 tests additionally cover time/URL validation, recurrence calculations and resource bounds, RSS/Stock pre-fill contracts, modal focus behavior, upcoming-event bounds, and R3 compact/layout-stabilization behavior.
+
+The target environment remains responsible for real MySQL migration execution, deployment-specific PHP/Web server configuration, actual Browser/Bootstrap focus lifecycle, and production rendering. V1.25 development overlays were verified in the target environment through F R3, including the compact upcoming display and month-switch layout improvement; the formal package should still receive the normal post-deployment smoke check.
