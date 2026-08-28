@@ -1,5 +1,39 @@
 # Changelog
 
+## 1.25.0 - 2026-08-28
+
+### Calendar event details
+- Extended the existing Calendar event model with all-day/timed scheduling, optional start/end time, and an optional related HTTP/HTTPS URL without introducing server-side URL fetching.
+- Kept existing events all-day by default and retained the existing Calendar / Task separation.
+- Reused the existing Calendar create/edit transaction path and color handling rather than adding a parallel Event implementation.
+
+### Recurrence
+- Added `none` / `daily` / `weekly` / `monthly` / `yearly` recurrence with optional repeat-until date.
+- Kept V1.25 recurrence edits/deletes at series level and intentionally deferred per-occurrence exceptions.
+- Added explicit owner scope and recurrence resource bounds, including active-series and month-expansion limits.
+
+### RSS / Stock to Calendar
+- Added `Calendarへ追加` to the shared article actions menu for RSS and Stock.
+- Article title and URL pre-fill the existing Calendar registration modal without auto-saving.
+- Calendar creation does not change processed / important / archived / Stock解除 state and does not create a hard relation to the source item.
+
+### Today / upcoming / Smartphone
+- Polished the existing Today flow, current-day emphasis, focus behavior, and Smartphone Calendar layout.
+- Added a server-derived 14-day upcoming list bounded to eight events, with three items shown initially and `もっと見る` / `閉じる` controls.
+- Corrected Calendar modal focus handling so a focused descendant is blurred before Bootstrap hides the modal and focus is restored only after it is fully hidden.
+- Reduced month-switch layout shift by temporarily holding the current Calendar grid height while asynchronous redraw completes.
+
+### Database / Security
+- Added `018_v1_25_calendar_event_time_url.sql` for all-day/time/URL columns and `019_v1_25_calendar_recurrence.sql` for recurrence columns; existing V1.24 installations apply them in numeric order after backup.
+- Integrated Migrations 018/019 into the fresh-install schema together with the existing integrated 013/017 state.
+- Calendar recurrence/upcoming operations remain authenticated POST + CSRF + request-size limited, fixed-action allowlisted, and owner-scoped.
+- Calendar URLs are stored/validated only; no new SSRF fetch path, external Calendar credential, reminder scheduler, or required secret was added.
+
+### Release verification
+- Promoted V1.25 B-F/R3 Calendar contracts into the current CI/release feature suite.
+- Finalized `APP_VERSION`, visible label, `APP_ASSET_REVISION`, and all V1.25 staged Calendar asset keys to `1.25.0`.
+- Formal release uses the generic full regression, compatibility, security, version/dependency hygiene, deterministic package, clean-room, and secret-scan gates before tag publication.
+
 ## 1.24.0 - 2026-08-27
 
 ### Memo
