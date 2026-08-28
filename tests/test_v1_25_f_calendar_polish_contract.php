@@ -18,10 +18,10 @@ foreach ([$upcoming, $api, $ui, $css, $loader, $version] as $source) {
 }
 
 $checks = [
-    'formal APP_VERSION stays V1.24.0' => str_contains($version, "const APP_VERSION = '1.24.0';"),
-    'asset revision is F R3 staged key' => str_contains($version, "const APP_ASSET_REVISION = '1.25-f3';"),
-    'F CSS is staged by Calendar loader' => str_contains($loader, "calendar-polish.css?v=1.25-f2"),
-    'F JS is staged by Calendar loader' => str_contains($loader, "calendar-polish.js?v=1.25-f2"),
+    'formal APP_VERSION is V1.25.0' => str_contains($version, "const APP_VERSION = '1.25.0';"),
+    'formal asset revision is V1.25.0' => str_contains($version, "const APP_ASSET_REVISION = '1.25.0';"),
+    'F CSS uses release cache key' => str_contains($loader, "calendar-polish.css?v=1.25.0"),
+    'F JS uses release cache key' => str_contains($loader, "calendar-polish.js?v=1.25.0"),
     'upcoming window is fixed to 14 days' => str_contains($upcoming, 'CALENDAR_UPCOMING_DAYS = 14'),
     'upcoming result is bounded to 8 events' => str_contains($upcoming, 'CALENDAR_UPCOMING_LIMIT = 8')
         && str_contains($upcoming, 'array_slice($events, 0, CALENDAR_UPCOMING_LIMIT)'),
@@ -77,8 +77,8 @@ $checks = [
         && str_contains($css, '.calendar-day'),
 ];
 
-$sourcePos = strpos($loader, "loadScript('./js/calendar-source-actions.js?v=1.25-e1');");
-$polishPos = strpos($loader, "loadScript('./js/calendar-polish.js?v=1.25-f2');");
+$sourcePos = strpos($loader, "loadScript('./js/calendar-source-actions.js?v=1.25.0');");
+$polishPos = strpos($loader, "loadScript('./js/calendar-polish.js?v=1.25.0');");
 $checks['F polish loads after E source actions'] = is_int($sourcePos) && is_int($polishPos) && $sourcePos < $polishPos;
 
 $failed = [];
