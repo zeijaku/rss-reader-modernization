@@ -41,7 +41,7 @@
     // V1.25-D: recurring-event controls and compact recurrence marker.
     loadStyle('./css/calendar-recurrence.css?v=1.25-d1', 'data-calendar-recurrence-style');
     // V1.25-F: Today / upcoming / modal focus / Smartphone polish.
-    loadStyle('./css/calendar-polish.css?v=1.25-f1', 'data-calendar-polish-style');
+    loadStyle('./css/calendar-polish.css?v=1.25-f2', 'data-calendar-polish-style');
     loadStyle('./css/block-collapse.css?v=1.24.0', 'data-block-collapse-style');
     // V1.24: Stock state filters/bulk UI now use the formal release revision.
     loadStyle('./css/stock-state-ui.css?v=1.24.0', 'data-stock-state-ui-style');
@@ -80,7 +80,7 @@
     // V1.25-E: RSS / Stock article actions pre-fill the existing Calendar form.
     loadScript('./js/calendar-source-actions.js?v=1.25-e1');
     // V1.25-F: polish Today navigation, upcoming events and Calendar modal focus.
-    loadScript('./js/calendar-polish.js?v=1.25-f1');
+    loadScript('./js/calendar-polish.js?v=1.25-f2');
     // V1.20.1-D: Canvas-only Block Collapse mini game.
     loadScript('./js/block-collapse.js?v=1.24.0');
     // Load the watchdogs before feature startup so they can observe the first
