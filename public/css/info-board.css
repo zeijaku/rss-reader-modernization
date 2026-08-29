@@ -1,4 +1,4 @@
-/* V1.26-D Information Board: static NEWS foundation plus accessible auto-scroll. */
+/* V1.26-D Information Board: fixed title plus right-to-left summary ticker. */
 .info-board-card .feed-card-inner {
     display: flex;
     flex-direction: column;
@@ -16,13 +16,11 @@
     background: var(--bs-body-bg, #fff);
 }
 
+/* Static fallback before the D ticker script binds. */
 .info-board-list {
     max-height: 20rem;
     overflow: auto;
     overscroll-behavior: contain;
-    scroll-behavior: smooth;
-    scroll-snap-type: y proximity;
-    scrollbar-gutter: stable;
 }
 
 .info-board-card[data-widget-height="2"] .info-board-list {
@@ -36,7 +34,6 @@
     align-items: start;
     padding: .7rem .85rem;
     border-bottom: 1px solid var(--bs-border-color, #dee2e6);
-    scroll-snap-align: start;
 }
 
 .info-board-item:last-child {
@@ -110,6 +107,54 @@ a.info-board-item-title:focus {
     padding: .5rem .75rem;
 }
 
+/* D ticker presentation: one NEWS item at a time. */
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-list {
+    max-height: none;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-item {
+    display: none;
+    min-width: 0;
+    overflow: hidden;
+    border-bottom: 0;
+}
+
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-item.is-active {
+    display: grid;
+}
+
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-item-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.info-board-summary-lane {
+    width: 100%;
+    min-width: 0;
+    min-height: 1.5em;
+    margin-top: .3rem;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-item-summary {
+    display: block;
+    width: max-content;
+    max-width: none;
+    margin: 0;
+    white-space: nowrap;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+}
+
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-item-meta,
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-fetch-warning {
+    display: none;
+}
+
 .info-board-motion-toggle {
     min-width: 2.25rem;
     min-height: 2.25rem;
@@ -126,9 +171,16 @@ a.info-board-item-title:focus {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .info-board-list {
-        scroll-behavior: auto;
-        scroll-snap-type: none;
+    .info-board-card[data-info-board-ticker-bound="1"] .info-board-summary-lane {
+        overflow: visible;
+        white-space: normal;
+    }
+
+    .info-board-card[data-info-board-ticker-bound="1"] .info-board-item-summary {
+        width: auto;
+        white-space: normal;
+        transform: none !important;
+        will-change: auto;
     }
 }
 
@@ -151,6 +203,21 @@ a.info-board-item-title:focus {
 
     .info-board-card[data-widget-height="2"] .info-board-list {
         max-height: 36rem;
+    }
+
+    .info-board-card[data-info-board-ticker-bound="1"] .info-board-item {
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: .5rem;
+        padding: .65rem .7rem;
+    }
+
+    .info-board-card[data-info-board-ticker-bound="1"] .info-board-kind {
+        justify-self: auto;
+    }
+
+    .info-board-card[data-info-board-ticker-bound="1"] .info-board-list {
+        max-height: none;
+        touch-action: manipulation;
     }
 
     .info-board-motion-toggle {

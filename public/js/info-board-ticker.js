@@ -1,13 +1,19 @@
-/* V1.26-D: Information Board ticker / auto-scroll behavior. */
+/* V1.26-D: Information Board horizontal summary ticker behavior. */
 (function (window, document) {
     'use strict';
 
     var CARD_SELECTOR = '.info-board-card[data-info-board="1"]';
-    var SPEED_DELAYS = {
-        slow: 6500,
-        normal: 4200,
-        fast: 2500
+    var SPEED_PIXELS = {
+        slow: 70,
+        normal: 105,
+        fast: 150
     };
+    var TITLE_ONLY_DELAYS = {
+        slow: 4200,
+        normal: 3000,
+        fast: 2200
+    };
+    var ITEM_GAP_DELAY = 500;
     var INTERACTION_RESUME_DELAY = 5000;
     var LAYOUT_RECHECK_DELAY = 80;
     var globalObserver = null;
@@ -18,24 +24,53 @@
 
     function normalizeSpeed(value) {
         value = String(value || 'normal');
-        return Object.prototype.hasOwnProperty.call(SPEED_DELAYS, value) ? value : 'normal';
+        return Object.prototype.hasOwnProperty.call(SPEED_PIXELS, value) ? value : 'normal';
     }
 
-    function delayForSpeed(value) {
-        return SPEED_DELAYS[normalizeSpeed(value)];
+    function pixelsForSpeed(value) {
+        return SPEED_PIXELS[normalizeSpeed(value)];
+    }
+
+    function titleOnlyDelay(value) {
+        return TITLE_ONLY_DELAYS[normalizeSpeed(value)];
     }
 
     function reducedMotionPreferred() {
         return !!(reducedMotionQuery && reducedMotionQuery.matches === true);
     }
 
+    function requestFrame(callback) {
+        if (typeof window.requestAnimationFrame === 'function') {
+            return window.requestAnimationFrame(callback);
+        }
+        return window.setTimeout(function () {
+            callback(Date.now());
+        }, 16);
+    }
+
+    function cancelFrame(frameId) {
+        if (frameId === null) {
+            return;
+        }
+        if (typeof window.cancelAnimationFrame === 'function') {
+            window.cancelAnimationFrame(frameId);
+            return;
+        }
+        window.clearTimeout(frameId);
+    }
+
     function stateFor(card) {
         if (!card.__infoBoardTickerState) {
             card.__infoBoardTickerState = {
+                frame: null,
                 timer: null,
                 interactionTimer: null,
                 evaluateTimer: null,
                 index: 0,
+                x: null,
+                lastFrameAt: null,
+                phase: 'idle',
+                needsRestart: true,
                 userPaused: false,
                 hovered: false,
                 focused: false,
@@ -43,10 +78,21 @@
                 list: null,
                 listObserver: null,
                 cardObserver: null,
-                toggle: null
+                toggle: null,
+                activeItem: null,
+                lane: null,
+                summary: null
             };
         }
         return card.__infoBoardTickerState;
+    }
+
+    function clearFrame(state) {
+        if (state.frame !== null) {
+            cancelFrame(state.frame);
+            state.frame = null;
+        }
+        state.lastFrameAt = null;
     }
 
     function clearTimer(state) {
@@ -75,60 +121,6 @@
             return [];
         }
         return Array.prototype.slice.call(list.querySelectorAll('.info-board-item'));
-    }
-
-    function maxScrollTop(list) {
-        return Math.max(0, Number(list.scrollHeight || 0) - Number(list.clientHeight || 0));
-    }
-
-    function isScrollable(list, items) {
-        return !!list && items.length > 1 && maxScrollTop(list) > 6;
-    }
-
-    function itemTargetTop(list, item) {
-        if (!list || !item) {
-            return 0;
-        }
-        var top = 0;
-        if (typeof item.getBoundingClientRect === 'function'
-            && typeof list.getBoundingClientRect === 'function') {
-            var itemRect = item.getBoundingClientRect();
-            var listRect = list.getBoundingClientRect();
-            top = Number(list.scrollTop || 0) + Number(itemRect.top || 0) - Number(listRect.top || 0);
-        } else {
-            top = Number(item.offsetTop || 0) - Number(list.offsetTop || 0);
-        }
-        return Math.max(0, Math.min(maxScrollTop(list), top));
-    }
-
-    function closestItemIndex(list, items) {
-        if (!list || !items || items.length === 0) {
-            return 0;
-        }
-        var currentTop = Number(list.scrollTop || 0);
-        var bestIndex = 0;
-        var bestDistance = Infinity;
-        for (var i = 0; i < items.length; i++) {
-            var distance = Math.abs(itemTargetTop(list, items[i]) - currentTop);
-            if (distance < bestDistance) {
-                bestDistance = distance;
-                bestIndex = i;
-            }
-        }
-        return bestIndex;
-    }
-
-    function scrollListTo(list, top) {
-        top = Math.max(0, Math.min(maxScrollTop(list), Number(top || 0)));
-        if (typeof list.scrollTo === 'function') {
-            list.scrollTo({
-                top: top,
-                left: 0,
-                behavior: reducedMotionPreferred() ? 'auto' : 'smooth'
-            });
-            return;
-        }
-        list.scrollTop = top;
     }
 
     function currentSpeed(card) {
@@ -174,9 +166,6 @@
                 return;
             }
             activeState.userPaused = !activeState.userPaused;
-            if (!activeState.userPaused) {
-                activeState.index = closestItemIndex(activeState.list, itemsFor(activeState.list));
-            }
             evaluateCard(card);
         });
 
@@ -196,37 +185,37 @@
 
         if (mode === 'loading') {
             button.disabled = true;
-            button.setAttribute('aria-label', 'Information Boardの自動送りは準備中です');
-            button.setAttribute('title', '自動送り準備中');
+            button.setAttribute('aria-label', 'Information BoardのTickerは準備中です');
+            button.setAttribute('title', 'Ticker準備中');
             if (icon) { icon.className = 'fas fa-hourglass-half'; }
             return;
         }
 
         if (mode === 'static') {
             button.disabled = true;
-            button.setAttribute('aria-label', 'Information Boardはすべて表示されているため自動送りは不要です');
-            button.setAttribute('title', '自動送り不要');
+            button.setAttribute('aria-label', 'Information Boardに自動送りする内容がありません');
+            button.setAttribute('title', 'Ticker停止');
             if (icon) { icon.className = 'fas fa-minus'; }
             return;
         }
 
         if (mode === 'reduced') {
             button.disabled = true;
-            button.setAttribute('aria-label', '端末の視差効果設定によりInformation Boardの自動送りを停止しています');
-            button.setAttribute('title', '視差効果を減らす設定により自動送り停止中');
+            button.setAttribute('aria-label', '端末の視差効果設定によりInformation BoardのTickerを停止しています');
+            button.setAttribute('title', '視差効果を減らす設定によりTicker停止中');
             if (icon) { icon.className = 'fas fa-universal-access'; }
             return;
         }
 
         if (state.userPaused) {
-            button.setAttribute('aria-label', 'Information Boardの自動送りを再開');
-            button.setAttribute('title', '自動送りを再開');
+            button.setAttribute('aria-label', 'Information BoardのTickerを再開');
+            button.setAttribute('title', 'Tickerを再開');
             if (icon) { icon.className = 'fas fa-play'; }
             return;
         }
 
-        button.setAttribute('aria-label', 'Information Boardの自動送りを一時停止');
-        button.setAttribute('title', mode === 'interaction' ? '操作中のため一時停止中' : '自動送りを一時停止');
+        button.setAttribute('aria-label', 'Information BoardのTickerを一時停止');
+        button.setAttribute('title', mode === 'interaction' ? '操作中のためTicker一時停止中' : 'Tickerを一時停止');
         if (icon) { icon.className = 'fas fa-pause'; }
     }
 
@@ -243,31 +232,183 @@
         updateToggle(card, state, mode);
     }
 
-    function scheduleNext(card, state) {
-        clearTimer(state);
-        state.timer = window.setTimeout(function () {
-            state.timer = null;
-            advanceCard(card);
-        }, delayForSpeed(currentSpeed(card)));
+    function ensureSummaryLane(item) {
+        if (!item) {
+            return null;
+        }
+        var summary = item.querySelector('.info-board-item-summary');
+        if (!summary) {
+            return null;
+        }
+        var parent = summary.parentElement;
+        if (parent && parent.classList && parent.classList.contains('info-board-summary-lane')) {
+            return parent;
+        }
+
+        var lane = document.createElement('div');
+        lane.className = 'info-board-summary-lane';
+        lane.setAttribute('aria-label', '概要');
+        summary.parentNode.insertBefore(lane, summary);
+        lane.appendChild(summary);
+        return lane;
     }
 
-    function advanceCard(card) {
-        var state = stateFor(card);
-        var list = state.list || card.querySelector('.info-board-list');
+    function prepareSummaryLanes(list) {
         var items = itemsFor(list);
+        for (var i = 0; i < items.length; i++) {
+            ensureSummaryLane(items[i]);
+        }
+    }
 
-        if (!isScrollable(list, items)
+    function activateItem(state, items, index) {
+        if (!items.length) {
+            state.activeItem = null;
+            state.lane = null;
+            state.summary = null;
+            return null;
+        }
+
+        index = Math.max(0, Math.min(items.length - 1, Number(index || 0)));
+        state.index = index;
+        for (var i = 0; i < items.length; i++) {
+            var active = i === index;
+            items[i].classList.toggle('is-active', active);
+            items[i].setAttribute('aria-hidden', active ? 'false' : 'true');
+        }
+
+        state.activeItem = items[index];
+        state.lane = ensureSummaryLane(state.activeItem);
+        state.summary = state.lane ? state.lane.querySelector('.info-board-item-summary') : null;
+        return state.activeItem;
+    }
+
+    function resetSummaryPosition(state) {
+        if (!state.lane || !state.summary) {
+            state.x = null;
+            return false;
+        }
+
+        var laneWidth = Math.max(0, Number(state.lane.clientWidth || 0));
+        if (laneWidth <= 0) {
+            return false;
+        }
+        state.x = laneWidth;
+        state.summary.style.transform = 'translate3d(' + state.x + 'px, 0, 0)';
+        return true;
+    }
+
+    function finishCurrentItem(card, state) {
+        clearFrame(state);
+        clearTimer(state);
+        state.phase = 'gap';
+        state.timer = window.setTimeout(function () {
+            state.timer = null;
+            advanceItem(card);
+        }, ITEM_GAP_DELAY);
+    }
+
+    function runFrame(card, state, timestamp) {
+        state.frame = null;
+
+        if (String(card.getAttribute('data-info-board-state') || '') !== 'ready'
             || reducedMotionPreferred()
             || motionBlocked(state)
-            || String(card.getAttribute('data-info-board-state') || '') !== 'ready') {
+            || state.phase !== 'running'
+            || !state.summary
+            || !state.lane) {
             evaluateCard(card);
             return;
         }
 
-        var nextIndex = (Number(state.index || 0) + 1) % items.length;
-        state.index = nextIndex;
-        scrollListTo(list, nextIndex === 0 ? 0 : itemTargetTop(list, items[nextIndex]));
-        scheduleNext(card, state);
+        if (state.lastFrameAt === null) {
+            state.lastFrameAt = Number(timestamp || Date.now());
+        } else {
+            var now = Number(timestamp || Date.now());
+            var elapsed = Math.max(0, Math.min(100, now - state.lastFrameAt));
+            state.lastFrameAt = now;
+            state.x -= pixelsForSpeed(currentSpeed(card)) * (elapsed / 1000);
+        }
+
+        var endX = -Math.max(1, Number(state.summary.scrollWidth || state.summary.offsetWidth || 1));
+        if (state.x <= endX) {
+            state.x = endX;
+            state.summary.style.transform = 'translate3d(' + state.x + 'px, 0, 0)';
+            finishCurrentItem(card, state);
+            return;
+        }
+
+        state.summary.style.transform = 'translate3d(' + state.x + 'px, 0, 0)';
+        state.frame = requestFrame(function (nextTimestamp) {
+            runFrame(card, state, nextTimestamp);
+        });
+    }
+
+    function startCurrentItem(card, state, restart) {
+        var items = itemsFor(state.list);
+        if (!items.length) {
+            return false;
+        }
+
+        if (restart || !state.activeItem || items.indexOf(state.activeItem) === -1) {
+            activateItem(state, items, state.index);
+            state.phase = 'idle';
+            state.x = null;
+        }
+
+        if (reducedMotionPreferred()) {
+            if (state.summary) {
+                state.summary.style.transform = 'none';
+            }
+            state.phase = 'reduced';
+            return true;
+        }
+
+        if (!state.summary || !state.lane) {
+            if (items.length <= 1) {
+                state.phase = 'static';
+                return false;
+            }
+            state.phase = 'title-only';
+            clearTimer(state);
+            state.timer = window.setTimeout(function () {
+                state.timer = null;
+                advanceItem(card);
+            }, titleOnlyDelay(currentSpeed(card)));
+            return true;
+        }
+
+        if (state.phase !== 'running') {
+            if (!resetSummaryPosition(state)) {
+                state.needsRestart = true;
+                queueEvaluate(card, LAYOUT_RECHECK_DELAY);
+                return true;
+            }
+            state.phase = 'running';
+        }
+
+        clearFrame(state);
+        state.frame = requestFrame(function (timestamp) {
+            runFrame(card, state, timestamp);
+        });
+        return true;
+    }
+
+    function advanceItem(card) {
+        var state = stateFor(card);
+        var items = itemsFor(state.list);
+        if (!items.length) {
+            evaluateCard(card);
+            return;
+        }
+
+        state.index = (Number(state.index || 0) + 1) % items.length;
+        state.activeItem = null;
+        state.lane = null;
+        state.summary = null;
+        state.x = null;
+        state.phase = 'idle';
+        state.needsRestart = true;
+        evaluateCard(card);
     }
 
     function evaluateCard(card) {
@@ -276,7 +417,6 @@
         }
 
         var state = stateFor(card);
-        clearTimer(state);
         bindList(card, state);
 
         var list = state.list;
@@ -286,31 +426,60 @@
         card.setAttribute('data-info-board-speed', speed);
 
         if (boardState !== 'ready' || !list) {
+            clearFrame(state);
+            clearTimer(state);
             setMotionMode(card, state, 'loading');
             return;
         }
 
-        if (!isScrollable(list, items)) {
-            state.index = 0;
+        if (!items.length) {
+            clearFrame(state);
+            clearTimer(state);
             setMotionMode(card, state, 'static');
             return;
         }
 
+        if (state.index >= items.length) {
+            state.index = 0;
+            state.needsRestart = true;
+        }
+
+        if (state.needsRestart || !state.activeItem || items.indexOf(state.activeItem) === -1) {
+            clearFrame(state);
+            clearTimer(state);
+            activateItem(state, items, state.index);
+            state.phase = 'idle';
+            state.x = null;
+            state.needsRestart = false;
+        }
+
         if (reducedMotionPreferred()) {
-            state.index = closestItemIndex(list, items);
+            clearFrame(state);
+            clearTimer(state);
+            if (state.summary) {
+                state.summary.style.transform = 'none';
+            }
+            state.phase = 'reduced';
             setMotionMode(card, state, 'reduced');
             return;
         }
 
         if (motionBlocked(state)) {
-            state.index = closestItemIndex(list, items);
+            clearFrame(state);
+            clearTimer(state);
             setMotionMode(card, state, state.userPaused ? 'paused' : 'interaction');
             return;
         }
 
-        state.index = closestItemIndex(list, items);
+        if (!state.summary && items.length <= 1) {
+            clearFrame(state);
+            clearTimer(state);
+            setMotionMode(card, state, 'static');
+            return;
+        }
+
         setMotionMode(card, state, 'running');
-        scheduleNext(card, state);
+        startCurrentItem(card, state, false);
     }
 
     function queueEvaluate(card, delay) {
@@ -328,7 +497,6 @@
             Number(state.interactionUntil || 0),
             Date.now() + Math.max(0, Number(delay || INTERACTION_RESUME_DELAY))
         );
-        state.index = closestItemIndex(state.list, itemsFor(state.list));
         clearInteractionTimer(state);
         state.interactionTimer = window.setTimeout(function () {
             state.interactionTimer = null;
@@ -349,8 +517,16 @@
             state.listObserver = null;
         }
 
+        clearFrame(state);
+        clearTimer(state);
         state.list = list;
         state.index = 0;
+        state.activeItem = null;
+        state.lane = null;
+        state.summary = null;
+        state.x = null;
+        state.phase = 'idle';
+        state.needsRestart = true;
         if (!list) {
             return;
         }
@@ -367,8 +543,20 @@
             pauseForInteraction(card, INTERACTION_RESUME_DELAY);
         }, {passive: true});
 
+        prepareSummaryLanes(list);
+
         if (typeof MutationObserver === 'function') {
             state.listObserver = new MutationObserver(function () {
+                state.listObserver.disconnect();
+                prepareSummaryLanes(list);
+                state.listObserver.observe(list, {childList: true, subtree: true});
+                state.index = 0;
+                state.activeItem = null;
+                state.lane = null;
+                state.summary = null;
+                state.x = null;
+                state.phase = 'idle';
+                state.needsRestart = true;
                 queueEvaluate(card, LAYOUT_RECHECK_DELAY);
             });
             state.listObserver.observe(list, {childList: true, subtree: true});
@@ -411,6 +599,7 @@
 
             if (typeof MutationObserver === 'function') {
                 state.cardObserver = new MutationObserver(function () {
+                    state.needsRestart = true;
                     queueEvaluate(card, LAYOUT_RECHECK_DELAY);
                 });
                 state.cardObserver.observe(card, {
@@ -432,16 +621,19 @@
         }
     }
 
-    function evaluateAllCards() {
+    function evaluateAllCards(restart) {
         var cards = document.querySelectorAll(CARD_SELECTOR);
         for (var i = 0; i < cards.length; i++) {
+            if (restart === true) {
+                stateFor(cards[i]).needsRestart = true;
+            }
             evaluateCard(cards[i]);
         }
     }
 
     function updateModalCopy() {
         var registerIntro = document.querySelector('#registerInfoBoard .modal-body > p.small.text-muted');
-        var introText = 'RSSのNEWSをInformation Board形式で自動送り表示します。記事本文の追加取得は行いません。';
+        var introText = 'RSSのNEWSを、タイトルを固定し概要だけ右から左へ流すInformation Board形式で表示します。記事本文の追加取得は行いません。';
         if (registerIntro && registerIntro.textContent !== introText) {
             registerIntro.textContent = introText;
         }
@@ -450,7 +642,7 @@
             var select = document.querySelector('.' + prefix + 'InfoBoardSpeed');
             var parent = select ? select.parentElement : null;
             var help = parent ? parent.querySelector('.form-text') : null;
-            var helpText = '自動送りの切り替え間隔を slow / normal / fast から指定します。';
+            var helpText = '概要の横スクロール速度を slow / normal / fast から指定します。';
             if (help && help.textContent !== helpText) {
                 help.textContent = helpText;
             }
@@ -459,7 +651,7 @@
 
     function bindGlobalEvents() {
         document.addEventListener('visibilitychange', function () {
-            evaluateAllCards();
+            evaluateAllCards(false);
         });
 
         window.addEventListener('resize', function () {
@@ -468,17 +660,17 @@
             }
             resizeTimer = window.setTimeout(function () {
                 resizeTimer = null;
-                evaluateAllCards();
+                evaluateAllCards(true);
             }, 120);
         });
 
         window.addEventListener('load', function () {
-            evaluateAllCards();
+            evaluateAllCards(true);
         });
 
         if (reducedMotionQuery) {
             var listener = function () {
-                evaluateAllCards();
+                evaluateAllCards(true);
             };
             if (typeof reducedMotionQuery.addEventListener === 'function') {
                 reducedMotionQuery.addEventListener('change', listener);
@@ -513,11 +705,13 @@
 
     window.RssInfoBoardTicker = {
         normalizeSpeed: normalizeSpeed,
-        delayForSpeed: delayForSpeed,
+        pixelsForSpeed: pixelsForSpeed,
+        titleOnlyDelay: titleOnlyDelay,
         reducedMotionPreferred: reducedMotionPreferred,
         prepareAllCards: prepareAllCards,
         evaluateAllCards: evaluateAllCards,
-        interactionResumeDelay: INTERACTION_RESUME_DELAY
+        interactionResumeDelay: INTERACTION_RESUME_DELAY,
+        itemGapDelay: ITEM_GAP_DELAY
     };
 
     if (document.readyState === 'loading') {
