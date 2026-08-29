@@ -136,6 +136,150 @@
     }
 }(typeof window !== 'undefined' ? window : null));
 
+/* V1.26-D: do not let the aggregate Information Board RSS request compete
+ * with the Dashboard's normal RSS / remote-widget startup requests. */
+(function (root) {
+    'use strict';
+
+    if (!root || !root.jQuery || root.RssInfoBoardAjaxGate) {
+        return;
+    }
+
+    var $ = root.jQuery;
+    var originalAjax = $.ajax;
+    var queue = [];
+    var running = false;
+    var pollTimer = null;
+    var idleChecks = 0;
+    var POLL_MS = 250;
+    var IDLE_CHECKS_REQUIRED = 2;
+
+    if (typeof originalAjax !== 'function' || typeof $.Deferred !== 'function') {
+        return;
+    }
+
+    function isInfoBoardFetch(options) {
+        return !!(
+            options
+            && options.data
+            && String(options.data.action || '') === 'widget.infoboard.fetch'
+        );
+    }
+
+    function canStart(activeRequests, stableIdleChecks) {
+        var active = Number(activeRequests);
+        if (!Number.isFinite(active) || active < 0) {
+            active = 0;
+        }
+        return active === 0 && Number(stableIdleChecks) >= IDLE_CHECKS_REQUIRED;
+    }
+
+    function schedulePoll() {
+        if (pollTimer !== null || running || queue.length === 0) {
+            return;
+        }
+        pollTimer = root.setTimeout(poll, POLL_MS);
+    }
+
+    function runNext() {
+        var item;
+        var xhr;
+        if (running || queue.length === 0) {
+            return;
+        }
+
+        item = queue.shift();
+        if (!item || item.aborted) {
+            schedulePoll();
+            return;
+        }
+
+        running = true;
+        xhr = originalAjax.call($, item.options);
+        item.realXhr = xhr;
+
+        xhr.done(function () {
+            item.deferred.resolveWith(this, arguments);
+        }).fail(function () {
+            item.deferred.rejectWith(this, arguments);
+        }).always(function () {
+            running = false;
+            item.realXhr = null;
+            schedulePoll();
+        });
+    }
+
+    function poll() {
+        var activeRequests;
+        pollTimer = null;
+        if (running || queue.length === 0) {
+            return;
+        }
+
+        activeRequests = Number($.active || 0);
+        if (activeRequests === 0) {
+            idleChecks++;
+        } else {
+            idleChecks = 0;
+        }
+
+        if (!canStart(activeRequests, idleChecks)) {
+            schedulePoll();
+            return;
+        }
+
+        idleChecks = 0;
+        runNext();
+    }
+
+    $.ajax = function (options) {
+        var deferred;
+        var item;
+        var proxy;
+
+        if (!isInfoBoardFetch(options)) {
+            return originalAjax.apply(this, arguments);
+        }
+
+        deferred = $.Deferred();
+        item = {
+            options: options,
+            deferred: deferred,
+            realXhr: null,
+            aborted: false
+        };
+        proxy = deferred.promise();
+        proxy.abort = function (statusText) {
+            var index;
+            var reason = statusText || 'abort';
+            if (item.realXhr && typeof item.realXhr.abort === 'function') {
+                item.realXhr.abort(reason);
+                return proxy;
+            }
+
+            index = queue.indexOf(item);
+            if (index >= 0) {
+                queue.splice(index, 1);
+            }
+            item.aborted = true;
+            deferred.rejectWith(options && options.context ? options.context : options, [proxy, reason, reason]);
+            return proxy;
+        };
+
+        queue.push(item);
+        schedulePoll();
+        return proxy;
+    };
+
+    root.RssInfoBoardAjaxGate = {
+        isInfoBoardFetch: isInfoBoardFetch,
+        canStart: canStart,
+        pendingCount: function () {
+            return queue.length + (running ? 1 : 0);
+        }
+    };
+}(typeof window !== 'undefined' ? window : null));
+
 /* V1.26-D phased Dashboard bootstrap: keep the Information Board presentation,
  * ticker, and navigation isolated from the legacy-sized dashboard.js surface. */
 (function (root, document) {

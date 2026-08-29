@@ -79,4 +79,9 @@ python3 "$SCRIPT_DIR/test_v1_26_d_info_board_navigation.py"
 node "$SCRIPT_DIR/test_v1_26_d_info_board_navigation.js"
 node --check "$ROOT/public/js/info-board-navigation.js"
 
+echo '== Current feature contracts: V1.26 Information Board startup gate =='
+python3 "$SCRIPT_DIR/test_v1_26_d_info_board_load_gate.py"
+node "$SCRIPT_DIR/test_v1_26_d_info_board_load_gate.js"
+node --check "$ROOT/public/js/memo-counter.js"
+
 echo 'PASS: current feature contract suite completed'
