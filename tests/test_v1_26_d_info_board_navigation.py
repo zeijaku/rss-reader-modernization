@@ -54,12 +54,22 @@ check("info-board-navigation.js' + assetQuery" in loader,
       'dashboard bootstrap loads the new Information Board navigation asset')
 check("data-info-board-v126d-navigation-script" in loader,
       'navigation asset is injected only once')
-check("summaryWrap.hidden = true" in nav,
-      'obsolete 100/200/300 summary-length selector is hidden while stored config stays compatible')
+check("summaryWrap.hidden !== true" in nav and "summaryWrap.hidden = true" in nav,
+      'obsolete summary-length selector is hidden without repeating the same DOM write')
+check("function setTextIfChanged" in nav and "String(node.textContent || '') === value" in nav,
+      'footer text writes are idempotent and skipped when content is unchanged')
+check("setTextIfChanged(meta, label)" in nav and "setTextIfChanged(meta, '')" in nav,
+      'footer metadata never rewrites identical text on each observer pass')
+check("function dashboardMutationNeedsRefresh" in nav and "mutationIsInsideFooter" in nav,
+      'dashboard observer can identify self-generated footer mutations')
+check("if (!dashboardMutationNeedsRefresh(records))" in nav,
+      'global observer ignores footer-only child mutations before re-preparing cards')
 check('node --check "$ROOT/public/js/info-board-navigation.js"' in runner,
       'active current-feature runner syntax-checks navigation JavaScript')
 check('test_v1_26_d_info_board_navigation.py' in runner,
-      'active current-feature runner executes the navigation/footer contract')
+      'active current-feature runner executes the navigation/footer static contract')
+check('test_v1_26_d_info_board_navigation.js' in runner,
+      'active current-feature runner executes the observer-loop runtime helper test')
 check('fetch(' not in nav and 'XMLHttpRequest' not in nav and '$.ajax' not in nav,
       'navigation/footer adds no network or article scraping path')
 check('localStorage' not in nav and 'sessionStorage' not in nav,
