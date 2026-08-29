@@ -26,8 +26,8 @@ check("xhr.done(function ()" in loader and ".fail(function ()" in loader and ".a
       'queued request preserves the existing jqXHR done/fail/always contract')
 check("proxy.abort = function" in loader,
       'queued Information Board request remains abortable')
-check("APP_ASSET_REVISION = '1.26.0-dev-d-gatefix1'" in version,
-      'new gate is forced past immutable browser asset cache')
+check("APP_ASSET_REVISION = '1.25.0'" in version,
+      'global asset revision remains at the formal V1.25 baseline during V1.26 development')
 check("APP_VERSION = '1.25.0'" in version,
       'formal app version remains unchanged during V1.26 development')
 check('test_v1_26_d_info_board_load_gate.py' in runner,
