@@ -136,8 +136,8 @@
     }
 }(typeof window !== 'undefined' ? window : null));
 
-/* V1.26-D phased Dashboard bootstrap: keep the Information Board presentation
- * and ticker isolated from the legacy-sized dashboard.js surface. */
+/* V1.26-D phased Dashboard bootstrap: keep the Information Board presentation,
+ * ticker, and navigation isolated from the legacy-sized dashboard.js surface. */
 (function (root, document) {
     'use strict';
 
@@ -166,5 +166,13 @@
         tickerScript.async = false;
         tickerScript.setAttribute('data-info-board-v126d-script', 'true');
         document.head.appendChild(tickerScript);
+    }
+
+    if (!document.querySelector('script[data-info-board-v126d-navigation-script]')) {
+        var navigationScript = document.createElement('script');
+        navigationScript.src = './js/info-board-navigation.js' + assetQuery;
+        navigationScript.async = false;
+        navigationScript.setAttribute('data-info-board-v126d-navigation-script', 'true');
+        document.head.appendChild(navigationScript);
     }
 }(typeof window !== 'undefined' ? window : null, typeof document !== 'undefined' ? document : null));
