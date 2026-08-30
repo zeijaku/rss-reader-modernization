@@ -49,5 +49,17 @@ function app_asset_url(string $path): string
         $revision = APP_VERSION;
     }
 
-    return './' . $path . '?v=' . rawurlencode($revision);
+    $url = './' . $path . '?v=' . rawurlencode($revision);
+
+    // V1.26-D: Information Board assets are staged through memo-counter.js.
+    // Give only that bootstrap chain its own cache key while APP_VERSION and
+    // the rest of the immutable Dashboard assets remain on the formal release.
+    if ($path === 'js/memo-counter.js' && defined('INFO_BOARD_ASSET_REVISION')) {
+        $infoBoardRevision = trim((string) INFO_BOARD_ASSET_REVISION);
+        if ($infoBoardRevision !== '') {
+            $url .= '&ib=' . rawurlencode($infoBoardRevision);
+        }
+    }
+
+    return $url;
 }
