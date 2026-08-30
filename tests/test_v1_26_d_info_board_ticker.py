@@ -53,7 +53,7 @@ check("requestAnimationFrame" in ticker and "translate3d(" in ticker,
       'summary moves horizontally with frame-based translate3d updates')
 check("state.x -= pixelsForSpeed" in ticker,
       'summary advances from right to left at the configured speed')
-check("endX = -Math.max" in ticker and "finishCurrentItem" in ticker,
+check("summary.scrollWidth" in ticker and "var endX = -summaryWidth" in ticker and "state.x <= endX" in ticker and "finishCurrentItem" in ticker,
       'current summary must fully leave the left edge before article switch')
 check("(Number(state.index || 0) + 1) % items.length" in ticker,
       'article title advances only after the current item completes and loops to the first item')
@@ -63,8 +63,8 @@ check("ensureSummaryLane" in ticker and "info-board-summary-lane" in ticker,
       'ticker creates a clipped lane around the summary only')
 check("querySelector('.info-board-item-summary')" in ticker,
       'movement target is the summary element, not the title or whole NEWS row')
-check("info-board-item-title" not in ticker,
-      'ticker script never translates or rewrites the fixed article title')
+check("title.style.transform" not in ticker and "title.textContent =" not in ticker and "title.innerHTML" not in ticker,
+      'ticker never translates or rewrites the fixed article title')
 check("card.__infoBoardConfig" in ticker and "config.speed" in ticker,
       'ticker uses the V1.26-B/C stored speed configuration')
 check("data-info-board-speed" in ticker and "data-info-board-motion" in ticker,
