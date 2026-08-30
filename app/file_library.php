@@ -81,6 +81,16 @@ function user_file_library_is_inline_image(array $row): bool
     return user_file_allowed_types()[$extension]['image'] === true;
 }
 
+function user_file_library_is_inline_pdf(array $row): bool
+{
+    if (!user_file_library_row_type_is_valid($row)) {
+        return false;
+    }
+
+    return strtolower((string) ($row['file_extension'] ?? '')) === 'pdf'
+        && strtolower((string) ($row['file_mime_type'] ?? '')) === 'application/pdf';
+}
+
 function user_file_library_storage_directory(): ?string
 {
     $configured = (string) APP_FILE_UPLOAD_DIR;

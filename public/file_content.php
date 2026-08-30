@@ -30,7 +30,9 @@ if ($userId === null) {
 }
 
 $fileId = app_validate_positive_int($_GET['id'] ?? null);
-$mode = app_validate_enum($_GET['mode'] ?? 'download', ['view', 'thumb', 'download']);
+$contentModes = ['view', 'thumb', 'download'];
+$contentModes[] = 'preview';
+$mode = app_validate_enum($_GET['mode'] ?? 'download', $contentModes);
 if ($fileId === null || $mode === null) {
     file_content_error(404, 'File not found.');
 }
@@ -47,6 +49,12 @@ try {
     if ($inline && !user_file_library_is_inline_image($row)) {
         file_content_error(404, 'File not found.');
     }
+
+    $pdfPreview = $mode === 'preview';
+    if ($pdfPreview && !user_file_library_is_inline_pdf($row)) {
+        file_content_error(404, 'File not found.');
+    }
+    $inline = $inline || $pdfPreview;
 
     $path = user_file_library_resolve_path($row);
     if ($path === null || !user_file_library_content_is_intact($row, $path)) {

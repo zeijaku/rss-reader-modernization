@@ -191,6 +191,124 @@
         }
     }
 
+    function bindPdfViewer() {
+        var cards = document.querySelectorAll('.file-library-card');
+        var triggers = [];
+        var inlineViewerAvailable = typeof navigator.pdfViewerEnabled !== 'boolean' || navigator.pdfViewerEnabled;
+        var modalElement;
+        var modal;
+        var title;
+        var loading;
+        var error;
+        var frame;
+        var openLink;
+        var downloadLink;
+        var i;
+
+        for (i = 0; i < cards.length; i++) {
+            var card = cards[i];
+            var pdfIcon = card.querySelector('.file-library-preview-icon.fa-file-pdf');
+            var actions = card.querySelector('.file-library-actions');
+            var download = actions ? actions.querySelector('a[href*="mode=download"]') : null;
+            var nameElement = card.querySelector('.file-library-name');
+            var fileName = nameElement ? nameElement.textContent.trim() : 'PDF';
+            var fileId = download ? fileIdFromHref(download.getAttribute('href') || '') : '';
+            var trigger;
+            if (!pdfIcon || !actions || !download || !/^[1-9]\d*$/.test(fileId)) { continue; }
+
+            trigger = document.createElement('a');
+            trigger.className = 'btn btn-sm btn-outline-secondary file-library-pdf-viewer-trigger';
+            trigger.setAttribute('href', './file_content.php?id=' + encodeURIComponent(fileId) + '&mode=preview');
+            trigger.setAttribute('target', '_blank');
+            trigger.setAttribute('rel', 'noopener');
+            trigger.setAttribute('data-file-id', fileId);
+            trigger.setAttribute('data-file-name', fileName);
+            trigger.setAttribute('aria-label', fileName + 'を表示');
+            trigger.setAttribute('title', '表示');
+            trigger.innerHTML = '<i class="fas fa-eye" aria-hidden="true"></i><span class="visually-hidden">表示</span>';
+            actions.insertBefore(trigger, download);
+            actions.classList.remove('file-library-actions-two', 'file-library-actions-detail-three', 'file-library-actions-detail-four');
+            actions.classList.add('file-library-actions-detail-three');
+            triggers.push(trigger);
+        }
+
+        if (triggers.length === 0 || !inlineViewerAvailable || !window.bootstrap || !window.bootstrap.Modal) {
+            return;
+        }
+
+        modalElement = document.getElementById('fileLibraryPdfModal');
+        if (!modalElement) {
+            modalElement = document.createElement('div');
+            modalElement.className = 'modal fade file-library-pdf-modal';
+            modalElement.id = 'fileLibraryPdfModal';
+            modalElement.tabIndex = -1;
+            modalElement.setAttribute('aria-labelledby', 'fileLibraryPdfModalTitle');
+            modalElement.setAttribute('aria-hidden', 'true');
+            modalElement.innerHTML = '<div class="modal-dialog modal-xl modal-dialog-centered"><div class="modal-content">'
+                + '<div class="modal-header"><h2 class="modal-title fs-6 text-truncate" id="fileLibraryPdfModalTitle">PDF表示</h2>'
+                + '<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>'
+                + '<div class="modal-body file-library-pdf-body"><div class="file-library-pdf-stage">'
+                + '<div class="file-library-pdf-loading" id="fileLibraryPdfLoading" role="status"><span class="spinner-border" aria-hidden="true"></span><span class="visually-hidden">PDFを読み込んでいます</span></div>'
+                + '<iframe class="file-library-pdf-frame" id="fileLibraryPdfFrame" title="PDFプレビュー" referrerpolicy="no-referrer" hidden></iframe>'
+                + '<div class="alert alert-warning mb-0" id="fileLibraryPdfError" role="status" hidden>PDFを表示できませんでした。別タブ表示またはダウンロードを使用してください。</div>'
+                + '</div></div>'
+                + '<div class="modal-footer file-library-pdf-footer"><a class="btn btn-sm btn-outline-secondary" id="fileLibraryPdfOpen" target="_blank" rel="noopener">別タブで開く</a>'
+                + '<a class="btn btn-sm btn-outline-primary" id="fileLibraryPdfDownload">ダウンロード</a></div>'
+                + '</div></div>';
+            document.body.appendChild(modalElement);
+        }
+
+        title = document.getElementById('fileLibraryPdfModalTitle');
+        loading = document.getElementById('fileLibraryPdfLoading');
+        error = document.getElementById('fileLibraryPdfError');
+        frame = document.getElementById('fileLibraryPdfFrame');
+        openLink = document.getElementById('fileLibraryPdfOpen');
+        downloadLink = document.getElementById('fileLibraryPdfDownload');
+        if (!title || !loading || !error || !frame || !openLink || !downloadLink) { return; }
+        modal = window.bootstrap.Modal.getOrCreateInstance(modalElement);
+
+        function reset() {
+            frame.removeAttribute('src');
+            frame.hidden = true;
+            frame.title = 'PDFプレビュー';
+            loading.hidden = false;
+            error.hidden = true;
+            openLink.removeAttribute('href');
+            downloadLink.removeAttribute('href');
+            title.textContent = 'PDF表示';
+        }
+
+        frame.addEventListener('load', function () {
+            loading.hidden = true;
+            error.hidden = true;
+            frame.hidden = false;
+        });
+        frame.addEventListener('error', function () {
+            loading.hidden = true;
+            frame.hidden = true;
+            error.hidden = false;
+        });
+        modalElement.addEventListener('hidden.bs.modal', reset);
+
+        for (i = 0; i < triggers.length; i++) {
+            triggers[i].addEventListener('click', function (event) {
+                var fileId = this.getAttribute('data-file-id') || '';
+                var fileName = this.getAttribute('data-file-name') || 'PDF';
+                var previewUrl;
+                if (!/^[1-9]\d*$/.test(fileId)) { return; }
+                event.preventDefault();
+                reset();
+                previewUrl = './file_content.php?id=' + encodeURIComponent(fileId) + '&mode=preview';
+                title.textContent = fileName;
+                frame.title = fileName + ' PDFプレビュー';
+                openLink.setAttribute('href', previewUrl);
+                downloadLink.setAttribute('href', './file_content.php?id=' + encodeURIComponent(fileId) + '&mode=download');
+                frame.setAttribute('src', previewUrl);
+                modal.show();
+            });
+        }
+    }
+
     function bindFileDetail() {
         var badge = document.querySelector('.file-library-toolbar .badge');
         var cards = document.querySelectorAll('.file-library-card');
@@ -202,7 +320,7 @@
         var content;
         var requestSerial = 0;
         var i;
-        if (badge) { badge.textContent = 'V1.28-B'; }
+        if (badge) { badge.textContent = 'V1.28-C'; }
         if (!window.bootstrap || !window.bootstrap.Modal || typeof window.fetch !== 'function') { return; }
 
         modalElement = document.createElement('div');
@@ -277,7 +395,7 @@
             button.innerHTML = '<i class="fas fa-info-circle" aria-hidden="true"></i><span class="visually-hidden">詳細</span>';
             actions.insertBefore(button, download);
             count = actions.children.length;
-            actions.classList.remove('file-library-actions-two');
+            actions.classList.remove('file-library-actions-two', 'file-library-actions-detail-three', 'file-library-actions-detail-four');
             actions.classList.add(count >= 4 ? 'file-library-actions-detail-four' : 'file-library-actions-detail-three');
             button.addEventListener('click', function () {
                 var targetId = this.getAttribute('data-file-id') || '';
@@ -334,6 +452,7 @@
         prepareUploadUi();
         bindUploadDropZone();
         bindImageViewer();
+        bindPdfViewer();
         bindFileDetail();
         bindDeleteConfirm();
         bindUploadGuard();
