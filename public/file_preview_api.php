@@ -50,7 +50,7 @@ if ($userId === null) {
 }
 
 $fileId = app_validate_positive_int($_GET['id'] ?? null);
-$mode = app_validate_enum($_GET['mode'] ?? 'detail', ['detail', 'text']);
+$mode = app_validate_enum($_GET['mode'] ?? 'detail', ['detail', 'text', 'csv']);
 if ($fileId === null || $mode === null) {
     file_preview_error('not_found', 'File not found.', 404);
 }
@@ -79,6 +79,24 @@ try {
         } catch (UserFilePreviewException $exception) {
             if ($exception->errorCode === 'preview_encoding_unsupported') {
                 file_preview_error('preview_encoding_unsupported', 'TXT preview requires UTF-8 text.', 422);
+            }
+            throw $exception;
+        }
+    }
+
+    if ($mode === 'csv') {
+        if (user_file_preview_kind($row) !== 'csv') {
+            file_preview_error('not_found', 'File not found.', 404);
+        }
+        try {
+            $csv = user_file_preview_csv($row, $path);
+            file_preview_success(['csv' => $csv]);
+        } catch (UserFilePreviewException $exception) {
+            if ($exception->errorCode === 'preview_encoding_unsupported') {
+                file_preview_error('preview_encoding_unsupported', 'CSV preview requires UTF-8 text.', 422);
+            }
+            if ($exception->errorCode === 'preview_record_too_large') {
+                file_preview_error('preview_record_too_large', 'CSV record exceeds the preview limit.', 422);
             }
             throw $exception;
         }

@@ -23,6 +23,8 @@
     }
 
     loadScript('file-library-core.js', function () {
-        loadScript('file-library-text-preview.js');
+        loadScript('file-library-text-preview.js', function () {
+            loadScript('file-library-csv-preview.js');
+        });
     });
 })(document);
