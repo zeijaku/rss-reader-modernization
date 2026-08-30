@@ -74,4 +74,16 @@ python3 "$SCRIPT_DIR/test_v1_26_d_info_board_ticker.py"
 node "$SCRIPT_DIR/test_v1_26_d_info_board_ticker.js"
 node --check "$ROOT/public/js/info-board-ticker.js"
 
+echo '== Current feature contracts: V1.27 Tracking / File Library / Image Viewer =='
+php "$SCRIPT_DIR/url_normalizer_v127b_test.php"
+php "$SCRIPT_DIR/user_file_v127d_test.php"
+php "$SCRIPT_DIR/file_library_v127e_test.php"
+php "$SCRIPT_DIR/file_library_drawer_v127e2_test.php"
+php "$SCRIPT_DIR/file_library_upload_v127e3_test.php"
+php "$SCRIPT_DIR/file_library_drag_drop_v127e4_test.php"
+php "$SCRIPT_DIR/file_library_endpoint_v127e_test.php"
+php "$SCRIPT_DIR/file_library_image_viewer_v127f_test.php"
+php "$SCRIPT_DIR/test_v127g_current_contract.php"
+node --check "$ROOT/public/js/file-library.js"
+
 echo 'PASS: current feature contract suite completed'

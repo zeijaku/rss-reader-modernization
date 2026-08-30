@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.27.0 - 2026-08-30
+
+- Expanded article URL tracking-parameter cleanup while leaving registered Feed URLs unchanged.
+- Normalized remaining Dashboard header/touch targets without changing the established grid or drag-and-drop model.
+- Added authenticated secure file upload backed by private `var/uploads/` storage and owner-scoped metadata.
+- Added the `/file-library` page with 24-item pagination, responsive cards, thumbnails, download, delete, upload progress, and drag-and-drop file selection.
+- Added an in-page Bootstrap Image Viewer that uses the existing authenticated owner-scoped content endpoint rather than exposing physical paths.
+- Default per-file upload limit is 10 MiB; allowed types are JPEG, PNG, GIF, WebP, PDF, TXT, CSV, and ZIP.
+- Browser MIME is not trusted. Server Fileinfo plus image/content/signature validation is authoritative; physical names use 256-bit random values.
+- ZIP files are stored/downloaded only and are never extracted or executed by the application.
+- Added Migration `020_v1_27_user_files.sql`; the fresh-install schema contains the same metadata-only `user_file` table contract.
+- Preserved authentication, CSRF, owner scope, deny-by-default public PHP endpoints, `nosniff`, same-origin resource policy, restrictive CSP, and private-path non-disclosure.
+- Finalized application and public asset revision markers at 1.27.0.
+
 ## 1.26.0 - 2026-08-30
 
 - Added the Dashboard Information Board Widget for All RSS or a specific owner-scoped Feed.

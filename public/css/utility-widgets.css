@@ -321,3 +321,64 @@
         padding-left: 6px;
     }
 }
+
+/* V1.27-C: finish Dashboard UI normalization without changing Grid/D&D behavior. */
+.links-card-header {
+    height: 44px;
+    min-height: 44px;
+    gap: 0;
+    padding: 0 4px 0 8px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.links-card-header .links-widget-edit-trigger {
+    display: inline-flex;
+    flex: 0 0 44px;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 4px;
+    line-height: 1;
+    touch-action: manipulation;
+}
+
+/* mini-game.css keeps the original V1.20-C 40px declaration. This more specific
+ * Dashboard override makes the header control match current 44px RSS actions. */
+#main-content .feed-card .rss-typing-trigger.rss-typing-trigger {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    flex-basis: 44px;
+}
+
+.feed-retry {
+    min-height: 44px;
+}
+
+@media (pointer: coarse) {
+    .task-toggle,
+    .task-item-edit-trigger,
+    .links-item-edit,
+    .links-create-row .btn {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        min-height: 44px;
+        padding: 0;
+        align-items: center;
+        justify-content: center;
+        touch-action: manipulation;
+    }
+
+    .task-toggle,
+    .task-item-edit-trigger,
+    .links-item-edit {
+        display: inline-flex;
+        flex: 0 0 44px;
+    }
+}

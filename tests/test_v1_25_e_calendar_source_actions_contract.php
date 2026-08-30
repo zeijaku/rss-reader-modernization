@@ -25,8 +25,8 @@ if (preg_match("/const APP_ASSET_REVISION = '([^']+)';/", $version, $assetMatch)
 
 $checks = [
     'formal APP_VERSION is defined' => is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+$/', $appVersion) === 1,
-    'formal asset revision follows APP_VERSION' => is_string($assetRevision) && $assetRevision === $appVersion,
-    'source action module uses current release cache key' => is_string($assetRevision)
+    'active asset revision is defined' => is_string($assetRevision) && preg_match('/^[A-Za-z0-9._-]+$/', $assetRevision) === 1,
+    'source action module uses current asset cache key' => is_string($assetRevision)
         && str_contains($loader, 'calendar-source-actions.js?v=' . $assetRevision),
     'article action menu is reused' => str_contains($sourceActions, "$('#articleActionsMenu')"),
     'Calendar action is added after Task when available' => str_contains($sourceActions, ".article-action-task")

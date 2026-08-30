@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.26.0`
-Release tag: `v1.26.0`
+**Stable release:** `RSS Reader Modernization 1.27.0`
+Release tag: `v1.27.0`
+
+Version 1.27.0は、記事URLのTracking Parameter除去を拡張し、認証済みユーザー専用のFile Libraryを追加したReleaseです。アップロードファイルは`public/`外のprivate storageへ保存し、Server側Fileinfo／内容検証、10 MiB上限、ランダム物理名、Owner scopeを維持します。JPEG／PNG／GIF／WebP／PDF／TXT／CSV／ZIP、Drag & Drop指定、Upload中表示、Image Viewer、Download／Deleteに対応し、ZIPは展開・実行しません。既存環境ではMigration `020_v1_27_user_files.sql`を適用します。
 
 Version 1.26.0は、DashboardのInformationカテゴリへInformation Board Widgetを追加したReleaseです。NEWSと現在の記事Titleを固定し、RSSの概要だけを右から左へ流します。前後記事移動、Source／日時／件数、NEXT予告、進捗表示、Reduced Motion、44px Header／Smartphone Touch targetに対応します。RSS本文は既存の安全なFeed取得経路で得たdescription/contentのみを使い、記事Pageの追加FetchやScrapingは行いません。DB Migrationと新規必須Secretはありません。
 

@@ -121,10 +121,11 @@ check("document.currentScript" in loader and "current.src.indexOf('?')" in loade
       and "document.currentScript" in ui and "sourceScript.src.indexOf('?')" in ui,
       'Information Board bootstrap passes the cache query from memo-counter.js through info-board.js to CSS')
 
-# Final V1.26.0 promotion aligns the global immutable asset revision and the
-# scoped Information Board bootstrap revision with the formal release version.
-check("const APP_ASSET_REVISION = '1.26.0';" in version,
-      'formal immutable asset revision matches the V1.26 release')
+# V1.26-D owns only the scoped Information Board bootstrap revision. The global
+# immutable asset revision advances with later releases and must not be pinned
+# to the historical V1.26.0 value by this durable feature contract.
+check("const APP_ASSET_REVISION = '" in version,
+      'global immutable asset revision remains defined for the active release')
 check("const INFO_BOARD_ASSET_REVISION = '1.26.0';" in version,
       'Information Board scoped cache revision matches the V1.26 release')
 check("$path === 'js/memo-counter.js'" in asset and "INFO_BOARD_ASSET_REVISION" in asset,
