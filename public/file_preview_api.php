@@ -50,7 +50,7 @@ if ($userId === null) {
 }
 
 $fileId = app_validate_positive_int($_GET['id'] ?? null);
-$mode = app_validate_enum($_GET['mode'] ?? 'detail', ['detail']);
+$mode = app_validate_enum($_GET['mode'] ?? 'detail', ['detail', 'text']);
 if ($fileId === null || $mode === null) {
     file_preview_error('not_found', 'File not found.', 404);
 }
@@ -67,6 +67,21 @@ try {
     if ($path === null || !user_file_library_content_is_intact($row, $path)) {
         error_log('File Library preview validation failed for file_id=' . $fileId);
         file_preview_error('not_found', 'File not found.', 404);
+    }
+
+    if ($mode === 'text') {
+        if (user_file_preview_kind($row) !== 'text') {
+            file_preview_error('not_found', 'File not found.', 404);
+        }
+        try {
+            $text = user_file_preview_text($row, $path);
+            file_preview_success(['text' => $text]);
+        } catch (UserFilePreviewException $exception) {
+            if ($exception->errorCode === 'preview_encoding_unsupported') {
+                file_preview_error('preview_encoding_unsupported', 'TXT preview requires UTF-8 text.', 422);
+            }
+            throw $exception;
+        }
     }
 
     $detail = user_file_preview_detail($row, $path);

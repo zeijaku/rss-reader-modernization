@@ -8,6 +8,88 @@ const USER_FILE_CSV_PREVIEW_MAX_BYTES = 524288;
 const USER_FILE_CSV_PREVIEW_MAX_ROWS = 50;
 const USER_FILE_CSV_PREVIEW_MAX_COLUMNS = 30;
 
+final class UserFilePreviewException extends RuntimeException
+{
+    public string $errorCode;
+
+    public function __construct(string $errorCode, string $message)
+    {
+        parent::__construct($message);
+        $this->errorCode = $errorCode;
+    }
+}
+
+function user_file_preview_utf8_prefix(string $text, bool $allowBoundaryTrim): ?string
+{
+    if (preg_match('//u', $text) === 1) {
+        return $text;
+    }
+    if (!$allowBoundaryTrim) {
+        return null;
+    }
+    for ($trim = 1; $trim <= 3 && $trim < strlen($text); $trim++) {
+        $candidate = substr($text, 0, -$trim);
+        if (preg_match('//u', $candidate) === 1) {
+            return $candidate;
+        }
+    }
+    return null;
+}
+
+/** @return array{content:string,truncated:bool,line_count:int,max_bytes:int,max_lines:int} */
+function user_file_preview_text(array $row, string $path): array
+{
+    if (user_file_preview_kind($row) !== 'text') {
+        throw new UserFilePreviewException('preview_type_not_supported', 'TXT preview is not available for this file.');
+    }
+    if (!is_file($path) || !is_readable($path)) {
+        throw new UserFilePreviewException('preview_unavailable', 'TXT preview source is unavailable.');
+    }
+
+    $size = filesize($path);
+    if (!is_int($size) || $size <= 0) {
+        throw new UserFilePreviewException('preview_unavailable', 'TXT preview source is unavailable.');
+    }
+
+    $handle = @fopen($path, 'rb');
+    if ($handle === false) {
+        throw new UserFilePreviewException('preview_unavailable', 'TXT preview source is unavailable.');
+    }
+    try {
+        $raw = fread($handle, USER_FILE_TEXT_PREVIEW_MAX_BYTES + 4);
+    } finally {
+        fclose($handle);
+    }
+    if (!is_string($raw)) {
+        throw new UserFilePreviewException('preview_unavailable', 'TXT preview could not be read.');
+    }
+
+    $truncatedByBytes = $size > USER_FILE_TEXT_PREVIEW_MAX_BYTES;
+    $text = substr($raw, 0, USER_FILE_TEXT_PREVIEW_MAX_BYTES);
+    if (str_starts_with($text, "\xEF\xBB\xBF")) {
+        $text = substr($text, 3);
+    }
+    $text = user_file_preview_utf8_prefix($text, $truncatedByBytes);
+    if ($text === null) {
+        throw new UserFilePreviewException('preview_encoding_unsupported', 'TXT preview requires UTF-8 text.');
+    }
+
+    $normalized = str_replace(["\r\n", "\r"], "\n", $text);
+    $lines = explode("\n", $normalized);
+    $truncatedByLines = count($lines) > USER_FILE_TEXT_PREVIEW_MAX_LINES;
+    if ($truncatedByLines) {
+        $lines = array_slice($lines, 0, USER_FILE_TEXT_PREVIEW_MAX_LINES);
+    }
+
+    return [
+        'content' => implode("\n", $lines),
+        'truncated' => $truncatedByBytes || $truncatedByLines,
+        'line_count' => count($lines),
+        'max_bytes' => USER_FILE_TEXT_PREVIEW_MAX_BYTES,
+        'max_lines' => USER_FILE_TEXT_PREVIEW_MAX_LINES,
+    ];
+}
+
 function user_file_preview_kind(array $row): string
 {
     if (!user_file_library_row_type_is_valid($row)) {
