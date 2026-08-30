@@ -5,6 +5,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ticker_path = ROOT / 'public/js/info-board-ticker.js'
 css_path = ROOT / 'public/css/info-board.css'
 loader_path = ROOT / 'public/js/memo-counter.js'
+ui_path = ROOT / 'public/js/info-board.js'
 version_path = ROOT / 'app/version.php'
 asset_path = ROOT / 'app/asset.php'
 navigation_path = ROOT / 'public/js/info-board-navigation.js'
@@ -24,6 +25,7 @@ check(css_path.is_file(), 'Information Board stylesheet exists')
 ticker = ticker_path.read_text(encoding='utf-8') if ticker_path.is_file() else ''
 css = css_path.read_text(encoding='utf-8') if css_path.is_file() else ''
 loader = loader_path.read_text(encoding='utf-8')
+ui = ui_path.read_text(encoding='utf-8')
 version = version_path.read_text(encoding='utf-8')
 asset = asset_path.read_text(encoding='utf-8')
 runner = runner_path.read_text(encoding='utf-8')
@@ -113,10 +115,11 @@ check("info-board-ticker.js' + assetQuery" in loader and "data-info-board-v126d-
       'Dashboard bootstrap loads ticker with the current asset query')
 check("info-board.js' + assetQuery" in loader and "data-info-board-v126c-script" in loader,
       'existing Information Board presentation bootstrap remains intact')
-check("info-board.css' + assetQuery" in loader,
+check("info-board.css' + assetQuery" in ui and "data-info-board-v126c-style" in ui,
       'Information Board stylesheet inherits the same staged asset query')
-check("document.currentScript" in loader and "sourceScript.src.indexOf('?')" in loader,
-      'Information Board bootstrap inherits its cache query from memo-counter.js')
+check("document.currentScript" in loader and "current.src.indexOf('?')" in loader
+      and "document.currentScript" in ui and "sourceScript.src.indexOf('?')" in ui,
+      'Information Board bootstrap passes the cache query from memo-counter.js through info-board.js to CSS')
 
 # Keep the formal V1.25 asset revision stable while explicitly busting only the
 # staged Information Board bootstrap chain. Apache can therefore keep immutable
