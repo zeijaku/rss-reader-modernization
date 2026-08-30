@@ -15,17 +15,28 @@ foreach ([$ui, $css, $loader, $version] as $source) {
     }
 }
 
+$appVersion = null;
+$assetRevision = null;
+if (preg_match("/const APP_VERSION = '([^']+)';/", $version, $versionMatch) === 1) {
+    $appVersion = $versionMatch[1];
+}
+if (preg_match("/const APP_ASSET_REVISION = '([^']+)';/", $version, $assetMatch) === 1) {
+    $assetRevision = $assetMatch[1];
+}
+
 $checks = [
-    'formal APP_VERSION is V1.25.0' => str_contains($version, "const APP_VERSION = '1.25.0';"),
-    'formal asset revision is V1.25.0' => str_contains($version, "const APP_ASSET_REVISION = '1.25.0';"),
-    'R2 Calendar polish uses release cache key' => str_contains($loader, "calendar-polish.js?v=1.25.0"),
-    'R3 CSS uses release cache key' => str_contains($loader, "calendar-polish-r3.css?v=1.25.0"),
-    'R3 JS uses release cache key' => str_contains($loader, "calendar-polish-r3.js?v=1.25.0"),
-    'R3 JS loads after R2 polish' => strpos($loader, "calendar-polish.js?v=1.25.0") < strpos($loader, "calendar-polish-r3.js?v=1.25.0"),
+    'formal APP_VERSION is defined' => is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+$/', $appVersion) === 1,
+    'formal asset revision follows APP_VERSION' => is_string($assetRevision) && $assetRevision === $appVersion,
+    'R2 Calendar polish uses current release cache key' => is_string($assetRevision)
+        && str_contains($loader, 'calendar-polish.js?v=' . $assetRevision),
+    'R3 CSS uses current release cache key' => is_string($assetRevision)
+        && str_contains($loader, 'calendar-polish-r3.css?v=' . $assetRevision),
+    'R3 JS uses current release cache key' => is_string($assetRevision)
+        && str_contains($loader, 'calendar-polish-r3.js?v=' . $assetRevision),
     'upcoming collapsed limit is three' => str_contains($ui, 'upcomingCollapsedLimit = 3'),
-    'upcoming extra items are hidden while collapsed' => str_contains($ui, "index >= upcomingCollapsedLimit")
+    'upcoming extra items are hidden while collapsed' => str_contains($ui, 'index >= upcomingCollapsedLimit')
         && str_contains($ui, ".prop('hidden', !expanded"),
-    'upcoming toggle exposes more label' => str_contains($ui, "もっと見る（") && str_contains($ui, "閉じる"),
+    'upcoming toggle exposes more label' => str_contains($ui, 'もっと見る（') && str_contains($ui, '閉じる'),
     'upcoming toggle exposes aria-expanded' => str_contains($ui, ".attr('aria-expanded', expanded ? 'true' : 'false')"),
     'month navigation capture covers previous next and today' => str_contains($ui, '.calendar-prev-month, .calendar-next-month, .calendar-today')
         && str_contains($ui, "addEventListener('click', holdCalendarHeight, true)"),
@@ -46,6 +57,10 @@ $checks = [
     'smartphone toggle rules exist' => str_contains($css, '@media (max-width: 575.98px)')
         && str_contains($css, '.calendar-upcoming-toggle'),
 ];
+
+$r2Pos = is_string($assetRevision) ? strpos($loader, "calendar-polish.js?v={$assetRevision}") : false;
+$r3Pos = is_string($assetRevision) ? strpos($loader, "calendar-polish-r3.js?v={$assetRevision}") : false;
+$checks['R3 JS loads after R2 polish'] = is_int($r2Pos) && is_int($r3Pos) && $r2Pos < $r3Pos;
 
 $failed = [];
 foreach ($checks as $name => $passed) {
