@@ -86,8 +86,8 @@ check("概要の横スクロール速度" in ticker,
       'speed help describes horizontal summary scrolling')
 
 # Final V1.26-D navigation and lower-board information are integrated into the
-# ticker state machine. This deliberately avoids the separate global observer
-# implementation that was tested during the failed symptom-era experiment.
+# ticker state machine. This deliberately avoids the separate navigation script
+# used during the symptom-era experiment.
 check("info-board-nav-previous" in ticker and "info-board-nav-next" in ticker,
       'previous / next article controls are integrated into the ticker')
 check("navigateItem(card, -1)" in ticker and "navigateItem(card, 1)" in ticker,
@@ -106,8 +106,8 @@ check("info-board-progress-track" in ticker and "info-board-progress-bar" in tic
       'summary progress indicator is integrated with the ticker')
 check(not navigation_path.exists(),
       'no separate document-wide Information Board navigation script is shipped')
-check("new MutationObserver" in ticker and "document.body" not in ticker,
-      'ticker observers remain card/list scoped instead of observing the whole document body')
+check("info-board-navigation" not in ticker and "info-board-navigation" not in loader,
+      'symptom-era navigation bootstrap is not referenced by the active scripts')
 
 check("info-board-ticker.js' + assetQuery" in loader and "data-info-board-v126d-script" in loader,
       'Dashboard bootstrap loads ticker with the current asset query')
