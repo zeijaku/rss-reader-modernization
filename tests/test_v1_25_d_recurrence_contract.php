@@ -35,7 +35,7 @@ $checks = [
     'migration defaults repeat type to none' => str_contains($migration, "DEFAULT ''none''"),
     'migration adds nullable repeat until' => str_contains($migration, 'calendar_event_repeat_until') && str_contains($migration, 'DATE NULL DEFAULT NULL'),
     'migration is idempotent per column' => substr_count($migration, 'information_schema.COLUMNS') === 2,
-    'fresh-install schema integrates recurrence migration' => str_contains($schema, 'integrated 013, 017, 018 and 019'),
+    'fresh-install schema integrates recurrence migration' => str_contains($schema, 'V1.25 Calendar recurrence (019)'),
     'fresh-install schema adds repeat type' => str_contains($schema, "`calendar_event_repeat_type` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none''"),
     'fresh-install schema adds repeat until' => str_contains($schema, '`calendar_event_repeat_until` DATE NULL DEFAULT NULL'),
     'repeat allowlist is fixed' => str_contains($domain, "['none', 'daily', 'weekly', 'monthly', 'yearly']"),
