@@ -18,11 +18,22 @@ if (!is_string($details) || !is_string($loader) || !is_string($style) || !is_str
     exit(1);
 }
 
+$appVersion = null;
+$assetRevision = null;
+if (preg_match("/const APP_VERSION = '([^']+)';/", $version, $versionMatch) === 1) {
+    $appVersion = $versionMatch[1];
+}
+if (preg_match("/const APP_ASSET_REVISION = '([^']+)';/", $version, $assetMatch) === 1) {
+    $assetRevision = $assetMatch[1];
+}
+
 $checks = [
-    'formal APP_VERSION is V1.25.0' => str_contains($version, "const APP_VERSION = '1.25.0';"),
-    'formal asset revision is V1.25.0' => str_contains($version, "const APP_ASSET_REVISION = '1.25.0';"),
-    'detail CSS is staged by Calendar loader' => str_contains($loader, 'calendar-event-details.css?v=1.25.0'),
-    'detail JS is staged by Calendar loader' => str_contains($loader, 'calendar-event-details.js?v=1.25.0'),
+    'formal APP_VERSION is defined' => is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+$/', $appVersion) === 1,
+    'formal asset revision follows APP_VERSION' => is_string($assetRevision) && $assetRevision === $appVersion,
+    'detail CSS is staged by Calendar loader' => is_string($assetRevision)
+        && str_contains($loader, 'calendar-event-details.css?v=' . $assetRevision),
+    'detail JS is staged by Calendar loader' => is_string($assetRevision)
+        && str_contains($loader, 'calendar-event-details.js?v=' . $assetRevision),
     'all-day field exists' => str_contains($details, "CalendarEventAllDay"),
     'start time field exists' => str_contains($details, "CalendarEventStartTime"),
     'end time field exists' => str_contains($details, "CalendarEventEndTime"),
@@ -44,9 +55,15 @@ $checks = [
     'smartphone time inputs can stack' => str_contains($details, 'col-12 col-sm-6'),
 ];
 
-$corePos = strpos($loader, "loadScript('./js/calendar-core.js?v=1.25.0');");
-$detailPos = strpos($loader, "loadScript('./js/calendar-event-details.js?v=1.25.0');");
-$colorPos = strpos($loader, "loadScript('./js/calendar-colors.js?v=1.25.0');");
+$corePos = is_string($assetRevision)
+    ? strpos($loader, "loadScript('./js/calendar-core.js?v={$assetRevision}');")
+    : false;
+$detailPos = is_string($assetRevision)
+    ? strpos($loader, "loadScript('./js/calendar-event-details.js?v={$assetRevision}');")
+    : false;
+$colorPos = is_string($assetRevision)
+    ? strpos($loader, "loadScript('./js/calendar-colors.js?v={$assetRevision}');")
+    : false;
 $checks['script order is core -> details -> color'] = is_int($corePos) && is_int($detailPos) && is_int($colorPos)
     && $corePos < $detailPos && $detailPos < $colorPos;
 
