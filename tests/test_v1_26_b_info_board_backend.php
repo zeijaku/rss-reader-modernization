@@ -105,6 +105,8 @@ v126b_check(info_board_config_from_input(array_merge($validInput, ['info_board_f
 v126b_check(info_board_config_from_input(array_merge($validInput, ['info_board_limit' => '30'])) === null, 'unsupported display limit is rejected');
 v126b_check(info_board_config_from_input(array_merge($validInput, ['info_board_speed' => 'turbo'])) === null, 'unsupported speed is rejected');
 v126b_check(info_board_config_from_input(array_merge($validInput, ['info_board_summary_max' => '999'])) === null, 'unsupported summary maximum is rejected');
+$fullInput = info_board_config_from_input(array_merge($validInput, ['info_board_summary_max' => (string) INFO_BOARD_SUMMARY_HARD_LIMIT]));
+v126b_check(is_array($fullInput) && ($fullInput['summary_max'] ?? 0) === INFO_BOARD_SUMMARY_HARD_LIMIT, 'safe RSS full-text ceiling is accepted as a bounded summary maximum');
 
 $stored = dashboard_widget_encode_config($specific ?? []);
 $roundTrip = info_board_config_from_storage($stored);
@@ -138,6 +140,27 @@ $fallback = info_board_item_payload([
     'date' => '',
 ], 'RSS', $config ?? []);
 v126b_check(is_array($fallback) && $fallback['summary'] === 'content:encoded 相当', 'content is used when description is absent');
+
+$fullConfig = info_board_config('all', null, 5, 'normal', true, INFO_BOARD_SUMMARY_HARD_LIMIT);
+$longerContent = info_board_item_payload([
+    'title' => 'Longer content',
+    'description' => str_repeat('d', 400),
+    'content' => str_repeat('c', 3000),
+    'link' => 'https://example.com/full',
+    'date' => '',
+], 'RSS', $fullConfig);
+$longerContentLength = function_exists('mb_strlen') ? mb_strlen((string) ($longerContent['summary'] ?? ''), 'UTF-8') : strlen((string) ($longerContent['summary'] ?? ''));
+v126b_check(is_array($longerContent) && $longerContentLength === 3000, 'longer sanitized content is preferred over a shorter description when fuller RSS text is available');
+
+$hardBound = info_board_item_payload([
+    'title' => 'Hard bound',
+    'description' => '',
+    'content' => str_repeat('x', INFO_BOARD_SUMMARY_HARD_LIMIT + 500),
+    'link' => 'https://example.com/bound',
+    'date' => '',
+], 'RSS', $fullConfig);
+$hardBoundLength = function_exists('mb_strlen') ? mb_strlen((string) ($hardBound['summary'] ?? ''), 'UTF-8') : strlen((string) ($hardBound['summary'] ?? ''));
+v126b_check($hardBoundLength === INFO_BOARD_SUMMARY_HARD_LIMIT, 'fuller RSS summary remains strictly bounded by the 4096-character safety ceiling');
 
 $noSummaryConfig = info_board_config('all', null, 5, 'slow', false, 100);
 $noSummary = info_board_item_payload([
