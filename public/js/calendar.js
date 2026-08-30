@@ -100,7 +100,7 @@
     // V1.17.1-D/E: production-safe settings interceptor. It runs in the
     // capture phase so legacy delegated update handlers cannot reload the page.
     loadScript('./js/widget-settings-no-reload.js?v=1.26.0');
-    // V1.21: load the finalized Drawer organizer under the current release
-    // cache key. It stages both the visual and Smartphone layers.
-    loadScript('./js/drawer-categories.js?v=1.26.0');
+    // V1.27-E2: this organizer changed in V1.27-E (File Library entry).  The
+    // previous V1.26.0 fixed key kept the old Drawer script cached on Dashboard.
+    loadScript('./js/drawer-categories.js?v=1.27.0-dev-e2');
 })(document);
