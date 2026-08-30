@@ -1,93 +1,64 @@
-# RSS Reader Modernization 1.25.0
+# RSS Reader Modernization 1.26.0
 
-Release tag: `v1.25.0`
-Release date: 2026-08-28
+Release tag: `v1.26.0`
+Release date: 2026-08-30
 
 ## Overview
 
-Version 1.25.0 expands the existing Calendar Widget without replacing its established Event / Task model. Calendar events now support all-day or timed schedules, an optional end time, a related HTTP/HTTPS URL, and daily / weekly / monthly / yearly recurrence with an optional repeat-until date. Existing Task due dates continue to be displayed directly from the Task table rather than copied into Calendar events.
+Version 1.26.0 adds the Information Board Widget to the Dashboard. The widget is inspired by an electronic NEWS board: the NEWS label and current article title remain fixed while only the current RSS summary scrolls from right to left. After the summary fully leaves the left edge, the board advances to the next article and repeats.
 
-RSS and Stock article actions can pre-fill the existing Calendar registration modal with the article title and URL. This does not auto-save the event, does not fetch the article URL on the server, and does not change Stock processed / important / archived / Stock解除 state.
-
-The Calendar UI also adds a clearer Today flow, a server-bounded 14-day upcoming list, compact three-item initial display with a more/close control, Smartphone presentation adjustments, modal focus handling, and month-switch layout stabilization.
+The widget uses only RSS data already obtained through the existing hardened feed path. It does not scrape article pages or introduce a secondary article fetch. A specific Feed is stored by owner-scoped `content_id`, not as an arbitrary raw URL.
 
 ## Main changes
 
-- Calendar events can be all-day or timed.
-- Timed events require a start time; end time is optional. Same-day end-before-start is rejected while a multi-day event may wrap to an earlier clock time on the ending date.
-- Calendar events can store one optional related URL, limited to HTTP/HTTPS and 2048 characters.
-- Repetition supports `none`, `daily`, `weekly`, `monthly`, and `yearly`, with an optional repeat-until date.
-- Recurrence editing/deletion is series-level in V1.25.0. Per-occurrence exceptions are intentionally not implemented.
-- Monthly recurrence skips months that do not contain the anchor day; yearly February 29 recurrence skips non-leap years and resumes on leap years.
-- RSS / Stock article actions add `Calendarへ追加`, reusing the existing Calendar registration modal and pre-filling title + URL without auto-submit.
-- Calendar event creation does not alter or remove the source Stock row.
-- Today is visually emphasized and the Today button returns to the current month/day.
-- Upcoming events cover today through the next 14 days, are server-bounded to eight results, and show the first three initially with `もっと見る` / `閉じる` controls.
-- Calendar modal focus is released before Bootstrap applies its hidden state and restored after the modal is fully hidden, avoiding focused descendants being left inside an `aria-hidden` modal.
-- Month navigation keeps the current Calendar grid height during asynchronous redraw to reduce visible layout shift.
-- V1.25 Calendar contracts are promoted into the current CI/release feature suite.
+- Added Information Board to the Dashboard Information category.
+- Added All RSS / specific Feed selection.
+- Added item limits of 5 / 10 / 20.
+- Added slow / normal / fast horizontal summary speed.
+- Added summary ON / OFF while preserving compatible stored summary settings.
+- Expanded displayed RSS summary content up to the existing 4096-character RSS safety ceiling where fuller sanitized RSS content is available.
+- Kept NEWS and current article title fixed while only the summary moves right-to-left.
+- Article changes occur only after the current summary fully exits the left edge.
+- Added visible pause / resume, desktop hover/focus pause, touch/wheel interaction pause, page-hidden pause, and `prefers-reduced-motion` handling.
+- Added previous / next article controls with first/last wrap-around and temporary automatic-movement pause after manual navigation.
+- Added source site, article date, current/total position, NEXT article preview, and summary progress in the lower board area.
+- Matched the converted Information Board header to the existing 44px Dashboard feed-card header while retaining 44px Smartphone touch targets.
+- Finalized application and public asset revision markers at `1.26.0`.
+
+## Security / compatibility
+
+- Existing authentication, authorization, CSRF, request-size and owner-scope boundaries are unchanged.
+- Specific Feed configuration stores `content_id`; arbitrary article or Feed URLs are not added to the Information Board configuration boundary.
+- Feed retrieval continues through the existing hardened RSS fetch/parser path and SSRF protections.
+- Remote RSS text remains inside the existing sanitization/text-rendering boundary.
+- The ticker adds no new `fetch`, `XMLHttpRequest`, jQuery Ajax, localStorage, or sessionStorage path.
+- The earlier experimental separate `info-board-navigation.js`, global Ajax startup gate, and RSS startup scheduling workaround are not included.
+- No new required secret or external service is introduced.
 
 ## Database migration
 
-Existing Version 1.24.0 installations must back up the database and apply these migrations in order:
-
-1. `database/migrations/018_v1_25_calendar_event_time_url.sql`
-2. `database/migrations/019_v1_25_calendar_recurrence.sql`
-
-Set `@table_prefix` in each migration to the same value as `DB_TABLE_PREFIX` before execution.
-
-Migration 018 adds these columns to `calendar_event`:
-
-- `calendar_event_all_day` — `TINYINT UNSIGNED NOT NULL DEFAULT 1`
-- `calendar_event_start_time` — nullable `TIME`
-- `calendar_event_end_time` — nullable `TIME`
-- `calendar_event_url` — nullable `VARCHAR(2048)`
-
-Existing events therefore remain all-day by default and do not gain synthetic time/URL values.
-
-Migration 019 adds:
-
-- `calendar_event_repeat_type` — fixed recurrence type storage with default `none`
-- `calendar_event_repeat_until` — nullable repeat end date
-
-The migrations check existing schema state before adding their columns and do not delete or rewrite existing Calendar events.
-
-For a fresh installation, `database/schema.sql` already integrates the Calendar columns from Migrations 013, 018, and 019 together with the V1.24 Stock state schema from Migration 017. Do not re-run integrated migrations after importing the fresh schema. Follow `docs/installation.md` for the remaining post-base migrations.
-
-## Security / privacy
-
-- Calendar mutation endpoints remain authenticated POST operations with CSRF validation and request-size limits.
-- Recurrence actions use a fixed server-side action allowlist; client input is not used as a raw action name, SQL identifier, or file path.
-- Calendar event reads/updates remain owner-scoped and limited to active rows.
-- The stored Calendar URL is validation-only. V1.25.0 does not perform server-side outbound fetches to event or article URLs, so the feature does not introduce a new SSRF path.
-- Active recurring series are resource-bounded to 50 per owner for recurrence expansion, and month expansion is bounded to 2000 occurrences.
-- Upcoming event lookup uses a server-derived date window, is fixed to 14 days, returns at most eight events, and bounds its non-recurring source query.
-- RSS / Stock to Calendar pre-fill is client-side and is revalidated by the existing Calendar server boundary on save.
-- No new required secret, external Calendar credential, OAuth integration, reminder service, or background scheduler is introduced.
+No database migration is required for Version 1.26.0. Information Board configuration reuses the existing owner-scoped widget/search storage contract and registered Feed `content_id`.
 
 ## Upgrade summary
 
 1. Back up the application code, `config/local.php`, database, and required runtime data.
-2. Apply Migration 018 with the deployment table prefix.
-3. Apply Migration 019 with the same table prefix.
-4. Deploy the Version 1.25.0 application files without overwriting private config/runtime data.
-5. Reload the browser and confirm the footer reports `RSS Reader Modernization 1.25.0`.
-6. Verify all-day and timed Calendar event creation/editing, optional URL, event colors, and recurrence.
-7. Verify RSS and Stock article `Calendarへ追加` pre-fill title + URL without changing Stock state.
-8. Verify Today, upcoming events, `もっと見る` / `閉じる`, month navigation, and Smartphone layout.
-9. Open/close Calendar modals by backdrop, close button, X, and Escape and confirm no new focus/`aria-hidden` warning appears.
-10. Confirm existing Task due-date display, Stock actions, RSS article actions, and recurrence endpoint access continue to work.
-11. Check Browser Console and PHP/Web server logs for new errors.
+2. Deploy the Version 1.26.0 application files without overwriting private config/runtime data.
+3. Reload the browser and confirm the footer reports `RSS Reader Modernization 1.26.0`.
+4. Add an Information Board Widget and verify All RSS / specific Feed selection, item count, speed, summary setting, and height setting.
+5. Confirm NEWS and the current article title remain fixed while only the summary moves horizontally.
+6. Confirm previous / next, source/date/count, NEXT preview, and progress display work without affecting other Feed Widgets.
+7. Confirm reduced-motion and Smartphone operation remain usable.
+8. Check Browser Console and PHP/Web server logs for new errors.
 
 ## Release assets
 
-- `rss-reader-modernization-1.25.0.zip`
-- `rss-reader-modernization-1.25.0.zip.sha256`
-- `rss-reader-modernization-1.25.0-complete.zip`
-- `rss-reader-modernization-1.25.0-complete.zip.sha256`
+- `rss-reader-modernization-1.26.0.zip`
+- `rss-reader-modernization-1.26.0.zip.sha256`
+- `rss-reader-modernization-1.26.0-complete.zip`
+- `rss-reader-modernization-1.26.0-complete.zip.sha256`
 
 ## Verification limits
 
-The formal release gate runs the full regression suite, compatibility suite, current feature suite including V1.25 Calendar contracts, security suite, version/dependency hygiene, high-signal secret scanning, deterministic package rebuild comparison, package verification, and clean-room extraction. Focused V1.25 tests additionally cover time/URL validation, recurrence calculations and resource bounds, RSS/Stock pre-fill contracts, modal focus behavior, upcoming-event bounds, and R3 compact/layout-stabilization behavior.
+The formal release gate runs the full current regression suite and current feature suite on PHP 8.1 and PHP 8.4, version/dependency/workflow hygiene checks, high-signal secret scanning, package verification, SHA-256 verification, and clean-room extraction checks. V1.26-specific contracts cover the owner-scoped backend, Information Board UI, fixed-title horizontal-summary ticker, navigation, lower-board metadata, NEXT/progress display, reduced-motion behavior, 44px header/touch targets, cache propagation, and the absence of additional article-fetch/network paths.
 
-The target environment remains responsible for real MySQL migration execution, deployment-specific PHP/Web server configuration, actual Browser/Bootstrap focus lifecycle, and production rendering. V1.25 development overlays were verified in the target environment through F R3, including the compact upcoming display and month-switch layout improvement; the formal package should still receive the normal post-deployment smoke check.
+The target environment remains responsible for deployment-specific PHP/Web server configuration, real browser rendering, external RSS availability, and final post-deployment smoke verification. The V1.26 Information Board candidate, including the corrected header height, expanded summary, navigation, lower-board metadata, NEXT preview, and progress bar, was physically verified before formalization.
