@@ -31,7 +31,8 @@ RewriteEngine On
 # V1.19-C: public/で直接実行可能なPHPはPublic Endpoint Matrixで明示的に固定する。
 # V1.22-A: authenticated RSS management page is an explicit public endpoint.
 # V1.25-D: recurring Calendar API is an explicit authenticated public endpoint.
-RewriteRule ^(?!api_v1\.php$|calendar_color_api\.php$|calendar_recurrence_api\.php$|connection_probe\.php$|error\.php$|index\.php$|logout\.php$|rss-management\.php$|settings\.php$|stock\.php$).*\.php$ - [F,L,NC]
+# V1.27-D: Secure File Upload API is authenticated + CSRF protected.
+RewriteRule ^(?!api_v1\.php$|calendar_color_api\.php$|calendar_recurrence_api\.php$|connection_probe\.php$|error\.php$|file_upload_api\.php$|index\.php$|logout\.php$|rss-management\.php$|settings\.php$|stock\.php$).*\.php$ - [F,L,NC]
 
 # V1.13-B R2: DocumentRootがpublic/直下の場合も /stock をCanonical URLとする。
 # Application Root配下の /public/stock.php が直接指定された場合も /stock へ戻す。
