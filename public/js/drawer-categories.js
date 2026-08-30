@@ -36,7 +36,7 @@
     };
 
     var hrefGroups = {
-        'display': ['./?tab=0', './?tab=1', './?tab=2', './?tab=3', './stock'],
+        'display': ['./?tab=0', './?tab=1', './?tab=2', './?tab=3', './stock', './file-library'],
         'feed': ['./rss-management'],
         'settings': ['./settings#tabs', './settings#display', './settings#highlight']
     };
@@ -91,6 +91,23 @@
             .append($('<i>').addClass('fas fa-list fa-fw').attr('aria-hidden', 'true'))
             .appendTo($link);
         $('<span>').addClass('drawer-item-label').text('RSS管理').appendTo($link);
+        $item.append($link).appendTo($menu);
+    }
+
+    function ensureFileLibraryItem($menu) {
+        var $item;
+        var $link;
+        if (itemByHref($menu, './file-library').length > 0) {
+            return;
+        }
+        $item = $('<li>');
+        $link = $('<a>')
+            .addClass('text-muted drawer-item')
+            .attr('href', './file-library');
+        $('<span>').addClass('drawer-item-icon')
+            .append($('<i>').addClass('fas fa-folder-open fa-fw').attr('aria-hidden', 'true'))
+            .appendTo($link);
+        $('<span>').addClass('drawer-item-label').text('File Library').appendTo($link);
         $item.append($link).appendTo($menu);
     }
 
@@ -161,6 +178,7 @@
         }
 
         ensureRssManagementItem($menu);
+        ensureFileLibraryItem($menu);
         $brand = $menu.children('.drawer-brand').first().detach();
         sectionOrder.forEach(function (key) {
             groups[key] = collectGroup($menu, key);
@@ -194,7 +212,7 @@
             });
         }
 
-        $menu.attr('data-drawer-categories', 'v1.22-a');
+        $menu.attr('data-drawer-categories', 'v1.27-e1');
     }
 
     $(function () {
