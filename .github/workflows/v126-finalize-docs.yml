@@ -41,24 +41,23 @@ jobs:
               '記事Pageの追加FetchやScrapingは行いません。DB Migrationと新規必須Secretはありません。\n\n'
           )
           marker = 'Version 1.25.0は、Calendar Widgetを実用的な予定管理へ拡張したReleaseです。'
-          if intro not in readme:
+          if 'Version 1.26.0は、DashboardのInformationカテゴリへInformation Board Widgetを追加したReleaseです。' not in readme:
               readme = readme.replace(marker, intro + marker, 1)
           readme_path.write_text(readme, encoding='utf-8')
 
           changelog_path = Path('CHANGELOG.md')
           changelog = changelog_path.read_text(encoding='utf-8')
-          section = '''## 1.26.0 - 2026-08-30
-
-- Added the Dashboard Information Board Widget for All RSS or a specific owner-scoped Feed.
-- NEWS and the current article title remain fixed while only the sanitized RSS summary scrolls right-to-left.
-- Added 5/10/20 item limits, slow/normal/fast speed, summary ON/OFF, previous/next navigation, source/date/count footer, NEXT preview, and summary progress.
-- Uses existing RSS description/content only, bounded by the existing 4096-character RSS safety ceiling; no article-page scraping or secondary article fetch is added.
-- Preserved reduced-motion, hover/focus/touch/page-hidden pause behavior, and aligned the Information Board header with the existing 44px Dashboard header/touch targets.
-- Finalized application and asset revision markers at 1.26.0.
-- Existing authentication, authorization, CSRF, owner-scope, SSRF-safe Feed retrieval, and text-sanitization boundaries are preserved.
-- No database migration or new required secret/configuration is introduced.
-
-'''
+          section = (
+              '## 1.26.0 - 2026-08-30\n\n'
+              '- Added the Dashboard Information Board Widget for All RSS or a specific owner-scoped Feed.\n'
+              '- NEWS and the current article title remain fixed while only the sanitized RSS summary scrolls right-to-left.\n'
+              '- Added 5/10/20 item limits, slow/normal/fast speed, summary ON/OFF, previous/next navigation, source/date/count footer, NEXT preview, and summary progress.\n'
+              '- Uses existing RSS description/content only, bounded by the existing 4096-character RSS safety ceiling; no article-page scraping or secondary article fetch is added.\n'
+              '- Preserved reduced-motion, hover/focus/touch/page-hidden pause behavior, and aligned the Information Board header with the existing 44px Dashboard header/touch targets.\n'
+              '- Finalized application and asset revision markers at 1.26.0.\n'
+              '- Existing authentication, authorization, CSRF, owner-scope, SSRF-safe Feed retrieval, and text-sanitization boundaries are preserved.\n'
+              '- No database migration or new required secret/configuration is introduced.\n\n'
+          )
           if '## 1.26.0 - 2026-08-30' not in changelog:
               changelog = changelog.replace('# Changelog\n\n', '# Changelog\n\n' + section, 1)
           changelog_path.write_text(changelog, encoding='utf-8')
