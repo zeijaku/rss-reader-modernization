@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.25.0`
-Release tag: `v1.25.0`
+**Stable release:** `RSS Reader Modernization 1.26.0`
+Release tag: `v1.26.0`
+
+Version 1.26.0は、DashboardのInformationカテゴリへInformation Board Widgetを追加したReleaseです。NEWSと現在の記事Titleを固定し、RSSの概要だけを右から左へ流します。前後記事移動、Source／日時／件数、NEXT予告、進捗表示、Reduced Motion、44px Header／Smartphone Touch targetに対応します。RSS本文は既存の安全なFeed取得経路で得たdescription/contentのみを使い、記事Pageの追加FetchやScrapingは行いません。DB Migrationと新規必須Secretはありません。
 
 Version 1.25.0は、Calendar Widgetを実用的な予定管理へ拡張したReleaseです。通常予定へ終日／時刻／関連URLを追加し、毎日／毎週／毎月／毎年の繰り返し、Today操作、14日以内の直近予定、Smartphone表示調整、RSS／Stock記事から既存Calendar登録ModalへのTitle／URL引継ぎに対応しました。直近予定はServer側で最大8件に制限し、Widget上では初期3件＋「もっと見る」で表示します。繰り返し予定はシリーズ全体の編集／削除を基本とし、個別Occurrence例外やReminder、外部Calendar同期は今回の対象外です。既存DBはMigration `018_v1_25_calendar_event_time_url.sql`、`019_v1_25_calendar_recurrence.sql`を番号順に適用します。
 
