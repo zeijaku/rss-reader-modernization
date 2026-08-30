@@ -47,8 +47,8 @@ check(str_contains($source['page'], 'mode=download'), 'all cards expose secure d
 check(!str_contains($source['page'], 'file_stored_name'), 'physical stored filename is never rendered by File Library page');
 check(!str_contains($source['page'], 'APP_FILE_UPLOAD_DIR'), 'physical upload directory is never rendered by File Library page');
 check(str_contains($source['page'], 'name="return_page"'), 'delete preserves pagination position');
-check(str_contains($source['page'], 'V1.27-E'), 'page retains V1.27-E File Library phase label');
-check(!str_contains($source['page'], 'modal fade') && !str_contains($source['page'], 'data-bs-toggle="modal"'), 'image modal is intentionally deferred to V1.27-F');
+check(str_contains($source['page'], 'V1.27-E'), 'base page retains V1.27-E label before F runtime enhancement');
+check(str_contains($source['js'], "modalElement.id = 'fileLibraryImageModal'") && str_contains($source['js'], "modalElement.className = 'modal fade file-library-image-modal'"), 'V1.27-F image modal is created by File Library JS');
 
 check(str_contains($source['helper'], 'const USER_FILE_LIBRARY_PAGE_SIZE = 24'), 'server page size is fixed at 24');
 check(str_contains($source['helper'], 'file_owner = :owner AND file_flag = 0'), 'list/find queries are owner scoped and active-only');
@@ -91,7 +91,7 @@ check(str_contains($source['css'], '@media (max-width: 575.98px)'), 'File Librar
 check(str_contains($source['css'], '@media (pointer: coarse)'), 'coarse pointer controls preserve touch height');
 check(!str_contains($source['css'], '@import') && !preg_match('/url\s*\(\s*["\']?https?:/i', $source['css']), 'File Library CSS adds no remote dependency');
 check(substr_count($source['css'], '{') === substr_count($source['css'], '}'), 'File Library CSS braces are balanced');
-check(str_contains($source['version'], "APP_ASSET_REVISION = '1.27.0-dev-e4'"), 'asset revision is V1.27-E4 checkpoint');
+check(str_contains($source['version'], "APP_ASSET_REVISION = '1.27.0-dev-f1'"), 'asset revision is V1.27-F checkpoint');
 check(str_contains($source['version'], "APP_VERSION = '1.26.0'"), 'formal APP_VERSION remains v1.26.0 until release phase');
 check(str_contains($source['upload'], 'random_bytes(32)'), 'D random physical filename protection remains present');
 check(str_contains($source['upload'], 'finfo(FILEINFO_MIME_TYPE)'), 'D server-side MIME detection remains present');

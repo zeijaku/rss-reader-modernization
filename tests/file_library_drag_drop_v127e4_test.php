@@ -22,7 +22,7 @@ $check = static function (bool $ok, string $label) use (&$pass, &$fail): void {
 $check(is_string($js), 'File Library JS is readable');
 $check(is_string($css), 'File Library CSS is readable');
 $check(is_string($version), 'version marker is readable');
-$check(str_contains((string) $version, "APP_ASSET_REVISION = '1.27.0-dev-e4'"), 'asset revision is E4');
+$check(str_contains((string) $version, "APP_ASSET_REVISION = '1.27.0-dev-f1'"), 'asset revision is F1 while E4 drag-and-drop remains intact');
 $check(str_contains((string) $js, 'bindUploadDropZone'), 'drag-and-drop binding exists');
 $check(str_contains((string) $js, "addEventListener('dragenter'"), 'dragenter is handled');
 $check(str_contains((string) $js, "addEventListener('dragover'"), 'dragover is handled');
