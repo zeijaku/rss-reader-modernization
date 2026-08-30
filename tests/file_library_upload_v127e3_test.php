@@ -42,7 +42,7 @@ e3check(str_contains($source['upload'], '$extension === \'zip\''), 'ZIP receives
 e3check(str_contains($source['upload'], 'PK\\x03\\x04') && str_contains($source['upload'], 'PK\\x05\\x06'), 'ZIP signatures are checked');
 e3check(!preg_match('/\b(?:eval|exec|shell_exec|system|passthru|proc_open|popen)\s*\(/', $source['upload']), 'upload path adds no code execution primitive');
 e3check(!str_contains($source['upload'], 'ZipArchive') && !str_contains($source['upload'], 'extractTo'), 'ZIP is never extracted server-side');
-e3check(str_contains($source['version'], "APP_ASSET_REVISION = '1.27.0-dev-g1'"), 'asset revision is dev-g1 while E3 upload behavior remains intact');
+e3check(str_contains($source['version'], "APP_ASSET_REVISION = '1.27.0'"), 'asset revision is dev-g1 while E3 upload behavior remains intact');
 e3check(str_contains($source['page'], 'V1.27-E'), 'base page keeps the File Library E phase badge before F runtime enhancement');
 
 echo "SUMMARY: {$pass} passed, {$fail} failed\n";

@@ -45,8 +45,8 @@ $check = static function (bool $ok, string $label) use (&$pass, &$fail): void {
 };
 
 // Integration/version boundary.
-$check(str_contains($source['version'], "APP_VERSION = '1.26.0'"), 'formal APP_VERSION remains 1.26.0 until release phase');
-$check(str_contains($source['version'], "APP_ASSET_REVISION = '1.27.0-dev-g1'"), 'G integration asset revision is set');
+$check(str_contains($source['version'], "APP_VERSION = '1.27.0'"), 'formal APP_VERSION is 1.27.0');
+$check(str_contains($source['version'], "APP_ASSET_REVISION = '1.27.0'"), 'formal V1.27 asset revision is set');
 $check(str_contains($source['runner'], 'test_v127g_current_contract.php'), 'current feature runner includes V1.27 G contract');
 $check(str_contains($source['fileDoc'], 'var/uploads/') && str_contains($source['fileDoc'], '020_v1_27_user_files.sql'), 'File Library deployment/storage documentation is present');
 $check(str_contains($source['checklist'], 'Direct upgrade from formal V1.26.0') && str_contains($source['checklist'], 'owner scoped'), 'G production checklist covers upgrade and ownership verification');

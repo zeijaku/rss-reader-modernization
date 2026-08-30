@@ -22,8 +22,8 @@ $check = static function (bool $ok, string $label) use (&$pass, &$fail): void {
 $check(is_string($calendar), 'calendar loader is readable');
 $check(is_string($drawer), 'drawer organizer is readable');
 $check(is_string($version), 'version marker is readable');
-$check(str_contains((string) $version, "APP_ASSET_REVISION = '1.27.0-dev-g1'"), 'G current asset revision is active');
-$check(str_contains((string) $calendar, "drawer-categories.js?v=1.27.0-dev-g1"), 'Dashboard loader requests current G Drawer script');
+$check(str_contains((string) $version, "APP_ASSET_REVISION = '1.27.0'"), 'G current asset revision is active');
+$check(str_contains((string) $calendar, "drawer-categories.js?v=1.27.0"), 'Dashboard loader requests current G Drawer script');
 $check(!str_contains((string) $calendar, "drawer-categories.js?v=1.26.0"), 'stale V1.26 Drawer cache key removed');
 $check(!str_contains((string) $calendar, "drawer-categories.js?v=1.27.0-dev-e2"), 'E2 checkpoint cache key no longer pins current Drawer');
 $check(str_contains((string) $drawer, "text('File Library')"), 'Drawer organizer contains File Library label');
