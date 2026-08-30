@@ -98,12 +98,14 @@ $txt = $work . '/fixture.txt';
 file_put_contents($txt, "safe plain text\nsecond line\n");
 $csv = $work . '/fixture.csv';
 file_put_contents($csv, "name,value\nalpha,1\n");
+$zip = $work . '/fixture.zip';
+file_put_contents($zip, "PK\x05\x06" . str_repeat("\x00", 18));
 $html = $work . '/fixture.htmlish';
 file_put_contents($html, "<!doctype html><script>alert(1)</script>");
 $binary = $work . '/fixture.bin';
 file_put_contents($binary, "abc\0def");
 
-check(APP_FILE_UPLOAD_MAX_BYTES === 5242880, 'default per-file limit is 5 MiB');
+check(APP_FILE_UPLOAD_MAX_BYTES === 10485760, 'default per-file limit is 10 MiB');
 check(APP_FILE_UPLOAD_MAX_REQUEST_BYTES > APP_FILE_UPLOAD_MAX_BYTES, 'request limit includes multipart overhead');
 check(str_ends_with(str_replace('\\', '/', (string) APP_FILE_UPLOAD_DIR), '/var/uploads'), 'default storage is private var/uploads');
 
@@ -126,7 +128,12 @@ check(user_file_detect_mime($pdf) === 'application/pdf', 'PDF MIME comes from se
 check(user_file_validate_non_image_content($pdf, 'pdf'), 'PDF signature is verified');
 check(user_file_validate_non_image_content($txt, 'txt'), 'plain text without NUL is accepted');
 check(user_file_validate_non_image_content($csv, 'csv'), 'CSV text without NUL is accepted');
+check(user_file_detect_mime($zip) === 'application/zip', 'ZIP MIME comes from server-side Fileinfo');
+check(user_file_validate_non_image_content($zip, 'zip'), 'ZIP signature is verified');
 check(!user_file_validate_non_image_content($binary, 'txt'), 'binary NUL content is rejected for text');
+
+$validZip = user_file_validate_upload(upload_array('archive.zip', $zip), static fn(string $path): bool => true);
+check($validZip['mime_type'] === 'application/zip' && $validZip['extension'] === 'zip', 'valid ZIP upload is accepted');
 
 $valid = user_file_validate_upload(upload_array('photo.png', $png), static fn(string $path): bool => true);
 check($valid['mime_type'] === 'image/png' && $valid['extension'] === 'png', 'valid PNG upload is accepted');
@@ -174,6 +181,14 @@ expect_upload_error(
     413,
     'server upload size rejection maps to 413'
 );
+
+$limitZip = $work . '/limit.zip';
+$fh = fopen($limitZip, 'wb');
+fwrite($fh, "PK\x03\x04");
+ftruncate($fh, APP_FILE_UPLOAD_MAX_BYTES);
+fclose($fh);
+$limitValid = user_file_validate_upload(upload_array('limit.zip', $limitZip), static fn(string $path): bool => true);
+check($limitValid['file_size'] === APP_FILE_UPLOAD_MAX_BYTES, 'file exactly at 10 MiB limit is accepted');
 
 $oversize = $work . '/oversize.bin';
 $fh = fopen($oversize, 'wb');

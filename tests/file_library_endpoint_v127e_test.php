@@ -38,7 +38,7 @@ check(str_contains($source['page'], 'user_file_library_delete_owned($currentUser
 check(str_contains($source['page'], 'APP_FILE_UPLOAD_MAX_REQUEST_BYTES'), 'page enforces upload request-size guard');
 check(strpos($source['page'], 'APP_FILE_UPLOAD_MAX_REQUEST_BYTES') < strpos($source['page'], 'app_csrf_is_valid'), 'request-size guard runs before CSRF so PHP post_max_size overflow fails as too large');
 check(str_contains($source['page'], 'enctype="multipart/form-data"'), 'upload form uses multipart encoding');
-check(str_contains($source['page'], 'accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.txt,.csv"'), 'browser accept hint matches D allowlist');
+check(str_contains($source['js'], ".jpg,.jpeg,.png,.gif,.webp,.pdf,.txt,.csv,.zip"), 'browser accept hint is upgraded to include ZIP');
 check(str_contains($source['page'], 'row-cols-2 row-cols-md-3 row-cols-xl-4'), 'mobile baseline is two-column File Library grid');
 check(str_contains($source['page'], 'loading="lazy"'), 'image previews are lazy-loaded');
 check(str_contains($source['page'], 'mode=thumb'), 'image cards use authenticated content endpoint for preview');
@@ -47,7 +47,7 @@ check(str_contains($source['page'], 'mode=download'), 'all cards expose secure d
 check(!str_contains($source['page'], 'file_stored_name'), 'physical stored filename is never rendered by File Library page');
 check(!str_contains($source['page'], 'APP_FILE_UPLOAD_DIR'), 'physical upload directory is never rendered by File Library page');
 check(str_contains($source['page'], 'name="return_page"'), 'delete preserves pagination position');
-check(str_contains($source['page'], 'V1.27-E'), 'page exposes V1.27-E checkpoint label');
+check(str_contains($source['page'], 'V1.27-E'), 'page retains V1.27-E File Library phase label');
 check(!str_contains($source['page'], 'modal fade') && !str_contains($source['page'], 'data-bs-toggle="modal"'), 'image modal is intentionally deferred to V1.27-F');
 
 check(str_contains($source['helper'], 'const USER_FILE_LIBRARY_PAGE_SIZE = 24'), 'server page size is fixed at 24');
@@ -91,11 +91,20 @@ check(str_contains($source['css'], '@media (max-width: 575.98px)'), 'File Librar
 check(str_contains($source['css'], '@media (pointer: coarse)'), 'coarse pointer controls preserve touch height');
 check(!str_contains($source['css'], '@import') && !preg_match('/url\s*\(\s*["\']?https?:/i', $source['css']), 'File Library CSS adds no remote dependency');
 check(substr_count($source['css'], '{') === substr_count($source['css'], '}'), 'File Library CSS braces are balanced');
-check(str_contains($source['version'], "APP_ASSET_REVISION = '1.27.0-dev-e2'"), 'asset revision is V1.27-E2 checkpoint');
+check(str_contains($source['version'], "APP_ASSET_REVISION = '1.27.0-dev-e3'"), 'asset revision is V1.27-E3 checkpoint');
 check(str_contains($source['version'], "APP_VERSION = '1.26.0'"), 'formal APP_VERSION remains v1.26.0 until release phase');
 check(str_contains($source['upload'], 'random_bytes(32)'), 'D random physical filename protection remains present');
 check(str_contains($source['upload'], 'finfo(FILEINFO_MIME_TYPE)'), 'D server-side MIME detection remains present');
 check(str_contains($source['upload'], 'move_uploaded_file'), 'D HTTP upload move boundary remains present');
+check(str_contains($source['upload'], "'10485760'"), 'default upload size is 10 MiB');
+check(str_contains($source['upload'], "'zip' => ['mimes'"), 'ZIP is server-side allowlisted');
+check(str_contains($source['upload'], 'application/zip'), 'ZIP MIME is checked server-side');
+check(str_contains($source['upload'], 'PK\\x03\\x04') || str_contains($source['upload'], 'PK\x03\x04'), 'ZIP signature validation is present');
+check(str_contains($source['js'], '1ファイル最大10 MiB'), 'File Library runtime UI explains 10 MiB limit');
+check(str_contains($source['js'], 'ZIP'), 'File Library runtime UI explains ZIP support');
+check(str_contains($source['css'], 'grid-row: 2') && str_contains($source['css'], '.file-library-upload-submit'), 'upload input and button share the same explicit grid row');
+check(str_contains($source['js'], 'spinner-border spinner-border-sm'), 'upload submit shows Bootstrap loading spinner');
+check(str_contains($source['js'], 'アップロード中…'), 'upload submit exposes loading text');
 
 echo "SUMMARY: {$pass} passed, {$fail} failed\n";
 exit($fail === 0 ? 0 : 1);

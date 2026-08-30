@@ -14,7 +14,7 @@ final class UserFileUploadException extends RuntimeException
 }
 
 if (!defined('APP_FILE_UPLOAD_MAX_BYTES')) {
-    define('APP_FILE_UPLOAD_MAX_BYTES', max(65536, min(10485760, (int) app_env('APP_FILE_UPLOAD_MAX_BYTES', '5242880'))));
+    define('APP_FILE_UPLOAD_MAX_BYTES', max(65536, min(10485760, (int) app_env('APP_FILE_UPLOAD_MAX_BYTES', '10485760'))));
 }
 if (!defined('APP_FILE_UPLOAD_MAX_REQUEST_BYTES')) {
     $requestDefault = (string) max(APP_FILE_UPLOAD_MAX_BYTES + 65536, 6291456);
@@ -39,6 +39,7 @@ function user_file_allowed_types(): array
         'pdf' => ['mimes' => ['application/pdf'], 'image' => false],
         'txt' => ['mimes' => ['text/plain'], 'image' => false],
         'csv' => ['mimes' => ['text/plain', 'text/csv', 'application/csv'], 'image' => false],
+        'zip' => ['mimes' => ['application/zip', 'application/x-zip-compressed'], 'image' => false],
     ];
 }
 
@@ -152,6 +153,11 @@ function user_file_validate_non_image_content(string $path, string $extension): 
     }
     if ($extension === 'txt' || $extension === 'csv') {
         return !str_contains($prefix, "\0");
+    }
+    if ($extension === 'zip') {
+        return str_starts_with($prefix, "PK\x03\x04")
+            || str_starts_with($prefix, "PK\x05\x06")
+            || str_starts_with($prefix, "PK\x07\x08");
     }
     return false;
 }
