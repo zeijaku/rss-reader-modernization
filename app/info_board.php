@@ -17,6 +17,7 @@ declare(strict_types=1);
 const INFO_BOARD_MODE = 'info_board';
 const INFO_BOARD_SOURCE_TYPE = 'rss';
 const INFO_BOARD_QUERY = "Information Board\u{2060}";
+const INFO_BOARD_SUMMARY_HARD_LIMIT = 4096;
 
 /** @return list<int> */
 function info_board_allowed_limits(): array
@@ -33,7 +34,7 @@ function info_board_allowed_speeds(): array
 /** @return list<int> */
 function info_board_allowed_summary_max(): array
 {
-    return [100, 200, 300];
+    return [100, 200, 300, INFO_BOARD_SUMMARY_HARD_LIMIT];
 }
 
 function info_board_validate_feed_mode(mixed $value): ?string
@@ -280,6 +281,18 @@ function info_board_single_line_text(mixed $value, int $maxLength): string
     return trim($text);
 }
 
+function info_board_text_length(string $value): int
+{
+    if (function_exists('mb_strlen')) {
+        return mb_strlen($value, 'UTF-8');
+    }
+    if (function_exists('iconv_strlen')) {
+        $length = iconv_strlen($value, 'UTF-8');
+        return is_int($length) ? $length : strlen($value);
+    }
+    return strlen($value);
+}
+
 /** @return array{kind:string,source_type:string,title:string,summary:string,text:string,link:string,date:string,source_title:string}|null */
 function info_board_item_payload(array $item, string $sourceTitle, array $config): ?array
 {
@@ -290,10 +303,14 @@ function info_board_item_payload(array $item, string $sourceTitle, array $config
 
     $summary = '';
     if (($config['show_summary'] ?? false) === true) {
-        $summaryMax = info_board_validate_summary_max($config['summary_max'] ?? null) ?? 200;
-        $summary = info_board_single_line_text($item['description'] ?? '', $summaryMax);
+        $summaryMax = info_board_validate_summary_max($config['summary_max'] ?? null) ?? INFO_BOARD_SUMMARY_HARD_LIMIT;
+        $description = info_board_single_line_text($item['description'] ?? '', $summaryMax);
+        $content = info_board_single_line_text($item['content'] ?? '', $summaryMax);
+        $summary = $description;
         if ($summary === '') {
-            $summary = info_board_single_line_text($item['content'] ?? '', $summaryMax);
+            $summary = $content;
+        } elseif (info_board_text_length($content) > info_board_text_length($summary)) {
+            $summary = $content;
         }
         if ($summary === $title) {
             $summary = '';
@@ -381,7 +398,9 @@ function info_board_execute(int $ownerId, int $widgetId): array
                 if (!is_array($item)) {
                     continue;
                 }
-                $payload = info_board_item_payload($item, $sourceTitle, $config);
+                $displayConfig = $config;
+                $displayConfig['summary_max'] = INFO_BOARD_SUMMARY_HARD_LIMIT;
+                $payload = info_board_item_payload($item, $sourceTitle, $displayConfig);
                 if ($payload === null) {
                     continue;
                 }
