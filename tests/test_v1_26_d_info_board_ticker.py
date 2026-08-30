@@ -116,20 +116,19 @@ check("info-board-ticker.js' + assetQuery" in loader and "data-info-board-v126d-
 check("info-board.js' + assetQuery" in loader and "data-info-board-v126c-script" in loader,
       'existing Information Board presentation bootstrap remains intact')
 check("info-board.css' + assetQuery" in ui and "data-info-board-v126c-style" in ui,
-      'Information Board stylesheet inherits the same staged asset query')
+      'Information Board stylesheet inherits the same asset query')
 check("document.currentScript" in loader and "current.src.indexOf('?')" in loader
       and "document.currentScript" in ui and "sourceScript.src.indexOf('?')" in ui,
       'Information Board bootstrap passes the cache query from memo-counter.js through info-board.js to CSS')
 
-# Keep the formal V1.25 asset revision stable while explicitly busting only the
-# staged Information Board bootstrap chain. Apache can therefore keep immutable
-# caching for unrelated assets without requiring Ctrl+F5 for this feature.
-check("const APP_ASSET_REVISION = '1.25.0';" in version,
-      'formal immutable asset revision remains on the V1.25 release baseline')
-check("const INFO_BOARD_ASSET_REVISION = '1.26.0-dev-d4';" in version,
-      'Information Board has a dedicated staged cache revision')
+# Final V1.26.0 promotion aligns the global immutable asset revision and the
+# scoped Information Board bootstrap revision with the formal release version.
+check("const APP_ASSET_REVISION = '1.26.0';" in version,
+      'formal immutable asset revision matches the V1.26 release')
+check("const INFO_BOARD_ASSET_REVISION = '1.26.0';" in version,
+      'Information Board scoped cache revision matches the V1.26 release')
 check("$path === 'js/memo-counter.js'" in asset and "INFO_BOARD_ASSET_REVISION" in asset,
-      'asset helper applies the staged cache key only to the Information Board bootstrap')
+      'asset helper keeps the scoped Information Board bootstrap cache key')
 check("$url .= '&ib='" in asset,
       'scoped Information Board cache revision is appended as a separate query parameter')
 check("APP_ASSET_REVISION" in asset and "rawurlencode($revision)" in asset,
