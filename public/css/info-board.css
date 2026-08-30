@@ -1,0 +1,392 @@
+/* V1.26-D Information Board: fixed title plus right-to-left summary ticker. */
+.info-board-card .feed-card-inner {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+}
+
+.info-board-header-table {
+    margin-bottom: 0;
+}
+
+/* Match the converted Information Board header to the normal dashboard feed header.
+ * info-board.js replaces .feed-table with .info-board-header-table, so the normal
+ * .feed-table thead .feed-card-header rule no longer matches after conversion. */
+.info-board-header-table thead .feed-card-header {
+    box-sizing: border-box;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    padding: 0 4px 0 8px;
+    border-top: 0;
+    border-bottom: 0;
+    line-height: 1;
+    overflow: hidden;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.info-board-card-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-top: 0;
+    background: var(--bs-body-bg, #fff);
+}
+
+/* Static fallback before the D ticker script binds. */
+.info-board-list {
+    max-height: 20rem;
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+
+.info-board-card[data-widget-height="2"] .info-board-list {
+    max-height: 42rem;
+}
+
+.info-board-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: .65rem;
+    align-items: start;
+    padding: .7rem .85rem;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+.info-board-item:last-child {
+    border-bottom: 0;
+}
+
+.info-board-kind {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.4rem;
+    padding: .15rem .45rem;
+    border-radius: var(--bs-border-radius-sm, .25rem);
+    background: var(--bs-danger, #dc3545);
+    color: var(--bs-white, #fff);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    line-height: 1.4;
+}
+
+.info-board-item-main {
+    min-width: 0;
+}
+
+.info-board-item-title {
+    display: block;
+    overflow-wrap: anywhere;
+    color: var(--bs-body-color, #212529);
+    font-weight: 600;
+    line-height: 1.35;
+    text-decoration: none;
+}
+
+a.info-board-item-title:hover,
+a.info-board-item-title:focus {
+    text-decoration: underline;
+}
+
+.info-board-item-summary {
+    margin: .25rem 0 0;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .86rem;
+    line-height: 1.45;
+}
+
+.info-board-item-meta {
+    margin-top: .25rem;
+    overflow: hidden;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .75rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.info-board-state,
+.info-board-fetch-warning {
+    padding: 1rem;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .86rem;
+    text-align: center;
+}
+
+.info-board-state-error,
+.info-board-fetch-warning {
+    color: var(--bs-danger-text-emphasis, #842029);
+}
+
+.info-board-fetch-warning {
+    border-top: 1px solid var(--bs-border-color, #dee2e6);
+    padding: .5rem .75rem;
+}
+
+.info-board-footer {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    min-height: 2.55rem;
+    margin-top: 0;
+    padding: .25rem .45rem;
+    border-top: 1px solid var(--bs-border-color, #dee2e6);
+    background: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+.info-board-footer[hidden] {
+    display: none !important;
+}
+
+.info-board-extras {
+    margin-top: auto;
+    padding: .45rem .75rem .35rem;
+    border-top: 1px solid var(--bs-border-color, #dee2e6);
+    background: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+.info-board-extras[hidden] {
+    display: none !important;
+}
+
+.info-board-extras[hidden] + .info-board-footer {
+    margin-top: auto;
+}
+
+.info-board-extras:not([hidden]) + .info-board-footer {
+    border-top: 0;
+}
+
+.info-board-next-row {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: .55rem;
+}
+
+.info-board-next-row[hidden] {
+    display: none !important;
+}
+
+.info-board-next-label {
+    flex: 0 0 auto;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+}
+
+.info-board-next-title {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .76rem;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.info-board-progress-track {
+    height: 4px;
+    margin-top: .4rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(var(--bs-secondary-rgb, 108, 117, 125), .18);
+}
+
+.info-board-progress-track[hidden] {
+    display: none !important;
+}
+
+.info-board-progress-bar {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--bs-info, #0dcaf0);
+    transform: scaleX(0);
+    transform-origin: left center;
+    will-change: transform;
+}
+
+.info-board-footer-meta {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .78rem;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.info-board-nav-button {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    padding: .2rem .45rem;
+    text-decoration: none;
+    touch-action: manipulation;
+}
+
+.info-board-nav-button:disabled {
+    cursor: default;
+    opacity: .45;
+}
+
+/* D ticker presentation: one NEWS item at a time. */
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-list {
+    max-height: none;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-item {
+    display: none;
+    min-width: 0;
+    overflow: hidden;
+    border-bottom: 0;
+}
+
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-item.is-active {
+    display: grid;
+}
+
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-item-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.info-board-summary-lane {
+    width: 100%;
+    min-width: 0;
+    min-height: 1.5em;
+    margin-top: .3rem;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-item-summary {
+    display: block;
+    width: max-content;
+    max-width: none;
+    margin: 0;
+    white-space: nowrap;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+}
+
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-item-meta,
+/* V1.26 final: summary length is fixed to the safe RSS full-text ceiling.
+ * Keep the legacy 100/200/300 select in the DOM for stored-config compatibility,
+ * but do not expose a control that no longer changes ticker output. */
+#registerInfoBoard .mb-3.col-md-4:has(> .registerInfoBoardSummaryMax),
+#changeInfoBoard .mb-3.col-md-4:has(> .changeInfoBoardSummaryMax) {
+    display: none;
+}
+
+.info-board-card[data-info-board-ticker-bound="1"] .info-board-fetch-warning {
+    display: none;
+}
+
+.info-board-motion-toggle {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    touch-action: manipulation;
+}
+
+.info-board-motion-toggle:disabled {
+    cursor: default;
+    opacity: .72;
+}
+
+.info-board-card[data-info-board-motion="interaction"] .info-board-motion-toggle {
+    opacity: .82;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .info-board-card[data-info-board-ticker-bound="1"] .info-board-summary-lane {
+        overflow: visible;
+        white-space: normal;
+    }
+
+    .info-board-card[data-info-board-ticker-bound="1"] .info-board-item-summary {
+        width: auto;
+        white-space: normal;
+        transform: none !important;
+        will-change: auto;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .info-board-item {
+        grid-template-columns: 1fr;
+        gap: .35rem;
+        padding: .65rem .7rem;
+    }
+
+    .info-board-kind {
+        justify-self: start;
+    }
+
+    .info-board-list {
+        max-height: 18rem;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-y;
+    }
+
+    .info-board-card[data-widget-height="2"] .info-board-list {
+        max-height: 36rem;
+    }
+
+    .info-board-card[data-info-board-ticker-bound="1"] .info-board-item {
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: .5rem;
+        padding: .65rem .7rem;
+    }
+
+    .info-board-card[data-info-board-ticker-bound="1"] .info-board-kind {
+        justify-self: auto;
+    }
+
+    .info-board-card[data-info-board-ticker-bound="1"] .info-board-list {
+        max-height: none;
+        touch-action: manipulation;
+    }
+
+    .info-board-motion-toggle,
+    .info-board-nav-button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .info-board-extras {
+        padding: .35rem .55rem .3rem;
+    }
+
+    .info-board-next-row {
+        gap: .4rem;
+    }
+
+    .info-board-next-title {
+        font-size: .72rem;
+    }
+
+    .info-board-footer {
+        gap: .15rem;
+        padding: .15rem .25rem;
+    }
+
+    .info-board-footer-meta {
+        font-size: .72rem;
+    }
+}

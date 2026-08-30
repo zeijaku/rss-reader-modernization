@@ -135,3 +135,36 @@
         }
     }
 }(typeof window !== 'undefined' ? window : null));
+
+/* V1.26-D phased Dashboard bootstrap: keep the Information Board presentation
+ * and ticker isolated from the legacy-sized dashboard.js surface. */
+(function (root, document) {
+    'use strict';
+
+    if (!root || !document) {
+        return;
+    }
+
+    var current = document.currentScript;
+    var assetQuery = '';
+    if (current && current.src) {
+        var queryIndex = current.src.indexOf('?');
+        assetQuery = queryIndex >= 0 ? current.src.slice(queryIndex) : '';
+    }
+
+    if (!document.querySelector('script[data-info-board-v126c-script]')) {
+        var infoBoardScript = document.createElement('script');
+        infoBoardScript.src = './js/info-board.js' + assetQuery;
+        infoBoardScript.async = false;
+        infoBoardScript.setAttribute('data-info-board-v126c-script', 'true');
+        document.head.appendChild(infoBoardScript);
+    }
+
+    if (!document.querySelector('script[data-info-board-v126d-script]')) {
+        var tickerScript = document.createElement('script');
+        tickerScript.src = './js/info-board-ticker.js' + assetQuery;
+        tickerScript.async = false;
+        tickerScript.setAttribute('data-info-board-v126d-script', 'true');
+        document.head.appendChild(tickerScript);
+    }
+}(typeof window !== 'undefined' ? window : null, typeof document !== 'undefined' ? document : null));

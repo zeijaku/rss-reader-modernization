@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.26.0 - 2026-08-30
+
+- Added the Dashboard Information Board Widget for All RSS or a specific owner-scoped Feed.
+- NEWS and the current article title remain fixed while only the sanitized RSS summary scrolls right-to-left.
+- Added 5/10/20 item limits, slow/normal/fast speed, summary ON/OFF, previous/next navigation, source/date/count footer, NEXT preview, and summary progress.
+- Uses existing RSS description/content only, bounded by the existing 4096-character RSS safety ceiling; no article-page scraping or secondary article fetch is added.
+- Preserved reduced-motion, hover/focus/touch/page-hidden pause behavior, and aligned the Information Board header with the existing 44px Dashboard header/touch targets.
+- Finalized application and asset revision markers at 1.26.0.
+- Existing authentication, authorization, CSRF, owner-scope, SSRF-safe Feed retrieval, and text-sanitization boundaries are preserved.
+- No database migration or new required secret/configuration is introduced.
+
 ## 1.25.0 - 2026-08-28
 
 ### Calendar event details

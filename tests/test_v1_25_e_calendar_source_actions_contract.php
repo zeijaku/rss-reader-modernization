@@ -14,10 +14,20 @@ foreach ([$sourceActions, $loader, $version] as $source) {
     }
 }
 
+$appVersion = null;
+$assetRevision = null;
+if (preg_match("/const APP_VERSION = '([^']+)';/", $version, $versionMatch) === 1) {
+    $appVersion = $versionMatch[1];
+}
+if (preg_match("/const APP_ASSET_REVISION = '([^']+)';/", $version, $assetMatch) === 1) {
+    $assetRevision = $assetMatch[1];
+}
+
 $checks = [
-    'formal APP_VERSION is V1.25.0' => str_contains($version, "const APP_VERSION = '1.25.0';"),
-    'formal asset revision is V1.25.0' => str_contains($version, "const APP_ASSET_REVISION = '1.25.0';"),
-    'source action module uses release cache key' => str_contains($loader, "calendar-source-actions.js?v=1.25.0"),
+    'formal APP_VERSION is defined' => is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+$/', $appVersion) === 1,
+    'formal asset revision follows APP_VERSION' => is_string($assetRevision) && $assetRevision === $appVersion,
+    'source action module uses current release cache key' => is_string($assetRevision)
+        && str_contains($loader, 'calendar-source-actions.js?v=' . $assetRevision),
     'article action menu is reused' => str_contains($sourceActions, "$('#articleActionsMenu')"),
     'Calendar action is added after Task when available' => str_contains($sourceActions, ".article-action-task")
         && str_contains($sourceActions, "insertAdjacentElement('afterend', button)"),
@@ -41,15 +51,15 @@ $checks = [
     'source action performs no AJAX or outbound fetch' => !str_contains($sourceActions, '$.ajax(')
         && !str_contains($sourceActions, 'fetch(')
         && !str_contains($sourceActions, 'XMLHttpRequest'),
-    'source action does not assign innerHTML' => !preg_match('/\\.innerHTML\\s*=/', $sourceActions),
-    'source action does not use eval' => !preg_match('/\\beval\\s*\\(/', $sourceActions),
+    'source action does not assign innerHTML' => !preg_match('/\.innerHTML\s*=/', $sourceActions),
+    'source action does not use eval' => !preg_match('/\beval\s*\(/', $sourceActions),
 ];
 
-$corePos = strpos($loader, "loadScript('./js/calendar-core.js?v=1.25.0');");
-$repeatPos = strpos($loader, "loadScript('./js/calendar-recurrence.js?v=1.25.0');");
-$detailPos = strpos($loader, "loadScript('./js/calendar-event-details.js?v=1.25.0');");
-$colorPos = strpos($loader, "loadScript('./js/calendar-colors.js?v=1.25.0');");
-$sourcePos = strpos($loader, "loadScript('./js/calendar-source-actions.js?v=1.25.0');");
+$corePos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-core.js?v={$assetRevision}');") : false;
+$repeatPos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-recurrence.js?v={$assetRevision}');") : false;
+$detailPos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-event-details.js?v={$assetRevision}');") : false;
+$colorPos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-colors.js?v={$assetRevision}');") : false;
+$sourcePos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-source-actions.js?v={$assetRevision}');") : false;
 $checks['source action loads after Calendar core/detail/recurrence/color layers'] = is_int($corePos)
     && is_int($repeatPos)
     && is_int($detailPos)
