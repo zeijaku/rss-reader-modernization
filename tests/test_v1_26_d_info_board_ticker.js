@@ -86,14 +86,14 @@ check(api.wrappedIndex(0, -1, 5) === 4, 'previous navigation wraps from the firs
 check(api.wrappedIndex(3, -1, 5) === 2, 'previous navigation moves to the preceding article');
 check(api.wrappedIndex(9, 1, 0) === 0, 'navigation fails closed when the article list is empty');
 
-check(api.footerMetaLabel('Example News', '8/30 12:34', 0, 5) === 'Example News · 8/30 12:34 · 1/5',
+check(api.footerMetaLabel('Example News', '8/30 12:34', 0, 5) === 'Example News ｜ 8/30 12:34 ｜ 1 / 5',
     'footer combines site name, date and current article count');
-check(api.footerMetaLabel('', '', 4, 5) === '5/5',
+check(api.footerMetaLabel('', '', 4, 5) === '5 / 5',
     'footer still exposes article count when source/date metadata is absent');
 
-check(api.progressForPosition(100, 300, 400) === 0, 'summary progress starts at zero at the right edge');
-check(api.progressForPosition(-300, 300, 400) === 1, 'summary progress reaches one only after the text fully exits left');
-const middleProgress = api.progressForPosition(-100, 300, 400);
+check(api.progressForPosition(100, 300, 100) === 0, 'summary progress starts at zero at the right edge');
+check(api.progressForPosition(100, 300, -300) === 1, 'summary progress reaches one only after the text fully exits left');
+const middleProgress = api.progressForPosition(100, 300, -100);
 check(middleProgress > 0 && middleProgress < 1, 'summary progress remains bounded while text is moving');
 
 const textNode = {textContent: 'same'};
