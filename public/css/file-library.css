@@ -26,8 +26,15 @@
 .file-library-meta { margin-bottom: .55rem; color: var(--bs-secondary-color,#6c757d); font-size: .68rem; line-height: 1.45; }
 .file-library-actions { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); margin-top: auto; gap: .3rem; }
 .file-library-actions.file-library-actions-two { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.file-library-actions.file-library-actions-detail-three { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.file-library-actions.file-library-actions-detail-four { grid-template-columns: repeat(4,minmax(0,1fr)); }
 .file-library-actions .btn { display: inline-flex; min-width: 0; min-height: 38px; padding: .3rem; align-items: center; justify-content: center; }
 .file-library-delete-form { display: contents; }
+.file-library-detail-loading:not([hidden]) { display: flex; min-height: 140px; align-items: center; justify-content: center; gap: .5rem; }
+.file-library-detail-list > div { display: grid; grid-template-columns: minmax(110px,.32fr) minmax(0,1fr); gap: .75rem; padding: .55rem 0; border-bottom: 1px solid rgba(var(--bs-body-color-rgb,33,37,41),.08); }
+.file-library-detail-list > div:last-child { border-bottom: 0; }
+.file-library-detail-list dt { margin: 0; color: var(--bs-secondary-color,#6c757d); font-size: .78rem; font-weight: 600; }
+.file-library-detail-list dd { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: .85rem; }
 .file-library-empty { padding: 3rem 1rem; text-align: center; }
 .file-library-pagination .page-link { min-width: 40px; text-align: center; }
 @media (pointer: coarse) {
@@ -44,8 +51,13 @@
     .file-library-name { font-size: .78rem; }
     .file-library-meta { font-size: .64rem; }
     .file-library-actions { gap: .2rem; }
-    .file-library-image-modal .modal-dialog { margin: .5rem; }
+    .file-library-actions.file-library-actions-detail-three,
+    .file-library-actions.file-library-actions-detail-four { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .file-library-image-modal .modal-dialog,
+    .file-library-detail-modal .modal-dialog { margin: .5rem; }
     .file-library-viewer-body { padding: .5rem; }
     .file-library-viewer-stage { min-height: 190px; max-height: calc(100vh - 9rem); }
     .file-library-viewer-image:not([hidden]) { max-height: calc(100vh - 10.5rem); }
+    .file-library-detail-list > div { display: block; }
+    .file-library-detail-list dt { margin-bottom: .15rem; }
 }
