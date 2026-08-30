@@ -91,7 +91,7 @@ check(str_contains($source['css'], '@media (max-width: 575.98px)'), 'File Librar
 check(str_contains($source['css'], '@media (pointer: coarse)'), 'coarse pointer controls preserve touch height');
 check(!str_contains($source['css'], '@import') && !preg_match('/url\s*\(\s*["\']?https?:/i', $source['css']), 'File Library CSS adds no remote dependency');
 check(substr_count($source['css'], '{') === substr_count($source['css'], '}'), 'File Library CSS braces are balanced');
-check(str_contains($source['version'], "APP_ASSET_REVISION = '1.27.0-dev-f1'"), 'asset revision is V1.27-F checkpoint');
+check(str_contains($source['version'], "APP_ASSET_REVISION = '1.27.0-dev-g1'"), 'asset revision is V1.27-G integration checkpoint');
 check(str_contains($source['version'], "APP_VERSION = '1.26.0'"), 'formal APP_VERSION remains v1.26.0 until release phase');
 check(str_contains($source['upload'], 'random_bytes(32)'), 'D random physical filename protection remains present');
 check(str_contains($source['upload'], 'finfo(FILEINFO_MIME_TYPE)'), 'D server-side MIME detection remains present');

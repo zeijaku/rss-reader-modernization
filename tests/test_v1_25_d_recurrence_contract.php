@@ -30,7 +30,7 @@ if (preg_match("/const APP_ASSET_REVISION = '([^']+)';/", $version, $assetMatch)
 
 $checks = [
     'formal APP_VERSION is defined' => is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+$/', $appVersion) === 1,
-    'formal asset revision follows APP_VERSION' => is_string($assetRevision) && $assetRevision === $appVersion,
+    'active asset revision is defined' => is_string($assetRevision) && preg_match('/^[A-Za-z0-9._-]+$/', $assetRevision) === 1,
     'migration adds repeat type' => str_contains($migration, 'calendar_event_repeat_type'),
     'migration defaults repeat type to none' => str_contains($migration, "DEFAULT ''none''"),
     'migration adds nullable repeat until' => str_contains($migration, 'calendar_event_repeat_until') && str_contains($migration, 'DATE NULL DEFAULT NULL'),
@@ -61,7 +61,7 @@ $checks = [
     'UI renders recurring marker' => str_contains($ui, 'calendar-event-repeat-label') && str_contains($css, '.calendar-event-repeat-label'),
     'UI does not assign innerHTML' => !preg_match('/\.innerHTML\s*=/', $ui),
     'UI does not use eval' => !preg_match('/\beval\s*\(/', $ui),
-    'recurrence layer is loaded with current release cache key' => is_string($assetRevision)
+    'recurrence layer is loaded with current asset cache key' => is_string($assetRevision)
         && str_contains($loader, 'calendar-recurrence.js?v=' . $assetRevision)
         && str_contains($loader, 'calendar-recurrence.css?v=' . $assetRevision),
 ];

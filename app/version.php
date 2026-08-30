@@ -12,12 +12,12 @@ const APP_VERSION_LABEL = 'RSS Reader Modernization 1.26.0';
 /**
  * Cache key for public assets.
  * Formal release assets use the same immutable cache key as APP_VERSION.
- * V1.27-F uses a development revision for the File Library Image Viewer.
+ * V1.27-G uses a development revision for integration and release-candidate verification.
  */
-const APP_ASSET_REVISION = '1.27.0-dev-f1';
+const APP_ASSET_REVISION = '1.27.0-dev-g1';
 
 /**
  * V1.26-D: scoped cache key for the Information Board bootstrap chain.
- * V1.27-F does not change those assets, so keep the formal revision.
+ * V1.27-G does not change those assets, so keep the formal revision.
  */
 const INFO_BOARD_ASSET_REVISION = '1.26.0';

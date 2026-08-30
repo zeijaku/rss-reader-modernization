@@ -1,8 +1,8 @@
--- RSS Reader Modernization base new-install schema (through migration 008 / V1.7, plus integrated 013, 017, 018 and 019).
+-- RSS Reader Modernization base new-install schema (through migration 008 / V1.7, plus integrated 013, 017, 018, 019 and 020).
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
 -- Current fresh installs must also apply migrations 009-012 and 014-016 in numeric order.
--- V1.20.1 Calendar color (013), V1.24 Stock state (017), V1.25 Calendar time/URL (018), and V1.25 Calendar recurrence (019) are integrated here.
+-- V1.20.1 Calendar color (013), V1.24 Stock state (017), V1.25 Calendar time/URL (018), V1.25 Calendar recurrence (019), and V1.27 user file metadata (020) are integrated here.
 -- See docs/installation.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
@@ -22,6 +22,7 @@ SET @t_task = CONCAT('`', @table_prefix, 'task`');
 SET @t_calendar_event = CONCAT('`', @table_prefix, 'calendar_event`');
 SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
 SET @t_remember_token = CONCAT('`', @table_prefix, 'remember_token`');
+SET @t_user_file = CONCAT('`', @table_prefix, 'user_file`');
 
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_user_info, ' (',
@@ -115,7 +116,6 @@ SET @sql = CONCAT(
 );
 PREPARE sb13_stmt FROM @sql; EXECUTE sb13_stmt; DEALLOCATE PREPARE sb13_stmt;
 
-
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_feed_item_state, ' (',
   '`state_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
@@ -134,7 +134,6 @@ SET @sql = CONCAT(
 );
 PREPARE v11c_stmt FROM @sql; EXECUTE v11c_stmt; DEALLOCATE PREPARE v11c_stmt;
 
-
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_memo, ' (',
   '`memo_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,',
@@ -149,7 +148,6 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Memo保管'''
 );
 PREPARE v11g_stmt FROM @sql; EXECUTE v11g_stmt; DEALLOCATE PREPARE v11g_stmt;
-
 
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_calendar_event, ' (',
@@ -175,7 +173,6 @@ SET @sql = CONCAT(
 );
 PREPARE v11i_stmt FROM @sql; EXECUTE v11i_stmt; DEALLOCATE PREPARE v11i_stmt;
 
-
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_task, ' (',
   '`task_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
@@ -196,7 +193,6 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Task保管'''
 );
 PREPARE v11h_stmt FROM @sql; EXECUTE v11h_stmt; DEALLOCATE PREPARE v11h_stmt;
-
 
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_dashboard_widget, ' (',
@@ -220,6 +216,24 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Dashboard Widget配置'''
 );
 PREPARE v11d_stmt FROM @sql; EXECUTE v11d_stmt; DEALLOCATE PREPARE v11d_stmt;
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_user_file, ' (',
+  '`file_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`file_owner` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`file_original_name` VARCHAR(255) NOT NULL,',
+  '`file_stored_name` VARCHAR(80) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`file_mime_type` VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`file_extension` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`file_size` BIGINT UNSIGNED NOT NULL,',
+  '`file_created_at` DATETIME NOT NULL,',
+  '`file_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:active/1:deleted'',',
+  'PRIMARY KEY (`file_id`),',
+  'UNIQUE KEY `uq_user_file_stored_name` (`file_stored_name`),',
+  'KEY `idx_user_file_owner_flag_id` (`file_owner`, `file_flag`, `file_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''User-owned file metadata'''
+);
+PREPARE v127d_user_file_stmt FROM @sql; EXECUTE v127d_user_file_stmt; DEALLOCATE PREPARE v127d_user_file_stmt;
 
 -- Foreign keys are intentionally NOT added in SB-13.
 -- Legacy orphan data and the user deletion policy must be resolved first.

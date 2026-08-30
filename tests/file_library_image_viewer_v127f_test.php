@@ -34,7 +34,7 @@ $check = static function (bool $ok, string $label) use (&$pass, &$fail): void {
     echo "FAIL: {$label}\n";
 };
 
-$check(str_contains($source['version'], "APP_ASSET_REVISION = '1.27.0-dev-f1'"), 'F1 asset revision is set');
+$check(str_contains($source['version'], "APP_ASSET_REVISION = '1.27.0-dev-g1'"), 'G1 asset revision is set while F viewer behavior remains intact');
 $check(str_contains($source['version'], "APP_VERSION = '1.26.0'"), 'formal version remains 1.26.0 before release phase');
 $check(str_contains($source['js'], "badge.textContent = 'V1.27-F'"), 'runtime File Library badge advances to F');
 $check(str_contains($source['js'], "modalElement.id = 'fileLibraryImageModal'"), 'Image Viewer creates one named modal');
