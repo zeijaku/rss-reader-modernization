@@ -26,6 +26,9 @@ if (!defined('APP_REMOTE_TRANSFER_TIMEOUT_MS')) {
 if (!defined('APP_REMOTE_TRANSFER_MAX_BYTES')) {
     define('APP_REMOTE_TRANSFER_MAX_BYTES', max(1048576, min(1073741824, (int) app_env('APP_REMOTE_TRANSFER_MAX_BYTES', '104857600'))));
 }
+if (!defined('APP_REMOTE_TEMP_DIR')) {
+    define('APP_REMOTE_TEMP_DIR', app_env('APP_REMOTE_TEMP_DIR', dirname(__DIR__, 2) . '/var/remote-tmp'));
+}
 if (!defined('APP_REMOTE_SSH_KNOWN_HOSTS_FILE')) {
     define('APP_REMOTE_SSH_KNOWN_HOSTS_FILE', app_env('APP_REMOTE_SSH_KNOWN_HOSTS_FILE', ''));
 }
@@ -39,3 +42,12 @@ require_once __DIR__ . '/remote_host.php';
 require_once __DIR__ . '/remote_crypto.php';
 require_once __DIR__ . '/remote_connection.php';
 require_once __DIR__ . '/remote_provider.php';
+
+require_once __DIR__ . '/remote_listing.php';
+require_once __DIR__ . '/remote_curl_transport.php';
+require_once __DIR__ . '/providers/curl_provider.php';
+require_once __DIR__ . '/providers/ftp_provider.php';
+require_once __DIR__ . '/providers/ftps_provider.php';
+require_once __DIR__ . '/providers/sftp_provider.php';
+require_once __DIR__ . '/providers/webdav_provider.php';
+require_once __DIR__ . '/remote_provider_factory.php';
