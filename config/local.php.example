@@ -68,7 +68,8 @@ return [
     'APP_X_TIMEOUT_MS' => '5000',
 
 
-    // V1.29 Remote File Manager. Generate a dedicated 32-byte key and base64-encode it.
+    // V1.29 Remote File Manager. Generate with: php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"
+    // Do not use an arbitrary 32/64-character string; strict Base64 decoding must yield exactly 32 bytes.
     'APP_REMOTE_CREDENTIAL_KEY_ID' => 'primary',
     'APP_REMOTE_CREDENTIAL_KEY_B64' => 'replace-with-base64-encoded-32-byte-key',
     'APP_REMOTE_ALLOWED_PORTS' => '21,22,443',

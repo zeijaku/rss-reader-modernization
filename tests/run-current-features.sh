@@ -97,6 +97,8 @@ php "$SCRIPT_DIR/remote_file_v129g_operations_test.php"
 php "$SCRIPT_DIR/remote_file_v129g_service_path_test.php"
 python3 "$SCRIPT_DIR/remote_file_v129h_integration_static.py"
 python3 "$SCRIPT_DIR/remote_file_v129i_ui_security_test.py"
+python3 "$SCRIPT_DIR/remote_file_v129i_credential_submit_r1_test.py"
+python3 "$SCRIPT_DIR/remote_file_v129i_env_check_r2_test.py"
 node --check "$ROOT/public/js/remote-files.js"
 
 echo 'PASS: current feature contract suite completed'

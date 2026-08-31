@@ -36,6 +36,50 @@ function remote_env_bool(bool $value): string
     return $value ? 'OK' : 'NG';
 }
 
+/** @return array<string,mixed> */
+function remote_env_local_config(): array
+{
+    $path = dirname(__DIR__) . '/config/local.php';
+    if (!is_file($path)) {
+        return [];
+    }
+    $config = require $path;
+    return is_array($config) ? $config : [];
+}
+
+function remote_env_config_value(string $name, array $localConfig): ?string
+{
+    $value = getenv($name);
+    if ($value !== false && $value !== '') {
+        return (string) $value;
+    }
+    if (!array_key_exists($name, $localConfig) || $localConfig[$name] === null || $localConfig[$name] === '') {
+        return null;
+    }
+    if (is_bool($localConfig[$name])) {
+        return $localConfig[$name] ? 'true' : 'false';
+    }
+    return is_scalar($localConfig[$name]) ? (string) $localConfig[$name] : null;
+}
+
+function remote_env_valid_credential_key(?string $encoded): bool
+{
+    if (!is_string($encoded) || trim($encoded) === '') {
+        return false;
+    }
+    $decoded = base64_decode(trim($encoded), true);
+    $ok = is_string($decoded) && strlen($decoded) === 32;
+    if (is_string($decoded) && function_exists('sodium_memzero')) {
+        sodium_memzero($decoded);
+    }
+    return $ok;
+}
+
+$localConfig = remote_env_local_config();
+$credentialKey = remote_env_config_value('APP_REMOTE_CREDENTIAL_KEY_B64', $localConfig);
+$remoteTempDir = remote_env_config_value('APP_REMOTE_TEMP_DIR', $localConfig);
+$knownHosts = remote_env_config_value('APP_REMOTE_SSH_KNOWN_HOSTS_FILE', $localConfig);
+
 $curlAvailable = extension_loaded('curl') && function_exists('curl_version');
 $curl = $curlAvailable ? curl_version() : [];
 $protocols = isset($curl['protocols']) && is_array($curl['protocols'])
@@ -47,6 +91,7 @@ $checks = [
     'PHP >= 8.1' => version_compare(PHP_VERSION, '8.1.0', '>='),
     'OpenSSL extension' => extension_loaded('openssl'),
     'Sodium extension' => extension_loaded('sodium'),
+    'Remote credential key (base64 -> 32 bytes)' => remote_env_valid_credential_key($credentialKey),
     'cURL extension' => $curlAvailable,
     'cURL FTP support' => $has('ftp'),
     'cURL SFTP support' => $has('sftp'),
@@ -68,17 +113,24 @@ printf("max_execution_time: %s\n", (string) ini_get('max_execution_time'));
 $failedCore = false;
 foreach ($checks as $label => $ok) {
     printf("[%s] %s\n", remote_env_bool($ok), $label);
-    if (in_array($label, ['PHP >= 8.1', 'OpenSSL extension', 'Sodium extension', 'cURL extension'], true) && !$ok) {
+    if (in_array($label, ['PHP >= 8.1', 'OpenSSL extension', 'Sodium extension', 'Remote credential key (base64 -> 32 bytes)', 'cURL extension'], true) && !$ok) {
         $failedCore = true;
     }
 }
 
-$knownHosts = getenv('APP_REMOTE_SSH_KNOWN_HOSTS_FILE');
+if (is_string($remoteTempDir) && trim($remoteTempDir) !== '') {
+    $remoteTempDir = trim($remoteTempDir);
+    printf("[%s] APP_REMOTE_TEMP_DIR exists and is writable\n", remote_env_bool(is_dir($remoteTempDir) && is_writable($remoteTempDir)));
+} else {
+    echo "[NG] APP_REMOTE_TEMP_DIR is not configured.\n";
+    $failedCore = true;
+}
+
 if (is_string($knownHosts) && trim($knownHosts) !== '') {
     $knownHosts = trim($knownHosts);
     printf("[%s] APP_REMOTE_SSH_KNOWN_HOSTS_FILE is readable\n", remote_env_bool(is_file($knownHosts) && is_readable($knownHosts)));
 } else {
-    echo "[INFO] APP_REMOTE_SSH_KNOWN_HOSTS_FILE is not visible in the process environment; if configured in config/local.php, verify it there.\n";
+    echo "[INFO] APP_REMOTE_SSH_KNOWN_HOSTS_FILE is not configured; required only when SFTP is used.\n";
 }
 
 if (!$has('sftp')) {
