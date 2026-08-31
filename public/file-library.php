@@ -156,6 +156,11 @@ function file_library_icon_class(string $extension): string
         default => 'fas fa-file',
     };
 }
+
+$uploadExtensions = array_keys(user_file_allowed_types());
+$uploadAccept = implode(',', array_map(static fn(string $extension): string => '.' . $extension, $uploadExtensions));
+$uploadTypeLabel = implode(' / ', array_map('strtoupper', $uploadExtensions));
+$uploadMaxLabel = user_file_library_format_bytes(APP_FILE_UPLOAD_MAX_BYTES);
 ?>
 <!doctype html>
 <html lang="ja">
@@ -198,7 +203,7 @@ function file_library_icon_class(string $extension): string
 <main id="main-content" class="igcontainer container-fluid" tabindex="-1">
   <div class="file-library-shell">
     <div class="file-library-toolbar mt-3 mb-3">
-      <h1 class="h4 mb-0"><i class="fas fa-folder-open fa-fw" aria-hidden="true"></i>File Library <span class="badge text-bg-secondary align-middle">V1.27-E</span></h1>
+      <h1 class="h4 mb-0"><i class="fas fa-folder-open fa-fw" aria-hidden="true"></i>File Library <span class="badge text-bg-secondary align-middle">V1.28-F</span></h1>
       <a class="btn btn-sm btn-outline-secondary" href="./"><i class="fas fa-arrow-left fa-fw" aria-hidden="true"></i>Dashboardへ戻る</a>
     </div>
 
@@ -215,8 +220,8 @@ function file_library_icon_class(string $extension): string
           <div class="file-library-upload-row">
             <div>
               <label class="form-label" for="fileLibraryUploadFile">ファイル</label>
-              <input class="form-control" type="file" id="fileLibraryUploadFile" name="file" accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.txt,.csv" required<?php echo $libraryAvailable ? '' : ' disabled'; ?>>
-              <div class="form-text">JPEG / PNG / GIF / WebP / PDF / TXT / CSV、1ファイル最大5 MiB。サーバー側で実ファイル形式を確認します。</div>
+              <input class="form-control" type="file" id="fileLibraryUploadFile" name="file" accept="<?php echo app_html($uploadAccept); ?>" required<?php echo $libraryAvailable ? '' : ' disabled'; ?>>
+              <div class="form-text"><?php echo app_html($uploadTypeLabel); ?>、1ファイル最大<?php echo app_html($uploadMaxLabel); ?>。サーバー側で実ファイル形式を確認します。</div>
             </div>
             <button type="submit" class="btn btn-primary file-library-upload-submit"<?php echo $libraryAvailable ? '' : ' disabled'; ?>><i class="fas fa-upload fa-fw" aria-hidden="true"></i>追加</button>
           </div>

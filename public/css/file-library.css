@@ -90,3 +90,30 @@
     .file-library-detail-list > div { display: block; }
     .file-library-detail-list dt { margin-bottom: .15rem; }
 }
+
+/* V1.28-F: File Library UI/mobile finish. */
+.file-library-meta time { overflow-wrap: anywhere; }
+.file-library-actions[role="group"] { align-items: stretch; }
+.file-library-actions.file-library-actions-count-4 { grid-template-columns: repeat(4,minmax(0,1fr)); }
+.file-library-actions .btn:focus-visible,
+.file-library-upload-submit:focus-visible { outline: 3px solid rgba(var(--bs-primary-rgb,13,110,253),.38); outline-offset: 1px; }
+.file-library-detail-modal .modal-body { overflow-wrap: anywhere; }
+.file-library-text-modal .modal-footer,
+.file-library-csv-modal .modal-footer { gap: .5rem; }
+@media (max-width: 767.98px) {
+    .file-library-actions.file-library-actions-count-4,
+    .file-library-actions.file-library-actions-detail-four { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 575.98px) {
+    .file-library-toolbar { align-items: stretch; }
+    .file-library-toolbar h1 { flex: 1 1 auto; }
+    .file-library-name { display: -webkit-box; min-height: 2.1em; overflow: hidden; line-height: 1.35; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .file-library-image-modal .modal-dialog,
+    .file-library-pdf-modal .modal-dialog,
+    .file-library-text-modal .modal-dialog,
+    .file-library-csv-modal .modal-dialog,
+    .file-library-detail-modal .modal-dialog { width: auto; max-width: none; margin: .25rem; }
+    .file-library-text-modal .modal-footer .btn,
+    .file-library-csv-modal .modal-footer .btn { width: 100%; }
+    .file-library-detail-modal .modal-body { padding: .75rem; }
+}

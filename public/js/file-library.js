@@ -24,7 +24,9 @@
 
     loadScript('file-library-core.js', function () {
         loadScript('file-library-text-preview.js', function () {
-            loadScript('file-library-csv-preview.js');
+            loadScript('file-library-csv-preview.js', function () {
+                loadScript('file-library-ui.js');
+            });
         });
     });
 })(document);
