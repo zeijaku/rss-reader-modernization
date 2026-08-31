@@ -24,8 +24,16 @@ $check = static function (bool $ok, string $label) use (&$pass, &$fail): void {
     if ($ok) { $pass++; echo "PASS: {$label}\n"; return; }
     $fail++; echo "FAIL: {$label}\n";
 };
-$check(str_contains($src['version'], "APP_VERSION = '1.28.0-dev.6'"), 'G checkpoint version is dev.6');
-$check(str_contains($src['version'], "APP_ASSET_REVISION = '1.28.0-dev.6'"), 'G asset revision is dev.6');
+$appVersion = null;
+$assetRevision = null;
+if (preg_match("/const APP_VERSION = '([^']+)';/", $src['version'], $match) === 1) {
+    $appVersion = $match[1];
+}
+if (preg_match("/const APP_ASSET_REVISION = '([^']+)';/", $src['version'], $match) === 1) {
+    $assetRevision = $match[1];
+}
+$check(is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?$/', $appVersion) === 1, 'current application version is a valid release/checkpoint token');
+$check(is_string($assetRevision) && $assetRevision === $appVersion, 'active asset revision follows the current application version');
 $check(str_contains($src['drawer'], "$('#main-content h1 .badge').remove()"), 'shared UI removes user-visible heading phase badges');
 $check(str_contains($src['drawer'], 'RSS Highlight用DB Migrationの適用状況を確認してください。'), 'shared UI neutralizes legacy migration warning version text');
 $check(!str_contains($src['ui'], 'badge.textContent'), 'File Library UI does not recreate phase badge');
@@ -54,7 +62,7 @@ $check(str_contains($src['runner'], 'file_preview_current_v128g_test.php') && st
 $check(!str_contains($src['runner'], 'file_library_image_viewer_v127f_test.php') && !str_contains($src['runner'], 'test_v127g_current_contract.php'), 'stale V1.27 phase-final UI gates are not active Current gates');
 foreach (['calendar','rssJs','camera'] as $key) {
     $check(!str_contains($src[$key], '?v=1.27.0'), $key . ' has no stale V1.27 runtime cache key');
-    $check(str_contains($src[$key], '?v=1.28.0-dev.6'), $key . ' follows G asset revision');
+    $check(is_string($assetRevision) && str_contains($src[$key], '?v=' . $assetRevision), $key . ' follows the active asset revision');
 }
 $check(str_contains($src['doc'], '64 KiB') && str_contains($src['doc'], '512 KiB') && str_contains($src['doc'], 'ZIP remains download-only'), 'V1.28 docs record bounds and ZIP policy');
 $check(str_contains($src['checklist'], 'V1.28-H') && str_contains($src['checklist'], 'different authenticated user'), 'production checklist covers H boundary and owner isolation');

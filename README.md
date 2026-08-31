@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.27.0`
-Release tag: `v1.27.0`
+**Stable release:** `RSS Reader Modernization 1.28.0`
+Release tag: `v1.28.0`
+
+Version 1.28.0は、V1.27で追加した認証済みユーザー専用File LibraryをPhase 2として拡張したReleaseです。File Detail、Browser標準機能を使う保護されたPDF Viewer、UTF-8 TXT Preview、CSV Preview、Smartphone向け操作／Modal調整を追加しました。TXTは64 KiB／300行、CSVは512 KiB／50行／30列／1レコード64 KiBに制限し、Owner scope、private storage、Serve時再Validation、`nosniff`、same-origin policy、restrictive CSPを維持します。ZIPは引き続きDownload専用で展開しません。V1.28のDB Migration、新規必須Secret／Configはありません。
 
 Version 1.27.0は、記事URLのTracking Parameter除去を拡張し、認証済みユーザー専用のFile Libraryを追加したReleaseです。アップロードファイルは`public/`外のprivate storageへ保存し、Server側Fileinfo／内容検証、10 MiB上限、ランダム物理名、Owner scopeを維持します。JPEG／PNG／GIF／WebP／PDF／TXT／CSV／ZIP、Drag & Drop指定、Upload中表示、Image Viewer、Download／Deleteに対応し、ZIPは展開・実行しません。既存環境ではMigration `020_v1_27_user_files.sql`を適用します。
 
