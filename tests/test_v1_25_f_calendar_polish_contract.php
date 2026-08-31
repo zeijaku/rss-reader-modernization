@@ -27,7 +27,7 @@ if (preg_match("/const APP_ASSET_REVISION = '([^']+)';/", $version, $assetMatch)
 }
 
 $checks = [
-    'formal APP_VERSION is defined' => is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+$/', $appVersion) === 1,
+    'current APP_VERSION is defined' => is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?$/', $appVersion) === 1,
     'active asset revision is defined' => is_string($assetRevision) && preg_match('/^[A-Za-z0-9._-]+$/', $assetRevision) === 1,
     'F CSS uses current asset cache key' => is_string($assetRevision)
         && str_contains($loader, 'calendar-polish.css?v=' . $assetRevision),

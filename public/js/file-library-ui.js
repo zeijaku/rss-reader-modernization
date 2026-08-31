@@ -42,19 +42,11 @@
     }
 
     function finalizeFileLibraryUi() {
-        var badge = document.querySelector('.file-library-toolbar .badge');
-        if (badge) {
-            badge.textContent = 'V1.28-F';
-        }
         finalizeActionGroups();
         localizeDetailModal();
         window.setTimeout(function () {
             finalizeActionGroups();
             localizeDetailModal();
-            var lateBadge = document.querySelector('.file-library-toolbar .badge');
-            if (lateBadge) {
-                lateBadge.textContent = 'V1.28-F';
-            }
         }, 0);
     }
 

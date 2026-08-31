@@ -215,7 +215,19 @@
         $menu.attr('data-drawer-categories', 'v1.27-e1');
     }
 
+    function removeUserVisiblePhaseMarkers() {
+        $('#main-content h1 .badge').remove();
+        $('.alert').each(function () {
+            var $alert = $(this);
+            var text = $alert.text();
+            if (text.indexOf('V1.12-BのDB Migration適用状況を確認してください。') >= 0) {
+                $alert.text(text.replace('V1.12-BのDB Migration適用状況を確認してください。', 'RSS Highlight用DB Migrationの適用状況を確認してください。'));
+            }
+        });
+    }
+
     $(function () {
+        removeUserVisiblePhaseMarkers();
         injectVisualStyles();
         injectMobileStyles();
         // Mail / Camera add their Drawer entries from their own ready handlers.
