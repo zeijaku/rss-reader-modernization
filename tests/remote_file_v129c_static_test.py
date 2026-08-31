@@ -27,6 +27,8 @@ check("'PROPFIND'" in webdav and 'LIBXML_NONET' in webdav and 'LIBXML_NOENT' not
       'WebDAV uses bounded PROPFIND and network-disabled XML parsing')
 check("$nextHost !== $originalHost" in webdav and 'remote_validate_target' in webdav,
       'WebDAV redirects are same-origin only and revalidated')
+check("!str_starts_with($nextPath, $basePath . '/')" in webdav and 'rawurldecode' in webdav,
+      'WebDAV redirects remain inside base path after encoded-path normalization')
 
 failed = len(checks)-sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed}')

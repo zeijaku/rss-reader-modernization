@@ -9,6 +9,64 @@ final class WebDavProvider extends RemoteCurlProvider
         return 'webdav';
     }
 
+    private function resolveRedirectUrl(string $baseUrl, string $location): ?string
+    {
+        $location = trim($location);
+        if ($location === '' || remote_path_has_control_characters($location)) {
+            return null;
+        }
+        if (preg_match('/^[A-Za-z][A-Za-z0-9+.-]*:/', $location) === 1
+            && preg_match('/^https:\/\//i', $location) !== 1) {
+            return null;
+        }
+
+        $base = parse_url($baseUrl);
+        if (!is_array($base) || strtolower((string) ($base['scheme'] ?? '')) !== 'https' || (string) ($base['host'] ?? '') === '') {
+            return null;
+        }
+        $host = (string) $base['host'];
+        $hostForUrl = str_contains($host, ':') ? '[' . $host . ']' : $host;
+        $origin = 'https://' . $hostForUrl;
+        if (isset($base['port'])) {
+            $origin .= ':' . (int) $base['port'];
+        }
+
+        if (preg_match('/^https:\/\//i', $location) === 1) {
+            return parse_url($location) !== false ? $location : null;
+        }
+        if (str_starts_with($location, '//')) {
+            $candidate = 'https:' . $location;
+            return parse_url($candidate) !== false ? $candidate : null;
+        }
+
+        $fragmentless = explode('#', $location, 2)[0];
+        if ($fragmentless === '') {
+            return null;
+        }
+        if (str_starts_with($fragmentless, '?')) {
+            $basePath = (string) ($base['path'] ?? '/');
+            return $origin . ($basePath === '' ? '/' : $basePath) . $fragmentless;
+        }
+
+        $query = parse_url($fragmentless, PHP_URL_QUERY);
+        $rawPath = parse_url($fragmentless, PHP_URL_PATH);
+        if (!is_string($rawPath)) {
+            return null;
+        }
+        if (str_starts_with($fragmentless, '/')) {
+            $resolvedPath = app_remove_dot_segments($rawPath);
+        } else {
+            $basePath = (string) ($base['path'] ?? '/');
+            $directory = str_ends_with($basePath, '/') ? $basePath : dirname($basePath) . '/';
+            $resolvedPath = app_remove_dot_segments($directory . $rawPath);
+        }
+        $candidate = $origin . $resolvedPath;
+        if ($query !== null) {
+            $candidate .= '?' . $query;
+        }
+        return $candidate;
+    }
+
     /** @return array<string,mixed> */
     private function webDavRequest(array $request, bool $allowRedirect = true): array
     {
@@ -27,7 +85,7 @@ final class WebDavProvider extends RemoteCurlProvider
                 throw new AppRemoteTransportException('redirect_not_allowed');
             }
             $location = isset($result['headers']['location']) ? (string) $result['headers']['location'] : '';
-            $next = app_resolve_redirect_url($url, $location);
+            $next = $this->resolveRedirectUrl($url, $location);
             if ($next === null) {
                 throw new AppRemoteTransportException('redirect_not_allowed');
             }
@@ -39,6 +97,18 @@ final class WebDavProvider extends RemoteCurlProvider
             $originalHost = strtolower((string) ($original['host'] ?? ''));
             $originalPort = isset($original['port']) ? (int) $original['port'] : 443;
             if ($nextScheme !== 'https' || $nextHost !== $originalHost || $nextPort !== $originalPort) {
+                throw new AppRemoteTransportException('redirect_not_allowed');
+            }
+            if (isset($parts['user']) || isset($parts['pass'])) {
+                throw new AppRemoteTransportException('redirect_not_allowed');
+            }
+            $nextPathRaw = isset($parts['path']) && is_string($parts['path']) ? rawurldecode($parts['path']) : '/';
+            $nextPath = remote_path_normalize_base($nextPathRaw);
+            $basePath = remote_path_normalize_base((string) $this->connection['remote_connection_base_path']);
+            if ($nextPath === null || $basePath === null) {
+                throw new AppRemoteTransportException('redirect_not_allowed');
+            }
+            if ($basePath !== '/' && $nextPath !== $basePath && !str_starts_with($nextPath, $basePath . '/')) {
                 throw new AppRemoteTransportException('redirect_not_allowed');
             }
             $validated = remote_validate_target('webdav', $nextHost, $nextPort, (int) $this->connection['remote_connection_allow_private'] === 1);
