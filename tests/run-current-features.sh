@@ -88,4 +88,15 @@ node --check "$ROOT/public/js/file-library-text-preview.js"
 node --check "$ROOT/public/js/file-library-csv-preview.js"
 node --check "$ROOT/public/js/file-library-ui.js"
 
+echo '== Current feature contracts: V1.29 Remote File Manager =='
+php "$SCRIPT_DIR/remote_file_v129b_security_test.php"
+python3 "$SCRIPT_DIR/remote_file_v129b_static_test.py"
+php "$SCRIPT_DIR/remote_file_v129c_provider_test.php"
+python3 "$SCRIPT_DIR/remote_file_v129c_static_test.py"
+php "$SCRIPT_DIR/remote_file_v129g_operations_test.php"
+php "$SCRIPT_DIR/remote_file_v129g_service_path_test.php"
+python3 "$SCRIPT_DIR/remote_file_v129h_integration_static.py"
+python3 "$SCRIPT_DIR/remote_file_v129i_ui_security_test.py"
+node --check "$ROOT/public/js/remote-files.js"
+
 echo 'PASS: current feature contract suite completed'
