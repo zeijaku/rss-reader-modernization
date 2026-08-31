@@ -504,10 +504,20 @@
             data.remote_connection_id = id;
         }
         if (el.authType.value === 'private_key') {
-            if (el.privateKey.value !== '') { data.private_key = el.privateKey.value; }
+            data.private_key = el.privateKey.value;
             if (el.passphrase.value !== '') { data.passphrase = el.passphrase.value; }
-        } else if (el.password.value !== '') {
+            if (id <= 0 && data.private_key === '') {
+                el.privateKey.focus();
+                showNotice('SSH Private Keyを入力してください。', 'danger');
+                return;
+            }
+        } else {
             data.password = el.password.value;
+            if (id <= 0 && data.password === '') {
+                el.password.focus();
+                showNotice('Password / App Passwordを入力してください。', 'danger');
+                return;
+            }
         }
         try {
             var result = await api(action, data);
@@ -523,7 +533,10 @@
             }
             showNotice(id > 0 ? '接続先を更新しました。' : '接続先を追加しました。', 'success');
         } catch (error) {
-            clearCredentialInputs();
+            // Keep credentials in the form after a validation/network error so
+            // the user can correct another field without re-entering secrets.
+            // They are cleared only after a successful save or when the modal
+            // is newly opened.
             showNotice(error.message || '接続先を保存できませんでした。', 'danger');
         }
     }

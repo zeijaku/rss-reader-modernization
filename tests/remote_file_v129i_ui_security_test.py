@@ -54,7 +54,7 @@ check('FTPは通信とCredentialが暗号化されません' in page,
       'plain FTP risk is visible in UI')
 check('Private Networkへの接続をこのConnectionで許可' in page and 'Server側Allowlist' in page,
       'private network opt-in explains server-side allowlist boundary')
-check("APP_VERSION = '1.29.0-dev.3'" in version and "APP_ASSET_REVISION = '1.29.0-dev.3'" in version,
+check("APP_VERSION = '1.29.0-dev.4'" in version and "APP_ASSET_REVISION = '1.29.0-dev.4'" in version,
       'G-I checkpoint version and asset revision advance together')
 
 print(f'RESULT: PASS {passes} / FAIL {fails}')
