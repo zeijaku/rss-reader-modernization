@@ -361,3 +361,87 @@ function user_file_store_upload(
         throw $exception;
     }
 }
+
+/**
+ * Validate a server-side file before importing it into File Library.
+ * Used by V1.29 Remote File Manager after a bounded remote download.
+ *
+ * @return array{original_name:string,extension:string,mime_type:string,file_size:int,tmp_name:string}
+ */
+function user_file_validate_local_source(string $path, string $originalName, ?int $maxBytes = null): array
+{
+    $normalizedName = user_file_normalize_original_name($originalName);
+    if ($normalizedName === null) {
+        throw new UserFileUploadException('filename_invalid', 422, 'File name is invalid.');
+    }
+    if (user_file_has_dangerous_double_extension($normalizedName)) {
+        throw new UserFileUploadException('file_type_blocked', 422, 'Dangerous double extension is not allowed.');
+    }
+    $extension = user_file_extension_from_name($normalizedName);
+    if ($extension === null) {
+        throw new UserFileUploadException('file_type_blocked', 422, 'File type is not allowed.');
+    }
+    if ($path === '' || str_contains($path, "\0") || !is_file($path) || !is_readable($path)) {
+        throw new UserFileUploadException('upload_invalid', 400, 'Source file is invalid.');
+    }
+    $size = filesize($path);
+    $limit = $maxBytes === null ? APP_FILE_UPLOAD_MAX_BYTES : max(1, min(APP_FILE_UPLOAD_MAX_BYTES, $maxBytes));
+    if (!is_int($size) || $size <= 0) {
+        throw new UserFileUploadException('file_empty', 422, 'Empty files are not allowed.');
+    }
+    if ($size > $limit) {
+        throw new UserFileUploadException('file_too_large', 413, 'File is too large for File Library.');
+    }
+    $mime = user_file_detect_mime($path);
+    $type = user_file_allowed_types()[$extension];
+    if ($mime === null || !in_array($mime, $type['mimes'], true)) {
+        throw new UserFileUploadException('mime_mismatch', 422, 'File content does not match the allowed file type.');
+    }
+    $validContent = $type['image']
+        ? user_file_validate_image_content($path, $mime)
+        : user_file_validate_non_image_content($path, $extension);
+    if (!$validContent) {
+        throw new UserFileUploadException('file_content_invalid', 422, 'File content could not be validated.');
+    }
+    return [
+        'original_name' => $normalizedName,
+        'extension' => $extension === 'jpeg' ? 'jpg' : $extension,
+        'mime_type' => $mime,
+        'file_size' => $size,
+        'tmp_name' => $path,
+    ];
+}
+
+/**
+ * Move/copy a validated server-side file into private File Library storage.
+ */
+function user_file_store_local_file(int $userId, string $sourcePath, string $originalName, bool $removeSource = false): array
+{
+    if ($userId <= 0) {
+        throw new InvalidArgumentException('Invalid file owner.');
+    }
+    $metadata = user_file_validate_local_source($sourcePath, $originalName);
+    $directory = user_file_storage_directory();
+    $storedName = user_file_generate_stored_name($metadata['extension'], $directory);
+    $destination = $directory . DIRECTORY_SEPARATOR . $storedName;
+
+    $moved = $removeSource ? @rename($sourcePath, $destination) : false;
+    if (!$moved) {
+        $moved = @copy($sourcePath, $destination);
+        if ($moved && $removeSource) {
+            @unlink($sourcePath);
+        }
+    }
+    if (!$moved || !is_file($destination)) {
+        @unlink($destination);
+        throw new UserFileUploadException('storage_write_failed', 503, 'Unable to store imported file.');
+    }
+    @chmod($destination, 0640);
+
+    try {
+        return user_file_insert_metadata($userId, $storedName, $metadata);
+    } catch (Throwable $exception) {
+        @unlink($destination);
+        throw $exception;
+    }
+}
