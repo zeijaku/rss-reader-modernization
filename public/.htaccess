@@ -33,7 +33,8 @@ RewriteEngine On
 # V1.25-D: recurring Calendar API is an explicit authenticated public endpoint.
 # V1.27-D: Secure File Upload API is authenticated + CSRF protected.
 # V1.27-E: File Library page/content endpoint are authenticated and owner-scoped.
-RewriteRule ^(?!api_v1\.php$|calendar_color_api\.php$|calendar_recurrence_api\.php$|connection_probe\.php$|error\.php$|file-library\.php$|file_content\.php$|file_upload_api\.php$|index\.php$|logout\.php$|rss-management\.php$|settings\.php$|stock\.php$).*\.php$ - [F,L,NC]
+# V1.28-B: File Detail API is authenticated, owner-scoped and read-only.
+RewriteRule ^(?!api_v1\.php$|calendar_color_api\.php$|calendar_recurrence_api\.php$|connection_probe\.php$|error\.php$|file-library\.php$|file_content\.php$|file_preview_api\.php$|file_upload_api\.php$|index\.php$|logout\.php$|rss-management\.php$|settings\.php$|stock\.php$).*\.php$ - [F,L,NC]
 
 # V1.13-B R2: DocumentRootがpublic/直下の場合も /stock をCanonical URLとする。
 # Application Root配下の /public/stock.php が直接指定された場合も /stock へ戻す。

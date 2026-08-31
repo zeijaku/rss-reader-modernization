@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.28.0 - 2026-08-31
+
+- Extended the authenticated V1.27 File Library without changing its metadata-only database schema or private-storage boundary.
+- Added File Detail for original filename, MIME, extension, size, upload time, numeric file id, and image dimensions when available; stored physical names, owner ids, and filesystem paths are not returned.
+- Added protected PDF preview for validated PDF files using the browser-native viewer; no PDF.js, CDN dependency, server PDF parser, or arbitrary path input is added.
+- Added UTF-8 TXT Preview bounded to 64 KiB and 300 lines; UTF-8 BOM is accepted and invalid encoding fails closed while full download remains available.
+- Added UTF-8 CSV Preview bounded to 512 KiB, 50 data rows, 30 columns, and 64 KiB per logical record using bounded `fgetcsv` parsing.
+- Rendered TXT/CSV dynamic content as text rather than HTML and kept preview/detail access authenticated, owner-scoped, private-path resolved, and revalidated at serve time.
+- Polished File Library actions and Modals for Smartphone/narrow layouts, including touch-friendly four-action 2x2 presentation and long filename/metadata wrapping.
+- Removed development phase badges from current File Library/RSS Management UI while retaining the central application version marker.
+- ZIP remains download-only and is never opened, extracted, or executed by the application.
+- No V1.28 database migration, schema change, new required secret, environment variable, or permission change is introduced.
+- Finalized application and active public asset revision markers at 1.28.0.
+
 ## 1.27.0 - 2026-08-30
 
 - Expanded article URL tracking-parameter cleanup while leaving registered Feed URLs unchanged.

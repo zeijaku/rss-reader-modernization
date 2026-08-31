@@ -179,8 +179,8 @@
         });
     });
 
-    $.getScript('./js/rss-rules.js?v=1.27.0').done(function () {
-        $.getScript('./js/rss-rules-integration.js?v=1.27.0');
+    $.getScript('./js/rss-rules.js?v=1.28.0').done(function () {
+        $.getScript('./js/rss-rules-integration.js?v=1.28.0');
     });
     $(loadFeeds);
 })(jQuery, document, window);

@@ -1,92 +1,72 @@
-# RSS Reader Modernization 1.27.0
+# RSS Reader Modernization 1.28.0
 
-Release tag: `v1.27.0`
-Release date: 2026-08-30
+Release tag: `v1.28.0`
+Release date: 2026-08-31
 
 ## Overview
 
-Version 1.27.0 extends article URL tracking-parameter cleanup and adds an authenticated, owner-scoped File Library. Uploaded files are stored outside `public/` in private storage, while the database keeps metadata only. The File Library provides responsive browsing, secure upload/download/delete, drag-and-drop file selection, and an in-page Image Viewer for validated image types.
+Version 1.28.0 extends the authenticated File Library introduced in V1.27. The existing private storage and metadata-only database contract remain unchanged while File Detail, protected PDF viewing, bounded TXT/CSV previews, and Smartphone-oriented action/Modal polish are added.
 
-The release keeps the existing authentication, session, CSRF, SSRF, XSS, PDO and public-endpoint protections. File upload does not trust the browser-provided MIME type, does not expose the physical stored name or path, and does not extract or execute ZIP files.
+The release keeps the existing authentication, session, CSRF, owner scope, private-path resolution, serve-time content validation, XSS boundaries, and public-endpoint protections. ZIP remains download-only and is never opened, extracted, or executed by the application.
 
 ## Main changes
 
-- Expanded article URL tracking-parameter removal for common `utm_*`, click-id and campaign parameters while leaving registered Feed URLs unchanged.
-- Normalized remaining Dashboard header and touch-target inconsistencies without redesigning the existing grid or drag-and-drop model.
-- Added authenticated secure upload with private `var/uploads/` storage.
-- Default per-file limit is 10 MiB. Supported extensions are JPEG/JPG, PNG, GIF, WebP, PDF, TXT, CSV and ZIP.
-- Added strict server-side Fileinfo MIME validation plus image structure or non-image signature/content validation.
-- Physical files receive a 256-bit random stored name; the original filename is metadata/display information only.
-- Added `/file-library`, owner-scoped listing, newest-first ordering and fixed 24-item pagination.
-- Added responsive File Library cards: two columns on small screens, three on medium screens and four on extra-large screens.
-- Added authenticated thumbnails, download and soft-delete plus best-effort physical deletion.
-- Added upload progress/spinner feedback and drag-and-drop file selection without automatic upload.
-- Added a Bootstrap Image Viewer for validated images. The Viewer builds only the fixed protected `file_content.php?id=...&mode=view` URL from a positive numeric file id.
-- Added File Library to the shared Drawer.
-- Finalized application/public asset revision markers at `1.27.0`.
+- Added File Detail with original filename, MIME type, extension, formatted size, upload time, numeric file id, and image dimensions when available.
+- File Detail never returns the stored random filename, filesystem path, or owner id.
+- Added protected PDF preview through the existing authenticated file content endpoint for validated PDF files only.
+- PDF display relies on the browser-native PDF viewer. No PDF.js, CDN dependency, server-side PDF parser, or secondary remote fetch is introduced.
+- Added UTF-8 TXT Preview bounded to 64 KiB and 300 lines. UTF-8 BOM is accepted; invalid/non-UTF-8 content fails safely and full download remains available.
+- Added UTF-8 CSV Preview bounded to 512 KiB, 50 data rows, 30 columns, and 64 KiB per logical record using bounded `fgetcsv` parsing.
+- TXT/CSV content is inserted as text rather than HTML.
+- Added responsive File Library action polish, including a touch-friendly 2x2 layout when four actions are present on narrow cards.
+- Improved long filename/metadata wrapping and PDF/TXT/CSV/File Detail Modal behavior on Smartphone widths.
+- Removed development phase badges from File Library and RSS Management while retaining the central application version label for deployment verification.
+- Finalized application and active public asset revision markers at `1.28.0`.
 
 ## Security / compatibility
 
-- Upload and File Library operations require an authenticated session; state-changing requests remain CSRF protected.
-- File ownership always comes from the authenticated session user, not request-supplied user ids.
-- Browser MIME metadata is ignored. `finfo(FILEINFO_MIME_TYPE)` is the MIME authority.
-- Image files are additionally checked with `getimagesize`, bounded dimensions and pixel count.
-- PDF, TXT/CSV and ZIP receive explicit content/signature checks. ZIP is never opened with `ZipArchive`, extracted, or executed.
-- Dangerous executable/script extensions and dangerous double extensions remain blocked.
-- Uploaded files are stored outside `public/`; storage resolution is confined to the configured private directory.
-- Stored physical names use `random_bytes(32)` and are revalidated before filesystem access.
-- Content serving resolves files by authenticated owner + numeric id, revalidates size/MIME/content at serve time, and never accepts a filesystem path from the request.
-- Only validated images may be served inline. PDF/TXT/CSV/ZIP remain attachment-only.
-- File responses retain `X-Content-Type-Options: nosniff`, same-origin resource policy, restrictive CSP and no-store behavior.
-- The public PHP endpoint allowlist remains deny-by-default and explicitly contains only the required File Library/upload/content endpoints.
-- Existing RSS, Stock, Calendar, Information Board and Dashboard data contracts remain unchanged except for the new V1.27 `user_file` metadata table.
+- Preview/detail operations start from the authenticated session user and an owner-scoped positive numeric file id.
+- The server resolves private storage paths internally; request data cannot select a stored random filename, owner id, or filesystem path.
+- Files are revalidated before preview/content responses are returned.
+- File responses retain `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, `Cross-Origin-Resource-Policy: same-origin`, and restrictive sandbox CSP behavior.
+- PDF preview is limited to validated PDF content and does not enable server parsing.
+- TXT and CSV previews are UTF-8-only and bounded before rendering; invalid encoding fails closed.
+- CSV parsing is bounded by total bytes, rows, columns, and per-record bytes to avoid unbounded preview work.
+- Dynamic TXT/CSV/File Detail values are rendered through text-safe DOM paths rather than user-controlled HTML.
+- ZIP remains storage/download only; there is no `ZipArchive`, extraction, archive browser, or execution path in V1.28.
+- Existing V1.27 upload MIME/content checks, random physical names, dangerous-extension rejection, private storage, owner scope, and soft-delete behavior remain in place.
+- No new required external service, secret, environment variable, or permission change is introduced.
 
 ## Database migration
 
-Existing Version 1.26.0 installations must back up the database and apply:
+No database migration is required for Version 1.28.0.
 
-1. `database/migrations/020_v1_27_user_files.sql`
+Existing Version 1.27.0 installations already using `database/migrations/020_v1_27_user_files.sql` keep the same metadata-only `user_file` table contract. Do not reapply Migration 020 solely for V1.28.
 
-Set `@table_prefix` in the migration to the same value as `DB_TABLE_PREFIX` before execution.
-
-Migration 020 adds the metadata-only `<prefix>user_file` table with owner, original filename, random stored filename, server-detected MIME, canonical extension, size, created time and active/deleted flag. Uploaded binary data is not stored in the database.
-
-For a fresh installation, `database/schema.sql` already integrates the same V1.27 `user_file` table contract. Follow `docs/installation.md` for the repository's normal fresh-install migration procedure.
-
-## Deployment configuration
-
-The application default is 10 MiB per file. Production PHP/Web server limits must allow that request size. A typical deployment uses:
-
-- `upload_max_filesize = 10M` or larger
-- `post_max_size = 12M` or larger
-- `APP_FILE_UPLOAD_MAX_BYTES=10485760` if the optional application limit is explicitly configured
-- `APP_FILE_UPLOAD_MAX_REQUEST_BYTES=12582912` if the optional request limit is explicitly configured
-
-Keep the configured upload directory outside `public/` and writable only as required by the PHP/Web server account.
+For a fresh installation, `database/schema.sql` already contains the File Library table introduced in V1.27.
 
 ## Upgrade summary
 
-1. Back up application code, `config/local.php`, database and required runtime data.
-2. Apply Migration 020 using the deployment's actual table prefix.
-3. Confirm private upload storage exists outside `public/` and is writable by the application.
-4. Confirm PHP/Web server upload/body limits allow a 10 MiB file plus multipart overhead.
-5. Deploy Version 1.27.0 without overwriting private configuration/runtime data.
-6. Reload the browser and confirm the footer reports `RSS Reader Modernization 1.27.0`.
-7. Open File Library and verify image/PDF/TXT/CSV/ZIP upload, spinner, drag-and-drop selection, download and delete.
-8. Verify an uploaded image opens in the in-page Image Viewer and non-image files do not receive inline-view behavior.
-9. Where a second account is available, verify another owner's file id cannot be read or deleted.
-10. Verify normal RSS article links remove the supported tracking parameters while registered Feed URLs are unchanged.
-11. Check Browser Console and PHP/Web server logs for new errors.
+1. Back up application code, `config/local.php`, database, and `var/uploads/` before deployment.
+2. No V1.28 SQL/Migration is required when upgrading from Version 1.27.0.
+3. Deploy Version 1.28.0 without overwriting private configuration or runtime upload data.
+4. Reload the browser and confirm the footer/login reports `RSS Reader Modernization 1.28.0`.
+5. Open File Library and verify Image Viewer, File Detail, PDF Viewer, TXT Preview, CSV Preview, Download, Delete, upload, and drag-and-drop selection.
+6. On Smartphone width, verify four-action cards remain touch-friendly and PDF/TXT/CSV/File Detail Modals remain usable.
+7. Verify a different authenticated user cannot access another user's file id.
+8. Verify invalid/non-UTF-8 TXT/CSV preview fails safely while the normal download path remains available.
+9. Verify ZIP has download/delete actions only and no archive extraction/browser action appears.
+10. Check Browser Console and PHP/Web server logs for new errors.
 
 ## Release assets
 
-- `rss-reader-modernization-1.27.0.zip`
-- `rss-reader-modernization-1.27.0.zip.sha256`
-- `rss-reader-modernization-1.27.0-complete.zip`
-- `rss-reader-modernization-1.27.0-complete.zip.sha256`
+- `rss-reader-modernization-1.28.0.zip`
+- `rss-reader-modernization-1.28.0.zip.sha256`
+- `rss-reader-modernization-1.28.0-complete.zip`
+- `rss-reader-modernization-1.28.0-complete.zip.sha256`
 
 ## Verification limits
 
-The V1.27 integration gate completed the current regression/current-feature suites, focused V1.27 contracts, PHP/JavaScript syntax checks, secret/high-signal execution scans, schema/migration consistency checks and deterministic checkpoint package verification. The formal GitHub Release gate again runs `tests/run-current.sh` and `tests/run-current-features.sh` on PHP 8.1 and PHP 8.4, version/dependency/workflow hygiene checks, high-signal secret scanning, Runtime and Complete Source package verification, SHA-256 checks, clean-room extraction, immutable-tag protection and main-SHA rechecks before publication.
+The V1.28-G integration checkpoint completed the durable current regression/current-feature gates on GitHub Actions for PHP 8.1 and PHP 8.4, together with focused File Library preview/integration contracts, syntax checks, version/workflow hygiene, owner/private-storage/security checks, and checkpoint package verification. V1.28-H formalizes the version and release documentation, then the generic GitHub Release workflow again runs `tests/run-current.sh` and `tests/run-current-features.sh` on PHP 8.1 and PHP 8.4, release-readiness/version/workflow hygiene checks, high-signal secret scanning, deterministic Runtime and Complete Source package verification, SHA-256 checks, clean-room extraction, immutable-tag protection, and main-SHA rechecks before publication.
 
-The target environment remains responsible for real production MySQL/MariaDB migration execution, deployment-specific PHP/Web server body limits and permissions, real browser rendering/Bootstrap behavior, filesystem ownership, and the final post-deployment smoke check.
+The target environment remains responsible for real browser-native PDF rendering differences, actual Smartphone rendering, deployment-specific PHP/Web server limits and permissions, filesystem ownership, and the final post-deployment smoke check.
