@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.28.0`
-Release tag: `v1.28.0`
+**Stable release:** `RSS Reader Modernization 1.29.0`
+Release tag: `v1.29.0`
+
+Version 1.29.0は、認証済みユーザー向けのRemote File Managerを追加したReleaseです。FTP／明示FTPS／SFTP／HTTPS WebDAVの接続登録・接続確認、Directory移動、Upload／Download、mkdir、Rename／Move、Delete、File Libraryとの相互転送、Image／PDF／TXT／CSV Previewに対応します。CredentialはSodium AEADで暗号化し、Owner scope／CSRF／Base Path confinement／DNS解決後IP検証／DNS pinning／Private Networkの明示CIDR allowlist／SFTP known_hosts／FTPS・WebDAV TLS検証を維持します。既存環境ではMigration `021_v1_29_remote_connection.sql`とRemote Credential Key等のprivate設定が必要です。Remote Text Editor、SCP、SMB/NFS、S3等は今回の対象外です。
 
 Version 1.28.0は、V1.27で追加した認証済みユーザー専用File LibraryをPhase 2として拡張したReleaseです。File Detail、Browser標準機能を使う保護されたPDF Viewer、UTF-8 TXT Preview、CSV Preview、Smartphone向け操作／Modal調整を追加しました。TXTは64 KiB／300行、CSVは512 KiB／50行／30列／1レコード64 KiBに制限し、Owner scope、private storage、Serve時再Validation、`nosniff`、same-origin policy、restrictive CSPを維持します。ZIPは引き続きDownload専用で展開しません。V1.28のDB Migration、新規必須Secret／Configはありません。
 
@@ -88,6 +90,8 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Connection Monitor Widgetの同一Origin監視、Latency履歴、Avg／Max／Jitter、切断／復旧、Downtime、品質判定
 - Camera / Video WidgetのSnapshot、YouTube、Video File、MJPEG、HLS表示
 - X Timeline Widgetによる指定した公開X Accountの最近の投稿表示（上級者向け、X Developer Platform／Pay Per Use／Server-side Bearer Tokenが必要）
+- File LibraryへのJPEG／PNG／GIF／WebP／PDF／TXT／CSV／ZIP保存、Image／PDF／TXT／CSV Preview、Download／Delete
+- Remote File ManagerによるFTP／明示FTPS／SFTP／HTTPS WebDAV接続、Directory操作、Upload／Download、File Libraryとの相互転送
 - スマートフォンでの左右スワイプによるタブ切り替え
 - Feed／Calendar読込中のSpinner表示
 - 記事リンクのStock保存と一覧表示

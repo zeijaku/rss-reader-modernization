@@ -36,7 +36,7 @@
     };
 
     var hrefGroups = {
-        'display': ['./?tab=0', './?tab=1', './?tab=2', './?tab=3', './stock', './file-library'],
+        'display': ['./?tab=0', './?tab=1', './?tab=2', './?tab=3', './stock', './file-library', './remote-files'],
         'feed': ['./rss-management'],
         'settings': ['./settings#tabs', './settings#display', './settings#highlight']
     };
@@ -111,6 +111,23 @@
         $item.append($link).appendTo($menu);
     }
 
+    function ensureRemoteFilesItem($menu) {
+        var $item;
+        var $link;
+        if (itemByHref($menu, './remote-files').length > 0) {
+            return;
+        }
+        $item = $('<li>');
+        $link = $('<a>')
+            .addClass('text-muted drawer-item')
+            .attr('href', './remote-files');
+        $('<span>').addClass('drawer-item-icon')
+            .append($('<i>').addClass('fas fa-server fa-fw').attr('aria-hidden', 'true'))
+            .appendTo($link);
+        $('<span>').addClass('drawer-item-label').text('Remote Files').appendTo($link);
+        $item.append($link).appendTo($menu);
+    }
+
     function appendUnique(items, $item) {
         var node;
         var exists = false;
@@ -179,6 +196,7 @@
 
         ensureRssManagementItem($menu);
         ensureFileLibraryItem($menu);
+        ensureRemoteFilesItem($menu);
         $brand = $menu.children('.drawer-brand').first().detach();
         sectionOrder.forEach(function (key) {
             groups[key] = collectGroup($menu, key);
@@ -212,7 +230,7 @@
             });
         }
 
-        $menu.attr('data-drawer-categories', 'v1.27-e1');
+        $menu.attr('data-drawer-categories', 'v1.29-i');
     }
 
     function removeUserVisiblePhaseMarkers() {

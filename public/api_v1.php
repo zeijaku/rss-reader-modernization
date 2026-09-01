@@ -10,6 +10,7 @@ require_once dirname(__DIR__) . '/app/stock_state.php';
 require_once dirname(__DIR__) . '/app/camera_video.php';
 require_once dirname(__DIR__) . '/app/api/all_rss_recent.php';
 require_once dirname(__DIR__) . '/app/api/info_board.php';
+require_once dirname(__DIR__) . '/app/remote_file/remote_bootstrap.php';
 
 // V1.9-C R2: Mail dependencies are loaded at the API boundary so the V1.8
 // bootstrap/api core does not need to be rewritten just to enable Mail Widget.
@@ -151,6 +152,9 @@ try {
     }
     if (str_starts_with($action, 'stock.state.')) {
         api_emit(stock_state_api_dispatch($action, $userId, $_POST));
+    }
+    if (str_starts_with($action, 'remote.')) {
+        api_emit(remote_api_dispatch($action, $userId, $_POST));
     }
     api_emit(api_dispatch($action, $userId, $_POST));
 } catch (Throwable $exception) {

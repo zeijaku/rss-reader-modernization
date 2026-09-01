@@ -1,3 +1,24 @@
+## 1.29.0 - 2026-09-01
+
+### Remote File Manager
+- Added authenticated owner-scoped Remote File Manager support for FTP, explicit FTPS, SFTP and HTTPS WebDAV.
+- Added connection registration/test, directory navigation/listing, upload/download, mkdir, rename/move, delete and refresh.
+- Added Remote -> File Library and File Library -> Remote transfer paths plus bounded Image/PDF/TXT/CSV preview reuse.
+- Grouped new backend code under `app/remote_file/` and kept public Remote endpoints explicitly allowlisted.
+
+### Security / deployment
+- Added Migration `021_v1_29_remote_connection.sql` for owner-scoped Remote connection metadata and an authenticated-ciphertext credential envelope.
+- Added Sodium XChaCha20-Poly1305 AEAD credential encryption with owner/connection-bound AAD; the encryption key remains outside the database and repository.
+- Added host/port validation, DNS answer validation/pinning, DNS-rebinding controls, public-IP default policy, explicit administrator CIDR allowlist for private networks, and permanent loopback/link-local denial.
+- Added Base Path confinement, traversal rejection, bounded transfer/temp storage, symbolic-link/unknown-entry fail-closed checks where server metadata permits, and same-origin/base-path WebDAV redirect validation.
+- SFTP requires verified `known_hosts`; FTPS/WebDAV keep peer/hostname TLS verification enabled. Plain FTP remains visibly marked as unencrypted.
+- Added `tools/remote_file_env_check.php` to validate cURL protocol capability, SimpleXML/Sodium/OpenSSL availability, credential-key shape and private temp-directory readiness without printing secrets.
+
+### Finalization
+- Hardened password/private-key form serialization and client-side required-credential checks after production checkpoint testing.
+- Finalized `APP_VERSION`, visible label, active asset revision and dynamic V1.29 asset keys at `1.29.0`.
+- Added V1.29 Remote File Manager contracts to the durable current feature suite and retained the generic PHP 8.1/8.4 CI/Release gates.
+
 # Changelog
 
 ## 1.28.0 - 2026-08-31

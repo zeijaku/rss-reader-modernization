@@ -1,8 +1,8 @@
--- RSS Reader Modernization base new-install schema (through migration 008 / V1.7, plus integrated 013, 017, 018, 019 and 020).
+-- RSS Reader Modernization base new-install schema (through migration 008 / V1.7, plus integrated 013, 017, 018, 019, 020 and 021).
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
 -- Current fresh installs must also apply migrations 009-012 and 014-016 in numeric order.
--- V1.20.1 Calendar color (013), V1.24 Stock state (017), V1.25 Calendar time/URL (018), V1.25 Calendar recurrence (019), and V1.27 user file metadata (020) are integrated here.
+-- V1.20.1 Calendar color (013), V1.24 Stock state (017), V1.25 Calendar time/URL (018), V1.25 Calendar recurrence (019), V1.27 user file metadata (020), and V1.29 remote connection metadata (021) are integrated here.
 -- See docs/installation.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
@@ -23,6 +23,7 @@ SET @t_calendar_event = CONCAT('`', @table_prefix, 'calendar_event`');
 SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
 SET @t_remember_token = CONCAT('`', @table_prefix, 'remember_token`');
 SET @t_user_file = CONCAT('`', @table_prefix, 'user_file`');
+SET @t_remote_connection = CONCAT('`', @table_prefix, 'remote_connection`');
 
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_user_info, ' (',
@@ -234,6 +235,31 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''User-owned file metadata'''
 );
 PREPARE v127d_user_file_stmt FROM @sql; EXECUTE v127d_user_file_stmt; DEALLOCATE PREPARE v127d_user_file_stmt;
+
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_remote_connection, ' (',
+  '`remote_connection_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`remote_connection_owner` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`remote_connection_name` VARCHAR(128) NOT NULL,',
+  '`remote_connection_protocol` VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`remote_connection_host` VARCHAR(253) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`remote_connection_port` SMALLINT UNSIGNED NOT NULL,',
+  '`remote_connection_username` VARCHAR(320) NOT NULL,',
+  '`remote_connection_auth_type` VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`remote_connection_secret` MEDIUMTEXT CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT ''AEAD encrypted credential envelope'',',
+  '`remote_connection_base_path` VARCHAR(2048) NOT NULL DEFAULT ''/'',',
+  '`remote_connection_allow_private` TINYINT UNSIGNED NOT NULL DEFAULT 0,',
+  '`remote_connection_enabled` TINYINT UNSIGNED NOT NULL DEFAULT 1,',
+  '`remote_connection_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0,',
+  '`remote_connection_created_at` DATETIME NOT NULL,',
+  '`remote_connection_updated_at` DATETIME NOT NULL,',
+  'PRIMARY KEY (`remote_connection_id`),',
+  'KEY `idx_remote_connection_owner_flag_id` (`remote_connection_owner`, `remote_connection_flag`, `remote_connection_id`),',
+  'KEY `idx_remote_connection_owner_enabled_flag` (`remote_connection_owner`, `remote_connection_enabled`, `remote_connection_flag`, `remote_connection_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''User-owned remote file connections'''
+);
+PREPARE v129b_remote_connection_stmt FROM @sql; EXECUTE v129b_remote_connection_stmt; DEALLOCATE PREPARE v129b_remote_connection_stmt;
 
 -- Foreign keys are intentionally NOT added in SB-13.
 -- Legacy orphan data and the user deletion policy must be resolved first.

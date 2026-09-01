@@ -144,7 +144,7 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\016
 
 phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016を同じ順番でImportします。V1.20.1のCalendar色Column（013）、V1.24のStock状態Column（017）、V1.25のCalendar終日／時刻／URL／繰り返しColumn（018 / 019）は`schema.sql`へ統合済みのため、新規Installで013 / 017 / 018 / 019を追加実行する必要はありません。
 
-Prefixが `rss_` の場合、最終的に次の19 tableが存在します。
+Prefixが `rss_` の場合、V1.29 fresh installでは最終的に次の21 tableが存在します。
 
 ```text
 rss_user_info
@@ -166,11 +166,17 @@ rss_feed_metadata
 rss_feed_health
 rss_rss_rule
 rss_rss_rule_condition
+rss_user_file
+rss_remote_connection
 ```
 
 **既存Databaseへ `schema.sql` を再実行しないでください。** 既存環境はBackupを取得し、未適用Migrationだけを順番に適用します。
 
 V1.23.0からV1.24.0へ更新する既存Databaseでは、Backup取得後に `017_v1_24_stock_state.sql` の `SET @table_prefix` を環境へ合わせて適用します。Migration 017は既存Stockを保持したまま `stock_processed` / `stock_important` / `stock_archived` をDefault 0で追加し、Archive検索用Indexを追加します。`stock_flag` は従来どおりStock解除用で、Archiveとは別状態です。
+
+V1.26以前からV1.27以降へ更新する既存Databaseでは、Backup取得後に `020_v1_27_user_files.sql` を1回適用してFile Library metadata tableを追加します。V1.28では追加Migrationはありません。
+
+V1.28.0からV1.29.0へ更新する既存Databaseでは、Backup取得後に `021_v1_29_remote_connection.sql` の `SET @table_prefix` を実環境の `DB_TABLE_PREFIX` と同じ値へ合わせて1回適用します。既存table/columnは削除せず、Remote Connection用tableを追加します。Credential暗号鍵はDatabaseには保存しないため、`APP_REMOTE_CREDENTIAL_KEY_B64`をprivate設定として別途準備してください。
 
 V1.24.0からV1.25.0へ更新する既存Databaseでは、Backup取得後に次を**この順番で1回ずつ**適用します。
 
@@ -226,6 +232,8 @@ CLIが使えないHostingでは、Control panelでPHP Version / Extensionを確�
 - RSS 2.0 / RSS 1.0 / Atom
 - Stock保存と一覧
 - Stockの未処理 / 処理済み、通常 / 重要、Archive状態とFilter / 一括更新
+- File LibraryのUpload／Preview／Download／Delete
+- Remote Filesの接続確認、Directory操作、Upload／Download、File Library相互転送
 - Settings保存
 - Drawer / Modal / Keyboard / Focus
 - JavaScript Console errorなし

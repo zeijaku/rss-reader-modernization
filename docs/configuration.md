@@ -123,6 +123,37 @@ Modalを開くだけではX APIへ検証Requestを送りません。Pay Per Use�
 
 X Timelineは公開Accountの最近の投稿を対象とします。X本体の「おすすめ / For You」Feedは同じRecommendation結果を公式APIから取得出来ないため、このVersionの対象外です。
 
+## Remote File Manager（V1.29 / Optional）
+
+Remote File ManagerはFTP／明示FTPS／SFTP／HTTPS WebDAVのCredentialをServer側で暗号化して保持します。利用する場合は専用鍵とPrivate temporary directoryを設定してください。
+
+| Key | Default | Runtime制約 / 補足 |
+|---|---:|---|
+| `APP_REMOTE_CREDENTIAL_KEY_ID` | `primary` | Credential envelopeのKey ID。Key rotationを行う場合の識別子 |
+| `APP_REMOTE_CREDENTIAL_KEY_B64` | 空 | 必須。32-byte乱数をBase64化した値。DB/Git/Browserへ出さない |
+| `APP_REMOTE_ALLOWED_PORTS` | `21,22,443` | Remote接続を許可するPortの明示Allowlist |
+| `APP_REMOTE_PRIVATE_NETWORK_ENABLED` | `false` | LAN/NAS接続のServer側Master switch |
+| `APP_REMOTE_PRIVATE_NETWORK_CIDRS` | 空 | Private network利用時のCIDR Allowlist。必要最小限にする |
+| `APP_REMOTE_CONNECT_TIMEOUT_MS` | `5000` | 接続Timeout |
+| `APP_REMOTE_TRANSFER_TIMEOUT_MS` | `60000` | Transfer Timeout |
+| `APP_REMOTE_TRANSFER_MAX_BYTES` | `104857600` | Remote transferのApplication上限 |
+| `APP_REMOTE_UPLOAD_MAX_REQUEST_BYTES` | `105906176` | Multipart requestのApplication上限 |
+| `APP_REMOTE_TEMP_DIR` | `var/remote-tmp`相当 | `public/`外のPrivate writable directoryを推奨 |
+| `APP_REMOTE_SSH_KNOWN_HOSTS_FILE` | 空 | SFTP利用時に必須。Trusted channelで検証したknown_hosts |
+| `APP_REMOTE_USER_AGENT` | `iGuguru-RemoteFiles/1.29` | WebDAV等で使うUser-Agent |
+
+Credential keyは次で生成します。
+
+```bash
+php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"
+```
+
+適当な32/64文字を手入力する設定ではありません。Strict Base64 decode後が32 bytesちょうどである必要があります。Remote Connection登録後に鍵を変更・紛失すると、保存済みCredentialを復号できなくなります。
+
+本番確認は `php tools/remote_file_env_check.php` を使います。Keyの実値は表示せず、cURL protocol、Sodium、SimpleXML、OpenSSL、SFTP option、Temporary directory等の準備状況を確認します。
+
+Private/LAN接続は`APP_REMOTE_PRIVATE_NETWORK_ENABLED=true`だけでは許可せず、CIDR allowlistと個別Connection opt-inの両方が必要です。Loopback／link-local等はPrivate利用を有効にしても拒否します。
+
 ## `config/local.php` と環境変数
 
 Shared hosting等で環境変数が使いにくい場合は `config/local.php` を使用します。ContainerやPHP-FPMでSecret管理を分離できる場合は環境変数を使用できます。
@@ -133,6 +164,8 @@ Shared hosting等で環境変数が使いにくい場合は `config/local.php` �
 
 - `config/local.php`
 - `APP_HASH_KEY`を保管するSecret store
+- `APP_REMOTE_CREDENTIAL_KEY_B64`を保管するSecret store（Remote Files利用時）
+- SFTPで使用する検証済みknown_hosts／private keyの保管場所
 - Database接続情報
 - Web server / PHP-FPM側の環境変数設定
 - DocumentRoot、PHP Version、Extension、write permissionの記録
