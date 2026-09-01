@@ -26,6 +26,11 @@ if (!defined('APP_REMOTE_TRANSFER_TIMEOUT_MS')) {
 if (!defined('APP_REMOTE_TRANSFER_MAX_BYTES')) {
     define('APP_REMOTE_TRANSFER_MAX_BYTES', max(1048576, min(1073741824, (int) app_env('APP_REMOTE_TRANSFER_MAX_BYTES', '104857600'))));
 }
+if (!defined('APP_REMOTE_EDITOR_MAX_BYTES')) {
+    // V1.30 keeps browser text editing deliberately small. Editor content must
+    // never inherit the much larger general remote-transfer ceiling.
+    define('APP_REMOTE_EDITOR_MAX_BYTES', max(65536, min(1048576, (int) app_env('APP_REMOTE_EDITOR_MAX_BYTES', '524288'))));
+}
 if (!defined('APP_REMOTE_TEMP_DIR')) {
     define('APP_REMOTE_TEMP_DIR', app_env('APP_REMOTE_TEMP_DIR', dirname(__DIR__, 2) . '/var/remote-tmp'));
 }
@@ -36,7 +41,7 @@ if (!defined('APP_REMOTE_SSH_KNOWN_HOSTS_FILE')) {
     define('APP_REMOTE_SSH_KNOWN_HOSTS_FILE', app_env('APP_REMOTE_SSH_KNOWN_HOSTS_FILE', ''));
 }
 if (!defined('APP_REMOTE_USER_AGENT')) {
-    define('APP_REMOTE_USER_AGENT', app_env('APP_REMOTE_USER_AGENT', 'iGuguru-RemoteFiles/1.29'));
+    define('APP_REMOTE_USER_AGENT', app_env('APP_REMOTE_USER_AGENT', 'iGuguru-RemoteFiles/1.30'));
 }
 
 require_once __DIR__ . '/remote_exception.php';
