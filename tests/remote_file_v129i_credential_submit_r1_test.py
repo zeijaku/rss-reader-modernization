@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 root = Path(__file__).resolve().parents[1]
 js = (root / 'public/js/remote-files.js').read_text(encoding='utf-8')
@@ -26,8 +27,10 @@ check("catch (error) {\n            clearCredentialInputs();" not in js, 'failed
 check('id="remoteConnectionUsername" name="username"' in page, 'username has form semantic name')
 check('id="remoteConnectionPassword" name="password"' in page, 'password has form semantic name')
 check('autocomplete="current-password"' in page, 'remote password field uses credential-oriented autocomplete semantics')
-check("APP_VERSION = '1.29.0-dev.4'" in version, 'checkpoint revision identifies credential-submit fix')
-check("APP_ASSET_REVISION = '1.29.0-dev.4'" in version, 'asset revision forces corrected JS reload')
+version_match = re.search(r"APP_VERSION\s*=\s*'([^']+)'", version)
+asset_match = re.search(r"APP_ASSET_REVISION\s*=\s*'([^']+)'", version)
+check(version_match is not None and bool(version_match.group(1)), 'active application version marker remains defined')
+check(version_match is not None and asset_match is not None and asset_match.group(1) == version_match.group(1), 'asset revision follows the active version so corrected JS reloads')
 
 print(f'Credential submit R1 tests: {passed} passed, {failed} failed')
 raise SystemExit(1 if failed else 0)

@@ -20,6 +20,9 @@ current_following.extend([
     TESTS / 'test_v122b_feed_health.py',
     TESTS / 'test_v122c_rss_rules.py',
     TESTS / 'test_v122d_rss_rules.py',
+    TESTS / 'remote_file_v129i_ui_security_test.py',
+    TESTS / 'remote_file_v129i_credential_submit_r1_test.py',
+    TESTS / 'remote_file_v129i_env_check_r2_test.py',
 ])
 
 pinned_asset_patterns = [

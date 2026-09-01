@@ -1,72 +1,90 @@
-# RSS Reader Modernization 1.28.0
+# RSS Reader Modernization 1.29.0
 
-Release tag: `v1.28.0`
-Release date: 2026-08-31
+Release tag: `v1.29.0`
+Release date: 2026-09-01
 
 ## Overview
 
-Version 1.28.0 extends the authenticated File Library introduced in V1.27. The existing private storage and metadata-only database contract remain unchanged while File Detail, protected PDF viewing, bounded TXT/CSV previews, and Smartphone-oriented action/Modal polish are added.
+Version 1.29.0 adds an authenticated Remote File Manager while preserving the existing RSS Reader and File Library security boundaries. FTP, explicit FTPS, SFTP and HTTPS WebDAV connections can be registered per user and used for directory navigation, upload/download, mkdir, rename/move, delete, refresh, File Library transfer and bounded preview operations.
 
-The release keeps the existing authentication, session, CSRF, owner scope, private-path resolution, serve-time content validation, XSS boundaries, and public-endpoint protections. ZIP remains download-only and is never opened, extracted, or executed by the application.
+Remote credentials are never stored in plaintext. They are encrypted server-side with Sodium XChaCha20-Poly1305 AEAD using owner/connection-bound authenticated data, while the encryption key remains private deployment configuration outside the database and repository.
 
 ## Main changes
 
-- Added File Detail with original filename, MIME type, extension, formatted size, upload time, numeric file id, and image dimensions when available.
-- File Detail never returns the stored random filename, filesystem path, or owner id.
-- Added protected PDF preview through the existing authenticated file content endpoint for validated PDF files only.
-- PDF display relies on the browser-native PDF viewer. No PDF.js, CDN dependency, server-side PDF parser, or secondary remote fetch is introduced.
-- Added UTF-8 TXT Preview bounded to 64 KiB and 300 lines. UTF-8 BOM is accepted; invalid/non-UTF-8 content fails safely and full download remains available.
-- Added UTF-8 CSV Preview bounded to 512 KiB, 50 data rows, 30 columns, and 64 KiB per logical record using bounded `fgetcsv` parsing.
-- TXT/CSV content is inserted as text rather than HTML.
-- Added responsive File Library action polish, including a touch-friendly 2x2 layout when four actions are present on narrow cards.
-- Improved long filename/metadata wrapping and PDF/TXT/CSV/File Detail Modal behavior on Smartphone widths.
-- Removed development phase badges from File Library and RSS Management while retaining the central application version label for deployment verification.
-- Finalized application and active public asset revision markers at `1.28.0`.
+- Added `/remote-files` with connection list/register/edit/delete and read-only Connection Test.
+- Added FTP, explicit FTPS, SFTP and HTTPS WebDAV providers behind a shared Remote File service boundary.
+- Added remote directory listing/navigation, file size/update metadata, upload/download, mkdir, rename/move, delete and refresh.
+- Added Remote -> File Library and File Library -> Remote transfers without exposing private stored filenames or filesystem paths to the browser.
+- Reused the existing bounded Image/PDF/TXT/CSV preview and content-validation boundaries for eligible remote files. ZIP remains non-previewable and is never extracted.
+- Added responsive/touch-oriented Remote Files UI and shared Drawer navigation entry.
+- Added production environment diagnostics through `tools/remote_file_env_check.php`.
+- Grouped V1.29 backend implementation under `app/remote_file/` for maintainability.
 
 ## Security / compatibility
 
-- Preview/detail operations start from the authenticated session user and an owner-scoped positive numeric file id.
-- The server resolves private storage paths internally; request data cannot select a stored random filename, owner id, or filesystem path.
-- Files are revalidated before preview/content responses are returned.
-- File responses retain `Cache-Control: no-store`, `X-Content-Type-Options: nosniff`, `Cross-Origin-Resource-Policy: same-origin`, and restrictive sandbox CSP behavior.
-- PDF preview is limited to validated PDF content and does not enable server parsing.
-- TXT and CSV previews are UTF-8-only and bounded before rendering; invalid encoding fails closed.
-- CSV parsing is bounded by total bytes, rows, columns, and per-record bytes to avoid unbounded preview work.
-- Dynamic TXT/CSV/File Detail values are rendered through text-safe DOM paths rather than user-controlled HTML.
-- ZIP remains storage/download only; there is no `ZipArchive`, extraction, archive browser, or execution path in V1.28.
-- Existing V1.27 upload MIME/content checks, random physical names, dangerous-extension rejection, private storage, owner scope, and soft-delete behavior remain in place.
-- No new required external service, secret, environment variable, or permission change is introduced.
+- Remote connections are owner scoped and all mutating JSON/multipart operations require authenticated session + CSRF validation.
+- Hostname and port values are validated before transport. DNS answers are checked on each remote operation and validated addresses are pinned to transport where supported.
+- Public IP targets are the default. Private/LAN targets require both administrator CIDR configuration and per-connection opt-in. Loopback, link-local and other blocked classes remain denied.
+- WebDAV redirects are manually handled, same-origin, DNS/IP revalidated and confined to the configured Base Path; automatic redirect following remains disabled.
+- Relative paths are normalized by segments and confined under the configured Base Path. Traversal, NUL/control characters and backslash path forms fail closed.
+- Entries identified as symbolic links or unknown types are refused for protected operations. Because FTP/SFTP listing metadata is not uniform across servers, a dedicated server-side root/chroot remains recommended as the final boundary.
+- SFTP requires a verified known_hosts file and host-key validation.
+- FTPS and WebDAV keep TLS peer and hostname verification enabled. PHP `ftp_ssl_connect()` is not used.
+- Plain FTP credentials and file data are unencrypted on the wire; the UI warns about this protocol risk.
+- Transfers and previews use bounded streaming/private temporary storage rather than unbounded whole-file memory loading.
+- Remote credentials, private keys and encrypted credential envelopes are not returned to JavaScript or logged by normal application paths.
 
 ## Database migration
 
-No database migration is required for Version 1.28.0.
+Version 1.29.0 requires one new existing-database migration:
 
-Existing Version 1.27.0 installations already using `database/migrations/020_v1_27_user_files.sql` keep the same metadata-only `user_file` table contract. Do not reapply Migration 020 solely for V1.28.
+`database/migrations/021_v1_29_remote_connection.sql`
 
-For a fresh installation, `database/schema.sql` already contains the File Library table introduced in V1.27.
+Back up the database first. Set the migration `@table_prefix` to the same value as `DB_TABLE_PREFIX`, then apply Migration 021 once. It adds the owner-scoped `remote_connection` table only; existing tables/columns are not removed or rewritten.
+
+Fresh installations use `database/schema.sql`, which already includes the V1.29 Remote connection table. Do not re-run `schema.sql` against an existing database.
+
+## Required private configuration
+
+Generate a dedicated 32-byte key and keep it outside Git/package contents:
+
+`php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"`
+
+Configure at least:
+
+- `APP_REMOTE_CREDENTIAL_KEY_ID=primary`
+- `APP_REMOTE_CREDENTIAL_KEY_B64=<generated Base64 value whose decoded length is exactly 32 bytes>`
+- `APP_REMOTE_ALLOWED_PORTS=21,22,443` adjusted to the minimum ports actually needed
+- `APP_REMOTE_TEMP_DIR=<private writable directory outside public/>`
+- `APP_REMOTE_SSH_KNOWN_HOSTS_FILE=<verified known_hosts path>` when SFTP is used
+
+For private/LAN targets, additionally configure `APP_REMOTE_PRIVATE_NETWORK_ENABLED=true` and the narrowest practical `APP_REMOTE_PRIVATE_NETWORK_CIDRS`, then enable private-network use on only the required connection.
+
+Run `php tools/remote_file_env_check.php` after deployment. It validates the credential-key shape without printing the secret and reports the relevant cURL/protocol/extension capabilities.
 
 ## Upgrade summary
 
-1. Back up application code, `config/local.php`, database, and `var/uploads/` before deployment.
-2. No V1.28 SQL/Migration is required when upgrading from Version 1.27.0.
-3. Deploy Version 1.28.0 without overwriting private configuration or runtime upload data.
-4. Reload the browser and confirm the footer/login reports `RSS Reader Modernization 1.28.0`.
-5. Open File Library and verify Image Viewer, File Detail, PDF Viewer, TXT Preview, CSV Preview, Download, Delete, upload, and drag-and-drop selection.
-6. On Smartphone width, verify four-action cards remain touch-friendly and PDF/TXT/CSV/File Detail Modals remain usable.
-7. Verify a different authenticated user cannot access another user's file id.
-8. Verify invalid/non-UTF-8 TXT/CSV preview fails safely while the normal download path remains available.
-9. Verify ZIP has download/delete actions only and no archive extraction/browser action appears.
-10. Check Browser Console and PHP/Web server logs for new errors.
+1. Back up application code, `config/local.php`, database, File Library storage and other private runtime data.
+2. Apply `database/migrations/021_v1_29_remote_connection.sql` once after matching `@table_prefix` to `DB_TABLE_PREFIX`.
+3. Generate/configure the Remote credential key and private temporary directory. Do not overwrite an existing production key after credentials have been stored.
+4. Configure only the required Remote ports/private CIDRs and verified SFTP known_hosts data.
+5. Deploy Version 1.29.0 without replacing `config/local.php`, private keys, known_hosts, File Library uploads or other runtime-private data.
+6. Run `php tools/remote_file_env_check.php`.
+7. Reload the browser and confirm the footer/login reports `RSS Reader Modernization 1.29.0`.
+8. Open `/remote-files`, create a non-critical test connection and run Connection Test.
+9. Verify directory listing/navigation, upload, preview/download, mkdir, rename/move, Remote -> File Library, File Library -> Remote and delete in a test Base Path.
+10. Verify invalid credentials fail safely; for SFTP verify host-key mismatch rejection, and for FTPS/WebDAV verify untrusted TLS certificate rejection.
+11. Check Browser Console and PHP/Web server logs for new errors and confirm no credential material is logged.
 
 ## Release assets
 
-- `rss-reader-modernization-1.28.0.zip`
-- `rss-reader-modernization-1.28.0.zip.sha256`
-- `rss-reader-modernization-1.28.0-complete.zip`
-- `rss-reader-modernization-1.28.0-complete.zip.sha256`
+- `rss-reader-modernization-1.29.0.zip`
+- `rss-reader-modernization-1.29.0.zip.sha256`
+- `rss-reader-modernization-1.29.0-complete.zip`
+- `rss-reader-modernization-1.29.0-complete.zip.sha256`
 
 ## Verification limits
 
-The V1.28-G integration checkpoint completed the durable current regression/current-feature gates on GitHub Actions for PHP 8.1 and PHP 8.4, together with focused File Library preview/integration contracts, syntax checks, version/workflow hygiene, owner/private-storage/security checks, and checkpoint package verification. V1.28-H formalizes the version and release documentation, then the generic GitHub Release workflow again runs `tests/run-current.sh` and `tests/run-current-features.sh` on PHP 8.1 and PHP 8.4, release-readiness/version/workflow hygiene checks, high-signal secret scanning, deterministic Runtime and Complete Source package verification, SHA-256 checks, clean-room extraction, immutable-tag protection, and main-SHA rechecks before publication.
+V1.29 B-I used focused security, provider, operation, File Library integration, UI and package checks. The production checkpoint also confirmed real FTP connection registration/authentication after the Remote credential key was configured correctly. V1.29-J runs the durable current regression/current-feature suites, PHP/JavaScript syntax, release/workflow/version hygiene, secret scanning, deterministic Runtime/Complete package verification and clean-room extraction. GitHub Actions provides the release matrix with PHP 8.1 and PHP 8.4 plus curl, mbstring, pdo_mysql, pdo_sqlite and simplexml.
 
-The target environment remains responsible for real browser-native PDF rendering differences, actual Smartphone rendering, deployment-specific PHP/Web server limits and permissions, filesystem ownership, and the final post-deployment smoke check.
+Protocol behavior can still vary with the target server and deployment cURL build. The target environment remains responsible for validating the actual FTP/FTPS/SFTP/WebDAV servers it uses, SFTP known_hosts provenance, FTPS/WebDAV certificate trust, private-network CIDRs, filesystem permissions, PHP/Web server upload/time limits, Smartphone rendering and the final post-deployment smoke check. Remote text editing, SCP, SMB/NFS, S3/cloud drives, shell commands, chmod/chown, archive browsing and background synchronization are outside Version 1.29.0.

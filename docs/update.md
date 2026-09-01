@@ -1,3 +1,32 @@
+# Version 1.29.0 update
+
+## Version 1.28.0からVersion 1.29.0
+
+V1.29.0はRemote File Managerを追加するため、既存DBへMigration 021とprivate設定の追加が必要です。Codeより先にBackupとCredential keyの保管方法を確定してください。
+
+1. Application code、`config/local.php`、Database、File Library storage、必要な`var/`DataをBackupする。
+2. `database/migrations/021_v1_29_remote_connection.sql`の`@table_prefix`を実環境の`DB_TABLE_PREFIX`へ合わせて1回適用する。
+3. `php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"`で専用Keyを生成し、`APP_REMOTE_CREDENTIAL_KEY_B64`へprivate設定する。
+4. `APP_REMOTE_TEMP_DIR`を`public/`外のwritable directoryへ設定する。
+5. 使用するProtocolに必要なPortだけ`APP_REMOTE_ALLOWED_PORTS`へ設定する。SFTP利用時は検証済みknown_hostsも設定する。
+6. Private/LAN接続が必要な場合だけ、`APP_REMOTE_PRIVATE_NETWORK_ENABLED`と最小CIDR allowlistを設定する。
+7. `php tools/remote_file_env_check.php`を実行し、必要なcURL protocol／Extension／Key／Temporary directoryがOKであることを確認する。
+8. Runtime ZIPのSHA-256を確認して別Folderへ展開し、`config/local.php`、実DB、File Library upload、known_hosts/private key等を上書きせずCodeを更新する。
+9. BrowserをReloadし、Footerが`RSS Reader Modernization 1.29.0`であることを確認する。
+10. `/remote-files`でTest Connectionを登録し、Connection Test、Directory操作、Upload／Preview／Download、Rename／Move、File Library相互転送、Deleteを確認する。
+11. 問題があればCodeだけでなく、021適用前のDatabase BackupとCredential設定を含む同じ時点へ戻す。
+
+```text
+DB Migration                021_v1_29_remote_connection.sql
+New table                   remote_connection
+必須設定                    APP_REMOTE_CREDENTIAL_KEY_B64 / APP_REMOTE_TEMP_DIR
+Protocol別設定              allowed ports / SFTP known_hosts / optional private CIDRs
+Browser Cache               APP_ASSET_REVISION=1.29.0
+正式Tag / GitHub Release    v1.29.0
+```
+
+Plain FTPは通信内容を暗号化しません。利用可能ならSFTP／FTPS／HTTPS WebDAVを優先してください。
+
 # Version 1.22.0 update
 
 ## Version 1.21.0からVersion 1.22.0

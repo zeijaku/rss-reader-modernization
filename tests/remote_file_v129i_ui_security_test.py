@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 ht = (ROOT / 'public/.htaccess').read_text(encoding='utf-8')
@@ -54,8 +55,10 @@ check('FTPは通信とCredentialが暗号化されません' in page,
       'plain FTP risk is visible in UI')
 check('Private Networkへの接続をこのConnectionで許可' in page and 'Server側Allowlist' in page,
       'private network opt-in explains server-side allowlist boundary')
-check("APP_VERSION = '1.29.0-dev.4'" in version and "APP_ASSET_REVISION = '1.29.0-dev.4'" in version,
-      'G-I checkpoint version and asset revision advance together')
+version_match = re.search(r"APP_VERSION\s*=\s*'([^']+)'", version)
+asset_match = re.search(r"APP_ASSET_REVISION\s*=\s*'([^']+)'", version)
+check(version_match is not None and asset_match is not None and version_match.group(1) == asset_match.group(1),
+      'Remote Files active version and asset revision advance together')
 
 print(f'RESULT: PASS {passes} / FAIL {fails}')
 raise SystemExit(0 if fails == 0 else 1)
