@@ -222,6 +222,20 @@
         return './remote_file_preview_api.php?' + params.toString();
     }
 
+    // UI hint only. Server-side remote_editor_allowed_extensions() remains authoritative.
+    var editableExtensions = ['txt', 'md', 'csv', 'json', 'xml', 'html', 'htm', 'css', 'js', 'php', 'ini', 'conf', 'yml', 'yaml'];
+
+    function editorUrl(path) {
+        var params = new URLSearchParams();
+        params.set('remote_connection_id', String(state.currentConnectionId));
+        params.set('path', path);
+        return './remote-editor?' + params.toString();
+    }
+
+    function editorExtensionAllowed(extension) {
+        return editableExtensions.indexOf(extension) >= 0;
+    }
+
     function setManagerEnabled(enabled) {
         [el.edit, el.test, el.remove, el.refresh, el.uploadOpen, el.newFolder].forEach(function (button) {
             if (button) {
@@ -370,6 +384,18 @@
                 downloadIcon.setAttribute('aria-hidden', 'true');
                 download.appendChild(downloadIcon);
                 actions.appendChild(download);
+                if (editorExtensionAllowed(extension)) {
+                    var editLink = document.createElement('a');
+                    editLink.className = 'btn btn-sm btn-outline-secondary';
+                    editLink.href = editorUrl(path);
+                    editLink.title = 'Edit';
+                    editLink.setAttribute('aria-label', name + 'をEdit');
+                    var editIcon = document.createElement('i');
+                    editIcon.className = 'fas fa-edit';
+                    editIcon.setAttribute('aria-hidden', 'true');
+                    editLink.appendChild(editIcon);
+                    actions.appendChild(editLink);
+                }
                 actions.appendChild(actionButton('fas fa-folder-plus', 'File Libraryへ保存', 'btn-outline-success', function () { importToLibrary(entry); }));
             }
 

@@ -1,0 +1,30 @@
+.remote-editor-shell { max-width: 1500px; margin: 0 auto; }
+.remote-editor-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+.remote-editor-heading-main { min-width: 0; }
+.remote-editor-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+.remote-editor-phase-note { font-size: .9rem; }
+.remote-editor-meta { display: grid; grid-template-columns: repeat(4,minmax(110px,1fr)); gap: .65rem; }
+.remote-editor-meta > div { min-width: 0; padding: .55rem .65rem; border: 1px solid var(--bs-border-color,#dee2e6); border-radius: .375rem; background: var(--bs-tertiary-bg,#f8f9fa); }
+.remote-editor-meta-label { display: block; margin-bottom: .15rem; color: var(--bs-secondary-color,#6c757d); font-size: .72rem; }
+.remote-editor-meta-hash { grid-column: 1 / -1; }
+.remote-editor-meta-hash code { display: block; overflow: hidden; color: inherit; text-overflow: ellipsis; white-space: nowrap; }
+.remote-editor-loading { display: flex; min-height: 420px; align-items: center; justify-content: center; gap: .55rem; color: var(--bs-secondary-color,#6c757d); }
+.remote-editor-text { width: 100%; min-height: 420px; height: clamp(420px,calc(100dvh - 360px),760px); resize: vertical; font-family: var(--bs-font-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace); font-size: .84rem; line-height: 1.55; tab-size: 4; white-space: pre; overflow: auto; }
+.remote-editor-toolbar { display: flex; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; }
+@media (pointer: coarse) {
+  .remote-editor-toolbar .btn, #remoteEditorBack { min-height: 44px; }
+}
+@media (max-width: 767.98px) {
+  .remote-editor-meta { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .remote-editor-text { min-height: 52dvh; height: 58dvh; font-size: .8rem; }
+}
+@media (max-width: 575.98px) {
+  .remote-editor-shell { padding-right: 4px; padding-left: 4px; }
+  .remote-editor-heading { display: block; }
+  .remote-editor-heading > .btn { width: 100%; margin-top: .65rem; }
+  .remote-editor-meta { grid-template-columns: 1fr 1fr; gap: .4rem; }
+  .remote-editor-meta > div { padding: .45rem .5rem; }
+  .remote-editor-toolbar { display: grid; grid-template-columns: 1fr 1fr; }
+  .remote-editor-toolbar .btn { width: 100%; }
+  .remote-editor-text { min-height: 56dvh; height: 62dvh; padding: .65rem; font-size: .78rem; }
+}
