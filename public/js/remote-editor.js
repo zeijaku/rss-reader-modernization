@@ -19,11 +19,14 @@
         path: typeof initial.path === 'string' ? initial.path : '',
         loaded: false,
         dirty: false,
+        loading: false,
+        saving: false,
         initialText: '',
         sha256: ''
     };
 
     var el = {
+        csrf: document.querySelector('meta[name="csrf-token"]'),
         notice: document.getElementById('remoteEditorNotice'),
         back: document.getElementById('remoteEditorBack'),
         loading: document.getElementById('remoteEditorLoading'),
@@ -37,6 +40,17 @@
         metaBom: document.getElementById('remoteEditorMetaBom'),
         metaHash: document.getElementById('remoteEditorMetaHash')
     };
+
+    function csrfToken() {
+        return el.csrf ? (el.csrf.getAttribute('content') || '') : '';
+    }
+
+    function syncCsrf(response) {
+        var token = response.headers.get('X-CSRF-Token');
+        if (token && el.csrf) {
+            el.csrf.setAttribute('content', token);
+        }
+    }
 
     function showNotice(message, type) {
         if (!el.notice) {
@@ -83,23 +97,30 @@
         return ({lf: 'LF', crlf: 'CRLF', none: 'None'})[value] || '-';
     }
 
+    function updateSaveState() {
+        if (!el.save) {
+            return;
+        }
+        var disabled = !state.available || !state.loaded || !state.dirty || state.loading || state.saving;
+        el.save.disabled = disabled;
+        el.save.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+    }
+
     function setDirty(value) {
         state.dirty = value === true;
-        if (!el.dirty) {
-            return;
+        if (el.dirty) {
+            if (!state.loaded) {
+                el.dirty.textContent = '未読込';
+                el.dirty.className = 'badge text-bg-secondary';
+            } else if (state.dirty) {
+                el.dirty.textContent = '未保存';
+                el.dirty.className = 'badge text-bg-warning';
+            } else {
+                el.dirty.textContent = 'Remoteと同じ';
+                el.dirty.className = 'badge text-bg-success';
+            }
         }
-        if (!state.loaded) {
-            el.dirty.textContent = '未読込';
-            el.dirty.className = 'badge text-bg-secondary';
-            return;
-        }
-        if (state.dirty) {
-            el.dirty.textContent = '未保存';
-            el.dirty.className = 'badge text-bg-warning';
-        } else {
-            el.dirty.textContent = 'Remoteと同じ';
-            el.dirty.className = 'badge text-bg-success';
-        }
+        updateSaveState();
     }
 
     function updateMetadata(data) {
@@ -130,20 +151,39 @@
     }
 
     function setLoading(loading) {
+        state.loading = loading === true;
         if (el.loading) {
-            el.loading.classList.toggle('d-none', !loading);
+            el.loading.classList.toggle('d-none', !state.loading);
         }
         if (el.reload) {
-            el.reload.disabled = loading || !state.available;
+            el.reload.disabled = state.loading || state.saving || !state.available;
         }
         if (el.text) {
-            el.text.disabled = loading || !state.available || (!loading && !state.loaded);
-            el.text.classList.toggle('d-none', loading || (!loading && !state.loaded));
+            el.text.disabled = state.loading || state.saving || !state.available || (!state.loading && !state.loaded);
+            el.text.classList.toggle('d-none', state.loading || (!state.loading && !state.loaded));
         }
+        updateSaveState();
+    }
+
+    function setSaving(saving) {
+        state.saving = saving === true;
+        if (el.reload) {
+            el.reload.disabled = state.saving || state.loading || !state.available;
+        }
+        if (el.text) {
+            el.text.disabled = state.saving || state.loading || !state.available || !state.loaded;
+        }
+        if (el.save) {
+            var label = el.save.querySelector('span');
+            if (label) {
+                label.textContent = state.saving ? '保存中...' : '保存';
+            }
+        }
+        updateSaveState();
     }
 
     async function loadRemoteText() {
-        if (!state.available || !state.connectionId || !state.path) {
+        if (!state.available || !state.connectionId || !state.path || state.saving) {
             return;
         }
 
@@ -155,6 +195,7 @@
                 credentials: 'same-origin',
                 headers: {'Accept': 'application/json'}
             });
+            syncCsrf(response);
             var payload = null;
             try {
                 payload = await response.json();
@@ -168,12 +209,12 @@
             var data = payload.data;
             var text = typeof data.text === 'string' ? data.text : '';
             el.text.value = text;
-            state.initialText = text;
+            state.initialText = el.text.value;
             state.sha256 = typeof data.sha256 === 'string' ? data.sha256 : '';
             state.loaded = true;
             updateMetadata(data);
             setDirty(false);
-            showNotice('Remote textを読み込みました。V1.30-Cでは保存機能はまだ無効です。', 'info');
+            showNotice('Remote textを読み込みました。', 'info');
         } catch (error) {
             state.loaded = false;
             state.initialText = '';
@@ -186,6 +227,61 @@
             showNotice(error.message || 'Remote textを読み込めませんでした。', 'danger');
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function saveRemoteText() {
+        if (!state.available || !state.loaded || !state.dirty || state.loading || state.saving || !el.text) {
+            return;
+        }
+
+        hideNotice();
+        setSaving(true);
+        try {
+            var response = await window.fetch('./remote_file_editor_api.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json;charset=UTF-8'
+                },
+                body: JSON.stringify({
+                    csrf_token: csrfToken(),
+                    remote_connection_id: state.connectionId,
+                    path: state.path,
+                    text: el.text.value,
+                    expected_sha256: state.sha256
+                })
+            });
+            syncCsrf(response);
+            var payload = null;
+            try {
+                payload = await response.json();
+            } catch (error) {
+                payload = null;
+            }
+            if (!response.ok || !payload || payload.ok !== true || !payload.data) {
+                var failure = new Error(responseMessage(payload, 'Remote textを保存できませんでした。'));
+                failure.status = response.status;
+                failure.code = payload && payload.error ? String(payload.error.code || '') : '';
+                throw failure;
+            }
+
+            var data = payload.data;
+            el.text.value = typeof data.text === 'string' ? data.text : el.text.value;
+            state.initialText = el.text.value;
+            state.sha256 = typeof data.sha256 === 'string' ? data.sha256 : '';
+            updateMetadata(data);
+            setDirty(false);
+            showNotice('Remote textを保存しました。', 'success');
+        } catch (error) {
+            if (error && error.code === 'editor_conflict') {
+                showNotice('Remote側のファイルが変更されています。上書きせず停止しました。Remoteから再読込してください。', 'warning');
+            } else {
+                showNotice(error.message || 'Remote textを保存できませんでした。', 'danger');
+            }
+        } finally {
+            setSaving(false);
         }
     }
 
@@ -206,7 +302,7 @@
         el.text.addEventListener('keydown', function (event) {
             if ((event.ctrlKey || event.metaKey) && String(event.key || '').toLowerCase() === 's') {
                 event.preventDefault();
-                showNotice('V1.30-CではRemoteへの保存機能はまだ利用できません。', 'warning');
+                saveRemoteText();
             }
         });
     }
@@ -217,6 +313,10 @@
                 loadRemoteText();
             }
         });
+    }
+
+    if (el.save) {
+        el.save.addEventListener('click', saveRemoteText);
     }
 
     if (el.back) {
@@ -235,12 +335,8 @@
         event.returnValue = '';
     });
 
-    if (el.save) {
-        el.save.disabled = true;
-        el.save.setAttribute('aria-disabled', 'true');
-    }
-
     setDirty(false);
+    setSaving(false);
     if (state.available) {
         loadRemoteText();
     } else if (typeof initial.error_message === 'string' && initial.error_message !== '') {

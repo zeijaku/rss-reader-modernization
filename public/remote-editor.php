@@ -145,7 +145,7 @@ if (!is_string($initialJson)) {
 
     <div class="alert alert-warning remote-editor-phase-note" role="note">
       <i class="fas fa-info-circle fa-fw" aria-hidden="true"></i>
-      V1.30-C checkpointではEditor UIのみ有効です。入力内容をRemoteへ保存する機能はまだ有効になっていません。
+      V1.30-D checkpointではRemote保存を有効化しています。保存時はSHA-256でRemote側の変更を確認し、競合時は上書きせず停止します。
     </div>
 
     <div id="remoteEditorNotice" class="alert d-none" role="status" aria-live="polite"></div>
@@ -189,12 +189,12 @@ if (!is_string($initialJson)) {
         ></textarea>
 
         <div class="form-text mt-2" id="remoteEditorPhaseHelp">
-          UTF-8 / 最大 <?php echo app_html(user_file_library_format_bytes(APP_REMOTE_EDITOR_MAX_BYTES)); ?>。V1.30-Cでは入力・未保存警告までを確認し、Remoteへの保存はV1.30-Dで追加します。
+          UTF-8 / 最大 <?php echo app_html(user_file_library_format_bytes(APP_REMOTE_EDITOR_MAX_BYTES)); ?>。保存時は元FileのLF / CRLFとUTF-8 BOMを可能な範囲で維持します。
         </div>
       </div>
       <div class="card-footer remote-editor-toolbar">
         <button type="button" class="btn btn-outline-secondary" id="remoteEditorReload"<?php echo $pageAvailable ? '' : ' disabled'; ?>><i class="fas fa-sync-alt fa-fw" aria-hidden="true"></i>Remoteから再読込</button>
-        <button type="button" class="btn btn-primary" id="remoteEditorSave" disabled title="V1.30-Dで有効化予定"><i class="fas fa-save fa-fw" aria-hidden="true"></i>保存</button>
+        <button type="button" class="btn btn-primary" id="remoteEditorSave" disabled aria-disabled="true"><i class="fas fa-save fa-fw" aria-hidden="true"></i><span>保存</span></button>
       </div>
     </section>
   </div>
