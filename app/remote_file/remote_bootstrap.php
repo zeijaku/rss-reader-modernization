@@ -64,4 +64,5 @@ require_once dirname(__DIR__) . '/user_file.php';
 require_once dirname(__DIR__) . '/file_library.php';
 require_once dirname(__DIR__) . '/file_preview.php';
 require_once __DIR__ . '/remote_service.php';
+require_once __DIR__ . '/remote_editor.php';
 require_once __DIR__ . '/remote_api.php';

@@ -24,12 +24,13 @@ env_example = read('config/.env.example')
 local_example = read('config/local.php.example')
 design = read('docs/v1.30-remote-text-editor-design.md')
 
-check("const APP_VERSION = '1.30.0-dev.1';" in version,
-      'V1.30 development version starts at 1.30.0-dev.1')
-check("const APP_VERSION_LABEL = 'RSS Reader Modernization 1.30.0-dev.1';" in version,
-      'visible version label matches the development version')
-check("const APP_ASSET_REVISION = '1.30.0-dev.1';" in version,
-      'active public asset revision is isolated from V1.29')
+version_match = re.search(r"const APP_VERSION = '(1\.30\.0(?:-dev\.[1-9][0-9]*)?)';", version)
+current_version = version_match.group(1) if version_match else ''
+check(bool(current_version), 'V1.30 uses the supported development/final version line')
+check(f"const APP_VERSION_LABEL = 'RSS Reader Modernization {current_version}';" in version,
+      'visible version label matches the current V1.30 version')
+check(f"const APP_ASSET_REVISION = '{current_version}';" in version,
+      'active public asset revision matches the current V1.30 version')
 
 check("define('APP_REMOTE_EDITOR_MAX_BYTES'" in bootstrap,
       'remote bootstrap defines a dedicated editor byte ceiling')
@@ -77,7 +78,7 @@ migration_dir = ROOT / 'database' / 'migrations'
 v130_migrations = []
 if migration_dir.is_dir():
     v130_migrations = [p.name for p in migration_dir.iterdir() if 'v1_30' in p.name.lower() or re.match(r'022_', p.name)]
-check(v130_migrations == [], 'V1.30-A introduces no database migration')
+check(v130_migrations == [], 'V1.30 introduces no database migration')
 
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')

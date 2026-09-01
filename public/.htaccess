@@ -35,7 +35,8 @@ RewriteEngine On
 # V1.27-E: File Library page/content endpoint are authenticated and owner-scoped.
 # V1.28-B: File Detail API is authenticated, owner-scoped and read-only.
 # V1.29-I: Remote File Manager page/content/preview/upload endpoints are explicit authenticated endpoints.
-RewriteRule ^(?!api_v1\.php$|calendar_color_api\.php$|calendar_recurrence_api\.php$|connection_probe\.php$|error\.php$|file-library\.php$|file_content\.php$|file_preview_api\.php$|file_upload_api\.php$|index\.php$|logout\.php$|remote-files\.php$|remote_file_content\.php$|remote_file_preview_api\.php$|remote_file_upload_api\.php$|rss-management\.php$|settings\.php$|stock\.php$).*\.php$ - [F,L,NC]
+# V1.30-B: Remote Text Editor read API is authenticated, owner-scoped and read-only.
+RewriteRule ^(?!api_v1\.php$|calendar_color_api\.php$|calendar_recurrence_api\.php$|connection_probe\.php$|error\.php$|file-library\.php$|file_content\.php$|file_preview_api\.php$|file_upload_api\.php$|index\.php$|logout\.php$|remote-files\.php$|remote_file_content\.php$|remote_file_editor_api\.php$|remote_file_preview_api\.php$|remote_file_upload_api\.php$|rss-management\.php$|settings\.php$|stock\.php$).*\.php$ - [F,L,NC]
 
 # V1.13-B R2: DocumentRootがpublic/直下の場合も /stock をCanonical URLとする。
 # Application Root配下の /public/stock.php が直接指定された場合も /stock へ戻す。
