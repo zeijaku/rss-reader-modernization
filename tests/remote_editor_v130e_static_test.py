@@ -18,8 +18,8 @@ def check(condition: bool, label: str) -> None:
     checks.append(bool(condition))
     print(('PASS' if condition else 'FAIL') + ': ' + label)
 
-check("const APP_VERSION = '1.30.0-dev.5';" in version, 'E uses dev.5 visible version')
-check("const APP_ASSET_REVISION = '1.30.0-dev.5';" in version, 'E bumps asset revision to avoid stale editor JS')
+check("const APP_VERSION = '1.30.0-dev." in version, 'current V1.30 development version remains visible')
+check("const APP_ASSET_REVISION = '1.30.0-dev." in version, 'current V1.30 asset revision remains development-scoped')
 
 check('V1.30-E checkpoint' in js and '競合時はSaveを停止' in js, 'client renders current E checkpoint guidance')
 check('ローカル入力を保持' in js and 'LF / CRLFとUTF-8 BOM' in js, 'E guidance explains conflict preservation and EOL/BOM scope')

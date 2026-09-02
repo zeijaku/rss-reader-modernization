@@ -63,3 +63,82 @@
 .remote-files-actions [title="File Libraryへ保存"] i { color: var(--bs-success); }
 .remote-files-actions [title="Rename / Move"] i { color: var(--bs-secondary); }
 .remote-files-actions [title="削除"] i { color: var(--bs-danger); }
+
+/* V1.30-F: differentiate entry file types by both glyph shape and color.
+ * Filename text remains visible, so the UI never relies on color alone.
+ * Modern :has() is used only for presentation; file behavior remains unchanged. */
+.remote-files-name-button .remote-files-entry-icon.fa-folder { color: var(--bs-warning,#ffc107); }
+.remote-files-name-button .remote-files-entry-icon.fa-link { color: var(--bs-secondary,#6c757d); }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".php" i]) .remote-files-entry-icon { color: var(--bs-purple,#7952b3); }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".php" i]) .remote-files-entry-icon::before { content: "\f1c9"; }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".html" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".htm" i]) .remote-files-entry-icon { color: var(--bs-orange,#e8590c); }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".html" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".htm" i]) .remote-files-entry-icon::before { content: "\f1c9"; }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".css" i]) .remote-files-entry-icon { color: var(--bs-primary,#0d6efd); }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".css" i]) .remote-files-entry-icon::before { content: "\f1c9"; }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".js" i]) .remote-files-entry-icon { color: #9a7b00; }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".js" i]) .remote-files-entry-icon::before { content: "\f1c9"; }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".json" i]) .remote-files-entry-icon { color: var(--bs-success,#198754); }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".json" i]) .remote-files-entry-icon::before { content: "\f1c9"; }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".xml" i]) .remote-files-entry-icon { color: #0aa2c0; }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".xml" i]) .remote-files-entry-icon::before { content: "\f1c9"; }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".ini" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".conf" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".yml" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".yaml" i]) .remote-files-entry-icon { color: var(--bs-indigo,#6610f2); }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".ini" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".conf" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".yml" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".yaml" i]) .remote-files-entry-icon::before { content: "\f1c9"; }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".txt" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".md" i]) .remote-files-entry-icon { color: var(--bs-secondary,#6c757d); }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".txt" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".md" i]) .remote-files-entry-icon::before { content: "\f15c"; }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".csv" i]) .remote-files-entry-icon { color: var(--bs-teal,#20c997); }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".csv" i]) .remote-files-entry-icon::before { content: "\f6dd"; }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".pdf" i]) .remote-files-entry-icon { color: var(--bs-danger,#dc3545); }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".pdf" i]) .remote-files-entry-icon::before { content: "\f1c1"; }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".jpg" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".jpeg" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".png" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".gif" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".webp" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".svg" i]) .remote-files-entry-icon { color: var(--bs-pink,#d63384); }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".jpg" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".jpeg" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".png" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".gif" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".webp" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".svg" i]) .remote-files-entry-icon::before { content: "\f1c5"; }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".zip" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".tar" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".gz" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".tgz" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".bz2" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".xz" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".7z" i]) .remote-files-entry-icon,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".rar" i]) .remote-files-entry-icon { color: var(--bs-orange,#fd7e14); }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".zip" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".tar" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".gz" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".tgz" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".bz2" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".xz" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".7z" i]) .remote-files-entry-icon::before,
+.remote-files-name-button:has(.remote-files-entry-name[title$=".rar" i]) .remote-files-entry-icon::before { content: "\f1c6"; }
+
+.remote-files-name-button:has(.remote-files-entry-name[title$=".sql" i]) .remote-files-entry-icon { color: var(--bs-indigo,#6610f2); }
+.remote-files-name-button:has(.remote-files-entry-name[title$=".sql" i]) .remote-files-entry-icon::before { content: "\f1c0"; }

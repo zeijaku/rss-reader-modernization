@@ -26,5 +26,5 @@
   .remote-editor-meta > div { padding: .45rem .5rem; }
   .remote-editor-toolbar { display: grid; grid-template-columns: 1fr 1fr; }
   .remote-editor-toolbar .btn { width: 100%; }
-  .remote-editor-text { min-height: 56dvh; height: 62dvh; padding: .65rem; font-size: .78rem; }
+  .remote-editor-text { min-height: 56dvh; height: 62dvh; padding: .65rem; font-size: 16px; }
 }
