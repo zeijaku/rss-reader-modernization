@@ -23,6 +23,10 @@ config/.env.*
 !/var/session/.gitkeep
 /var/session/*
 !/var/session/.gitkeep
+!/var/remote-tmp/
+!/var/remote-tmp/.gitkeep
+/var/remote-tmp/*
+!/var/remote-tmp/.gitkeep
 /public/session_file/
 /public/dat/
 /session_file/
