@@ -101,4 +101,17 @@ python3 "$SCRIPT_DIR/remote_file_v129i_credential_submit_r1_test.py"
 python3 "$SCRIPT_DIR/remote_file_v129i_env_check_r2_test.py"
 node --check "$ROOT/public/js/remote-files.js"
 
+
+echo '== Current feature contracts: V1.30 Remote Text Editor =='
+python3 "$SCRIPT_DIR/test_current_remote_editor.py"
+php "$SCRIPT_DIR/remote_editor_v130b_text_test.php"
+php "$SCRIPT_DIR/remote_editor_v130d_save_test.php"
+python3 "$SCRIPT_DIR/remote_editor_v130d_api_http_test.py"
+node "$SCRIPT_DIR/remote_editor_v130d_ui_runtime_test.js"
+node "$SCRIPT_DIR/remote_editor_v130d_r3_navigation_runtime_test.js"
+php "$SCRIPT_DIR/remote_editor_v130e_roundtrip_test.php"
+node "$SCRIPT_DIR/remote_editor_v130e_ui_runtime_test.js"
+node --check "$ROOT/public/js/remote-editor.js"
+node --check "$ROOT/public/js/remote-files.js"
+
 echo 'PASS: current feature contract suite completed'

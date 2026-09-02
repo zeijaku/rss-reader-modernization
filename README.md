@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.29.0`
-Release tag: `v1.29.0`
+**Stable release:** `RSS Reader Modernization 1.30.0`
+Release tag: `v1.30.0`
+
+Version 1.30.0は、V1.29のRemote File Managerへ認証済みOwner専用のRemote Text Editorを追加したReleaseです。UTF-8のTXT／MD／CSV／JSON／XML／HTML／CSS／JS／PHP／INI／CONF／YAMLを最大512 KiBで編集でき、SHA-256による楽観的競合検出、LF／CRLF・UTF-8 BOM維持、WAF誤検知を避けるBase64保存Transport、同一Directory内の一時Fileを使う段階Saveと保存後Hash確認を行います。競合時はLocal内容を保持して上書きを停止し、Remote最新版の再読込まで再Saveを許可しません。Remote Filesの操作／File種別Iconも視認性を改善しました。V1.30のDB Migrationや新規必須Secretはありません。Remote側のchmod/chown、Lock、Atomic replacement保証、Shift_JIS/EUC-JP自動変換、IDE化は対象外です。
 
 Version 1.29.0は、認証済みユーザー向けのRemote File Managerを追加したReleaseです。FTP／明示FTPS／SFTP／HTTPS WebDAVの接続登録・接続確認、Directory移動、Upload／Download、mkdir、Rename／Move、Delete、File Libraryとの相互転送、Image／PDF／TXT／CSV Previewに対応します。CredentialはSodium AEADで暗号化し、Owner scope／CSRF／Base Path confinement／DNS解決後IP検証／DNS pinning／Private Networkの明示CIDR allowlist／SFTP known_hosts／FTPS・WebDAV TLS検証を維持します。既存環境ではMigration `021_v1_29_remote_connection.sql`とRemote Credential Key等のprivate設定が必要です。Remote Text Editor、SCP、SMB/NFS、S3等は今回の対象外です。
 
@@ -92,6 +94,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - X Timeline Widgetによる指定した公開X Accountの最近の投稿表示（上級者向け、X Developer Platform／Pay Per Use／Server-side Bearer Tokenが必要）
 - File LibraryへのJPEG／PNG／GIF／WebP／PDF／TXT／CSV／ZIP保存、Image／PDF／TXT／CSV Preview、Download／Delete
 - Remote File ManagerによるFTP／明示FTPS／SFTP／HTTPS WebDAV接続、Directory操作、Upload／Download、File Libraryとの相互転送
+- Remote Text EditorによるUTF-8 Text/Source編集、SHA-256競合検出、LF／CRLF・BOM維持、WAF-safe保存
 - スマートフォンでの左右スワイプによるタブ切り替え
 - Feed／Calendar読込中のSpinner表示
 - 記事リンクのStock保存と一覧表示

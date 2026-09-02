@@ -1,3 +1,27 @@
+## 1.30.0 - 2026-09-03
+
+### Remote Text Editor
+- Added an authenticated owner-scoped Remote Text Editor on top of the V1.29 Remote File Manager for `txt`, `md`, `csv`, `json`, `xml`, `html`, `htm`, `css`, `js`, `php`, `ini`, `conf`, `yml`, and `yaml`.
+- Added bounded UTF-8 reads and saves with a default 512 KiB editor ceiling, raw-byte SHA-256 metadata, UTF-8 BOM awareness, and LF/CRLF preservation for supported source files.
+- Added a dedicated responsive editor UI with dirty state, Save/Reload controls, Ctrl/Cmd+S, safe return to the previous Remote connection/directory, and explicit conflict recovery.
+
+### Save / conflict safety
+- Added optimistic SHA-256 conflict checks before staging and again before replacement; stale editors stop with HTTP 409 and never expose a force-overwrite bypass.
+- Added random same-directory staged saves, bounded read-back verification, best-effort staged cleanup, and zero-byte save support through the common provider contract.
+- Added Base64 JSON transport for editor text so hosting WAF/ModSecurity rules do not need to be disabled for PHP/HTML/JS source saves; Base64 is transport encoding, not encryption.
+- Kept the editor protocol-neutral across FTP, explicit FTPS, SFTP, and HTTPS WebDAV. Atomic replacement and Remote file locking are not claimed.
+
+### UI / compatibility / deployment
+- Differentiated Remote Files action icons and file-type icons by shape plus color while keeping filename, title, and aria-label cues.
+- Improved narrow/mobile editor behavior and retained spellcheck/autocomplete/autocapitalize hardening and 44px coarse-pointer targets.
+- Added the private `var/remote-tmp/.gitkeep` placeholder while keeping actual temp contents ignored/private; production temp storage must remain writable by PHP and outside `public/`.
+- No V1.30 database migration, provider schema change, or new required credential/secret is introduced. Existing V1.29 Remote configuration remains in force.
+
+### Finalization
+- Promoted durable V1.30 Remote Text Editor contracts into the current feature regression suite.
+- Finalized `APP_VERSION`, visible label, and `APP_ASSET_REVISION` at `1.30.0`.
+- Retained the generic PHP 8.1/8.4 CI and Release gates, deterministic Runtime/Complete packages, secret scan, and clean-room verification before immutable tag publication.
+
 ## 1.29.0 - 2026-09-01
 
 ### Remote File Manager
