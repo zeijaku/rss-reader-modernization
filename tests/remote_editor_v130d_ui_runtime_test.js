@@ -81,25 +81,27 @@ const windowListeners = {};
 let confirmResult = true;
 let confirmCalls = 0;
 const window = {
+    btoa(binary) { return Buffer.from(binary, 'latin1').toString('base64'); },
     fetch(url, options = {}) {
         fetchCalls.push({url: String(url), options});
         if ((options.method || 'GET') === 'GET') {
             return Promise.resolve(response(true, 200, {ok: true, data: readData}, 'csrf-after-read'));
         }
         const requestBody = JSON.parse(options.body);
+        const requestText = Buffer.from(requestBody.text_base64 || '', 'base64').toString('utf8');
         if (mode === 'pending-success') {
             return new Promise(resolve => { pendingSaveResolve = () => resolve(response(true, 200, {ok: true, data: {
                 ...readData,
-                text: requestBody.text,
-                byte_size: Buffer.byteLength(requestBody.text),
+                text: requestText,
+                byte_size: Buffer.byteLength(requestText),
                 sha256: 'b'.repeat(64)
             }}, 'csrf-after-save')); });
         }
         if (mode === 'success') {
             return Promise.resolve(response(true, 200, {ok: true, data: {
                 ...readData,
-                text: requestBody.text,
-                byte_size: Buffer.byteLength(requestBody.text),
+                text: requestText,
+                byte_size: Buffer.byteLength(requestText),
                 sha256: 'c'.repeat(64)
             }}, 'csrf-after-save2'));
         }
@@ -112,7 +114,7 @@ const window = {
     addEventListener(name, handler) { (windowListeners[name] ||= []).push(handler); }
 };
 
-const context = {document, window, URLSearchParams, Number, String, Error, Promise, console, setTimeout, clearTimeout};
+const context = {document, window, URLSearchParams, Number, String, Error, Promise, console, setTimeout, clearTimeout, encodeURIComponent, parseInt};
 vm.createContext(context);
 vm.runInContext(source, context, {filename: 'remote-editor.js'});
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
@@ -141,7 +143,10 @@ const flush = () => new Promise(resolve => setTimeout(resolve, 0));
     check(body.csrf_token === 'csrf-after-read', 'Save sends current CSRF token');
     check(body.remote_connection_id === 42 && body.path === '/dir/a b.php', 'Save sends selected connection and relative path');
     check(body.expected_sha256 === 'a'.repeat(64), 'Save sends hash from opened remote state');
-    check(body.text === dangerousText + 'local change\n', 'Save sends current textarea text');
+    check(typeof body.text_base64 === 'string' && body.text_base64 !== '', 'Save sends Base64 text transport');
+    check(!Object.prototype.hasOwnProperty.call(body, 'text'), 'Save omits raw source text field');
+    check(Buffer.from(body.text_base64, 'base64').toString('utf8') === dangerousText + 'local change\n', 'Save Base64 round-trip preserves current textarea text');
+    check(!fetchCalls[1].options.body.includes('<script>'), 'Save request body does not contain raw script-like source');
     check(confirmCalls === confirmsBeforeSave, 'normal Save does not display repetitive confirmation');
     check(elements.remoteEditorSave.disabled === true && elements.remoteEditorText.disabled === true && elements.remoteEditorReload.disabled === true, 'Save-in-flight disables overlapping edit/reload/save');
     check(elements.remoteEditorSave.childSpan.textContent === '保存中...', 'Save button shows saving state');

@@ -52,11 +52,16 @@ function remote_editor_public_message(string $code): string
     };
 }
 
+function remote_editor_base64_max_bytes(): int
+{
+    return 4 * intdiv(APP_REMOTE_EDITOR_MAX_BYTES + 2, 3);
+}
+
 function remote_editor_request_max_bytes(): int
 {
-    // JSON escaping can make the request envelope larger than the decoded text.
-    // The decoded/final content is still independently limited to the editor ceiling.
-    return (APP_REMOTE_EDITOR_MAX_BYTES * 4) + 65536;
+    // Base64 is bounded to about 4/3 of decoded editor text. Keep a small
+    // fixed allowance for JSON metadata, path, CSRF and optimistic SHA state.
+    return remote_editor_base64_max_bytes() + 65536;
 }
 
 function remote_editor_content_length(): ?int
@@ -104,6 +109,27 @@ function remote_editor_decode_save_request(string $raw): array
         throw new AppRemoteEditorException('editor_state_invalid', 422);
     }
     return $input;
+}
+
+/** @param array<string,mixed> $input */
+function remote_editor_decode_save_text(array $input): string
+{
+    $encoded = $input['text_base64'] ?? null;
+    if (!is_string($encoded)) {
+        throw new AppRemoteEditorException('editor_state_invalid', 422);
+    }
+    if (strlen($encoded) > remote_editor_base64_max_bytes()) {
+        throw new AppRemoteEditorException('editor_too_large', 413);
+    }
+
+    $decoded = base64_decode($encoded, true);
+    if (!is_string($decoded) || base64_encode($decoded) !== $encoded) {
+        throw new AppRemoteEditorException('editor_state_invalid', 422);
+    }
+    if (strlen($decoded) > APP_REMOTE_EDITOR_MAX_BYTES) {
+        throw new AppRemoteEditorException('editor_too_large', 413);
+    }
+    return $decoded;
 }
 
 app_session_start();
@@ -183,11 +209,11 @@ try {
 
     $connectionId = app_validate_positive_int($input['remote_connection_id'] ?? null);
     $path = remote_path_normalize_relative($input['path'] ?? null);
-    $text = $input['text'] ?? null;
     $expectedSha256 = $input['expected_sha256'] ?? null;
-    if ($connectionId === null || $path === null || $path === '/' || !is_string($text) || !is_string($expectedSha256)) {
+    if ($connectionId === null || $path === null || $path === '/' || !is_string($expectedSha256)) {
         throw new AppRemoteEditorException('editor_state_invalid', 422);
     }
+    $text = remote_editor_decode_save_text($input);
 
     app_session_release();
     $data = remote_editor_save($userId, $connectionId, $path, $text, $expectedSha256);

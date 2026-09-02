@@ -75,6 +75,14 @@
         return fallback;
     }
 
+    function utf8ToBase64(value) {
+        var encoded = encodeURIComponent(value);
+        var binary = encoded.replace(/%([0-9A-F]{2})/g, function (match, hex) {
+            return String.fromCharCode(parseInt(hex, 16));
+        });
+        return window.btoa(binary);
+    }
+
     function formatBytes(value) {
         var bytes = Number(value);
         if (!Number.isFinite(bytes) || bytes < 0) {
@@ -238,6 +246,13 @@
         hideNotice();
         setSaving(true);
         try {
+            var textBase64;
+            try {
+                textBase64 = utf8ToBase64(el.text.value);
+            } catch (error) {
+                throw new Error('入力内容をUTF-8として保存要求へ変換できませんでした。');
+            }
+
             var response = await window.fetch('./remote_file_editor_api.php', {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -249,7 +264,7 @@
                     csrf_token: csrfToken(),
                     remote_connection_id: state.connectionId,
                     path: state.path,
-                    text: el.text.value,
+                    text_base64: textBase64,
                     expected_sha256: state.sha256
                 })
             });
