@@ -13,11 +13,26 @@
         initial = {};
     }
 
+    var returnParams = new URLSearchParams(window.location.search || '');
+    var requestedConnectionId = Number(returnParams.get('remote_connection_id') || 0);
+    if (!Number.isSafeInteger(requestedConnectionId) || requestedConnectionId <= 0) {
+        requestedConnectionId = 0;
+    }
+    var requestedPath = returnParams.get('path');
+    if (typeof requestedPath !== 'string' || requestedPath === '' || requestedPath.charAt(0) !== '/' || requestedPath.indexOf('\\') >= 0 || /[\u0000-\u001F\u007F]/.test(requestedPath)) {
+        requestedPath = '/';
+    } else {
+        var requestedSegments = requestedPath.split('/');
+        if (requestedSegments.some(function (segment) { return segment === '.' || segment === '..'; })) {
+            requestedPath = '/';
+        }
+    }
+
     var state = {
         connections: Array.isArray(initial.connections) ? initial.connections : [],
         libraryFiles: Array.isArray(initial.library_files) ? initial.library_files : [],
-        currentConnectionId: 0,
-        currentPath: '/',
+        currentConnectionId: requestedConnectionId,
+        currentPath: requestedPath,
         entries: [],
         busy: false,
         privateNetworkServerEnabled: initial.private_network_server_enabled === true
@@ -371,7 +386,7 @@
             if (type === 'directory') {
                 actions.appendChild(actionButton('fas fa-folder-open', '開く', 'btn-outline-primary', function () { loadDirectory(path); }));
             } else if (type === 'file') {
-                if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'txt', 'csv'].indexOf(extension) >= 0) {
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'txt', 'csv'].indexOf(extension) >= 0 && !editorExtensionAllowed(extension)) {
                     actions.appendChild(actionButton('fas fa-eye', 'Preview', 'btn-outline-secondary', function () { openPreview(entry); }));
                 }
                 var download = document.createElement('a');
@@ -849,6 +864,16 @@
     }
 
     renderConnectionOptions();
+    if (!state.currentConnectionId) {
+        state.currentPath = '/';
+    }
+    if (el.path) {
+        el.path.textContent = state.currentPath;
+    }
     renderEntries();
     renderLibraryOptions();
+    var restoredConnection = connectionById(state.currentConnectionId);
+    if (restoredConnection && restoredConnection.enabled === true) {
+        loadDirectory(state.currentPath);
+    }
 })(document, window);

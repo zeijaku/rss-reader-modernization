@@ -158,6 +158,23 @@
         return './remote_file_editor_api.php?' + params.toString();
     }
 
+    function pathParent(path) {
+        var normalized = typeof path === 'string' && path.charAt(0) === '/' ? path : '/';
+        if (normalized === '/') {
+            return '/';
+        }
+        var parts = normalized.replace(/\/$/, '').split('/');
+        parts.pop();
+        return parts.length <= 1 ? '/' : parts.join('/');
+    }
+
+    function backUrl() {
+        var params = new URLSearchParams();
+        params.set('remote_connection_id', String(state.connectionId));
+        params.set('path', pathParent(state.path));
+        return './remote-files?' + params.toString();
+    }
+
     function setLoading(loading) {
         state.loading = loading === true;
         if (el.loading) {
@@ -335,6 +352,7 @@
     }
 
     if (el.back) {
+        el.back.href = backUrl();
         el.back.addEventListener('click', function (event) {
             if (state.dirty && !window.confirm('未保存の変更があります。Remote Filesへ戻ると入力内容は破棄されます。')) {
                 event.preventDefault();
