@@ -17,9 +17,9 @@ def check(condition: bool, label: str) -> None:
     checks.append(bool(condition))
     print(('PASS' if condition else 'FAIL') + ': ' + label)
 
-check("const APP_VERSION = '1.30.0-dev.4-r2';" in version, 'V1.30-D-R2 uses dev.4-r2 version')
-check("const APP_VERSION_LABEL = 'RSS Reader Modernization 1.30.0-dev.4-r2';" in version, 'visible version label matches dev.4-r2')
-check("const APP_ASSET_REVISION = '1.30.0-dev.4-r2';" in version, 'asset revision matches dev.4-r2')
+check("const APP_VERSION = '1.30.0-dev." in version, 'current V1.30 development version is visible')
+check("const APP_VERSION_LABEL = 'RSS Reader Modernization 1.30.0-dev." in version, 'visible version label tracks V1.30 development checkpoint')
+check("const APP_ASSET_REVISION = '1.30.0-dev." in version, 'asset revision tracks V1.30 development checkpoint')
 
 check("preg_match('/\\A[0-9a-f]{64}\\z/D'" in editor, 'expected optimistic state is strict lowercase SHA-256')
 check('remote_editor_validate_browser_text($text);' in editor, 'browser text is validated before save construction')
@@ -66,8 +66,8 @@ check("Cross-Origin-Resource-Policy: same-origin" in api and "frame-ancestors 'n
 check('app_send_no_store_headers()' in api, 'editor API remains no-store')
 
 check('<meta name="csrf-token"' in page, 'editor page exposes only normal CSRF token meta for same-origin save')
-check('V1.30-D checkpointではRemote保存を有効化しています。' in page, 'page clearly labels D save checkpoint')
-check('競合時は上書きせず停止します。' in page, 'page tells user conflict will not overwrite')
+check('V1.30-E checkpoint' in js, 'current E checkpoint guidance is rendered by editor JS')
+check('競合時はSaveを停止' in js, 'current guidance tells user conflict blocks stale save')
 check('id="remoteEditorSave" disabled aria-disabled="true"' in page, 'Save starts disabled until remote text is loaded and changed')
 check('<span>保存</span>' in page, 'Save button has mutable visible label for saving state')
 
@@ -84,6 +84,8 @@ check("el.save.addEventListener('click', saveRemoteText);" in js, 'Save button i
 check("event.ctrlKey || event.metaKey" in js and 'saveRemoteText();' in js, 'Ctrl/Cmd+S uses same save path')
 check("error.code === 'editor_conflict'" in js, 'client recognizes backend conflict code')
 check('上書きせず停止しました' in js, 'conflict UX explicitly says overwrite was stopped')
+check('state.conflicted' in js and '競合' in js, 'client tracks an explicit conflicted state')
+check('state.conflicted || state.loading || state.saving' in js, 'conflicted state blocks stale Save')
 check('state.sha256 = typeof data.sha256' in js, 'successful save updates optimistic state token')
 check('state.initialText = el.text.value' in js and 'setDirty(false)' in js, 'successful save resets clean baseline')
 check('syncCsrf(response)' in js, 'client accepts rotated CSRF token response header')

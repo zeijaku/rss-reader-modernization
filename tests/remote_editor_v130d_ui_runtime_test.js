@@ -176,10 +176,10 @@ const flush = () => new Promise(resolve => setTimeout(resolve, 0));
     elements.remoteEditorText.dispatch('input');
     elements.remoteEditorSave.dispatch('click');
     await flush(); await flush();
-    check(elements.remoteEditorDirtyState.textContent === '未保存', '409 conflict keeps local editor dirty');
+    check(elements.remoteEditorDirtyState.textContent === '競合', '409 conflict enters explicit conflict state');
     check(elements.remoteEditorText.value === textBeforeConflict, '409 conflict preserves local unsaved text');
     check(elements.remoteEditorNotice.textContent.includes('上書きせず停止しました'), '409 conflict clearly reports no overwrite');
-    check(elements.remoteEditorSave.disabled === false, 'after conflict user may save only after state changes/reload; button remains tied to dirty state');
+    check(elements.remoteEditorSave.disabled === true, 'after conflict stale Save is blocked until Remote reload');
 
     let unloadPrevented = false;
     const unload = {returnValue: null, preventDefault() { unloadPrevented = true; }};

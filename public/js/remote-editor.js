@@ -19,6 +19,7 @@
         path: typeof initial.path === 'string' ? initial.path : '',
         loaded: false,
         dirty: false,
+        conflicted: false,
         loading: false,
         saving: false,
         initialText: '',
@@ -28,6 +29,7 @@
     var el = {
         csrf: document.querySelector('meta[name="csrf-token"]'),
         notice: document.getElementById('remoteEditorNotice'),
+        phaseNote: document.querySelector('.remote-editor-phase-note'),
         back: document.getElementById('remoteEditorBack'),
         loading: document.getElementById('remoteEditorLoading'),
         text: document.getElementById('remoteEditorText'),
@@ -105,11 +107,24 @@
         return ({lf: 'LF', crlf: 'CRLF', none: 'None'})[value] || '-';
     }
 
+    function normalizeEditorText(value) {
+        return String(value || '').replace(/\r\n/g, '\n');
+    }
+
+    function updateConflictUi() {
+        if (!el.reload) {
+            return;
+        }
+        var label = state.conflicted ? 'Remote最新版を再読込' : 'Remoteから再読込';
+        el.reload.title = label;
+        el.reload.setAttribute('aria-label', label);
+    }
+
     function updateSaveState() {
         if (!el.save) {
             return;
         }
-        var disabled = !state.available || !state.loaded || !state.dirty || state.loading || state.saving;
+        var disabled = !state.available || !state.loaded || !state.dirty || state.conflicted || state.loading || state.saving;
         el.save.disabled = disabled;
         el.save.setAttribute('aria-disabled', disabled ? 'true' : 'false');
     }
@@ -120,6 +135,9 @@
             if (!state.loaded) {
                 el.dirty.textContent = '未読込';
                 el.dirty.className = 'badge text-bg-secondary';
+            } else if (state.conflicted) {
+                el.dirty.textContent = '競合';
+                el.dirty.className = 'badge text-bg-danger';
             } else if (state.dirty) {
                 el.dirty.textContent = '未保存';
                 el.dirty.className = 'badge text-bg-warning';
@@ -129,6 +147,12 @@
             }
         }
         updateSaveState();
+    }
+
+    function setConflicted(value) {
+        state.conflicted = value === true;
+        updateConflictUi();
+        setDirty(state.dirty);
     }
 
     function updateMetadata(data) {
@@ -212,6 +236,15 @@
             return;
         }
 
+        var previous = {
+            loaded: state.loaded,
+            dirty: state.dirty,
+            conflicted: state.conflicted,
+            text: el.text ? el.text.value : '',
+            initialText: state.initialText,
+            sha256: state.sha256
+        };
+
         hideNotice();
         setLoading(true);
         try {
@@ -232,30 +265,51 @@
             }
 
             var data = payload.data;
-            var text = typeof data.text === 'string' ? data.text : '';
+            var text = normalizeEditorText(typeof data.text === 'string' ? data.text : '');
             el.text.value = text;
             state.initialText = el.text.value;
             state.sha256 = typeof data.sha256 === 'string' ? data.sha256 : '';
             state.loaded = true;
+            state.conflicted = false;
+            updateConflictUi();
             updateMetadata(data);
             setDirty(false);
             showNotice('Remote textを読み込みました。', 'info');
         } catch (error) {
-            state.loaded = false;
-            state.initialText = '';
-            state.sha256 = '';
-            if (el.text) {
-                el.text.value = '';
-                el.text.disabled = true;
+            if (previous.loaded) {
+                state.loaded = true;
+                state.initialText = previous.initialText;
+                state.sha256 = previous.sha256;
+                state.conflicted = previous.conflicted;
+                if (el.text) {
+                    el.text.value = previous.text;
+                }
+                updateConflictUi();
+                setDirty(previous.dirty);
+                showNotice((error.message || 'Remote textを再読込できませんでした。') + ' ローカル入力は保持しています。', 'danger');
+            } else {
+                state.loaded = false;
+                state.initialText = '';
+                state.sha256 = '';
+                state.conflicted = false;
+                updateConflictUi();
+                if (el.text) {
+                    el.text.value = '';
+                    el.text.disabled = true;
+                }
+                setDirty(false);
+                showNotice(error.message || 'Remote textを読み込めませんでした。', 'danger');
             }
-            setDirty(false);
-            showNotice(error.message || 'Remote textを読み込めませんでした。', 'danger');
         } finally {
             setLoading(false);
         }
     }
 
     async function saveRemoteText() {
+        if (state.conflicted) {
+            showNotice('競合を検出したためSaveは停止中です。ローカル入力は保持されています。Remote最新版を再読込してください。', 'warning');
+            return;
+        }
         if (!state.available || !state.loaded || !state.dirty || state.loading || state.saving || !el.text) {
             return;
         }
@@ -300,15 +354,18 @@
             }
 
             var data = payload.data;
-            el.text.value = typeof data.text === 'string' ? data.text : el.text.value;
+            el.text.value = normalizeEditorText(typeof data.text === 'string' ? data.text : el.text.value);
             state.initialText = el.text.value;
             state.sha256 = typeof data.sha256 === 'string' ? data.sha256 : '';
+            state.conflicted = false;
+            updateConflictUi();
             updateMetadata(data);
             setDirty(false);
             showNotice('Remote textを保存しました。', 'success');
         } catch (error) {
             if (error && error.code === 'editor_conflict') {
-                showNotice('Remote側のファイルが変更されています。上書きせず停止しました。Remoteから再読込してください。', 'warning');
+                setConflicted(true);
+                showNotice('Remote側のファイルが変更されています。上書きせず停止しました。ローカル入力は保持しています。Remote最新版を再読込してください。', 'warning');
             } else {
                 showNotice(error.message || 'Remote textを保存できませんでした。', 'danger');
             }
@@ -320,6 +377,9 @@
     function confirmDiscard() {
         if (!state.dirty) {
             return true;
+        }
+        if (state.conflicted) {
+            return window.confirm('競合後のローカル変更を破棄し、Remote最新版を再読込しますか？');
         }
         return window.confirm('未保存の変更があります。Remoteから再読込すると入力内容は破棄されます。');
     }
@@ -368,6 +428,10 @@
         event.returnValue = '';
     });
 
+    if (el.phaseNote) {
+        el.phaseNote.textContent = 'V1.30-E checkpoint：競合時はSaveを停止してローカル入力を保持します。LF / CRLFとUTF-8 BOMは元Remoteの形式を基準に保存します。';
+    }
+    updateConflictUi();
     setDirty(false);
     setSaving(false);
     if (state.available) {

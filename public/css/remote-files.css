@@ -55,3 +55,11 @@
   .remote-files-path { font-size: .75rem; }
   .remote-files-preview-text { max-height: calc(100vh - 13rem); font-size: .75rem; }
 }
+
+/* V1.30-E: keep action meaning visible without relying on icon shape alone. */
+.remote-files-actions [title="Preview"] i { color: var(--bs-info); }
+.remote-files-actions [title="Download"] i { color: var(--bs-primary); }
+.remote-files-actions [title="Edit"] i { color: var(--bs-warning); }
+.remote-files-actions [title="File Libraryへ保存"] i { color: var(--bs-success); }
+.remote-files-actions [title="Rename / Move"] i { color: var(--bs-secondary); }
+.remote-files-actions [title="削除"] i { color: var(--bs-danger); }
