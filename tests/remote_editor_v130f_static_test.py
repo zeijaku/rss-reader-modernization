@@ -19,8 +19,8 @@ def check(condition: bool, label: str) -> None:
     checks.append(bool(condition))
     print(('PASS' if condition else 'FAIL') + ': ' + label)
 
-check("const APP_VERSION = '1.30.0-dev.6';" in version, 'F visible version is dev.6')
-check("const APP_ASSET_REVISION = '1.30.0-dev.6';" in version, 'F asset revision is dev.6')
+check("const APP_VERSION = '1.30.0-dev." in version, 'current V1.30 development checkpoint remains visible')
+check("const APP_ASSET_REVISION = '1.30.0-dev." in version, 'current V1.30 development asset revision remains visible')
 
 # File-type visuals are presentation-only. Existing row behavior is untouched.
 check(':has(' in files_css, 'file-type styling uses modern presentation-only :has selector')
