@@ -15,6 +15,18 @@ final class SftpProvider extends RemoteCurlProvider implements RemotePermissionP
         return ['read' => 'best_effort', 'change' => 'supported'];
     }
 
+    private function quotePath(string $absolutePath): string
+    {
+        if (remote_path_has_control_characters($absolutePath)) {
+            throw new AppRemoteValidationException('invalid_path');
+        }
+        return '"' . strtr($absolutePath, [
+            '\\' => '\\\\',
+            '"' => '\\"',
+            "'" => "\\'",
+        ]) . '"';
+    }
+
     public function chmod(string $relativePath, string $mode): void
     {
         $normalizedMode = remote_permission_normalize_mode($mode);
@@ -30,7 +42,7 @@ final class SftpProvider extends RemoteCurlProvider implements RemotePermissionP
         }
         $this->requireSuccess($this->request([
             'url' => $this->endpointUrl((string) $this->connection['remote_connection_base_path'], true),
-            'quote' => ['chmod ' . $normalizedMode . ' ' . $this->absolutePath($path)],
+            'quote' => ['chmod ' . $normalizedMode . ' ' . $this->quotePath($this->absolutePath($path))],
             'max_bytes' => 65536,
         ]));
     }
@@ -90,7 +102,7 @@ final class SftpProvider extends RemoteCurlProvider implements RemotePermissionP
         $absolute = $this->absolutePath($relativePath);
         $this->requireSuccess($this->request([
             'url' => $this->endpointUrl((string) $this->connection['remote_connection_base_path'], true),
-            'quote' => ['mkdir ' . $absolute],
+            'quote' => ['mkdir ' . $this->quotePath($absolute)],
             'max_bytes' => 65536,
         ]));
     }
@@ -102,7 +114,7 @@ final class SftpProvider extends RemoteCurlProvider implements RemotePermissionP
         }
         $this->requireSuccess($this->request([
             'url' => $this->endpointUrl((string) $this->connection['remote_connection_base_path'], true),
-            'quote' => ['rename ' . $this->absolutePath($fromRelativePath) . ' ' . $this->absolutePath($toRelativePath)],
+            'quote' => ['rename ' . $this->quotePath($this->absolutePath($fromRelativePath)) . ' ' . $this->quotePath($this->absolutePath($toRelativePath))],
             'max_bytes' => 65536,
         ]));
     }
@@ -111,7 +123,7 @@ final class SftpProvider extends RemoteCurlProvider implements RemotePermissionP
     {
         $this->requireSuccess($this->request([
             'url' => $this->endpointUrl((string) $this->connection['remote_connection_base_path'], true),
-            'quote' => [($directory ? 'rmdir ' : 'rm ') . $this->absolutePath($relativePath)],
+            'quote' => [($directory ? 'rmdir ' : 'rm ') . $this->quotePath($this->absolutePath($relativePath))],
             'max_bytes' => 65536,
         ]));
     }
