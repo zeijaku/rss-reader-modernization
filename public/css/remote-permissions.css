@@ -1,0 +1,27 @@
+/* V1.31-D: protocol-neutral Remote Permission display/chmod UI. */
+.remote-files-table { min-width: 880px; }
+.remote-files-permission-column { width: 165px; }
+.remote-files-permission-cell {
+  width: 165px;
+  font-family: var(--bs-font-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace);
+  white-space: nowrap;
+}
+.remote-files-permission-mode { display: block; font-weight: 600; }
+.remote-files-permission-symbolic { display: block; color: var(--bs-secondary-color,#6c757d); font-size: .72rem; }
+.remote-files-permission-status { min-height: 1.25rem; }
+.remote-files-permission-status-dependent { color: var(--bs-warning-text-emphasis,#664d03) !important; }
+.remote-files-permission-target,
+.remote-files-permission-current {
+  padding: .35rem .5rem;
+  border: 1px solid var(--bs-border-color,#dee2e6);
+  border-radius: .375rem;
+  background: var(--bs-tertiary-bg,#f8f9fa);
+  overflow-wrap: anywhere;
+}
+.remote-files-permission-current { font-family: var(--bs-font-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace); }
+.remote-files-actions .remote-permission-action i { color: var(--bs-info,#0dcaf0); }
+.remote-files-action-column { width: 290px; }
+
+@media (max-width: 767.98px) {
+  .remote-files-table { min-width: 780px; }
+}
