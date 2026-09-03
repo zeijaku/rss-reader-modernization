@@ -2,11 +2,50 @@
 
 declare(strict_types=1);
 
-class FtpProvider extends RemoteCurlProvider
+class FtpProvider extends RemoteCurlProvider implements RemotePermissionProvider
 {
     protected function transportProtocol(): string
     {
         return 'ftp';
+    }
+
+    /** @return array{read:string,change:string} */
+    public function permissionCapabilities(): array
+    {
+        return ['read' => 'best_effort', 'change' => 'server_dependent'];
+    }
+
+    public function chmod(string $relativePath, string $mode): void
+    {
+        $normalizedMode = remote_permission_normalize_mode($mode);
+        if ($normalizedMode === null) {
+            throw new AppRemoteValidationException('invalid_mode');
+        }
+        if (remote_path_has_control_characters($relativePath)) {
+            throw new AppRemoteValidationException('invalid_path');
+        }
+        $path = remote_path_normalize_relative($relativePath);
+        if ($path === null || $path === '/') {
+            throw new AppRemoteValidationException('invalid_path');
+        }
+        $absolute = $this->absolutePath($path);
+        $result = $this->request([
+            'url' => $this->endpointUrl((string) $this->connection['remote_connection_base_path'], true),
+            'quote' => ['SITE CHMOD ' . $normalizedMode . ' ' . $absolute],
+            'max_bytes' => 65536,
+        ]);
+        if (($result['ok'] ?? false) === true) {
+            return;
+        }
+
+        $status = (int) ($result['status'] ?? 0);
+        if (in_array($status, [500, 502, 504], true)) {
+            throw new AppRemoteTransportException('chmod_unsupported');
+        }
+        if ($status === 550) {
+            throw new AppRemoteTransportException('chmod_denied');
+        }
+        throw new AppRemoteTransportException((string) ($result['error_code'] ?? 'chmod_failed'));
     }
 
     public function list(string $relativePath): array

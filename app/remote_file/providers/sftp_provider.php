@@ -2,11 +2,37 @@
 
 declare(strict_types=1);
 
-final class SftpProvider extends RemoteCurlProvider
+final class SftpProvider extends RemoteCurlProvider implements RemotePermissionProvider
 {
     protected function transportProtocol(): string
     {
         return 'sftp';
+    }
+
+    /** @return array{read:string,change:string} */
+    public function permissionCapabilities(): array
+    {
+        return ['read' => 'best_effort', 'change' => 'supported'];
+    }
+
+    public function chmod(string $relativePath, string $mode): void
+    {
+        $normalizedMode = remote_permission_normalize_mode($mode);
+        if ($normalizedMode === null) {
+            throw new AppRemoteValidationException('invalid_mode');
+        }
+        if (remote_path_has_control_characters($relativePath)) {
+            throw new AppRemoteValidationException('invalid_path');
+        }
+        $path = remote_path_normalize_relative($relativePath);
+        if ($path === null || $path === '/') {
+            throw new AppRemoteValidationException('invalid_path');
+        }
+        $this->requireSuccess($this->request([
+            'url' => $this->endpointUrl((string) $this->connection['remote_connection_base_path'], true),
+            'quote' => ['chmod ' . $normalizedMode . ' ' . $this->absolutePath($path)],
+            'max_bytes' => 65536,
+        ]));
     }
 
     public function list(string $relativePath): array

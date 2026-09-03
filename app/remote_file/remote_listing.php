@@ -2,6 +2,35 @@
 
 declare(strict_types=1);
 
+/** @return array{symbolic:string,mode:?string}|null */
+function remote_listing_unix_permissions(string $rawMode): ?array
+{
+    if (preg_match('/\A[bcdlps-]([rwxStTs-]{9})[.+@]?\z/D', $rawMode, $matches) !== 1) {
+        return null;
+    }
+
+    $symbolic = $matches[1];
+    if (preg_match('/[StTs]/', $symbolic) === 1) {
+        return ['symbolic' => $symbolic, 'mode' => null];
+    }
+
+    $mode = '';
+    foreach (str_split($symbolic, 3) as $triplet) {
+        $value = 0;
+        if ($triplet[0] === 'r') {
+            $value += 4;
+        }
+        if ($triplet[1] === 'w') {
+            $value += 2;
+        }
+        if ($triplet[2] === 'x') {
+            $value += 1;
+        }
+        $mode .= (string) $value;
+    }
+    return ['symbolic' => $symbolic, 'mode' => $mode];
+}
+
 /** @return array{name:string,type:string,size:?int,modified_at:?string}|null */
 function remote_listing_parse_mlsd_line(string $line): ?array
 {
@@ -39,7 +68,7 @@ function remote_listing_parse_mlsd_line(string $line): ?array
     return ['name' => $name, 'type' => $type, 'size' => $type === 'directory' ? null : $size, 'modified_at' => $modified];
 }
 
-/** @return array{name:string,type:string,size:?int,modified_at:?string}|null */
+/** @return array{name:string,type:string,size:?int,modified_at:?string,permission_symbolic?:string,permission_mode?:?string}|null */
 function remote_listing_parse_unix_line(string $line): ?array
 {
     $line = trim($line);
@@ -69,12 +98,18 @@ function remote_listing_parse_unix_line(string $line): ?array
     };
     $size = preg_match('/\A\d{1,20}\z/D', $parts[4]) === 1 ? (int) $parts[4] : null;
     $modified = trim($parts[5] . ' ' . $parts[6] . ' ' . $parts[7]);
-    return [
+    $entry = [
         'name' => $name,
         'type' => $type,
         'size' => $type === 'file' ? $size : null,
         'modified_at' => $modified !== '' ? $modified : null,
     ];
+    $permissions = remote_listing_unix_permissions($mode);
+    if ($permissions !== null) {
+        $entry['permission_symbolic'] = $permissions['symbolic'];
+        $entry['permission_mode'] = $permissions['mode'];
+    }
+    return $entry;
 }
 
 /** @return list<array{name:string,type:string,size:?int,modified_at:?string}> */
