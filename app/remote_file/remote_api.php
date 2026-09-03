@@ -18,6 +18,7 @@ function remote_api_validation_message(string $reason): string
         'invalid_path' => 'Remote path is invalid.',
         'invalid_filename' => 'Remote file name is invalid.',
         'invalid_transfer' => 'Transfer request is invalid.',
+        'invalid_mode' => 'Permission mode must be exactly three octal digits (000-777).',
         'preview_not_supported' => 'Preview is not available for this file type.',
         default => 'Remote File Manager request is invalid.',
     };
@@ -51,6 +52,9 @@ function remote_api_failure(string $operation, int $userId, Throwable $exception
             'dependency_unavailable' => api_error('remote_dependency_unavailable', 'Required remote protocol support is unavailable on this server.', 503),
             'known_hosts_unavailable' => api_error('remote_known_hosts_unavailable', 'SFTP known_hosts configuration is unavailable.', 503),
             'temp_unavailable' => api_error('remote_temp_unavailable', 'Private remote transfer workspace is unavailable.', 503),
+            'chmod_unsupported' => api_error('remote_permission_unsupported', 'Remote permission changes are not supported by this connection.', 409),
+            'chmod_denied' => api_error('remote_permission_denied', 'Remote server denied the permission change.', 403),
+            'chmod_failed' => api_error('remote_permission_failed', 'Remote permission change failed.', 502),
             'dns_failed' => api_validation_error('Remote host could not be resolved.'),
             'private_address_not_allowed' => api_validation_error('Private remote address is not allowed by the configured policy.'),
             'address_not_allowed' => api_validation_error('Remote address is not allowed by the configured policy.'),
@@ -136,6 +140,23 @@ function remote_api_connection_test(int $userId, array $input): array
 }
 
 /** @return array{status:int,body:array<string,mixed>} */
+function remote_api_permission_capabilities(int $userId, array $input): array
+{
+    $connectionId = api_positive_int($input, 'remote_connection_id');
+    if ($connectionId === null) {
+        return api_validation_error('remote_connection_id must be a positive integer.');
+    }
+    try {
+        return api_success([
+            'remote_connection_id' => $connectionId,
+            'permission_capabilities' => remote_service_permission_capabilities($userId, $connectionId),
+        ]);
+    } catch (Throwable $exception) {
+        return remote_api_failure('permission.capabilities', $userId, $exception);
+    }
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
 function remote_api_file_list(int $userId, array $input): array
 {
     $connectionId = api_positive_int($input, 'remote_connection_id');
@@ -210,6 +231,26 @@ function remote_api_file_delete(int $userId, array $input): array
 }
 
 /** @return array{status:int,body:array<string,mixed>} */
+function remote_api_file_chmod(int $userId, array $input): array
+{
+    $connectionId = api_positive_int($input, 'remote_connection_id');
+    $path = api_string($input, 'path');
+    $mode = api_string($input, 'mode');
+    if ($connectionId === null || $path === null || $mode === null) {
+        return api_validation_error('Connection, path and mode are required.');
+    }
+    try {
+        remote_service_chmod($userId, $connectionId, $path, $mode);
+        return api_success([
+            'path' => remote_path_normalize_relative($path),
+            'mode' => remote_permission_normalize_mode($mode),
+        ]);
+    } catch (Throwable $exception) {
+        return remote_api_failure('file.chmod', $userId, $exception);
+    }
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
 function remote_api_file_import(int $userId, array $input): array
 {
     $connectionId = api_positive_int($input, 'remote_connection_id');
@@ -251,10 +292,12 @@ function remote_api_dispatch(string $action, int $userId, array $input): array
         'remote.connection.update' => remote_api_connection_update($userId, $input),
         'remote.connection.delete' => remote_api_connection_delete($userId, $input),
         'remote.connection.test' => remote_api_connection_test($userId, $input),
+        'remote.permission.capabilities' => remote_api_permission_capabilities($userId, $input),
         'remote.file.list' => remote_api_file_list($userId, $input),
         'remote.file.mkdir' => remote_api_file_mkdir($userId, $input),
         'remote.file.move' => remote_api_file_move($userId, $input),
         'remote.file.delete' => remote_api_file_delete($userId, $input),
+        'remote.file.chmod' => remote_api_file_chmod($userId, $input),
         'remote.file.import' => remote_api_file_import($userId, $input),
         'remote.file.export' => remote_api_file_export($userId, $input),
         default => api_error('unknown_action', 'Unknown API action.', 400),
