@@ -31,7 +31,20 @@ function remote_listing_unix_permissions(string $rawMode): ?array
     return ['symbolic' => $symbolic, 'mode' => $mode];
 }
 
-/** @return array{name:string,type:string,size:?int,modified_at:?string}|null */
+/** @param array<string,string> $facts */
+function remote_listing_mlsd_permission_mode(array $facts): ?string
+{
+    if (!isset($facts['unix.mode'])) {
+        return null;
+    }
+    $value = trim((string) $facts['unix.mode']);
+    if (preg_match('/\A0?([0-7]{3})\z/D', $value, $matches) !== 1) {
+        return null;
+    }
+    return $matches[1];
+}
+
+/** @return array{name:string,type:string,size:?int,modified_at:?string,permission_mode?:string}|null */
 function remote_listing_parse_mlsd_line(string $line): ?array
 {
     $line = trim($line);
@@ -65,7 +78,12 @@ function remote_listing_parse_mlsd_line(string $line): ?array
     if (isset($facts['modify']) && preg_match('/\A(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/', $facts['modify'], $m) === 1) {
         $modified = sprintf('%s-%s-%s %s:%s:%s UTC', $m[1], $m[2], $m[3], $m[4], $m[5], $m[6]);
     }
-    return ['name' => $name, 'type' => $type, 'size' => $type === 'directory' ? null : $size, 'modified_at' => $modified];
+    $entry = ['name' => $name, 'type' => $type, 'size' => $type === 'directory' ? null : $size, 'modified_at' => $modified];
+    $permissionMode = remote_listing_mlsd_permission_mode($facts);
+    if ($permissionMode !== null) {
+        $entry['permission_mode'] = $permissionMode;
+    }
+    return $entry;
 }
 
 /** @return array{name:string,type:string,size:?int,modified_at:?string,permission_symbolic?:string,permission_mode?:?string}|null */
