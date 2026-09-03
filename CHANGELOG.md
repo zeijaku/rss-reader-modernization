@@ -1,3 +1,21 @@
+## 1.31.0 - 2026-09-04
+
+### Remote Permissions
+- Added best-effort Unix permission display and preset-only chmod controls to the authenticated owner-scoped Remote File Manager.
+- Added the optional `RemotePermissionProvider` capability boundary plus permission capability/chmod API actions without widening the common Remote provider contract.
+- Added File presets `600` / `640` / `644` and Directory presets `700` / `750` / `755`; free-form and special-bit chmod are not exposed.
+
+### FTP / FTPS / SFTP behavior
+- Kept MLSD as the authoritative FTP/FTPS listing and now reads `UNIX.mode` when available; when permission metadata is absent, a best-effort Unix LIST supplements permission only and does not replace MLSD name/size/time/type data.
+- FTP/FTPS `SITE CHMOD` accepts only 2xx as success, maps 500/502/504 to unsupported, and keeps 550 as a target/user-specific denial rather than disabling chmod for the whole connection.
+- Hardened SFTP quote paths used by chmod, mkdir, rename and delete so spaces and quote characters remain bounded to the intended Remote path.
+
+### Security / finalization
+- Preserved authentication, CSRF, owner scope, Base Path confinement, control-character/traversal rejection, server-side safe-path checks, known-symlink rejection and strict three-digit octal validation.
+- Added no database migration, schema change, or new required secret/configuration; existing Remote credential/private-key/known_hosts boundaries remain unchanged.
+- Promoted V1.31 permission contracts into the durable current feature regression suite and retained the generic PHP 8.1/8.4 CI and Release gates.
+- Production FTPS verification confirmed permission enrichment and actual server-side `SITE CHMOD` changes. Final production SFTP endpoint verification is not claimed; SFTP behavior is covered by focused and final automated tests.
+
 ## 1.30.0 - 2026-09-03
 
 ### Remote Text Editor

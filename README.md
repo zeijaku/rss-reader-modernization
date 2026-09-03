@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.30.0`
-Release tag: `v1.30.0`
+**Stable release:** `RSS Reader Modernization 1.31.0`
+Release tag: `v1.31.0`
+
+Version 1.31.0は、V1.29のRemote File ManagerへUnix PermissionのBest-effort表示とpreset chmodを追加したReleaseです。SFTPはPermission変更対応、FTP／明示FTPSはServer依存のSITE CHMOD、HTTPS WebDAVはportableなUnix chmodが無いため非対応として明示します。FTP／FTPS一覧はMLSDを基本にUNIX.modeを利用し、Permissionが無い場合だけUnix LISTで補完します。Fileは600／640／644、Directoryは700／750／755に限定し、認証・CSRF・Owner scope・Base Path confinement・Symlink安全確認・3桁octal Validationを維持します。DB Migration、新規必須Secret／Configはありません。
 
 Version 1.30.0は、V1.29のRemote File Managerへ認証済みOwner専用のRemote Text Editorを追加したReleaseです。UTF-8のTXT／MD／CSV／JSON／XML／HTML／CSS／JS／PHP／INI／CONF／YAMLを最大512 KiBで編集でき、SHA-256による楽観的競合検出、LF／CRLF・UTF-8 BOM維持、WAF誤検知を避けるBase64保存Transport、同一Directory内の一時Fileを使う段階Saveと保存後Hash確認を行います。競合時はLocal内容を保持して上書きを停止し、Remote最新版の再読込まで再Saveを許可しません。Remote Filesの操作／File種別Iconも視認性を改善しました。V1.30のDB Migrationや新規必須Secretはありません。Remote側のchmod/chown、Lock、Atomic replacement保証、Shift_JIS/EUC-JP自動変換、IDE化は対象外です。
 
