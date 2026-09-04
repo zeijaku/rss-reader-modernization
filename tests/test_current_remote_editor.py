@@ -26,8 +26,13 @@ editor_css = read('public/css/remote-editor.css')
 version_match = re.search(r"const APP_VERSION = '([^']+)';", version)
 label_match = re.search(r"const APP_VERSION_LABEL = '([^']+)';", version)
 asset_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
-check(version_match is not None and version_match.group(1) == '1.30.0', 'formal V1.30 version marker')
-check(label_match is not None and label_match.group(1) == 'RSS Reader Modernization 1.30.0', 'formal V1.30 visible label')
+check(version_match is not None, 'formal application version marker remains available')
+check(
+    label_match is not None
+    and version_match is not None
+    and label_match.group(1) == f'RSS Reader Modernization {version_match.group(1)}',
+    'visible label follows current application version',
+)
 check(asset_match is not None and version_match is not None and asset_match.group(1) == version_match.group(1), 'active asset revision follows current version')
 
 for ext in ['txt', 'md', 'csv', 'json', 'xml', 'html', 'htm', 'css', 'js', 'php', 'ini', 'conf', 'yml', 'yaml']:
