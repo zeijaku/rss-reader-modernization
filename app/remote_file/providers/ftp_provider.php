@@ -2,11 +2,110 @@
 
 declare(strict_types=1);
 
-class FtpProvider extends RemoteCurlProvider
+class FtpProvider extends RemoteCurlProvider implements RemotePermissionProvider
 {
     protected function transportProtocol(): string
     {
         return 'ftp';
+    }
+
+    /** @return array{read:string,change:string} */
+    public function permissionCapabilities(): array
+    {
+        return ['read' => 'best_effort', 'change' => 'server_dependent'];
+    }
+
+    public function chmod(string $relativePath, string $mode): void
+    {
+        $normalizedMode = remote_permission_normalize_mode($mode);
+        if ($normalizedMode === null) {
+            throw new AppRemoteValidationException('invalid_mode');
+        }
+        if (remote_path_has_control_characters($relativePath)) {
+            throw new AppRemoteValidationException('invalid_path');
+        }
+        $path = remote_path_normalize_relative($relativePath);
+        if ($path === null || $path === '/') {
+            throw new AppRemoteValidationException('invalid_path');
+        }
+        $absolute = $this->absolutePath($path);
+        $result = $this->request([
+            'url' => $this->endpointUrl((string) $this->connection['remote_connection_base_path'], true),
+            'quote' => ['SITE CHMOD ' . $normalizedMode . ' ' . $absolute],
+            'max_bytes' => 65536,
+        ]);
+        $status = (int) ($result['status'] ?? 0);
+        if (($result['ok'] ?? false) === true && $status >= 200 && $status < 300) {
+            return;
+        }
+        if (in_array($status, [500, 502, 504], true)) {
+            throw new AppRemoteTransportException('chmod_unsupported');
+        }
+        if ($status === 550) {
+            throw new AppRemoteTransportException('chmod_denied');
+        }
+        if (($result['ok'] ?? false) === true) {
+            throw new AppRemoteTransportException('chmod_failed');
+        }
+
+        $errorCode = (string) ($result['error_code'] ?? '');
+        throw new AppRemoteTransportException($errorCode !== '' ? $errorCode : 'chmod_failed');
+    }
+
+    /** @param list<array<string,mixed>> $entries */
+    private function needsPermissionSupplement(array $entries): bool
+    {
+        foreach ($entries as $entry) {
+            $type = (string) ($entry['type'] ?? '');
+            if (!in_array($type, ['file', 'directory'], true)) {
+                continue;
+            }
+            if (!array_key_exists('permission_mode', $entry) && !array_key_exists('permission_symbolic', $entry)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @param list<array<string,mixed>> $primary
+     * @param list<array<string,mixed>> $supplement
+     * @return list<array<string,mixed>>
+     */
+    private function mergePermissionSupplement(array $primary, array $supplement): array
+    {
+        $byName = [];
+        foreach ($supplement as $entry) {
+            $name = isset($entry['name']) && is_string($entry['name']) ? $entry['name'] : '';
+            if ($name === '' || isset($byName[$name])) {
+                continue;
+            }
+            $byName[$name] = $entry;
+        }
+
+        foreach ($primary as &$entry) {
+            if (array_key_exists('permission_mode', $entry) || array_key_exists('permission_symbolic', $entry)) {
+                continue;
+            }
+            $name = isset($entry['name']) && is_string($entry['name']) ? $entry['name'] : '';
+            if ($name === '' || !isset($byName[$name])) {
+                continue;
+            }
+            $source = $byName[$name];
+            if (($entry['type'] ?? null) !== ($source['type'] ?? null)) {
+                continue;
+            }
+            if (isset($source['permission_symbolic']) && is_string($source['permission_symbolic'])) {
+                $entry['permission_symbolic'] = $source['permission_symbolic'];
+            }
+            if (array_key_exists('permission_mode', $source)
+                && ($source['permission_mode'] === null || is_string($source['permission_mode']))) {
+                $entry['permission_mode'] = $source['permission_mode'];
+            }
+        }
+        unset($entry);
+
+        return $primary;
     }
 
     public function list(string $relativePath): array
@@ -30,8 +129,21 @@ class FtpProvider extends RemoteCurlProvider
             $format = 'unix';
         }
         $result = $this->requireSuccess($result);
+        $parsedEntries = remote_listing_parse((string) ($result['body'] ?? ''), $format);
+
+        if ($format === 'mlsd' && $this->needsPermissionSupplement($parsedEntries)) {
+            $supplementResult = $this->request([
+                'url' => $this->endpointUrl($absolute, true),
+                'max_bytes' => 2097152,
+            ]);
+            if (($supplementResult['ok'] ?? false) === true) {
+                $supplementEntries = remote_listing_parse((string) ($supplementResult['body'] ?? ''), 'unix');
+                $parsedEntries = $this->mergePermissionSupplement($parsedEntries, $supplementEntries);
+            }
+        }
+
         $entries = [];
-        foreach (remote_listing_parse((string) ($result['body'] ?? ''), $format) as $entry) {
+        foreach ($parsedEntries as $entry) {
             $child = remote_path_child($relative, $entry['name']);
             if ($child === null) {
                 continue;

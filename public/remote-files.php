@@ -73,6 +73,7 @@ if (!is_string($initialJson)) {
     <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/all.css')); ?>">
     <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/dashboard.css')); ?>">
     <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/remote-files.css')); ?>">
+    <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/remote-permissions.css')); ?>">
 </head>
 <body>
 <a class="skip-link" href="#main-content">本文へ移動</a>
@@ -253,6 +254,7 @@ if (!is_string($initialJson)) {
 <script src="<?php echo app_html(app_asset_url('js/jquery-3.7.1.min.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/bootstrap.bundle-5.3.8.min.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/drawer-categories.js')); ?>"></script>
+<script src="<?php echo app_html(app_asset_url('js/remote-permissions.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/remote-files.js')); ?>"></script>
 </body>
 </html>

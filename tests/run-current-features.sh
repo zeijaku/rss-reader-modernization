@@ -93,7 +93,7 @@ php "$SCRIPT_DIR/remote_file_v129b_security_test.php"
 python3 "$SCRIPT_DIR/remote_file_v129b_static_test.py"
 php "$SCRIPT_DIR/remote_file_v129c_provider_test.php"
 python3 "$SCRIPT_DIR/remote_file_v129c_static_test.py"
-php "$SCRIPT_DIR/remote_file_v129g_operations_test.php"
+php -d auto_prepend_file="$ROOT/app/remote_file/remote_permission_provider.php" "$SCRIPT_DIR/remote_file_v129g_operations_test.php"
 php "$SCRIPT_DIR/remote_file_v129g_service_path_test.php"
 python3 "$SCRIPT_DIR/remote_file_v129h_integration_static.py"
 python3 "$SCRIPT_DIR/remote_file_v129i_ui_security_test.py"
@@ -113,5 +113,11 @@ php "$SCRIPT_DIR/remote_editor_v130e_roundtrip_test.php"
 node "$SCRIPT_DIR/remote_editor_v130e_ui_runtime_test.js"
 node --check "$ROOT/public/js/remote-editor.js"
 node --check "$ROOT/public/js/remote-files.js"
+
+echo '== Current feature contracts: V1.31 Remote Permissions =='
+php "$SCRIPT_DIR/test_current_remote_permissions.php"
+python3 "$SCRIPT_DIR/test_current_remote_permissions_static.py"
+node --check "$ROOT/public/js/remote-permissions.js"
+
 
 echo 'PASS: current feature contract suite completed'

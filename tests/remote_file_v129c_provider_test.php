@@ -9,6 +9,7 @@ require_once __DIR__ . '/../app/remote_file/remote_exception.php';
 require_once __DIR__ . '/../app/remote_file/remote_path.php';
 require_once __DIR__ . '/../app/remote_file/remote_host.php';
 require_once __DIR__ . '/../app/remote_file/remote_provider.php';
+require_once __DIR__ . '/../app/remote_file/remote_permission_provider.php';
 require_once __DIR__ . '/../app/remote_file/remote_listing.php';
 
 define('APP_REMOTE_TRANSFER_MAX_BYTES', 104857600);
@@ -98,9 +99,9 @@ $sftp = remote_provider_create($sftpConnection, ['private_key' => 'KEY', 'passph
 $sftpEntries = $sftp->list('/');
 check_v129c(count($sftpEntries) === 2 && $sftpEntries[0]['type'] === 'directory', 'SFTP Unix listing is parsed without shell execution');
 $sftp->mkdir('/new-dir');
-check_v129c(($sftpRequests[1]['quote'][0] ?? '') === 'mkdir /var/www/new-dir', 'SFTP mkdir uses libcurl SFTP quote command under base path');
+check_v129c(($sftpRequests[1]['quote'][0] ?? '') === 'mkdir "/var/www/new-dir"', 'SFTP mkdir uses libcurl SFTP quote command under base path');
 $sftp->move('/index.php', '/renamed.php', true);
-check_v129c(($sftpRequests[2]['quote'][0] ?? '') === 'rename /var/www/index.php /var/www/renamed.php', 'SFTP rename stays within normalized base path');
+check_v129c(($sftpRequests[2]['quote'][0] ?? '') === 'rename "/var/www/index.php" "/var/www/renamed.php"', 'SFTP rename stays within normalized base path');
 
 $webdavConnection = $connection;
 $webdavConnection['remote_connection_protocol'] = 'webdav';
