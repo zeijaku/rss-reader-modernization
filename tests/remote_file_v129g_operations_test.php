@@ -9,6 +9,7 @@ require_once __DIR__ . '/../app/remote_file/remote_exception.php';
 require_once __DIR__ . '/../app/remote_file/remote_path.php';
 require_once __DIR__ . '/../app/remote_file/remote_host.php';
 require_once __DIR__ . '/../app/remote_file/remote_provider.php';
+require_once __DIR__ . '/../app/remote_file/remote_permission_provider.php';
 require_once __DIR__ . '/../app/remote_file/remote_listing.php';
 
 define('APP_REMOTE_TRANSFER_MAX_BYTES', 104857600);
