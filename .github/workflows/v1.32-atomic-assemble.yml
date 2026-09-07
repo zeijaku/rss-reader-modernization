@@ -1,6 +1,5 @@
 name: V1.32 Atomic Assemble
-# complete-payload-trigger
-# run-now
+# diagnostic-run
 
 on:
   push:
@@ -72,13 +71,22 @@ jobs:
 
           EXPECTED_B64_SHA='bc5c4be7243e20b233b3b6fa82cb182b294e383e22e20b3d2ac19ced774b10c3'
           ACTUAL_B64_SHA="$(sha256sum "${B64_FILE}" | awk '{print $1}')"
-          test "${ACTUAL_B64_SHA}" = "${EXPECTED_B64_SHA}"
+          echo "B64 SHA actual=${ACTUAL_B64_SHA} expected=${EXPECTED_B64_SHA}"
+          if [ "${ACTUAL_B64_SHA}" != "${EXPECTED_B64_SHA}" ]; then
+            echo 'V1.32 atomic Base64 payload mismatch.' >&2
+            exit 1
+          fi
 
           base64 --decode "${B64_FILE}" > "${XZ_FILE}"
           EXPECTED_XZ_SHA='276a4c5e55152daa47be1c16e5cbad9da07b8b61834e78a897febe7de7d5f0bd'
           ACTUAL_XZ_SHA="$(sha256sum "${XZ_FILE}" | awk '{print $1}')"
-          test "${ACTUAL_XZ_SHA}" = "${EXPECTED_XZ_SHA}"
+          echo "XZ SHA actual=${ACTUAL_XZ_SHA} expected=${EXPECTED_XZ_SHA}"
+          if [ "${ACTUAL_XZ_SHA}" != "${EXPECTED_XZ_SHA}" ]; then
+            echo 'V1.32 atomic tar.xz payload mismatch.' >&2
+            exit 1
+          fi
 
+          echo 'Checking xz stream and tar archive.'
           xz -t "${XZ_FILE}"
           tar -tJf "${XZ_FILE}" >/dev/null
           tar -xJf "${XZ_FILE}" -C .
@@ -87,9 +95,11 @@ jobs:
           rm -rf .github/v132-atomic
           rm -f .github/workflows/v1.32-atomic-assemble.yml
 
-          grep -Fq "const APP_VERSION = '1.32.0';" app/version.php
-          grep -Fq "const APP_ASSET_REVISION = '1.32.0';" app/version.php
-          test "$(tr -d '[:space:]' < .github/release-request.txt)" = '1.32.0'
+          echo 'Checking final version contracts.'
+          grep -Fq "const APP_VERSION = '1.32.0';" app/version.php || { echo 'APP_VERSION contract failed.' >&2; exit 1; }
+          grep -Fq "const APP_ASSET_REVISION = '1.32.0';" app/version.php || { echo 'APP_ASSET_REVISION contract failed.' >&2; exit 1; }
+          test "$(tr -d '[:space:]' < .github/release-request.txt)" = '1.32.0' || { echo 'release-request contract failed.' >&2; exit 1; }
+          echo 'V1.32 payload verification complete.'
 
       - name: Commit assembled V1.32.0 source
         shell: bash
