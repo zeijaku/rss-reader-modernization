@@ -1,13 +1,85 @@
 name: V1.32 Bootstrap
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - release/v1.32.0-final
+    paths:
+      - '.github/workflows/v1.32-bootstrap.yml'
+      - '.github/v132-bootstrap/**'
 
 permissions:
   contents: write
 
+concurrency:
+  group: v132-bootstrap-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   bootstrap:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - run: echo bootstrap-placeholder
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Reassemble and verify V1.32 overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          PART_COUNT="$(find .github/v132-bootstrap -maxdepth 1 -type f -name 'part_*' | wc -l | tr -d ' ')"
+          if [ "${PART_COUNT}" != '20' ]; then
+            echo "Expected 20 bootstrap parts, found ${PART_COUNT}." >&2
+            exit 1
+          fi
+
+          B64_FILE="${RUNNER_TEMP}/v132-overlay.b64"
+          ZIP_FILE="${RUNNER_TEMP}/v132-overlay.zip"
+          cat .github/v132-bootstrap/part_* > "${B64_FILE}"
+
+          EXPECTED_B64_SHA='a1dbd558a51f8b0caba0aefcaa0f89dfbb9c38970a20a5a8f93039fc06f9baf8'
+          ACTUAL_B64_SHA="$(sha256sum "${B64_FILE}" | awk '{print $1}')"
+          if [ "${ACTUAL_B64_SHA}" != "${EXPECTED_B64_SHA}" ]; then
+            echo "Bootstrap base64 SHA-256 mismatch: ${ACTUAL_B64_SHA}" >&2
+            exit 1
+          fi
+
+          base64 --decode "${B64_FILE}" > "${ZIP_FILE}"
+          EXPECTED_ZIP_SHA='b28615613ea88543bec14796ae126af00f3060123aeb87a3374c42d7d392818b'
+          ACTUAL_ZIP_SHA="$(sha256sum "${ZIP_FILE}" | awk '{print $1}')"
+          if [ "${ACTUAL_ZIP_SHA}" != "${EXPECTED_ZIP_SHA}" ]; then
+            echo "Bootstrap ZIP SHA-256 mismatch: ${ACTUAL_ZIP_SHA}" >&2
+            exit 1
+          fi
+
+          unzip -tq "${ZIP_FILE}"
+          unzip -qo "${ZIP_FILE}" -d .
+
+          # The staged overlay intentionally carried the previous release request so
+          # payload uploads could never trigger a final release. Arm it only now.
+          printf '1.32.0\n' > .github/release-request.txt
+
+          # Bootstrap transport is temporary and must not become release source.
+          rm -rf .github/v132-bootstrap
+          rm -f .github/workflows/v1.32-bootstrap.yml
+
+          grep -Fq "const APP_VERSION = '1.32.0';" app/version.php
+          grep -Fq "const APP_ASSET_REVISION = '1.32.0';" app/version.php
+          test "$(tr -d '[:space:]' < .github/release-request.txt)" = '1.32.0'
+
+      - name: Commit assembled V1.32.0 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No assembled source changes found.' >&2
+            exit 1
+          fi
+          git commit -m 'Assemble V1.32.0 release source'
+          git push origin HEAD:release/v1.32.0-final
