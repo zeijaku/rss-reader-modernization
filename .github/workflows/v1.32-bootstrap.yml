@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/v1.32-bootstrap.yml'
       - '.github/v132-bootstrap/**'
+      - '.github/v132-fix14-*'
 
 permissions:
   contents: write
@@ -30,15 +31,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           PART_COUNT="$(find .github/v132-bootstrap -maxdepth 1 -type f -name 'part_*' | wc -l | tr -d ' ')"
           if [ "${PART_COUNT}" != '20' ]; then
             echo "Expected 20 bootstrap parts, found ${PART_COUNT}." >&2
             exit 1
           fi
+          test -f .github/v132-fix14-a
+          test -f .github/v132-fix14-b
 
           B64_FILE="${RUNNER_TEMP}/v132-overlay.b64"
           ZIP_FILE="${RUNNER_TEMP}/v132-overlay.zip"
-          cat .github/v132-bootstrap/part_* > "${B64_FILE}"
+          : > "${B64_FILE}"
+          for n in $(seq -w 0 13); do
+            cat ".github/v132-bootstrap/part_${n}" >> "${B64_FILE}"
+          done
+          cat .github/v132-fix14-a .github/v132-fix14-b >> "${B64_FILE}"
+          for n in $(seq -w 15 19); do
+            cat ".github/v132-bootstrap/part_${n}" >> "${B64_FILE}"
+          done
 
           EXPECTED_B64_SHA='a1dbd558a51f8b0caba0aefcaa0f89dfbb9c38970a20a5a8f93039fc06f9baf8'
           ACTUAL_B64_SHA="$(sha256sum "${B64_FILE}" | awk '{print $1}')"
@@ -58,12 +69,12 @@ jobs:
           unzip -tq "${ZIP_FILE}"
           unzip -qo "${ZIP_FILE}" -d .
 
-          # The staged overlay intentionally carried the previous release request so
-          # payload uploads could never trigger a final release. Arm it only now.
+          # Arm the final release request only after the verified overlay is assembled.
           printf '1.32.0\n' > .github/release-request.txt
 
           # Bootstrap transport is temporary and must not become release source.
           rm -rf .github/v132-bootstrap
+          rm -f .github/v132-fix14-a .github/v132-fix14-b
           rm -f .github/workflows/v1.32-bootstrap.yml
 
           grep -Fq "const APP_VERSION = '1.32.0';" app/version.php
