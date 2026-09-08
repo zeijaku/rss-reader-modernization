@@ -7,6 +7,7 @@ import re
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,6 +49,13 @@ def check(cond: bool, msg: str):
         raise AssertionError(msg)
 
 port = free_port()
+db_path = Path(tempfile.gettempdir()) / f'rss-sb03-http-{port}.sqlite'
+for suffix in ('', '-journal', '-wal', '-shm'):
+    try:
+        Path(str(db_path) + suffix).unlink()
+    except FileNotFoundError:
+        pass
+
 proc = subprocess.Popen(
     ['php', '-S', f'127.0.0.1:{port}', str(ROUTER)],
     cwd=ROOT,
@@ -82,7 +90,16 @@ try:
     state2 = json.loads(body)
     check(sid2 != sid1, 'login changes the browser session id')
     check(state2['authenticated'] is True and state2['user_id'] == 42, 'authenticated session survives login request')
-    check(sorted(state2['keys']) == sorted(['user_id','authenticated_at','last_activity','csrf_token']), 'HTTP login session contains only minimal keys')
+    expected_keys = [
+        'user_id',
+        'authenticated_at',
+        'last_activity',
+        'csrf_token',
+        'auth_session_registry_token',
+        'auth_session_registry_id',
+        'auth_session_registry_last_touch_at',
+    ]
+    check(sorted(state2['keys']) == sorted(expected_keys), 'HTTP login session contains only minimal auth and Session Registry keys')
 
     status, headers, body = request(port, 'GET', '/__test/state', sid2)
     state3 = json.loads(body)
@@ -140,3 +157,8 @@ finally:
         proc.wait(timeout=3)
     except subprocess.TimeoutExpired:
         proc.kill()
+    for suffix in ('', '-journal', '-wal', '-shm'):
+        try:
+            Path(str(db_path) + suffix).unlink()
+        except FileNotFoundError:
+            pass
