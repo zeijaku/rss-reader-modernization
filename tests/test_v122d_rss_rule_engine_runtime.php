@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+if (!in_array('sqlite', PDO::getAvailableDrivers(), true)) {
+    echo "SKIP: PDO SQLite is unavailable.\n";
+    exit(0);
+}
+
 $GLOBALS['test_rules'] = [];
 $GLOBALS['test_pdo'] = new PDO('sqlite::memory:');
 $GLOBALS['test_pdo']->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

@@ -16,6 +16,9 @@ if ($currentUserId === null) {
 
 $ui = user_ui_config($currentUserId);
 
+require_once dirname(__DIR__) . '/app/view/account_security.php';
+$accountSecurityState = account_security_view_state($currentUserId, 'Account Settings');
+
 /* RSS Highlight: Settings画面の管理用にactive Keywordを読み込む。
  * Migration未適用などの場合でも他のSettingsは表示出来るようにする。 */
 $feedKeywords = [];
@@ -291,6 +294,8 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
+                <?php account_security_render($accountSecurityState, 'accountSecurityTitle'); ?>
+                <hr>
                 <section aria-labelledby="accountEmailTitle">
                     <h6 id="accountEmailTitle">メールアドレス変更</h6>
                     <p class="small text-muted">現在のメールアドレスは画面には表示していません。変更後は新しいメールアドレスでLoginしてください。</p>
@@ -321,6 +326,8 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
 <script src="<?php echo htmlspecialchars(app_asset_url('js/jquery-3.7.1.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/bootstrap.bundle-5.3.8.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/totp-qr.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/account-2fa.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/drawer-categories.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 </body>
 </html>

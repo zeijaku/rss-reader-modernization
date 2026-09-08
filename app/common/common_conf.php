@@ -87,6 +87,36 @@ if (!defined('AUTH_PASSWORD_MIN_LENGTH')) {
 if (!defined('AUTH_PASSWORD_MAX_LENGTH')) {
     define('AUTH_PASSWORD_MAX_LENGTH', max(AUTH_PASSWORD_MIN_LENGTH, (int) app_env('AUTH_PASSWORD_MAX_LENGTH', '72')));
 }
+// V1.32-B: TOTP encryption uses a dedicated key, never the Remote File Manager credential key.
+if (!defined('APP_TOTP_SECRET_KEY_ID')) {
+    define('APP_TOTP_SECRET_KEY_ID', app_env('APP_TOTP_SECRET_KEY_ID', 'primary'));
+}
+if (!defined('APP_TOTP_SECRET_KEY_B64')) {
+    define('APP_TOTP_SECRET_KEY_B64', app_env('APP_TOTP_SECRET_KEY_B64', ''));
+}
+if (!defined('APP_TOTP_ISSUER')) {
+    define('APP_TOTP_ISSUER', app_env('APP_TOTP_ISSUER', 'iGuguru'));
+}
+// V1.32-C: the password-verified 2FA bridge stays short-lived and has its own rate namespace.
+if (!defined('AUTH_2FA_PENDING_TIMEOUT')) {
+    define('AUTH_2FA_PENDING_TIMEOUT', max(60, min(900, (int) app_env('AUTH_2FA_PENDING_TIMEOUT', '300'))));
+}
+if (!defined('AUTH_2FA_RATE_WINDOW')) {
+    define('AUTH_2FA_RATE_WINDOW', max(60, min(3600, (int) app_env('AUTH_2FA_RATE_WINDOW', '900'))));
+}
+if (!defined('AUTH_2FA_RATE_MAX_PAIR')) {
+    define('AUTH_2FA_RATE_MAX_PAIR', max(2, min(20, (int) app_env('AUTH_2FA_RATE_MAX_PAIR', '5'))));
+}
+if (!defined('AUTH_2FA_RATE_MAX_IP')) {
+    define('AUTH_2FA_RATE_MAX_IP', max(AUTH_2FA_RATE_MAX_PAIR, min(100, (int) app_env('AUTH_2FA_RATE_MAX_IP', '30'))));
+}
+if (!defined('AUTH_2FA_RATE_BLOCK_SECONDS')) {
+    define('AUTH_2FA_RATE_BLOCK_SECONDS', max(60, min(3600, (int) app_env('AUTH_2FA_RATE_BLOCK_SECONDS', '900'))));
+}
+// V1.32-F: recent Password + second-factor confirmation for sensitive Security changes.
+if (!defined('AUTH_STEP_UP_TIMEOUT')) {
+    define('AUTH_STEP_UP_TIMEOUT', max(60, min(900, (int) app_env('AUTH_STEP_UP_TIMEOUT', '300'))));
+}
 if (!defined('SESSION_COOKIE_NAME')) {
     define('SESSION_COOKIE_NAME', app_env('SESSION_COOKIE_NAME', 'iguguru_session'));
 }
@@ -271,7 +301,7 @@ if (!defined('DB_TABLE_PREFIX')) {
 /** Return the physical table name for a known logical table. */
 function db_table_name(string $logicalName): string
 {
-    static $allowed = ['user_info', 'user_conf', 'content', 'content_stock', 'feed_item_state', 'memo', 'task', 'calendar_event', 'dashboard_widget', 'remember_token', 'link_item', 'stock_tag', 'stock_tag_map', 'feed_keyword', 'feed_metadata'];
+    static $allowed = ['user_info', 'user_conf', 'content', 'content_stock', 'feed_item_state', 'memo', 'task', 'calendar_event', 'dashboard_widget', 'remember_token', 'link_item', 'stock_tag', 'stock_tag_map', 'feed_keyword', 'feed_metadata', 'auth_totp', 'auth_recovery_code', 'auth_session', 'auth_audit_log'];
     if (!in_array($logicalName, $allowed, true)) {
         throw new InvalidArgumentException('Unknown database table name.');
     }

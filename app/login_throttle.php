@@ -187,3 +187,71 @@ function registration_throttle_consume(string $ipAddress, ?int $now = null): arr
     ];
 }
 
+
+// V1.32-C: second-factor attempts use separate buckets from password Login.
+function auth_2fa_throttle_identity(int $userId): string
+{
+    if ($userId <= 0) {
+        throw new InvalidArgumentException('A positive user id is required for 2FA throttle.');
+    }
+    return hash_hmac('sha256', 'auth-2fa' . "\0" . (string) $userId, (string) INI_HASH_KEY);
+}
+
+/** @return array{blocked:bool,retry_after:int} */
+function auth_2fa_throttle_status(int $userId, string $ipAddress, ?int $now = null): array
+{
+    $now ??= time();
+    $identity = auth_2fa_throttle_identity($userId);
+    $pairValue = $identity . "\0" . $ipAddress;
+
+    $prune = static function (array $state) use ($now): array {
+        $state['failures'] = array_values(array_filter(
+            $state['failures'],
+            static fn(int $timestamp): bool => $timestamp >= ($now - AUTH_2FA_RATE_WINDOW)
+        ));
+        if ($state['blocked_until'] <= $now) {
+            $state['blocked_until'] = 0;
+        }
+        return $state;
+    };
+
+    $pair = login_throttle_mutate('2fa-pair', $pairValue, $prune);
+    $ip = login_throttle_mutate('2fa-ip', $ipAddress, $prune);
+    $blockedUntil = max($pair['blocked_until'], $ip['blocked_until']);
+    return [
+        'blocked' => $blockedUntil > $now,
+        'retry_after' => max(0, $blockedUntil - $now),
+    ];
+}
+
+function auth_2fa_throttle_record_failure(int $userId, string $ipAddress, ?int $now = null): void
+{
+    $now ??= time();
+    $identity = auth_2fa_throttle_identity($userId);
+    auth_2fa_throttle_record_bucket('2fa-pair', $identity . "\0" . $ipAddress, AUTH_2FA_RATE_MAX_PAIR, $now);
+    auth_2fa_throttle_record_bucket('2fa-ip', $ipAddress, AUTH_2FA_RATE_MAX_IP, $now);
+}
+
+function auth_2fa_throttle_record_bucket(string $scope, string $value, int $maximum, int $now): void
+{
+    login_throttle_mutate($scope, $value, static function (array $state) use ($now, $maximum): array {
+        $state['failures'] = array_values(array_filter(
+            $state['failures'],
+            static fn(int $timestamp): bool => $timestamp >= ($now - AUTH_2FA_RATE_WINDOW)
+        ));
+        $state['failures'][] = $now;
+        if (count($state['failures']) >= $maximum) {
+            $state['blocked_until'] = max($state['blocked_until'], $now + AUTH_2FA_RATE_BLOCK_SECONDS);
+        }
+        return $state;
+    });
+}
+
+function auth_2fa_throttle_record_success(int $userId, string $ipAddress): void
+{
+    $identity = auth_2fa_throttle_identity($userId);
+    $path = login_throttle_path('2fa-pair', $identity . "\0" . $ipAddress);
+    if (is_file($path)) {
+        @unlink($path);
+    }
+}

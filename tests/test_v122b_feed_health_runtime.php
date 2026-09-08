@@ -11,7 +11,8 @@ function app_validate_text(mixed $value, int $maxLength, bool $allowEmpty = fals
     if (!$allowEmpty && $value === '') {
         return null;
     }
-    if (mb_strlen($value, 'UTF-8') > $maxLength || str_contains($value, "\0")) {
+    $length = function_exists('mb_strlen') ? mb_strlen($value, 'UTF-8') : strlen($value);
+    if ($length > $maxLength || str_contains($value, "\0")) {
         return null;
     }
     return $value;

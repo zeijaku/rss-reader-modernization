@@ -120,4 +120,21 @@ python3 "$SCRIPT_DIR/test_current_remote_permissions_static.py"
 node --check "$ROOT/public/js/remote-permissions.js"
 
 
+echo '== Current feature contracts: Account Security =='
+php "$SCRIPT_DIR/test_current_totp.php"
+php "$SCRIPT_DIR/test_current_totp_window.php"
+php "$SCRIPT_DIR/test_current_recovery_code.php"
+php "$SCRIPT_DIR/test_current_recovery_code_api.php"
+php "$SCRIPT_DIR/test_current_step_up.php"
+php "$SCRIPT_DIR/test_current_account_security_api.php"
+php "$SCRIPT_DIR/test_current_session_registry.php"
+php "$SCRIPT_DIR/test_current_auth_audit.php"
+python3 "$SCRIPT_DIR/test_current_account_security_contract.py"
+python3 "$SCRIPT_DIR/test_current_step_up_contract.py"
+python3 "$SCRIPT_DIR/test_current_session_registry_contract.py"
+python3 "$SCRIPT_DIR/test_current_auth_audit_contract.py"
+python3 "$SCRIPT_DIR/test_current_account_security_release_gate.py"
+node --check "$ROOT/public/js/account-2fa.js"
+node --check "$ROOT/public/js/totp-qr.js"
+
 echo 'PASS: current feature contract suite completed'

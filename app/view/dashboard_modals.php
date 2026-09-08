@@ -688,6 +688,11 @@
     </div></div>
 </div>
 
+<?php
+require_once __DIR__ . '/account_security.php';
+$dashboardAccountSecurityState = account_security_view_state((int) $currentUserId, 'Dashboard Account Settings');
+?>
+
 <!-- アカウント設定モーダル -->
 <div class="modal fade" id="accountSettings" tabindex="-1" role="dialog" aria-labelledby="accountSettingsTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -697,6 +702,8 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
+                <?php account_security_render($dashboardAccountSecurityState, 'accountSecurityTitle'); ?>
+                <hr>
                 <section aria-labelledby="accountEmailTitle">
                     <h6 id="accountEmailTitle">メールアドレス変更</h6>
                     <p class="small text-muted">現在のメールアドレスは画面には表示していません。変更後は新しいメールアドレスでLoginしてください。</p>

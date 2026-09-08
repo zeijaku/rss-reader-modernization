@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.31.0`
-Release tag: `v1.31.0`
+**Stable release:** `RSS Reader Modernization 1.32.0`
+Release tag: `v1.32.0`
+
+Version 1.32.0はAccount Securityを拡張し、TOTP 2FA、Recovery Code、Step-up Authentication、Session Management、Authentication Security Audit Logを追加したReleaseです。既存環境はMigration `022_v1_32_auth_2fa.sql`、`023_v1_32_auth_session.sql`、`024_v1_32_auth_audit_log.sql`を必要なものだけ番号順に適用し、既に2FAを使用している環境では`APP_TOTP_SECRET_KEY_B64`を変更しないでください。
 
 Version 1.31.0は、V1.29のRemote File ManagerへUnix PermissionのBest-effort表示とpreset chmodを追加したReleaseです。SFTPはPermission変更対応、FTP／明示FTPSはServer依存のSITE CHMOD、HTTPS WebDAVはportableなUnix chmodが無いため非対応として明示します。FTP／FTPS一覧はMLSDを基本にUNIX.modeを利用し、Permissionが無い場合だけUnix LISTで補完します。Fileは600／640／644、Directoryは700／750／755に限定し、認証・CSRF・Owner scope・Base Path confinement・Symlink安全確認・3桁octal Validationを維持します。DB Migration、新規必須Secret／Configはありません。
 

@@ -86,7 +86,15 @@ final class V18eRenderPDO extends PDO
 
 set_db_connection_for_testing(new V18eRenderPDO());
 app_session_start();
-app_session_login(1);
+// V1.32 adds a DB-backed logical Session Registry. This historical render
+// fixture is scoped to Stock HTML and uses a minimal authenticated session;
+// Session Registry behavior is covered by dedicated V1.32 current tests.
+$_SESSION = [
+    'user_id' => 1,
+    'authenticated_at' => time(),
+    'last_activity' => time(),
+    'csrf_token' => bin2hex(random_bytes(32)),
+];
 ob_start();
 require $root . '/public/stock.php';
 $html = ob_get_clean();

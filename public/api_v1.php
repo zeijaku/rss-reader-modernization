@@ -6,6 +6,9 @@ define('APP_RESPONSE_FORMAT', 'json');
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/api.php';
+require_once dirname(__DIR__) . '/app/api/account_totp.php';
+require_once dirname(__DIR__) . '/app/api/account_security.php';
+require_once dirname(__DIR__) . '/app/api/account_session.php';
 require_once dirname(__DIR__) . '/app/stock_state.php';
 require_once dirname(__DIR__) . '/app/camera_video.php';
 require_once dirname(__DIR__) . '/app/api/all_rss_recent.php';
@@ -79,6 +82,8 @@ function api_action_requires_open_session(string $action): bool
     return in_array($action, [
         'account.email.update',
         'account.password.update',
+        'account.security.stepup.verify',
+        'account.security.totp.disable',
     ], true);
 }
 
@@ -155,6 +160,15 @@ try {
     }
     if (str_starts_with($action, 'remote.')) {
         api_emit(remote_api_dispatch($action, $userId, $_POST));
+    }
+    if (str_starts_with($action, 'account.session.')) {
+        api_emit(api_account_session_dispatch($action, $userId, $_POST));
+    }
+    if (str_starts_with($action, 'account.security.')) {
+        api_emit(api_account_security_dispatch($action, $userId, $_POST));
+    }
+    if (str_starts_with($action, 'account.totp.')) {
+        api_emit(api_account_totp_dispatch($action, $userId, $_POST));
     }
     api_emit(api_dispatch($action, $userId, $_POST));
 } catch (Throwable $exception) {
