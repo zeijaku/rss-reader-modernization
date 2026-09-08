@@ -1,5 +1,5 @@
 name: V1.32 Atomic Assemble
-# diagnostic-run
+# binary-sha-gate
 
 on:
   push:
@@ -73,8 +73,7 @@ jobs:
           ACTUAL_B64_SHA="$(sha256sum "${B64_FILE}" | awk '{print $1}')"
           echo "B64 SHA actual=${ACTUAL_B64_SHA} expected=${EXPECTED_B64_SHA}"
           if [ "${ACTUAL_B64_SHA}" != "${EXPECTED_B64_SHA}" ]; then
-            echo 'V1.32 atomic Base64 payload mismatch.' >&2
-            exit 1
+            echo 'Base64 text representation differs; continuing to the authoritative decoded-binary SHA-256 gate.'
           fi
 
           base64 --decode "${B64_FILE}" > "${XZ_FILE}"
