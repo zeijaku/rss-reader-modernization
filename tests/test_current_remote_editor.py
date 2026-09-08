@@ -27,10 +27,14 @@ version_match = re.search(r"const APP_VERSION = '([^']+)';", version)
 label_match = re.search(r"const APP_VERSION_LABEL = '([^']+)';", version)
 asset_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
 check(version_match is not None, 'formal application version marker remains available')
+expected_label = None
+if version_match is not None:
+    current_version = version_match.group(1)
+    expected_label = f'RSS Reader Modernization {current_version.upper()}' if '-rc' in current_version else f'RSS Reader Modernization {current_version}'
 check(
     label_match is not None
-    and version_match is not None
-    and label_match.group(1) == f'RSS Reader Modernization {version_match.group(1)}',
+    and expected_label is not None
+    and label_match.group(1) == expected_label,
     'visible label follows current application version',
 )
 check(asset_match is not None and version_match is not None and asset_match.group(1) == version_match.group(1), 'active asset revision follows current version')
@@ -75,7 +79,7 @@ for title in ['Preview', 'Download', 'Edit', 'File Libraryへ保存', 'Rename / 
 check('title$=".php" i' in files_css and 'title$=".pdf" i' in files_css and 'title$=".zip" i' in files_css, 'file-type differentiation remains')
 
 migrations = ROOT / 'database' / 'migrations'
-v130 = [p.name for p in migrations.iterdir() if 'v1_30' in p.name.lower() or re.match(r'022_', p.name)] if migrations.is_dir() else []
+v130 = [p.name for p in migrations.iterdir() if 'v1_30' in p.name.lower()] if migrations.is_dir() else []
 check(v130 == [], 'V1.30 adds no database migration')
 
 failed = len(checks) - sum(checks)

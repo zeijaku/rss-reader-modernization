@@ -53,7 +53,7 @@ function app_session_configure(): void
     ]);
 }
 
-/** Start the application session and enforce idle/absolute expiry. */
+/** Start the application session and enforce idle/absolute/pending expiry. */
 function app_session_start(): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {
@@ -68,6 +68,8 @@ function app_session_start(): void
 
     $now = time();
     $authenticationExpired = false;
+    $pendingExpired = false;
+    $registryRevoked = false;
     if (isset($_SESSION['user_id'])) {
         $authenticatedAt = isset($_SESSION['authenticated_at']) ? (int) $_SESSION['authenticated_at'] : 0;
         $lastActivity = isset($_SESSION['last_activity']) ? (int) $_SESSION['last_activity'] : 0;
@@ -89,13 +91,49 @@ function app_session_start(): void
         } else {
             $_SESSION['last_activity'] = $now;
         }
+    } elseif (app_session_has_pending_auth() && app_session_pending_is_expired($now)) {
+        app_session_clear_authentication();
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        if (!session_regenerate_id(true)) {
+            throw new RuntimeException('Unable to rotate an expired pending session identifier.');
+        }
+        $pendingExpired = true;
+    }
+
+    if (!$authenticationExpired && app_session_is_authenticated() && function_exists('auth_session_registry_validate_current')) {
+        $registry = auth_session_registry_validate_current((int) $_SESSION['user_id'], $now);
+        if (($registry['ok'] ?? false) !== true) {
+            $reason = (string) ($registry['reason'] ?? 'invalid_session');
+            app_session_clear_authentication();
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            if (!session_regenerate_id(true)) {
+                throw new RuntimeException('Unable to rotate an invalidated session identifier.');
+            }
+
+            if ($reason === 'expired') {
+                $authenticationExpired = true;
+            } else {
+                $registryRevoked = true;
+                if (function_exists('persistent_login_revoke_current')) {
+                    persistent_login_revoke_current();
+                }
+            }
+        }
     }
 
     $restored = false;
-    if (!app_session_is_authenticated() && function_exists('persistent_login_restore_session')) {
+    if (!$pendingExpired
+        && !$registryRevoked
+        && !app_session_is_authenticated()
+        && !app_session_has_pending_auth()
+        && function_exists('persistent_login_restore_session')) {
         $restored = persistent_login_restore_session();
     }
-    if ($authenticationExpired && !$restored) {
+    if ($pendingExpired) {
+        app_flash_set('auth_notice', '2段階認証の有効期限が切れました。もう一度ログインしてください。', 'warning');
+    } elseif ($registryRevoked) {
+        app_flash_set('auth_notice', 'このセッションはログアウトされました。もう一度ログインしてください。', 'warning');
+    } elseif ($authenticationExpired && !$restored) {
         app_flash_set('auth_notice', 'セッションの有効期限が切れました。もう一度ログインしてください。', 'warning');
     }
 
@@ -128,6 +166,225 @@ function app_session_user_id(): ?int
     return (int) $_SESSION['user_id'];
 }
 
+function app_session_authenticated_at(): ?int
+{
+    if (!app_session_is_authenticated()) {
+        return null;
+    }
+    $value = isset($_SESSION['authenticated_at']) ? (int) $_SESSION['authenticated_at'] : 0;
+    return $value > 0 ? $value : null;
+}
+
+/** Session Registry material remains accessible only through app/session.php. */
+function app_session_registry_token(): ?string
+{
+    $token = $_SESSION['auth_session_registry_token'] ?? null;
+    return is_string($token) && preg_match('/\A[a-f0-9]{64}\z/D', $token) === 1 ? $token : null;
+}
+
+function app_session_registry_id(): ?int
+{
+    $id = isset($_SESSION['auth_session_registry_id']) ? (int) $_SESSION['auth_session_registry_id'] : 0;
+    return $id > 0 ? $id : null;
+}
+
+function app_session_registry_last_touch_at(): int
+{
+    return isset($_SESSION['auth_session_registry_last_touch_at'])
+        ? max(0, (int) $_SESSION['auth_session_registry_last_touch_at'])
+        : 0;
+}
+
+function app_session_registry_store(string $token, int $sessionId, int $lastTouchAt): void
+{
+    if (preg_match('/\A[a-f0-9]{64}\z/D', $token) !== 1 || $sessionId <= 0 || $lastTouchAt < 0) {
+        throw new InvalidArgumentException('Invalid Session Registry state.');
+    }
+    $_SESSION['auth_session_registry_token'] = $token;
+    $_SESSION['auth_session_registry_id'] = $sessionId;
+    $_SESSION['auth_session_registry_last_touch_at'] = $lastTouchAt;
+}
+
+function app_session_registry_set_last_touch_at(int $timestamp): void
+{
+    if ($timestamp < 0) {
+        throw new InvalidArgumentException('Invalid Session Registry touch timestamp.');
+    }
+    $_SESSION['auth_session_registry_last_touch_at'] = $timestamp;
+}
+
+/** Return whether this authenticated session still has a recent Security step-up grant. */
+function app_session_step_up_is_valid(?int $now = null): bool
+{
+    if (!app_session_is_authenticated()) {
+        app_session_step_up_clear();
+        return false;
+    }
+
+    $now ??= time();
+    $userId = app_session_user_id();
+    $verifiedUserId = isset($_SESSION['auth_step_up_user_id']) ? (int) $_SESSION['auth_step_up_user_id'] : 0;
+    $verifiedAt = isset($_SESSION['auth_step_up_verified_at']) ? (int) $_SESSION['auth_step_up_verified_at'] : 0;
+    $method = $_SESSION['auth_step_up_method'] ?? null;
+
+    $valid = $userId !== null
+        && $verifiedUserId === $userId
+        && $verifiedAt > 0
+        && $verifiedAt <= ($now + 60)
+        && ($now - $verifiedAt) <= AUTH_STEP_UP_TIMEOUT
+        && is_string($method)
+        && in_array($method, ['totp', 'recovery'], true);
+
+    if (!$valid) {
+        app_session_step_up_clear();
+    }
+
+    return $valid;
+}
+
+function app_session_step_up_verified_at(): ?int
+{
+    return app_session_step_up_is_valid() ? (int) $_SESSION['auth_step_up_verified_at'] : null;
+}
+
+function app_session_step_up_expires_at(): ?int
+{
+    $verifiedAt = app_session_step_up_verified_at();
+    return $verifiedAt === null ? null : $verifiedAt + AUTH_STEP_UP_TIMEOUT;
+}
+
+/** Record a short-lived Security step-up grant inside the current PHP session only. */
+function app_session_step_up_grant(int $userId, string $method): void
+{
+    if ($userId <= 0 || !in_array($method, ['totp', 'recovery'], true)) {
+        throw new InvalidArgumentException('Valid Security step-up context is required.');
+    }
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        app_session_start();
+    }
+    if (app_session_user_id() !== $userId) {
+        throw new RuntimeException('Security step-up user does not match the authenticated session.');
+    }
+
+    $_SESSION['auth_step_up_user_id'] = $userId;
+    $_SESSION['auth_step_up_verified_at'] = time();
+    $_SESSION['auth_step_up_method'] = $method;
+}
+
+function app_session_step_up_clear(): void
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        return;
+    }
+    unset(
+        $_SESSION['auth_step_up_user_id'],
+        $_SESSION['auth_step_up_verified_at'],
+        $_SESSION['auth_step_up_method']
+    );
+}
+
+/** True only for the temporary password/Remember verified state before TOTP. */
+function app_session_has_pending_auth(): bool
+{
+    return isset($_SESSION['auth_pending_user_id']) && (int) $_SESSION['auth_pending_user_id'] > 0;
+}
+
+function app_session_pending_user_id(): ?int
+{
+    return app_session_has_pending_auth() ? (int) $_SESSION['auth_pending_user_id'] : null;
+}
+
+function app_session_pending_source(): ?string
+{
+    if (!app_session_has_pending_auth()) {
+        return null;
+    }
+    $source = $_SESSION['auth_pending_source'] ?? null;
+    return is_string($source) && in_array($source, ['password', 'remember'], true) ? $source : null;
+}
+
+function app_session_pending_remember_requested(): bool
+{
+    return app_session_has_pending_auth() && ($_SESSION['auth_pending_remember_requested'] ?? false) === true;
+}
+
+function app_session_pending_remember_selector(): ?string
+{
+    if (!app_session_has_pending_auth()) {
+        return null;
+    }
+    $selector = $_SESSION['auth_pending_remember_selector'] ?? null;
+    return is_string($selector) && preg_match('/\A[a-f0-9]{24}\z/D', $selector) === 1 ? $selector : null;
+}
+
+function app_session_pending_is_expired(?int $now = null): bool
+{
+    if (!app_session_has_pending_auth()) {
+        return false;
+    }
+    $now ??= time();
+    $startedAt = isset($_SESSION['auth_pending_started_at']) ? (int) $_SESSION['auth_pending_started_at'] : 0;
+    $source = app_session_pending_source();
+    return $startedAt <= 0
+        || $startedAt > ($now + 60)
+        || $source === null
+        || ($now - $startedAt) > AUTH_2FA_PENDING_TIMEOUT;
+}
+
+/** Enter the temporary second-factor state without granting application authentication. */
+function app_session_begin_pending_auth(int $userId, string $source, bool $rememberRequested = false, ?string $rememberSelector = null): void
+{
+    if ($userId <= 0 || !in_array($source, ['password', 'remember'], true)) {
+        throw new InvalidArgumentException('Valid pending authentication context is required.');
+    }
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        app_session_start();
+    }
+    if (!session_regenerate_id(true)) {
+        throw new RuntimeException('Unable to regenerate the pending session identifier.');
+    }
+
+    if ($rememberSelector !== null && preg_match('/\A[a-f0-9]{24}\z/D', $rememberSelector) !== 1) {
+        throw new InvalidArgumentException('Invalid pending Remember selector.');
+    }
+
+    $_SESSION = [
+        'auth_pending_user_id' => $userId,
+        'auth_pending_started_at' => time(),
+        'auth_pending_source' => $source,
+        'auth_pending_remember_requested' => $source === 'password' && $rememberRequested,
+        'csrf_token' => bin2hex(random_bytes(32)),
+    ];
+    if ($source === 'remember' && $rememberSelector !== null) {
+        $_SESSION['auth_pending_remember_selector'] = $rememberSelector;
+    }
+}
+
+/** Complete the pending state only for its recorded user and rotate the session again. */
+function app_session_complete_pending_auth(): ?int
+{
+    $userId = app_session_pending_user_id();
+    if ($userId === null || app_session_pending_is_expired()) {
+        return null;
+    }
+    $rememberSelector = app_session_pending_remember_selector();
+    app_session_login($userId);
+    if ($rememberSelector !== null && function_exists('auth_session_registry_bind_remember_selector')) {
+        auth_session_registry_bind_remember_selector($userId, $rememberSelector);
+    }
+    return $userId;
+}
+
+/** Cancel pending authentication and rotate back to a clean anonymous session. */
+function app_session_cancel_pending_auth(): void
+{
+    app_session_clear_authentication();
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    if (session_status() === PHP_SESSION_ACTIVE && !session_regenerate_id(true)) {
+        throw new RuntimeException('Unable to rotate a cancelled pending session identifier.');
+    }
+}
+
 /** Establish a fresh authenticated session after successful credential verification. */
 function app_session_login(int $userId): void
 {
@@ -139,6 +396,15 @@ function app_session_login(int $userId): void
         app_session_start();
     }
 
+    $preserveRegistry = app_session_is_authenticated()
+        && app_session_user_id() === $userId
+        && function_exists('auth_session_registry_current_token')
+        && auth_session_registry_current_token() !== null;
+    $registryToken = $preserveRegistry ? auth_session_registry_current_token() : null;
+    $registryId = $preserveRegistry && function_exists('auth_session_registry_current_id')
+        ? auth_session_registry_current_id()
+        : null;
+
     if (!session_regenerate_id(true)) {
         throw new RuntimeException('Unable to regenerate the session identifier.');
     }
@@ -149,6 +415,27 @@ function app_session_login(int $userId): void
         'last_activity' => time(),
         'csrf_token' => bin2hex(random_bytes(32)),
     ];
+    if ($registryToken !== null) {
+        $_SESSION['auth_session_registry_token'] = $registryToken;
+        if ($registryId !== null) {
+            $_SESSION['auth_session_registry_id'] = $registryId;
+        }
+        // Force a Registry touch after authentication/session rotation so the
+        // mirrored idle/absolute expiry matches this fresh authenticated_at.
+        $_SESSION['auth_session_registry_last_touch_at'] = 0;
+    }
+
+    if (function_exists('auth_session_registry_validate_current')) {
+        $registry = auth_session_registry_validate_current($userId);
+        if (($registry['ok'] ?? false) !== true) {
+            app_session_clear_authentication();
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            if (!session_regenerate_id(true)) {
+                throw new RuntimeException('Unable to rotate a failed Session Registry login.');
+            }
+            throw new RuntimeException('Unable to register the authenticated session.');
+        }
+    }
 }
 
 /** Remove authenticated state but keep a valid anonymous session. */
@@ -264,6 +551,15 @@ function app_session_logout(): void
 {
     if (session_status() !== PHP_SESSION_ACTIVE) {
         return;
+    }
+
+    $logoutUserId = app_session_user_id();
+    if ($logoutUserId !== null && function_exists('auth_session_registry_revoke_current')) {
+        try {
+            auth_session_registry_revoke_current($logoutUserId);
+        } catch (Throwable $exception) {
+            error_log('Session Registry logout update failed: ' . $exception::class);
+        }
     }
 
     $cookieName = session_name();

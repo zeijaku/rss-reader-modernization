@@ -1,74 +1,58 @@
-# RSS Reader Modernization 1.31.0
+# RSS Reader Modernization 1.32.0
 
-Release tag: `v1.31.0`
-Release date: 2026-09-04
+Release tag: `v1.32.0`
+Release date: 2026-09-07
 
 ## Overview
 
-Version 1.31.0 extends the authenticated owner-scoped Remote File Manager with best-effort Unix permission display and bounded preset chmod support. The implementation keeps permission handling as an optional provider capability instead of widening the common Remote File Provider contract.
+Version 1.32 focuses on Account Security. It adds TOTP 2FA, one-time Recovery Codes, Step-up Authentication for sensitive operations, owner-scoped Session Management, and a bounded Authentication Security Activity log while preserving the existing Secure Baseline authentication, CSRF, throttling, Remember Me and filesystem-backed PHP session model.
 
-SFTP reports permission-change support. FTP and explicit FTPS use server-dependent `SITE CHMOD`. HTTPS WebDAV does not expose portable Unix chmod and is therefore reported as unsupported. Permission display remains best-effort for Remote protocols and shows `—` when reliable metadata is unavailable.
+V1.32-G Session Management and V1.32-H Authentication Security Audit Log completed production smoke verification. V1.32-I integrated the final regression, fresh-install schema/documentation and release gates, and the 1.32.0-RC1 production verification completed without reported problems before formal release.
 
 ## Main changes
 
-- Added permission metadata to Remote listings when it can be obtained safely: symbolic mode such as `rw-r--r--` and three-digit numeric mode such as `644`.
-- Added a dedicated Permission column, capability status, and preset chmod UI to Remote Files without replacing the existing listing UI.
-- Added File presets `600`, `640`, `644` and Directory presets `700`, `750`, `755`. Free-form chmod and special-bit changes are not exposed.
-- Added `remote.permission.capabilities` and `remote.file.chmod` API actions using the existing authenticated POST/CSRF/owner-scoped Remote API boundary.
-- Added the optional `RemotePermissionProvider` interface and a server-side permission service. WebDAV remains outside this capability boundary.
-- Known symbolic links are not chmod targets. Server-side path/type validation is authoritative rather than browser-submitted type information.
+- TOTP 2FA enrollment and login verification using a dedicated encrypted TOTP secret envelope.
+- Recovery Codes generated as one-time values and stored only through one-way password hashes.
+- Short-lived Step-up Authentication for sensitive Account Security actions.
+- Session Management showing the current/other logical sessions with individual and all-other revoke operations.
+- Authentication Security Activity for login success/failure, 2FA success/failure, Recovery Code use, Step-up, 2FA changes, Password/Email changes, Session revoke and Logout.
+- Account Security UI shared by Dashboard/Settings with owner-scoped Security Activity and Session views.
 
-## FTP / FTPS permission behavior
+## Security / privacy
 
-- MLSD remains the authoritative FTP/FTPS directory listing for filename, entry type, size and timestamp data.
-- Well-formed `UNIX.mode` permission metadata is used when the server provides it.
-- When MLSD succeeds but does not contain permission metadata, a best-effort Unix-style LIST request may supplement permission fields only. Supplemental LIST never adds/removes authoritative MLSD entries or replaces their unrelated metadata.
-- If supplemental LIST is unavailable or cannot be matched conservatively, the Remote listing still succeeds and Permission remains `—`.
-- FTP/FTPS chmod uses `SITE CHMOD`. A successful 2xx response is accepted; 500/502/504 are classified as unsupported and 550 remains a target/user-specific denial rather than disabling permission changes for the whole connection.
-
-## SFTP permission behavior
-
-- SFTP exposes permission-change support through libcurl quote commands with strict three-digit octal validation.
-- SFTP quote paths used by chmod, mkdir, rename and delete now escape spaces, backslashes and quote characters so the intended Remote path remains one command argument.
-- Permission display is still best-effort and depends on directory metadata returned by the target endpoint.
-
-## Security / compatibility
-
-- Existing authentication, owner scope, CSRF, Base Path confinement, traversal/control-character rejection and provider transport verification remain in force.
-- Chmod accepts only `^[0-7]{3}$`; special bits are not accepted through the change API.
-- Existing special-bit symbolic display can be preserved while numeric preset reuse is intentionally omitted for those entries.
-- Known symbolic links are rejected before chmod. Permission changes do not bypass the existing server-side safe-path checks.
-- Remote credentials, private keys, `known_hosts`, credential encryption keys and runtime/private data remain server-side and are excluded from release packages.
-- Plain FTP remains unencrypted on the wire. Explicit FTPS, SFTP and HTTPS WebDAV retain the transport verification requirements introduced by V1.29.
+- Password, TOTP code, Recovery Code, TOTP secret, encryption key and raw/full PHP Session IDs are not written to the Authentication Audit Log.
+- Raw email is not used for failure correlation; the existing keyed login identity is used where needed.
+- Raw IP address is not stored. `REMOTE_ADDR` is reduced to a keyed digest; forwarded proxy headers are not implicitly trusted.
+- Full User-Agent is not stored. A bounded Browser/platform label is used for Session/Security Activity display.
+- Recovery Codes are one-time and hash-stored; accepted TOTP time steps are tracked to reduce replay/reuse.
+- Sensitive changes keep CSRF protection and require recent Step-up Authentication where applicable.
+- 2FA/Login rate-limit and existing login-throttle boundaries remain in force.
 
 ## Database / configuration
 
-Version 1.31.0 adds **no database migration**, schema change, or new required secret/configuration.
+Existing V1.31 installations use these additive migrations, in numeric order when not already applied:
 
-Existing V1.29/V1.30 Remote configuration remains in force. In particular, do not replace an existing `APP_REMOTE_CREDENTIAL_KEY_B64` after Remote credentials have been stored.
+1. `022_v1_32_auth_2fa.sql` - adds `auth_totp` and `auth_recovery_code`.
+2. `023_v1_32_auth_session.sql` - adds `auth_session`.
+3. `024_v1_32_auth_audit_log.sql` - adds `auth_audit_log`.
 
-## Upgrade summary
+For a `rss_` prefix, the resulting tables are `rss_auth_totp`, `rss_auth_recovery_code`, `rss_auth_session`, and `rss_auth_audit_log`. The migration files default to `ig_`; change `SET @table_prefix` to the actual `DB_TABLE_PREFIX` before execution. Do not re-run a migration solely because 1.32.0 is being deployed if the corresponding table already exists.
 
-1. Back up the application, `config/local.php`, database, File Library storage and other private runtime data.
-2. Deploy Version 1.31.0 without replacing `config/local.php`, credential keys, private keys, `known_hosts`, uploads, logs, cache, sessions, DB dumps or runtime temp contents.
-3. Reload the browser and confirm `RSS Reader Modernization 1.31.0` is visible.
-4. Open Remote Files and verify Connection Test/listing/download for each protocol actually configured in production.
-5. On a disposable regular file, confirm Permission display when available and change `644 -> 640 -> 644` through the preset UI.
-6. On a disposable directory, confirm `755 -> 750 -> 755` when the target server supports chmod.
-7. For FTP/FTPS, confirm a server that does not expose permission metadata can still list files successfully with `—` rather than failing the page.
-8. Remove disposable test files/directories after verification.
+Fresh installs now include all four V1.32 Account Security tables directly in `database/schema.sql`.
 
-## Release assets
+`APP_TOTP_SECRET_KEY_B64` is a dedicated 32-byte Base64 encryption key used for TOTP secret envelopes. If 2FA has already been enrolled, **do not replace this key** or existing encrypted TOTP secrets will no longer be decryptable. `APP_TOTP_SECRET_KEY_ID`, `APP_TOTP_ISSUER`, 2FA throttling settings and `AUTH_STEP_UP_TIMEOUT` are documented in the example configuration.
 
-- `rss-reader-modernization-1.31.0.zip`
-- `rss-reader-modernization-1.31.0.zip.sha256`
-- `rss-reader-modernization-1.31.0-complete.zip`
-- `rss-reader-modernization-1.31.0-complete.zip.sha256`
+## Upgrade summary for an existing V1.31/V1.32 checkpoint environment
+
+1. Back up the application, `config/local.php`, database and private runtime data.
+2. Confirm whether `auth_totp`, `auth_recovery_code`, `auth_session` and `auth_audit_log` already exist under the configured prefix. Apply only the missing migrations 022/023/024, in numeric order.
+3. Keep the existing `APP_TOTP_SECRET_KEY_B64`, `APP_HASH_KEY`, Remote credential key, private keys, `known_hosts`, uploads, logs and other private runtime data unchanged.
+4. Deploy the 1.32.0 application update.
+5. Reload the browser and confirm `RSS Reader Modernization 1.32.0` is visible.
+6. Verify Login, TOTP 2FA, Recovery Code handling as applicable, Step-up Authentication, Session Management and Security Activity in the production environment.
 
 ## Verification limits
 
-V1.31 A-G used focused architecture, backend/provider, API, browser UI, permission parsing, FTP/FTPS response classification, supplemental LIST enrichment, SFTP quote-path, validation and package/security checks. Production FTPS verification confirmed that the target server accepts actual permission changes and that permission acquisition can be improved without replacing MLSD as the authoritative listing.
+Local V1.32-I regression was executed with the available PHP 8.4 runtime and the current PHP/Python/Node test suites. The local environment does not provide every production/CI PHP extension and does not provide PHP 8.1; extension-dependent tests may explicitly skip where their contract permits. Formal publication is performed only by the generic GitHub Release workflow after PHP 8.1 and PHP 8.4 regression, release workflow hygiene, secret scan, deterministic package verification, clean-room validation and main-SHA checks pass.
 
-The final H flow promotes durable V1.31 permission contracts into the current feature suite and runs `tests/run-current.sh` plus `tests/run-current-features.sh` in GitHub Actions on PHP 8.1 and PHP 8.4. The standard Release workflow repeats release-ready validation, both PHP regressions, high-signal source secret scanning, deterministic Runtime/Complete package verification, clean-room extraction, main-SHA revalidation, immutable tag protection and GitHub Release publication.
-
-A final live SFTP production endpoint verification was not performed for this release, so SFTP production interoperability is not claimed beyond the focused automated tests and libcurl-compatible command construction. Actual FTP/FTPS/SFTP/WebDAV behavior can still vary with the target server, cURL build and filesystem policy.
+Production-specific behavior remains the responsibility of the real hosting environment, database, browser and configured Remote endpoints. In particular, existing V1.31 Remote Files protocol limitations remain unchanged: SFTP production endpoint behavior is not newly claimed by V1.32, FTP remains unencrypted, and FTPS/WebDAV trust plus SFTP `known_hosts` provenance remain deployment responsibilities.

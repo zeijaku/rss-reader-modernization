@@ -48,7 +48,16 @@ final class V113cStatement extends PDOStatement {
 }
 final class V113cPDO extends PDO {public function __construct(){} public function prepare(string $q,array $o=[]):PDOStatement|false{return new V113cStatement($q);}}
 set_db_connection_for_testing(new V113cPDO());
-app_session_start(); app_session_login(1);
+app_session_start();
+// V1.32 adds a DB-backed logical Session Registry. This historical render
+// fixture is scoped to Settings HTML; dedicated V1.32 current tests cover
+// Session Registry authentication and revocation behavior.
+$_SESSION = [
+    'user_id' => 1,
+    'authenticated_at' => time(),
+    'last_activity' => time(),
+    'csrf_token' => bin2hex(random_bytes(32)),
+];
 ob_start(); require $root.'/public/settings.php'; $html=ob_get_clean();
 app_session_logout(); echo base64_encode($html);
 ''')

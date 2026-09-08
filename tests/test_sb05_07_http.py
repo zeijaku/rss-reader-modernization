@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import socket
 import subprocess
+import tempfile
 import time
 import urllib.parse
 
@@ -39,11 +40,18 @@ def check(cond, msg):
         raise AssertionError(msg)
 
 port = free_port()
+db_path = Path(tempfile.gettempdir()) / f'rss-sb05-07-http-{port}.sqlite'
+for suffix in ('', '-journal', '-wal', '-shm'):
+    try:
+        Path(str(db_path) + suffix).unlink()
+    except FileNotFoundError:
+        pass
+
 env = os.environ.copy()
 env.update({
     'APP_ENV':'testing', 'APP_DEBUG':'false',
     'APP_HASH_KEY':'0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-    'DB_DRIVER':'mysql', 'DB_HOST':'test', 'DB_NAME':'test', 'DB_USER':'test', 'DB_PASSWORD':'test',
+    'DB_DRIVER':'sqlite', 'DB_SQLITE_PATH':str(db_path),
 })
 proc = subprocess.Popen(
     ['php', '-S', f'127.0.0.1:{port}', '-t', str(ROOT/'public'), str(ROUTER)],
@@ -94,12 +102,17 @@ try:
     payload = json.loads(body)
     check(status == 422 and payload['error']['code'] == 'validation_error', 'valid authenticated request returns structured action validation error')
 
+    # Use an action whose missing fixture table is not intentionally translated
+    # into a feature-specific 503. This keeps the original SB-05..07 contract:
+    # an unexpected backend exception must be converted by the public API
+    # boundary into a generic JSON 500 without leaking diagnostics.
     status, _, body = request(port, 'POST', '/api_v1.php', {
-        'action':'content.create', 'csrf_token':token, 'content_value':'https://example.test/feed', 'content_style':'success', 'content_location':'0'
+        'action':'stock.create', 'csrf_token':token,
+        'stock_data':'https://example.test/article', 'stock_title':'fixture article'
     }, cookie=cookie)
     payload = json.loads(body)
     check(status == 500 and payload['error']['code'] == 'internal_error', 'unexpected API failure is converted to structured JSON 500')
-    check('could not find driver' not in body.lower() and 'DB_PASSWORD' not in body and 'test' not in body, 'API 500 does not expose backend diagnostics or configured DB values')
+    check('could not find driver' not in body.lower() and 'DB_PASSWORD' not in body and str(db_path) not in body, 'API 500 does not expose backend diagnostics or configured DB values')
 
     print('All SB-05..07 endpoint HTTP checks passed.')
 finally:
@@ -108,3 +121,8 @@ finally:
         proc.wait(timeout=3)
     except subprocess.TimeoutExpired:
         proc.kill()
+    for suffix in ('', '-journal', '-wal', '-shm'):
+        try:
+            Path(str(db_path) + suffix).unlink()
+        except FileNotFoundError:
+            pass

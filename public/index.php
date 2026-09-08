@@ -11,13 +11,16 @@ access_log();
 
 $token = isset($_POST['token']) && is_string($_POST['token']) ? $_POST['token'] : null;
 $resultAuth = ['ok' => false];
+$twoFactorResult = ['ok' => false];
 $authCsrfInvalid = false;
 $authTrapFilled = false;
 
 if ($token === 'login' || $token === 'regist') {
     $trapValue = $_POST[AUTH_FORM_TRAP_FIELD] ?? null;
     $authTrapFilled = auth_form_trap_is_filled($trapValue);
+}
 
+if (in_array($token, ['login', 'regist', '2fa', '2fa_recovery', '2fa_cancel'], true)) {
     $submittedCsrf = isset($_POST['csrf_token']) && is_string($_POST['csrf_token']) ? $_POST['csrf_token'] : null;
     if (!app_csrf_is_valid($submittedCsrf)) {
         $authCsrfInvalid = true;
@@ -41,21 +44,137 @@ if ($token === 'login' && !$authCsrfInvalid) {
             $resultAuth = auth_authenticate($email, $password);
         }
         if (($resultAuth['ok'] ?? false) === true) {
-            login_throttle_record_success($throttleIdentity, $ipAddress);
             $authenticatedUserId = (int) $resultAuth['user_id'];
-            app_session_login($authenticatedUserId);
-            if ($rememberRequested) {
-                persistent_login_issue_for_user($authenticatedUserId);
-            } else {
-                persistent_login_revoke_current();
+            try {
+                $totpStatus = auth_totp_status($authenticatedUserId);
+                $twoFactorEnabled = ($totpStatus['enabled'] ?? false) === true;
+            } catch (Throwable $exception) {
+                error_log('TOTP status check failed during login: ' . $exception::class);
+                $resultAuth = ['ok' => false, 'reason' => 'authentication_unavailable'];
+                $twoFactorEnabled = false;
             }
-            header('Location: ./', true, 303);
-            exit;
+
+            if (($resultAuth['ok'] ?? false) === true) {
+                login_throttle_record_success($throttleIdentity, $ipAddress);
+                if ($twoFactorEnabled) {
+                    // Never leave an older persistent credential active while a new password login waits for TOTP.
+                    persistent_login_revoke_current();
+                    app_session_begin_pending_auth($authenticatedUserId, 'password', $rememberRequested);
+                    header('Location: ./?auth=2fa', true, 303);
+                    exit;
+                }
+
+                app_session_login($authenticatedUserId);
+                auth_audit_log_record(
+                    'login',
+                    'success',
+                    $authenticatedUserId,
+                    auth_audit_log_identity_hash($email),
+                    'password'
+                );
+                if ($rememberRequested) {
+                    persistent_login_issue_for_user($authenticatedUserId);
+                } else {
+                    persistent_login_revoke_current();
+                }
+                header('Location: ./', true, 303);
+                exit;
+            }
         }
-        login_throttle_record_failure($throttleIdentity, $ipAddress);
+        if (($resultAuth['reason'] ?? '') !== 'authentication_unavailable') {
+            auth_audit_log_record(
+                'login',
+                'failure',
+                null,
+                auth_audit_log_identity_hash($email),
+                'password'
+            );
+            login_throttle_record_failure($throttleIdentity, $ipAddress);
+        }
     } else {
         $resultAuth = ['ok' => false, 'reason' => 'throttled'];
     }
+} elseif (($token === '2fa' || $token === '2fa_recovery') && !$authCsrfInvalid) {
+    $pendingUserId = app_session_pending_user_id();
+    if ($pendingUserId === null || app_session_pending_is_expired()) {
+        app_session_cancel_pending_auth();
+        app_flash_set('auth_notice', '2段階認証の有効期限が切れました。もう一度ログインしてください。', 'warning');
+        header('Location: ./', true, 303);
+        exit;
+    }
+
+    $ipAddress = substr((string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 0, 128);
+    $factorThrottle = auth_2fa_throttle_status($pendingUserId, $ipAddress);
+    if (!$factorThrottle['blocked']) {
+        try {
+            if ($token === '2fa_recovery') {
+                $submittedRecoveryCode = isset($_POST['recovery_code']) && is_string($_POST['recovery_code'])
+                    ? trim($_POST['recovery_code'])
+                    : '';
+                if (strlen($submittedRecoveryCode) > 32) {
+                    $submittedRecoveryCode = '';
+                }
+                $verified = auth_recovery_code_consume($pendingUserId, $submittedRecoveryCode);
+            } else {
+                $code = isset($_POST['totp_code']) && is_string($_POST['totp_code'])
+                    ? trim($_POST['totp_code'])
+                    : '';
+                if (strlen($code) > 16) {
+                    $code = '';
+                }
+                $verified = auth_totp_verify_enabled_code($pendingUserId, $code);
+            }
+
+            if ($verified) {
+                auth_2fa_throttle_record_success($pendingUserId, $ipAddress);
+                $pendingSource = app_session_pending_source();
+                $rememberRequested = app_session_pending_remember_requested();
+                $completedUserId = app_session_complete_pending_auth();
+                if ($completedUserId === null) {
+                    throw new RuntimeException('Pending authentication state changed before completion.');
+                }
+
+                if ($pendingSource === 'password') {
+                    if ($rememberRequested) {
+                        persistent_login_issue_for_user($completedUserId);
+                    } else {
+                        persistent_login_revoke_current();
+                    }
+                }
+
+                $factorMethod = $token === '2fa_recovery' ? 'recovery' : 'totp';
+                auth_audit_log_record('two_factor', 'success', $completedUserId, null, $factorMethod);
+                if ($factorMethod === 'recovery') {
+                    auth_audit_log_record('recovery_code', 'success', $completedUserId, null, 'recovery');
+                }
+                $loginMethod = ($pendingSource === 'remember' ? 'remember' : 'password') . '+' . $factorMethod;
+                auth_audit_log_record('login', 'success', $completedUserId, null, $loginMethod);
+
+                // Remember restoration already rotated/set its persistent token before this challenge.
+                header('Location: ./', true, 303);
+                exit;
+            }
+            auth_2fa_throttle_record_failure($pendingUserId, $ipAddress);
+            auth_audit_log_record(
+                'two_factor',
+                'failure',
+                $pendingUserId,
+                null,
+                $token === '2fa_recovery' ? 'recovery' : 'totp'
+            );
+            $twoFactorResult = ['ok' => false, 'reason' => 'invalid_code'];
+        } catch (Throwable $exception) {
+            error_log('Second-factor login verification failed: ' . $exception::class);
+            $twoFactorResult = ['ok' => false, 'reason' => 'authentication_unavailable'];
+        }
+    } else {
+        $twoFactorResult = ['ok' => false, 'reason' => 'throttled'];
+    }
+} elseif ($token === '2fa_cancel' && !$authCsrfInvalid) {
+    persistent_login_revoke_current();
+    app_session_cancel_pending_auth();
+    header('Location: ./', true, 303);
+    exit;
 } elseif ($token === 'regist' && !$authCsrfInvalid) {
     $email = isset($_POST['email']) && is_string($_POST['email']) ? $_POST['email'] : '';
     $password = isset($_POST['password']) && is_string($_POST['password']) ? $_POST['password'] : '';
@@ -158,6 +277,20 @@ if ($tabParam === 'stock') {
 <?php
 /* ログインしていれば login画面 表示 */
 if ($currentUserId === null) {
+    if (app_session_has_pending_auth()) {
+        $twoFactorMessage = null;
+        $twoFactorMessageType = 'danger';
+        if ($authCsrfInvalid && in_array($token, ['2fa', '2fa_recovery', '2fa_cancel'], true)) {
+            $twoFactorMessage = 'The form expired or could not be verified. Reload the page and try again.';
+        } elseif (($token === '2fa' || $token === '2fa_recovery') && (($twoFactorResult['ok'] ?? false) !== true)) {
+            $reason = (string) ($twoFactorResult['reason'] ?? 'invalid_code');
+            $twoFactorMessage = $reason === 'authentication_unavailable'
+                ? '2段階認証を確認出来ませんでした。しばらく待ってからもう一度お試しください。'
+                : '認証コードを確認して、もう一度お試しください。';
+        }
+        view_totp_challenge($twoFactorMessage, $twoFactorMessageType);
+    }
+
     /* 未ログイン時 */
     $loginMessage = null;
     $loginMessageType = 'danger';
@@ -434,6 +567,8 @@ function search_feed_form_fields(string $prefix): string
 <script src="<?php echo htmlspecialchars(app_asset_url('js/lights-out.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/clock-timer.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/totp-qr.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/account-2fa.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/memo-counter.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/utility-widgets.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/connection-monitor.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>

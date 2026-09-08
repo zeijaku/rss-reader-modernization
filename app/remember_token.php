@@ -194,6 +194,43 @@ function remember_token_revoke_user(int $userId, ?PDO $pdo = null): int
     return $stmt->rowCount();
 }
 
+/** Revoke one Remember Token by selector inside an already authenticated user scope. */
+function remember_token_revoke_selector_for_user(int $userId, string $selector, ?PDO $pdo = null): int
+{
+    if ($userId <= 0 || preg_match('/\A[a-f0-9]{24}\z/D', $selector) !== 1) {
+        return 0;
+    }
+
+    $stmt = ($pdo ?? conn_db())->prepare(
+        'DELETE FROM ' . db_table_identifier('remember_token') . ' '
+        . 'WHERE remember_token_user_id = :user_id AND remember_token_selector = :selector'
+    );
+    $stmt->execute([':user_id' => $userId, ':selector' => $selector]);
+    return $stmt->rowCount();
+}
+
+/** Revoke every Remember Token for a user except one current-browser selector. */
+function remember_token_revoke_user_except_selector(int $userId, ?string $exceptSelector, ?PDO $pdo = null): int
+{
+    if ($userId <= 0) {
+        return 0;
+    }
+    if ($exceptSelector !== null && preg_match('/\A[a-f0-9]{24}\z/D', $exceptSelector) !== 1) {
+        throw new InvalidArgumentException('Invalid Remember Token selector exception.');
+    }
+
+    $sql = 'DELETE FROM ' . db_table_identifier('remember_token') . ' WHERE remember_token_user_id = :user_id';
+    $params = [':user_id' => $userId];
+    if ($exceptSelector !== null) {
+        $sql .= ' AND remember_token_selector <> :selector';
+        $params[':selector'] = $exceptSelector;
+    }
+
+    $stmt = ($pdo ?? conn_db())->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->rowCount();
+}
+
 /** Delete expired persistent-login tokens. */
 function remember_token_cleanup_expired(?int $now = null): int
 {

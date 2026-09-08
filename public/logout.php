@@ -23,6 +23,11 @@ if (!app_csrf_is_valid($csrfToken)) {
     exit;
 }
 
+$logoutUserId = app_session_user_id();
+if ($logoutUserId !== null && function_exists('auth_audit_log_record')) {
+    auth_audit_log_record('logout', 'success', $logoutUserId, null, null);
+}
+
 persistent_login_revoke_current();
 app_session_logout();
 app_session_start();

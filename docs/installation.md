@@ -142,9 +142,9 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\015
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\016_v1_22_rss_rules.sql
 ```
 
-phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016を同じ順番でImportします。V1.20.1のCalendar色Column（013）、V1.24のStock状態Column（017）、V1.25のCalendar終日／時刻／URL／繰り返しColumn（018 / 019）は`schema.sql`へ統合済みのため、新規Installで013 / 017 / 018 / 019を追加実行する必要はありません。
+phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016を同じ順番でImportします。V1.20.1のCalendar色Column（013）、V1.24のStock状態Column（017）、V1.25のCalendar終日／時刻／URL／繰り返しColumn（018 / 019）、V1.27 user file（020）、V1.29 Remote Connection（021）、V1.32 Account Security（022〜024）は`schema.sql`へ統合済みのため、新規Installではこれらを追加実行しません。
 
-Prefixが `rss_` の場合、V1.29 fresh installでは最終的に次の21 tableが存在します。
+Prefixが `rss_` の場合、V1.32 fresh installでは最終的に次の25 tableが存在します。
 
 ```text
 rss_user_info
@@ -168,6 +168,10 @@ rss_rss_rule
 rss_rss_rule_condition
 rss_user_file
 rss_remote_connection
+rss_auth_totp
+rss_auth_recovery_code
+rss_auth_session
+rss_auth_audit_log
 ```
 
 **既存Databaseへ `schema.sql` を再実行しないでください。** 既存環境はBackupを取得し、未適用Migrationだけを順番に適用します。
@@ -177,6 +181,16 @@ V1.23.0からV1.24.0へ更新する既存Databaseでは、Backup取得後に `01
 V1.26以前からV1.27以降へ更新する既存Databaseでは、Backup取得後に `020_v1_27_user_files.sql` を1回適用してFile Library metadata tableを追加します。V1.28では追加Migrationはありません。
 
 V1.28.0からV1.29.0へ更新する既存Databaseでは、Backup取得後に `021_v1_29_remote_connection.sql` の `SET @table_prefix` を実環境の `DB_TABLE_PREFIX` と同じ値へ合わせて1回適用します。既存table/columnは削除せず、Remote Connection用tableを追加します。Credential暗号鍵はDatabaseには保存しないため、`APP_REMOTE_CREDENTIAL_KEY_B64`をprivate設定として別途準備してください。
+
+V1.31.0からV1.32.0へ更新する既存Databaseでは、Backup取得後に次を**この順番で、未適用のものだけ1回ずつ**適用します。各Migrationの `SET @table_prefix` は実環境の `DB_TABLE_PREFIX` と同じ値へ変更してください。
+
+```text
+022_v1_32_auth_2fa.sql
+→ 023_v1_32_auth_session.sql
+→ 024_v1_32_auth_audit_log.sql
+```
+
+Migration 022は`auth_totp`と`auth_recovery_code`、023は`auth_session`、024は`auth_audit_log`を追加します。いずれも既存tableを削除しない加算型です。対象tableが既に存在する本番環境では、RC/正式版への更新だけを理由に再実行しません。2FAを既に使用している環境では`APP_TOTP_SECRET_KEY_B64`を変更しないでください。
 
 V1.24.0からV1.25.0へ更新する既存Databaseでは、Backup取得後に次を**この順番で1回ずつ**適用します。
 

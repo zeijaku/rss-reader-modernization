@@ -94,6 +94,10 @@ function persistent_login_issue_for_user(int $userId): bool
             persistent_login_clear_cookie();
             return false;
         }
+        $parsed = remember_token_parse($cookieValue);
+        if (is_array($parsed) && function_exists('auth_session_registry_bind_remember_selector')) {
+            auth_session_registry_bind_remember_selector($userId, (string) $parsed['selector']);
+        }
         return true;
     } catch (Throwable $exception) {
         persistent_login_clear_cookie();
@@ -110,6 +114,9 @@ function persistent_login_restore_session(): bool
 {
     if (app_session_is_authenticated()) {
         return true;
+    }
+    if (function_exists('app_session_has_pending_auth') && app_session_has_pending_auth()) {
+        return false;
     }
 
     $cookieValue = persistent_login_cookie_value();
@@ -132,16 +139,39 @@ function persistent_login_restore_session(): bool
             return false;
         }
 
-        $previousCsrfToken = app_csrf_current_token();
-        app_session_login($userId);
-        if ($previousCsrfToken !== null) {
-            app_csrf_allow_previous_token($previousCsrfToken);
+        $twoFactorEnabled = false;
+        if (function_exists('auth_totp_status')) {
+            $totpStatus = auth_totp_status($userId);
+            $twoFactorEnabled = ($totpStatus['enabled'] ?? false) === true;
         }
+
+        $rotatedParsed = remember_token_parse($rotatedCookie);
+        $rememberSelector = is_array($rotatedParsed) ? (string) ($rotatedParsed['selector'] ?? '') : '';
+        if (preg_match('/\A[a-f0-9]{24}\z/D', $rememberSelector) !== 1) {
+            persistent_login_clear_cookie();
+            return false;
+        }
+
+        $previousCsrfToken = app_csrf_current_token();
+        if ($twoFactorEnabled) {
+            app_session_begin_pending_auth($userId, 'remember', false, $rememberSelector);
+        } else {
+            app_session_login($userId);
+            if ($previousCsrfToken !== null) {
+                app_csrf_allow_previous_token($previousCsrfToken);
+            }
+        }
+
         if (!persistent_login_set_cookie($rotatedCookie, $expiresAt)) {
-            // The session remains valid for this browser session, but the
-            // rotated persistent token must not remain active without a cookie.
+            // The current browser session/pending challenge may continue, but
+            // the rotated persistent token must not remain active without a cookie.
             remember_token_revoke_cookie($rotatedCookie);
             persistent_login_clear_cookie();
+        } elseif (!$twoFactorEnabled && function_exists('auth_session_registry_bind_remember_selector')) {
+            auth_session_registry_bind_remember_selector($userId, $rememberSelector);
+        }
+        if (!$twoFactorEnabled && function_exists('auth_audit_log_record')) {
+            auth_audit_log_record('login', 'success', $userId, null, 'remember');
         }
         return true;
     } catch (Throwable $exception) {

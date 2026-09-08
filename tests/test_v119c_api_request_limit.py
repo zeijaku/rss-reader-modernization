@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 import socket
 import subprocess
+import tempfile
 import time
 import urllib.parse
 
@@ -47,16 +48,20 @@ for path in SESSION_DIR.glob('sess_*'):
     path.unlink()
 
 port = free_port()
+db_path = Path(tempfile.gettempdir()) / f'rss-v119c-api-limit-{port}.sqlite'
+for suffix in ('', '-journal', '-wal', '-shm'):
+    try:
+        Path(str(db_path) + suffix).unlink()
+    except FileNotFoundError:
+        pass
+
 env = os.environ.copy()
 env.update({
     'APP_ENV': 'testing',
     'APP_DEBUG': 'false',
     'APP_HASH_KEY': '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-    'DB_DRIVER': 'mysql',
-    'DB_HOST': 'test',
-    'DB_NAME': 'test',
-    'DB_USER': 'test',
-    'DB_PASSWORD': 'test',
+    'DB_DRIVER': 'sqlite',
+    'DB_SQLITE_PATH': str(db_path),
     'APP_API_MAX_REQUEST_BYTES': '65536',
 })
 proc = subprocess.Popen(
@@ -121,3 +126,8 @@ finally:
         proc.kill()
     for path in SESSION_DIR.glob('sess_*'):
         path.unlink()
+    for suffix in ('', '-journal', '-wal', '-shm'):
+        try:
+            Path(str(db_path) + suffix).unlink()
+        except FileNotFoundError:
+            pass

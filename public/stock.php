@@ -3,95 +3,20 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
-require_once dirname(__DIR__) . '/app/common/common_login.php';
 
 app_session_start();
 app_send_private_no_store_headers();
 access_log();
 
-$token = isset($_POST['token']) && is_string($_POST['token']) ? $_POST['token'] : null;
-$resultAuth = ['ok' => false];
-$authCsrfInvalid = false;
-$authTrapFilled = false;
-
-if ($token === 'login' || $token === 'regist') {
-    $trapValue = $_POST[AUTH_FORM_TRAP_FIELD] ?? null;
-    $authTrapFilled = auth_form_trap_is_filled($trapValue);
-
-    $submittedCsrf = isset($_POST['csrf_token']) && is_string($_POST['csrf_token']) ? $_POST['csrf_token'] : null;
-    if (!app_csrf_is_valid($submittedCsrf)) {
-        $authCsrfInvalid = true;
-        http_response_code(403);
-    }
-}
-
-if ($token === 'login' && !$authCsrfInvalid) {
-    $email = isset($_POST['email']) && is_string($_POST['email']) ? $_POST['email'] : '';
-    $password = isset($_POST['password']) && is_string($_POST['password']) ? $_POST['password'] : '';
-    $rememberRequested = persistent_login_is_requested($_POST['remember_me'] ?? null);
-    $ipAddress = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
-    $throttleIdentity = auth_throttle_identity($email);
-    $throttle = login_throttle_status($throttleIdentity, $ipAddress);
-
-    if (!$throttle['blocked']) {
-        if ($authTrapFilled) {
-            auth_dummy_password_verify($password);
-            $resultAuth = ['ok' => false, 'reason' => 'invalid_credentials'];
-        } else {
-            $resultAuth = auth_authenticate($email, $password);
-        }
-        if (($resultAuth['ok'] ?? false) === true) {
-            login_throttle_record_success($throttleIdentity, $ipAddress);
-            $authenticatedUserId = (int) $resultAuth['user_id'];
-            app_session_login($authenticatedUserId);
-            if ($rememberRequested) {
-                persistent_login_issue_for_user($authenticatedUserId);
-            } else {
-                persistent_login_revoke_current();
-            }
-            header('Location: ./', true, 303);
-            exit;
-        }
-        login_throttle_record_failure($throttleIdentity, $ipAddress);
-    } else {
-        $resultAuth = ['ok' => false, 'reason' => 'throttled'];
-    }
-} elseif ($token === 'regist' && !$authCsrfInvalid) {
-    $email = isset($_POST['email']) && is_string($_POST['email']) ? $_POST['email'] : '';
-    $password = isset($_POST['password']) && is_string($_POST['password']) ? $_POST['password'] : '';
-    $ipAddress = (string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
-    $registrationThrottle = REGISTRATION_ENABLED
-        ? registration_throttle_consume($ipAddress)
-        : ['allowed' => true, 'retry_after' => 0];
-
-    if (!$registrationThrottle['allowed']) {
-        // Keep the existing generic registration failure response. Do not
-        // disclose whether an IP bucket is currently throttled.
-        $registration = ['ok' => false, 'reason' => 'registration_failed'];
-    } else {
-        $registration = $authTrapFilled
-            ? ['ok' => false, 'reason' => 'registration_failed']
-            : auth_register($email, $password);
-    }
-
-    if (($registration['ok'] ?? false) === true) {
-        header('Location: ./?result=regist', true, 303);
-        exit;
-    }
-
-    $reason = (string) ($registration['reason'] ?? 'registration_failed');
-    if ($reason === 'registration_disabled') {
-        header('Location: ./?result=regist_disabled', true, 303);
-    } elseif ($reason === 'invalid_password') {
-        header('Location: ./?result=regist_password', true, 303);
-    } else {
-        header('Location: ./?result=regist_error', true, 303);
-    }
+/* V1.32-C6: Stockは認証入口を持たず、Login/2FAはindex.phpへ一本化する。
+ * 2FA Pendingを含む未認証状態では、Stockの処理へ進む前にLogin画面へ戻す。 */
+$currentUserId = app_session_user_id();
+if ($currentUserId === null) {
+    header('Location: ./', true, 302);
     exit;
 }
 
-$currentUserId = app_session_user_id();
-$ui = $currentUserId !== null ? user_ui_config($currentUserId) : app_safe_ui_config(default_ui_config());
+$ui = user_ui_config($currentUserId);
 $tabParam = 'stock';
 
 $stockSearchQuery = '';
@@ -153,39 +78,6 @@ if ($tabParam === 'stock') {
 <a class="skip-link" href="#main-content">本文へ移動</a>
 
 <?php
-/* ログインしていれば login画面 表示 */
-if ($currentUserId === null) {
-    /* 未ログイン時 */
-    $loginMessage = null;
-    $loginMessageType = 'danger';
-    $authNotice = app_flash_take('auth_notice');
-
-    if ($authCsrfInvalid) {
-        $loginMessage = 'The form expired or could not be verified. Reload the page and try again.';
-    } elseif ($token === 'login' && (($resultAuth['ok'] ?? false) !== true)) {
-        $loginMessage = 'Login failed. Please check your email address and password.';
-    } else {
-        $result = filter_input(INPUT_GET, 'result', FILTER_SANITIZE_SPECIAL_CHARS);
-        if ($result === 'regist') {
-            $loginMessage = 'Registration completed. Sign in with the account you just created.';
-            $loginMessageType = 'success';
-        } elseif ($result === 'regist_error') {
-            $loginMessage = 'Registration could not be completed. Check the email address and try again, or use Sign in if the account already exists.';
-        } elseif ($result === 'regist_password') {
-            $loginMessage = 'Registration could not be completed. Passwords must be at least ' . AUTH_PASSWORD_MIN_LENGTH . ' characters.';
-        } elseif ($result === 'regist_disabled') {
-            $loginMessage = 'New account registration is currently disabled.';
-            $loginMessageType = 'info';
-        } elseif ($authNotice !== null) {
-            $loginMessage = $authNotice['message'];
-            $loginMessageType = $authNotice['type'];
-        }
-    }
-
-    view_login($loginMessage, $loginMessageType, REGISTRATION_ENABLED);
-    exit;
-}
-
 /* RSS Highlight: active Keywordを初期表示用に読み込む。
  * Migration未適用などの場合でもDashboard全体は表示出来るようにする。 */
 $feedKeywords = [];

@@ -13,6 +13,7 @@ function account_settings_change_email(int $userId, string $newEmail, string $cu
     }
     if (!account_settings_current_password_is_valid($currentPassword)) {
         auth_dummy_password_verify($currentPassword);
+        auth_audit_log_record('email_change', 'failure', $userId, null, 'password');
         return ['ok' => false, 'reason' => 'invalid_current_password'];
     }
 
@@ -31,6 +32,7 @@ function account_settings_change_email(int $userId, string $newEmail, string $cu
         $storedPassword = (string) ($user['user_password'] ?? '');
         if (!auth_is_password_hash($storedPassword) || !password_verify($currentPassword, $storedPassword)) {
             $conn->rollBack();
+            auth_audit_log_record('email_change', 'failure', $userId, null, 'password');
             return ['ok' => false, 'reason' => 'invalid_current_password'];
         }
 
@@ -57,6 +59,7 @@ function account_settings_change_email(int $userId, string $newEmail, string $cu
         }
 
         $conn->commit();
+        auth_audit_log_record('email_change', 'success', $userId, null, 'password');
         return ['ok' => true];
     } catch (Throwable $exception) {
         if ($conn->inTransaction()) {
@@ -78,6 +81,7 @@ function account_settings_change_password(
     }
     if (!account_settings_current_password_is_valid($currentPassword)) {
         auth_dummy_password_verify($currentPassword);
+        auth_audit_log_record('password_change', 'failure', $userId, null, 'password');
         return ['ok' => false, 'reason' => 'invalid_current_password'];
     }
     if (!auth_password_is_valid_for_registration($newPassword)) {
@@ -101,6 +105,7 @@ function account_settings_change_password(
         $storedPassword = (string) ($user['user_password'] ?? '');
         if (!auth_is_password_hash($storedPassword) || !password_verify($currentPassword, $storedPassword)) {
             $conn->rollBack();
+            auth_audit_log_record('password_change', 'failure', $userId, null, 'password');
             return ['ok' => false, 'reason' => 'invalid_current_password'];
         }
         if (password_verify($newPassword, $storedPassword)) {
@@ -120,10 +125,18 @@ function account_settings_change_password(
             throw new RuntimeException('Account password update did not affect one active user.');
         }
 
-        // Password changes invalidate persistent login on every browser/device.
+        // Password changes invalidate persistent login and every other active
+        // PHP session while preserving the browser that performed the change.
         remember_token_revoke_user($userId, $conn);
+        $currentSessionHash = function_exists('auth_session_registry_current_token_hash')
+            ? auth_session_registry_current_token_hash($userId)
+            : null;
+        if ($currentSessionHash !== null && function_exists('auth_session_registry_revoke_user')) {
+            auth_session_registry_revoke_user($userId, $currentSessionHash, $conn, false);
+        }
 
         $conn->commit();
+        auth_audit_log_record('password_change', 'success', $userId, null, 'password');
         return ['ok' => true];
     } catch (Throwable $exception) {
         if ($conn->inTransaction()) {

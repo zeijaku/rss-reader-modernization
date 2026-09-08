@@ -7,6 +7,24 @@ $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 
 if ($uri === '/__test_login') {
     require_once $root . '/app/bootstrap.php';
+    // V1.32-G Session Registry is part of the real login path. The HTTP fixture
+    // provides only that additive table so login exercises the production
+    // registry boundary; later API mutation tests still fail safely because
+    // application content tables are intentionally absent.
+    $pdo = conn_db();
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS ' . db_table_identifier('auth_session') . ' ('
+        . 'auth_session_id INTEGER PRIMARY KEY AUTOINCREMENT,'
+        . 'auth_session_user_id INTEGER NOT NULL,'
+        . 'auth_session_token_hash TEXT NOT NULL UNIQUE,'
+        . 'auth_session_remember_selector TEXT NULL,'
+        . 'auth_session_client_label TEXT NOT NULL,'
+        . 'auth_session_created_at TEXT NOT NULL,'
+        . 'auth_session_last_seen_at TEXT NOT NULL,'
+        . 'auth_session_expires_at TEXT NOT NULL,'
+        . 'auth_session_revoked_at TEXT NULL'
+        . ')'
+    );
     app_session_start();
     app_session_login(42);
     header('Content-Type: text/plain; charset=UTF-8');

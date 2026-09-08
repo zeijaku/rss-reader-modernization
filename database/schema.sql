@@ -1,8 +1,8 @@
--- RSS Reader Modernization base new-install schema (through migration 008 / V1.7, plus integrated 013, 017, 018, 019, 020 and 021).
+-- RSS Reader Modernization base new-install schema (through migration 008 / V1.7, plus integrated 013, 017-024 where applicable).
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
 -- Current fresh installs must also apply migrations 009-012 and 014-016 in numeric order.
--- V1.20.1 Calendar color (013), V1.24 Stock state (017), V1.25 Calendar time/URL (018), V1.25 Calendar recurrence (019), V1.27 user file metadata (020), and V1.29 remote connection metadata (021) are integrated here.
+-- V1.20.1 Calendar color (013), V1.24 Stock state (017), V1.25 Calendar time/URL/recurrence (018/019), V1.27 user file metadata (020), V1.29 remote connection metadata (021), and V1.32 Account Security tables (022-024) are integrated here.
 -- See docs/installation.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
@@ -24,6 +24,10 @@ SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
 SET @t_remember_token = CONCAT('`', @table_prefix, 'remember_token`');
 SET @t_user_file = CONCAT('`', @table_prefix, 'user_file`');
 SET @t_remote_connection = CONCAT('`', @table_prefix, 'remote_connection`');
+SET @t_auth_totp = CONCAT('`', @table_prefix, 'auth_totp`');
+SET @t_auth_recovery_code = CONCAT('`', @table_prefix, 'auth_recovery_code`');
+SET @t_auth_session = CONCAT('`', @table_prefix, 'auth_session`');
+SET @t_auth_audit_log = CONCAT('`', @table_prefix, 'auth_audit_log`');
 
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_user_info, ' (',
@@ -150,6 +154,7 @@ SET @sql = CONCAT(
 );
 PREPARE v11g_stmt FROM @sql; EXECUTE v11g_stmt; DEALLOCATE PREPARE v11g_stmt;
 
+-- V1.25 Calendar recurrence (019) is integrated in the fresh-install calendar_event table.
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_calendar_event, ' (',
   '`calendar_event_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
@@ -260,6 +265,77 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''User-owned remote file connections'''
 );
 PREPARE v129b_remote_connection_stmt FROM @sql; EXECUTE v129b_remote_connection_stmt; DEALLOCATE PREPARE v129b_remote_connection_stmt;
+
+
+-- V1.32 Account Security: TOTP second factor and one-time Recovery Code hashes.
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_auth_totp, ' (',
+  '`auth_totp_user_id` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`auth_totp_secret` MEDIUMTEXT CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT ''AEAD encrypted TOTP secret envelope'',',
+  '`auth_totp_created_at` DATETIME NOT NULL,',
+  '`auth_totp_updated_at` DATETIME NOT NULL,',
+  '`auth_totp_enabled_at` DATETIME NULL DEFAULT NULL,',
+  '`auth_totp_last_used_step` BIGINT UNSIGNED NULL DEFAULT NULL COMMENT ''Replay prevention for accepted TOTP time-step'',',
+  'PRIMARY KEY (`auth_totp_user_id`),',
+  'KEY `idx_auth_totp_enabled_user` (`auth_totp_enabled_at`, `auth_totp_user_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''User TOTP second-factor settings'''
+);
+PREPARE v132_totp_stmt FROM @sql; EXECUTE v132_totp_stmt; DEALLOCATE PREPARE v132_totp_stmt;
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_auth_recovery_code, ' (',
+  '`auth_recovery_code_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`auth_recovery_code_user_id` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`auth_recovery_code_hash` VARCHAR(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT ''One-way recovery code hash only'',',
+  '`auth_recovery_code_created_at` DATETIME NOT NULL,',
+  '`auth_recovery_code_used_at` DATETIME NULL DEFAULT NULL,',
+  'PRIMARY KEY (`auth_recovery_code_id`),',
+  'UNIQUE KEY `uq_auth_recovery_user_hash` (`auth_recovery_code_user_id`, `auth_recovery_code_hash`),',
+  'KEY `idx_auth_recovery_user_used_id` (`auth_recovery_code_user_id`, `auth_recovery_code_used_at`, `auth_recovery_code_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''One-time authentication recovery code hashes'''
+);
+PREPARE v132_recovery_stmt FROM @sql; EXECUTE v132_recovery_stmt; DEALLOCATE PREPARE v132_recovery_stmt;
+
+-- V1.32 Session Management: PHP session contents remain filesystem-backed.
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_auth_session, ' (',
+  '`auth_session_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`auth_session_user_id` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`auth_session_token_hash` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT ''SHA-256 of user-bound random Session Registry token'',',
+  '`auth_session_remember_selector` CHAR(24) CHARACTER SET ascii COLLATE ascii_bin NULL DEFAULT NULL COMMENT ''Remember selector only; validator/cookie value is never stored here'',',
+  '`auth_session_client_label` VARCHAR(120) NOT NULL COMMENT ''Privacy-bounded Browser/platform label; no IP address'',',
+  '`auth_session_created_at` DATETIME NOT NULL,',
+  '`auth_session_last_seen_at` DATETIME NOT NULL,',
+  '`auth_session_expires_at` DATETIME NOT NULL,',
+  '`auth_session_revoked_at` DATETIME NULL DEFAULT NULL,',
+  'PRIMARY KEY (`auth_session_id`),',
+  'UNIQUE KEY `uq_auth_session_token_hash` (`auth_session_token_hash`),',
+  'KEY `idx_auth_session_user_active` (`auth_session_user_id`, `auth_session_revoked_at`, `auth_session_expires_at`),',
+  'KEY `idx_auth_session_remember_selector` (`auth_session_remember_selector`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Authenticated PHP Session Registry for Session Management'''
+);
+PREPARE v132_session_stmt FROM @sql; EXECUTE v132_session_stmt; DEALLOCATE PREPARE v132_session_stmt;
+
+-- V1.32 Authentication Security Activity. No raw Password/TOTP/Recovery Secret,
+-- full User-Agent, raw IP address, or raw PHP Session identifier is stored.
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_auth_audit_log, ' (',
+  '`auth_audit_log_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`auth_audit_log_user_id` INT UNSIGNED NULL DEFAULT NULL COMMENT ''Authenticated owner when known'',',
+  '`auth_audit_log_identity_hash` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL DEFAULT NULL COMMENT ''Existing keyed login identity for associating credential failures; never raw email'',',
+  '`auth_audit_log_event` VARCHAR(48) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`auth_audit_log_result` VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`auth_audit_log_method` VARCHAR(32) CHARACTER SET ascii COLLATE ascii_bin NULL DEFAULT NULL,',
+  '`auth_audit_log_client_label` VARCHAR(120) NOT NULL COMMENT ''Privacy-bounded Browser/platform label; never full User-Agent'',',
+  '`auth_audit_log_ip_hash` CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL DEFAULT NULL COMMENT ''Keyed digest of REMOTE_ADDR; never raw IP'',',
+  '`auth_audit_log_created_at` DATETIME NOT NULL,',
+  'PRIMARY KEY (`auth_audit_log_id`),',
+  'KEY `idx_auth_audit_user_created` (`auth_audit_log_user_id`, `auth_audit_log_id`),',
+  'KEY `idx_auth_audit_identity_created` (`auth_audit_log_identity_hash`, `auth_audit_log_id`),',
+  'KEY `idx_auth_audit_event_created` (`auth_audit_log_event`, `auth_audit_log_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Bounded Authentication Security Activity log'''
+);
+PREPARE v132_audit_stmt FROM @sql; EXECUTE v132_audit_stmt; DEALLOCATE PREPARE v132_audit_stmt;
 
 -- Foreign keys are intentionally NOT added in SB-13.
 -- Legacy orphan data and the user deletion policy must be resolved first.

@@ -20,6 +20,17 @@ require_once $root . '/app/login_throttle.php';
 require_once $root . '/app/auth.php';
 require_once $root . '/app/remember_token.php';
 require_once $root . '/app/persistent_login.php';
+
+// V1.32-H adds audit side effects to Account Settings. This historical V1.1-J
+// fixture stays focused on account mutation/authorization; dedicated V1.32
+// current-security tests assert the audit contract.
+if (!function_exists('auth_audit_log_record')) {
+    function auth_audit_log_record(string $event, string $result, ?int $userId = null, ?int $subjectUserId = null, ?string $method = null, array $context = []): bool
+    {
+        return true;
+    }
+}
+
 require_once $root . '/app/account_settings.php';
 require_once $root . '/app/api.php';
 

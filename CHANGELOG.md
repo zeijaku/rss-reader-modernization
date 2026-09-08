@@ -1,3 +1,31 @@
+## 1.32.0 - 2026-09-07
+
+### Account Security
+- Added TOTP-based 2FA enrollment and login verification using a dedicated server-side encryption key for TOTP secrets.
+- Added one-time Recovery Codes stored only as password hashes, with bounded generation/regeneration and one-time consumption.
+- Added shared Step-up Authentication for sensitive Account Security actions with a short configurable validity window.
+- Added owner-scoped Session Management backed by a registry token hash while keeping PHP session contents filesystem-backed.
+- Added bounded Authentication Security Activity logging for login, 2FA, Recovery Code, Step-up, account changes, Session revocation and Logout events.
+
+### Security / privacy
+- Kept Passwords, TOTP values, Recovery Codes, TOTP secrets, encryption keys and full PHP Session identifiers out of the Security Activity log.
+- Stores only a privacy-bounded Browser/platform label and a keyed digest of `REMOTE_ADDR`; raw IP addresses and full User-Agent strings are not stored in the audit table.
+- Preserved CSRF, login/2FA throttling, session fixation prevention, Remember Me boundaries, owner scope and sensitive-operation Step-up checks.
+- Session Registry and Audit Log database failures are handled so an absent optional audit table does not itself turn authentication into a 500; required Session Registry migration remains a deployment prerequisite.
+
+### Database / configuration
+- Added additive Migration `022_v1_32_auth_2fa.sql` for `auth_totp` and `auth_recovery_code`.
+- Added additive Migration `023_v1_32_auth_session.sql` for Session Management.
+- Added additive Migration `024_v1_32_auth_audit_log.sql` for Authentication Security Activity.
+- Integrated all four V1.32 Account Security tables into `database/schema.sql` for fresh installs.
+- Added `APP_TOTP_SECRET_KEY_ID`, `APP_TOTP_SECRET_KEY_B64`, `APP_TOTP_ISSUER`, V1.32 2FA rate-limit settings and `AUTH_STEP_UP_TIMEOUT` examples. Existing TOTP encryption keys must not be replaced after enrollment.
+
+### Finalization / verification
+- Promoted V1.32 TOTP, Recovery Code, Step-up, Session Registry and Authentication Audit contracts into the version-neutral current feature suite.
+- Repaired legacy current-test fixtures that assumed pre-V1.32 authentication/session behavior without weakening the production security boundary.
+- V1.32-G Session Management, V1.32-H Security Audit Log and V1.32-I RC1 completed production smoke verification before formal release.
+- Final publication is gated by the generic GitHub Release workflow, including PHP 8.1/8.4 regression, release-ready validation, secret scan, deterministic package verification and clean-room checks before the immutable `v1.32.0` tag.
+
 ## 1.31.0 - 2026-09-04
 
 ### Remote Permissions
