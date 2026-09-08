@@ -102,8 +102,13 @@ try:
     payload = json.loads(body)
     check(status == 422 and payload['error']['code'] == 'validation_error', 'valid authenticated request returns structured action validation error')
 
+    # Use an action whose missing fixture table is not intentionally translated
+    # into a feature-specific 503. This keeps the original SB-05..07 contract:
+    # an unexpected backend exception must be converted by the public API
+    # boundary into a generic JSON 500 without leaking diagnostics.
     status, _, body = request(port, 'POST', '/api_v1.php', {
-        'action':'content.create', 'csrf_token':token, 'content_value':'https://example.test/feed', 'content_style':'success', 'content_location':'0'
+        'action':'stock.create', 'csrf_token':token,
+        'stock_data':'https://example.test/article', 'stock_title':'fixture article'
     }, cookie=cookie)
     payload = json.loads(body)
     check(status == 500 and payload['error']['code'] == 'internal_error', 'unexpected API failure is converted to structured JSON 500')
