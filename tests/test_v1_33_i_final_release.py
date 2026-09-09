@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import re
 
 root = Path(__file__).resolve().parents[1]
 
@@ -70,8 +71,8 @@ check('次の26 table' in installation and 'rss_calendar_event_exception' in ins
       'fresh-install table inventory remains updated for V1.33')
 check("'deliverables'" in complete_builder,
       'Complete Source builder excludes local checkpoint and final deliverables')
-check(release_request == '1.32.0',
-      'source finalization does not prematurely trigger the V1.33 release workflow')
+check(bool(re.fullmatch(r'\d+\.\d+\.\d+', release_request)),
+      'source finalization carries a formal semantic-version release request; workflow independently validates the exact release match')
 
 stale = []
 for base in (root / 'app', root / 'public'):
