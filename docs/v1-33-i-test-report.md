@@ -37,7 +37,7 @@
 - Accepted JavaScript dependency order, four-stylesheet batches and one 600ms static-asset retry remain unchanged.
 - The loader never retries Calendar/API create, update or delete requests.
 - README, CHANGELOG and RELEASE_NOTES agree on `1.33.0` / `v1.33.0`.
-- `.github/release-request.txt` remains at `1.32.0`, so source preparation alone cannot prematurely publish V1.33.
+- `.github/release-request.txt` is a formal semantic-version input; the release workflow independently validates the exact requested release before publishing.
 - Complete Source collection excludes `dist/`, `deliverables/`, private configuration, generated runtime data, database dumps and nested archives.
 - Runtime and Complete Source ZIPs have one safe top-level directory, no duplicate/traversal path and full internal SHA-256 manifests.
 
