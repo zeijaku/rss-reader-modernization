@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.32.0`
-Release tag: `v1.32.0`
+**Stable release:** `RSS Reader Modernization 1.33.0`
+Release tag: `v1.33.0`
+
+Version 1.33.0はCalendar Enhancement Releaseです。予定色5色、予定範囲の共通化、繰り返し予定のOccurrence単位変更／削除、月表示の複数日予定連結、日／週／月表示とCalendar toolbar整理を統合しています。Dashboardの動的JavaScriptは既存依存順に読み込み、CSSは小分けに開始し、静的Asset失敗時だけ1回再試行します。既存V1.32 DBは、Tableがまだ存在しない場合に限り、加算型Migration `025_v1_33_calendar_event_exception.sql`を1回適用します。日程コピーと日程Drag & DropはV1.33へ追加せず、次期以降の改善候補として設計要件を記録しています。
 
 Version 1.32.0はAccount Securityを拡張し、TOTP 2FA、Recovery Code、Step-up Authentication、Session Management、Authentication Security Audit Logを追加したReleaseです。既存環境はMigration `022_v1_32_auth_2fa.sql`、`023_v1_32_auth_session.sql`、`024_v1_32_auth_audit_log.sql`を必要なものだけ番号順に適用し、既に2FAを使用している環境では`APP_TOTP_SECRET_KEY_B64`を変更しないでください。
 
@@ -88,7 +90,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Clock Widgetの追加・変更・削除、12／24時間、日付・秒表示
 - Memo Widgetの追加・変更・削除、改行を保持した本文表示、長文のWidget内Scroll、4000文字Counter
 - Task Widgetの追加・変更・削除、完了切替、期限、優先度
-- Calendar Widgetの月表示、通常予定、Task期限連動、終日／時刻／URL、赤／青／緑、毎日／毎週／毎月／毎年の繰り返し、Today、14日以内の直近予定、RSS／Stock記事からの予定作成
+- Calendar Widgetの日／週／月表示、通常予定、Task期限連動、終日／時刻／URL、赤／青／緑／黄／紫、毎日／毎週／毎月／毎年の繰り返し、Occurrence単位変更／削除、月表示の複数日連結、Today、14日以内の直近予定、RSS／Stock記事からの予定作成
 - Weather Widgetの地域別天気表示
 - Earthquake Widgetの気象庁最新地震情報表示
 - Sun / Moon Widgetの日の出・日の入り・月齢・月相表示

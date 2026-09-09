@@ -400,6 +400,11 @@ if (is_int($content_location)) {
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-prev-month" aria-label="前の月"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-today">今月</button>
                                 <strong class="calendar-month-label" aria-live="polite">----</strong>
+                                <div class="btn-group btn-group-sm calendar-view-switch" role="group" aria-label="Calendar表示">
+                                    <button type="button" class="btn btn-outline-secondary calendar-view-mode" data-calendar-view-mode="day" aria-pressed="false">日</button>
+                                    <button type="button" class="btn btn-outline-secondary calendar-view-mode" data-calendar-view-mode="week" aria-pressed="false">週</button>
+                                    <button type="button" class="btn btn-outline-secondary calendar-view-mode active" data-calendar-view-mode="month" aria-pressed="true">月</button>
+                                </div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-next-month" aria-label="次の月"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
                                 <button type="button" class="btn btn-sm btn-primary calendar-event-add-trigger" data-bs-toggle="modal" data-bs-target="#registerCalendarEvent"><i class="fas fa-plus" aria-hidden="true"></i><span class="visually-hidden">予定を追加</span></button>
                             </div>

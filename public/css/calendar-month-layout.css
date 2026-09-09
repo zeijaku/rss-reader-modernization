@@ -1,0 +1,102 @@
+/* V1.33-F: keep multi-day event segments in one lane and visually join
+ * adjacent days inside each Sunday-to-Saturday calendar row. */
+#main-content .calendar-days.calendar-month-layout-ready {
+    --calendar-span-overlap: 3px;
+}
+
+#main-content .calendar-month-layout-ready .calendar-day {
+    overflow: visible;
+}
+
+#main-content .calendar-month-layout-ready .calendar-day-entries {
+    isolation: isolate;
+}
+
+#main-content .calendar-month-layout-ready .calendar-entry {
+    position: relative;
+    height: 24px;
+    min-height: 24px;
+}
+
+#main-content .calendar-month-layout-ready .calendar-entry-placeholder {
+    display: block;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+#main-content .calendar-month-layout-ready .calendar-event-multiday {
+    z-index: 2;
+}
+
+#main-content .calendar-month-layout-ready .calendar-entry.calendar-event-entry.calendar-event-span-start {
+    width: calc(100% + var(--calendar-span-overlap));
+    margin-right: calc(var(--calendar-span-overlap) * -1);
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+#main-content .calendar-month-layout-ready .calendar-entry.calendar-event-entry.calendar-event-span-middle {
+    width: calc(100% + (var(--calendar-span-overlap) * 2));
+    margin-right: calc(var(--calendar-span-overlap) * -1);
+    margin-left: calc(var(--calendar-span-overlap) * -1);
+    border-left: 0;
+    border-radius: 0;
+}
+
+#main-content .calendar-month-layout-ready .calendar-entry.calendar-event-entry.calendar-event-span-end {
+    width: calc(100% + var(--calendar-span-overlap));
+    margin-left: calc(var(--calendar-span-overlap) * -1);
+    border-left: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+#main-content .calendar-month-layout-ready .calendar-event-span-continuation > * {
+    visibility: hidden;
+}
+
+#main-content .calendar-month-layout-ready .calendar-event-span-continued-before::before,
+#main-content .calendar-month-layout-ready .calendar-event-span-continued-after::after {
+    position: absolute;
+    top: 50%;
+    z-index: 1;
+    font-size: .85em;
+    font-weight: 700;
+    line-height: 1;
+    transform: translateY(-50%);
+    opacity: .82;
+}
+
+#main-content .calendar-month-layout-ready .calendar-event-span-continued-before::before {
+    left: 2px;
+    content: '‹';
+}
+
+#main-content .calendar-month-layout-ready .calendar-event-span-continued-before.calendar-event-span-label-visible {
+    padding-left: 10px;
+}
+
+#main-content .calendar-month-layout-ready .calendar-event-span-continued-after::after {
+    right: 2px;
+    content: '›';
+}
+
+@media (max-width: 575.98px) {
+    #main-content .calendar-days.calendar-month-layout-ready {
+        --calendar-span-overlap: 2px;
+    }
+
+    #main-content .calendar-month-layout-ready .calendar-entry {
+        height: 20px;
+        min-height: 20px;
+    }
+
+    #main-content .calendar-month-layout-ready .calendar-event-span-continued-before.calendar-event-span-label-visible {
+        padding-left: 7px;
+    }
+}
+
+#main-content[data-dashboard-theme="bootstrap-solar"] .calendar-month-layout-ready .calendar-entry-placeholder,
+#main-content[data-dashboard-theme="bootstrap-slate"] .calendar-month-layout-ready .calendar-entry-placeholder {
+    background: transparent;
+}

@@ -20,6 +20,7 @@ SET @t_feed_item_state = CONCAT('`', @table_prefix, 'feed_item_state`');
 SET @t_memo = CONCAT('`', @table_prefix, 'memo`');
 SET @t_task = CONCAT('`', @table_prefix, 'task`');
 SET @t_calendar_event = CONCAT('`', @table_prefix, 'calendar_event`');
+SET @t_calendar_event_exception = CONCAT('`', @table_prefix, 'calendar_event_exception`');
 SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
 SET @t_remember_token = CONCAT('`', @table_prefix, 'remember_token`');
 SET @t_user_file = CONCAT('`', @table_prefix, 'user_file`');
@@ -178,6 +179,36 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Calendar予定保管'''
 );
 PREPARE v11i_stmt FROM @sql; EXECUTE v11i_stmt; DEALLOCATE PREPARE v11i_stmt;
+
+-- V1.33-D Calendar occurrence overrides and cancellations (025).
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_calendar_event_exception, ' (',
+  '`calendar_event_exception_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`calendar_event_exception_owner` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`calendar_event_exception_event_id` BIGINT UNSIGNED NOT NULL COMMENT ''calendar_event.calendar_event_id'',',
+  '`calendar_event_exception_original_start_date` DATE NOT NULL,',
+  '`calendar_event_exception_kind` VARCHAR(10) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`calendar_event_exception_revision` BIGINT UNSIGNED NOT NULL DEFAULT 1,',
+  '`calendar_event_exception_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:有効/1:復元済み'',',
+  '`calendar_event_exception_start_date` DATE NULL DEFAULT NULL,',
+  '`calendar_event_exception_end_date` DATE NULL DEFAULT NULL,',
+  '`calendar_event_exception_title` VARCHAR(256) NULL DEFAULT NULL,',
+  '`calendar_event_exception_note` TEXT NULL,',
+  '`calendar_event_exception_color` VARCHAR(8) NULL DEFAULT NULL,',
+  '`calendar_event_exception_all_day` TINYINT UNSIGNED NULL DEFAULT NULL,',
+  '`calendar_event_exception_start_time` TIME NULL DEFAULT NULL,',
+  '`calendar_event_exception_end_time` TIME NULL DEFAULT NULL,',
+  '`calendar_event_exception_url` VARCHAR(2048) NULL DEFAULT NULL,',
+  '`calendar_event_exception_created_at` DATETIME NOT NULL,',
+  '`calendar_event_exception_updated_at` DATETIME NOT NULL,',
+  'PRIMARY KEY (`calendar_event_exception_id`),',
+  'UNIQUE KEY `uq_cal_exception_owner_event_original` (`calendar_event_exception_owner`, `calendar_event_exception_event_id`, `calendar_event_exception_original_start_date`),',
+  'KEY `idx_cal_exception_owner_original` (`calendar_event_exception_owner`, `calendar_event_exception_original_start_date`, `calendar_event_exception_event_id`),',
+  'KEY `idx_cal_exception_owner_effective` (`calendar_event_exception_owner`, `calendar_event_exception_flag`, `calendar_event_exception_start_date`, `calendar_event_exception_end_date`, `calendar_event_exception_id`),',
+  'KEY `idx_cal_exception_owner_event` (`calendar_event_exception_owner`, `calendar_event_exception_event_id`, `calendar_event_exception_flag`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Calendar occurrence override and cancellation'''
+);
+PREPARE v133d_stmt FROM @sql; EXECUTE v133d_stmt; DEALLOCATE PREPARE v133d_stmt;
 
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_task, ' (',

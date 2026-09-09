@@ -6,6 +6,7 @@ define('APP_RESPONSE_FORMAT', 'json');
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/api.php';
+require_once dirname(__DIR__) . '/app/calendar_exception.php';
 require_once dirname(__DIR__) . '/app/api/account_totp.php';
 require_once dirname(__DIR__) . '/app/api/account_security.php';
 require_once dirname(__DIR__) . '/app/api/account_session.php';

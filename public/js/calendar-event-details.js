@@ -3,7 +3,7 @@
 
     var endpoint = './calendar_color_api.php';
     var namespace = '.iguguruCalendarEventDetails';
-    var colorValues = ['red', 'blue', 'green'];
+    var colorValues = ['red', 'blue', 'green', 'yellow', 'purple'];
 
     function csrfToken() {
         return $('meta[name="csrf-token"]').attr('content') || '';

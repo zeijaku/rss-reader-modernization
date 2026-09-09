@@ -1,3 +1,42 @@
+## 1.33.0 - 2026-09-09
+
+### Calendar Enhancement
+- Finalized the five-color Calendar, shared date-range and occurrence identity, occurrence-only recurring-event exceptions, connected multi-day month bars, and day/week/month views verified through the V1.33 RC cycle.
+- Retained existing `red` / `blue` / `green` data, series-wide operations, owner scope, CSRF, output escaping, PDO parameterization and all V1.32 authentication boundaries.
+
+### Finalization
+- Promoted the accepted RC2 source and immutable asset revision to formal `1.33.0` without adding new Calendar behavior.
+- Retained bounded, dependency-ordered Dashboard JavaScript loading, ordered stylesheet batches and a single static-asset retry; API mutations remain non-retried.
+- Kept Migration 025 additive and one-time, with no destructive change and no new required configuration or secret.
+- Deferred schedule copy and Calendar Drag & Drop to a later version with their design constraints recorded separately.
+
+## 1.33.0-RC2 - 2026-09-09
+
+### Asset loading stabilization
+- Kept the V1.33 Calendar feature scope and UI unchanged while replacing the Dashboard dynamic asset burst with an ordered JavaScript queue.
+- Starts stylesheets in small declaration-order batches so their cascade remains stable without issuing every cold-cache request at once.
+- Retries a failed JavaScript or stylesheet request once after a bounded delay; update/create/delete API requests are not automatically retried.
+- Advanced the application and immutable asset revision to `1.33.0-RC2` so RC1 browser caches cannot retain the previous loader.
+
+## 1.33.0-RC1 - 2026-09-09
+
+### Calendar Enhancement
+- Expanded existing Calendar colors from three to five while preserving stored `red` / `blue` / `green` values; added accessible `yellow` and `purple` presentation for light and dark themes.
+- Unified single-day, multi-day and recurring occurrence ranges so month, week and day views share the same owner-scoped event identity and inclusive date semantics.
+- Added occurrence-only edit, delete and restore for recurring events through an additive exception record; series edit/delete remains available and “this and following” remains deferred.
+- Added visually connected multi-day bars in month view, including week-boundary and month-boundary continuation states.
+- Added day/week/month view switching, timed placement in day/week timelines and a compact responsive Calendar toolbar.
+
+### Database / security / compatibility
+- Added additive Migration `025_v1_33_calendar_event_exception.sql` and integrated `calendar_event_exception` into fresh-install `database/schema.sql`; no existing table or event row is dropped or rewritten.
+- Preserved Authentication, owner scope, CSRF, XSS escaping, PDO parameterization, input validation, Session, Step-up Authentication, 2FA, Recovery Code, Session Registry and Authentication Security Audit Log boundaries.
+- Preserved existing event dates, recurrence rules, colors and API behavior; exception-aware fields and view metadata are additive.
+
+### Finalization
+- Promoted V1.33 Calendar PHP, HTTP, DOM, JavaScript and static contracts into the current feature runner.
+- Prepared `1.33.0-RC1` as the V1.33-H production-verification candidate. It is not the formal `v1.33.0` release.
+- Recorded schedule copy and schedule Drag & Drop as post-V1.33 improvements, with recurring-event scope confirmation, conflict handling and mobile fallback required before implementation.
+
 ## 1.32.0 - 2026-09-07
 
 ### Account Security

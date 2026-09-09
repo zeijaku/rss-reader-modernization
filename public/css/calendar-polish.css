@@ -83,6 +83,18 @@
     background: rgba(var(--bs-success-rgb, 25, 135, 84), 0.08);
 }
 
+.calendar-upcoming-item.calendar-event-color-yellow {
+    border-left: 3px solid var(--calendar-event-yellow-border, #946200);
+    background: var(--calendar-event-yellow-background, #fff3cd);
+    color: var(--calendar-event-yellow-text, #563d00);
+}
+
+.calendar-upcoming-item.calendar-event-color-purple {
+    border-left: 3px solid var(--calendar-event-purple-border, #7048a8);
+    background: var(--calendar-event-purple-background, #f1e8ff);
+    color: var(--calendar-event-purple-text, #43256e);
+}
+
 .calendar-upcoming-item:hover,
 .calendar-upcoming-item:focus {
     background: rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.04);

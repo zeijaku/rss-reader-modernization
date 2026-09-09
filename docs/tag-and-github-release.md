@@ -1,9 +1,11 @@
 # Tag and GitHub Release Procedure
 
-## Current formal release
+## Current formal target
 
-- Version: `1.23.0`
-- Tag: `v1.23.0`
+- Version: `1.33.0`
+- Tag: `v1.33.0`
+
+V1.33-Hの`1.33.0-RC2`は本番確認済みです。V1.33-Iでは同じ機能Scopeを正式版`1.33.0`へ昇格し、Tag／GitHub ReleaseはPHP 8.1／8.4、Security、Migration、Package、Clean-room Gate完了後にだけ公開します。
 
 V1.23-E以降は、VersionごとのRelease workflowや `release/vX.Y.Z-final` branchを標準手順として増やしません。
 

@@ -33,6 +33,12 @@ Runtime format     変更なし
 
 上書き運用の場合は、前Versionの完全なfile一覧を使用します。現在Releaseで追加されたfileが残る場合があるため、Releaseの削除 / 追加一覧を確認します。
 
+## V1.33からV1.32へ戻す場合
+
+V1.33のApplication codeをV1.32.0へ戻した場合、V1.32は`calendar_event_exception` Tableを参照しません。Migration 025で追加したTableは、緊急Rollback時にDROPせず残すことを基本とします。既存`calendar_event`はMigration 025で変更されません。
+
+V1.33で作成したOccurrence overrideを将来再利用する必要がある場合は、Tableを保持してください。Database全体を戻す必要がある障害では、V1.33配置前Backupを別DatabaseへRestoreし、ApplicationとDatabaseを同じ時点へ切り替えます。手作業のDROP／TRUNCATEや既存予定の書換えは行いません。
+
 ## Git history
 
 公開済みCommitを消すためのforce pushは行いません。Repository上で変更を取り消す場合は、対象Commitを確認してRevert commitを作ります。

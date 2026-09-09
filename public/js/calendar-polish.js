@@ -79,7 +79,7 @@
 
     function validColor(value) {
         var color = String(value || 'blue');
-        return ['red', 'blue', 'green'].indexOf(color) !== -1 ? color : 'blue';
+        return ['red', 'blue', 'green', 'yellow', 'purple'].indexOf(color) !== -1 ? color : 'blue';
     }
 
     function validRepeat(value) {
@@ -286,6 +286,21 @@
             .attr('data-event-note', note)
             .attr('data-calendar-occurrence-start-date', String(item.occurrence_start_date || ''))
             .attr('data-calendar-occurrence-end-date', String(item.occurrence_end_date || ''))
+            .attr('data-calendar-occurrence-key', String(item.occurrence_key || ''))
+            .attr('data-calendar-original-occurrence-start-date', String(
+                item.original_occurrence_start_date || item.occurrence_start_date || ''
+            ))
+            .attr('data-calendar-occurrence-revision', /^[a-f0-9]{64}$/.test(String(item.occurrence_revision || ''))
+                ? String(item.occurrence_revision) : '')
+            .attr('data-calendar-exception-id', item.exception_id ? String(item.exception_id) : '')
+            .attr('data-calendar-exception-kind', String(item.exception_kind || ''))
+            .attr('data-calendar-source-title', String(item.source_title !== undefined ? item.source_title : title))
+            .attr('data-calendar-source-note', String(item.source_note !== undefined ? item.source_note : note))
+            .attr('data-calendar-source-color', validColor(item.source_color !== undefined ? item.source_color : color))
+            .attr('data-calendar-source-all-day', (item.source_all_day !== undefined ? item.source_all_day : item.all_day) === false ? '0' : '1')
+            .attr('data-calendar-source-start-time', publicTime(item.source_start_time !== undefined ? item.source_start_time : item.start_time))
+            .attr('data-calendar-source-end-time', publicTime(item.source_end_time !== undefined ? item.source_end_time : item.end_time))
+            .attr('data-calendar-source-url', String(item.source_url !== undefined && item.source_url !== null ? item.source_url : item.url || ''))
             .attr('data-calendar-event-color', color)
             .attr('data-calendar-event-color-ready', '1')
             .attr('data-calendar-event-meta-ready', '1')
@@ -384,6 +399,11 @@
                 window.setTimeout(function () {
                     syncTodayState($card);
                 }, 0);
+            })
+            .off('calendar:occurrenceChanged' + namespace)
+            .on('calendar:occurrenceChanged' + namespace, function () {
+                upcomingPromise = null;
+                loadUpcoming();
             });
 
         $(document).ajaxComplete(function () {

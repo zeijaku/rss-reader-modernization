@@ -48,7 +48,10 @@ $checks = [
     'API requires authenticated session' => str_contains($api, 'app_session_user_id()') && str_contains($api, "Authentication is required."),
     'API requires CSRF' => str_contains($api, 'app_csrf_is_valid'),
     'API enforces request body limit' => str_contains($api, 'APP_API_MAX_REQUEST_BYTES'),
-    'API uses fixed action allowlist' => str_contains($api, "['calendar.recurrence.list', 'calendar.upcoming.list', 'calendar.recurrence.create', 'calendar.recurrence.update']"),
+    'API uses fixed action allowlist' => str_contains($api, "if (!in_array(\$action, [")
+        && str_contains($api, "'calendar.recurrence.create'")
+        && str_contains($api, "'calendar.recurrence.update'")
+        && str_contains($api, "], true))"),
     'API releases session before DB work' => str_contains($api, 'app_session_release();'),
     'API ownership comes from session user id' => str_contains($api, 'calendar_event_recurrence_month_list($userId') && str_contains($api, '$userId,'),
     'API validates color/time/repeat settings' => str_contains($api, 'calendar_event_color_validate') && str_contains($api, 'calendar_event_time_settings') && str_contains($api, 'calendar_event_recurrence_settings'),

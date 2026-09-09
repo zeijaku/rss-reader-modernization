@@ -609,6 +609,11 @@ if (is_int($content_location)) {
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-prev-month" aria-label="前の月"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-today">今月</button>
                                 <strong class="calendar-month-label" aria-live="polite">----</strong>
+                                <div class="btn-group btn-group-sm calendar-view-switch" role="group" aria-label="Calendar表示">
+                                    <button type="button" class="btn btn-outline-secondary calendar-view-mode" data-calendar-view-mode="day" aria-pressed="false">日</button>
+                                    <button type="button" class="btn btn-outline-secondary calendar-view-mode" data-calendar-view-mode="week" aria-pressed="false">週</button>
+                                    <button type="button" class="btn btn-outline-secondary calendar-view-mode active" data-calendar-view-mode="month" aria-pressed="true">月</button>
+                                </div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-next-month" aria-label="次の月"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
                                 <button type="button" class="btn btn-sm btn-primary calendar-event-add-trigger" data-bs-toggle="modal" data-bs-target="#registerCalendarEvent"><i class="fas fa-plus" aria-hidden="true"></i><span class="visually-hidden">予定を追加</span></button>
                             </div>
@@ -1513,11 +1518,22 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
         <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeCalendarEventTitle"><i class="far fa-calendar-check" aria-hidden="true"></i> 予定を変更</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <input type="hidden" class="changeCalendarEventId">
+            <input type="hidden" class="changeCalendarOccurrenceOriginalStartDate">
+            <input type="hidden" class="changeCalendarOccurrenceRevision">
+            <fieldset class="calendar-occurrence-scope mb-3" hidden>
+                <legend class="form-label"><small class="text-dark">変更する範囲</small></legend>
+                <div class="calendar-occurrence-scope-options">
+                    <div class="form-check"><input class="form-check-input calendarOccurrenceScope" type="radio" name="calendar_occurrence_scope" id="calendarOccurrenceScopeSingle" value="occurrence" checked><label class="form-check-label" for="calendarOccurrenceScopeSingle">この予定のみ</label></div>
+                    <div class="form-check"><input class="form-check-input calendarOccurrenceScope" type="radio" name="calendar_occurrence_scope" id="calendarOccurrenceScopeSeries" value="series"><label class="form-check-label" for="calendarOccurrenceScopeSeries">シリーズ全体</label></div>
+                </div>
+                <div class="form-text calendar-occurrence-scope-help">シリーズ全体を変更しても、個別変更した回は保持されます。</div>
+                <div class="calendar-occurrence-context small text-muted" role="status"></div>
+            </fieldset>
             <div class="mb-3"><label class="form-label" for="changeCalendarEventTitleValue"><small class="text-dark">予定</small></label><input type="text" class="form-control changeCalendarEventTitleValue" id="changeCalendarEventTitleValue" maxlength="128" required></div>
             <div class="row g-2"><div class="mb-3 col-6"><label class="form-label" for="changeCalendarEventStartDate"><small class="text-dark">開始日</small></label><input type="date" class="form-control changeCalendarEventStartDate" id="changeCalendarEventStartDate" required></div><div class="mb-3 col-6"><label class="form-label" for="changeCalendarEventEndDate"><small class="text-dark">終了日</small></label><input type="date" class="form-control changeCalendarEventEndDate" id="changeCalendarEventEndDate" required></div></div>
             <div class="mb-3"><label class="form-label" for="changeCalendarEventNote"><small class="text-dark">メモ</small></label><textarea class="form-control changeCalendarEventNote" id="changeCalendarEventNote" maxlength="2000" rows="4"></textarea></div>
         </div>
-        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_calendar_event">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-secondary restore_calendar_occurrence" hidden>個別変更を元に戻す</button><button type="button" class="btn btn-outline-danger delete_calendar_event">削除する</button><button type="submit" class="btn btn-primary calendar-event-submit">変更する</button></div>
         </form>
     </div></div>
 </div>

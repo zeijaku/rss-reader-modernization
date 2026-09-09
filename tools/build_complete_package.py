@@ -14,7 +14,7 @@ FIXED_TIME = (1980, 1, 1, 0, 0, 0)
 SEMVER = re.compile(r'[0-9]+\.[0-9]+\.[0-9]+')
 FORBIDDEN_EXACT = {'config/local.php', '.env', 'rss.sql', 'rss.zip'}
 FORBIDDEN_SUFFIXES = ('.sqlite', '.sqlite3', '.db', '.dump', '.bak', '.backup', '.log', '.pid', '.zip')
-EXCLUDED_TOP = {'.git', 'dist', '.idea', '.vscode'}
+EXCLUDED_TOP = {'.git', 'dist', 'deliverables', '.idea', '.vscode'}
 RUNTIME_DIRS = (
     'var/session', 'var/log', 'var/cache', 'var/db-migration',
     'var/security/login-throttle', 'var/m4f-evidence',

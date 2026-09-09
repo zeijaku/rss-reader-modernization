@@ -1,3 +1,29 @@
+# Version 1.33.0 update
+
+## Version 1.32.0からVersion 1.33.0
+
+V1.33.0はCalendar Enhancementです。既存予定を保持したままOccurrence単位編集／削除を追加するため、加算型Migration 025が必要です。正式版のVersion表示は`1.33.0`です。
+
+1. Application、`config/local.php`、Database、private runtime dataをBackupする。
+2. 実環境の`DB_TABLE_PREFIX`と`calendar_event_exception` Tableの有無を確認する。
+3. Tableが無い場合だけ`database/migrations/025_v1_33_calendar_event_exception.sql`の`@table_prefix`を合わせて1回適用する。既存DBへ`schema.sql`は実行しない。
+4. ZIPとSHA-256を確認し、本番Directory外へ展開する。
+5. `config/local.php`、実DB、生成済み`var/`Data、Secretを維持したまま、配布物をApplication Rootへ相対Pathで上書きする。
+6. Browserを完全Reloadし、Version、CSS／JavaScriptのHTTP 200とMIME type、Console errorなしを確認する。
+7. 既存予定、5色、複数日連結、日／週／月、Occurrence単位編集／削除／復元、シリーズ全体操作を確認する。
+8. Owner Scope、CSRF、XSS、Login／2FA／Step-up／SessionのSmoke Testを行う。
+9. 問題があれば前Sourceへ戻し、Migration 025適用済みTableは空のまま残してもV1.32は参照しない。DBを戻す場合は事前BackupからApplicationと同じ時点へ戻す。
+
+```text
+DB Migration                025_v1_33_calendar_event_exception.sql
+New table                   calendar_event_exception
+必須設定                    追加なし
+Browser Cache               APP_ASSET_REVISION=1.33.0
+正式Tag / GitHub Release    v1.33.0（Release workflow全Gate通過後のみ）
+```
+
+詳細な順序は`docs/v1-33-i-final-release.md`を参照してください。日程コピーと日程Drag & DropはV1.33対象外です。
+
 # Version 1.29.0 update
 
 ## Version 1.28.0からVersion 1.29.0

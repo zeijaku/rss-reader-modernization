@@ -37,6 +37,16 @@ if ($uri === '/api_v1.php') {
     return true;
 }
 
+if ($uri === '/calendar_color_api.php') {
+    require $root . '/public/calendar_color_api.php';
+    return true;
+}
+
+if ($uri === '/calendar_recurrence_api.php') {
+    require $root . '/public/calendar_recurrence_api.php';
+    return true;
+}
+
 $file = realpath($root . '/public' . $uri);
 $public = realpath($root . '/public');
 if (is_string($file) && is_string($public) && str_starts_with($file, $public . DIRECTORY_SEPARATOR) && is_file($file)) {

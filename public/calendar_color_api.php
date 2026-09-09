@@ -7,6 +7,7 @@ define('APP_RESPONSE_FORMAT', 'json');
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/calendar_color.php';
 require_once dirname(__DIR__) . '/app/calendar_time.php';
+require_once dirname(__DIR__) . '/app/calendar_exception.php';
 
 /** @param array<string,mixed> $body */
 function calendar_color_emit(int $status, array $body): never
@@ -175,6 +176,8 @@ try {
         'end_time' => $timeSettings['end_time'] === null ? null : substr($timeSettings['end_time'], 0, 5),
         'url' => $timeSettings['url'],
     ]);
+} catch (CalendarOccurrenceConflictException $exception) {
+    calendar_color_error('calendar_occurrence_conflict', $exception->getMessage(), 409);
 } catch (LengthException|InvalidArgumentException $exception) {
     calendar_color_error('validation_error', $exception->getMessage(), 422);
 } catch (PDOException $exception) {

@@ -17,9 +17,10 @@ function check(value, message) {
 }
 check(js.includes("'use strict';") && js.includes(".iguguruCalendar"), 'Calendar runtime keeps a small namespaced boundary');
 check(js.includes("url: './api_v1.php'") && js.includes("'csrf_token': appCsrfToken()"), 'Calendar runtime sends CSRF-protected API requests');
-['widget.calendar.create','widget.calendar.update','widget.calendar.delete','calendar.month.list','calendar.event.create','calendar.event.update','calendar.event.delete'].forEach(action => {
+['widget.calendar.create','widget.calendar.update','widget.calendar.delete','calendar.event.create','calendar.event.update','calendar.event.delete'].forEach(action => {
   check(js.includes(`apiRequest('${action}'`), `Calendar runtime represents ${action}`);
 });
+check(js.includes("action: 'calendar.range.list'"), 'Calendar runtime represents calendar.range.list');
 check(js.includes("data-dashboard-widget-type=\"calendar\"") || index.includes('data-dashboard-widget-type="calendar"'), 'Calendar Widget has a stable runtime hook');
 check(js.includes(".off('submit' + eventNamespace, '#registerCalendarWidgetForm')"), 'Calendar Widget create binding is replaceable');
 check(js.includes(".off('submit' + eventNamespace, '#changeCalendarEventForm')"), 'Calendar event update binding is replaceable');
