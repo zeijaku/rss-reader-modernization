@@ -1,13 +1,20 @@
-# RSS Reader Modernization 1.33.0
+# RSS Reader Modernization 1.33.1
 
-Intended release tag: `v1.33.0`
+Intended release tag: `v1.33.1`
 Release date: 2026-09-09
 
 ## Overview
 
-Version 1.33 is a Calendar Enhancement release. It keeps the existing Calendar data and API compatibility while adding five colors, occurrence-only recurring-event exceptions, visually connected multi-day events, and day/week/month views. The production-accepted RC2 feature scope is unchanged in the formal 1.33.0 source.
+Version 1.33.1 is a Remote Files patch release. It adds multiple file Upload to the existing Remote Files dialog without changing the single-file server API or Calendar behavior from 1.33.0.
 
 ## Main changes
+
+- The Remote Files Upload picker accepts multiple files and sends one request per file in selection order.
+- Every request uses the existing `remote_file_upload_api.php` contract, current CSRF token, same-origin credentials, owner scope and server-side size/content validation.
+- A single failed file does not abort later files. The dialog reports successful and failed counts plus failed names, while disabling overlapping submits during processing.
+- Existing one-file selection remains supported; overwrite behavior is applied independently to each request.
+
+## Calendar baseline
 
 - Existing `red`, `blue` and `green` event colors remain unchanged; `yellow` and `purple` are added without a color-only migration.
 - Single-day, multi-day and recurring occurrences use common inclusive date-range and occurrence-identity helpers.
@@ -22,7 +29,7 @@ Version 1.33 is a Calendar Enhancement release. It keeps the existing Calendar d
 - Dynamically loaded stylesheets start in small batches while retaining their original cascade order.
 - A failed JavaScript or stylesheet request is retried once after 600ms with a retry-only cache marker.
 - API mutations and Calendar data contracts are unchanged and are never automatically retried by this loader.
-- No database, configuration, UI or Calendar feature change was introduced between the accepted RC and the formal version promotion.
+- No database, configuration, UI or Calendar feature change was introduced by this patch.
 
 ## Deferred Calendar improvements
 
@@ -49,18 +56,16 @@ No new mandatory configuration or secret is added. Keep `config/local.php`, `APP
 - Exception lookup and mutation are owner-scoped to both the authenticated owner and the underlying event.
 - Existing three-color values, recurrence rows and non-recurring events remain readable without data conversion.
 
-## Upgrade summary from V1.32.0
+## Upgrade summary from V1.33.0
 
 1. Back up the application, `config/local.php`, database and private runtime data.
-2. Confirm the deployed source and database prefix.
-3. If the prefixed `calendar_event_exception` table is absent, adjust and apply Migration 025 once. Do not re-run `database/schema.sql` on an existing database.
-4. Extract the Runtime ZIP outside the live directory and verify its SHA-256.
-5. Overlay the packaged paths, including `app/`, `public/`, `database/` and documentation, while preserving private configuration and runtime data.
-6. Reload the browser and confirm `RSS Reader Modernization 1.33.0` is visible.
-7. Complete the ordered production checks in `docs/v1-33-i-final-release.md`.
+2. Extract the Runtime ZIP outside the live directory and verify its SHA-256.
+3. Overlay the packaged `app/` and `public/` paths while preserving private configuration and runtime data. No SQL is required for this patch.
+4. Reload the browser and confirm `RSS Reader Modernization 1.33.1` is visible.
+5. Complete the ordered production checks in `docs/v1-33-1-release.md`.
 
 ## Verification limits
 
 The source and packages are verified by the tests available in each build environment and by deterministic package integrity checks. The production RC result was accepted. PHP 8.1, PHP 8.4, live MariaDB/MySQL migration, all browser/theme/responsive combinations and hosting-specific behavior remain separately recorded when the relevant runtime is unavailable locally.
 
-The immutable `v1.33.0` tag and GitHub Release may be published only from the exact `main` commit that passes the GitHub Actions Current, Feature, Security, Migration, Package and Clean-room gates.
+The immutable `v1.33.1` tag and GitHub Release may be published only from the exact `main` commit that passes the GitHub Actions Current, Feature, Security, Migration, Package and Clean-room gates.

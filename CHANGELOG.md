@@ -1,3 +1,13 @@
+## 1.33.1 - 2026-09-09
+
+### Remote Files
+- Added multiple file selection to the Remote Files Upload dialog.
+- Uploads selected files sequentially through the existing single-file endpoint, preserving per-request CSRF refresh, same-origin credentials, owner scope and server-side validation.
+- Reports successful and failed files together and continues the queue after an individual failure; duplicate submissions are disabled while processing.
+
+### Compatibility
+- No database migration, configuration, secret, public API contract or existing single-file server behavior changed.
+
 ## 1.33.0 - 2026-09-09
 
 ### Calendar Enhancement

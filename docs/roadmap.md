@@ -18,7 +18,7 @@ V1.33-H以降は機能Scopeを固定し、日程コピーと日程Drag & Dropは
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在の正式版Sourceは`RSS Reader Modernization 1.33.0`です。V1.33は既存CalendarとSecurity境界を維持した段階的なCalendar Enhancementで、Tag／GitHub Releaseは共通Release workflowの全Gate通過後にだけ公開します。
+現在の正式版Sourceは`RSS Reader Modernization 1.33.1`です。V1.33.1は既存Remote Files APIとSecurity境界を維持した複数Upload Patch Releaseで、Tag／GitHub Releaseは共通Release workflowの全Gate通過後にだけ公開します。
 
 ## Version 1.1 — Dashboard機能追加
 
