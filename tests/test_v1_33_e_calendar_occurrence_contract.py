@@ -37,10 +37,10 @@ for modal in modals:
     check('changeCalendarOccurrenceOriginalStartDate' in modal and 'changeCalendarOccurrenceRevision' in modal, 'edit modal keeps stable occurrence identity and revision')
 
 check(loader.index('calendar-occurrence.js') < loader.index('calendar-recurrence.js'), 'occurrence handler loads before series submit handler')
-check('calendar-occurrence.css?v=1.33.0' in loader, 'formal V1.33 release keeps the E CSS contract')
-check('calendar-occurrence.js?v=1.33.0' in loader, 'formal V1.33 release keeps the E JavaScript contract')
-check("const APP_VERSION = '1.33.0';" in version, 'formal V1.33 release keeps the E version contract')
-check("const APP_ASSET_REVISION = '1.33.0';" in version, 'formal V1.33 release keeps the E cache contract')
+check('calendar-occurrence.css?v=1.33.1' in loader, 'formal V1.33 release keeps the E CSS contract')
+check('calendar-occurrence.js?v=1.33.1' in loader, 'formal V1.33 release keeps the E JavaScript contract')
+check("const APP_VERSION = '1.33.1';" in version, 'formal V1.33 release keeps the E version contract')
+check("const APP_ASSET_REVISION = '1.33.1';" in version, 'formal V1.33 release keeps the E cache contract')
 
 for field in ('source_title', 'source_note', 'source_color', 'source_all_day', 'source_start_time', 'source_end_time', 'source_url'):
     check(f"'{field}'" in domain and f"'{field}'" in exception, f'{field} survives base and override responses')

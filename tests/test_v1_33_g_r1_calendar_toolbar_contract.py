@@ -49,7 +49,7 @@ check(css.count('"prev today label next add"') >= 2
       'compact card and Smartphone toolbar use the intended two-row layout')
 check('grid-area: switch;' in css and 'width: min(100%, 15rem);' in css,
       'view switch stays centered and bounded in compact layouts')
-check('calendar-views.css?v=1.33.0-r1' in loader,
+check('calendar-views.css?v=1.33.1-r1' in loader,
       'G-R1 Calendar CSS receives a distinct browser cache key')
 check('calendar_range_start' not in css and 'calendar.range.list' not in css,
       'display-only CSS adds no Calendar API behavior')

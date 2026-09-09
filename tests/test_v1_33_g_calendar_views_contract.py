@@ -33,14 +33,14 @@ for markup, name in ((dashboard, 'Dashboard'), (stock, 'Stock')):
     check('aria-label="Calendar表示"' in markup and 'aria-pressed="true"' in markup,
           f'{name} switch exposes pressed state to assistive technology')
 
-check(loader.index('calendar-month-layout.js?v=1.33.0')
-      < loader.index('calendar-views.js?v=1.33.0')
-      < loader.index('calendar-core.js?v=1.33.0'),
+check(loader.index('calendar-month-layout.js?v=1.33.1')
+      < loader.index('calendar-views.js?v=1.33.1')
+      < loader.index('calendar-core.js?v=1.33.1'),
       'pure layout modules load before the Calendar DOM core')
-check('calendar-views.css?v=1.33.0-r1' in loader,
+check('calendar-views.css?v=1.33.1-r1' in loader,
       'responsive view CSS has the immutable G-R1 cache key')
-check("const APP_VERSION = '1.33.0';" in version
-      and "const APP_ASSET_REVISION = '1.33.0';" in version,
+check("const APP_VERSION = '1.33.1';" in version
+      and "const APP_ASSET_REVISION = '1.33.1';" in version,
       'G checkpoint version and asset revision match')
 
 check("action: 'calendar.range.list'" in core and 'calendar_range_start: period.start' in core
