@@ -700,29 +700,60 @@
 
     async function uploadFile(event) {
         event.preventDefault();
-        if (!state.currentConnectionId || !el.uploadFile.files || el.uploadFile.files.length !== 1) {
+        var files = el.uploadFile && el.uploadFile.files ? Array.prototype.slice.call(el.uploadFile.files) : [];
+        if (!state.currentConnectionId || files.length === 0) {
+            showNotice('接続先とUploadするファイルを選択してください。', 'warning');
             return;
         }
-        var form = new FormData();
-        form.set('csrf_token', csrfToken());
-        form.set('remote_connection_id', String(state.currentConnectionId));
-        form.set('path', state.currentPath);
-        form.set('overwrite', el.uploadOverwrite.checked ? '1' : '0');
-        form.set('file', el.uploadFile.files[0]);
+        hideNotice();
+        var submitButton = el.uploadForm ? el.uploadForm.querySelector('button[type="submit"]') : null;
+        var previousSubmitDisabled = submitButton ? submitButton.disabled : false;
+        var previousFileDisabled = el.uploadFile.disabled;
+        var successCount = 0;
+        var failures = [];
+        el.uploadFile.disabled = true;
+        if (submitButton) { submitButton.disabled = true; }
         try {
-            var response = await window.fetch('./remote_file_upload_api.php', {method: 'POST', credentials: 'same-origin', body: form});
-            syncCsrf(response);
-            var payload = null;
-            try { payload = await response.json(); } catch (error) { payload = null; }
-            if (!response.ok || !payload || payload.ok !== true) {
-                throw new Error(responseMessage(payload, 'RemoteへUploadできませんでした。'));
+            for (var index = 0; index < files.length; index += 1) {
+                var file = files[index];
+                try {
+                    var form = new FormData();
+                    form.set('csrf_token', csrfToken());
+                    form.set('remote_connection_id', String(state.currentConnectionId));
+                    form.set('path', state.currentPath);
+                    form.set('overwrite', el.uploadOverwrite.checked ? '1' : '0');
+                    form.set('file', file);
+                    var response = await window.fetch('./remote_file_upload_api.php', {method: 'POST', credentials: 'same-origin', body: form});
+                    syncCsrf(response);
+                    var payload = null;
+                    try { payload = await response.json(); } catch (error) { payload = null; }
+                    if (!response.ok || !payload || payload.ok !== true) {
+                        throw new Error(responseMessage(payload, 'RemoteへUploadできませんでした。'));
+                    }
+                    successCount += 1;
+                } catch (error) {
+                    failures.push({name: String(file.name || '（名前なし）'), message: error.message || 'RemoteへUploadできませんでした。'});
+                }
+            }
+            if (successCount > 0) {
+                await loadDirectory(state.currentPath);
             }
             el.uploadForm.reset();
             modals.upload.hide();
-            showNotice('RemoteへUploadしました。', 'success');
-            await loadDirectory(state.currentPath);
-        } catch (error) {
-            showNotice(error.message || 'RemoteへUploadできませんでした。', 'danger');
+            if (failures.length === 0) {
+                showNotice('Remoteへ' + String(successCount) + '件Uploadしました。', 'success');
+            } else {
+                var failureText = failures.slice(0, 10).map(function (failure) {
+                    return failure.name + ': ' + failure.message;
+                }).join(' / ');
+                if (failures.length > 10) {
+                    failureText += ' / ほか' + String(failures.length - 10) + '件';
+                }
+                showNotice('Upload完了: 成功 ' + String(successCount) + '件、失敗 ' + String(failures.length) + '件。' + (failureText ? ' ' + failureText : ''), 'warning');
+            }
+        } finally {
+            el.uploadFile.disabled = previousFileDisabled;
+            if (submitButton) { submitButton.disabled = previousSubmitDisabled; }
         }
     }
 

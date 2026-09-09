@@ -2,6 +2,8 @@
 from pathlib import Path
 import re
 
+from version_contract_utils import read_app_version_constants
+
 root = Path(__file__).resolve().parents[1]
 
 version = (root / 'app/version.php').read_text(encoding='utf-8')
@@ -16,6 +18,8 @@ migration = (root / 'database/migrations/025_v1_33_calendar_event_exception.sql'
 schema = (root / 'database/schema.sql').read_text(encoding='utf-8')
 complete_builder = (root / 'tools/build_complete_package.py').read_text(encoding='utf-8')
 release_request = (root / '.github/release-request.txt').read_text(encoding='utf-8').strip()
+version_constants = read_app_version_constants(root)
+current_version = version_constants.get('APP_VERSION', '')
 
 passed = 0
 failed = 0
@@ -31,11 +35,13 @@ def check(condition: bool, message: str) -> None:
         print(f'FAIL: {message}')
 
 
-check("const APP_VERSION = '1.33.0';" in version,
+check(current_version == '1.33.1' and "const APP_VERSION = '1.33.1';" in version,
       'formal application version is explicit')
-check("const APP_VERSION_LABEL = 'RSS Reader Modernization 1.33.0';" in version,
+check(version_constants.get('APP_VERSION_LABEL') == 'RSS Reader Modernization 1.33.1'
+      and "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.33.1';" in version,
       'formal visible label matches package policy')
-check("const APP_ASSET_REVISION = '1.33.0';" in version,
+check(version_constants.get('APP_ASSET_REVISION') == '1.33.1'
+      and "const APP_ASSET_REVISION = '1.33.1';" in version,
       'formal assets use the immutable release cache key')
 check('var ASSET_RETRY_LIMIT = 1;' in loader
       and 'var ASSET_RETRY_DELAY_MS = 600;' in loader,
@@ -44,15 +50,15 @@ check('scriptQueue.push(src);' in loader and 'startScriptQueue();' in loader,
       'accepted ordered JavaScript queue remains active')
 check('var STYLE_BATCH_SIZE = 4;' in loader and 'startStyleQueue();' in loader,
       'accepted stylesheet batches remain bounded and declaration-ordered')
-check('# RSS Reader Modernization 1.33.0' in notes
+check('# RSS Reader Modernization 1.33.1' in notes
       and '正式Releaseではありません' not in notes,
       'release notes describe the formal release without an RC warning')
 check('Verification limits' in notes and 'PHP 8.1' in notes and 'PHP 8.4' in notes,
       'release notes disclose runtime verification limits and final gates')
-check('Stable release:** `RSS Reader Modernization 1.33.0`' in readme
-      and 'Release tag: `v1.33.0`' in readme,
+check('Stable release:** `RSS Reader Modernization 1.33.1`' in readme
+      and 'Release tag: `v1.33.1`' in readme,
       'README identifies V1.33 as the stable source and intended tag')
-check(changelog.startswith('## 1.33.0 - 2026-09-09'),
+check(changelog.startswith('## 1.33.1 - 2026-09-09'),
       'CHANGELOG starts with the formal V1.33 entry')
 check('日程のコピー' in future and '日程のDrag & Drop' in future,
       'future Calendar copy and Drag & Drop requests remain recorded')
@@ -71,8 +77,8 @@ check('次の26 table' in installation and 'rss_calendar_event_exception' in ins
       'fresh-install table inventory remains updated for V1.33')
 check("'deliverables'" in complete_builder,
       'Complete Source builder excludes local checkpoint and final deliverables')
-check(bool(re.fullmatch(r'\d+\.\d+\.\d+', release_request)),
-      'source finalization carries a formal semantic-version release request; workflow independently validates the exact release match')
+check(re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', release_request) is not None,
+      'browser fallback release request remains a formal semantic version')
 
 stale = []
 for base in (root / 'app', root / 'public'):

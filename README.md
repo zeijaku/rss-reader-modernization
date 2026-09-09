@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.33.0`
-Release tag: `v1.33.0`
+**Stable release:** `RSS Reader Modernization 1.33.1`
+Release tag: `v1.33.1`
+
+Version 1.33.1はRemote Filesの複数Upload対応を追加したPatch Releaseです。既存の単一ファイルUpload API、認証・Owner scope・CSRF・サイズ／内容Validationを維持し、Remote Files画面で複数ファイルを選択して順番にUploadできます。各ファイルの成功／失敗を集計し、部分失敗時も後続ファイルを継続します。DB Migration、公開API仕様、必須Config／Secretの変更はありません。
 
 Version 1.33.0はCalendar Enhancement Releaseです。予定色5色、予定範囲の共通化、繰り返し予定のOccurrence単位変更／削除、月表示の複数日予定連結、日／週／月表示とCalendar toolbar整理を統合しています。Dashboardの動的JavaScriptは既存依存順に読み込み、CSSは小分けに開始し、静的Asset失敗時だけ1回再試行します。既存V1.32 DBは、Tableがまだ存在しない場合に限り、加算型Migration `025_v1_33_calendar_event_exception.sql`を1回適用します。日程コピーと日程Drag & DropはV1.33へ追加せず、次期以降の改善候補として設計要件を記録しています。
 

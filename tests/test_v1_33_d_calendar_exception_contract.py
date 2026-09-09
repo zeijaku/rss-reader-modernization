@@ -95,8 +95,8 @@ for source, label in ((core, 'month'), (polish, 'upcoming')):
     check('data-calendar-occurrence-revision' in source, f'{label} DOM carries occurrence revision')
     check('data-calendar-exception-id' in source and 'data-calendar-exception-kind' in source, f'{label} DOM carries exception metadata')
     check(not re.search(r'\.innerHTML\s*=', source), f'{label} renderer adds no HTML assignment sink')
-check("const APP_VERSION = '1.33.0';" in version, 'formal V1.33 release keeps the D contract')
-check("const APP_ASSET_REVISION = '1.33.0';" in version, 'formal V1.33 cache revision keeps the D contract')
+check("const APP_VERSION = '1.33.1';" in version, 'formal V1.33 release keeps the D contract')
+check("const APP_ASSET_REVISION = '1.33.1';" in version, 'formal V1.33 cache revision keeps the D contract')
 
 print(f'RESULT: PASS {passed} / FAIL {failed} / SKIP 0')
 raise SystemExit(0 if failed == 0 else 1)

@@ -84,11 +84,11 @@ check("action !== 'calendar.month.list'" in colors_js, 'legacy color observer re
 check("action !== 'calendar.month.list'" in details_js, 'legacy metadata observer remains available only for compatibility loads')
 check("data-calendar-occurrence-key" in polish_js, 'upcoming DOM carries the same occurrence identity')
 
-check("const APP_VERSION = '1.33.0';" in version, 'formal V1.33 release keeps the C contract')
-check("const APP_ASSET_REVISION = '1.33.0';" in version, 'formal V1.33 cache revision keeps the C contract')
+check("const APP_VERSION = '1.33.1';" in version, 'formal V1.33 release keeps the C contract')
+check("const APP_ASSET_REVISION = '1.33.1';" in version, 'formal V1.33 cache revision keeps the C contract')
 check('1.33.0-dev.1' not in loader, 'Calendar loader contains no stale B cache key')
-check("calendar-core.js?v=1.33.0" in loader, 'Calendar core remains cache-busted after C')
-check("calendar-recurrence.js?v=1.33.0" in loader, 'Calendar recurrence layer remains cache-busted after C')
+check("calendar-core.js?v=1.33.1" in loader, 'Calendar core remains cache-busted after C')
+check("calendar-recurrence.js?v=1.33.1" in loader, 'Calendar recurrence layer remains cache-busted after C')
 check("`calendar_event_color` VARCHAR(8) NOT NULL DEFAULT ''blue''" in schema, 'fresh schema remains compatible without C migration')
 
 check("calendar.event.create" not in core[core.find('function loadCalendar'):core.find('function moveCalendarMonth')], 'range load cannot enter a save action')
