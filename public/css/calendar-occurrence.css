@@ -1,0 +1,64 @@
+.calendar-occurrence-scope {
+    margin: 0;
+    padding: .75rem;
+    border: 1px solid rgba(13, 110, 253, .28);
+    border-radius: .5rem;
+    background: rgba(13, 110, 253, .055);
+}
+
+.calendar-occurrence-scope-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1rem;
+}
+
+.calendar-occurrence-context {
+    margin-top: .35rem;
+    overflow-wrap: anywhere;
+}
+
+.calendar-event-cancelled {
+    border-style: dashed;
+    opacity: .72;
+    filter: saturate(.55);
+}
+
+.calendar-event-cancelled-label {
+    flex: 0 0 auto;
+    padding: 0 .25rem;
+    border-radius: .25rem;
+    background: rgba(255, 255, 255, .72);
+    color: #495057;
+    font-size: .68rem;
+    font-weight: 700;
+}
+
+@media (max-width: 575.98px) {
+    .calendar-occurrence-scope-options {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: .35rem;
+    }
+
+    #changeCalendarEvent .modal-footer {
+        align-items: stretch;
+    }
+
+    #changeCalendarEvent .restore_calendar_occurrence,
+    #changeCalendarEvent .delete_calendar_event,
+    #changeCalendarEvent .calendar-event-submit {
+        flex: 1 1 calc(50% - .25rem);
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .calendar-occurrence-scope {
+        border-color: rgba(110, 168, 254, .42);
+        background: rgba(110, 168, 254, .09);
+    }
+
+    .calendar-event-cancelled-label {
+        background: rgba(33, 37, 41, .82);
+        color: #f8f9fa;
+    }
+}

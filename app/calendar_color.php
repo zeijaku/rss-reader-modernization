@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
-/** V1.20.1-C: fixed Calendar event color allowlist. */
+/** V1.33-B: fixed Calendar event color allowlist. */
+const CALENDAR_EVENT_COLOR_VALUES = ['red', 'blue', 'green', 'yellow', 'purple'];
+
 function calendar_event_color_validate(mixed $value): ?string
 {
-    return is_string($value) && in_array($value, ['red', 'blue', 'green'], true) ? $value : null;
+    return is_string($value) && in_array($value, CALENDAR_EVENT_COLOR_VALUES, true) ? $value : null;
 }
 
 /** @return list<array{event_id:int,color:string}> */

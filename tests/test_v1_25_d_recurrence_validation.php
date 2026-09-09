@@ -33,7 +33,7 @@ function calendar_validate_event_range(mixed $start, mixed $end): ?array
 function db_table_identifier(string $name): string { return '`' . $name . '`'; }
 function conn_db(): PDO { throw new RuntimeException('DB not used in pure recurrence test'); }
 function calendar_normalize_event_row(array $row): ?array { return $row; }
-function calendar_event_color_validate(mixed $value): ?string { return is_string($value) && in_array($value, ['red','blue','green'], true) ? $value : null; }
+function calendar_event_color_validate(mixed $value): ?string { return is_string($value) && in_array($value, ['red','blue','green','yellow','purple'], true) ? $value : null; }
 function calendar_event_time_validate_all_day(mixed $value): ?bool { return in_array($value, [true,1,'1'], true) ? true : (in_array($value, [false,0,'0'], true) ? false : null); }
 function calendar_event_time_public_clock(mixed $value): ?string { return is_string($value) && preg_match('/^\d{2}:\d{2}/', $value) ? substr($value,0,5) : null; }
 function calendar_event_time_validate_url(mixed $value): string|false { return $value === null || $value === '' ? '' : (is_string($value) && preg_match('#^https?://#', $value) ? $value : false); }

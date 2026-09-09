@@ -1,10 +1,24 @@
 # Roadmap after Secure Baseline
 
+## Version 1.33 — Calendar Enhancement
+
+- [x] V1.33-A 現状調査・Phase設計
+- [x] V1.33-B 予定色3色から5色
+- [x] V1.33-C 予定範囲・Occurrence identity共通化
+- [x] V1.33-D Occurrence例外Table／API基盤
+- [x] V1.33-E Occurrence単位編集／削除／復元UI
+- [x] V1.33-F 月表示の複数日連結
+- [x] V1.33-G 日／週／月表示とtoolbar
+- [x] V1.33-H RC本番確認・Asset読み込み安定化
+- [x] V1.33-I 正式版1.33.0昇格・Package／Release Gate整備
+
+V1.33-H以降は機能Scopeを固定し、日程コピーと日程Drag & Dropは次期以降へ延期しました。設計上の要件は[`v1-33-future-calendar.md`](v1-33-future-calendar.md)へ記録しています。
+
 ## Current milestone
 
 `Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
 
-現在は `RSS Reader Modernization 1.2.0`。Version 1.1.0のDashboard機能とDB構造を維持したまま、認証画面、記事表示、Search Feed、記事Actionsを追加しました。Version 1.2 Releaseで統合回帰、Documentation整合、Version確定、完全統合ZIPとRuntime ZIPのRelease Gateを完了しています。
+現在の正式版Sourceは`RSS Reader Modernization 1.33.0`です。V1.33は既存CalendarとSecurity境界を維持した段階的なCalendar Enhancementで、Tag／GitHub Releaseは共通Release workflowの全Gate通過後にだけ公開します。
 
 ## Version 1.1 — Dashboard機能追加
 

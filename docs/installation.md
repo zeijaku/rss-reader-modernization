@@ -104,7 +104,7 @@ Prefix:   rss_
 
 ## 6. Schemaと現行Migrationを投入
 
-`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`（Migration 013）、V1.24のStock状態Column（Migration 017）、V1.25のCalendar終日／時刻／URL（Migration 018）と繰り返し（Migration 019）を取り込んでいます。Mail / Links / Stock Tags / RSS Highlightに加え、V1.22のFeed Metadata / Feed Health / RSS Rulesは009〜012、014〜016を番号順に適用します。
+`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`（Migration 013）、V1.24のStock状態Column（Migration 017）、V1.25のCalendar終日／時刻／URL（Migration 018）と繰り返し（Migration 019）、V1.33のOccurrence例外Table（Migration 025）を取り込んでいます。Mail / Links / Stock Tags / RSS Highlightに加え、V1.22のFeed Metadata / Feed Health / RSS Rulesは009〜012、014〜016を番号順に適用します。
 
 まず `database/schema.sql` 冒頭の値を、`DB_TABLE_PREFIX` と同じにします。
 
@@ -142,9 +142,9 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\015
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\016_v1_22_rss_rules.sql
 ```
 
-phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016を同じ順番でImportします。V1.20.1のCalendar色Column（013）、V1.24のStock状態Column（017）、V1.25のCalendar終日／時刻／URL／繰り返しColumn（018 / 019）、V1.27 user file（020）、V1.29 Remote Connection（021）、V1.32 Account Security（022〜024）は`schema.sql`へ統合済みのため、新規Installではこれらを追加実行しません。
+phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016を同じ順番でImportします。V1.20.1のCalendar色Column（013）、V1.24のStock状態Column（017）、V1.25のCalendar終日／時刻／URL／繰り返しColumn（018 / 019）、V1.27 user file（020）、V1.29 Remote Connection（021）、V1.32 Account Security（022〜024）、V1.33 Calendar Occurrence例外（025）は`schema.sql`へ統合済みのため、新規Installではこれらを追加実行しません。
 
-Prefixが `rss_` の場合、V1.32 fresh installでは最終的に次の25 tableが存在します。
+Prefixが `rss_` の場合、V1.33 fresh installでは最終的に次の26 tableが存在します。
 
 ```text
 rss_user_info
@@ -155,6 +155,7 @@ rss_feed_item_state
 rss_memo
 rss_task
 rss_calendar_event
+rss_calendar_event_exception
 rss_dashboard_widget
 rss_remember_token
 rss_mail_account
@@ -191,6 +192,8 @@ V1.31.0からV1.32.0へ更新する既存Databaseでは、Backup取得後に次�
 ```
 
 Migration 022は`auth_totp`と`auth_recovery_code`、023は`auth_session`、024は`auth_audit_log`を追加します。いずれも既存tableを削除しない加算型です。対象tableが既に存在する本番環境では、RC/正式版への更新だけを理由に再実行しません。2FAを既に使用している環境では`APP_TOTP_SECRET_KEY_B64`を変更しないでください。
+
+V1.32.0からV1.33.0へ更新する既存Databaseでは、Backup取得後に`025_v1_33_calendar_event_exception.sql`の`SET @table_prefix`を実環境の`DB_TABLE_PREFIX`へ合わせ、対象Tableが無い場合だけ1回適用します。このMigrationはOccurrence例外Tableを追加するだけで、既存`calendar_event`を変更・削除しません。V1.33 checkpointで適用済みの場合はRC／正式版への更新を理由に再実行しません。
 
 V1.24.0からV1.25.0へ更新する既存Databaseでは、Backup取得後に次を**この順番で1回ずつ**適用します。
 

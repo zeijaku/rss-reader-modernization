@@ -3,7 +3,7 @@
 
     var endpoint = './calendar_color_api.php';
     var namespace = '.iguguruCalendarColors';
-    var colorValues = ['red', 'blue', 'green'];
+    var colorValues = ['red', 'blue', 'green', 'yellow', 'purple'];
 
     function csrfToken() {
         return $('meta[name="csrf-token"]').attr('content') || '';
@@ -83,7 +83,9 @@
         [
             ['blue', '青 - 通常'],
             ['red', '赤 - 重要'],
-            ['green', '緑 - その他']
+            ['green', '緑 - その他'],
+            ['yellow', '黄 - 注意'],
+            ['purple', '紫 - 特別']
         ].forEach(function (optionData) {
             var option = document.createElement('option');
             option.value = optionData[0];
@@ -94,7 +96,7 @@
 
         var help = document.createElement('div');
         help.className = 'form-text';
-        help.textContent = '青=通常 / 赤=重要 / 緑=その他';
+        help.textContent = '青=通常 / 赤=重要 / 緑=その他 / 黄=注意 / 紫=特別';
 
         group.appendChild(label);
         group.appendChild(select);
@@ -223,7 +225,7 @@
             var id = String($entry.attr('data-event-id') || '');
             var color = map[id] || 'blue';
             $entry
-                .removeClass('calendar-event-color-red calendar-event-color-blue calendar-event-color-green')
+                .removeClass('calendar-event-color-red calendar-event-color-blue calendar-event-color-green calendar-event-color-yellow calendar-event-color-purple')
                 .addClass('calendar-event-color-' + color)
                 .attr('data-calendar-event-color', color);
         });

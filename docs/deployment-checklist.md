@@ -2,6 +2,8 @@
 
 ## 配置前
 
+- [ ] V1.33ではMigration 025の適用有無と実際のTable prefixを確認した
+- [ ] 正式版`1.33.0`のRuntime ZIPを配置対象として記録した
 - [ ] 対象Version、Commit、ZIP SHA-256を記録した
 - [ ] Release Notes、変更 / 新規 / 削除fileを確認した
 - [ ] DB migrationと必須設定追加の有無を確認した
@@ -52,6 +54,11 @@
 
 ## Browser
 
+- [ ] V1.33 Calendarの5色と既存3色互換
+- [ ] V1.33 Calendarの日／週／月表示とcompact toolbar
+- [ ] 時刻指定予定が日／週のhour laneへ配置される
+- [ ] 複数日予定が週境界／月境界を含めて連結表示される
+- [ ] 繰り返し予定のOccurrence単位変更／削除／復元とシリーズ全体操作
 - [ ] HTTPS
 - [ ] Response HeaderのCSPに `frame-ancestors 'self'`, `base-uri 'self'`, `form-action 'self'`, `object-src 'none'` が含まれる
 - [ ] Version表示

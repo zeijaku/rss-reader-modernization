@@ -4,7 +4,7 @@
     var endpoint = './calendar_recurrence_api.php';
     var namespace = '.iguguruCalendarRecurrence';
     var repeatValues = ['none', 'daily', 'weekly', 'monthly', 'yearly'];
-    var colorValues = ['red', 'blue', 'green'];
+    var colorValues = ['red', 'blue', 'green', 'yellow', 'purple'];
 
     function csrfToken() {
         return $('meta[name="csrf-token"]').attr('content') || '';
@@ -387,6 +387,21 @@
             .attr('data-event-note', note)
             .attr('data-calendar-occurrence-start-date', String(item.occurrence_start_date || ''))
             .attr('data-calendar-occurrence-end-date', String(item.occurrence_end_date || ''))
+            .attr('data-calendar-occurrence-key', String(item.occurrence_key || ''))
+            .attr('data-calendar-original-occurrence-start-date', String(
+                item.original_occurrence_start_date || item.occurrence_start_date || ''
+            ))
+            .attr('data-calendar-occurrence-revision', /^[a-f0-9]{64}$/.test(String(item.occurrence_revision || ''))
+                ? String(item.occurrence_revision) : '')
+            .attr('data-calendar-exception-id', item.exception_id ? String(item.exception_id) : '')
+            .attr('data-calendar-exception-kind', String(item.exception_kind || ''))
+            .attr('data-calendar-source-title', String(item.source_title !== undefined ? item.source_title : title))
+            .attr('data-calendar-source-note', String(item.source_note !== undefined ? item.source_note : note))
+            .attr('data-calendar-source-color', validColor(item.source_color !== undefined ? item.source_color : color))
+            .attr('data-calendar-source-all-day', (item.source_all_day !== undefined ? item.source_all_day : item.all_day) === false ? '0' : '1')
+            .attr('data-calendar-source-start-time', publicTime(item.source_start_time !== undefined ? item.source_start_time : item.start_time))
+            .attr('data-calendar-source-end-time', publicTime(item.source_end_time !== undefined ? item.source_end_time : item.end_time))
+            .attr('data-calendar-source-url', String(item.source_url !== undefined && item.source_url !== null ? item.source_url : item.url || ''))
             .attr('data-calendar-event-color', color)
             .attr('data-calendar-event-color-ready', '1')
             .attr('data-calendar-event-meta-ready', '1')
@@ -414,8 +429,13 @@
         var map = {};
         (Array.isArray(events) ? events : []).forEach(function (item) {
             var id = String(item && item.event_id || '');
-            if (/^[1-9][0-9]*$/.test(id) && map[id] === undefined) {
-                map[id] = item;
+            var originalStart = String(item && (item.original_occurrence_start_date || item.occurrence_start_date) || '');
+            var key = String(item && item.occurrence_key || ('event:' + id + ':' + originalStart));
+            if (/^[1-9][0-9]*$/.test(id) && /^event:[1-9][0-9]*:[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(key)) {
+                map[key] = item;
+                if (map[id] === undefined) {
+                    map[id] = item;
+                }
             }
         });
         return map;
@@ -494,6 +514,7 @@
         var $entry = $(trigger);
         var $card = $entry.closest('[data-dashboard-widget-type="calendar"]');
         var eventId = String(trigger.getAttribute('data-event-id') || '');
+        var occurrenceKey = String(trigger.getAttribute('data-calendar-occurrence-key') || '');
         if (!form) {
             return;
         }
@@ -512,7 +533,7 @@
 
         var map = $card.data('calendar-recurrence-map') || {};
         if (String($card.attr('data-calendar-recurrence-ready') || '') === '1') {
-            populateRepeatFields(form, map[eventId] || null);
+            populateRepeatFields(form, map[occurrenceKey] || map[eventId] || null);
             return;
         }
 
@@ -528,7 +549,7 @@
                 return;
             }
             var currentMap = $card.data('calendar-recurrence-map') || {};
-            populateRepeatFields(form, currentMap[eventId] || null);
+            populateRepeatFields(form, currentMap[occurrenceKey] || currentMap[eventId] || null);
         });
     }
 
@@ -601,6 +622,24 @@
             });
     }
 
+    function bindRangeObserver() {
+        $(document)
+            .off('calendar:rangeLoaded' + namespace)
+            .on('calendar:rangeLoaded' + namespace, '[data-dashboard-widget-type="calendar"]', function (event, data) {
+                var $card = $(this);
+                var events = data && Array.isArray(data.events) ? data.events : [];
+                var recurring = events.filter(function (item) {
+                    return validRepeat(item && item.repeat_type) !== 'none';
+                });
+                $card
+                    .data('calendar-recurrence-events', recurring)
+                    .data('calendar-recurrence-map', eventMap(recurring))
+                    .data('calendar-recurrence-year', Number($card.attr('data-calendar-year') || 0))
+                    .data('calendar-recurrence-month', Number($card.attr('data-calendar-month') || 0))
+                    .attr('data-calendar-recurrence-ready', '1');
+            });
+    }
+
     function bindFieldChanges() {
         $(document)
             .off('change' + namespace, '.registerCalendarEventRepeatType, .changeCalendarEventRepeatType')
@@ -612,6 +651,7 @@
     document.addEventListener('submit', captureSubmit, true);
     document.addEventListener('click', captureClick, true);
     bindAjaxObserver();
+    bindRangeObserver();
     bindFieldChanges();
     $(function () {
         window.setTimeout(ensureFields, 0);

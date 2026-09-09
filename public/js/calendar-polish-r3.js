@@ -11,7 +11,7 @@
 
     function calendarNavigationTrigger(event) {
         return event.target && typeof event.target.closest === 'function'
-            ? event.target.closest('.calendar-prev-month, .calendar-next-month, .calendar-today')
+            ? event.target.closest('.calendar-prev-month, .calendar-next-month, .calendar-today, .calendar-view-mode')
             : null;
     }
 

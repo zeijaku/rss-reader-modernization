@@ -5,6 +5,14 @@ declare(strict_types=1);
 const CALENDAR_RECURRENCE_MAX_ACTIVE_SERIES = 50;
 const CALENDAR_RECURRENCE_MAX_MONTH_OCCURRENCES = 2000;
 
+function calendar_event_occurrence_key(int $eventId, string $originalOccurrenceStartDate): string
+{
+    if ($eventId <= 0 || calendar_validate_date($originalOccurrenceStartDate) === null) {
+        throw new InvalidArgumentException('Calendar occurrence identity is invalid.');
+    }
+    return 'event:' . $eventId . ':' . $originalOccurrenceStartDate;
+}
+
 function calendar_event_recurrence_validate_type(mixed $value): ?string
 {
     return is_string($value) && in_array($value, ['none', 'daily', 'weekly', 'monthly', 'yearly'], true)
@@ -169,6 +177,24 @@ function calendar_event_recurrence_time_color_update(
         $pdo->beginTransaction();
     }
     try {
+        $lockedEvent = calendar_lock_owned_event($pdo, $ownerId, $eventId);
+        if ($lockedEvent === null) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return false;
+        }
+        if (function_exists('calendar_event_exception_assert_series_change_allowed')) {
+            calendar_event_exception_assert_series_change_allowed(
+                $pdo,
+                $ownerId,
+                $lockedEvent,
+                $startDate,
+                $endDate,
+                $repeatSettings
+            );
+        }
+        calendar_event_recurrence_apply($pdo, $ownerId, $eventId, $repeatSettings);
         if (!calendar_event_time_color_update(
             $ownerId,
             $eventId,
@@ -184,7 +210,6 @@ function calendar_event_recurrence_time_color_update(
             }
             return false;
         }
-        calendar_event_recurrence_apply($pdo, $ownerId, $eventId, $repeatSettings);
         if ($started) {
             $pdo->commit();
         }
@@ -372,7 +397,13 @@ function calendar_event_recurrence_expand_row(array $row, string $monthStart, st
             continue;
         }
         $occurrences[] = [
+            'kind' => 'event',
             'event_id' => (int) $event['calendar_event_id'],
+            'occurrence_key' => calendar_event_occurrence_key(
+                (int) $event['calendar_event_id'],
+                $occurrenceStart
+            ),
+            'original_occurrence_start_date' => $occurrenceStart,
             'title' => $event['calendar_event_title'],
             'note' => $event['calendar_event_note'],
             'color' => $color,
@@ -380,6 +411,13 @@ function calendar_event_recurrence_expand_row(array $row, string $monthStart, st
             'occurrence_end_date' => $occurrenceEnd,
             'source_start_date' => $event['calendar_event_start_date'],
             'source_end_date' => $event['calendar_event_end_date'],
+            'source_title' => $event['calendar_event_title'],
+            'source_note' => $event['calendar_event_note'],
+            'source_color' => $color,
+            'source_all_day' => $allDay,
+            'source_start_time' => $allDay ? null : $startTime,
+            'source_end_time' => $allDay ? null : $endTime,
+            'source_url' => $url,
             'all_day' => $allDay,
             'start_time' => $allDay ? null : $startTime,
             'end_time' => $allDay ? null : $endTime,

@@ -1,0 +1,440 @@
+/* V1.33-G: day/week/month switching, day timeline and card-width-aware week list. */
+#main-content .calendar-toolbar {
+    display: grid;
+    grid-template-areas: "prev today label switch next add";
+    grid-template-columns: auto auto minmax(8rem, 1fr) minmax(9rem, 15rem) auto auto;
+    align-items: center;
+}
+
+#main-content .calendar-prev-month {
+    grid-area: prev;
+}
+
+#main-content .calendar-today {
+    grid-area: today;
+}
+
+#main-content .calendar-month-label {
+    grid-area: label;
+}
+
+#main-content .calendar-next-month {
+    grid-area: next;
+}
+
+#main-content .calendar-event-add-trigger {
+    grid-area: add;
+}
+
+#main-content .calendar-view-switch {
+    display: flex;
+    grid-area: switch;
+    width: 100%;
+    max-width: 15rem;
+    margin: 0;
+    justify-self: center;
+}
+
+#main-content .calendar-view-switch .btn {
+    flex: 1 1 0;
+    min-height: 32px;
+}
+
+#main-content .calendar-view-switch .btn.active {
+    border-color: var(--bs-primary, #0d6efd);
+    background: var(--bs-primary, #0d6efd);
+    color: #fff;
+}
+
+#main-content .calendar-view-compact .calendar-toolbar {
+    min-width: 0;
+    grid-template-areas:
+        "prev today label next add"
+        "switch switch switch switch switch";
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+}
+
+#main-content .calendar-view-compact .calendar-month-label {
+    width: auto;
+    min-width: 0;
+    padding: 2px 4px;
+}
+
+#main-content .calendar-view-compact .calendar-view-switch {
+    width: min(100%, 15rem);
+    margin-top: 2px;
+}
+
+#main-content .calendar-view-holiday {
+    color: var(--bs-danger, #dc3545);
+    font-size: .72rem;
+    font-weight: 600;
+}
+
+#main-content .calendar-view-empty {
+    display: block;
+    padding: 8px 5px;
+    font-size: .7rem;
+    text-align: center;
+}
+
+/* Day view */
+#main-content .calendar-days.calendar-day-view {
+    display: block;
+    width: 100%;
+    min-width: 0;
+}
+
+#main-content .calendar-day-detail {
+    min-height: 0;
+    padding: 0;
+    border: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, .12));
+}
+
+#main-content .calendar-day-detail-heading {
+    display: flex;
+    min-height: 40px;
+    padding: 5px 7px;
+    align-items: center;
+    gap: 7px;
+    border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, .12));
+}
+
+#main-content .calendar-day-detail-heading strong {
+    flex: 1 1 auto;
+    font-size: .88rem;
+}
+
+#main-content .calendar-day-all-day,
+#main-content .calendar-day-time-section {
+    padding: 7px;
+}
+
+#main-content .calendar-day-all-day {
+    border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, .12));
+}
+
+#main-content .calendar-view-section-label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .7rem;
+}
+
+#main-content .calendar-day-all-day-entries {
+    display: grid;
+    gap: 3px;
+}
+
+#main-content .calendar-day-list-entry {
+    min-height: 30px;
+    font-size: .74rem;
+}
+
+#main-content .calendar-day-timeline-scroll {
+    max-height: 34rem;
+    overflow-y: auto;
+    border: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, .12));
+    overscroll-behavior: contain;
+}
+
+#main-content .calendar-day-timeline {
+    position: relative;
+    min-width: 280px;
+    height: 1152px;
+    background: var(--bs-body-bg, #fff);
+}
+
+#main-content .calendar-time-row {
+    position: relative;
+    height: 48px;
+    border-top: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, .10));
+}
+
+#main-content .calendar-time-row:first-child {
+    border-top: 0;
+}
+
+#main-content .calendar-time-row::after {
+    position: absolute;
+    top: 24px;
+    right: 0;
+    left: 52px;
+    border-top: 1px dashed rgba(var(--bs-body-color-rgb, 33, 37, 41), .07);
+    content: '';
+}
+
+#main-content .calendar-time-label {
+    display: block;
+    width: 48px;
+    padding: 2px 5px 0 0;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .64rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+#main-content .calendar-timeline-events {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    right: 4px;
+    bottom: 0;
+    left: 52px;
+}
+
+#main-content .calendar-timeline-entry {
+    position: absolute;
+    top: var(--calendar-entry-top);
+    left: calc(var(--calendar-entry-left) + 2px);
+    width: calc(var(--calendar-entry-width) - 4px);
+    height: var(--calendar-entry-height);
+    min-height: 24px;
+    align-content: flex-start;
+    border-top: 1px solid rgba(var(--bs-body-color-rgb, 33, 37, 41), .16);
+    border-right: 1px solid rgba(var(--bs-body-color-rgb, 33, 37, 41), .16);
+    border-bottom: 1px solid rgba(var(--bs-body-color-rgb, 33, 37, 41), .16);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+    font-size: .7rem;
+}
+
+#main-content .calendar-timeline-entry-open-ended,
+#main-content .calendar-timeline-entry-zero-duration {
+    border-bottom-style: dashed;
+}
+
+#main-content .calendar-timeline-state {
+    flex: 0 0 auto;
+    margin-left: 4px;
+    font-size: .6rem;
+    font-weight: 600;
+}
+
+#main-content .calendar-timeline-empty {
+    display: block;
+    padding: 12px;
+    font-size: .72rem;
+    text-align: center;
+}
+
+/* Week view: wide cards retain the Sunday-first seven-column layout. */
+#main-content .calendar-days.calendar-week-view {
+    display: grid;
+    width: 100%;
+    min-width: 700px;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+#main-content .calendar-week-day {
+    min-height: 180px;
+    padding: 2px;
+    border-top: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, .12));
+}
+
+#main-content .calendar-week-day-heading {
+    min-height: 45px;
+    padding: 2px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, .08));
+}
+
+#main-content .calendar-week-day-number {
+    display: block;
+    width: 100%;
+    min-height: 25px;
+    padding: 2px;
+    border: 0;
+    background: transparent;
+    color: var(--bs-body-color, #212529);
+    font-size: .7rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+#main-content .calendar-week-day:first-child .calendar-week-day-number,
+#main-content .calendar-week-day.calendar-day-holiday .calendar-week-day-number {
+    color: var(--bs-danger, #dc3545);
+}
+
+#main-content .calendar-week-day:last-child .calendar-week-day-number {
+    color: var(--bs-primary, #0d6efd);
+}
+
+#main-content .calendar-week-day-heading .calendar-view-holiday {
+    display: block;
+    overflow: hidden;
+    font-size: .6rem;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ResizeObserver adds this class from the actual card width, including a
+ * one-column Calendar on a desktop viewport. */
+#main-content .calendar-view-compact .calendar-days.calendar-week-view {
+    display: block;
+    min-width: 0;
+}
+
+#main-content .calendar-view-compact .calendar-week-day {
+    display: grid;
+    min-height: 64px;
+    padding: 5px;
+    grid-template-columns: minmax(92px, 28%) minmax(0, 1fr);
+    gap: 6px;
+    border-left: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, .12));
+}
+
+#main-content .calendar-view-compact .calendar-week-day-heading {
+    min-height: 0;
+    padding: 0 5px 0 0;
+    border-right: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, .08));
+    border-bottom: 0;
+}
+
+#main-content .calendar-view-compact .calendar-week-day-number,
+#main-content .calendar-view-compact .calendar-week-day-heading .calendar-view-holiday {
+    text-align: left;
+}
+
+#main-content .calendar-view-compact .calendar-week-view .calendar-day-entries {
+    gap: 3px;
+}
+
+#main-content .calendar-view-compact .calendar-week-view .calendar-entry {
+    width: 100%;
+    min-height: 30px;
+    margin-right: 0;
+    margin-left: 0;
+    border-left-width: 3px;
+    border-radius: 3px;
+    font-size: .7rem;
+}
+
+#main-content .calendar-view-compact .calendar-week-view.calendar-month-layout-ready .calendar-entry.calendar-event-entry.calendar-event-span-start,
+#main-content .calendar-view-compact .calendar-week-view.calendar-month-layout-ready .calendar-entry.calendar-event-entry.calendar-event-span-middle,
+#main-content .calendar-view-compact .calendar-week-view.calendar-month-layout-ready .calendar-entry.calendar-event-entry.calendar-event-span-end {
+    width: 100%;
+    margin-right: 0;
+    margin-left: 0;
+    border-left-width: 3px;
+    border-left-style: solid;
+    border-left-color: var(--calendar-entry-accent, var(--bs-primary, #0d6efd));
+    border-radius: 3px;
+}
+
+#main-content .calendar-view-compact .calendar-week-view .calendar-event-span-continuation > * {
+    visibility: visible;
+}
+
+#main-content .calendar-view-compact .calendar-week-view .calendar-event-span-continued-before::before,
+#main-content .calendar-view-compact .calendar-week-view .calendar-event-span-continued-after::after {
+    content: none;
+}
+
+@media (max-width: 575.98px) {
+    #main-content .calendar-toolbar {
+        grid-template-areas:
+            "prev today label next add"
+            "switch switch switch switch switch";
+        grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    }
+
+    #main-content .calendar-month-label {
+        width: auto;
+        min-width: 0;
+        padding: 2px 3px;
+    }
+
+    #main-content .calendar-view-switch {
+        width: min(100%, 15rem);
+        max-width: 15rem;
+        margin-top: 2px;
+    }
+
+    #main-content .calendar-day-detail-heading {
+        flex-wrap: wrap;
+    }
+
+    #main-content .calendar-day-detail-heading strong {
+        min-width: 65%;
+    }
+
+    #main-content .calendar-day-timeline-scroll {
+        max-height: 28rem;
+    }
+
+    #main-content .calendar-days.calendar-week-view {
+        display: block;
+        min-width: 0;
+    }
+
+    #main-content .calendar-week-day {
+        display: grid;
+        min-height: 64px;
+        padding: 5px;
+        grid-template-columns: minmax(82px, 28%) minmax(0, 1fr);
+        gap: 5px;
+        border-left: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, .12));
+    }
+
+    #main-content .calendar-week-day-heading {
+        min-height: 0;
+        padding: 0 4px 0 0;
+        border-right: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, .08));
+        border-bottom: 0;
+    }
+
+    #main-content .calendar-week-day-number,
+    #main-content .calendar-week-day-heading .calendar-view-holiday {
+        text-align: left;
+    }
+
+    #main-content .calendar-week-view .calendar-entry {
+        width: 100%;
+        min-height: 30px;
+        margin-right: 0;
+        margin-left: 0;
+        border-left-width: 3px;
+        border-radius: 3px;
+        font-size: .68rem;
+    }
+
+    #main-content .calendar-week-view.calendar-month-layout-ready .calendar-entry.calendar-event-entry.calendar-event-span-start,
+    #main-content .calendar-week-view.calendar-month-layout-ready .calendar-entry.calendar-event-entry.calendar-event-span-middle,
+    #main-content .calendar-week-view.calendar-month-layout-ready .calendar-entry.calendar-event-entry.calendar-event-span-end {
+        width: 100%;
+        margin-right: 0;
+        margin-left: 0;
+        border-left-width: 3px;
+        border-left-style: solid;
+        border-left-color: var(--calendar-entry-accent, var(--bs-primary, #0d6efd));
+        border-radius: 3px;
+    }
+
+    #main-content .calendar-week-view .calendar-event-span-continuation > * {
+        visibility: visible;
+    }
+
+    #main-content .calendar-week-view .calendar-event-span-continued-before::before,
+    #main-content .calendar-week-view .calendar-event-span-continued-after::after {
+        content: none;
+    }
+}
+
+#main-content[data-dashboard-theme="bootstrap-solar"] .calendar-day-timeline,
+#main-content[data-dashboard-theme="bootstrap-slate"] .calendar-day-timeline {
+    background: var(--bs-body-bg);
+}
+
+#main-content[data-dashboard-theme="bootstrap-solar"] .calendar-week-day:first-child .calendar-week-day-number,
+#main-content[data-dashboard-theme="bootstrap-solar"] .calendar-week-day.calendar-day-holiday .calendar-week-day-number,
+#main-content[data-dashboard-theme="bootstrap-slate"] .calendar-week-day:first-child .calendar-week-day-number,
+#main-content[data-dashboard-theme="bootstrap-slate"] .calendar-week-day.calendar-day-holiday .calendar-week-day-number {
+    color: #ff8f9a;
+}
+
+#main-content[data-dashboard-theme="bootstrap-solar"] .calendar-week-day:last-child .calendar-week-day-number,
+#main-content[data-dashboard-theme="bootstrap-slate"] .calendar-week-day:last-child .calendar-week-day-number {
+    color: #6ea8fe;
+}

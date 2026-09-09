@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__);
 $upcoming = file_get_contents($root . '/app/calendar_upcoming.php');
+$range = file_get_contents($root . '/app/calendar_range.php');
 $api = file_get_contents($root . '/public/calendar_recurrence_api.php');
 $ui = file_get_contents($root . '/public/js/calendar-polish.js');
 $css = file_get_contents($root . '/public/css/calendar-polish.css');
 $loader = file_get_contents($root . '/public/js/calendar.js');
 $version = file_get_contents($root . '/app/version.php');
 
-foreach ([$upcoming, $api, $ui, $css, $loader, $version] as $source) {
+foreach ([$upcoming, $range, $api, $ui, $css, $loader, $version] as $source) {
     if (!is_string($source)) {
         fwrite(STDERR, "FAIL: V1.25-F source read\n");
         exit(1);
@@ -36,11 +37,10 @@ $checks = [
     'upcoming window is fixed to 14 days' => str_contains($upcoming, 'CALENDAR_UPCOMING_DAYS = 14'),
     'upcoming result is bounded to 8 events' => str_contains($upcoming, 'CALENDAR_UPCOMING_LIMIT = 8')
         && str_contains($upcoming, 'array_slice($events, 0, CALENDAR_UPCOMING_LIMIT)'),
-    'non-recurring upcoming query is owner scoped' => str_contains($upcoming, 'calendar_event_owner = :owner AND calendar_event_flag = 0'),
-    'non-recurring upcoming query excludes recurring source rows' => str_contains($upcoming, "calendar_event_repeat_type = 'none'"),
-    'recurring upcoming expansion keeps owner scope' => str_contains($upcoming, 'calendar_event_recurrence_month_list(')
-        && str_contains($upcoming, '$ownerId,'),
-    'upcoming query is bounded' => str_contains($upcoming, 'LIMIT 500'),
+    'unified upcoming query is owner scoped' => str_contains($range, 'calendar_event_owner = :owner AND calendar_event_flag = 0'),
+    'upcoming uses common normal/recurring expansion' => str_contains($upcoming, 'calendar_range_event_list('),
+    'recurring upcoming expansion keeps owner scope' => str_contains($upcoming, 'calendar_range_event_list($ownerId'),
+    'upcoming query is bounded' => str_contains($range, 'CALENDAR_RANGE_MAX_SOURCE_EVENTS = 500'),
     'upcoming helper performs no outbound URL fetch' => !str_contains($upcoming, 'curl_exec(')
         && !str_contains($upcoming, 'file_get_contents($url')
         && !str_contains($upcoming, 'fopen($url')
@@ -50,7 +50,9 @@ $checks = [
         && str_contains($api, 'Authentication is required.'),
     'existing recurrence API still requires CSRF' => str_contains($api, 'app_csrf_is_valid'),
     'existing recurrence API still enforces body limit' => str_contains($api, 'APP_API_MAX_REQUEST_BYTES'),
-    'upcoming action is in fixed allowlist' => str_contains($api, "['calendar.recurrence.list', 'calendar.upcoming.list', 'calendar.recurrence.create', 'calendar.recurrence.update']"),
+    'upcoming action is in fixed allowlist' => str_contains($api, "if (!in_array(\$action, [")
+        && str_contains($api, "'calendar.upcoming.list'")
+        && str_contains($api, "], true))"),
     'upcoming action uses server date' => str_contains($api, "substr((string) app_now(), 0, 10)")
         && str_contains($api, 'calendar_event_upcoming_list($userId, $today)'),
     'upcoming action does not accept client date range' => !str_contains($api, "\$_POST['upcoming_start']")

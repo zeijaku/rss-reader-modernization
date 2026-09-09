@@ -8,6 +8,7 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/calendar_color.php';
 require_once dirname(__DIR__) . '/app/calendar_time.php';
 require_once dirname(__DIR__) . '/app/calendar_recurrence.php';
+require_once dirname(__DIR__) . '/app/calendar_range.php';
 require_once dirname(__DIR__) . '/app/calendar_upcoming.php';
 
 /** @param array<string,mixed> $body */
@@ -82,7 +83,16 @@ if ($contentLength !== null && $contentLength > APP_API_MAX_REQUEST_BYTES) {
 }
 
 $action = isset($_POST['action']) && is_string($_POST['action']) ? trim($_POST['action']) : '';
-if (!in_array($action, ['calendar.recurrence.list', 'calendar.upcoming.list', 'calendar.recurrence.create', 'calendar.recurrence.update'], true)) {
+if (!in_array($action, [
+    'calendar.range.list',
+    'calendar.recurrence.list',
+    'calendar.upcoming.list',
+    'calendar.recurrence.create',
+    'calendar.recurrence.update',
+    'calendar.occurrence.update',
+    'calendar.occurrence.cancel',
+    'calendar.occurrence.restore',
+], true)) {
     calendar_recurrence_error('unknown_action', 'Unknown API action.', 400);
 }
 
@@ -90,6 +100,24 @@ if (!in_array($action, ['calendar.recurrence.list', 'calendar.upcoming.list', 'c
 app_session_release();
 
 try {
+    if ($action === 'calendar.range.list') {
+        $widgetId = calendar_recurrence_positive_int($_POST['widget_id'] ?? null);
+        $range = calendar_range_validate($_POST['calendar_range_start'] ?? null, $_POST['calendar_range_end'] ?? null);
+        if ($widgetId === null || $range === null) {
+            calendar_recurrence_error('validation_error', 'Calendar range request is invalid.', 422);
+        }
+        try {
+            calendar_recurrence_success(calendar_range_data(
+                $userId,
+                $widgetId,
+                $range['start'],
+                $range['end']
+            ));
+        } catch (OutOfBoundsException) {
+            calendar_recurrence_error('not_found', 'Calendar Widget was not found.', 404);
+        }
+    }
+
     if ($action === 'calendar.upcoming.list') {
         $today = substr((string) app_now(), 0, 10);
         calendar_recurrence_success([
@@ -110,6 +138,24 @@ try {
             'month' => $month,
             'events' => calendar_event_recurrence_month_list($userId, $year, $month),
         ]);
+    }
+
+    if ($action === 'calendar.occurrence.cancel' || $action === 'calendar.occurrence.restore') {
+        $eventId = calendar_recurrence_positive_int($_POST['event_id'] ?? null);
+        $originalStart = isset($_POST['original_occurrence_start_date'])
+            && is_string($_POST['original_occurrence_start_date'])
+            ? $_POST['original_occurrence_start_date']
+            : '';
+        $revision = isset($_POST['occurrence_revision']) && is_string($_POST['occurrence_revision'])
+            ? $_POST['occurrence_revision']
+            : '';
+        if ($eventId === null) {
+            calendar_recurrence_error('validation_error', 'Calendar occurrence target is invalid.', 422);
+        }
+        $occurrence = $action === 'calendar.occurrence.cancel'
+            ? calendar_event_occurrence_cancel($userId, $eventId, $originalStart, $revision)
+            : calendar_event_occurrence_restore($userId, $eventId, $originalStart, $revision);
+        calendar_recurrence_success(['occurrence' => $occurrence]);
     }
 
     $title = calendar_validate_event_title($_POST['calendar_event_title'] ?? null);
@@ -133,6 +179,32 @@ try {
     );
     if ($timeSettings === null) {
         calendar_recurrence_error('validation_error', 'Calendar event time or URL is invalid.', 422);
+    }
+
+    if ($action === 'calendar.occurrence.update') {
+        $eventId = calendar_recurrence_positive_int($_POST['event_id'] ?? null);
+        $originalStart = isset($_POST['original_occurrence_start_date'])
+            && is_string($_POST['original_occurrence_start_date'])
+            ? $_POST['original_occurrence_start_date']
+            : '';
+        $revision = isset($_POST['occurrence_revision']) && is_string($_POST['occurrence_revision'])
+            ? $_POST['occurrence_revision']
+            : '';
+        if ($eventId === null) {
+            calendar_recurrence_error('validation_error', 'Calendar occurrence target is invalid.', 422);
+        }
+        calendar_recurrence_success(['occurrence' => calendar_event_occurrence_update(
+            $userId,
+            $eventId,
+            $originalStart,
+            $title,
+            $range[0],
+            $range[1],
+            $note,
+            $color,
+            $timeSettings,
+            $revision
+        )]);
     }
 
     $repeatSettings = calendar_event_recurrence_settings(
@@ -195,10 +267,20 @@ try {
         'repeat_type' => $repeatSettings['repeat_type'],
         'repeat_until' => $repeatSettings['repeat_until'],
     ]);
+} catch (CalendarOccurrenceConflictException $exception) {
+    calendar_recurrence_error('calendar_occurrence_conflict', $exception->getMessage(), 409);
+} catch (OutOfBoundsException $exception) {
+    calendar_recurrence_error('not_found', $exception->getMessage(), 404);
 } catch (LengthException|InvalidArgumentException $exception) {
     calendar_recurrence_error('validation_error', $exception->getMessage(), 422);
 } catch (PDOException $exception) {
     error_log('Calendar recurrence API failed: ' . $exception->getMessage());
+    if ($action === 'calendar.range.list') {
+        calendar_recurrence_error('calendar_range_unavailable', 'Calendar data could not be loaded.', 503);
+    }
+    if (str_starts_with($action, 'calendar.occurrence.')) {
+        calendar_recurrence_error('calendar_exception_unavailable', 'Calendar occurrence data could not be saved.', 503);
+    }
     calendar_recurrence_error('calendar_recurrence_unavailable', 'Calendar recurrence migration is required.', 503);
 } catch (Throwable $exception) {
     error_log('Calendar recurrence API failed: ' . $exception->getMessage());

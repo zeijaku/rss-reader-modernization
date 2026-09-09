@@ -1,58 +1,66 @@
-# RSS Reader Modernization 1.32.0
+# RSS Reader Modernization 1.33.0
 
-Release tag: `v1.32.0`
-Release date: 2026-09-07
+Intended release tag: `v1.33.0`
+Release date: 2026-09-09
 
 ## Overview
 
-Version 1.32 focuses on Account Security. It adds TOTP 2FA, one-time Recovery Codes, Step-up Authentication for sensitive operations, owner-scoped Session Management, and a bounded Authentication Security Activity log while preserving the existing Secure Baseline authentication, CSRF, throttling, Remember Me and filesystem-backed PHP session model.
-
-V1.32-G Session Management and V1.32-H Authentication Security Audit Log completed production smoke verification. V1.32-I integrated the final regression, fresh-install schema/documentation and release gates, and the 1.32.0-RC1 production verification completed without reported problems before formal release.
+Version 1.33 is a Calendar Enhancement release. It keeps the existing Calendar data and API compatibility while adding five colors, occurrence-only recurring-event exceptions, visually connected multi-day events, and day/week/month views. The production-accepted RC2 feature scope is unchanged in the formal 1.33.0 source.
 
 ## Main changes
 
-- TOTP 2FA enrollment and login verification using a dedicated encrypted TOTP secret envelope.
-- Recovery Codes generated as one-time values and stored only through one-way password hashes.
-- Short-lived Step-up Authentication for sensitive Account Security actions.
-- Session Management showing the current/other logical sessions with individual and all-other revoke operations.
-- Authentication Security Activity for login success/failure, 2FA success/failure, Recovery Code use, Step-up, 2FA changes, Password/Email changes, Session revoke and Logout.
-- Account Security UI shared by Dashboard/Settings with owner-scoped Security Activity and Session views.
+- Existing `red`, `blue` and `green` event colors remain unchanged; `yellow` and `purple` are added without a color-only migration.
+- Single-day, multi-day and recurring occurrences use common inclusive date-range and occurrence-identity helpers.
+- A user can edit, delete and restore one occurrence of a recurring series while retaining series-wide edit/delete operations.
+- Month view renders multi-day events as connected `single` / `start` / `middle` / `end` segments, including week and month boundaries.
+- Day and week views place timed events against their hour lanes; all-day and multi-day events remain in a separate area.
+- Day/week/month switching is integrated into the compact responsive Calendar toolbar for PC and smartphone layouts.
 
-## Security / privacy
+## Asset loading stabilization
 
-- Password, TOTP code, Recovery Code, TOTP secret, encryption key and raw/full PHP Session IDs are not written to the Authentication Audit Log.
-- Raw email is not used for failure correlation; the existing keyed login identity is used where needed.
-- Raw IP address is not stored. `REMOTE_ADDR` is reduced to a keyed digest; forwarded proxy headers are not implicitly trusted.
-- Full User-Agent is not stored. A bounded Browser/platform label is used for Session/Security Activity display.
-- Recovery Codes are one-time and hash-stored; accepted TOTP time steps are tracked to reduce replay/reuse.
-- Sensitive changes keep CSRF protection and require recent Step-up Authentication where applicable.
-- 2FA/Login rate-limit and existing login-throttle boundaries remain in force.
+- Dynamically loaded JavaScript now starts in its existing dependency order instead of releasing the entire chain at once.
+- Dynamically loaded stylesheets start in small batches while retaining their original cascade order.
+- A failed JavaScript or stylesheet request is retried once after 600ms with a retry-only cache marker.
+- API mutations and Calendar data contracts are unchanged and are never automatically retried by this loader.
+- No database, configuration, UI or Calendar feature change was introduced between the accepted RC and the formal version promotion.
+
+## Deferred Calendar improvements
+
+The following requested features are intentionally not included in V1.33 and are recorded for a later version:
+
+- Schedule copy, with an explicit choice between copying one occurrence and copying a recurring series.
+- Schedule Drag & Drop for date movement in month view and time/date movement in day/week views.
+
+Both features must reuse the V1.33 range/occurrence identity, require confirmation of recurring-event scope, preserve optimistic revision checks, and provide a non-drag mobile/keyboard fallback. Details are in `docs/v1-33-future-calendar.md`.
 
 ## Database / configuration
 
-Existing V1.31 installations use these additive migrations, in numeric order when not already applied:
+Existing V1.32 installations apply the additive Migration `database/migrations/025_v1_33_calendar_event_exception.sql` once after a backup. Set `@table_prefix` to the actual `DB_TABLE_PREFIX` before execution. The migration creates only the owner-scoped `calendar_event_exception` table; it does not drop, truncate or rewrite existing Calendar records.
 
-1. `022_v1_32_auth_2fa.sql` - adds `auth_totp` and `auth_recovery_code`.
-2. `023_v1_32_auth_session.sql` - adds `auth_session`.
-3. `024_v1_32_auth_audit_log.sql` - adds `auth_audit_log`.
+Fresh installations already include the exception table in `database/schema.sql` and must not run Migration 025 again.
 
-For a `rss_` prefix, the resulting tables are `rss_auth_totp`, `rss_auth_recovery_code`, `rss_auth_session`, and `rss_auth_audit_log`. The migration files default to `ig_`; change `SET @table_prefix` to the actual `DB_TABLE_PREFIX` before execution. Do not re-run a migration solely because 1.32.0 is being deployed if the corresponding table already exists.
+No new mandatory configuration or secret is added. Keep `config/local.php`, `APP_HASH_KEY`, `APP_TOTP_SECRET_KEY_B64`, Remote credential keys and private runtime data unchanged.
 
-Fresh installs now include all four V1.32 Account Security tables directly in `database/schema.sql`.
+## Security / compatibility
 
-`APP_TOTP_SECRET_KEY_B64` is a dedicated 32-byte Base64 encryption key used for TOTP secret envelopes. If 2FA has already been enrolled, **do not replace this key** or existing encrypted TOTP secrets will no longer be decryptable. `APP_TOTP_SECRET_KEY_ID`, `APP_TOTP_ISSUER`, 2FA throttling settings and `AUTH_STEP_UP_TIMEOUT` are documented in the example configuration.
+- Authentication, Authorization/Owner Scope, CSRF, XSS escaping, PDO parameterization, input validation and Session boundaries remain in force.
+- Step-up Authentication, 2FA, Recovery Codes, Session Registry and Authentication Security Audit Log are not weakened or bypassed.
+- Calendar title, note and URL output continues through the existing escaping and URL-validation policy.
+- Exception lookup and mutation are owner-scoped to both the authenticated owner and the underlying event.
+- Existing three-color values, recurrence rows and non-recurring events remain readable without data conversion.
 
-## Upgrade summary for an existing V1.31/V1.32 checkpoint environment
+## Upgrade summary from V1.32.0
 
 1. Back up the application, `config/local.php`, database and private runtime data.
-2. Confirm whether `auth_totp`, `auth_recovery_code`, `auth_session` and `auth_audit_log` already exist under the configured prefix. Apply only the missing migrations 022/023/024, in numeric order.
-3. Keep the existing `APP_TOTP_SECRET_KEY_B64`, `APP_HASH_KEY`, Remote credential key, private keys, `known_hosts`, uploads, logs and other private runtime data unchanged.
-4. Deploy the 1.32.0 application update.
-5. Reload the browser and confirm `RSS Reader Modernization 1.32.0` is visible.
-6. Verify Login, TOTP 2FA, Recovery Code handling as applicable, Step-up Authentication, Session Management and Security Activity in the production environment.
+2. Confirm the deployed source and database prefix.
+3. If the prefixed `calendar_event_exception` table is absent, adjust and apply Migration 025 once. Do not re-run `database/schema.sql` on an existing database.
+4. Extract the Runtime ZIP outside the live directory and verify its SHA-256.
+5. Overlay the packaged paths, including `app/`, `public/`, `database/` and documentation, while preserving private configuration and runtime data.
+6. Reload the browser and confirm `RSS Reader Modernization 1.33.0` is visible.
+7. Complete the ordered production checks in `docs/v1-33-i-final-release.md`.
 
 ## Verification limits
 
-Local V1.32-I regression was executed with the available PHP 8.4 runtime and the current PHP/Python/Node test suites. The local environment does not provide every production/CI PHP extension and does not provide PHP 8.1; extension-dependent tests may explicitly skip where their contract permits. Formal publication is performed only by the generic GitHub Release workflow after PHP 8.1 and PHP 8.4 regression, release workflow hygiene, secret scan, deterministic package verification, clean-room validation and main-SHA checks pass.
+The source and packages are verified by the tests available in each build environment and by deterministic package integrity checks. The production RC result was accepted. PHP 8.1, PHP 8.4, live MariaDB/MySQL migration, all browser/theme/responsive combinations and hosting-specific behavior remain separately recorded when the relevant runtime is unavailable locally.
 
-Production-specific behavior remains the responsibility of the real hosting environment, database, browser and configured Remote endpoints. In particular, existing V1.31 Remote Files protocol limitations remain unchanged: SFTP production endpoint behavior is not newly claimed by V1.32, FTP remains unencrypted, and FTPS/WebDAV trust plus SFTP `known_hosts` provenance remain deployment responsibilities.
+The immutable `v1.33.0` tag and GitHub Release may be published only from the exact `main` commit that passes the GitHub Actions Current, Feature, Security, Migration, Package and Clean-room gates.

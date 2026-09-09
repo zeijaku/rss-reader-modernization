@@ -5,6 +5,8 @@ ROOT=Path(__file__).resolve().parents[1]
 calendar=(ROOT/'app/calendar.php').read_text(encoding='utf-8')
 widget=(ROOT/'app/dashboard_widget.php').read_text(encoding='utf-8')
 api=(ROOT/'app/api.php').read_text(encoding='utf-8')
+integrations=(ROOT/'app/api/integrations.php').read_text(encoding='utf-8')
+recurrence_api=(ROOT/'public/calendar_recurrence_api.php').read_text(encoding='utf-8')
 bootstrap=(ROOT/'app/bootstrap.php').read_text(encoding='utf-8')
 conf=(ROOT/'app/common/common_conf.php').read_text(encoding='utf-8')
 index = dashboard_source(ROOT)
@@ -44,8 +46,8 @@ check("VALUES (:owner, :location, 'calendar', NULL" in widget, 'Calendar Widget 
 check('widget_flag = 1' in widget[widget.find('function dashboard_widget_delete_calendar'):], 'Calendar Widget delete is logical')
 for action in ['widget.calendar.create','widget.calendar.update','widget.calendar.delete','calendar.month.list','calendar.event.create','calendar.event.update','calendar.event.delete']:
     check(f"'{action}' =>" in api, f'{action} API action is registered')
-check('calendar_create_event($userId' in api and 'calendar_month_data($userId' in api, 'Calendar ownership comes from authenticated user id')
-segment=api[api.find('function api_widget_calendar_create'):api.find('function api_stock_create')]
+check('calendar_create_event($userId' in integrations and 'calendar_range_data(\n                $userId' in recurrence_api, 'Calendar ownership comes from authenticated user id')
+segment=integrations[integrations.find('function api_widget_calendar_create'):integrations.find('function api_stock_create')]
 check('calendar_event_owner' not in segment and 'widget_owner' not in segment, 'Calendar API never trusts a client owner field')
 check("api_error('not_found'" in segment and "api_error('calendar_unavailable'" in segment, 'Calendar API has controlled not-found and DB failure responses')
 check('data-dashboard-widget-type="calendar"' in index and 'calendar-card' in index, 'Calendar renders as a Dashboard Widget')
@@ -59,8 +61,9 @@ check('Calendar追加' in index and 'fa-calendar-alt' in index, 'Drawer exposes 
 check("app_asset_url('js/calendar.js')" in index, 'Calendar JavaScript is loaded as an external versioned asset')
 check("var eventNamespace = '.iguguruCalendar';" in js, 'Calendar events use one namespace')
 check("url: './api_v1.php'" in js and "'csrf_token': appCsrfToken()" in js, 'Calendar requests use the protected central API endpoint')
-for action in ['widget.calendar.create','widget.calendar.update','widget.calendar.delete','calendar.month.list','calendar.event.create','calendar.event.update','calendar.event.delete']:
+for action in ['widget.calendar.create','widget.calendar.update','widget.calendar.delete','calendar.event.create','calendar.event.update','calendar.event.delete']:
     check(f"apiRequest('{action}'" in js, f'Frontend sends {action}')
+check("action: 'calendar.range.list'" in js, 'Frontend sends calendar.range.list')
 check('.html(' not in js and 'innerHTML' not in js and 'insertAdjacentHTML' not in js, 'Calendar JS keeps text-only DOM construction')
 check(".append($('<span>').text(item.title))" in js, 'Calendar entry titles use text insertion')
 check('guard < 370' in js, 'multi-day client expansion has a hard guard')
@@ -71,7 +74,7 @@ check("window.confirm('この予定を削除しますか？')" in js, 'Calendar 
 check('.calendar-card' in css and '.calendar-card-inner' in css and '.calendar-card-body' in css, 'Calendar participates in Dashboard card layout')
 check('.calendar-weekdays' in css and '.calendar-days' in css and 'grid-template-columns: repeat(7' in css, 'Calendar uses a seven-column grid')
 check('.calendar-day-today' in css and '.calendar-task-entry.task-completed' in css, 'today and completed Tasks have restrained visual states')
-check('@media (max-width: 767.98px)' in css and 'min-width: 500px' in css, 'Calendar has a deliberate narrow-screen fallback')
+check('@media (max-width: 575.98px)' in css and '.calendar-days {' in css and 'min-width: 0' in css, 'Calendar has a deliberate narrow-screen fallback')
 check((re.search(r"const APP_VERSION = '1\.1\.0-dev\.[89][0-9]*';", version) is not None and any(label in version for label in ['V1.1-I / R1','V1.1-I / R2','V1.1-J / R1'])) or ("const APP_VERSION = '1.1.0';" in version and 'RSS Reader Modernization 1.1.0' in version) or "const APP_VERSION = '1.2.0-dev.3';" or "const APP_VERSION = '1.2.0-dev.4';" in version, 'visible Version marker is V1.1-I or later')
 check('test_v11i_calendar_widget.php' in run and 'test_v11i_frontend_runtime.js' in run, 'main regression runner includes V1.1-I checks')
 if not all(checks):

@@ -1,22 +1,58 @@
-/* V1.20.1-C: Calendar event colors + Task priority colors.
+/* V1.33-B: five Calendar event colors + existing Task priority colors.
  * Keep the color cue compact so Calendar text remains readable in every Theme. */
+#main-content {
+    --calendar-event-yellow-border: #946200;
+    --calendar-event-yellow-background: #fff3cd;
+    --calendar-event-yellow-text: #563d00;
+    --calendar-event-purple-border: #7048a8;
+    --calendar-event-purple-background: #f1e8ff;
+    --calendar-event-purple-text: #43256e;
+}
+
+#main-content[data-dashboard-theme="bootstrap-solar"],
+#main-content[data-dashboard-theme="bootstrap-slate"] {
+    --calendar-event-yellow-border: #ffd166;
+    --calendar-event-yellow-background: #433815;
+    --calendar-event-yellow-text: #fff3cd;
+    --calendar-event-purple-border: #c6a7ff;
+    --calendar-event-purple-background: #332548;
+    --calendar-event-purple-text: #f1e8ff;
+}
+
 #main-content .calendar-entry.calendar-event-entry,
 #main-content .calendar-entry.calendar-event-entry.calendar-event-color-blue,
 #main-content .calendar-entry.calendar-task-entry.task-priority-normal {
+    --calendar-entry-accent: var(--bs-primary, #0d6efd);
     border-left: 3px solid var(--bs-primary, #0d6efd);
     background-color: rgba(var(--bs-primary-rgb, 13, 110, 253), 0.10);
 }
 
 #main-content .calendar-entry.calendar-event-entry.calendar-event-color-red,
 #main-content .calendar-entry.calendar-task-entry.task-priority-high {
+    --calendar-entry-accent: var(--bs-danger, #dc3545);
     border-left: 3px solid var(--bs-danger, #dc3545);
     background-color: rgba(var(--bs-danger-rgb, 220, 53, 69), 0.11);
 }
 
 #main-content .calendar-entry.calendar-event-entry.calendar-event-color-green,
 #main-content .calendar-entry.calendar-task-entry.task-priority-low {
+    --calendar-entry-accent: var(--bs-success, #198754);
     border-left: 3px solid var(--bs-success, #198754);
     background-color: rgba(var(--bs-success-rgb, 25, 135, 84), 0.11);
+}
+
+#main-content .calendar-entry.calendar-event-entry.calendar-event-color-yellow {
+    --calendar-entry-accent: var(--calendar-event-yellow-border);
+    border-left: 3px solid var(--calendar-event-yellow-border);
+    background-color: var(--calendar-event-yellow-background);
+    color: var(--calendar-event-yellow-text);
+}
+
+#main-content .calendar-entry.calendar-event-entry.calendar-event-color-purple {
+    --calendar-entry-accent: var(--calendar-event-purple-border);
+    border-left: 3px solid var(--calendar-event-purple-border);
+    background-color: var(--calendar-event-purple-background);
+    color: var(--calendar-event-purple-text);
 }
 
 #main-content .calendar-entry.calendar-task-entry.task-completed {

@@ -262,6 +262,8 @@ function api_calendar_event_update(int $userId, array $input): array
         if (!calendar_update_event($userId, $eventId, $title, $range[0], $range[1], $note)) {
             return api_error('not_found', 'Calendar event was not found.', 404);
         }
+    } catch (CalendarOccurrenceConflictException $exception) {
+        return api_error('calendar_occurrence_conflict', $exception->getMessage(), 409);
     } catch (InvalidArgumentException $exception) {
         return api_validation_error($exception->getMessage());
     } catch (PDOException $exception) {

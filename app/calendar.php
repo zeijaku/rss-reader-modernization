@@ -231,11 +231,21 @@ function calendar_update_event(int $ownerId, int $eventId, string $title, string
         $pdo->beginTransaction();
     }
     try {
-        if (calendar_lock_owned_event($pdo, $ownerId, $eventId) === null) {
+        $lockedEvent = calendar_lock_owned_event($pdo, $ownerId, $eventId);
+        if ($lockedEvent === null) {
             if ($started) {
                 $pdo->rollBack();
             }
             return false;
+        }
+        if (function_exists('calendar_event_exception_assert_series_change_allowed')) {
+            calendar_event_exception_assert_series_change_allowed(
+                $pdo,
+                $ownerId,
+                $lockedEvent,
+                $range[0],
+                $range[1]
+            );
         }
         $stmt = $pdo->prepare(
             'UPDATE ' . db_table_identifier('calendar_event') . ' SET '
