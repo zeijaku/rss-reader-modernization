@@ -1,11 +1,9 @@
 name: V1.34 Release Sync Inspect
 
 on:
-  push:
+  pull_request:
     branches:
-      - release/v1.34.0
-    paths:
-      - '.github/workflows/release-sync-inspect.yml'
+      - main
 
 permissions:
   contents: read
@@ -15,10 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Decode staged payload safely
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Decode and inspect staged payload safely
         shell: bash
         run: |
           set -euo pipefail
+          test -f .release-sync/part-00
+          test -f .release-sync/part-01
           cat .release-sync/part-* | tr -d '\r\n' | base64 --decode > /tmp/v134.tar.gz
           gzip -t /tmp/v134.tar.gz
           tar -tzf /tmp/v134.tar.gz | tee /tmp/archive-list.txt
