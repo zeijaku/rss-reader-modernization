@@ -21,3 +21,4 @@ jobs:
       - name: Apply verified V1.34 release source
         shell: bash
         run: bash .release-sync/apply.sh
+# retry after release-contract correction
