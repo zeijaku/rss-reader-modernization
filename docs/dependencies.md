@@ -10,6 +10,14 @@ Version 1.14.0で配布するFrontend dependencyを、実際のruntime AssetとL
 | Popper | Bootstrap bundle内蔵 | standalone fileなし | `../licenses/popper-MIT.txt` | Bootstrap bundle経由のみ |
 | Font Awesome Free | 6.7.2 | `public/css/all.css`, TTF / WOFF2 | `../licenses/fontawesome-6.7.2-LICENSE.txt` | CSS / Font inventory確認 |
 
+## Backend dependency（V1.34）
+
+| Component | Version | Runtime path | License |
+|---|---:|---|---|
+| PHPMailer | 7.1.1 | `app/mail/vendor/phpmailer/phpmailer/` | LGPL-2.1-only (`LICENSE`を同梱) |
+
+V1.34ではComposer実行を本番要件にせず、SMTP送信に必要なPHPMailerの限定SourceをRepositoryへ同梱します。OAuthTokenProvider interfaceは含みますが、OAuth2認証実装はV1.34の対象外です。
+
 ## Theme inventory
 
 通常Bootstrapを含め、画面から選択できるThemeは8種類です。

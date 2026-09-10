@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-This repository contains vendored third-party frontend assets and one optional runtime-loaded HLS library. The project-level MIT License in `LICENSE` applies to the original RSS Reader application and its modernization work; it does **not** replace or relicense third-party components. Those components remain under their respective upstream licenses.
+This repository contains vendored third-party frontend/backend assets and one optional runtime-loaded HLS library. The project-level MIT License in `LICENSE` applies to the original RSS Reader application and its modernization work; it does **not** replace or relicense third-party components. Those components remain under their respective upstream licenses.
 
 The distributed third-party source files retain their existing license headers where applicable. Copies of the applicable upstream license notices are stored under `licenses/`. The versions and paths below describe the active dependencies used by the current application.
 
@@ -12,6 +12,7 @@ The distributed third-party source files retain their existing license headers w
 | Popper | bundled with Bootstrap JS | MIT | embedded in `public/js/bootstrap.bundle-5.3.8.min.js`; no standalone runtime file | `licenses/popper-MIT.txt` |
 | Font Awesome Free | 6.7.2 | Icons: CC BY 4.0; Fonts: SIL OFL 1.1; Code: MIT | `public/css/all.css`, `public/webfonts/fa-*.ttf`, `public/webfonts/fa-*.woff2` | `licenses/fontawesome-6.7.2-LICENSE.txt` |
 | hls.js | 1.6.16 | Apache-2.0 | HLS Widget only: pinned jsDelivr runtime URL with SRI; loaded lazily by `public/js/camera-video-streaming.js` | `licenses/hls.js-1.6.16-Apache-2.0.txt` |
+| PHPMailer | 7.1.1 | LGPL-2.1-only | `app/mail/vendor/phpmailer/phpmailer/` | `app/mail/vendor/phpmailer/phpmailer/LICENSE` |
 
 ## Upstream references
 
@@ -21,6 +22,7 @@ The distributed third-party source files retain their existing license headers w
 - Popper v2 documentation: https://popper.js.org/docs/v2/
 - Font Awesome Free 6.7.2: https://github.com/FortAwesome/Font-Awesome/tree/6.7.2
 - hls.js 1.6.16: https://github.com/video-dev/hls.js/releases/tag/v1.6.16
+- PHPMailer 7.1.1: https://github.com/PHPMailer/PHPMailer/tree/v7.1.1
 
 ## Removed from runtime distribution in Version 1.14.0
 

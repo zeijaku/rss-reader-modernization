@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.33.1`
-Release tag: `v1.33.1`
+**Stable release:** `RSS Reader Modernization 1.34.0`
+Release tag: `v1.34.0`
+
+Version 1.34.0はMail WidgetへSMTP送信、Plain Text Compose／Reply、Sent保存、送信中表示、送信添付と受信／Sent添付の表示・ダウンロードを追加したReleaseです。SMTPは465 SSL/TLSまたは587 STARTTLSに限定し、IMAP Credential再利用または暗号化した個別SMTP Credentialに対応します。送信添付は最大5件・1件10 MiB・合計20 MiB、受信添付はメタ情報だけを一覧取得し、選択時に最大25 MiBまでオンデマンドで取得します。既存環境ではMigration 026、027を番号順に一度だけ適用します。
 
 Version 1.33.1はRemote Filesの複数Upload対応を追加したPatch Releaseです。既存の単一ファイルUpload API、認証・Owner scope・CSRF・サイズ／内容Validationを維持し、Remote Files画面で複数ファイルを選択して順番にUploadできます。各ファイルの成功／失敗を集計し、部分失敗時も後続ファイルを継続します。DB Migration、公開API仕様、必須Config／Secretの変更はありません。
 
@@ -67,6 +69,8 @@ Version 1.12.0では、RSS HighlightとMail Widget Phase 2を追加しました�
 M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Modernization** もM2-Gまで完了しました。M2-A〜M2-DでFrontend構造、Feed表示、Accessibility、Responsive、UI / UXを整理し、M2-Eで未使用Frontend配布物を削除、M2-FでjQueryを3.7.1、Font Awesome Freeを6.7.2へ更新しています。M2-GではSecure Baseline、M1、M2を横断する最終回帰、配布物・Asset・Documentationの整合確認を行いました。M2時点ではBootstrap / Bootswatch 4.1.3、Drawer 3.2.2、iScroll 5.2.0-snapshotを維持していましたが、Version 1.14.0でBootstrap / Bootswatch 5.3.8へ移行し、DrawerはBootstrap Offcanvasへ置換、旧Frontend dependencyは配布物から整理しました。Navbar、4タブ、Feed CRUD、Stock、Settings、公開API、DB、M1 RSS Engineの契約は維持しています。
 
 ## 現在できること
+
+- Mail WidgetによるIMAP受信／検索／Folder切替、SMTP Plain Text送信／Reply、Sent保存、送信／受信添付
 
 - ユーザー登録 / ログイン / ログアウト
 - Account Settingsからのメールアドレス変更・パスワード変更

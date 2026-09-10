@@ -1,3 +1,23 @@
+## 1.34.0 - 2026-09-11
+
+### Mail Send / Reply / Sent
+- Added bounded SMTP settings to each Mail Account with 465 SSL/TLS or 587 STARTTLS, optional encrypted separate SMTP credentials, From Address/Name, and a connection/authentication test that sends no message.
+- Added Plain Text Compose and Reply, including Reply-To preference, validated threading headers, and a visible send-progress state.
+- Added Sent save modes Auto / Server / RSS Reader. Auto checks immediately, after 1 second, and after a further 2 seconds before bounded IMAP APPEND fallback; SMTP is never resent because Sent storage failed.
+
+### Attachments
+- Added outbound attachments for Compose and Reply: up to 5 files, 10 MiB per file and 20 MiB total, with malformed upload, dangerous executable/script extension, and clearly dangerous MIME rejection.
+- Added received/Sent attachment metadata display and on-demand download. Binary content is not included in the normal message JSON response; download rechecks ownership, folder, part identifier and a 25 MiB receive limit.
+
+### Security / compatibility
+- Preserved Authentication, Session, CSRF, owner scope, IMAP/SMTP SSRF validation and validated-IP pinning, TLS verification, input validation and existing read-only IMAP list/search/body behavior.
+- Bundled the required PHPMailer 7.1.1 subset with its upstream LICENSE. OAuthTokenProvider preparation is present, but OAuth2 authentication itself is not implemented.
+
+### Database / finalization
+- Added additive/idempotent migrations `026_v1_34_mail_smtp.sql` and `027_v1_34_mail_sent_save_mode.sql`. Existing Mail Accounts remain SMTP-disabled until configured; Sent mode defaults to `auto`.
+- Production checkpoint verification completed for SMTP send, Reply, Sent handling, outbound attachments and received/Sent attachment download before formal release.
+- Promoted the V1.34 Mail contract into the current feature suite and finalized application/asset revision at `1.34.0`.
+
 ## 1.33.1 - 2026-09-09
 
 ### Remote Files

@@ -8,6 +8,7 @@
     var registerMailAutoTitle = true;
     var mailNoticeTimer = null;
     var lastMailNoticeMessage = '';
+    var composeMailFiles = [];
 
     function csrfToken() {
         return $('meta[name="csrf-token"]').attr('content') || '';
@@ -21,6 +22,30 @@
             dataType: 'json',
             timeout: timeout || 5000,
             data: $.extend({}, data || {}, {'action': action, 'csrf_token': csrfToken()})
+        });
+    }
+
+    function apiMultipartRequest(action, data, files, timeout) {
+        var formData = new window.FormData();
+        formData.append('action', action);
+        formData.append('csrf_token', csrfToken());
+        $.each(data || {}, function (key, value) {
+            if (value !== undefined && value !== null) {
+                formData.append(key, value);
+            }
+        });
+        (files || []).forEach(function (file) {
+            formData.append('attachments[]', file, file.name);
+        });
+        return $.ajax({
+            url: './api_v1.php',
+            method: 'POST',
+            cache: false,
+            dataType: 'json',
+            timeout: timeout || 120000,
+            data: formData,
+            processData: false,
+            contentType: false
         });
     }
 
@@ -136,7 +161,15 @@
             + '<div class="modal-header mail-modal-header"><h5 class="modal-title" id="registerMailAccountTitle"><i class="fas fa-at" aria-hidden="true"></i> Mail Accountを追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>'
             + '<div class="modal-body"><div class="mb-3"><label class="form-label">表示名</label><input type="text" class="form-control mailAccountDisplayName" maxlength="128" required></div><div class="mb-3"><label class="form-label">IMAP Host</label><input type="text" class="form-control mailAccountHost" maxlength="253" placeholder="imap.example.com" required></div>'
             + '<div class="row g-2"><div class="mb-3 col-6"><label class="form-label">暗号化</label><select class="form-select mailAccountEncryption"><option value="ssl" selected>SSL/TLS</option><option value="starttls">STARTTLS</option></select></div><div class="mb-3 col-6"><label class="form-label">Port</label><input type="number" class="form-control mailAccountPort" min="1" max="65535" value="993" required></div></div>'
-            + '<div class="mb-3"><label class="form-label">User</label><input type="text" class="form-control mailAccountUsername" maxlength="320" autocomplete="username" required></div><div class="mb-3"><label class="form-label">Password / App Password</label><input type="password" class="form-control mailAccountPassword" maxlength="8192" autocomplete="new-password" required></div><small class="form-text text-muted">Passwordは暗号化して保存します。Mail本文はplain textのみ表示し、HTML本文・外部画像・添付・送信機能は使用しません。</small></div>'
+            + '<div class="mb-3"><label class="form-label">User</label><input type="text" class="form-control mailAccountUsername" maxlength="320" autocomplete="username" required></div><div class="mb-3"><label class="form-label">Password / App Password</label><input type="password" class="form-control mailAccountPassword" maxlength="8192" autocomplete="new-password" required></div><small class="form-text text-muted">IMAP Passwordは暗号化して保存します。</small>'
+            + '<hr class="my-3"><div class="form-check mb-3"><input type="checkbox" class="form-check-input mailAccountSmtpEnabled" id="mailAccountSmtpEnabled"><label class="form-check-label" for="mailAccountSmtpEnabled">SMTP送信を有効にする</label></div>'
+            + '<div class="mailAccountSmtpPanel d-none"><div class="mb-3"><label class="form-label">SMTP Host</label><input type="text" class="form-control mailAccountSmtpHost" maxlength="253" placeholder="smtp.example.com"></div>'
+            + '<div class="row g-2"><div class="mb-3 col-6"><label class="form-label">SMTP暗号化</label><select class="form-select mailAccountSmtpEncryption"><option value="ssl">SSL/TLS</option><option value="starttls" selected>STARTTLS</option></select></div><div class="mb-3 col-6"><label class="form-label">SMTP Port</label><input type="number" class="form-control mailAccountSmtpPort" min="1" max="65535" value="587"></div></div>'
+            + '<div class="form-check mb-3"><input type="checkbox" class="form-check-input mailAccountSmtpUseImapCredentials" id="mailAccountSmtpUseImapCredentials" checked><label class="form-check-label" for="mailAccountSmtpUseImapCredentials">IMAPのUser / PasswordをSMTPでも使用する</label></div>'
+            + '<div class="mailAccountSmtpCredentialPanel d-none"><div class="mb-3"><label class="form-label">SMTP User</label><input type="text" class="form-control mailAccountSmtpUsername" maxlength="320" autocomplete="username"></div><div class="mb-3"><label class="form-label">SMTP Password / App Password</label><input type="password" class="form-control mailAccountSmtpPassword" maxlength="8192" autocomplete="new-password"></div></div>'
+            + '<div class="mb-3"><label class="form-label">From Address</label><input type="email" class="form-control mailAccountFromAddress" maxlength="320" autocomplete="email"></div><div class="mb-3"><label class="form-label">From Name</label><input type="text" class="form-control mailAccountFromName" maxlength="128"></div>'
+            + '<div class="mb-3"><label class="form-label">送信済み保存</label><select class="form-select mailAccountSentSaveMode"><option value="auto" selected>自動（推奨）</option><option value="server">サーバー側で保存</option><option value="reader">RSS Reader側で保存</option></select><small class="form-text text-muted">自動では送信後にSentを最大約3秒確認し、見つからない場合だけRSS Reader側で保存します。RSS Reader側で保存を固定すると、サーバーも自動保存する環境では重複する可能性があります。</small></div>'
+            + '<small class="form-text text-muted">SMTP Passwordも暗号化して保存します。保存したSMTP設定はMail送信に使用します。</small></div></div>'
             + '<div class="modal-footer"><button type="button" class="btn btn-outline-secondary me-auto open-mail-account-manage">Account管理</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">保存して接続確認</button></div></form></div></div></div>'
             + '<div class="modal fade" id="manageMailAccounts" tabindex="-1" role="dialog" aria-labelledby="manageMailAccountsTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">'
             + '<div class="modal-header mail-modal-header"><h5 class="modal-title" id="manageMailAccountsTitle"><i class="fas fa-at" aria-hidden="true"></i> Mail Account管理</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>'
@@ -147,8 +180,20 @@
             + '<div class="modal-body"><input type="hidden" class="editMailAccountId"><div class="mb-3"><label class="form-label">表示名</label><input type="text" class="form-control editMailAccountDisplayName" maxlength="128" required></div><div class="mb-3"><label class="form-label">IMAP Host</label><input type="text" class="form-control editMailAccountHost" maxlength="253" required></div>'
             + '<div class="row g-2"><div class="mb-3 col-6"><label class="form-label">暗号化</label><select class="form-select editMailAccountEncryption"><option value="ssl">SSL/TLS</option><option value="starttls">STARTTLS</option></select></div><div class="mb-3 col-6"><label class="form-label">Port</label><input type="number" class="form-control editMailAccountPort" min="1" max="65535" required></div></div>'
             + '<div class="mb-3"><label class="form-label">User</label><input type="text" class="form-control editMailAccountUsername" maxlength="320" autocomplete="username" required></div><div class="mb-3"><label class="form-label">新しいPassword / App Password</label><input type="password" class="form-control editMailAccountPassword" maxlength="8192" autocomplete="new-password"><small class="form-text text-muted">変更しない場合は空欄のまま保存してください。</small></div>'
+            + '<hr class="my-3"><div class="form-check mb-3"><input type="checkbox" class="form-check-input editMailAccountSmtpEnabled" id="editMailAccountSmtpEnabled"><label class="form-check-label" for="editMailAccountSmtpEnabled">SMTP送信を有効にする</label></div>'
+            + '<div class="editMailAccountSmtpPanel d-none"><div class="mb-3"><label class="form-label">SMTP Host</label><input type="text" class="form-control editMailAccountSmtpHost" maxlength="253"></div>'
+            + '<div class="row g-2"><div class="mb-3 col-6"><label class="form-label">SMTP暗号化</label><select class="form-select editMailAccountSmtpEncryption"><option value="ssl">SSL/TLS</option><option value="starttls">STARTTLS</option></select></div><div class="mb-3 col-6"><label class="form-label">SMTP Port</label><input type="number" class="form-control editMailAccountSmtpPort" min="1" max="65535"></div></div>'
+            + '<div class="form-check mb-3"><input type="checkbox" class="form-check-input editMailAccountSmtpUseImapCredentials" id="editMailAccountSmtpUseImapCredentials"><label class="form-check-label" for="editMailAccountSmtpUseImapCredentials">IMAPのUser / PasswordをSMTPでも使用する</label></div>'
+            + '<div class="editMailAccountSmtpCredentialPanel d-none"><div class="mb-3"><label class="form-label">SMTP User</label><input type="text" class="form-control editMailAccountSmtpUsername" maxlength="320" autocomplete="username"></div><div class="mb-3"><label class="form-label">新しいSMTP Password / App Password</label><input type="password" class="form-control editMailAccountSmtpPassword" maxlength="8192" autocomplete="new-password"><small class="form-text text-muted">変更しない場合は空欄のまま保存してください。</small></div></div>'
+            + '<div class="mb-3"><label class="form-label">From Address</label><input type="email" class="form-control editMailAccountFromAddress" maxlength="320" autocomplete="email"></div><div class="mb-3"><label class="form-label">From Name</label><input type="text" class="form-control editMailAccountFromName" maxlength="128"></div>'
+            + '<div class="mb-3"><label class="form-label">送信済み保存</label><select class="form-select editMailAccountSentSaveMode"><option value="auto">自動（推奨）</option><option value="server">サーバー側で保存</option><option value="reader">RSS Reader側で保存</option></select><small class="form-text text-muted">自動では送信後にSentを最大約3秒確認し、見つからない場合だけRSS Reader側で保存します。RSS Reader側で保存を固定すると、サーバーも自動保存する環境では重複する可能性があります。</small></div>'
+            + '<small class="form-text text-muted">SMTPを無効化して保存しても設定値は保持されます。IMAP認証情報を使用へ切り替えた場合、別保存していたSMTP Passwordは削除します。</small></div>'
             + '<div class="form-check"><input type="checkbox" class="form-check-input editMailAccountEnabled" id="editMailAccountEnabled"><label class="form-check-label" for="editMailAccountEnabled">有効にする</label></div><small class="form-text text-muted mt-2">無効化すると、このAccountを使用するMail Widgetの取得は停止します。</small></div>'
-            + '<div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto delete-mail-account">削除</button><button type="button" class="btn btn-outline-info test-mail-account">保存済み設定で接続確認</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">変更</button></div></form></div></div></div>';
+            + '<div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto delete-mail-account">削除</button><button type="button" class="btn btn-outline-info test-mail-account" data-mail-connection="imap">IMAP接続確認</button><button type="button" class="btn btn-outline-info test-mail-smtp-account" data-mail-connection="smtp">SMTP接続確認</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">変更</button></div></form></div></div></div>'
+            + '<div class="modal fade" id="composeMail" tabindex="-1" role="dialog" aria-labelledby="composeMailTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg" role="document"><div class="modal-content"><form id="composeMailForm" autocomplete="off">'
+            + '<div class="modal-header mail-modal-header"><h5 class="modal-title" id="composeMailTitle"><i class="far fa-paper-plane" aria-hidden="true"></i> 新規Mail</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>'
+            + '<div class="modal-body"><input type="hidden" class="composeMailAccountId"><input type="hidden" class="composeMailMode" value="new"><input type="hidden" class="composeMailReplyMessageId"><div class="mb-2 text-muted small composeMailAccountInfo"></div><div class="mb-3"><label class="form-label">To</label><input type="email" class="form-control composeMailTo" maxlength="320" autocomplete="email" required></div><div class="mb-3"><label class="form-label">件名</label><input type="text" class="form-control composeMailSubject" maxlength="255" required></div><div class="mb-3"><label class="form-label">本文</label><textarea class="form-control composeMailBody" rows="9" maxlength="20000" required></textarea></div><div class="mb-3"><label class="form-label">添付ファイル</label><input type="file" class="form-control composeMailAttachments" multiple><small class="form-text text-muted">最大5ファイル / 1ファイル10MB / 合計20MB。実行・スクリプト系ファイルは添付できません。サーバー設定により、これより小さい上限になる場合があります。</small><div class="composeMailAttachmentList mt-2"></div></div><small class="form-text text-muted composeMailScopeNote">V1.34-Fではプレーンテキスト本文＋添付ファイルを送信できます。</small></div>'
+            + '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary compose-mail-submit"><i class="far fa-paper-plane me-1" aria-hidden="true"></i>送信</button></div></form></div></div></div>';
         $('body').append(modalHtml);
 
         var $memoItem = $('.drawer-menu-action[data-drawer-modal-target="#registerMemo"]').first().closest('li');
@@ -225,7 +270,6 @@
             });
     }
 
-
     function findAccount(accountId) {
         var targetId = String(accountId || '');
         var found = null;
@@ -235,6 +279,12 @@
             return true;
         });
         return found;
+    }
+
+    function sentSaveModeLabel(mode) {
+        if (mode === 'server') { return 'Server'; }
+        if (mode === 'reader') { return 'RSS Reader'; }
+        return 'Auto';
     }
 
     function renderAccountManagement() {
@@ -247,6 +297,7 @@
         accountCache.forEach(function (account) {
             var accountId = String(account.mail_account_id || '');
             var enabled = account.enabled === true;
+            var smtpEnabled = account.smtp_enabled === true;
             var $item = $('<div>').addClass('mail-account-manage-item').attr('data-mail-account-id', accountId).appendTo($list);
             var $main = $('<div>').addClass('mail-account-manage-main').appendTo($item);
             var $title = $('<div>').addClass('mail-account-manage-title').appendTo($main);
@@ -255,10 +306,19 @@
                 .addClass('badge ms-2 ' + (enabled ? 'bg-success' : 'bg-secondary'))
                 .text(enabled ? '有効' : '無効')
                 .appendTo($title);
+            if (smtpEnabled) {
+                $('<span>').addClass('badge ms-1 bg-info text-dark').text('SMTP').appendTo($title);
+            }
             $('<div>')
                 .addClass('mail-account-manage-detail text-muted')
-                .text(String(account.username || '') + ' / ' + String(account.host || '') + ':' + String(account.port || ''))
+                .text('IMAP: ' + String(account.username || '') + ' / ' + String(account.host || '') + ':' + String(account.port || ''))
                 .appendTo($main);
+            if (smtpEnabled) {
+                $('<div>')
+                    .addClass('mail-account-manage-detail text-muted')
+                    .text('SMTP: ' + String(account.smtp_host || '') + ':' + String(account.smtp_port || '') + ' / From: ' + String(account.from_address || '') + ' / Sent: ' + sentSaveModeLabel(String(account.sent_save_mode || 'auto')))
+                    .appendTo($main);
+            }
 
             var $actions = $('<div>').addClass('mail-account-manage-actions').appendTo($item);
             $('<button>')
@@ -267,10 +327,16 @@
                 .text('編集')
                 .appendTo($actions);
             $('<button>')
-                .attr({'type': 'button', 'data-mail-account-id': accountId, 'title': enabled ? '接続確認' : '無効なAccountは接続確認できません'})
+                .attr({'type': 'button', 'data-mail-account-id': accountId, 'data-mail-connection': 'imap', 'title': enabled ? 'IMAP接続確認' : '無効なAccountは接続確認できません'})
                 .prop('disabled', !enabled)
                 .addClass('btn btn-sm btn-outline-info test-mail-account-list')
-                .text('接続確認')
+                .text('IMAP確認')
+                .appendTo($actions);
+            $('<button>')
+                .attr({'type': 'button', 'data-mail-account-id': accountId, 'data-mail-connection': 'smtp', 'title': enabled && smtpEnabled ? 'SMTP接続確認' : 'SMTPが無効、またはAccountが無効です'})
+                .prop('disabled', !enabled || !smtpEnabled)
+                .addClass('btn btn-sm btn-outline-info test-mail-account-list')
+                .text('SMTP確認')
                 .appendTo($actions);
         });
     }
@@ -281,6 +347,30 @@
             renderAccountManagement();
             $('#manageMailAccounts').modal('show');
         });
+    }
+
+    function syncRegisterSmtpUi() {
+        var enabled = $('.mailAccountSmtpEnabled').prop('checked');
+        var useImap = $('.mailAccountSmtpUseImapCredentials').prop('checked');
+        $('.mailAccountSmtpPanel').toggleClass('d-none', !enabled);
+        $('.mailAccountSmtpCredentialPanel').toggleClass('d-none', !enabled || useImap);
+        $('.mailAccountSmtpHost, .mailAccountSmtpPort, .mailAccountFromAddress').prop('required', enabled);
+        $('.mailAccountSmtpUsername, .mailAccountSmtpPassword').prop('required', enabled && !useImap);
+    }
+
+    function syncEditSmtpUi() {
+        var enabled = $('.editMailAccountSmtpEnabled').prop('checked');
+        var useImap = $('.editMailAccountSmtpUseImapCredentials').prop('checked');
+        var accountEnabled = $('.editMailAccountEnabled').prop('checked');
+        $('.editMailAccountSmtpPanel').toggleClass('d-none', !enabled);
+        $('.editMailAccountSmtpCredentialPanel').toggleClass('d-none', !enabled || useImap);
+        $('.editMailAccountSmtpHost, .editMailAccountSmtpPort, .editMailAccountFromAddress').prop('required', enabled);
+        $('.editMailAccountSmtpUsername').prop('required', enabled && !useImap);
+        // Existing encrypted SMTP password can be retained on edit, therefore
+        // the password field itself is intentionally never HTML-required.
+        $('.editMailAccountSmtpPassword').prop('required', false);
+        $('.test-mail-smtp-account').prop('disabled', !accountEnabled || !enabled);
+        $('.test-mail-account').prop('disabled', !accountEnabled);
     }
 
     function openEditAccount(accountId) {
@@ -297,8 +387,18 @@
         $('.editMailAccountEncryption').val(String(account.encryption || 'ssl'));
         $('.editMailAccountUsername').val(String(account.username || ''));
         $('.editMailAccountPassword').val('');
+        $('.editMailAccountSmtpEnabled').prop('checked', account.smtp_enabled === true);
+        $('.editMailAccountSmtpHost').val(String(account.smtp_host || ''));
+        $('.editMailAccountSmtpPort').val(String(account.smtp_port || ''));
+        $('.editMailAccountSmtpEncryption').val(String(account.smtp_encryption || 'starttls'));
+        $('.editMailAccountSmtpUseImapCredentials').prop('checked', account.smtp_use_imap_credentials !== false);
+        $('.editMailAccountSmtpUsername').val(String(account.smtp_username || ''));
+        $('.editMailAccountSmtpPassword').val('');
+        $('.editMailAccountFromAddress').val(String(account.from_address || ''));
+        $('.editMailAccountFromName').val(String(account.from_name || ''));
+        $('.editMailAccountSentSaveMode').val(String(account.sent_save_mode || 'auto'));
         $('.editMailAccountEnabled').prop('checked', account.enabled === true);
-        $('.test-mail-account').prop('disabled', account.enabled !== true);
+        syncEditSmtpUi();
         $('#manageMailAccounts').modal('hide');
         $('#editMailAccount').modal('show');
     }
@@ -312,7 +412,17 @@
             'encryption': $('.editMailAccountEncryption').val(),
             'username': $('.editMailAccountUsername').val(),
             'password': $('.editMailAccountPassword').val(),
-            'enabled': $('.editMailAccountEnabled').prop('checked') ? '1' : '0'
+            'enabled': $('.editMailAccountEnabled').prop('checked') ? '1' : '0',
+            'smtp_enabled': $('.editMailAccountSmtpEnabled').prop('checked') ? '1' : '0',
+            'smtp_host': $('.editMailAccountSmtpHost').val(),
+            'smtp_port': $('.editMailAccountSmtpPort').val(),
+            'smtp_encryption': $('.editMailAccountSmtpEncryption').val(),
+            'smtp_use_imap_credentials': $('.editMailAccountSmtpUseImapCredentials').prop('checked') ? '1' : '0',
+            'smtp_username': $('.editMailAccountSmtpUsername').val(),
+            'smtp_password': $('.editMailAccountSmtpPassword').val(),
+            'from_address': $('.editMailAccountFromAddress').val(),
+            'from_name': $('.editMailAccountFromName').val(),
+            'sent_save_mode': $('.editMailAccountSentSaveMode').val()
         };
     }
 
@@ -340,34 +450,46 @@
                 if (!account) { return; }
                 clearMailNotice();
                 updateAccountCache(account);
-                $('.editMailAccountPassword').val('');
-                $('.test-mail-account').prop('disabled', account.enabled !== true);
+                $('.editMailAccountPassword, .editMailAccountSmtpPassword').val('');
+                $('.editMailAccountSmtpEnabled').prop('checked', account.smtp_enabled === true);
+                $('.editMailAccountSmtpUseImapCredentials').prop('checked', account.smtp_use_imap_credentials !== false);
+                $('.editMailAccountSmtpUsername').val(String(account.smtp_username || ''));
+                $('.editMailAccountSentSaveMode').val(String(account.sent_save_mode || 'auto'));
+                syncEditSmtpUi();
                 showNotice('Mail Accountを変更しました', 'success');
             })
             .fail(function (xhr, textStatus) { showNotice(errorMessage(xhr, textStatus), 'danger'); })
-            .always(function () { $button.prop('disabled', false); $('.editMailAccountPassword').val(''); });
+            .always(function () { $button.prop('disabled', false); $('.editMailAccountPassword, .editMailAccountSmtpPassword').val(''); });
     }
 
-    function testAccount(accountId, $button) {
+    function testAccount(accountId, $button, connection) {
         var id = String(accountId || '');
+        var type = connection === 'smtp' ? 'smtp' : 'imap';
+        var label = type === 'smtp' ? 'SMTP' : 'IMAP';
         if (!/^\d+$/.test(id)) { return; }
         var account = findAccount(id);
         if (account && account.enabled !== true) {
             showNotice('無効なMail Accountは接続確認できません', 'info');
             return;
         }
+        if (type === 'smtp' && account && account.smtp_enabled !== true) {
+            showNotice('このMail AccountではSMTPが無効です', 'info');
+            return;
+        }
         if ($button && $button.length) { $button.prop('disabled', true); }
-        apiRequest('mail.account.test', {'mail_account_id': id}, 12000)
+        apiRequest('mail.account.test', {'mail_account_id': id, 'connection': type}, type === 'smtp' ? 20000 : 12000)
             .done(function (response) {
                 var data = responseData(response);
                 clearMailNotice();
-                showNotice(data && data.connected === true ? 'Mail Accountの接続を確認しました' : 'Mail Accountの接続を確認できませんでした', data && data.connected === true ? 'success' : 'danger');
+                showNotice(data && data.connected === true ? label + 'の接続を確認しました' : label + 'の接続を確認できませんでした', data && data.connected === true ? 'success' : 'danger');
             })
-            .fail(function (xhr, textStatus) { showNotice(errorMessage(xhr, textStatus), 'danger'); })
+            .fail(function (xhr, textStatus) { showNotice(label + '接続確認: ' + errorMessage(xhr, textStatus), 'danger'); })
             .always(function () {
                 if ($button && $button.length) {
                     var latest = findAccount(id);
-                    $button.prop('disabled', latest ? latest.enabled !== true : false);
+                    var disabled = latest ? latest.enabled !== true : false;
+                    if (type === 'smtp' && latest) { disabled = disabled || latest.smtp_enabled !== true; }
+                    $button.prop('disabled', disabled);
                 }
             });
     }
@@ -395,6 +517,235 @@
             })
             .fail(function (xhr, textStatus) { showNotice(errorMessage(xhr, textStatus), 'danger'); })
             .always(function () { $button.prop('disabled', false); });
+    }
+
+    function composeAttachmentBytesLabel(bytes) {
+        var value = Number(bytes || 0);
+        if (value >= 1024 * 1024) { return (value / (1024 * 1024)).toFixed(1) + ' MB'; }
+        if (value >= 1024) { return Math.ceil(value / 1024) + ' KB'; }
+        return value + ' B';
+    }
+
+    function composeAttachmentBlocked(fileName) {
+        var name = String(fileName || '').toLowerCase();
+        var dot = name.lastIndexOf('.');
+        if (dot < 0) { return false; }
+        var ext = name.substring(dot + 1);
+        return [
+            'exe', 'com', 'scr', 'dll', 'msi', 'msp', 'cpl', 'hta', 'lnk',
+            'bat', 'cmd', 'ps1', 'psm1', 'psd1', 'vbs', 'vbe', 'wsf', 'wsh',
+            'sh', 'bash', 'zsh', 'fish', 'js', 'mjs', 'cjs', 'jse',
+            'php', 'php3', 'php4', 'php5', 'php7', 'php8', 'phtml', 'phar', 'cgi',
+            'pl', 'py', 'pyw', 'rb', 'jar'
+        ].indexOf(ext) >= 0;
+    }
+
+    function renderComposeAttachments() {
+        var $list = $('.composeMailAttachmentList').empty();
+        var total = 0;
+        composeMailFiles.forEach(function (file, index) {
+            total += Number(file.size || 0);
+            var $row = $('<div>').addClass('d-flex align-items-center justify-content-between border rounded px-2 py-1 mb-1');
+            $('<span>').addClass('small text-break me-2').text(String(file.name || '') + ' (' + composeAttachmentBytesLabel(file.size) + ')').appendTo($row);
+            $('<button>')
+                .attr({'type': 'button', 'data-mail-attachment-index': String(index), 'aria-label': String(file.name || '') + ' を添付から外す'})
+                .addClass('btn btn-sm btn-outline-secondary compose-mail-attachment-remove')
+                .text('削除')
+                .appendTo($row);
+            $row.appendTo($list);
+        });
+        if (composeMailFiles.length > 0) {
+            $('<div>').addClass('small text-muted').text('添付 ' + composeMailFiles.length + '件 / 合計 ' + composeAttachmentBytesLabel(total)).appendTo($list);
+        }
+    }
+
+    function addComposeAttachments(fileList) {
+        var incoming = Array.prototype.slice.call(fileList || []);
+        var total = composeMailFiles.reduce(function (sum, file) { return sum + Number(file.size || 0); }, 0);
+        for (var i = 0; i < incoming.length; i += 1) {
+            var file = incoming[i];
+            if (composeMailFiles.length >= 5) {
+                showNotice('添付ファイルは最大5件です', 'danger');
+                break;
+            }
+            if (Number(file.size || 0) > 10 * 1024 * 1024) {
+                showNotice(String(file.name || 'ファイル') + ' は10MBを超えているため添付できません', 'danger');
+                continue;
+            }
+            if (total + Number(file.size || 0) > 20 * 1024 * 1024) {
+                showNotice('添付ファイルの合計は20MBまでです', 'danger');
+                break;
+            }
+            if (composeAttachmentBlocked(file.name)) {
+                showNotice(String(file.name || 'ファイル') + ' は添付できないファイル形式です', 'danger');
+                continue;
+            }
+            var duplicate = composeMailFiles.some(function (existing) {
+                return String(existing.name) === String(file.name)
+                    && Number(existing.size) === Number(file.size)
+                    && Number(existing.lastModified || 0) === Number(file.lastModified || 0);
+            });
+            if (duplicate) { continue; }
+            composeMailFiles.push(file);
+            total += Number(file.size || 0);
+        }
+        $('.composeMailAttachments').val('');
+        renderComposeAttachments();
+    }
+
+    function resetComposeFields() {
+        composeMailFiles = [];
+        $('.composeMailAccountId, .composeMailReplyMessageId, .composeMailTo, .composeMailSubject, .composeMailBody, .composeMailAttachments').val('');
+        $('.composeMailMode').val('new');
+        $('.composeMailAccountInfo').text('');
+        $('.composeMailScopeNote').text('V1.34-Fではプレーンテキスト本文＋添付ファイルを送信できます。');
+        $('.composeMailAttachmentList').empty();
+        $('#composeMailTitle').html('<i class="far fa-paper-plane" aria-hidden="true"></i> 新規Mail');
+    }
+
+    function openComposeForAccount(accountId, options) {
+        options = options || {};
+        var mode = options.mode === 'reply' ? 'reply' : 'new';
+        if (!/^\d+$/.test(String(accountId || ''))) {
+            showNotice('送信に使用するMail Accountを確認できませんでした', 'danger');
+            return $.Deferred().reject().promise();
+        }
+
+        return loadAccounts(true, accountId).then(function () {
+            var account = findAccount(accountId);
+            if (!account || account.enabled !== true) {
+                showNotice('送信に使用するMail Accountが無効です', 'info');
+                return $.Deferred().reject().promise();
+            }
+            if (account.smtp_enabled !== true) {
+                showNotice('このMail AccountではSMTP送信が無効です', 'info');
+                return $.Deferred().reject().promise();
+            }
+
+            resetComposeFields();
+            $('.composeMailAccountId').val(String(accountId));
+            $('.composeMailMode').val(mode);
+            $('.composeMailAccountInfo').text(
+                'Account: ' + String(account.display_name || 'Mail')
+                + ' / From: ' + String(account.from_name || '')
+                + (String(account.from_name || '') !== '' ? ' <' : '')
+                + String(account.from_address || '')
+                + (String(account.from_name || '') !== '' ? '>' : '')
+            );
+
+            if (mode === 'reply') {
+                $('.composeMailTo').val(String(options.to || ''));
+                $('.composeMailSubject').val(String(options.subject || ''));
+                $('.composeMailReplyMessageId').val(String(options.messageId || ''));
+                $('.composeMailScopeNote').text('元本文は自動引用しません。プレーンテキスト本文に必要なファイルを添付して返信できます。');
+                $('#composeMailTitle').html('<i class="fas fa-reply" aria-hidden="true"></i> Mailへ返信');
+            }
+
+            $('#composeMail').modal('show');
+            window.setTimeout(function () {
+                (mode === 'reply' ? $('.composeMailBody') : $('.composeMailTo')).trigger('focus');
+            }, 150);
+        });
+    }
+
+    function openCompose($trigger) {
+        var $card = $trigger.closest('[data-dashboard-widget-type="mail"]');
+        openComposeForAccount(String($card.attr('data-mail-account-id') || ''), {mode: 'new'});
+    }
+
+    function openReply($trigger) {
+        var $card = $trigger.closest('[data-dashboard-widget-type="mail"]');
+        var widgetId = String($card.attr('data-dashboard-widget-id') || '');
+        var uid = String($trigger.attr('data-mail-uid') || '');
+        var folder = String($trigger.attr('data-mail-folder') || '');
+        if (!/^\d+$/.test(widgetId) || !/^\d+$/.test(uid) || folder === '') {
+            showNotice('返信元のMailを確認できませんでした', 'danger');
+            return;
+        }
+        if (folder !== String($card.attr('data-mail-folder') || '')) {
+            showNotice('Folderが切り替わっています。Mail Widgetを更新してください', 'info');
+            return;
+        }
+        if ($trigger.prop('disabled')) { return; }
+
+        $trigger.prop('disabled', true);
+        apiRequest('mail.message.reply.context', {
+            'widget_id': widgetId,
+            'mail_uid': uid,
+            'mail_folder': folder
+        }, 12000)
+            .done(function (response) {
+                var data = responseData(response);
+                if (!data || !/^\d+$/.test(String(data.mail_account_id || '')) || String(data.to || '') === '') {
+                    showNotice('返信先を確認できませんでした', 'danger');
+                    return;
+                }
+                openComposeForAccount(String(data.mail_account_id), {
+                    mode: 'reply',
+                    to: String(data.to || ''),
+                    subject: String(data.subject || 'Re: 件名なし'),
+                    messageId: String(data.message_id || '')
+                });
+            })
+            .fail(function (xhr, textStatus) {
+                showNotice('Mail返信準備: ' + errorMessage(xhr, textStatus), 'danger');
+            })
+            .always(function () { $trigger.prop('disabled', false); });
+    }
+
+    function sendCompose($form) {
+        var accountId = String($('.composeMailAccountId').val() || '');
+        var $button = $form.find('.compose-mail-submit');
+        if (!/^\d+$/.test(accountId) || $button.prop('disabled')) { return; }
+
+        var originalButtonHtml = $button.html();
+        $button
+            .prop('disabled', true)
+            .attr('aria-busy', 'true')
+            .html('<i class="fas fa-spinner fa-spin me-1" aria-hidden="true"></i>送信中...');
+        var payload = {
+            'mail_account_id': accountId,
+            'to': $('.composeMailTo').val(),
+            'subject': $('.composeMailSubject').val(),
+            'body': $('.composeMailBody').val()
+        };
+        var replyMessageId = String($('.composeMailReplyMessageId').val() || '');
+        if (String($('.composeMailMode').val() || '') === 'reply' && replyMessageId !== '') {
+            payload.in_reply_to = replyMessageId;
+        }
+        var sendRequest = composeMailFiles.length > 0
+            ? apiMultipartRequest('mail.message.send', payload, composeMailFiles, 120000)
+            : apiRequest('mail.message.send', payload, 45000);
+        sendRequest
+            .done(function (response) {
+                var data = responseData(response);
+                if (!data || data.sent !== true) {
+                    showNotice('Mailを送信できませんでした', 'danger');
+                    return;
+                }
+                var wasReply = String($('.composeMailMode').val() || '') === 'reply';
+                var sentSaveStatus = String(data.sent_save_status || 'failed');
+                $('#composeMail').modal('hide');
+                resetComposeFields();
+                if (sentSaveStatus === 'failed') {
+                    showNotice(wasReply ? 'Mailは返信しましたが、送信済みへの保存を確認できませんでした' : 'Mailは送信しましたが、送信済みへの保存を確認できませんでした', 'warning', 8000);
+                    return;
+                }
+                if (sentSaveStatus === 'server_managed') {
+                    showNotice(wasReply ? 'Mailを返信しました（送信済みはサーバー側で保存）' : 'Mailを送信しました（送信済みはサーバー側で保存）', 'success');
+                    return;
+                }
+                showNotice(wasReply ? 'Mailを返信しました' : 'Mailを送信しました', 'success');
+            })
+            .fail(function (xhr, textStatus) {
+                showNotice('Mail送信: ' + errorMessage(xhr, textStatus), 'danger', 8000);
+            })
+            .always(function () {
+                $button
+                    .prop('disabled', false)
+                    .removeAttr('aria-busy')
+                    .html(originalButtonHtml);
+            });
     }
 
     function widthClass(width) {
@@ -430,6 +781,7 @@
         $('<small>').addClass('mail-card-title widget-title-text').attr('id', 'mail-title-' + id).text(String(config.title || widget.account_name || 'Mail')).appendTo($header);
         $('<span>').addClass('badge bg-light text-dark mail-unread-count').attr('aria-label', '未読件数').text('未読 -').appendTo($header);
         $('<div>').addClass('mail-card-actions').append(
+            $('<button>').attr({'type': 'button', 'aria-label': '新規Mailを作成', 'title': '新規Mail'}).addClass('btn btn-link mail-compose-trigger').append($('<i>').addClass('far fa-paper-plane').attr('aria-hidden', 'true')),
             $('<button>').attr({'type': 'button', 'aria-label': 'このMail Widgetを編集'}).addClass('btn btn-link mail-widget-edit-trigger').append($('<i>').addClass('fas fa-edit').attr('aria-hidden', 'true')),
             $('<button>').attr({'type': 'button', 'aria-label': 'このMailを更新'}).addClass('btn btn-link mail-widget-refresh').append($('<i>').addClass('fas fa-sync-alt').attr('aria-hidden', 'true'))
         ).appendTo($header);
@@ -652,6 +1004,86 @@
         renderMessageRows($card, messages);
     }
 
+    function formatAttachmentSize(value) {
+        var bytes = Number(value);
+        if (!isFinite(bytes) || bytes < 0) { return ''; }
+        if (bytes < 1024) { return String(Math.round(bytes)) + ' B'; }
+        if (bytes < 1048576) { return (bytes / 1024).toFixed(bytes < 10240 ? 1 : 0) + ' KB'; }
+        return (bytes / 1048576).toFixed(bytes < 10485760 ? 1 : 0) + ' MB';
+    }
+
+    function appendReceivedAttachments($body, widgetId, uid, folder, attachments) {
+        var items = Array.isArray(attachments) ? attachments : [];
+        if (items.length === 0) { return; }
+
+        var $section = $('<div>').addClass('mail-received-attachments mt-2 pt-2 border-top').appendTo($body);
+        $('<div>').addClass('small font-weight-bold mb-1')
+            .append($('<i>').addClass('fas fa-paperclip mr-1').attr('aria-hidden', 'true'))
+            .append(document.createTextNode('添付ファイル ' + String(items.length) + '件'))
+            .appendTo($section);
+
+        items.forEach(function (attachment) {
+            var partId = String(attachment && attachment.part_id ? attachment.part_id : '');
+            var name = String(attachment && attachment.name ? attachment.name : 'attachment');
+            if (!/^[1-9][0-9]*(?:\.[1-9][0-9]*)*$/.test(partId)) { return; }
+            var $row = $('<div>').addClass('d-flex align-items-center flex-wrap small mb-1').appendTo($section);
+            $('<span>').addClass('mr-2 text-break')
+                .append($('<i>').addClass('far fa-file mr-1').attr('aria-hidden', 'true'))
+                .append(document.createTextNode(name))
+                .appendTo($row);
+            var sizeText = formatAttachmentSize(attachment.size);
+            if (sizeText !== '') { $('<span>').addClass('text-muted mr-2').text(sizeText).appendTo($row); }
+            if (attachment.downloadable === false) {
+                $('<span>').addClass('text-muted').text('サイズ上限のためダウンロード不可').appendTo($row);
+                return;
+            }
+            $('<button>').attr({
+                'type': 'button',
+                'data-mail-uid': uid,
+                'data-mail-folder': folder,
+                'data-mail-part-id': partId,
+                'title': name + ' をダウンロード'
+            }).addClass('btn btn-sm btn-link p-0 mail-attachment-download')
+                .append($('<i>').addClass('fas fa-download mr-1').attr('aria-hidden', 'true'))
+                .append(document.createTextNode('ダウンロード'))
+                .appendTo($row);
+        });
+    }
+
+    function loadReceivedAttachments($body, widgetId, uid, folder) {
+        apiRequest('mail.message.attachments', {'widget_id': widgetId, 'mail_uid': uid, 'mail_folder': folder}, 12000)
+            .done(function (response) {
+                var data = responseData(response);
+                if (data === null) { return; }
+                appendReceivedAttachments($body, widgetId, uid, folder, data.attachments || []);
+            })
+            .fail(function () {
+                $('<div>').addClass('mail-message-body-note text-muted mt-2').text('添付ファイル情報を読み込めませんでした').appendTo($body);
+            });
+    }
+
+    function downloadReceivedAttachment($button) {
+        var $card = $button.closest('[data-dashboard-widget-type="mail"]');
+        var widgetId = String($card.attr('data-dashboard-widget-id') || '');
+        var uid = String($button.attr('data-mail-uid') || '');
+        var folder = String($button.attr('data-mail-folder') || '');
+        var partId = String($button.attr('data-mail-part-id') || '');
+        if (!/^\d+$/.test(widgetId) || !/^\d+$/.test(uid) || folder === '' || !/^[1-9][0-9]*(?:\.[1-9][0-9]*)*$/.test(partId)) { return; }
+
+        var $form = $('<form>').attr({'method': 'post', 'action': 'api_v1.php', 'target': '_blank'}).css('display', 'none');
+        [
+            ['csrf_token', csrfToken()],
+            ['action', 'mail.message.attachment.download'],
+            ['widget_id', widgetId],
+            ['mail_uid', uid],
+            ['mail_folder', folder],
+            ['part_id', partId]
+        ].forEach(function (pair) { $('<input>').attr({'type': 'hidden', 'name': pair[0]}).val(pair[1]).appendTo($form); });
+        $form.appendTo(document.body);
+        $form.trigger('submit');
+        window.setTimeout(function () { $form.remove(); }, 1000);
+    }
+
     function bodyInlineError(xhr, textStatus) {
         if (textStatus === 'timeout') { return '本文の読み込みがタイムアウトしました'; }
         if (xhr && xhr.responseJSON && xhr.responseJSON.error && xhr.responseJSON.error.message) {
@@ -717,6 +1149,14 @@
                         $('<div>').addClass('mail-message-body-note text-muted').text('本文は一部のみ表示しています').appendTo($body);
                     }
                 }
+                loadReceivedAttachments($body, widgetId, uid, folder);
+                $('<div>').addClass('mail-message-body-actions mt-2')
+                    .append($('<button>')
+                        .attr({'type': 'button', 'data-mail-uid': uid, 'data-mail-folder': folder, 'title': 'このMailへ返信'})
+                        .addClass('btn btn-sm btn-outline-primary mail-reply-trigger')
+                        .append($('<i>').addClass('fas fa-reply mr-1').attr('aria-hidden', 'true'))
+                        .append(document.createTextNode('返信')))
+                    .appendTo($body);
             })
             .fail(function (xhr, textStatus) {
                 $body.attr('data-mail-body-state', 'error').empty().append($('<div>').addClass('mail-message-body-error').text(bodyInlineError(xhr, textStatus)));
@@ -868,19 +1308,71 @@
             .fail(function (xhr, textStatus) { showNotice(errorMessage(xhr, textStatus), 'danger'); });
     }
 
-    function saveAccount($form) {
-        var $button = $form.find('button[type="submit"]');
-        $button.prop('disabled', true);
-        var payload = {
+    function accountCreatePayload() {
+        return {
             'display_name': $('.mailAccountDisplayName').val(),
             'host': $('.mailAccountHost').val(),
             'port': $('.mailAccountPort').val(),
             'encryption': $('.mailAccountEncryption').val(),
             'username': $('.mailAccountUsername').val(),
             'password': $('.mailAccountPassword').val(),
-            'enabled': '1'
+            'enabled': '1',
+            'smtp_enabled': $('.mailAccountSmtpEnabled').prop('checked') ? '1' : '0',
+            'smtp_host': $('.mailAccountSmtpHost').val(),
+            'smtp_port': $('.mailAccountSmtpPort').val(),
+            'smtp_encryption': $('.mailAccountSmtpEncryption').val(),
+            'smtp_use_imap_credentials': $('.mailAccountSmtpUseImapCredentials').prop('checked') ? '1' : '0',
+            'smtp_username': $('.mailAccountSmtpUsername').val(),
+            'smtp_password': $('.mailAccountSmtpPassword').val(),
+            'from_address': $('.mailAccountFromAddress').val(),
+            'from_name': $('.mailAccountFromName').val(),
+            'sent_save_mode': $('.mailAccountSentSaveMode').val()
         };
-        apiRequest('mail.account.create', payload, 7000)
+    }
+
+    function verifyNewAccount(account) {
+        var id = String(account.mail_account_id || '');
+        if (!/^\d+$/.test(id)) { return; }
+
+        apiRequest('mail.account.test', {'mail_account_id': id, 'connection': 'imap'}, 12000)
+            .done(function (imapResponse) {
+                var imapData = responseData(imapResponse);
+                if (account.smtp_enabled !== true) {
+                    showNotice(imapData && imapData.connected === true ? 'Mail Accountを保存し、IMAP接続を確認しました' : 'Mail Accountを保存しました', imapData && imapData.connected === true ? 'success' : 'info');
+                    return;
+                }
+
+                apiRequest('mail.account.test', {'mail_account_id': id, 'connection': 'smtp'}, 20000)
+                    .done(function (smtpResponse) {
+                        var smtpData = responseData(smtpResponse);
+                        var bothConnected = imapData && imapData.connected === true && smtpData && smtpData.connected === true;
+                        showNotice(bothConnected ? 'Mail Accountを保存し、IMAP / SMTP接続を確認しました' : 'Mail Accountを保存しました。接続確認結果を確認してください', bothConnected ? 'success' : 'info');
+                    })
+                    .fail(function (xhr, textStatus) {
+                        showNotice('Mail Accountは保存しました。SMTP接続確認: ' + errorMessage(xhr, textStatus), 'danger');
+                    });
+            })
+            .fail(function (xhr, textStatus) {
+                if (account.smtp_enabled !== true) {
+                    showNotice('Mail Accountは保存しました。IMAP接続確認: ' + errorMessage(xhr, textStatus), 'danger');
+                    return;
+                }
+                // IMAPが失敗しても、独立したSMTP設定の確認は続ける。
+                apiRequest('mail.account.test', {'mail_account_id': id, 'connection': 'smtp'}, 20000)
+                    .done(function (smtpResponse) {
+                        var smtpData = responseData(smtpResponse);
+                        showNotice(smtpData && smtpData.connected === true ? 'Mail Accountは保存しました。SMTP接続は確認できましたが、IMAP接続を確認してください' : 'Mail Accountを保存しました。IMAP / SMTP接続を確認してください', 'info');
+                    })
+                    .fail(function () {
+                        showNotice('Mail Accountは保存しました。IMAP / SMTP接続を確認してください', 'danger');
+                    });
+            });
+    }
+
+    function saveAccount($form) {
+        var $button = $form.find('button[type="submit"]');
+        $button.prop('disabled', true);
+        apiRequest('mail.account.create', accountCreatePayload(), 7000)
             .done(function (response) {
                 var data = responseData(response);
                 var account = data && data.account ? data.account : null;
@@ -893,16 +1385,11 @@
                 fillAccountSelects();
                 $('.registerMailAccount').val(String(account.mail_account_id));
                 loadAccounts(false, account.mail_account_id);
-                apiRequest('mail.account.test', {'mail_account_id': String(account.mail_account_id)}, 12000)
-                    .done(function (testResponse) {
-                        var testData = responseData(testResponse);
-                        showNotice(testData && testData.connected === true ? 'Mail Accountを保存し、接続を確認しました' : 'Mail Accountを保存しました', testData && testData.connected === true ? 'success' : 'info');
-                    })
-                    .fail(function (xhr, textStatus) { showNotice('Mail Accountは保存しました。接続確認: ' + errorMessage(xhr, textStatus), 'danger'); });
+                verifyNewAccount(account);
                 $('#registerMailAccount').modal('hide');
             })
             .fail(function (xhr, textStatus) { showNotice(errorMessage(xhr, textStatus), 'danger'); })
-            .always(function () { $button.prop('disabled', false); $('.mailAccountPassword').val(''); });
+            .always(function () { $button.prop('disabled', false); $('.mailAccountPassword, .mailAccountSmtpPassword').val(''); });
     }
 
     function bindEvents() {
@@ -914,6 +1401,9 @@
                 $('.registerMailFolder').val('INBOX');
                 loadAccounts(true).done(function () { suggestRegisterMailTitle(true); });
             })
+            .off('show.bs.modal' + ns, '#registerMailAccount').on('show.bs.modal' + ns, '#registerMailAccount', function () {
+                syncRegisterSmtpUi();
+            })
             .off('change' + ns, '.registerMailAccount').on('change' + ns, '.registerMailAccount', function () {
                 suggestRegisterMailTitle(false);
             })
@@ -924,14 +1414,30 @@
             .off('click' + ns, '.open-mail-account-register-from-manage').on('click' + ns, '.open-mail-account-register-from-manage', function () { $('#manageMailAccounts').modal('hide'); $('#registerMailAccount').modal('show'); })
             .off('click' + ns, '.open-mail-account-manage').on('click' + ns, '.open-mail-account-manage', openAccountManagement)
             .off('click' + ns, '.edit-mail-account').on('click' + ns, '.edit-mail-account', function () { openEditAccount($(this).attr('data-mail-account-id')); })
-            .off('click' + ns, '.test-mail-account-list').on('click' + ns, '.test-mail-account-list', function () { testAccount($(this).attr('data-mail-account-id'), $(this)); })
+            .off('click' + ns, '.test-mail-account-list').on('click' + ns, '.test-mail-account-list', function () { testAccount($(this).attr('data-mail-account-id'), $(this), $(this).attr('data-mail-connection')); })
             .off('change' + ns, '.mailAccountEncryption').on('change' + ns, '.mailAccountEncryption', function () { $('.mailAccountPort').val($(this).val() === 'starttls' ? '143' : '993'); })
             .off('change' + ns, '.editMailAccountEncryption').on('change' + ns, '.editMailAccountEncryption', function () { $('.editMailAccountPort').val($(this).val() === 'starttls' ? '143' : '993'); })
+            .off('change' + ns, '.mailAccountSmtpEncryption').on('change' + ns, '.mailAccountSmtpEncryption', function () { $('.mailAccountSmtpPort').val($(this).val() === 'starttls' ? '587' : '465'); })
+            .off('change' + ns, '.editMailAccountSmtpEncryption').on('change' + ns, '.editMailAccountSmtpEncryption', function () { $('.editMailAccountSmtpPort').val($(this).val() === 'starttls' ? '587' : '465'); })
+            .off('change' + ns, '.mailAccountSmtpEnabled, .mailAccountSmtpUseImapCredentials').on('change' + ns, '.mailAccountSmtpEnabled, .mailAccountSmtpUseImapCredentials', syncRegisterSmtpUi)
+            .off('change' + ns, '.editMailAccountSmtpEnabled, .editMailAccountSmtpUseImapCredentials, .editMailAccountEnabled').on('change' + ns, '.editMailAccountSmtpEnabled, .editMailAccountSmtpUseImapCredentials, .editMailAccountEnabled', syncEditSmtpUi)
             .off('submit' + ns, '#registerMailAccountForm').on('submit' + ns, '#registerMailAccountForm', function (event) { event.preventDefault(); saveAccount($(this)); })
             .off('submit' + ns, '#editMailAccountForm').on('submit' + ns, '#editMailAccountForm', function (event) { event.preventDefault(); saveAccountChanges($(this)); })
-            .off('click' + ns, '.test-mail-account').on('click' + ns, '.test-mail-account', function () { testAccount($('.editMailAccountId').val(), $(this)); })
+            .off('click' + ns, '.test-mail-account').on('click' + ns, '.test-mail-account', function () { testAccount($('.editMailAccountId').val(), $(this), 'imap'); })
+            .off('click' + ns, '.test-mail-smtp-account').on('click' + ns, '.test-mail-smtp-account', function () { testAccount($('.editMailAccountId').val(), $(this), 'smtp'); })
             .off('click' + ns, '.delete-mail-account').on('click' + ns, '.delete-mail-account', deleteAccount)
             .off('submit' + ns, '#registerMailWidgetForm').on('submit' + ns, '#registerMailWidgetForm', function (event) { event.preventDefault(); saveWidget($(this), false); })
+            .off('click' + ns, '.mail-compose-trigger').on('click' + ns, '.mail-compose-trigger', function () { openCompose($(this)); })
+            .off('click' + ns, '.mail-reply-trigger').on('click' + ns, '.mail-reply-trigger', function () { openReply($(this)); })
+            .off('change' + ns, '.composeMailAttachments').on('change' + ns, '.composeMailAttachments', function () { addComposeAttachments(this.files); })
+            .off('click' + ns, '.compose-mail-attachment-remove').on('click' + ns, '.compose-mail-attachment-remove', function () {
+                var index = Number($(this).attr('data-mail-attachment-index'));
+                if (Number.isInteger(index) && index >= 0 && index < composeMailFiles.length) {
+                    composeMailFiles.splice(index, 1);
+                    renderComposeAttachments();
+                }
+            })
+            .off('submit' + ns, '#composeMailForm').on('submit' + ns, '#composeMailForm', function (event) { event.preventDefault(); sendCompose($(this)); })
             .off('click' + ns, '.mail-widget-edit-trigger').on('click' + ns, '.mail-widget-edit-trigger', function () { editWidget($(this)); })
             .off('submit' + ns, '#changeMailWidgetForm').on('submit' + ns, '#changeMailWidgetForm', function (event) { event.preventDefault(); saveWidget($(this), true); })
             .off('change' + ns, '.changeMailAccount').on('change' + ns, '.changeMailAccount', function () { $('.changeMailFolder').val('INBOX'); })
@@ -962,6 +1468,8 @@
                 fetchWidget($card.attr('data-dashboard-widget-id'), true);
             })
             .off('click' + ns, '.mail-message-toggle').on('click' + ns, '.mail-message-toggle', function () { loadMessageBody($(this)); });
+        $(document)
+            .off('click' + ns, '.mail-attachment-download').on('click' + ns, '.mail-attachment-download', function () { downloadReceivedAttachment($(this)); });
     }
 
     function init() {
