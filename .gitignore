@@ -87,6 +87,8 @@ __pycache__/
 !/database/migrations/023_v1_32_auth_session.sql
 !/database/migrations/024_v1_32_auth_audit_log.sql
 !/database/migrations/025_v1_33_calendar_event_exception.sql
+!/database/migrations/026_v1_34_mail_smtp.sql
+!/database/migrations/027_v1_34_mail_sent_save_mode.sql
 !/database/audit/v1_1_c_preflight.sql
 !/database/audit/v1_1_c_postflight.sql
 !/database/audit/v1_1_h_preflight.sql
