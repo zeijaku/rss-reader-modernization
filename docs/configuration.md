@@ -109,7 +109,7 @@ Mail WidgetのIMAP受信とSMTP送信は、保存CredentialをServer側の専用
 
 Mail Account保存後にCredential keyを変更・紛失すると、既存IMAP Credentialと個別SMTP Credentialを復号できなくなります。Keyを変更した場合は対象AccountのCredential再入力が必要です。
 
-送信添付のApplication上限は最大5件、1件10 MiB、合計20 MiBです。ただしHosting側の`upload_max_filesize`、`post_max_size`、Web Server request-body limit、Mail provider側のmessage-size policyの方が小さい場合は、そちらが実質上限になります。受信添付は本文JSONへ含めず、選択されたpartだけを最大25 MiBまでオンデマンド取得します。
+送信添付のApplication上限は最大5件、1件10 MiB、合計20 MiBです。ただしHosting側の`upload_max_filesize`、`post_max_size`、Web Server request-body limit、Mail provider側のmessage-size policyの方が小さい場合は、そちらが実質上限になります。受信メール／Sentメールの添付ファイル表示・ダウンロードはV1.34対象外です。
 
 ## X API Widget（上級者向け / Optional）
 

@@ -7,7 +7,7 @@
 
 ### Attachments
 - Added outbound attachments for Compose and Reply: up to 5 files, 10 MiB per file and 20 MiB total, with malformed upload, dangerous executable/script extension, and clearly dangerous MIME rejection.
-- Added received/Sent attachment metadata display and on-demand download. Binary content is not included in the normal message JSON response; download rechecks ownership, folder, part identifier and a 25 MiB receive limit.
+- Received/Sent attachment display and download are intentionally deferred beyond V1.34.
 
 ### Security / compatibility
 - Preserved Authentication, Session, CSRF, owner scope, IMAP/SMTP SSRF validation and validated-IP pinning, TLS verification, input validation and existing read-only IMAP list/search/body behavior.
@@ -15,7 +15,7 @@
 
 ### Database / finalization
 - Added additive/idempotent migrations `026_v1_34_mail_smtp.sql` and `027_v1_34_mail_sent_save_mode.sql`. Existing Mail Accounts remain SMTP-disabled until configured; Sent mode defaults to `auto`.
-- Production checkpoint verification completed for SMTP send, Reply, Sent handling, outbound attachments and received/Sent attachment download before formal release.
+- Production checkpoint verification completed for SMTP send, Reply, Sent handling and outbound attachments before formal release.
 - Promoted the V1.34 Mail contract into the current feature suite and finalized application/asset revision at `1.34.0`.
 
 ## 1.33.1 - 2026-09-09

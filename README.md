@@ -5,7 +5,7 @@
 **Stable release:** `RSS Reader Modernization 1.34.0`
 Release tag: `v1.34.0`
 
-Version 1.34.0はMail WidgetへSMTP送信、Plain Text Compose／Reply、Sent保存、送信中表示、送信添付と受信／Sent添付の表示・ダウンロードを追加したReleaseです。SMTPは465 SSL/TLSまたは587 STARTTLSに限定し、IMAP Credential再利用または暗号化した個別SMTP Credentialに対応します。送信添付は最大5件・1件10 MiB・合計20 MiB、受信添付はメタ情報だけを一覧取得し、選択時に最大25 MiBまでオンデマンドで取得します。既存環境ではMigration 026、027を番号順に一度だけ適用します。
+Version 1.34.0はMail WidgetへSMTP送信、Plain Text Compose／Reply、Sent保存、送信中表示、複数添付送信を追加したReleaseです。SMTPは465 SSL/TLSまたは587 STARTTLSに限定し、IMAP Credential再利用または暗号化した個別SMTP Credentialに対応します。送信添付は最大5件・1件10 MiB・合計20 MiBです。既存環境ではMigration 026、027を番号順に一度だけ適用します。受信メール／Sentメールの添付ファイル表示・ダウンロードはV1.34対象外で、今後の機能として扱います。
 
 Version 1.33.1はRemote Filesの複数Upload対応を追加したPatch Releaseです。既存の単一ファイルUpload API、認証・Owner scope・CSRF・サイズ／内容Validationを維持し、Remote Files画面で複数ファイルを選択して順番にUploadできます。各ファイルの成功／失敗を集計し、部分失敗時も後続ファイルを継続します。DB Migration、公開API仕様、必須Config／Secretの変更はありません。
 
@@ -70,7 +70,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 
 ## 現在できること
 
-- Mail WidgetによるIMAP受信／検索／Folder切替、SMTP Plain Text送信／Reply、Sent保存、送信／受信添付
+- Mail WidgetによるIMAP受信／検索／Folder切替、SMTP Plain Text送信／Reply、Sent保存、複数添付送信
 
 - ユーザー登録 / ログイン / ログアウト
 - Account Settingsからのメールアドレス変更・パスワード変更

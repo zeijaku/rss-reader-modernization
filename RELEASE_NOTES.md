@@ -13,7 +13,6 @@ V1.34 extends the existing read-only IMAP Mail Widget into a bounded plain-text 
 - Auto Sent mode checks immediately, after 1 second and after a further 2 seconds before performing IMAP APPEND when no server-saved copy is found.
 - Send progress indicator while SMTP/Sent handling is active.
 - Outbound attachments: up to 5 files, 10 MiB per file, 20 MiB total, subject to lower PHP/Web-server limits.
-- Received/Sent attachment metadata display and on-demand download from the Mail Widget.
 - Bundled PHPMailer 7.1.1 subset required by the SMTP implementation, including OAuthTokenProvider interface preparation; OAuth2 authentication itself is not implemented.
 
 ## Database
@@ -29,8 +28,6 @@ Both migrations are additive and idempotent by column-existence checks. Migratio
 - SMTP TLS peer/hostname verification remains enabled.
 - Raw passwords, generated MIME and internal Message-ID values are not exposed through the Mail JSON API.
 - SMTP success is never automatically retried because Sent verification/storage failed.
-- Received attachment metadata does not include binary content; the selected part is downloaded only on demand.
-- Received attachment access rechecks Widget ownership, bound Mail Account ownership, current folder, safe part identifier and bounded file size.
 - Outbound attachments reject malformed uploads, dangerous executable/script extensions and clearly dangerous MIME types.
 
 ## Intentionally not included
@@ -39,10 +36,11 @@ Both migrations are additive and idempotent by column-existence checks. Migratio
 - Reply All / Forward.
 - OAuth2 authentication implementation.
 - Automatic re-attachment of files from the original received message on Reply.
+- Received/Sent attachment display and download.
 - Application database storage of sent message bodies.
 
 ## Verification limits
-- Production checkpoint verification confirmed SMTP send, Reply, Sent handling, outbound attachments, and received/Sent attachment display/download on the deployed hosting environment before formal release.
+- Production checkpoint verification confirmed SMTP send, Reply, Sent handling and outbound attachments on the deployed hosting environment before formal release.
 - The V1.34-G focused integration gate completed 605 PASS / 0 FAIL, plus PHP/JavaScript syntax, secret-scan, deterministic-package, and clean-room verification.
 - The formal GitHub Release workflow reruns the repository current regression and current feature contracts on PHP 8.1 and PHP 8.4 before publishing the immutable tag.
 - Provider-specific SMTP/IMAP policies remain external. Auto Sent can duplicate if a provider creates its own Sent copy only after the bounded approximately 3-second verification window; Server mode is available for such providers. Attachment delivery also remains subject to Hosting/PHP/provider size and content policies.

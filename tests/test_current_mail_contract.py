@@ -2,10 +2,8 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 
-
 def read(path):
     return (root / path).read_text(encoding='utf-8')
-
 
 # Durable Mail contract: keep this current-following test version-neutral.
 assert (root / 'database/migrations/026_v1_34_mail_smtp.sql').is_file()
@@ -17,11 +15,7 @@ assert '026_v1_34_mail_smtp.sql' in installation
 assert '027_v1_34_mail_sent_save_mode.sql' in installation
 
 api = read('public/api_v1.php')
-assert all(action in api for action in (
-    'mail.message.send',
-    'mail.message.attachments',
-    'mail.message.attachment.download',
-))
+assert 'mail.message.send' in api
 
 smtp = read('app/mail/mail_smtp_client.php')
 assert 'PHPMailer' in smtp
@@ -38,11 +32,11 @@ assert 'return 5;' in attachment
 assert 'return 10 * 1024 * 1024;' in attachment
 assert 'return 20 * 1024 * 1024;' in attachment
 
+# Received/Sent attachment display/download is deferred beyond V1.34.
 received = read('app/mail/mail_received_attachment.php')
-assert 'MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES = 26214400' in received
-assert 'MAIL_RECEIVED_ATTACHMENT_MAX_TRANSFER_BYTES = 83886080' in received
-assert "'size' => $displaySize" in received
-assert 'strlen($content) > MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES' in received
+assert "'data' => ['attachments' => []]" in received
+assert "api_error('unknown_action'" in received
+assert 'MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES' not in received
 
 js = read('public/js/mail-widget.js')
 assert '送信中...' in js
