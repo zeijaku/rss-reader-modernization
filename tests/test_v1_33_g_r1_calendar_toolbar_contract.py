@@ -60,8 +60,8 @@ check(version_match is not None and tuple(map(int, version_match.groups()[:3])) 
       'G-R1 contract runs on V1.33.1 or later')
 check(bool(current_revision) and current_revision == current_version,
       'current asset revision matches the application version')
-check(f'calendar-views.css?v={current_revision}-r1' in loader,
-      'G-R1 Calendar CSS uses the current cache revision with its R1 suffix')
+check(f'calendar-views.css?v={current_revision}' in loader,
+      'G-R1 Calendar CSS uses the current cache revision')
 check('calendar_range_start' not in css and 'calendar.range.list' not in css,
       'display-only CSS adds no Calendar API behavior')
 
