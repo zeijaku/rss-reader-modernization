@@ -26,6 +26,11 @@ modal_rule = re.compile(
     re.S,
 )
 matched_mobile_rule = any(modal_rule.search(block) for block in mobile_blocks)
+fix_block = re.search(
+    r'/\* V1\.34\.2-A:.*?@media\s*\(max-width:\s*575\.98px\).*?\n\}',
+    utility_css,
+    re.S,
+)
 
 check(matched_mobile_rule, 'smartphone CSS maps the shared modal footer background to the active modal background')
 check(
@@ -33,11 +38,7 @@ check(
     'the V1.34.2-A modal footer override is defined exactly once',
 )
 check(
-    '!important' not in re.search(
-        r'/\* V1\.34\.2-A:.*?@media\s*\(max-width:\s*575\.98px\).*?\n\}',
-        utility_css,
-        re.S,
-    ).group(0),
+    fix_block is not None and '!important' not in fix_block.group(0),
     'the modal fix does not force precedence with !important',
 )
 check(
@@ -61,8 +62,7 @@ check(
     'Dashboard keeps multiple Bootstrap modal instances covered by the shared .modal selector',
 )
 check(
-    '<div class="modal-content">\n      <form' in modals_php
-    or '<div class="modal-content">\n        <form' in modals_php,
+    re.search(r'<div class="modal-content">\s*<form\b', modals_php) is not None,
     'form-wrapped Dashboard modal structure remains present',
 )
 check(
