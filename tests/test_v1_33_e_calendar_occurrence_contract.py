@@ -2,6 +2,8 @@
 from pathlib import Path
 import re
 
+from version_contract_utils import read_app_version_constants
+
 ROOT = Path(__file__).resolve().parents[1]
 js = (ROOT / 'public/js/calendar-occurrence.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/calendar-occurrence.css').read_text(encoding='utf-8')
@@ -10,7 +12,10 @@ polish = (ROOT / 'public/js/calendar-polish.js').read_text(encoding='utf-8')
 loader = (ROOT / 'public/js/calendar.js').read_text(encoding='utf-8')
 domain = (ROOT / 'app/calendar_recurrence.php').read_text(encoding='utf-8')
 exception = (ROOT / 'app/calendar_exception.php').read_text(encoding='utf-8')
-version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
+version_constants = read_app_version_constants(ROOT)
+current_version = version_constants.get('APP_VERSION', '')
+current_revision = version_constants.get('APP_ASSET_REVISION', '')
+version_match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)(?:-(?:rc\d+|dev\.\d+))?', current_version)
 modals = [
     (ROOT / 'app/view/dashboard_modals.php').read_text(encoding='utf-8'),
     (ROOT / 'public/stock.php').read_text(encoding='utf-8'),
@@ -37,10 +42,10 @@ for modal in modals:
     check('changeCalendarOccurrenceOriginalStartDate' in modal and 'changeCalendarOccurrenceRevision' in modal, 'edit modal keeps stable occurrence identity and revision')
 
 check(loader.index('calendar-occurrence.js') < loader.index('calendar-recurrence.js'), 'occurrence handler loads before series submit handler')
-check('calendar-occurrence.css?v=1.33.1' in loader, 'formal V1.33 release keeps the E CSS contract')
-check('calendar-occurrence.js?v=1.33.1' in loader, 'formal V1.33 release keeps the E JavaScript contract')
-check("const APP_VERSION = '1.33.1';" in version, 'formal V1.33 release keeps the E version contract')
-check("const APP_ASSET_REVISION = '1.33.1';" in version, 'formal V1.33 release keeps the E cache contract')
+check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1), 'E contract runs on V1.33.1 or later')
+check(bool(current_revision) and current_revision == current_version, 'current asset revision matches the application version')
+check(f'calendar-occurrence.css?v={current_revision}' in loader, 'occurrence CSS uses the current cache revision')
+check(f'calendar-occurrence.js?v={current_revision}' in loader, 'occurrence JavaScript uses the current cache revision')
 
 for field in ('source_title', 'source_note', 'source_color', 'source_all_day', 'source_start_time', 'source_end_time', 'source_url'):
     check(f"'{field}'" in domain and f"'{field}'" in exception, f'{field} survives base and override responses')

@@ -127,3 +127,75 @@ function mail_crypto_decrypt(int $ownerId, int $accountId, string $envelope): st
         }
     }
 }
+
+// V1.34-B keeps the existing IMAP credential format untouched and gives an
+// independently stored SMTP password a separate AEAD associated-data domain.
+function mail_crypto_smtp_aad(int $ownerId, int $accountId): string
+{
+    if ($ownerId <= 0 || $accountId <= 0) {
+        throw new AppMailCredentialException('Mail SMTP credential context is invalid.');
+    }
+    return 'rss-reader:mail-account-smtp:' . $ownerId . ':' . $accountId . ':v1';
+}
+
+function mail_crypto_encrypt_smtp(int $ownerId, int $accountId, string $plaintext): string
+{
+    if ($plaintext === '' || strlen($plaintext) > 8192 || str_contains($plaintext, "\0")) {
+        throw new AppMailCredentialException('Mail SMTP credential value is invalid.');
+    }
+
+    $key = mail_crypto_key();
+    try {
+        $nonce = random_bytes(SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES);
+        $ciphertext = sodium_crypto_aead_xchacha20poly1305_ietf_encrypt(
+            $plaintext,
+            mail_crypto_smtp_aad($ownerId, $accountId),
+            $nonce,
+            $key
+        );
+        return 'v1.' . mail_crypto_key_id() . '.'
+            . mail_crypto_base64url_encode($nonce) . '.'
+            . mail_crypto_base64url_encode($ciphertext);
+    } finally {
+        if (function_exists('sodium_memzero')) {
+            sodium_memzero($key);
+        }
+    }
+}
+
+function mail_crypto_decrypt_smtp(int $ownerId, int $accountId, string $envelope): string
+{
+    $parts = explode('.', $envelope);
+    if (count($parts) !== 4 || $parts[0] !== 'v1') {
+        throw new AppMailCredentialException('Mail SMTP credential envelope is invalid.');
+    }
+
+    $expectedKeyId = mail_crypto_key_id();
+    if (!hash_equals($expectedKeyId, $parts[1])) {
+        throw new AppMailCredentialException('Mail SMTP credential key ID does not match.');
+    }
+
+    $nonce = mail_crypto_base64url_decode($parts[2]);
+    $ciphertext = mail_crypto_base64url_decode($parts[3]);
+    if (!is_string($nonce) || strlen($nonce) !== SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES || !is_string($ciphertext)) {
+        throw new AppMailCredentialException('Mail SMTP credential envelope is invalid.');
+    }
+
+    $key = mail_crypto_key();
+    try {
+        $plaintext = sodium_crypto_aead_xchacha20poly1305_ietf_decrypt(
+            $ciphertext,
+            mail_crypto_smtp_aad($ownerId, $accountId),
+            $nonce,
+            $key
+        );
+        if (!is_string($plaintext) || $plaintext === '' || strlen($plaintext) > 8192 || str_contains($plaintext, "\0")) {
+            throw new AppMailCredentialException('Mail SMTP credential could not be decrypted.');
+        }
+        return $plaintext;
+    } finally {
+        if (function_exists('sodium_memzero')) {
+            sodium_memzero($key);
+        }
+    }
+}

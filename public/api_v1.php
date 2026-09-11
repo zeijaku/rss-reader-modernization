@@ -37,9 +37,11 @@ require_once dirname(__DIR__) . '/app/mail/mail_crypto.php';
 require_once dirname(__DIR__) . '/app/mail/mail_target.php';
 require_once dirname(__DIR__) . '/app/mail/mail_account.php';
 require_once dirname(__DIR__) . '/app/mail/mail_client.php';
+require_once dirname(__DIR__) . '/app/mail/mail_message.php';
 require_once dirname(__DIR__) . '/app/mail/mail_service.php';
 require_once dirname(__DIR__) . '/app/mail/mail_api.php';
 require_once dirname(__DIR__) . '/app/mail/mail_widget.php';
+require_once dirname(__DIR__) . '/app/mail/mail_received_attachment.php';
 
 function api_emit(array $response): never
 {
@@ -70,6 +72,17 @@ function api_mail_account_dispatch(string $action, int $userId, array $input): a
         'mail.account.update' => api_mail_account_update($userId, $input),
         'mail.account.delete' => api_mail_account_delete($userId, $input),
         'mail.account.test' => api_mail_account_test($userId, $input),
+        default => api_error('unknown_action', 'Unknown API action.', 400),
+    };
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_mail_message_dispatch(string $action, int $userId, array $input, array $files = []): array
+{
+    return match ($action) {
+        'mail.message.send' => api_mail_message_send($userId, $input, $files),
+        'mail.message.reply.context' => api_mail_message_reply_context($userId, $input),
+        'mail.message.attachments' => api_mail_received_attachment_list($userId, $input),
         default => api_error('unknown_action', 'Unknown API action.', 400),
     };
 }
@@ -121,14 +134,19 @@ if (!app_csrf_is_valid($csrfToken)) {
     api_emit(api_error('csrf_invalid', 'CSRF validation failed.', 403));
 }
 
-$contentLength = api_request_content_length();
-if ($contentLength !== null && $contentLength > APP_API_MAX_REQUEST_BYTES) {
-    api_emit(api_error('request_too_large', 'Request body is too large.', 413));
-}
-
 $action = isset($_POST['action']) && is_string($_POST['action']) ? trim($_POST['action']) : '';
 if ($action === '' || strlen($action) > 64 || preg_match('/^[a-z]+(?:\.[a-z]+)+$/', $action) !== 1) {
     api_emit(api_error('invalid_request', 'A valid action is required.', 400));
+}
+
+$contentLength = api_request_content_length();
+$contentType = isset($_SERVER['CONTENT_TYPE']) && is_string($_SERVER['CONTENT_TYPE'])
+    ? strtolower(trim($_SERVER['CONTENT_TYPE']))
+    : '';
+$mailMultipart = $action === 'mail.message.send' && str_starts_with($contentType, 'multipart/form-data');
+$maxRequestBytes = $mailMultipart ? mail_attachment_http_request_max_bytes() : APP_API_MAX_REQUEST_BYTES;
+if ($contentLength !== null && $contentLength > $maxRequestBytes) {
+    api_emit(api_error('request_too_large', 'Request body is too large.', 413));
 }
 
 try {
@@ -146,6 +164,12 @@ try {
     }
     if (str_starts_with($action, 'mail.account.')) {
         api_emit(api_mail_account_dispatch($action, $userId, $_POST));
+    }
+    if (str_starts_with($action, 'mail.message.')) {
+        if ($action === 'mail.message.attachment.download') {
+            mail_received_attachment_download_emit($userId, $_POST);
+        }
+        api_emit(api_mail_message_dispatch($action, $userId, $_POST, $_FILES));
     }
     if (str_starts_with($action, 'mail.widget.')) {
         api_emit(api_mail_widget_dispatch($action, $userId, $_POST));

@@ -95,8 +95,13 @@ for source, label in ((core, 'month'), (polish, 'upcoming')):
     check('data-calendar-occurrence-revision' in source, f'{label} DOM carries occurrence revision')
     check('data-calendar-exception-id' in source and 'data-calendar-exception-kind' in source, f'{label} DOM carries exception metadata')
     check(not re.search(r'\.innerHTML\s*=', source), f'{label} renderer adds no HTML assignment sink')
-check("const APP_VERSION = '1.33.1';" in version, 'formal V1.33 release keeps the D contract')
-check("const APP_ASSET_REVISION = '1.33.1';" in version, 'formal V1.33 cache revision keeps the D contract')
+version_match = re.search(r"const APP_VERSION = '([0-9]+\.[0-9]+\.[0-9]+)';", version)
+asset_match = re.search(r"const APP_ASSET_REVISION = '([0-9]+\.[0-9]+\.[0-9]+)';", version)
+version_tuple = tuple(int(part) for part in version_match.group(1).split('.')) if version_match else ()
+check(version_match is not None and version_tuple >= (1, 33, 1),
+      'formal release version keeps the V1.33-D contract')
+check(asset_match is not None and version_match is not None and asset_match.group(1) == version_match.group(1),
+      'formal release cache revision keeps the V1.33-D contract')
 
 print(f'RESULT: PASS {passed} / FAIL {failed} / SKIP 0')
 raise SystemExit(0 if failed == 0 else 1)

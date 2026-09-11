@@ -120,3 +120,64 @@ function mail_validate_target(
         'error_code' => '',
     ];
 }
+
+/**
+ * Validate an SMTP submission target. Only the two encrypted submission
+ * transports used by V1.34 are accepted: implicit TLS/465 and STARTTLS/587.
+ * Every resolved address must be public before PHPMailer receives the target.
+ *
+ * @param callable(string):list<string>|null $resolver
+ * @return array{ok:bool,host:string,port:int,encryption:string,ips:list<string>,error_code:string}
+ */
+function mail_validate_smtp_target(
+    mixed $hostValue,
+    mixed $portValue,
+    mixed $encryptionValue,
+    ?callable $resolver = null
+): array {
+    $host = mail_normalize_host($hostValue);
+    $port = filter_var($portValue, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 65535]]);
+    $encryption = is_string($encryptionValue) ? strtolower(trim($encryptionValue)) : '';
+
+    if ($host === null) {
+        return ['ok' => false, 'host' => '', 'port' => 0, 'encryption' => '', 'ips' => [], 'error_code' => 'invalid_smtp_host'];
+    }
+    if (!(($encryption === 'ssl' && $port === 465) || ($encryption === 'starttls' && $port === 587))) {
+        return ['ok' => false, 'host' => $host, 'port' => is_int($port) ? $port : 0, 'encryption' => $encryption, 'ips' => [], 'error_code' => 'invalid_smtp_transport'];
+    }
+
+    if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
+        $ips = [$host];
+    } else {
+        $resolve = $resolver ?? 'app_resolve_host_ips';
+        $ips = $resolve($host);
+    }
+    if (!is_array($ips) || $ips === []) {
+        return ['ok' => false, 'host' => $host, 'port' => $port, 'encryption' => $encryption, 'ips' => [], 'error_code' => 'smtp_dns_failed'];
+    }
+
+    $clean = [];
+    foreach ($ips as $ip) {
+        if (!is_string($ip) || filter_var($ip, FILTER_VALIDATE_IP) === false) {
+            continue;
+        }
+        if (!app_is_public_ip($ip)) {
+            return ['ok' => false, 'host' => $host, 'port' => $port, 'encryption' => $encryption, 'ips' => [], 'error_code' => 'smtp_non_public_address'];
+        }
+        $clean[] = $ip;
+    }
+
+    $clean = array_values(array_unique($clean));
+    if ($clean === []) {
+        return ['ok' => false, 'host' => $host, 'port' => $port, 'encryption' => $encryption, 'ips' => [], 'error_code' => 'smtp_dns_failed'];
+    }
+
+    return [
+        'ok' => true,
+        'host' => $host,
+        'port' => $port,
+        'encryption' => $encryption,
+        'ips' => $clean,
+        'error_code' => '',
+    ];
+}

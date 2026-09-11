@@ -96,6 +96,21 @@ TimeoutやSize上限を緩めても、private address拒否、redirect再検証�
 Cache / Lock / Fetch stateは `var/cache/feed/` に置きます。このPathはRuntimeで固定され、`public/` 外です。
 
 
+## Mail Widget（V1.34）
+
+Mail WidgetのIMAP受信とSMTP送信は、保存CredentialをServer側の専用鍵で暗号化して扱います。SMTPは465 SSL/TLSまたは587 STARTTLSだけを許可し、TLS peer／hostname検証と既存のpublic-address-only target validationを維持します。
+
+| Key | Default | Runtime制約 / 補足 |
+|---|---:|---|
+| `APP_MAIL_CREDENTIAL_KEY_ID` | `primary` | Mail Credential envelopeのKey ID |
+| `APP_MAIL_CREDENTIAL_KEY_B64` | 空 | 必須。32-byte乱数をBase64化した値。DB／Git／Browserへ出さない |
+| `APP_MAIL_IMAP_TIMEOUT_SECONDS` | `5` | IMAP接続／Commandのbounded Timeout |
+| `APP_MAIL_SMTP_TIMEOUT_SECONDS` | `5` | SMTP接続／Commandのbounded Timeout |
+
+Mail Account保存後にCredential keyを変更・紛失すると、既存IMAP Credentialと個別SMTP Credentialを復号できなくなります。Keyを変更した場合は対象AccountのCredential再入力が必要です。
+
+送信添付のApplication上限は最大5件、1件10 MiB、合計20 MiBです。ただしHosting側の`upload_max_filesize`、`post_max_size`、Web Server request-body limit、Mail provider側のmessage-size policyの方が小さい場合は、そちらが実質上限になります。受信メール／Sentメールの添付ファイル表示・ダウンロードはV1.34対象外です。
+
 ## X API Widget（上級者向け / Optional）
 
 X Timeline Widgetは、X Developer Platformで発行したServer-side Bearer Tokenを使って、指定した公開Accountの最近の投稿をRead Onlyで取得します。X APIはPay Per Useのため、利用量とCredit残高はX Developer Console側でも確認してください。
@@ -164,6 +179,7 @@ Shared hosting等で環境変数が使いにくい場合は `config/local.php` �
 
 - `config/local.php`
 - `APP_HASH_KEY`を保管するSecret store
+- `APP_MAIL_CREDENTIAL_KEY_B64`を保管するSecret store（Mail利用時）
 - `APP_REMOTE_CREDENTIAL_KEY_B64`を保管するSecret store（Remote Files利用時）
 - SFTPで使用する検証済みknown_hosts／private keyの保管場所
 - Database接続情報

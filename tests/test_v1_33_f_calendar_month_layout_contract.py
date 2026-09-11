@@ -2,12 +2,17 @@
 from pathlib import Path
 import re
 
+from version_contract_utils import read_app_version_constants
+
 ROOT = Path(__file__).resolve().parents[1]
 layout = (ROOT / 'public/js/calendar-month-layout.js').read_text(encoding='utf-8')
 core = (ROOT / 'public/js/calendar-core.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/calendar-month-layout.css').read_text(encoding='utf-8')
 loader = (ROOT / 'public/js/calendar.js').read_text(encoding='utf-8')
-version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
+version_constants = read_app_version_constants(ROOT)
+current_version = version_constants.get('APP_VERSION', '')
+current_revision = version_constants.get('APP_ASSET_REVISION', '')
+version_match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)(?:-(?:rc\d+|dev\.\d+))?', current_version)
 
 passed = 0
 failed = 0
@@ -45,10 +50,10 @@ check('calendar-entry-placeholder' in css and 'visibility: hidden' in css and 'p
 check('@media (max-width: 575.98px)' in css, 'connected layout includes Smartphone sizing')
 check('bootstrap-solar' in css and 'bootstrap-slate' in css, 'connected layout accounts for dark application Themes')
 check(loader.index('calendar-month-layout.js') < loader.index('calendar-core.js'), 'placement module loads before Calendar core')
-check('calendar-month-layout.css?v=1.33.1' in loader, 'connected CSS has the formal F cache key')
-check('calendar-month-layout.js?v=1.33.1' in loader, 'placement JavaScript has the formal F cache key')
-check("const APP_VERSION = '1.33.1';" in version, 'formal V1.33 release keeps the F visible-version contract')
-check("const APP_ASSET_REVISION = '1.33.1';" in version, 'formal V1.33 cache key keeps the F asset contract')
+check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1), 'F contract runs on V1.33.1 or later')
+check(bool(current_revision) and current_revision == current_version, 'current asset revision matches the application version')
+check(f'calendar-month-layout.css?v={current_revision}' in loader, 'connected CSS uses the current cache revision')
+check(f'calendar-month-layout.js?v={current_revision}' in loader, 'placement JavaScript uses the current cache revision')
 check(not list((ROOT / 'database/migrations').glob('026*v1_33*')), 'F adds no database migration')
 check('calendar.range.list' not in layout, 'F reuses C range data without a new API action')
 

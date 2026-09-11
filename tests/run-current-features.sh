@@ -147,6 +147,20 @@ python3 "$SCRIPT_DIR/test_current_remote_permissions_static.py"
 node --check "$ROOT/public/js/remote-permissions.js"
 
 
+echo '== Current feature contracts: Mail =='
+python3 "$SCRIPT_DIR/test_current_mail_contract.py"
+php -l "$ROOT/app/mail/mail_account.php"
+php -l "$ROOT/app/mail/mail_api.php"
+php -l "$ROOT/app/mail/mail_attachment.php"
+php -l "$ROOT/app/mail/mail_message.php"
+php -l "$ROOT/app/mail/mail_received_attachment.php"
+php -l "$ROOT/app/mail/mail_reply.php"
+php -l "$ROOT/app/mail/mail_sent.php"
+php -l "$ROOT/app/mail/mail_service.php"
+php -l "$ROOT/app/mail/mail_smtp_client.php"
+php -l "$ROOT/public/api_v1.php"
+node --check "$ROOT/public/js/mail-widget.js"
+
 echo '== Current feature contracts: Account Security =='
 php "$SCRIPT_DIR/test_current_totp.php"
 php "$SCRIPT_DIR/test_current_totp_window.php"
