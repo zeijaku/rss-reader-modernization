@@ -1,0 +1,88 @@
+from pathlib import Path
+
+root = Path(__file__).resolve().parents[1]
+
+
+def read(path: str) -> str:
+    return (root / path).read_text(encoding='utf-8')
+
+
+def write(path: str, text: str) -> None:
+    (root / path).write_text(text, encoding='utf-8')
+
+
+version = read('app/version.php').replace("'1.34.0'", "'1.34.1'").replace('RSS Reader Modernization 1.34.0', 'RSS Reader Modernization 1.34.1')
+write('app/version.php', version)
+write('public/js/calendar.js', read('public/js/calendar.js').replace('?v=1.34.0', '?v=1.34.1'))
+write('.github/release-request.txt', '1.34.1\n')
+
+mail_test = read('tests/test_current_mail_contract.py')
+old = """# Received/Sent attachment display/download is deferred beyond V1.34.\nreceived = read('app/mail/mail_received_attachment.php')\nassert \"'data' => ['attachments' => []]\" in received\nassert \"api_error('unknown_action'\" in received\nassert 'MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES' not in received\n"""
+new = """# Received/Sent attachment display/download remains an existing bounded Mail capability.\nreceived = read('app/mail/mail_received_attachment.php')\nassert 'MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES' in received\nassert 'MAIL_RECEIVED_ATTACHMENT_MAX_TRANSFER_BYTES' in received\nassert 'mail_received_attachment_list_from_structure' in received\nassert 'mail_received_attachment_download_emit' in received\nassert \"'mail.message.attachments'\" in api\nassert \"'mail.message.attachment.download'\" in api\n"""
+if old not in mail_test:
+    raise SystemExit('expected deferred Mail contract block not found')
+mail_test = mail_test.replace(old, new)
+mail_test = mail_test.replace("assert 'attachment' in js.lower()", "assert 'mail.message.attachments' in js\nassert 'mail-attachment-download' in js")
+write('tests/test_current_mail_contract.py', mail_test)
+
+readme = read('README.md')
+readme = readme.replace('**Stable release:** `RSS Reader Modernization 1.34.0`\nRelease tag: `v1.34.0`', '**Stable release:** `RSS Reader Modernization 1.34.1`\nRelease tag: `v1.34.1`')
+marker = 'Version 1.34.0はMail WidgetへSMTP送信、Plain Text Compose／Reply、Sent保存、送信中表示、複数添付送信を追加したReleaseです。'
+patch_para = 'Version 1.34.1はV1.34.0のCorrection Releaseです。V1.34開発中および本番で動作確認済みだった受信メール／Sentメールの添付ファイル表示・ダウンロード実装が、正式Release作成時に誤って無効化されたため、安全境界を維持した既存実装を復元します。DB Migration、必須Config／Secretの追加はありません。\n\n'
+if patch_para not in readme:
+    if marker not in readme:
+        raise SystemExit('README V1.34 marker not found')
+    readme = readme.replace(marker, patch_para + marker, 1)
+write('README.md', readme)
+
+config = read('docs/configuration.md')
+old_cfg = '送信添付のApplication上限は最大5件、1件10 MiB、合計20 MiBです。ただしHosting側の`upload_max_filesize`、`post_max_size`、Web Server request-body limit、Mail provider側のmessage-size policyの方が小さい場合は、そちらが実質上限になります。受信メール／Sentメールの添付ファイル表示・ダウンロードはV1.34対象外です。'
+new_cfg = '送信添付のApplication上限は最大5件、1件10 MiB、合計20 MiBです。ただしHosting側の`upload_max_filesize`、`post_max_size`、Web Server request-body limit、Mail provider側のmessage-size policyの方が小さい場合は、そちらが実質上限になります。受信メール／Sentメールでは添付ファイル一覧を表示し、1ファイルあたりdecoded content 25 MiBを上限としてダウンロードできます。IMAP接続は既存のOwner scope、Folder一致、public-address-only target validation、validated-IP pinningを維持します。'
+if old_cfg not in config:
+    raise SystemExit('configuration deferred sentence not found')
+write('docs/configuration.md', config.replace(old_cfg, new_cfg, 1))
+
+notes = """# RSS Reader Modernization 1.34.1 - Mail Received Attachment Correction
+
+V1.34.1 is a correction release for V1.34.0. It restores the existing received/Sent attachment display and download implementation that was already used in production but was mistakenly disabled during the V1.34.0 formal release finalization.
+
+## Corrected
+- Restored received/Sent attachment metadata listing in the existing Mail message body UI.
+- Restored attachment download through the existing `mail.message.attachment.download` route.
+- Kept the existing bounded 25 MiB decoded-content download limit and 80 MiB transfer-encoded safety cap.
+- Kept filename/content-type sanitization and bounded attachment enumeration.
+
+## Security / compatibility
+- Authentication, Session, CSRF, owner scope and Mail Widget ownership checks remain required.
+- The requested folder must still match the configured Mail Widget folder.
+- IMAP uses the existing public-address-only target validation, validated-IP pinning and TLS certificate validation.
+- This patch does not change SMTP send, Reply, Sent save modes or outbound attachment limits introduced in V1.34.0.
+- No database migration and no new mandatory configuration or secret are introduced by V1.34.1.
+
+## Intentionally not included
+- HTML compose.
+- CC / BCC.
+- Reply All / Forward.
+- OAuth2 authentication implementation.
+- Automatic re-attachment of original received files when replying.
+- Application database storage of sent message bodies.
+
+## Verification limits
+- The restored received attachment implementation corresponds to the existing production capability; production code is not modified as part of this Git correction.
+- The formal GitHub Release workflow reruns the current regression and current feature contracts on PHP 8.1 and PHP 8.4 before publishing the immutable tag.
+- Provider-specific IMAP policies and provider-side attachment limits remain external.
+"""
+write('RELEASE_NOTES.md', notes)
+
+changelog = read('CHANGELOG.md')
+entry = """## 1.34.1 - 2026-09-11
+
+### Mail received attachments correction
+- Restored the existing received/Sent attachment list and download backend that had been mistakenly disabled during V1.34.0 final release preparation.
+- Preserved the existing Mail UI/API routes, owner/folder scope, IMAP SSRF/DNS-pinning/TLS boundaries, filename/content-type sanitization, and bounded attachment size handling.
+- No database migration, mandatory configuration or secret change is required for this correction release.
+
+"""
+if not changelog.startswith('## 1.34.1 - '):
+    changelog = entry + changelog
+write('CHANGELOG.md', changelog)
