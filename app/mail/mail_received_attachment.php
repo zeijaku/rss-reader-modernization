@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 const MAIL_RECEIVED_ATTACHMENT_MAX_COUNT = 50;
-const MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES = 26214400; // 25 MiB
+const MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES = 26214400; // 25 MiB decoded content
+const MAIL_RECEIVED_ATTACHMENT_MAX_TRANSFER_BYTES = 83886080; // 80 MiB transfer-encoded safety cap
 
 function mail_received_attachment_validate_part_id(mixed $value): ?string
 {
@@ -85,17 +86,30 @@ function mail_received_attachment_metadata_from_part(object $part): ?array
         }
     }
 
-    $size = null;
+    $transferSize = null;
     try {
         $rawSize = method_exists($part, 'size') ? $part->size() : null;
         if (is_int($rawSize) && $rawSize >= 0) {
-            $size = $rawSize;
+            $transferSize = $rawSize;
         } elseif (is_string($rawSize) && preg_match('/^[0-9]+$/D', $rawSize) === 1) {
-            $size = (int) $rawSize;
+            $transferSize = (int) $rawSize;
         }
     } catch (Throwable) {
-        $size = null;
+        $transferSize = null;
     }
+
+    $encoding = '';
+    try {
+        $rawEncoding = method_exists($part, 'encoding') ? $part->encoding() : null;
+        $encoding = is_string($rawEncoding) ? strtolower(trim($rawEncoding)) : '';
+    } catch (Throwable) {
+        $encoding = '';
+    }
+    $identityEncoding = $encoding === '' || in_array($encoding, ['7bit', '8bit', 'binary'], true);
+    $displaySize = $identityEncoding ? $transferSize : null;
+    $transferLimit = $identityEncoding
+        ? MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES
+        : MAIL_RECEIVED_ATTACHMENT_MAX_TRANSFER_BYTES;
 
     $contentType = null;
     try {
@@ -107,9 +121,9 @@ function mail_received_attachment_metadata_from_part(object $part): ?array
     return [
         'part_id' => $partId,
         'name' => mail_received_attachment_safe_filename($filename),
-        'size' => $size,
+        'size' => $displaySize,
         'content_type' => mail_received_attachment_safe_content_type($contentType),
-        'downloadable' => $size === null || $size <= MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES,
+        'downloadable' => $transferSize === null || $transferSize <= $transferLimit,
     ];
 }
 
