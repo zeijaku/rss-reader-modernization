@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import re
+
+from version_contract_utils import read_app_version_constants
 
 root = Path(__file__).resolve().parents[1]
 core = (root / 'public/js/calendar-core.js').read_text(encoding='utf-8')
@@ -9,7 +12,10 @@ css = (root / 'public/css/calendar-views.css').read_text(encoding='utf-8')
 color_css = (root / 'public/css/calendar-colors.css').read_text(encoding='utf-8')
 dashboard = (root / 'app/view/dashboard_widgets.php').read_text(encoding='utf-8')
 stock = (root / 'public/stock.php').read_text(encoding='utf-8')
-version = (root / 'app/version.php').read_text(encoding='utf-8')
+version_constants = read_app_version_constants(root)
+current_version = version_constants.get('APP_VERSION', '')
+current_revision = version_constants.get('APP_ASSET_REVISION', '')
+version_match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)(?:-(?:rc\d+|dev\.\d+))?', current_version)
 
 passed = 0
 failed = 0
@@ -33,15 +39,16 @@ for markup, name in ((dashboard, 'Dashboard'), (stock, 'Stock')):
     check('aria-label="Calendar表示"' in markup and 'aria-pressed="true"' in markup,
           f'{name} switch exposes pressed state to assistive technology')
 
-check(loader.index('calendar-month-layout.js?v=1.33.1')
-      < loader.index('calendar-views.js?v=1.33.1')
-      < loader.index('calendar-core.js?v=1.33.1'),
-      'pure layout modules load before the Calendar DOM core')
-check('calendar-views.css?v=1.33.1-r1' in loader,
-      'responsive view CSS has the immutable G-R1 cache key')
-check("const APP_VERSION = '1.33.1';" in version
-      and "const APP_ASSET_REVISION = '1.33.1';" in version,
-      'G checkpoint version and asset revision match')
+check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1),
+      'G contract runs on V1.33.1 or later')
+check(bool(current_revision) and current_revision == current_version,
+      'current asset revision matches the application version')
+check(loader.index(f'calendar-month-layout.js?v={current_revision}')
+      < loader.index(f'calendar-views.js?v={current_revision}')
+      < loader.index(f'calendar-core.js?v={current_revision}'),
+      'pure layout modules load before the Calendar DOM core with the current cache revision')
+check(f'calendar-views.css?v={current_revision}-r1' in loader,
+      'responsive view CSS uses the current immutable G-R1 cache key')
 
 check("action: 'calendar.range.list'" in core and 'calendar_range_start: period.start' in core
       and 'calendar_range_end: period.end' in core,
