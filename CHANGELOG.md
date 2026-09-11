@@ -1,3 +1,10 @@
+## 1.34.1 - 2026-09-11
+
+### Mail received attachments correction
+- Restored the existing received/Sent attachment list and download backend that had been mistakenly disabled during V1.34.0 final release preparation.
+- Preserved the existing Mail UI/API routes, owner/folder scope, IMAP SSRF/DNS-pinning/TLS boundaries, filename/content-type sanitization, and bounded attachment size handling.
+- No database migration, mandatory configuration or secret change is required for this correction release.
+
 ## 1.34.0 - 2026-09-11
 
 ### Mail Send / Reply / Sent

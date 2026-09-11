@@ -32,15 +32,19 @@ assert 'return 5;' in attachment
 assert 'return 10 * 1024 * 1024;' in attachment
 assert 'return 20 * 1024 * 1024;' in attachment
 
-# Received/Sent attachment display/download is deferred beyond V1.34.
+# Received/Sent attachment display/download remains an existing bounded Mail capability.
 received = read('app/mail/mail_received_attachment.php')
-assert "'data' => ['attachments' => []]" in received
-assert "api_error('unknown_action'" in received
-assert 'MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES' not in received
+assert 'MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES' in received
+assert 'MAIL_RECEIVED_ATTACHMENT_MAX_TRANSFER_BYTES' in received
+assert 'mail_received_attachment_list_from_structure' in received
+assert 'mail_received_attachment_download_emit' in received
+assert "'mail.message.attachments'" in api
+assert "'mail.message.attachment.download'" in api
 
 js = read('public/js/mail-widget.js')
 assert '送信中...' in js
-assert 'attachment' in js.lower()
+assert 'mail.message.attachments' in js
+assert 'mail-attachment-download' in js
 assert not (root / 'config/local.php').exists()
 
 print('PASS: current Mail feature contract')
