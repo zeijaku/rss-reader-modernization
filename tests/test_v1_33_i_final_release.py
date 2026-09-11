@@ -6,7 +6,6 @@ from version_contract_utils import read_app_version_constants
 
 root = Path(__file__).resolve().parents[1]
 
-version = (root / 'app/version.php').read_text(encoding='utf-8')
 loader = (root / 'public/js/calendar.js').read_text(encoding='utf-8')
 readme = (root / 'README.md').read_text(encoding='utf-8')
 changelog = (root / 'CHANGELOG.md').read_text(encoding='utf-8')
@@ -20,6 +19,9 @@ complete_builder = (root / 'tools/build_complete_package.py').read_text(encoding
 release_request = (root / '.github/release-request.txt').read_text(encoding='utf-8').strip()
 version_constants = read_app_version_constants(root)
 current_version = version_constants.get('APP_VERSION', '')
+current_label = version_constants.get('APP_VERSION_LABEL', '')
+current_revision = version_constants.get('APP_ASSET_REVISION', '')
+version_match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)(?:-(?:rc\d+|dev\.\d+))?', current_version)
 
 passed = 0
 failed = 0
@@ -35,14 +37,12 @@ def check(condition: bool, message: str) -> None:
         print(f'FAIL: {message}')
 
 
-check(current_version == '1.33.1' and "const APP_VERSION = '1.33.1';" in version,
-      'formal application version is explicit')
-check(version_constants.get('APP_VERSION_LABEL') == 'RSS Reader Modernization 1.33.1'
-      and "const APP_VERSION_LABEL = 'RSS Reader Modernization 1.33.1';" in version,
-      'formal visible label matches package policy')
-check(version_constants.get('APP_ASSET_REVISION') == '1.33.1'
-      and "const APP_ASSET_REVISION = '1.33.1';" in version,
-      'formal assets use the immutable release cache key')
+check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1),
+      'V1.33-I regression contract runs on V1.33.1 or later')
+check(current_label == f'RSS Reader Modernization {current_version}',
+      'visible application label follows the current application version')
+check(bool(current_revision) and current_revision == current_version,
+      'formal assets use the current immutable release cache key')
 check('var ASSET_RETRY_LIMIT = 1;' in loader
       and 'var ASSET_RETRY_DELAY_MS = 600;' in loader,
       'accepted static asset retry count and delay remain bounded')
@@ -50,16 +50,16 @@ check('scriptQueue.push(src);' in loader and 'startScriptQueue();' in loader,
       'accepted ordered JavaScript queue remains active')
 check('var STYLE_BATCH_SIZE = 4;' in loader and 'startStyleQueue();' in loader,
       'accepted stylesheet batches remain bounded and declaration-ordered')
-check('# RSS Reader Modernization 1.33.1' in notes
+check(f'# RSS Reader Modernization {current_version}' in notes
       and '正式Releaseではありません' not in notes,
-      'release notes describe the formal release without an RC warning')
+      'release notes describe the current formal release without an RC warning')
 check('Verification limits' in notes and 'PHP 8.1' in notes and 'PHP 8.4' in notes,
       'release notes disclose runtime verification limits and final gates')
-check('Stable release:** `RSS Reader Modernization 1.33.1`' in readme
-      and 'Release tag: `v1.33.1`' in readme,
-      'README identifies V1.33 as the stable source and intended tag')
-check(changelog.startswith('## 1.33.1 - 2026-09-09'),
-      'CHANGELOG starts with the formal V1.33 entry')
+check(f'Stable release:** `RSS Reader Modernization {current_version}`' in readme
+      and f'Release tag: `v{current_version}`' in readme,
+      'README identifies the current stable source and intended tag')
+check(changelog.startswith(f'## {current_version} - '),
+      'CHANGELOG starts with the current formal release entry')
 check('日程のコピー' in future and '日程のDrag & Drop' in future,
       'future Calendar copy and Drag & Drop requests remain recorded')
 check('V1.33対象外' in future and 'DB変更は現時点では不要' in future,
@@ -77,8 +77,8 @@ check('次の26 table' in installation and 'rss_calendar_event_exception' in ins
       'fresh-install table inventory remains updated for V1.33')
 check("'deliverables'" in complete_builder,
       'Complete Source builder excludes local checkpoint and final deliverables')
-check(re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', release_request) is not None,
-      'browser fallback release request remains a formal semantic version')
+check(release_request == current_version,
+      'browser fallback release request matches the current application version')
 
 stale = []
 for base in (root / 'app', root / 'public'):
