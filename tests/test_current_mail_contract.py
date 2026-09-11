@@ -12,6 +12,10 @@ assert (root / 'database/migrations/026_v1_34_mail_smtp.sql').is_file()
 assert (root / 'database/migrations/027_v1_34_mail_sent_save_mode.sql').is_file()
 assert read('app/mail/vendor/phpmailer/phpmailer/VERSION').strip() == '7.1.1'
 
+installation = read('docs/installation.md')
+assert '026_v1_34_mail_smtp.sql' in installation
+assert '027_v1_34_mail_sent_save_mode.sql' in installation
+
 api = read('public/api_v1.php')
 assert all(action in api for action in (
     'mail.message.send',
@@ -33,6 +37,12 @@ attachment = read('app/mail/mail_attachment.php')
 assert 'return 5;' in attachment
 assert 'return 10 * 1024 * 1024;' in attachment
 assert 'return 20 * 1024 * 1024;' in attachment
+
+received = read('app/mail/mail_received_attachment.php')
+assert 'MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES = 26214400' in received
+assert 'MAIL_RECEIVED_ATTACHMENT_MAX_TRANSFER_BYTES = 83886080' in received
+assert "'size' => $displaySize" in received
+assert 'strlen($content) > MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES' in received
 
 js = read('public/js/mail-widget.js')
 assert '送信中...' in js
