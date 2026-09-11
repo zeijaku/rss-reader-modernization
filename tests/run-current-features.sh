@@ -147,8 +147,8 @@ python3 "$SCRIPT_DIR/test_current_remote_permissions_static.py"
 node --check "$ROOT/public/js/remote-permissions.js"
 
 
-echo '== Current feature contracts: V1.34 Mail =='
-python3 "$SCRIPT_DIR/test_current_mail_v134.py"
+echo '== Current feature contracts: Mail =='
+python3 "$SCRIPT_DIR/test_current_mail_contract.py"
 php -l "$ROOT/app/mail/mail_account.php"
 php -l "$ROOT/app/mail/mail_api.php"
 php -l "$ROOT/app/mail/mail_attachment.php"
