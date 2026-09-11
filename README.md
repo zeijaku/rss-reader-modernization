@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.34.0`
-Release tag: `v1.34.0`
+**Stable release:** `RSS Reader Modernization 1.34.1`
+Release tag: `v1.34.1`
+
+Version 1.34.1はV1.34.0のCorrection Releaseです。V1.34開発中および本番で動作確認済みだった受信メール／Sentメールの添付ファイル表示・ダウンロード実装が、正式Release作成時に誤って無効化されたため、安全境界を維持した既存実装を復元します。DB Migration、必須Config／Secretの追加はありません。
 
 Version 1.34.0はMail WidgetへSMTP送信、Plain Text Compose／Reply、Sent保存、送信中表示、複数添付送信を追加したReleaseです。SMTPは465 SSL/TLSまたは587 STARTTLSに限定し、IMAP Credential再利用または暗号化した個別SMTP Credentialに対応します。送信添付は最大5件・1件10 MiB・合計20 MiBです。既存環境ではMigration 026、027を番号順に一度だけ適用します。受信メール／Sentメールの添付ファイル表示・ダウンロードはV1.34対象外で、今後の機能として扱います。
 
