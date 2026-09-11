@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import re
+
+from version_contract_utils import read_app_version_constants
 
 root = Path(__file__).resolve().parents[1]
 dashboard = (root / 'app/view/dashboard_widgets.php').read_text(encoding='utf-8')
 stock = (root / 'public/stock.php').read_text(encoding='utf-8')
 css = (root / 'public/css/calendar-views.css').read_text(encoding='utf-8')
 loader = (root / 'public/js/calendar.js').read_text(encoding='utf-8')
+version_constants = read_app_version_constants(root)
+current_version = version_constants.get('APP_VERSION', '')
+current_revision = version_constants.get('APP_ASSET_REVISION', '')
+version_match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)(?:-(?:rc\d+|dev\.\d+))?', current_version)
 
 passed = 0
 failed = 0
@@ -49,8 +56,12 @@ check(css.count('"prev today label next add"') >= 2
       'compact card and Smartphone toolbar use the intended two-row layout')
 check('grid-area: switch;' in css and 'width: min(100%, 15rem);' in css,
       'view switch stays centered and bounded in compact layouts')
-check('calendar-views.css?v=1.33.1-r1' in loader,
-      'G-R1 Calendar CSS receives a distinct browser cache key')
+check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1),
+      'G-R1 contract runs on V1.33.1 or later')
+check(bool(current_revision) and current_revision == current_version,
+      'current asset revision matches the application version')
+check(f'calendar-views.css?v={current_revision}-r1' in loader,
+      'G-R1 Calendar CSS uses the current cache revision with its R1 suffix')
 check('calendar_range_start' not in css and 'calendar.range.list' not in css,
       'display-only CSS adds no Calendar API behavior')
 
