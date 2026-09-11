@@ -382,3 +382,12 @@
         flex: 0 0 44px;
     }
 }
+
+/* V1.34.2-A: keep the shared Bootstrap modal footer opaque on smartphones.
+ * Use the active theme modal surface instead of a fixed color so every
+ * Dashboard modal stays consistent across light and dark themes. */
+@media (max-width: 575.98px) {
+    .modal {
+        --bs-modal-footer-bg: var(--bs-modal-bg);
+    }
+}
