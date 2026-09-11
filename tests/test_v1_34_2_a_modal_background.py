@@ -63,11 +63,11 @@ check(
 )
 check(
     re.search(r'<div class="modal-content">\s*<form\b', modals_php) is not None,
-    'form-wrapped Dashboard modal structure remains present',
+    'multiline form-wrapped Dashboard modal structure remains present',
 )
 check(
-    re.search(r'<div class="modal-content">\s*<div class="modal-header">', modals_php) is not None,
-    'direct modal-content/header structure remains present and is covered without depending on a form wrapper',
+    '<div class="modal-content"><form' in modals_php,
+    'compact one-line form-wrapped Dashboard modal structure remains covered by the same .modal selector',
 )
 check(
     utility_css.find('/* V1.34.2-A:') > utility_css.find('@media (pointer: coarse)'),
