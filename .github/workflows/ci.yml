@@ -67,6 +67,9 @@ jobs:
       - name: Check standard release flow hygiene
         run: python3 tests/test_release_flow.py
 
+      - name: Check V1.34.2-A smartphone modal contract
+        run: python3 tests/test_v1_34_2_a_modal_background.py
+
       - name: Run current regression tests
         run: |
           bash tests/run-current.sh
