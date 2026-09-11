@@ -1,0 +1,186 @@
+name: V1.34 Final Scope Fix
+
+on:
+  push:
+    branches:
+      - release/v1.34.0
+    paths:
+      - '.github/workflows/v134-final-scope-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: release/v1.34.0
+          fetch-depth: 0
+
+      - name: Apply minimal V1.34 finalization fixes
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'expected text not found in {path}: {old[:80]!r}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # Historical V1.33 Calendar contract must follow later formal releases.
+          p = Path('tests/test_v1_33_d_calendar_exception_contract.py')
+          text = p.read_text(encoding='utf-8')
+          old = '''check("const APP_VERSION = '1.33.1';" in version, 'formal V1.33 release keeps the D contract')
+          check("const APP_ASSET_REVISION = '1.33.1';" in version, 'formal V1.33 cache revision keeps the D contract')'''
+          new = '''version_match = re.search(r"const APP_VERSION = '([0-9]+\\.[0-9]+\\.[0-9]+)';", version)
+          asset_match = re.search(r"const APP_ASSET_REVISION = '([0-9]+\\.[0-9]+\\.[0-9]+)';", version)
+          version_tuple = tuple(int(part) for part in version_match.group(1).split('.')) if version_match else ()
+          check(version_match is not None and version_tuple >= (1, 33, 1),
+                'formal release version keeps the V1.33-D contract')
+          check(asset_match is not None and version_match is not None and asset_match.group(1) == version_match.group(1),
+                'formal release cache revision keeps the V1.33-D contract')'''
+          if old not in text:
+              raise SystemExit('calendar literal-version contract block not found')
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # V1.34 intentionally defers received/Sent attachment browsing/download.
+          Path('app/mail/mail_received_attachment.php').write_text('''<?php
+
+          declare(strict_types=1);
+
+          /**
+           * V1.34 intentionally does not expose received/Sent attachment browsing.
+           * Keep this compatibility boundary inert so the existing message-body UI
+           * does not open an attachment retrieval/download surface in this release.
+           */
+          function api_mail_received_attachment_list(int $ownerId, array $input): array
+          {
+              return [
+                  'status' => 200,
+                  'body' => [
+                      'ok' => true,
+                      'data' => ['attachments' => []],
+                  ],
+              ];
+          }
+
+          function mail_received_attachment_download_emit(int $ownerId, array $input): never
+          {
+              api_emit(api_error('unknown_action', 'Unknown API action.', 400));
+          }
+          ''', encoding='utf-8')
+
+          Path('tests/test_current_mail_contract.py').write_text('''from pathlib import Path
+
+          root = Path(__file__).resolve().parents[1]
+
+          def read(path):
+              return (root / path).read_text(encoding='utf-8')
+
+          # Durable Mail contract: keep this current-following test version-neutral.
+          assert (root / 'database/migrations/026_v1_34_mail_smtp.sql').is_file()
+          assert (root / 'database/migrations/027_v1_34_mail_sent_save_mode.sql').is_file()
+          assert read('app/mail/vendor/phpmailer/phpmailer/VERSION').strip() == '7.1.1'
+
+          installation = read('docs/installation.md')
+          assert '026_v1_34_mail_smtp.sql' in installation
+          assert '027_v1_34_mail_sent_save_mode.sql' in installation
+
+          api = read('public/api_v1.php')
+          assert 'mail.message.send' in api
+
+          smtp = read('app/mail/mail_smtp_client.php')
+          assert 'PHPMailer' in smtp
+          assert 'getSentMIMEMessage' in smtp
+
+          assert all((root / path).is_file() for path in (
+              'app/mail/mail_sent.php',
+              'app/mail/mail_attachment.php',
+              'app/mail/mail_received_attachment.php',
+          ))
+
+          attachment = read('app/mail/mail_attachment.php')
+          assert 'return 5;' in attachment
+          assert 'return 10 * 1024 * 1024;' in attachment
+          assert 'return 20 * 1024 * 1024;' in attachment
+
+          # Received/Sent attachment display/download is deferred beyond V1.34.
+          received = read('app/mail/mail_received_attachment.php')
+          assert "'data' => ['attachments' => []]" in received
+          assert "api_error('unknown_action'" in received
+          assert 'MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES' not in received
+
+          js = read('public/js/mail-widget.js')
+          assert '送信中...' in js
+          assert 'attachment' in js.lower()
+          assert not (root / 'config/local.php').exists()
+
+          print('PASS: current Mail feature contract')
+          ''', encoding='utf-8')
+
+          replace_once(
+              'README.md',
+              'Version 1.34.0はMail WidgetへSMTP送信、Plain Text Compose／Reply、Sent保存、送信中表示、送信添付と受信／Sent添付の表示・ダウンロードを追加したReleaseです。SMTPは465 SSL/TLSまたは587 STARTTLSに限定し、IMAP Credential再利用または暗号化した個別SMTP Credentialに対応します。送信添付は最大5件・1件10 MiB・合計20 MiB、受信添付はメタ情報だけを一覧取得し、選択時に最大25 MiBまでオンデマンドで取得します。既存環境ではMigration 026、027を番号順に一度だけ適用します。',
+              'Version 1.34.0はMail WidgetへSMTP送信、Plain Text Compose／Reply、Sent保存、送信中表示、複数添付送信を追加したReleaseです。SMTPは465 SSL/TLSまたは587 STARTTLSに限定し、IMAP Credential再利用または暗号化した個別SMTP Credentialに対応します。送信添付は最大5件・1件10 MiB・合計20 MiBです。既存環境ではMigration 026、027を番号順に一度だけ適用します。受信メール／Sentメールの添付ファイル表示・ダウンロードはV1.34対象外で、今後の機能として扱います。'
+          )
+          replace_once(
+              'README.md',
+              '- Mail WidgetによるIMAP受信／検索／Folder切替、SMTP Plain Text送信／Reply、Sent保存、送信／受信添付',
+              '- Mail WidgetによるIMAP受信／検索／Folder切替、SMTP Plain Text送信／Reply、Sent保存、複数添付送信'
+          )
+
+          replace_once(
+              'CHANGELOG.md',
+              '- Added received/Sent attachment metadata display and on-demand download. Binary content is not included in the normal message JSON response; download rechecks ownership, folder, part identifier and a 25 MiB receive limit.\n',
+              '- Received/Sent attachment display and download are intentionally deferred beyond V1.34.\n'
+          )
+          replace_once(
+              'CHANGELOG.md',
+              '- Production checkpoint verification completed for SMTP send, Reply, Sent handling, outbound attachments and received/Sent attachment download before formal release.',
+              '- Production checkpoint verification completed for SMTP send, Reply, Sent handling and outbound attachments before formal release.'
+          )
+
+          replace_once(
+              'RELEASE_NOTES.md',
+              '- Received/Sent attachment metadata display and on-demand download from the Mail Widget.\n',
+              ''
+          )
+          replace_once(
+              'RELEASE_NOTES.md',
+              '- Received attachment metadata does not include binary content; the selected part is downloaded only on demand.\n- Received attachment access rechecks Widget ownership, bound Mail Account ownership, current folder, safe part identifier and bounded file size.\n',
+              ''
+          )
+          replace_once(
+              'RELEASE_NOTES.md',
+              '- Production checkpoint verification confirmed SMTP send, Reply, Sent handling, outbound attachments, and received/Sent attachment display/download on the deployed hosting environment before formal release.',
+              '- Production checkpoint verification confirmed SMTP send, Reply, Sent handling and outbound attachments on the deployed hosting environment before formal release.'
+          )
+          replace_once(
+              'RELEASE_NOTES.md',
+              '- Automatic re-attachment of files from the original received message on Reply.\n',
+              '- Automatic re-attachment of files from the original received message on Reply.\n- Received/Sent attachment display and download.\n'
+          )
+
+          replace_once(
+              'docs/configuration.md',
+              '送信添付のApplication上限は最大5件、1件10 MiB、合計20 MiBです。ただしHosting側の`upload_max_filesize`、`post_max_size`、Web Server request-body limit、Mail provider側のmessage-size policyの方が小さい場合は、そちらが実質上限になります。受信添付は本文JSONへ含めず、選択されたpartだけを最大25 MiBまでオンデマンド取得します。',
+              '送信添付のApplication上限は最大5件、1件10 MiB、合計20 MiBです。ただしHosting側の`upload_max_filesize`、`post_max_size`、Web Server request-body limit、Mail provider側のmessage-size policyの方が小さい場合は、そちらが実質上限になります。受信メール／Sentメールの添付ファイル表示・ダウンロードはV1.34対象外です。'
+          )
+          PY
+
+          python3 tests/test_v1_33_d_calendar_exception_contract.py
+          python3 tests/test_current_mail_contract.py
+          php -l app/mail/mail_received_attachment.php
+          node --check public/js/mail-widget.js
+
+          git rm .github/workflows/v134-final-scope-fix.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app/mail/mail_received_attachment.php tests/test_v1_33_d_calendar_exception_contract.py tests/test_current_mail_contract.py README.md CHANGELOG.md RELEASE_NOTES.md docs/configuration.md
+          git commit -m 'Finalize V1.34 release scope and CI contracts'
+          git push origin HEAD:release/v1.34.0
