@@ -87,18 +87,3 @@ jobs:
 
       - name: Run current feature contract tests
         run: bash tests/run-current-features.sh
-
-      - name: Package V1.34.2-C runtime files
-        if: matrix.php == '8.1'
-        uses: actions/upload-artifact@v4
-        with:
-          name: v1.34.2-C-runtime
-          path: |
-            app/version.php
-            public/js/calendar.js
-            public/js/calendar-drag-drop.js
-            public/css/calendar-drag-drop.css
-            public/js/camera-video-streaming.js
-            public/js/rss-management.js
-          if-no-files-found: error
-          retention-days: 1
