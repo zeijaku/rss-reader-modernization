@@ -10,6 +10,8 @@
     var dragState = null;
     var pending = false;
     var suppressClickUntil = 0;
+    var redrawObserver = null;
+    var prepareTimer = null;
 
     function text(value) {
         return value === null || value === undefined ? '' : String(value);
@@ -227,6 +229,34 @@
         });
     }
 
+    function schedulePrepare() {
+        if (prepareTimer !== null) {
+            return;
+        }
+        prepareTimer = window.setTimeout(function () {
+            prepareTimer = null;
+            prepareEntries(document);
+        }, 0);
+    }
+
+    function observeCalendarRedraws() {
+        var target = document.getElementById('main-content');
+        if (!target || typeof window.MutationObserver !== 'function' || redrawObserver !== null) {
+            return;
+        }
+        redrawObserver = new window.MutationObserver(function (mutations) {
+            var hasAddedElement = mutations.some(function (mutation) {
+                return mutation.type === 'childList' && Array.prototype.some.call(mutation.addedNodes || [], function (node) {
+                    return node && node.nodeType === 1;
+                });
+            });
+            if (hasAddedElement) {
+                schedulePrepare();
+            }
+        });
+        redrawObserver.observe(target, {childList: true, subtree: true});
+    }
+
     function onDragStart(event) {
         if (pending) {
             event.preventDefault();
@@ -315,6 +345,7 @@
             .always(function () {
                 pending = false;
                 finishDrag();
+                schedulePrepare();
             });
     }
 
@@ -333,16 +364,18 @@
     document.addEventListener('drop', onDrop, true);
     document.addEventListener('dragend', finishDrag, true);
     document.addEventListener('click', onClickCapture, true);
-    $(function () { prepareEntries(document); });
-    $(document).on('calendar:rangeRendered calendar:eventChanged calendar:occurrenceChanged', function () {
-        window.setTimeout(function () { prepareEntries(document); }, 0);
+    $(function () {
+        prepareEntries(document);
+        observeCalendarRedraws();
     });
+    $(document).on('calendar:rangeRendered calendar:eventChanged calendar:occurrenceChanged', schedulePrepare);
 
     window.IguguruCalendarDragDrop = Object.freeze({
         dayDelta: dayDelta,
         shiftDate: shiftDate,
         shiftRange: shiftRange,
         sourceState: sourceState,
-        buildMovePlan: buildMovePlan
+        buildMovePlan: buildMovePlan,
+        prepareEntries: prepareEntries
     });
 }(window.jQuery, window, document));
