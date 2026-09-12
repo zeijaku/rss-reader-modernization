@@ -26,13 +26,13 @@ check('overscroll-behavior: contain' in memo_css,
       'test fixture retains a bounded internal card scroller that D must override at its boundary')
 check('overscroll-behavior: contain' in dashboard_css,
       'non-card Drawer containment remains present and outside D scope')
-check("./css/dashboard-card-wheel.css?v=1.34.2-dev.7" in loader,
-      'D stylesheet is loaded with the dev.7 cache key')
+check("./css/dashboard-card-wheel.css?v=1.34.2-dev.8" in loader,
+      'D stylesheet is loaded with the dev.8 cache key')
 check("data-dashboard-card-wheel-style" in loader,
       'D stylesheet has a duplicate-load marker')
-check("const APP_VERSION = '1.34.2-dev.7';" in version and
-      "const APP_ASSET_REVISION = '1.34.2-dev.7';" in version,
-      'version and asset revision are synchronized at dev.7')
+check("const APP_VERSION = '1.34.2-dev.8';" in version and
+      "const APP_ASSET_REVISION = '1.34.2-dev.8';" in version,
+      'version and asset revision are synchronized at dev.8')
 check('preventDefault' not in css and 'scrollBy' not in css,
       'D relies on native scroll chaining rather than synthetic wheel scrolling')
 
