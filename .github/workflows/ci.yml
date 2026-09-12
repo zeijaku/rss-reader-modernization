@@ -85,6 +85,9 @@ jobs:
       - name: Check V1.34.2-D Card mouse wheel contract
         run: python3 tests/test_v1_34_2_d_card_mouse_wheel.py
 
+      - name: Check V1.34.2-E release readiness
+        run: python3 tests/test_v1_34_2_e_release_readiness.py
+
       - name: Run current core regression tests
         run: bash tests/run-current.sh
 
