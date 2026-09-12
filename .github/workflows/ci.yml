@@ -38,7 +38,7 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: '8.1'
           extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
           coverage: none
 
@@ -81,6 +81,9 @@ jobs:
           python3 tests/test_v1_34_2_c_calendar_drag_drop_contract.py
           node tests/test_v1_34_2_c_calendar_drag_drop.js
           node --check public/js/calendar-drag-drop.js
+
+      - name: Check V1.34.2-D Card mouse wheel contract
+        run: python3 tests/test_v1_34_2_d_card_mouse_wheel.py
 
       - name: Run current core regression tests
         run: bash tests/run-current.sh
