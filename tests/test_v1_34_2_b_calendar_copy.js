@@ -97,6 +97,7 @@ const series = api.snapshotChangeForm(formWith(seriesMap, {'data-calendar-occurr
 check(series.occurrenceOnly === false && series.repeat === 'weekly' && series.repeatUntil === '2026-12-31',
     'series scope copy keeps the recurring series definition');
 
+const loading = {hidden: false};
 const registerMap = {
     '.registerCalendarEventTitleValue': input(''),
     '.registerCalendarEventStartDate': input(''),
@@ -108,9 +109,13 @@ const registerMap = {
     '.registerCalendarEventEndTime': input(''),
     '.registerCalendarEventUrl': input(''),
     '.registerCalendarEventRepeatType': input('none'),
-    '.registerCalendarEventRepeatUntil': input('')
+    '.registerCalendarEventRepeatUntil': input(''),
+    '.calendar-event-recurrence-loading': loading
 };
-const register = formWith(registerMap, {});
+const register = formWith(registerMap, {
+    'data-calendar-recurrence-submit-ready': '0',
+    'aria-busy': 'true'
+});
 check(api.applySnapshot(register, normal) === true, 'snapshot applies to the existing register form');
 check(registerMap['.registerCalendarEventTitleValue'].value === '会議'
       && registerMap['.registerCalendarEventStartDate'].value === '2026-09-15'
@@ -124,6 +129,21 @@ check(registerMap['.registerCalendarEventRepeatType'].value === 'weekly'
       && registerMap['.registerCalendarEventRepeatUntil'].value === '2026-12-31',
     'register form receives recurrence state');
 check(register.attrs['data-calendar-copy-source'] === 'event', 'copy origin marker contains no event id or user data');
+check(register.attrs['data-calendar-recurrence-submit-ready'] === '1',
+    'copied register form becomes recurrence-submit ready after values are applied');
+check(register.attrs['aria-busy'] === 'false' && loading.hidden === true,
+    'copied register form clears stale recurrence loading state');
+
+const occurrenceRegisterMap = Object.assign({}, registerMap, {
+    '.registerCalendarEventRepeatType': input('weekly'),
+    '.registerCalendarEventRepeatUntil': input('2099-01-01')
+});
+const occurrenceRegister = formWith(occurrenceRegisterMap, {'data-calendar-recurrence-submit-ready': '0'});
+check(api.applySnapshot(occurrenceRegister, occurrence) === true
+      && occurrenceRegisterMap['.registerCalendarEventRepeatType'].value === 'none'
+      && occurrenceRegisterMap['.registerCalendarEventRepeatUntil'].value === ''
+      && occurrenceRegister.attrs['data-calendar-recurrence-submit-ready'] === '1',
+    'occurrence-only copy is standalone and immediately eligible for normal create validation');
 
 console.log('RESULT: PASS ' + passed + ' / FAIL ' + failed + ' / SKIP 0');
 process.exit(failed === 0 ? 0 : 1);
