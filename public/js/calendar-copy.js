@@ -77,6 +77,16 @@
         }
         $('.registerCalendarEventRepeatType').trigger('change');
         registerForm.setAttribute('data-calendar-copy-source', snapshot.occurrenceOnly ? 'occurrence' : 'event');
+        // The normal add-trigger path marks recurrence data ready after resetAddFields().
+        // Copy bypasses that trigger, but all recurrence values above came from the
+        // already prepared edit form and will still be validated by the existing
+        // client and server create path before persistence.
+        registerForm.setAttribute('data-calendar-recurrence-submit-ready', '1');
+        registerForm.setAttribute('aria-busy', 'false');
+        var loading = registerForm.querySelector('.calendar-event-recurrence-loading');
+        if (loading) {
+            loading.hidden = true;
+        }
         return true;
     }
 
