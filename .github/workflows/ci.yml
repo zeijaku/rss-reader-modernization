@@ -82,8 +82,50 @@ jobs:
       - name: Diagnose V1.33 RC2 asset loader
         run: node tests/test_v1_33_rc2_asset_loader.js
 
-      - name: Diagnose Calendar feature contracts
-        run: bash tests/run-current-feature-diagnostics.sh calendar
+      - name: Diagnose Calendar contracts first half
+        run: |
+          php tests/test_v1_25_b_calendar_time_contract.php
+          php tests/test_v1_25_b_calendar_time_validation.php
+          php tests/test_v1_25_c_calendar_event_ui_contract.php
+          php tests/test_v1_25_d_recurrence_contract.php
+          php tests/test_v1_25_d_recurrence_validation.php
+          php tests/test_v1_25_e_calendar_source_actions_contract.php
+          php tests/test_v1_25_f_calendar_polish_contract.php
+          php tests/test_v1_25_f_calendar_polish_r3_contract.php
+          php tests/test_v1_33_c_calendar_range.php
+          python3 tests/test_v1_33_c_calendar_range_http.py
+          python3 tests/test_v1_33_c_calendar_range_contract.py
+          node tests/test_v1_33_c_calendar_range_ui.js
+          node tests/test_v1_33_c_calendar_submit_ui.js
+          php tests/test_v1_33_d_calendar_exception.php
+          python3 tests/test_v1_33_d_calendar_exception_http.py
+          python3 tests/test_v1_33_d_calendar_exception_contract.py
+          sh tests/test_v1_33_d_mariadb_migration.sh
+
+      - name: Diagnose Calendar contracts second half
+        run: |
+          python3 tests/test_v1_33_e_calendar_occurrence_contract.py
+          node tests/test_v1_33_e_calendar_occurrence_ui.js
+          python3 tests/test_v1_33_f_calendar_month_layout_contract.py
+          node tests/test_v1_33_f_calendar_month_layout.js
+          node tests/test_v1_33_f_calendar_month_dom.js
+          python3 tests/test_v1_33_g_calendar_views_contract.py
+          node tests/test_v1_33_g_calendar_views.js
+          node tests/test_v1_33_g_calendar_views_dom.js
+          python3 tests/test_v1_33_g_r1_calendar_toolbar_contract.py
+          python3 tests/test_v1_33_i_final_release.py
+          php -l app/calendar_exception.php
+          node --check public/js/calendar-core.js
+          node --check public/js/calendar-occurrence.js
+          node --check public/js/calendar-month-layout.js
+          node --check public/js/calendar-views.js
+          node --check public/js/calendar.js
+          node tests/test_v1_33_rc2_asset_loader.js
+          node --check public/js/calendar-recurrence.js
+          node --check public/js/calendar-event-details.js
+          node --check public/js/calendar-source-actions.js
+          node --check public/js/calendar-polish.js
+          node --check public/js/calendar-polish-r3.js
 
       - name: Diagnose feature contracts after Calendar
         run: bash tests/run-current-feature-diagnostics.sh post-calendar
