@@ -74,13 +74,13 @@ jobs:
         run: bash tests/run-current.sh
 
       - name: Diagnose feature contracts before Calendar
-        run: bash tests/run-v1-34-2-feature-diagnostics.sh pre-calendar
+        run: bash tests/run-current-feature-diagnostics.sh pre-calendar
 
       - name: Diagnose Calendar feature contracts
-        run: bash tests/run-v1-34-2-feature-diagnostics.sh calendar
+        run: bash tests/run-current-feature-diagnostics.sh calendar
 
       - name: Diagnose feature contracts after Calendar
-        run: bash tests/run-v1-34-2-feature-diagnostics.sh post-calendar
+        run: bash tests/run-current-feature-diagnostics.sh post-calendar
 
       - name: Run current feature contract tests
         run: bash tests/run-current-features.sh
