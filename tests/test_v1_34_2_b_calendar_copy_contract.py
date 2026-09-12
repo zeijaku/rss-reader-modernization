@@ -41,18 +41,18 @@ check("registerForm.setAttribute('data-calendar-recurrence-submit-ready', '1')" 
 check("registerForm.setAttribute('aria-busy', 'false')" in copy_js
       and '.calendar-event-recurrence-loading' in copy_js,
       'copy clears stale recurrence loading state before user review')
-check("./js/calendar-copy.js?v=1.34.2-dev.3" in loader,
-      'Calendar copy module is loaded with the current dev.3 cache key')
-occurrence_pos = loader.find("./js/calendar-occurrence.js?v=1.34.2-dev.3")
-recurrence_pos = loader.find("./js/calendar-recurrence.js?v=1.34.2-dev.3")
-detail_pos = loader.find("./js/calendar-event-details.js?v=1.34.2-dev.3")
-copy_pos = loader.find("./js/calendar-copy.js?v=1.34.2-dev.3")
+check("./js/calendar-copy.js?v=1.34.2-dev.4" in loader,
+      'Calendar copy module is loaded with the current dev.4 cache key')
+occurrence_pos = loader.find("./js/calendar-occurrence.js?v=1.34.2-dev.4")
+recurrence_pos = loader.find("./js/calendar-recurrence.js?v=1.34.2-dev.4")
+detail_pos = loader.find("./js/calendar-event-details.js?v=1.34.2-dev.4")
+copy_pos = loader.find("./js/calendar-copy.js?v=1.34.2-dev.4")
 check(-1 not in (occurrence_pos, recurrence_pos, detail_pos, copy_pos)
       and occurrence_pos < recurrence_pos < detail_pos < copy_pos,
       'copy module loads after occurrence, recurrence and event-detail form controllers')
-check("const APP_VERSION = '1.34.2-dev.3';" in version
-      and "const APP_ASSET_REVISION = '1.34.2-dev.3';" in version,
-      'application and asset revisions are synchronized at 1.34.2-dev.3')
+check("const APP_VERSION = '1.34.2-dev.4';" in version
+      and "const APP_ASSET_REVISION = '1.34.2-dev.4';" in version,
+      'application and asset revisions are synchronized at 1.34.2-dev.4')
 check('test_v1_34_2_b_calendar_copy_contract.py' in workflow
       and 'test_v1_34_2_b_calendar_copy.js' in workflow,
       'CI executes both static and runtime Calendar copy tests')
