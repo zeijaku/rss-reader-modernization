@@ -93,3 +93,22 @@ jobs:
 
       - name: Run current feature contract tests
         run: bash tests/run-current-features.sh
+
+      - name: Build V1.34.2-dev.8 rental-server ZIP
+        if: matrix.php == '8.1'
+        run: |
+          zip -9 rss-reader-modernization-v1.34.2-dev.8-release-readiness.zip \
+            app/version.php \
+            public/js/calendar.js \
+            public/js/calendar-drag-drop.js \
+            public/js/camera-video-streaming.js \
+            public/js/rss-management.js
+          unzip -t rss-reader-modernization-v1.34.2-dev.8-release-readiness.zip
+
+      - name: Upload V1.34.2-dev.8 rental-server ZIP
+        if: matrix.php == '8.1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: v1.34.2-dev.8-release-readiness
+          path: rss-reader-modernization-v1.34.2-dev.8-release-readiness.zip
+          if-no-files-found: error
