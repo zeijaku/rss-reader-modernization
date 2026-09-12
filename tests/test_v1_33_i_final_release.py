@@ -22,6 +22,7 @@ current_version = version_constants.get('APP_VERSION', '')
 current_label = version_constants.get('APP_VERSION_LABEL', '')
 current_revision = version_constants.get('APP_ASSET_REVISION', '')
 version_match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)(?:-(?:rc\d+|dev\.\d+))?', current_version)
+is_formal_release = '-' not in current_version
 
 passed = 0
 failed = 0
@@ -42,7 +43,7 @@ check(version_match is not None and tuple(map(int, version_match.groups()[:3])) 
 check(current_label == f'RSS Reader Modernization {current_version}',
       'visible application label follows the current application version')
 check(bool(current_revision) and current_revision == current_version,
-      'formal assets use the current immutable release cache key')
+      'current assets use the current immutable checkpoint/release cache key')
 check('var ASSET_RETRY_LIMIT = 1;' in loader
       and 'var ASSET_RETRY_DELAY_MS = 600;' in loader,
       'accepted static asset retry count and delay remain bounded')
@@ -50,16 +51,24 @@ check('scriptQueue.push(src);' in loader and 'startScriptQueue();' in loader,
       'accepted ordered JavaScript queue remains active')
 check('var STYLE_BATCH_SIZE = 4;' in loader and 'startStyleQueue();' in loader,
       'accepted stylesheet batches remain bounded and declaration-ordered')
-check(f'# RSS Reader Modernization {current_version}' in notes
-      and '正式Releaseではありません' not in notes,
-      'release notes describe the current formal release without an RC warning')
+if is_formal_release:
+    check(f'# RSS Reader Modernization {current_version}' in notes
+          and '正式Releaseではありません' not in notes,
+          'release notes describe the current formal release without an RC warning')
+    check(f'Stable release:** `RSS Reader Modernization {current_version}`' in readme
+          and f'Release tag: `v{current_version}`' in readme,
+          'README identifies the current stable source and intended tag')
+    check(changelog.startswith(f'## {current_version} - '),
+          'CHANGELOG starts with the current formal release entry')
+    check(release_request == current_version,
+          'browser fallback release request matches the current application version')
+else:
+    check(f'Stable release:** `RSS Reader Modernization {current_version}`' not in readme,
+          'development checkpoint does not replace README stable release metadata')
+    check(release_request != current_version,
+          'development checkpoint does not replace the formal release request')
 check('Verification limits' in notes and 'PHP 8.1' in notes and 'PHP 8.4' in notes,
       'release notes disclose runtime verification limits and final gates')
-check(f'Stable release:** `RSS Reader Modernization {current_version}`' in readme
-      and f'Release tag: `v{current_version}`' in readme,
-      'README identifies the current stable source and intended tag')
-check(changelog.startswith(f'## {current_version} - '),
-      'CHANGELOG starts with the current formal release entry')
 check('日程のコピー' in future and '日程のDrag & Drop' in future,
       'future Calendar copy and Drag & Drop requests remain recorded')
 check('V1.33対象外' in future and 'DB変更は現時点では不要' in future,
@@ -77,8 +86,6 @@ check('次の26 table' in installation and 'rss_calendar_event_exception' in ins
       'fresh-install table inventory remains updated for V1.33')
 check("'deliverables'" in complete_builder,
       'Complete Source builder excludes local checkpoint and final deliverables')
-check(release_request == current_version,
-      'browser fallback release request matches the current application version')
 
 stale = []
 for base in (root / 'app', root / 'public'):
