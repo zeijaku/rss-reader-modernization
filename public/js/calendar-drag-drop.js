@@ -227,6 +227,7 @@
                 var message = status === 'timeout' ? '通信がタイムアウトしました' : '予定を移動出来ませんでした';
                 if (xhr && xhr.responseJSON && xhr.responseJSON.error && xhr.responseJSON.error.message) message = xhr.responseJSON.error.message;
                 showNotice(message, 'danger');
+                if (xhr && xhr.status === 409) $(document).trigger('calendar:occurrenceChanged');
             })
             .always(function () { pending = false; finishDrag(); schedulePrepare(); });
     }
