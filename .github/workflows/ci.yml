@@ -101,12 +101,17 @@ jobs:
           node tests/test_v1_33_c_calendar_range_ui.js
           node tests/test_v1_33_c_calendar_submit_ui.js
 
-      - name: Diagnose V1.33-D Calendar contracts
-        run: |
-          php tests/test_v1_33_d_calendar_exception.php
-          python3 tests/test_v1_33_d_calendar_exception_http.py
-          python3 tests/test_v1_33_d_calendar_exception_contract.py
-          sh tests/test_v1_33_d_mariadb_migration.sh
+      - name: Diagnose V1.33-D exception runtime
+        run: php tests/test_v1_33_d_calendar_exception.php
+
+      - name: Diagnose V1.33-D exception HTTP
+        run: python3 tests/test_v1_33_d_calendar_exception_http.py
+
+      - name: Diagnose V1.33-D exception contract
+        run: python3 tests/test_v1_33_d_calendar_exception_contract.py
+
+      - name: Diagnose V1.33-D MariaDB migration
+        run: sh tests/test_v1_33_d_mariadb_migration.sh
 
       - name: Diagnose V1.33-E+ Calendar contracts
         run: |
