@@ -29,6 +29,6 @@
     $('#opmlExportButton').on('click', function () {
         var $button = $(this).prop('disabled', true); setAlert($('#opmlExportResult'), 'info', 'Exportデータを作成しています。'); apiPost('opml.export').done(function (response) { var data = response && response.data ? response.data : {}; if (typeof data.content !== 'string' || typeof data.filename !== 'string') { setAlert($('#opmlExportResult'), 'danger', 'Exportデータが不正です。'); return; } var blob = new Blob([data.content], {type: data.mime || 'text/x-opml;charset=UTF-8'}); var url = window.URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = data.filename; document.body.appendChild(a); a.click(); a.remove(); window.setTimeout(function () { window.URL.revokeObjectURL(url); }, 0); setAlert($('#opmlExportResult'), 'success', (data.count || 0) + '件のRSSをExportしました。'); }).fail(function (xhr) { var message = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error.message : 'OPML Exportに失敗しました。'; setAlert($('#opmlExportResult'), 'danger', message); }).always(function () { $button.prop('disabled', false); });
     });
-    $.getScript('./js/rss-rules.js?v=1.34.2-dev.7').done(function () { $.getScript('./js/rss-rules-integration.js?v=1.34.2-dev.7'); });
+    $.getScript('./js/rss-rules.js?v=1.34.2-dev.8').done(function () { $.getScript('./js/rss-rules-integration.js?v=1.34.2-dev.8'); });
     $(loadFeeds);
 })(jQuery, document, window);
