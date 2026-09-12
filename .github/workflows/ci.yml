@@ -76,6 +76,12 @@ jobs:
       - name: Diagnose feature contracts before Calendar
         run: bash tests/run-current-feature-diagnostics.sh pre-calendar
 
+      - name: Diagnose V1.33-I checkpoint release contract
+        run: python3 tests/test_v1_33_i_final_release.py
+
+      - name: Diagnose V1.33 RC2 asset loader
+        run: node tests/test_v1_33_rc2_asset_loader.js
+
       - name: Diagnose Calendar feature contracts
         run: bash tests/run-current-feature-diagnostics.sh calendar
 
