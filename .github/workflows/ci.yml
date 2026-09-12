@@ -70,6 +70,12 @@ jobs:
       - name: Check V1.34.2-A smartphone modal contract
         run: python3 tests/test_v1_34_2_a_modal_background.py
 
+      - name: Check V1.34.2-B Calendar copy contracts
+        run: |
+          python3 tests/test_v1_34_2_b_calendar_copy_contract.py
+          node tests/test_v1_34_2_b_calendar_copy.js
+          node --check public/js/calendar-copy.js
+
       - name: Run current core regression tests
         run: bash tests/run-current.sh
 
