@@ -7,8 +7,9 @@ function jq(arg){ if(typeof arg==='function'){return;} return {find:function(){r
 jq.extend=Object.assign;
 const documentStub={addEventListener:function(){}};
 const windowStub={jQuery:jq,setTimeout:function(fn){fn();},location:{reload:function(){}}};
-vm.createContext({window:windowStub,document:documentStub,console:console,Date:Date,Object:Object,Number:Number,String:String,Math:Math});
-vm.runInContext(source,{window:windowStub,document:documentStub,console:console,Date:Date,Object:Object,Number:Number,String:String,Math:Math},{filename:'calendar-drag-drop.js'});
+const context={window:windowStub,document:documentStub,console:console,Date:Date,Object:Object,Number:Number,String:String,Math:Math};
+vm.createContext(context);
+vm.runInContext(source,context,{filename:'calendar-drag-drop.js'});
 const api=windowStub.IguguruCalendarDragDrop;
 check(!!api,'drag/drop pure helper API is exposed');
 check(api.dayDelta('2026-09-10','2026-09-13')===3,'positive day delta');
