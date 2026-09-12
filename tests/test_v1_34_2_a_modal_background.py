@@ -20,25 +20,30 @@ bootstrap_css = text('public/css/bootstrap-5.3.8.min.css')
 index_php = text('public/index.php')
 modals_php = text('app/view/dashboard_modals.php')
 
-mobile_blocks = re.findall(r'@media\s*\(max-width:\s*575\.98px\)\s*\{(.*?)\n\}', utility_css, re.S)
-modal_rule = re.compile(
-    r'\.modal\s*\{\s*--bs-modal-footer-bg:\s*var\(--bs-modal-bg\);\s*\}',
-    re.S,
-)
-matched_mobile_rule = any(modal_rule.search(block) for block in mobile_blocks)
 fix_block = re.search(
     r'/\* V1\.34\.2-A:.*?@media\s*\(max-width:\s*575\.98px\).*?\n\}',
     utility_css,
     re.S,
 )
+fix_text = fix_block.group(0) if fix_block else ''
 
-check(matched_mobile_rule, 'smartphone CSS maps the shared modal footer background to the active modal background')
+check(fix_block is not None, 'smartphone modal opacity override exists at 575.98px and below')
 check(
-    utility_css.count('--bs-modal-footer-bg: var(--bs-modal-bg);') == 1,
-    'the V1.34.2-A modal footer override is defined exactly once',
+    '.modal .modal-content' in fix_text
+    and '--bs-modal-bg: var(--bs-body-bg, #fff);' in fix_text
+    and 'background-color: var(--bs-body-bg, #fff);' in fix_text,
+    'smartphone modal content has an explicit opaque theme-aware surface',
 )
 check(
-    fix_block is not None and '!important' not in fix_block.group(0),
+    '.modal .modal-body' in fix_text and '.modal .modal-footer' in fix_text,
+    'smartphone modal body and footer explicitly share the opaque surface',
+)
+check(
+    '--bs-modal-footer-bg: var(--bs-body-bg, #fff);' in fix_text,
+    'smartphone modal footer variable uses the same opaque theme-aware surface',
+)
+check(
+    '!important' not in fix_text,
     'the modal fix does not force precedence with !important',
 )
 check(
@@ -46,7 +51,7 @@ check(
     and '--bs-modal-footer-bg:' in bootstrap_css
     and 'background-color:var(--bs-modal-bg)' in bootstrap_css
     and 'background-color:var(--bs-modal-footer-bg)' in bootstrap_css,
-    'Bootstrap modal variables still provide the theme-aware content/footer surfaces used by the fix',
+    'Bootstrap modal variables and surfaces remain intact',
 )
 
 theme_pos = index_php.find("resolve_theme_stylesheet($ui['conf_style'] ?? null)")
@@ -59,7 +64,7 @@ check(
 
 check(
     modals_php.count('class="modal ') >= 8,
-    'Dashboard keeps multiple Bootstrap modal instances covered by the shared .modal selector',
+    'Dashboard keeps multiple Bootstrap modal instances covered by the shared modal selectors',
 )
 check(
     re.search(r'<div class="modal-content">\s*<form\b', modals_php) is not None,
@@ -67,7 +72,7 @@ check(
 )
 check(
     '<div class="modal-content"><form' in modals_php,
-    'compact one-line form-wrapped Dashboard modal structure remains covered by the same .modal selector',
+    'compact one-line form-wrapped Dashboard modal structure remains covered',
 )
 check(
     utility_css.find('/* V1.34.2-A:') > utility_css.find('@media (pointer: coarse)'),
