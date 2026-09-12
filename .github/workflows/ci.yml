@@ -93,13 +93,16 @@ jobs:
           php tests/test_v1_25_f_calendar_polish_contract.php
           php tests/test_v1_25_f_calendar_polish_r3_contract.php
 
-      - name: Diagnose V1.33-C-D Calendar contracts
+      - name: Diagnose V1.33-C Calendar contracts
         run: |
           php tests/test_v1_33_c_calendar_range.php
           python3 tests/test_v1_33_c_calendar_range_http.py
           python3 tests/test_v1_33_c_calendar_range_contract.py
           node tests/test_v1_33_c_calendar_range_ui.js
           node tests/test_v1_33_c_calendar_submit_ui.js
+
+      - name: Diagnose V1.33-D Calendar contracts
+        run: |
           php tests/test_v1_33_d_calendar_exception.php
           python3 tests/test_v1_33_d_calendar_exception_http.py
           python3 tests/test_v1_33_d_calendar_exception_contract.py
