@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from pathlib import Path
-import re
 
 ROOT = Path(__file__).resolve().parents[1]
 copy_js = (ROOT / 'public/js/calendar-copy.js').read_text(encoding='utf-8')
@@ -16,7 +15,7 @@ def check(condition: bool, message: str) -> None:
 
 check("'changeCalendarEventForm'" in copy_js and "'registerCalendarEventForm'" in copy_js,
       'copy workflow reuses the existing edit and register Calendar forms')
-check("button.type = 'button'" in copy_js and "copy_calendar_event" in copy_js,
+check("button.type = 'button'" in copy_js and 'copy_calendar_event' in copy_js,
       'copy action is an explicit non-submit button')
 check('snapshotChangeForm' in copy_js and 'applySnapshot' in copy_js,
       'copy workflow separates source snapshot from destination population')
@@ -36,18 +35,24 @@ check("bootstrap.Modal.getOrCreateInstance(registerModal).show()" in copy_js,
       'copy opens the existing new-event modal for review before save')
 check("data-calendar-copy-source" in copy_js,
       'destination form records non-sensitive copy origin state for UI/test visibility')
-check("./js/calendar-copy.js?v=1.34.2-dev.2" in loader,
-      'Calendar copy module is loaded with the current dev.2 cache key')
-occurrence_pos = loader.find("./js/calendar-occurrence.js?v=1.34.2-dev.2")
-recurrence_pos = loader.find("./js/calendar-recurrence.js?v=1.34.2-dev.2")
-detail_pos = loader.find("./js/calendar-event-details.js?v=1.34.2-dev.2")
-copy_pos = loader.find("./js/calendar-copy.js?v=1.34.2-dev.2")
+check("registerForm.setAttribute('data-calendar-recurrence-submit-ready', '1')" in copy_js
+      and copy_js.find("registerForm.setAttribute('data-calendar-recurrence-submit-ready', '1')") > copy_js.find("setValue(registerForm, '.registerCalendarEventRepeatUntil'") ,
+      'copied recurrence data becomes save-ready only after all recurrence values are populated')
+check("registerForm.setAttribute('aria-busy', 'false')" in copy_js
+      and '.calendar-event-recurrence-loading' in copy_js,
+      'copy clears stale recurrence loading state before user review')
+check("./js/calendar-copy.js?v=1.34.2-dev.3" in loader,
+      'Calendar copy module is loaded with the current dev.3 cache key')
+occurrence_pos = loader.find("./js/calendar-occurrence.js?v=1.34.2-dev.3")
+recurrence_pos = loader.find("./js/calendar-recurrence.js?v=1.34.2-dev.3")
+detail_pos = loader.find("./js/calendar-event-details.js?v=1.34.2-dev.3")
+copy_pos = loader.find("./js/calendar-copy.js?v=1.34.2-dev.3")
 check(-1 not in (occurrence_pos, recurrence_pos, detail_pos, copy_pos)
       and occurrence_pos < recurrence_pos < detail_pos < copy_pos,
       'copy module loads after occurrence, recurrence and event-detail form controllers')
-check("const APP_VERSION = '1.34.2-dev.2';" in version
-      and "const APP_ASSET_REVISION = '1.34.2-dev.2';" in version,
-      'application and asset revisions are synchronized at 1.34.2-dev.2')
+check("const APP_VERSION = '1.34.2-dev.3';" in version
+      and "const APP_ASSET_REVISION = '1.34.2-dev.3';" in version,
+      'application and asset revisions are synchronized at 1.34.2-dev.3')
 check('test_v1_34_2_b_calendar_copy_contract.py' in workflow
       and 'test_v1_34_2_b_calendar_copy.js' in workflow,
       'CI executes both static and runtime Calendar copy tests')
