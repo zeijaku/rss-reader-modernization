@@ -4,7 +4,7 @@
     var HLS_LIBRARY_VERSION = '1.6.16';
     var HLS_LIBRARY_URL = 'https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js';
     var HLS_LIBRARY_INTEGRITY = 'sha384-5E8B0pTlZZJMabWpC0fyYf6OUpe15jJij34BqBAh4NXoHAlLNOjCPRrwtOXOQFAn';
-    function injectStylesheet() { if (document.querySelector('link[data-camera-video-streaming-style]')) return; var link = document.createElement('link'); link.rel = 'stylesheet'; link.href = './css/camera-video-streaming.css?v=1.34.2-dev.7'; link.setAttribute('data-camera-video-streaming-style', 'true'); document.head.appendChild(link); }
+    function injectStylesheet() { if (document.querySelector('link[data-camera-video-streaming-style]')) return; var link = document.createElement('link'); link.rel = 'stylesheet'; link.href = './css/camera-video-streaming.css?v=1.34.2-dev.8'; link.setAttribute('data-camera-video-streaming-style', 'true'); document.head.appendChild(link); }
     function addStatus($stage, message, type) { var className = 'camera-video-streaming-status'; if (type === 'error') className += ' is-error'; else if (type === 'warning') className += ' is-warning'; return $('<div>').addClass(className).attr({role: type === 'error' ? 'alert' : 'status', 'aria-live': 'polite'}).text(String(message || '')).appendTo($stage); }
     function setStatus($status, message, type) { $status.removeClass('is-error is-warning').attr('role', type === 'error' ? 'alert' : 'status'); if (type === 'error') $status.addClass('is-error'); else if (type === 'warning') $status.addClass('is-warning'); $status.text(String(message || '')); }
     function mixedContent(mediaUrl) { return window.location.protocol === 'https:' && /^http:\/\//i.test(String(mediaUrl || '')); }
