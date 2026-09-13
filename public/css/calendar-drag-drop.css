@@ -1,0 +1,22 @@
+.calendar-event-edit-trigger[data-calendar-drag-ready="1"] {
+    cursor: grab;
+}
+
+.calendar-event-edit-trigger[data-calendar-drag-ready="1"]:active {
+    cursor: grabbing;
+}
+
+.calendar-event-dragging {
+    opacity: 0.55;
+}
+
+.calendar-day.calendar-drag-drop-target {
+    outline: 2px dashed currentColor;
+    outline-offset: -3px;
+}
+
+@media (hover: none), (pointer: coarse) {
+    .calendar-event-edit-trigger[data-calendar-drag-ready="1"] {
+        cursor: pointer;
+    }
+}

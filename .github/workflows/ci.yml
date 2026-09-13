@@ -67,7 +67,29 @@ jobs:
       - name: Check standard release flow hygiene
         run: python3 tests/test_release_flow.py
 
-      - name: Run current regression tests
+      - name: Check V1.34.2-A smartphone modal contract
+        run: python3 tests/test_v1_34_2_a_modal_background.py
+
+      - name: Check V1.34.2-B Calendar copy contracts
         run: |
-          bash tests/run-current.sh
-          bash tests/run-current-features.sh
+          python3 tests/test_v1_34_2_b_calendar_copy_contract.py
+          node tests/test_v1_34_2_b_calendar_copy.js
+          node --check public/js/calendar-copy.js
+
+      - name: Check V1.34.2-C Calendar drag and drop contracts
+        run: |
+          python3 tests/test_v1_34_2_c_calendar_drag_drop_contract.py
+          node tests/test_v1_34_2_c_calendar_drag_drop.js
+          node --check public/js/calendar-drag-drop.js
+
+      - name: Check V1.34.2-D Card mouse wheel contract
+        run: python3 tests/test_v1_34_2_d_card_mouse_wheel.py
+
+      - name: Check V1.34.2-E release readiness
+        run: python3 tests/test_v1_34_2_e_release_readiness.py
+
+      - name: Run current core regression tests
+        run: bash tests/run-current.sh
+
+      - name: Run current feature contract tests
+        run: bash tests/run-current-features.sh
