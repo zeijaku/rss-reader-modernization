@@ -12,10 +12,10 @@ checks = []
 def check(ok, msg):
     checks.append(bool(ok)); print(('PASS' if ok else 'FAIL') + ': ' + msg)
 
-check("./js/calendar-drag-drop.js?v=1.34.2-dev.8" in loader, 'drag module uses dev.8 cache key')
-check("./css/calendar-drag-drop.css?v=1.34.2-dev.8" in loader, 'drag style uses dev.8 cache key')
-check(loader.find('calendar-copy.js?v=1.34.2-dev.8') < loader.find('calendar-drag-drop.js?v=1.34.2-dev.8'), 'drag module loads after Calendar edit/copy controllers')
-check("const APP_VERSION = '1.34.2-dev.8';" in version and "const APP_ASSET_REVISION = '1.34.2-dev.8';" in version, 'version and asset revision are dev.8')
+check("./js/calendar-drag-drop.js?v=1.34.2-dev.9" in loader, 'drag module uses dev.8 cache key')
+check("./css/calendar-drag-drop.css?v=1.34.2-dev.9" in loader, 'drag style uses dev.8 cache key')
+check(loader.find('calendar-copy.js?v=1.34.2-dev.9') < loader.find('calendar-drag-drop.js?v=1.34.2-dev.9'), 'drag module loads after Calendar edit/copy controllers')
+check("const APP_VERSION = '1.34.2-dev.9';" in version and "const APP_ASSET_REVISION = '1.34.2-dev.9';" in version, 'version and asset revision are dev.8')
 check("calendar.color.update" in drag and "calendar.occurrence.update" in drag, 'existing normal and occurrence update actions are reused')
 check("./calendar_color_api.php" in drag and "./calendar_recurrence_api.php" in drag, 'existing Calendar endpoints are reused')
 check('original_occurrence_start_date' in drag and 'occurrence_revision' in drag, 'occurrence move retains original identity and optimistic revision')
