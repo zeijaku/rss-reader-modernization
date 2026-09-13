@@ -1,0 +1,49 @@
+name: Temporary Bootstrap close-button migration
+
+on:
+  push:
+    branches:
+      - release/v1.34.2
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: ${{ !contains(github.event.head_commit.message, '[bootstrap-close-migrated]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/v1.34.2
+          fetch-depth: 0
+
+      - name: Migrate modal close buttons to Bootstrap 5.3 color mode
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('app/view/dashboard_modals.php')
+          text = path.read_text(encoding='utf-8')
+          old = 'class="btn-close btn-close-white" data-bs-dismiss="modal"'
+          new = 'class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal"'
+          count = text.count(old)
+          if count == 0:
+              raise SystemExit('No legacy btn-close-white modal buttons found; refusing no-op migration.')
+          text = text.replace(old, new)
+          path.write_text(text, encoding='utf-8')
+          print(f'Migrated {count} modal close buttons.')
+          if 'btn-close-white' in text:
+              raise SystemExit('Unexpected btn-close-white remains in dashboard_modals.php')
+          PY
+
+      - name: Commit migration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/view/dashboard_modals.php
+          git diff --cached --check
+          git diff --cached --quiet && { echo "No staged changes"; exit 1; }
+          git commit -m "V1.34.2: align modal close buttons with Bootstrap 5.3 [bootstrap-close-migrated]"
+          git push origin HEAD:release/v1.34.2
