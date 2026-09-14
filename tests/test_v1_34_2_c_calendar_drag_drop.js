@@ -1,0 +1,42 @@
+'use strict';
+const fs = require('fs'); const vm = require('vm');
+const source = fs.readFileSync('public/js/calendar-drag-drop.js', 'utf8');
+let passed=0, failed=0;
+function check(ok,msg){ if(ok){passed++;console.log('PASS: '+msg);}else{failed++;console.log('FAIL: '+msg);} }
+function jq(arg){ if(typeof arg==='function'){return;} return {find:function(){return {each:function(){}};},on:function(){return this;},attr:function(){return '';},removeAttr:function(){return this;},removeClass:function(){return this;},addClass:function(){return this;}}; }
+jq.extend=Object.assign;
+const documentStub={addEventListener:function(){}};
+const windowStub={jQuery:jq,setTimeout:function(fn){fn();},location:{reload:function(){}}};
+const context={window:windowStub,document:documentStub,console:console,Date:Date,Object:Object,Number:Number,String:String,Math:Math};
+vm.createContext(context);
+vm.runInContext(source,context,{filename:'calendar-drag-drop.js'});
+const api=windowStub.IguguruCalendarDragDrop;
+check(!!api,'drag/drop pure helper API is exposed');
+check(api.dayDelta('2026-09-10','2026-09-13')===3,'positive day delta');
+check(api.dayDelta('2026-09-10','2026-09-08')===-2,'negative day delta');
+check(api.shiftDate('2026-01-31',1)==='2026-02-01','month boundary shift');
+check(api.shiftDate('2026-12-31',1)==='2027-01-01','year boundary shift');
+check(api.shiftDate('2028-02-28',1)==='2028-02-29','leap-day shift');
+check(api.shiftDate('2027-02-29',1)==='','invalid date rejected');
+let range=api.shiftRange('2026-09-10','2026-09-12','2026-09-11','2026-09-15');
+check(range.start==='2026-09-14'&&range.end==='2026-09-16'&&range.delta===4,'multi-day range preserves duration relative to dragged segment');
+function el(attrs){return {getAttribute:function(k){return Object.prototype.hasOwnProperty.call(attrs,k)?attrs[k]:null;}};}
+const normal=api.sourceState(el({'data-event-id':'41','data-event-title':'会議','data-event-start-date':'2026-09-10','data-event-end-date':'2026-09-10','data-event-note':'memo','data-calendar-event-color':'purple','data-calendar-event-all-day':'0','data-calendar-event-start-time':'09:30','data-calendar-event-end-time':'10:45','data-calendar-event-url':'https://example.com','data-calendar-event-repeat-type':'none'}),'2026-09-10');
+let plan=api.buildMovePlan(normal,'2026-09-12');
+check(plan.action==='calendar.color.update'&&plan.range.delta===2,'normal event reuses normal update action');
+check(plan.payload.calendar_event_start_date==='2026-09-12'&&plan.payload.calendar_event_end_date==='2026-09-12','normal event date is shifted');
+check(plan.payload.calendar_event_title==='会議'&&plan.payload.calendar_event_note==='memo'&&plan.payload.calendar_event_color==='purple'&&plan.payload.calendar_event_url==='https://example.com','normal event metadata is preserved');
+check(plan.payload.calendar_event_all_day==='0'&&plan.payload.calendar_event_start_time==='09:30'&&plan.payload.calendar_event_end_time==='10:45','timed event values are preserved');
+check(api.buildMovePlan(normal,'2026-09-10')===null,'same-day drop is a no-op');
+const allDay=api.sourceState(el({'data-event-id':'42','data-event-title':'休暇','data-event-start-date':'2026-09-10','data-event-end-date':'2026-09-11','data-calendar-event-all-day':'1','data-calendar-event-start-time':'09:00','data-calendar-event-end-time':'10:00','data-calendar-event-repeat-type':'none'}),'2026-09-10');
+plan=api.buildMovePlan(allDay,'2026-09-09');
+check(plan.payload.calendar_event_start_date==='2026-09-09'&&plan.payload.calendar_event_end_date==='2026-09-10','backward multi-day move preserves range');
+check(plan.payload.calendar_event_start_time===''&&plan.payload.calendar_event_end_time==='','all-day move does not send stale time values');
+const recurring=api.sourceState(el({'data-event-id':'51','data-event-title':'定例','data-event-start-date':'2026-09-01','data-event-end-date':'2026-09-01','data-calendar-event-repeat-type':'weekly','data-calendar-occurrence-start-date':'2026-09-15','data-calendar-occurrence-end-date':'2026-09-15','data-calendar-original-occurrence-start-date':'2026-09-15','data-calendar-occurrence-revision':'7','data-calendar-event-all-day':'1'}),'2026-09-15');
+plan=api.buildMovePlan(recurring,'2026-09-17');
+check(plan.action==='calendar.occurrence.update'&&plan.recurring===true,'recurring move is occurrence-only');
+check(plan.payload.original_occurrence_start_date==='2026-09-15'&&plan.payload.occurrence_revision==='7','occurrence identity/revision are preserved');
+check(plan.payload.calendar_event_start_date==='2026-09-17','displayed occurrence is shifted, not series base date');
+check(api.sourceState(el({'data-event-id':'52','data-event-start-date':'2026-09-15','data-event-end-date':'2026-09-15','data-calendar-event-repeat-type':'weekly','data-calendar-original-occurrence-start-date':'2026-09-15','data-calendar-exception-kind':'cancelled'}),'2026-09-15')===null,'cancelled occurrence is rejected');
+check(api.sourceState(el({'data-event-id':'bad','data-event-start-date':'2026-09-15','data-event-end-date':'2026-09-15','data-calendar-event-repeat-type':'none'}),'2026-09-15')===null,'invalid event id is rejected');
+console.log('RESULT: PASS '+passed+' / FAIL '+failed+' / SKIP 0'); process.exit(failed?1:0);

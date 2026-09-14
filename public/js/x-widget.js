@@ -181,7 +181,7 @@
         var $form = $('<form>').attr({id: register ? 'registerXWidgetForm' : 'changeXWidgetForm', method: 'post', action: './'});
         var $header = $('<div>').addClass('modal-header x-widget-modal-header')
             .append($('<h5>').addClass('modal-title').attr('id', titleId).append($('<i>').addClass('fab fa-x-twitter me-2').attr('aria-hidden', 'true'), document.createTextNode(register ? 'X Widgetを追加' : 'X Widgetを編集')))
-            .append($('<button>').attr({type: 'button', 'data-bs-dismiss': 'modal', 'aria-label': '閉じる'}).addClass('btn-close btn-close-white'));
+            .append($('<button>').attr({type: 'button', 'data-bs-dismiss': 'modal', 'aria-label': '閉じる'}).attr('data-bs-theme', 'dark').addClass('btn-close'));
         var $body = $('<div>').addClass('modal-body');
         $('<input>').attr({type: 'hidden'}).addClass(register ? 'registerXWidgetLocation' : 'changeXWidgetId').appendTo($body);
         $('<div>').addClass('alert alert-warning small x-widget-advanced-note')

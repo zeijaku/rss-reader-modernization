@@ -291,7 +291,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
         <div class="modal-content">
             <div class="modal-header" style="color: #fff; background-color: #555;">
                 <h5 class="modal-title" id="accountSettingsTitle"><i class="fas fa-user-cog" aria-hidden="true"></i> アカウント設定</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <?php account_security_render($accountSecurityState, 'accountSecurityTitle'); ?>

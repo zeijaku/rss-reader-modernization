@@ -1,0 +1,7 @@
+/* V1.34.2-D: Dashboard cards may contain bounded internal scroll areas.
+ * Keep their own scrolling while content remains, but allow the wheel gesture
+ * to chain to the Dashboard page at the top/bottom instead of trapping it. */
+#main-content .dashboard-grid .dashboard-widget,
+#main-content .dashboard-grid .dashboard-widget * {
+    overscroll-behavior-y: auto;
+}

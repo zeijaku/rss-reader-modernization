@@ -2,8 +2,12 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.34.1`
-Release tag: `v1.34.1`
+**Stable release:** `RSS Reader Modernization 1.34.2`
+Release tag: `v1.34.2`
+
+Version 1.34.2は表示・操作性改善のPatch Releaseです。Smartphone Modal背景、Calendar予定のコピー、PCでの通常予定／繰り返しOccurrenceの日付Drag & Drop、Dashboardカード上でのページスクロールを改善します。日付移動後はCalendarカードのみ更新し、409競合時の再同期を維持します。暗色ヘッダーのModal closeボタンはBootstrap 5.3方式へ統一します。V1.34.1の受信／Sent添付表示・Downloadを含む既存機能を維持し、DB／API／新規Dependencyの変更はありません。
+
+このブランチの正式版メタデータは公開準備用です。merge・Tag作成・GitHub Release公開は別途承認後に行います。
 
 Version 1.34.1はV1.34.0のCorrection Releaseです。V1.34開発中および本番で動作確認済みだった受信メール／Sentメールの添付ファイル表示・ダウンロード実装が、正式Release作成時に誤って無効化されたため、安全境界を維持した既存実装を復元します。DB Migration、必須Config／Secretの追加はありません。
 

@@ -1,3 +1,19 @@
+## 1.34.2 - 2026-09-14
+
+### Display and interaction improvements
+- Made Smartphone Bootstrap modal content/body/footer use an opaque active-theme background.
+- Added Calendar copy-to-new for ordinary events, individual occurrences and recurring series through the existing creation flow.
+- Added desktop date Drag & Drop for ordinary events and individual recurring occurrences, preserving duration and other event fields.
+- Refresh only the affected Calendar card after a move; retain 409 occurrence conflict resynchronization and repeated-drag binding after redraw.
+- Allow native page scrolling over Dashboard cards while preserving internal scroll areas.
+- Use Bootstrap 5.3 `btn-close` with `data-bs-theme="dark"` for dark modal headers in Dashboard, Stock, Settings and dynamically created Widget dialogs.
+
+### Release readiness / compatibility
+- Synchronize application version, label, asset revision and A–E contracts to `1.34.2`, with the current PHP 8.1 / 8.4 regression gates retained.
+- Preserve existing functionality, including received/Sent Mail attachments restored in V1.34.1, and all existing authentication, owner scope, CSRF and validation boundaries.
+- No DB migration, API change, mandatory configuration, secret or dependency is introduced.
+- Final metadata prepares this branch for approval; merge, immutable tag creation and GitHub Release publication remain separate pending actions.
+
 ## 1.34.1 - 2026-09-11
 
 ### Mail received attachments correction

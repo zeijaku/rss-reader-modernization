@@ -382,3 +382,19 @@
         flex: 0 0 44px;
     }
 }
+
+/* V1.34.2-A: keep the shared Bootstrap modal surface opaque on smartphones.
+ * Use the active body surface so form-wrapped modal bodies and footers stay
+ * visually continuous across light and dark themes. */
+@media (max-width: 575.98px) {
+    .modal .modal-content {
+        --bs-modal-bg: var(--bs-body-bg, #fff);
+        --bs-modal-footer-bg: var(--bs-body-bg, #fff);
+        background-color: var(--bs-body-bg, #fff);
+    }
+
+    .modal .modal-body,
+    .modal .modal-footer {
+        background-color: var(--bs-body-bg, #fff);
+    }
+}
