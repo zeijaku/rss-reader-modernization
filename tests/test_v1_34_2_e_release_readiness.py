@@ -45,8 +45,10 @@ for path in ('public/stock.php', 'public/settings.php', 'public/js/info-board.js
 close_css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 check('btn-close-white' not in close_css
       and '.modal-header .btn-close[data-bs-theme="dark"]' in close_css
-      and '--bs-btn-close-filter: none;' in close_css,
-      'application white close-icon override covers Bootstrap 5.3 without double inversion')
+      and '--bs-btn-close-filter: none;' in close_css
+      and 'background-image: var(--bs-btn-close-bg);' in close_css
+      and 'filter: none;' in close_css,
+      'application white close-icon override covers Bootstrap 5.3 and Bootswatch without double inversion')
 
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
