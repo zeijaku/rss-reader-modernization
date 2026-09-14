@@ -97,9 +97,34 @@ if (!defined('APP_TOTP_SECRET_KEY_B64')) {
 if (!defined('APP_TOTP_ISSUER')) {
     define('APP_TOTP_ISSUER', app_env('APP_TOTP_ISSUER', 'iGuguru'));
 }
+// V1.35 Gmail OAuth2. Secrets stay in private deployment configuration.
+if (!defined('APP_MAIL_GOOGLE_OAUTH_CLIENT_ID')) {
+    define('APP_MAIL_GOOGLE_OAUTH_CLIENT_ID', trim(app_env('APP_MAIL_GOOGLE_OAUTH_CLIENT_ID', '')));
+}
+if (!defined('APP_MAIL_GOOGLE_OAUTH_CLIENT_SECRET')) {
+    define('APP_MAIL_GOOGLE_OAUTH_CLIENT_SECRET', trim(app_env('APP_MAIL_GOOGLE_OAUTH_CLIENT_SECRET', '')));
+}
+if (!defined('APP_MAIL_GOOGLE_OAUTH_REDIRECT_URI')) {
+    define('APP_MAIL_GOOGLE_OAUTH_REDIRECT_URI', trim(app_env('APP_MAIL_GOOGLE_OAUTH_REDIRECT_URI', '')));
+}
+if (!defined('APP_MAIL_GOOGLE_OAUTH_ALLOWED_EMAIL')) {
+    define('APP_MAIL_GOOGLE_OAUTH_ALLOWED_EMAIL', strtolower(trim(app_env('APP_MAIL_GOOGLE_OAUTH_ALLOWED_EMAIL', ''))));
+}
+if (!defined('APP_MAIL_CREDENTIAL_KEY_ID')) {
+    define('APP_MAIL_CREDENTIAL_KEY_ID', app_env('APP_MAIL_CREDENTIAL_KEY_ID', 'primary'));
+}
+if (!defined('APP_MAIL_CREDENTIAL_KEY_B64')) {
+    define('APP_MAIL_CREDENTIAL_KEY_B64', app_env('APP_MAIL_CREDENTIAL_KEY_B64', ''));
+}
+if (!defined('APP_MAIL_IMAP_TIMEOUT_SECONDS')) {
+    define('APP_MAIL_IMAP_TIMEOUT_SECONDS', max(2, min(30, (int) app_env('APP_MAIL_IMAP_TIMEOUT_SECONDS', '5'))));
+}
 // V1.32-C: the password-verified 2FA bridge stays short-lived and has its own rate namespace.
 if (!defined('AUTH_2FA_PENDING_TIMEOUT')) {
     define('AUTH_2FA_PENDING_TIMEOUT', max(60, min(900, (int) app_env('AUTH_2FA_PENDING_TIMEOUT', '300'))));
+}
+if (!defined('AUTH_REMEMBER_2FA_TRUST_SECONDS')) {
+    define('AUTH_REMEMBER_2FA_TRUST_SECONDS', max(3600, min(604800, (int) app_env('AUTH_REMEMBER_2FA_TRUST_SECONDS', '86400'))));
 }
 if (!defined('AUTH_2FA_RATE_WINDOW')) {
     define('AUTH_2FA_RATE_WINDOW', max(60, min(3600, (int) app_env('AUTH_2FA_RATE_WINDOW', '900'))));

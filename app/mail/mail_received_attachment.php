@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/mail_google_oauth.php';
+
 const MAIL_RECEIVED_ATTACHMENT_MAX_COUNT = 50;
 const MAIL_RECEIVED_ATTACHMENT_MAX_DOWNLOAD_BYTES = 26214400; // 25 MiB decoded content
 const MAIL_RECEIVED_ATTACHMENT_MAX_TRANSFER_BYTES = 83886080; // 80 MiB transfer-encoded safety cap
@@ -216,7 +218,7 @@ function mail_received_attachment_read(
                 'password' => $password,
                 'encryption' => $target['encryption'],
                 'validate_cert' => true,
-                'authentication' => 'plain',
+                'authentication' => ($account['authentication'] ?? 'plain') === 'oauth' ? 'oauth' : 'plain',
             ]);
             $stream = new AppMailPinnedImapStream($target['host'], $ip);
             $connection = new DirectoryTree\ImapEngine\Connection\ImapConnection($stream, null);
@@ -354,8 +356,8 @@ function mail_received_attachment_for_user(
     }
 
     try {
-        $password = mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''));
-    } catch (AppMailCredentialException) {
+        $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return ['ok' => false, 'code' => 'credential_unavailable'];
     }
 
@@ -364,11 +366,12 @@ function mail_received_attachment_for_user(
             'host' => $account['mail_account_host'] ?? null,
             'port' => $account['mail_account_port'] ?? null,
             'encryption' => $account['mail_account_encryption'] ?? null,
-            'username' => $account['mail_account_username'] ?? null,
-        ], $password, $uid, $folderToRead, $partId);
+            'username' => $auth['username'],
+            'authentication' => $auth['authentication'],
+        ], $auth['credential'], $uid, $folderToRead, $partId);
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($password);
+            sodium_memzero($auth['credential']);
         }
     }
 }

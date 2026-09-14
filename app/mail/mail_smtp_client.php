@@ -86,6 +86,35 @@ function mail_smtp_client_apply_password_auth(object $mailer, string $username, 
     $mailer->Password = $password;
 }
 
+function mail_smtp_client_apply_oauth_auth(object $mailer, string $username, string $accessToken): void
+{
+    $provider = new class($username, $accessToken) implements PHPMailer\PHPMailer\OAuthTokenProvider {
+        public function __construct(private string $username, private string $accessToken)
+        {
+        }
+
+        public function getOauth64(): string
+        {
+            return base64_encode('user=' . $this->username . "\x01auth=Bearer " . $this->accessToken . "\x01\x01");
+        }
+    };
+
+    $mailer->SMTPAuth = true;
+    $mailer->AuthType = 'XOAUTH2';
+    $mailer->Username = $username;
+    $mailer->Password = '';
+    $mailer->setOAuth($provider);
+}
+
+function mail_smtp_client_apply_auth(object $mailer, array $account, string $username, string $credential): void
+{
+    if (($account['authentication'] ?? 'plain') === 'oauth') {
+        mail_smtp_client_apply_oauth_auth($mailer, $username, $credential);
+        return;
+    }
+    mail_smtp_client_apply_password_auth($mailer, $username, $credential);
+}
+
 function mail_smtp_client_clear_auth(object $mailer): void
 {
     if (property_exists($mailer, 'Username')) {
@@ -246,7 +275,7 @@ function mail_smtp_client_send_plain_text(
         $connected = false;
         try {
             $mailer = mail_smtp_client_create_mailer($target, $ip);
-            mail_smtp_client_apply_password_auth($mailer, $username, $password);
+            mail_smtp_client_apply_auth($mailer, $account, $username, $password);
 
             if (!$mailer->smtpConnect()) {
                 continue;
@@ -348,7 +377,7 @@ function mail_smtp_client_test_credentials(
         $mailer = null;
         try {
             $mailer = mail_smtp_client_create_mailer($target, $ip);
-            mail_smtp_client_apply_password_auth($mailer, $username, $password);
+            mail_smtp_client_apply_auth($mailer, $account, $username, $password);
 
             if ($mailer->smtpConnect()) {
                 return ['ok' => true, 'code' => 'connected'];

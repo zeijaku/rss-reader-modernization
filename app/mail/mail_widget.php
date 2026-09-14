@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/mail_google_oauth.php';
+
 function mail_widget_validate_title(mixed $value): ?string
 {
     return app_validate_text($value, 32, false);
@@ -207,7 +209,7 @@ function mail_widget_read_latest(array $account, string $password, int $limit, ?
                 'password' => $password,
                 'encryption' => $target['encryption'],
                 'validate_cert' => true,
-                'authentication' => 'plain',
+                'authentication' => ($account['authentication'] ?? 'plain') === 'oauth' ? 'oauth' : 'plain',
             ]);
             $stream = new AppMailPinnedImapStream($target['host'], $ip);
             $connection = new DirectoryTree\ImapEngine\Connection\ImapConnection($stream, null);
@@ -331,7 +333,7 @@ function mail_widget_read_folders(array $account, string $password, ?callable $r
                 'password' => $password,
                 'encryption' => $target['encryption'],
                 'validate_cert' => true,
-                'authentication' => 'plain',
+                'authentication' => ($account['authentication'] ?? 'plain') === 'oauth' ? 'oauth' : 'plain',
             ]);
             $stream = new AppMailPinnedImapStream($target['host'], $ip);
             $connection = new DirectoryTree\ImapEngine\Connection\ImapConnection($stream, null);
@@ -422,7 +424,7 @@ function mail_widget_read_message_text(array $account, string $password, int $ui
                 'password' => $password,
                 'encryption' => $target['encryption'],
                 'validate_cert' => true,
-                'authentication' => 'plain',
+                'authentication' => ($account['authentication'] ?? 'plain') === 'oauth' ? 'oauth' : 'plain',
             ]);
             $stream = new AppMailPinnedImapStream($target['host'], $ip);
             $connection = new DirectoryTree\ImapEngine\Connection\ImapConnection($stream, null);
@@ -660,8 +662,8 @@ function mail_widget_fetch_folders(int $ownerId, int $widgetId): array
     }
     $config = mail_widget_config_from_storage($widget['widget_config'] ?? null, (string) ($account['mail_account_display_name'] ?? 'Mail'));
     try {
-        $password = mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''));
-    } catch (AppMailCredentialException) {
+        $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return ['ok' => false, 'code' => 'credential_unavailable'];
     }
     try {
@@ -669,8 +671,9 @@ function mail_widget_fetch_folders(int $ownerId, int $widgetId): array
             'host' => $account['mail_account_host'] ?? null,
             'port' => $account['mail_account_port'] ?? null,
             'encryption' => $account['mail_account_encryption'] ?? null,
-            'username' => $account['mail_account_username'] ?? null,
-        ], $password);
+            'username' => $auth['username'],
+            'authentication' => $auth['authentication'],
+        ], $auth['credential']);
         if (($result['ok'] ?? false) !== true) {
             return $result;
         }
@@ -682,7 +685,7 @@ function mail_widget_fetch_folders(int $ownerId, int $widgetId): array
         ];
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($password);
+            sodium_memzero($auth['credential']);
         }
     }
 }
@@ -707,8 +710,8 @@ function mail_widget_update_folder(int $ownerId, int $widgetId, string $folderPa
         return ['ok' => false, 'code' => 'disabled'];
     }
     try {
-        $password = mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''));
-    } catch (AppMailCredentialException) {
+        $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return ['ok' => false, 'code' => 'credential_unavailable'];
     }
     try {
@@ -716,8 +719,9 @@ function mail_widget_update_folder(int $ownerId, int $widgetId, string $folderPa
             'host' => $account['mail_account_host'] ?? null,
             'port' => $account['mail_account_port'] ?? null,
             'encryption' => $account['mail_account_encryption'] ?? null,
-            'username' => $account['mail_account_username'] ?? null,
-        ], $password);
+            'username' => $auth['username'],
+            'authentication' => $auth['authentication'],
+        ], $auth['credential']);
         if (($result['ok'] ?? false) !== true) {
             return $result;
         }
@@ -742,7 +746,7 @@ function mail_widget_update_folder(int $ownerId, int $widgetId, string $folderPa
         return ['ok' => true, 'code' => 'updated', 'folder' => $resolvedFolder, 'folders' => $folders];
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($password);
+            sodium_memzero($auth['credential']);
         }
     }
 }
@@ -764,8 +768,8 @@ function mail_widget_fetch(int $ownerId, int $widgetId, string $searchType = '',
     }
     $config = mail_widget_config_from_storage($widget['widget_config'] ?? null, (string) ($account['mail_account_display_name'] ?? 'Mail'));
     try {
-        $password = mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''));
-    } catch (AppMailCredentialException) {
+        $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return ['ok' => false, 'code' => 'credential_unavailable', 'messages' => []];
     }
     try {
@@ -773,11 +777,12 @@ function mail_widget_fetch(int $ownerId, int $widgetId, string $searchType = '',
             'host' => $account['mail_account_host'] ?? null,
             'port' => $account['mail_account_port'] ?? null,
             'encryption' => $account['mail_account_encryption'] ?? null,
-            'username' => $account['mail_account_username'] ?? null,
-        ], $password, $config['item_limit'], null, $searchType, $searchQuery, $config['folder']);
+            'username' => $auth['username'],
+            'authentication' => $auth['authentication'],
+        ], $auth['credential'], $config['item_limit'], null, $searchType, $searchQuery, $config['folder']);
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($password);
+            sodium_memzero($auth['credential']);
         }
     }
 }
@@ -811,8 +816,8 @@ function mail_widget_fetch_message_text(int $ownerId, int $widgetId, int $uid, ?
         return array_merge($empty, ['code' => 'disabled']);
     }
     try {
-        $password = mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''));
-    } catch (AppMailCredentialException) {
+        $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return array_merge($empty, ['code' => 'credential_unavailable']);
     }
     try {
@@ -820,11 +825,12 @@ function mail_widget_fetch_message_text(int $ownerId, int $widgetId, int $uid, ?
             'host' => $account['mail_account_host'] ?? null,
             'port' => $account['mail_account_port'] ?? null,
             'encryption' => $account['mail_account_encryption'] ?? null,
-            'username' => $account['mail_account_username'] ?? null,
-        ], $password, $uid, $folderToRead);
+            'username' => $auth['username'],
+            'authentication' => $auth['authentication'],
+        ], $auth['credential'], $uid, $folderToRead);
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($password);
+            sodium_memzero($auth['credential']);
         }
     }
 }

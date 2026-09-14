@@ -73,12 +73,12 @@ function persistent_login_revoke_current(): void
 }
 
 /** Replace any current-browser token with a newly issued fixed-30-day token. */
-function persistent_login_issue_for_user(int $userId): bool
+function persistent_login_issue_for_user(int $userId, bool $secondFactorVerified = false): bool
 {
     persistent_login_revoke_current();
 
     try {
-        $issued = remember_token_issue($userId);
+        $issued = remember_token_issue($userId, null, $secondFactorVerified);
         if (($issued['ok'] ?? false) !== true) {
             persistent_login_clear_cookie();
             return false;
@@ -144,6 +144,15 @@ function persistent_login_restore_session(): bool
             $totpStatus = auth_totp_status($userId);
             $twoFactorEnabled = ($totpStatus['enabled'] ?? false) === true;
         }
+        $secondFactorVerifiedAt = isset($validated['second_factor_verified_at'])
+            && is_int($validated['second_factor_verified_at'])
+            ? $validated['second_factor_verified_at']
+            : null;
+        $now = time();
+        $secondFactorTrusted = $twoFactorEnabled
+            && $secondFactorVerifiedAt !== null
+            && $secondFactorVerifiedAt <= ($now + 60)
+            && ($now - $secondFactorVerifiedAt) <= AUTH_REMEMBER_2FA_TRUST_SECONDS;
 
         $rotatedParsed = remember_token_parse($rotatedCookie);
         $rememberSelector = is_array($rotatedParsed) ? (string) ($rotatedParsed['selector'] ?? '') : '';
@@ -153,7 +162,7 @@ function persistent_login_restore_session(): bool
         }
 
         $previousCsrfToken = app_csrf_current_token();
-        if ($twoFactorEnabled) {
+        if ($twoFactorEnabled && !$secondFactorTrusted) {
             app_session_begin_pending_auth($userId, 'remember', false, $rememberSelector);
         } else {
             app_session_login($userId);
@@ -167,11 +176,11 @@ function persistent_login_restore_session(): bool
             // the rotated persistent token must not remain active without a cookie.
             remember_token_revoke_cookie($rotatedCookie);
             persistent_login_clear_cookie();
-        } elseif (!$twoFactorEnabled && function_exists('auth_session_registry_bind_remember_selector')) {
+        } elseif ((!$twoFactorEnabled || $secondFactorTrusted) && function_exists('auth_session_registry_bind_remember_selector')) {
             auth_session_registry_bind_remember_selector($userId, $rememberSelector);
         }
-        if (!$twoFactorEnabled && function_exists('auth_audit_log_record')) {
-            auth_audit_log_record('login', 'success', $userId, null, 'remember');
+        if ((!$twoFactorEnabled || $secondFactorTrusted) && function_exists('auth_audit_log_record')) {
+            auth_audit_log_record('login', 'success', $userId, null, $secondFactorTrusted ? 'remember+trusted_totp' : 'remember');
         }
         return true;
     } catch (Throwable $exception) {

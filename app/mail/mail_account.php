@@ -258,6 +258,7 @@ function mail_account_safe_row(array $row): array
         'port' => (int) ($row['mail_account_port'] ?? 0),
         'encryption' => (string) ($row['mail_account_encryption'] ?? ''),
         'username' => (string) ($row['mail_account_username'] ?? ''),
+        'auth_type' => (string) ($row['mail_account_auth_type'] ?? 'password'),
         'enabled' => (int) ($row['mail_account_enabled'] ?? 0) === 1,
         'smtp_enabled' => (int) ($row['mail_account_smtp_enabled'] ?? 0) === 1,
         'smtp_host' => (string) ($row['mail_account_smtp_host'] ?? ''),
@@ -281,11 +282,119 @@ function mail_account_supports_for_update(PDO $conn): bool
 function mail_account_public_columns(): string
 {
     return 'mail_account_id, mail_account_owner, mail_account_display_name, mail_account_host, mail_account_port, '
-        . 'mail_account_encryption, mail_account_username, mail_account_enabled, mail_account_flag, '
+        . 'mail_account_encryption, mail_account_username, mail_account_auth_type, mail_account_enabled, mail_account_flag, '
         . 'mail_account_smtp_enabled, mail_account_smtp_host, mail_account_smtp_port, mail_account_smtp_encryption, '
         . 'mail_account_smtp_use_imap_credentials, mail_account_smtp_username, mail_account_from_address, mail_account_from_name, '
         . 'mail_account_sent_save_mode, '
         . 'mail_account_created_at, mail_account_updated_at';
+}
+
+/** Create or reconnect the owner's Gmail OAuth account without storing an access token. */
+function mail_account_upsert_google_oauth(int $ownerId, string $email, string $refreshToken): array
+{
+    if ($ownerId <= 0
+        || filter_var($email, FILTER_VALIDATE_EMAIL) === false
+        || strlen($email) > 320
+        || $refreshToken === ''
+        || strlen($refreshToken) > 8192
+        || str_contains($refreshToken, "\0")) {
+        throw new AppMailValidationException('invalid_oauth_account');
+    }
+
+    $email = strtolower(trim($email));
+    $conn = conn_db();
+    try {
+        $conn->beginTransaction();
+        $sql = 'SELECT * FROM ' . mail_account_table_name() . ' '
+            . "WHERE mail_account_owner = :owner AND mail_account_auth_type = 'google_oauth' "
+            . 'AND mail_account_username = :username AND mail_account_flag = 0 LIMIT 1';
+        if (mail_account_supports_for_update($conn)) {
+            $sql .= ' FOR UPDATE';
+        }
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([':owner' => $ownerId, ':username' => $email]);
+        $current = $stmt->fetch();
+        $now = app_now();
+
+        if (is_array($current)) {
+            $accountId = (int) ($current['mail_account_id'] ?? 0);
+            if ($accountId <= 0) {
+                throw new RuntimeException('Gmail OAuth account ID is invalid.');
+            }
+            $secret = mail_crypto_encrypt($ownerId, $accountId, $refreshToken);
+            $stmt = $conn->prepare(
+                'UPDATE ' . mail_account_table_name() . ' SET '
+                . 'mail_account_secret = :secret, mail_account_enabled = 1, mail_account_smtp_enabled = 1, '
+                . "mail_account_host = 'imap.gmail.com', mail_account_port = 993, mail_account_encryption = 'ssl', "
+                . "mail_account_smtp_host = 'smtp.gmail.com', mail_account_smtp_port = 587, mail_account_smtp_encryption = 'starttls', "
+                . 'mail_account_smtp_use_imap_credentials = 1, mail_account_smtp_username = NULL, mail_account_smtp_secret = NULL, '
+                . 'mail_account_from_address = :from_address, mail_account_sent_save_mode = :sent_save_mode, '
+                . 'mail_account_updated_at = :updated_at '
+                . 'WHERE mail_account_id = :account_id AND mail_account_owner = :owner AND mail_account_flag = 0'
+            );
+            $stmt->execute([
+                ':secret' => $secret,
+                ':from_address' => $email,
+                ':sent_save_mode' => 'server',
+                ':updated_at' => $now,
+                ':account_id' => $accountId,
+                ':owner' => $ownerId,
+            ]);
+            if ($stmt->rowCount() !== 1) {
+                throw new RuntimeException('Gmail OAuth credential update did not affect one row.');
+            }
+        } else {
+            $stmt = $conn->prepare(
+                'INSERT INTO ' . mail_account_table_name() . ' ('
+                . 'mail_account_owner, mail_account_display_name, mail_account_host, mail_account_port, '
+                . 'mail_account_encryption, mail_account_username, mail_account_auth_type, mail_account_secret, mail_account_enabled, '
+                . 'mail_account_smtp_enabled, mail_account_smtp_host, mail_account_smtp_port, mail_account_smtp_encryption, '
+                . 'mail_account_smtp_use_imap_credentials, mail_account_smtp_username, mail_account_smtp_secret, '
+                . 'mail_account_from_address, mail_account_from_name, mail_account_sent_save_mode, '
+                . 'mail_account_flag, mail_account_created_at, mail_account_updated_at'
+                . ') VALUES ('
+                . ":owner, 'Gmail', 'imap.gmail.com', 993, 'ssl', :username, 'google_oauth', '', 1, "
+                . "1, 'smtp.gmail.com', 587, 'starttls', 1, NULL, NULL, :from_address, NULL, 'server', 0, :created_at, :updated_at"
+                . ')'
+            );
+            $stmt->execute([
+                ':owner' => $ownerId,
+                ':username' => $email,
+                ':from_address' => $email,
+                ':created_at' => $now,
+                ':updated_at' => $now,
+            ]);
+            $accountId = (int) $conn->lastInsertId();
+            if ($accountId <= 0) {
+                throw new RuntimeException('Gmail OAuth account insert did not return an ID.');
+            }
+            $secret = mail_crypto_encrypt($ownerId, $accountId, $refreshToken);
+            $stmt = $conn->prepare(
+                'UPDATE ' . mail_account_table_name() . ' SET mail_account_secret = :secret '
+                . 'WHERE mail_account_id = :account_id AND mail_account_owner = :owner AND mail_account_flag = 0'
+            );
+            $stmt->execute([':secret' => $secret, ':account_id' => $accountId, ':owner' => $ownerId]);
+            if ($stmt->rowCount() !== 1) {
+                throw new RuntimeException('Gmail OAuth credential update did not affect one row.');
+            }
+        }
+
+        $conn->commit();
+        $row = mail_account_find_owned($ownerId, $accountId, false, false);
+        if ($row === null) {
+            throw new RuntimeException('Gmail OAuth account could not be loaded.');
+        }
+        return mail_account_safe_row($row);
+    } catch (Throwable $exception) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
+        throw $exception;
+    } finally {
+        if (function_exists('sodium_memzero')) {
+            sodium_memzero($refreshToken);
+        }
+    }
 }
 
 /** @return array<string,mixed>|null */
@@ -442,9 +551,21 @@ function mail_account_update(int $ownerId, int $accountId, array $input): ?array
             return null;
         }
 
+        $authType = (string) ($current['mail_account_auth_type'] ?? 'password');
+        $googleOAuth = $authType === 'google_oauth';
         $secret = (string) ($current['mail_account_secret'] ?? '');
-        if (is_string($data['password'])) {
+        if (!$googleOAuth && is_string($data['password'])) {
             $secret = mail_crypto_encrypt($ownerId, $accountId, $data['password']);
+        }
+
+        // OAuth accounts keep Google-controlled endpoints, identity, and the
+        // encrypted refresh token. The generic edit form may change only the
+        // display name, enabled state, From name, and Sent handling.
+        if ($googleOAuth) {
+            $data['host'] = 'imap.gmail.com';
+            $data['port'] = 993;
+            $data['encryption'] = 'ssl';
+            $data['username'] = (string) ($current['mail_account_username'] ?? '');
         }
 
         // Old V1.33.1 JS does not send SMTP fields. Preserve all SMTP data in
@@ -463,7 +584,20 @@ function mail_account_update(int $ownerId, int $accountId, array $input): ?array
             $sentSaveMode = mail_account_validate_sent_save_mode($input['sent_save_mode']);
         }
 
-        if ($smtpInputProvided) {
+        if ($googleOAuth) {
+            $smtpEnabled = 1;
+            $smtpHost = 'smtp.gmail.com';
+            $smtpPort = 587;
+            $smtpEncryption = 'starttls';
+            $smtpUseImap = 1;
+            $smtpUsername = null;
+            $smtpSecret = null;
+            $fromAddress = (string) ($current['mail_account_username'] ?? '');
+            $fromName = mail_account_validate_from_name($input['from_name'] ?? $fromName);
+            if (array_key_exists('sent_save_mode', $input)) {
+                $sentSaveMode = mail_account_validate_sent_save_mode($input['sent_save_mode']);
+            }
+        } elseif ($smtpInputProvided) {
             $requestedSmtpEnabled = mail_account_validate_smtp_flag(
                 $input['smtp_enabled'] ?? null,
                 0,

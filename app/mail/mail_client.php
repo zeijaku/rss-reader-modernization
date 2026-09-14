@@ -101,6 +101,7 @@ function mail_client_test_credentials(array $account, string $password, ?callabl
         return ['ok' => false, 'code' => $target['error_code']];
     }
     $username = mail_account_validate_username($account['username'] ?? null);
+    $authentication = ($account['authentication'] ?? 'plain') === 'oauth' ? 'oauth' : 'plain';
 
     foreach ($target['ips'] as $ip) {
         $mailbox = null;
@@ -114,7 +115,7 @@ function mail_client_test_credentials(array $account, string $password, ?callabl
                 'password' => $password,
                 'encryption' => $target['encryption'],
                 'validate_cert' => true,
-                'authentication' => 'plain',
+                'authentication' => $authentication,
             ]);
             $stream = new AppMailPinnedImapStream($target['host'], $ip);
             $connection = new DirectoryTree\ImapEngine\Connection\ImapConnection($stream, null);

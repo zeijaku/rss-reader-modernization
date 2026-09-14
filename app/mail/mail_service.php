@@ -7,6 +7,7 @@ require_once __DIR__ . '/mail_attachment.php';
 require_once __DIR__ . '/mail_reply.php';
 require_once __DIR__ . '/mail_sent.php';
 require_once __DIR__ . '/mail_smtp_client.php';
+require_once __DIR__ . '/mail_google_oauth.php';
 
 /** @return list<array<string,mixed>> */
 function mail_service_list_accounts(int $ownerId): array
@@ -43,12 +44,8 @@ function mail_service_test_account(int $ownerId, int $accountId): array
     }
 
     try {
-        $password = mail_crypto_decrypt(
-            $ownerId,
-            $accountId,
-            (string) ($account['mail_account_secret'] ?? '')
-        );
-    } catch (AppMailCredentialException) {
+        $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return ['ok' => false, 'code' => 'credential_unavailable'];
     }
 
@@ -57,11 +54,12 @@ function mail_service_test_account(int $ownerId, int $accountId): array
             'host' => $account['mail_account_host'] ?? null,
             'port' => $account['mail_account_port'] ?? null,
             'encryption' => $account['mail_account_encryption'] ?? null,
-            'username' => $account['mail_account_username'] ?? null,
-        ], $password);
+            'username' => $auth['username'],
+            'authentication' => $auth['authentication'],
+        ], $auth['credential']);
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($password);
+            sodium_memzero($auth['credential']);
         }
     }
 }
@@ -80,16 +78,22 @@ function mail_service_test_smtp_account(int $ownerId, int $accountId): array
         return ['ok' => false, 'code' => 'smtp_disabled'];
     }
 
-    $useImap = (int) ($account['mail_account_smtp_use_imap_credentials'] ?? 1) === 1;
-    $username = $useImap
-        ? (string) ($account['mail_account_username'] ?? '')
-        : (string) ($account['mail_account_smtp_username'] ?? '');
-
     try {
-        $password = $useImap
-            ? mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''))
-            : mail_crypto_decrypt_smtp($ownerId, $accountId, (string) ($account['mail_account_smtp_secret'] ?? ''));
-    } catch (AppMailCredentialException) {
+        if (($account['mail_account_auth_type'] ?? 'password') === 'google_oauth') {
+            $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+        } else {
+            $useImap = (int) ($account['mail_account_smtp_use_imap_credentials'] ?? 1) === 1;
+            $auth = [
+                'username' => $useImap
+                    ? (string) ($account['mail_account_username'] ?? '')
+                    : (string) ($account['mail_account_smtp_username'] ?? ''),
+                'credential' => $useImap
+                    ? mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''))
+                    : mail_crypto_decrypt_smtp($ownerId, $accountId, (string) ($account['mail_account_smtp_secret'] ?? '')),
+                'authentication' => 'plain',
+            ];
+        }
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return ['ok' => false, 'code' => 'smtp_credential_unavailable'];
     }
 
@@ -98,10 +102,11 @@ function mail_service_test_smtp_account(int $ownerId, int $accountId): array
             'host' => $account['mail_account_smtp_host'] ?? null,
             'port' => $account['mail_account_smtp_port'] ?? null,
             'encryption' => $account['mail_account_smtp_encryption'] ?? null,
-        ], $username, $password);
+            'authentication' => $auth['authentication'],
+        ], $auth['username'], $auth['credential']);
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($password);
+            sodium_memzero($auth['credential']);
         }
     }
 }
@@ -141,16 +146,22 @@ function mail_service_send_plain_text(int $ownerId, int $accountId, array $input
         return ['ok' => false, 'code' => 'smtp_configuration_unavailable'];
     }
 
-    $useImap = (int) ($account['mail_account_smtp_use_imap_credentials'] ?? 1) === 1;
-    $username = $useImap
-        ? (string) ($account['mail_account_username'] ?? '')
-        : (string) ($account['mail_account_smtp_username'] ?? '');
-
     try {
-        $smtpPassword = $useImap
-            ? mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''))
-            : mail_crypto_decrypt_smtp($ownerId, $accountId, (string) ($account['mail_account_smtp_secret'] ?? ''));
-    } catch (AppMailCredentialException) {
+        if (($account['mail_account_auth_type'] ?? 'password') === 'google_oauth') {
+            $smtpAuth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+        } else {
+            $useImap = (int) ($account['mail_account_smtp_use_imap_credentials'] ?? 1) === 1;
+            $smtpAuth = [
+                'username' => $useImap
+                    ? (string) ($account['mail_account_username'] ?? '')
+                    : (string) ($account['mail_account_smtp_username'] ?? ''),
+                'credential' => $useImap
+                    ? mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''))
+                    : mail_crypto_decrypt_smtp($ownerId, $accountId, (string) ($account['mail_account_smtp_secret'] ?? '')),
+                'authentication' => 'plain',
+            ];
+        }
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return ['ok' => false, 'code' => 'smtp_credential_unavailable'];
     }
 
@@ -159,10 +170,11 @@ function mail_service_send_plain_text(int $ownerId, int $accountId, array $input
             'host' => $account['mail_account_smtp_host'] ?? null,
             'port' => $account['mail_account_smtp_port'] ?? null,
             'encryption' => $account['mail_account_smtp_encryption'] ?? null,
-        ], $username, $smtpPassword, $fromAddress, $fromName, $message['to'], $message['subject'], $message['body'], null, $replyMessageId, $attachments);
+            'authentication' => $smtpAuth['authentication'],
+        ], $smtpAuth['username'], $smtpAuth['credential'], $fromAddress, $fromName, $message['to'], $message['subject'], $message['body'], null, $replyMessageId, $attachments);
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($smtpPassword);
+            sodium_memzero($smtpAuth['credential']);
         }
     }
 
@@ -199,12 +211,8 @@ function mail_service_send_plain_text(int $ownerId, int $accountId, array $input
     // Sent storage always uses IMAP credentials even when SMTP has a separate
     // username/password. Decrypt only after a known successful SMTP send.
     try {
-        $imapPassword = mail_crypto_decrypt(
-            $ownerId,
-            $accountId,
-            (string) ($account['mail_account_secret'] ?? '')
-        );
-    } catch (AppMailCredentialException) {
+        $imapAuth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return [
             'ok' => true,
             'code' => 'sent',
@@ -219,11 +227,12 @@ function mail_service_send_plain_text(int $ownerId, int $accountId, array $input
             'host' => $account['mail_account_host'] ?? null,
             'port' => $account['mail_account_port'] ?? null,
             'encryption' => $account['mail_account_encryption'] ?? null,
-            'username' => $account['mail_account_username'] ?? null,
-        ], $imapPassword, $sentSaveMode, $messageId, $mimeMessage);
+            'username' => $imapAuth['username'],
+            'authentication' => $imapAuth['authentication'],
+        ], $imapAuth['credential'], $sentSaveMode, $messageId, $mimeMessage);
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($imapPassword);
+            sodium_memzero($imapAuth['credential']);
         }
     }
 
@@ -280,12 +289,8 @@ function mail_service_reply_context(int $ownerId, int $widgetId, int $uid, strin
     }
 
     try {
-        $password = mail_crypto_decrypt(
-            $ownerId,
-            $accountId,
-            (string) ($account['mail_account_secret'] ?? '')
-        );
-    } catch (AppMailCredentialException) {
+        $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return ['ok' => false, 'code' => 'credential_unavailable'];
     }
 
@@ -294,8 +299,9 @@ function mail_service_reply_context(int $ownerId, int $widgetId, int $uid, strin
             'host' => $account['mail_account_host'] ?? null,
             'port' => $account['mail_account_port'] ?? null,
             'encryption' => $account['mail_account_encryption'] ?? null,
-            'username' => $account['mail_account_username'] ?? null,
-        ], $password, $uid, $folderToRead);
+            'username' => $auth['username'],
+            'authentication' => $auth['authentication'],
+        ], $auth['credential'], $uid, $folderToRead);
         if (($result['ok'] ?? false) !== true) {
             return $result;
         }
@@ -303,8 +309,7 @@ function mail_service_reply_context(int $ownerId, int $widgetId, int $uid, strin
         return $result;
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($password);
+            sodium_memzero($auth['credential']);
         }
     }
 }
-

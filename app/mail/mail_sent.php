@@ -140,7 +140,7 @@ function mail_sent_store_after_send(
                 'password' => $password,
                 'encryption' => $target['encryption'],
                 'validate_cert' => true,
-                'authentication' => 'plain',
+                'authentication' => ($account['authentication'] ?? 'plain') === 'oauth' ? 'oauth' : 'plain',
             ]);
             $stream = new AppMailPinnedImapStream($target['host'], $ip);
             $connection = new DirectoryTree\ImapEngine\Connection\ImapConnection($stream, null);

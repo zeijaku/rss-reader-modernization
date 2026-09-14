@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
+from version_contract_utils import current_asset_revision
 
 ROOT = Path(__file__).resolve().parents[1]
 css = (ROOT / 'public/css/dashboard-card-wheel.css').read_text(encoding='utf-8')
@@ -7,6 +8,7 @@ loader = (ROOT / 'public/js/calendar.js').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 memo_css = (ROOT / 'public/css/memo-widget.css').read_text(encoding='utf-8')
 dashboard_css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
+asset_revision = current_asset_revision(ROOT)
 checks = []
 
 def check(ok, msg):
@@ -26,13 +28,12 @@ check('overscroll-behavior: contain' in memo_css,
       'test fixture retains a bounded internal card scroller that D must override at its boundary')
 check('overscroll-behavior: contain' in dashboard_css,
       'non-card Drawer containment remains present and outside D scope')
-check("./css/dashboard-card-wheel.css?v=1.34.2" in loader,
-      'D stylesheet is loaded with the dev.8 cache key')
+check(f"./css/dashboard-card-wheel.css?v={asset_revision}" in loader,
+      'D stylesheet is loaded with the current asset revision')
 check("data-dashboard-card-wheel-style" in loader,
       'D stylesheet has a duplicate-load marker')
-check("const APP_VERSION = '1.34.2';" in version and
-      "const APP_ASSET_REVISION = '1.34.2';" in version,
-      'version and asset revision are synchronized at dev.8')
+check(f"const APP_ASSET_REVISION = '{asset_revision}';" in version,
+      'D stylesheet revision matches app/version.php')
 check('preventDefault' not in css and 'scrollBy' not in css,
       'D relies on native scroll chaining rather than synthetic wheel scrolling')
 
