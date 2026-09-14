@@ -5,6 +5,8 @@ ROOT = Path(__file__).resolve().parents[1]
 drag = (ROOT / 'public/js/calendar-drag-drop.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/calendar-drag-drop.css').read_text(encoding='utf-8')
 loader = (ROOT / 'public/js/calendar.js').read_text(encoding='utf-8')
+core = (ROOT / 'public/js/calendar-core.js').read_text(encoding='utf-8')
+polish = (ROOT / 'public/js/calendar-polish.js').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
 checks = []
@@ -31,8 +33,10 @@ check("draggable" in drag and "calendar-drag-drop-target" in drag and 'currentCo
 check('MutationObserver' in drag and 'observeCalendarRedraws' in drag and '{childList: true, subtree: true}' in drag, 'Calendar DOM redraws are observed for repeated drag preparation')
 check('schedulePrepare' in drag and 'prepareTimer' in drag, 'redraw preparation is coalesced instead of racing render timing')
 check(".always(function ()" in drag and 'schedulePrepare();' in drag, 'request completion schedules drag re-preparation')
-check('refreshCalendarCard' in drag and "[data-dashboard-widget-type=\"calendar\"]" in drag, 'successful drag scopes refresh to its Calendar card')
-check(".calendar-view-mode[data-calendar-view-mode=\"" in drag and ".trigger('click')" in drag, 'Calendar-only success refresh reuses the existing current-view load path')
+check(drag.count("$(document).trigger('calendar:occurrenceChanged')") >= 2,
+      'successful drag and occurrence conflict both trigger Calendar projection synchronization')
+check('refreshVisibleCalendars' in core and 'loadUpcoming();' in polish,
+      'Calendar synchronization refreshes every visible Calendar and the upcoming projection')
 check('window.location.reload' not in drag, 'drag and drop never reloads the whole Dashboard')
 check('innerHTML' not in drag and '.html(' not in drag, 'drag module introduces no HTML assignment sink')
 check('test_v1_34_2_c_calendar_drag_drop_contract.py' in workflow and 'test_v1_34_2_c_calendar_drag_drop.js' in workflow, 'CI runs C static and runtime tests')

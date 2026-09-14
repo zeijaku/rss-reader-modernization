@@ -25,7 +25,8 @@ check("calendar-copy.js?v=1.34.2" in loader, 'B Calendar Copy is present in form
 check("calendar-drag-drop.js?v=1.34.2" in loader and "calendar-drag-drop.css?v=1.34.2" in loader, 'C Drag & Drop assets are present in formal bootstrap')
 check("dashboard-card-wheel.css?v=1.34.2" in loader, 'D Card Mouse Wheel stylesheet is present in formal bootstrap')
 check('window.location.reload' not in drag, 'C D&D never restores Dashboard-wide reload')
-check('refreshCalendarCard' in drag, 'successful C D&D retains Calendar-card-only refresh')
+check(drag.count("$(document).trigger('calendar:occurrenceChanged')") >= 2,
+      'successful C D&D and occurrence conflicts resynchronize all Calendar projections')
 check('xhr.status === 409' in drag and "calendar:occurrenceChanged" in drag, 'C occurrence conflict resynchronization is retained')
 check('MutationObserver' in drag and 'schedulePrepare' in drag, 'C repeated-drag redraw rebind is retained')
 check('overscroll-behavior-y: auto' in wheel, 'D native wheel chaining correction is retained')

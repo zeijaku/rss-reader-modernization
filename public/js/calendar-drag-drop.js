@@ -143,16 +143,6 @@
         return day ? validIsoDate(day.getAttribute('data-calendar-date')) : '';
     }
 
-    function refreshCalendarCard($card) {
-        if (!$card || $card.length === 0) return false;
-        var mode = String($card.attr('data-calendar-view') || 'month');
-        var $button = $card.find('.calendar-view-mode[data-calendar-view-mode="' + mode + '"]').first();
-        if ($button.length === 0) $button = $card.find('.calendar-view-mode.active').first();
-        if ($button.length === 0) return false;
-        $button.trigger('click');
-        return true;
-    }
-
     function prepareEntries(root) {
         $(root || document).find('.calendar-event-edit-trigger').each(function () {
             var $entry = $(this);
@@ -211,14 +201,13 @@
         event.preventDefault();
         var plan = buildMovePlan(dragState.state, targetDate);
         if (!plan) { finishDrag(); return; }
-        var $calendar = $(dragState.entry).closest('[data-dashboard-widget-type="calendar"]');
         pending = true; suppressClickUntil = Date.now() + 800; clearDropTarget();
         showNotice(plan.recurring ? 'この回の予定を移動しています…' : '予定を移動しています…', 'info');
         request(plan)
             .done(function (response) {
                 if (response && response.ok === true) {
                     showNotice(plan.recurring ? 'この回の予定を移動しました' : '予定を移動しました', 'success');
-                    if (!refreshCalendarCard($calendar)) showNotice('予定は移動しました。Calendarの再表示に失敗したため、必要に応じて再読み込みしてください', 'danger');
+                    $(document).trigger('calendar:occurrenceChanged');
                     return;
                 }
                 showNotice(response && response.error && response.error.message ? response.error.message : '予定を移動出来ませんでした', 'danger');
@@ -249,6 +238,6 @@
 
     window.IguguruCalendarDragDrop = Object.freeze({
         dayDelta: dayDelta, shiftDate: shiftDate, shiftRange: shiftRange, sourceState: sourceState,
-        buildMovePlan: buildMovePlan, prepareEntries: prepareEntries, refreshCalendarCard: refreshCalendarCard
+        buildMovePlan: buildMovePlan, prepareEntries: prepareEntries
     });
 }(window.jQuery, window, document));
