@@ -383,7 +383,7 @@
                 '<form id="registerInfoBoardForm">' +
                   '<div class="modal-header" style="color:#fff;background-color:#333;">' +
                     '<h5 class="modal-title" id="registerInfoBoardTitle"><i class="fas fa-bullhorn" aria-hidden="true"></i> Information Boardを追加</h5>' +
-                    '<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>' +
+                    '<button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>' +
                   '</div>' +
                   '<div class="modal-body">' +
                     '<input type="hidden" class="registerInfoBoardLocation" value="0">' +
@@ -399,7 +399,7 @@
                 '<form id="changeInfoBoardForm">' +
                   '<div class="modal-header" style="color:#fff;background-color:#333;">' +
                     '<h5 class="modal-title" id="changeInfoBoardTitle"><i class="fas fa-bullhorn" aria-hidden="true"></i> Information Boardを変更</h5>' +
-                    '<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>' +
+                    '<button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>' +
                   '</div>' +
                   '<div class="modal-body">' +
                     '<input type="hidden" class="changeInfoBoardId">' +

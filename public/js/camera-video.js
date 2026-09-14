@@ -108,7 +108,7 @@
             .append($('<i>').addClass('fas fa-video').attr('aria-hidden', 'true'))
             .append(document.createTextNode(register ? ' Camera / Videoを追加' : ' Camera / Videoを変更'))
             .appendTo($header);
-        $('<button>').attr({type: 'button', 'data-bs-dismiss': 'modal', 'aria-label': '閉じる'}).addClass('btn-close btn-close-white').appendTo($header);
+        $('<button>').attr({type: 'button', 'data-bs-dismiss': 'modal', 'aria-label': '閉じる'}).attr('data-bs-theme', 'dark').addClass('btn-close').appendTo($header);
 
         var $body = $('<div>').addClass('modal-body');
         var $sourceField;

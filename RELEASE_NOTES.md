@@ -1,29 +1,25 @@
-# RSS Reader Modernization 1.34.1 - Mail Received Attachment Correction
+# RSS Reader Modernization 1.34.2 - Display and Interaction Improvements
 
-V1.34.1 is a correction release for V1.34.0. It restores the existing received/Sent attachment display and download implementation that was already used in production but was mistakenly disabled during the V1.34.0 formal release finalization.
+V1.34.2 is a patch release improving existing Dashboard and Calendar interactions while preserving existing features and data.
 
-## Corrected
-- Restored received/Sent attachment metadata listing in the existing Mail message body UI.
-- Restored attachment download through the existing `mail.message.attachment.download` route.
-- Kept the existing bounded 25 MiB decoded-content download limit and 80 MiB transfer-encoded safety cap.
-- Kept filename/content-type sanitization and bounded attachment enumeration.
+## Changes
+- **A — Smartphone Modal:** Give Bootstrap modal content, body and footer an opaque active-theme background on Smartphone widths.
+- **B — Calendar Copy:** Copy an existing event into the new-event dialog for review before saving. Copying one recurring occurrence creates an independent event; copying a series retains its recurrence settings.
+- **C — Calendar Drag & Drop:** Move ordinary events and individual recurring occurrences between dates on PC. Preserve multi-day duration and event fields, refresh only the Calendar card, and retain 409 conflict resynchronization and bindings after redraw.
+- **D — Card Mouse Wheel:** Allow native page scrolling over Dashboard cards while retaining existing internally scrollable areas.
+- **E — Release Readiness:** Synchronize the formal version and asset revision to `1.34.2` and retain A–E contracts alongside the current core and feature regression suites.
+- **Modal Close:** Use Bootstrap 5.3 `btn-close` with `data-bs-theme="dark"` for dark modal headers, including Dashboard, Stock, Settings and dynamically created Widget dialogs. Preserve the application-owned white close-icon styling.
 
 ## Security / compatibility
-- Authentication, Session, CSRF, owner scope and Mail Widget ownership checks remain required.
-- The requested folder must still match the configured Mail Widget folder.
-- IMAP uses the existing public-address-only target validation, validated-IP pinning and TLS certificate validation.
-- This patch does not change SMTP send, Reply, Sent save modes or outbound attachment limits introduced in V1.34.0.
-- No database migration and no new mandatory configuration or secret are introduced by V1.34.1.
-
-## Intentionally not included
-- HTML compose.
-- CC / BCC.
-- Reply All / Forward.
-- OAuth2 authentication implementation.
-- Automatic re-attachment of original received files when replying.
-- Application database storage of sent message bodies.
+- Authentication, Session, owner scope, CSRF, input validation and Calendar occurrence revision checks remain intact.
+- Existing Calendar APIs and data models are reused; this patch introduces no DB migration, API change, mandatory configuration, secret or dependency.
+- Existing Mail received/Sent attachment display and download restored in V1.34.1 remain enabled, with their existing security and size boundaries.
+- Runtime and Complete Source packages remain separate and use the existing deterministic builders, SHA-256 verification, secret scan and clean-room gates.
 
 ## Verification limits
-- The restored received attachment implementation corresponds to the existing production capability; production code is not modified as part of this Git correction.
-- The formal GitHub Release workflow reruns the current regression and current feature contracts on PHP 8.1 and PHP 8.4 before publishing the immutable tag.
-- Provider-specific IMAP policies and provider-side attachment limits remain external.
+- The user confirmed A–E and the Dashboard modal close correction in the dev.9 package on the rental server before finalization.
+- Remaining legacy close-button declarations in Stock, Settings and dynamic Widget dialogs were found during finalization and corrected with the same Bootstrap 5.3 markup; this additional scope has not been verified on the user's production server.
+- PHP 8.1 and PHP 8.4 must both pass the current CI regression gates before merge. The standard release workflow reruns both runtimes and package verification before publishing.
+- These files prepare the formal release source; they do not record a completed merge, tag or GitHub Release publication. Each remains pending explicit user authorization.
+- Updating `.github/release-request.txt` on main triggers the existing release workflow, including immutable tag and GitHub Release publication. Approval to merge alone must not be treated as approval to publish.
+- Production deployment is outside this preparation task.

@@ -34,6 +34,20 @@ check("test_v1_34_2_e_release_readiness.py" in workflow, 'CI permanently runs E 
 check('btn-close-white' not in modals, 'deprecated Bootstrap btn-close-white is absent from Dashboard modals')
 check('class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal"' in modals, 'Dashboard modal close buttons use Bootstrap 5.3 color-mode form')
 
+# Cover the static and dynamic dark-header dialogs that shared the legacy markup.
+for path in ('public/stock.php', 'public/settings.php', 'public/js/info-board.js',
+             'public/js/mail-widget.js', 'public/js/x-widget.js', 'public/js/camera-video.js'):
+    source = (ROOT / path).read_text(encoding='utf-8')
+    check('btn-close-white' not in source, f'{path} has no legacy close-button class')
+    check('data-bs-theme="dark"' in source or ".attr('data-bs-theme', 'dark')" in source,
+          f'{path} retains dark-mode close buttons')
+
+close_css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
+check('btn-close-white' not in close_css
+      and '.modal-header .btn-close[data-bs-theme="dark"]' in close_css
+      and '--bs-btn-close-filter: none;' in close_css,
+      'application white close-icon override covers Bootstrap 5.3 without double inversion')
+
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
 raise SystemExit(1 if failed else 0)

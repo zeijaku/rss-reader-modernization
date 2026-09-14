@@ -897,7 +897,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="registerContentForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="registerContentTitle">RSSを追加</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
 
@@ -952,7 +952,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="changeContentForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="changeContentTitle">RSSを変更</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
 
@@ -1003,9 +1003,9 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 
 
 <!-- Search Feed追加モーダル -->
-<div class="modal fade" id="registerSearchFeed" tabindex="-1" role="dialog" aria-labelledby="registerSearchFeedTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="registerSearchFeedForm"><div class="modal-header" style="color:#fff;background-color:#333;"><h5 class="modal-title" id="registerSearchFeedTitle"><i class="fas fa-search" aria-hidden="true"></i> Search Feedを追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div><div class="modal-body"><input type="hidden" class="registerSearchLocation" value="<?php echo app_html((string) $addTargetLocation); ?>"><?php echo search_feed_form_fields('register'); ?></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加</button></div></form></div></div></div>
+<div class="modal fade" id="registerSearchFeed" tabindex="-1" role="dialog" aria-labelledby="registerSearchFeedTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="registerSearchFeedForm"><div class="modal-header" style="color:#fff;background-color:#333;"><h5 class="modal-title" id="registerSearchFeedTitle"><i class="fas fa-search" aria-hidden="true"></i> Search Feedを追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div><div class="modal-body"><input type="hidden" class="registerSearchLocation" value="<?php echo app_html((string) $addTargetLocation); ?>"><?php echo search_feed_form_fields('register'); ?></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">追加</button></div></form></div></div></div>
 <!-- Search Feed変更モーダル -->
-<div class="modal fade" id="changeSearchFeed" tabindex="-1" role="dialog" aria-labelledby="changeSearchFeedTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="changeSearchFeedForm"><div class="modal-header" style="color:#fff;background-color:#333;"><h5 class="modal-title" id="changeSearchFeedTitle"><i class="fas fa-search" aria-hidden="true"></i> Search Feedを変更</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div><div class="modal-body"><input type="hidden" class="changeSearchId"><?php echo search_feed_form_fields('change'); ?></div><div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto delete-search-feed">削除</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">変更</button></div></form></div></div></div>
+<div class="modal fade" id="changeSearchFeed" tabindex="-1" role="dialog" aria-labelledby="changeSearchFeedTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="changeSearchFeedForm"><div class="modal-header" style="color:#fff;background-color:#333;"><h5 class="modal-title" id="changeSearchFeedTitle"><i class="fas fa-search" aria-hidden="true"></i> Search Feedを変更</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div><div class="modal-body"><input type="hidden" class="changeSearchId"><?php echo search_feed_form_fields('change'); ?></div><div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto delete-search-feed">削除</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">変更</button></div></form></div></div></div>
 
 <!-- Clock追加モーダル -->
 <div class="modal fade" id="registerClock" tabindex="-1" role="dialog" aria-labelledby="registerClockTitle" aria-hidden="true">
@@ -1014,7 +1014,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="registerClockForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="registerClockTitle"><i class="far fa-clock" aria-hidden="true"></i> Clockを追加</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="registerClockLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
@@ -1083,7 +1083,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="changeClockForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="changeClockTitle"><i class="far fa-clock" aria-hidden="true"></i> Clockを変更</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="changeClockId">
@@ -1151,7 +1151,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="registerMemoForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="registerMemoTitle"><i class="far fa-sticky-note" aria-hidden="true"></i> Memoを追加</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="registerMemoLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
@@ -1197,7 +1197,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="changeMemoForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="changeMemoTitle"><i class="far fa-sticky-note" aria-hidden="true"></i> Memoを変更</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="changeMemoWidgetId">
@@ -1243,7 +1243,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="registerTaskWidgetForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="registerTaskWidgetTitle"><i class="fas fa-tasks" aria-hidden="true"></i> Taskを追加</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="registerTaskWidgetLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
@@ -1277,7 +1277,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="changeTaskWidgetForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="changeTaskWidgetTitle"><i class="fas fa-tasks" aria-hidden="true"></i> Task Widgetを変更</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="changeTaskWidgetId">
@@ -1302,7 +1302,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <form id="changeTaskItemForm" method="post" action="./">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="changeTaskItemTitle"><i class="fas fa-check-square" aria-hidden="true"></i> Taskを変更</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <input type="hidden" class="changeTaskItemId">
@@ -1322,7 +1322,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="registerGameWidget" tabindex="-1" role="dialog" aria-labelledby="registerGameWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="registerGameWidgetForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Gameを追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Gameを追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <div class="mb-3"><label class="form-label" for="registerGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerGameTitleValue" id="registerGameTitleValue" maxlength="32" value="Icon Quest" required></div>
             <div class="mb-3"><label class="form-label" for="registerGameType"><small class="text-dark">Game</small></label><select class="form-select registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option></select></div>
@@ -1344,7 +1344,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="changeGameWidget" tabindex="-1" role="dialog" aria-labelledby="changeGameWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="changeGameWidgetForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Game Widgetを変更</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Game Widgetを変更</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <input type="hidden" class="changeGameWidgetId">
             <div class="mb-3"><label class="form-label" for="changeGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeGameTitleValue" id="changeGameTitleValue" maxlength="32" required></div>
@@ -1366,7 +1366,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="registerLinksWidget" tabindex="-1" role="dialog" aria-labelledby="registerLinksWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="registerLinksWidgetForm" method="post" action="./">
-            <div class="modal-header" style="color:#fff;background-color:#555;"><h5 class="modal-title" id="registerLinksWidgetTitle"><i class="fas fa-link" aria-hidden="true"></i> Linksを追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+            <div class="modal-header" style="color:#fff;background-color:#555;"><h5 class="modal-title" id="registerLinksWidgetTitle"><i class="fas fa-link" aria-hidden="true"></i> Linksを追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
             <div class="modal-body">
                 <input type="hidden" class="registerLinksLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
                 <div class="mb-3"><label class="form-label" for="registerLinksTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerLinksTitleValue" id="registerLinksTitleValue" value="Links" maxlength="32" required></div>
@@ -1385,7 +1385,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="changeLinksWidget" tabindex="-1" role="dialog" aria-labelledby="changeLinksWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="changeLinksWidgetForm" method="post" action="./">
-            <div class="modal-header" style="color:#fff;background-color:#555;"><h5 class="modal-title" id="changeLinksWidgetTitle"><i class="fas fa-link" aria-hidden="true"></i> Linksを編集</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+            <div class="modal-header" style="color:#fff;background-color:#555;"><h5 class="modal-title" id="changeLinksWidgetTitle"><i class="fas fa-link" aria-hidden="true"></i> Linksを編集</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
             <div class="modal-body">
                 <input type="hidden" class="changeLinksWidgetId">
                 <div class="mb-3"><label class="form-label" for="changeLinksTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeLinksTitleValue" id="changeLinksTitleValue" maxlength="32" required></div>
@@ -1403,7 +1403,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="changeLinkItem" tabindex="-1" role="dialog" aria-labelledby="changeLinkItemTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="changeLinkItemForm" method="post" action="./">
-            <div class="modal-header" style="color:#fff;background-color:#555;"><h5 class="modal-title" id="changeLinkItemTitle"><i class="fas fa-link" aria-hidden="true"></i> リンクを編集</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+            <div class="modal-header" style="color:#fff;background-color:#555;"><h5 class="modal-title" id="changeLinkItemTitle"><i class="fas fa-link" aria-hidden="true"></i> リンクを編集</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
             <div class="modal-body">
                 <input type="hidden" class="changeLinkItemId">
                 <div class="mb-3"><label class="form-label" for="changeLinkItemTitleValue"><small class="text-dark">名前</small></label><input type="text" class="form-control changeLinkItemTitleValue" id="changeLinkItemTitleValue" maxlength="128" required></div>
@@ -1418,7 +1418,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="registerWeatherWidget" tabindex="-1" role="dialog" aria-labelledby="registerWeatherWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="registerWeatherWidgetForm" method="post" action="./">
-            <div class="modal-header" style="color:#fff;background-color:#17a2b8;"><h5 class="modal-title" id="registerWeatherWidgetTitle"><i class="fas fa-cloud-sun" aria-hidden="true"></i> Weatherを追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+            <div class="modal-header" style="color:#fff;background-color:#17a2b8;"><h5 class="modal-title" id="registerWeatherWidgetTitle"><i class="fas fa-cloud-sun" aria-hidden="true"></i> Weatherを追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
             <div class="modal-body">
                 <input type="hidden" class="registerWeatherLocationValue" value="<?php echo app_html((string) $addTargetLocation); ?>">
                 <div class="mb-3"><label class="form-label" for="registerWeatherTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerWeatherTitleValue" id="registerWeatherTitleValue" value="Weather" maxlength="32" required></div>
@@ -1438,7 +1438,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="changeWeatherWidget" tabindex="-1" role="dialog" aria-labelledby="changeWeatherWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="changeWeatherWidgetForm" method="post" action="./">
-            <div class="modal-header" style="color:#fff;background-color:#17a2b8;"><h5 class="modal-title" id="changeWeatherWidgetTitle"><i class="fas fa-cloud-sun" aria-hidden="true"></i> Weatherを編集</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+            <div class="modal-header" style="color:#fff;background-color:#17a2b8;"><h5 class="modal-title" id="changeWeatherWidgetTitle"><i class="fas fa-cloud-sun" aria-hidden="true"></i> Weatherを編集</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
             <div class="modal-body">
                 <input type="hidden" class="changeWeatherWidgetId">
                 <div class="mb-3"><label class="form-label" for="changeWeatherTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeWeatherTitleValue" id="changeWeatherTitleValue" maxlength="32" required></div>
@@ -1458,7 +1458,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="registerCalendarWidget" tabindex="-1" role="dialog" aria-labelledby="registerCalendarWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="registerCalendarWidgetForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerCalendarWidgetTitle"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendarを追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerCalendarWidgetTitle"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendarを追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <input type="hidden" class="registerCalendarWidgetLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
             <div class="mb-3"><label class="form-label" for="registerCalendarWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerCalendarWidgetTitleValue" id="registerCalendarWidgetTitleValue" value="Calendar" maxlength="32" required></div>
@@ -1479,7 +1479,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="changeCalendarWidget" tabindex="-1" role="dialog" aria-labelledby="changeCalendarWidgetTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="changeCalendarWidgetForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeCalendarWidgetTitle"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendar Widgetを変更</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeCalendarWidgetTitle"><i class="far fa-calendar-alt" aria-hidden="true"></i> Calendar Widgetを変更</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <input type="hidden" class="changeCalendarWidgetId">
             <div class="mb-3"><label class="form-label" for="changeCalendarWidgetTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeCalendarWidgetTitleValue" id="changeCalendarWidgetTitleValue" maxlength="32" required></div>
@@ -1500,7 +1500,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="registerCalendarEvent" tabindex="-1" role="dialog" aria-labelledby="registerCalendarEventTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="registerCalendarEventForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerCalendarEventTitle"><i class="fas fa-calendar-plus" aria-hidden="true"></i> 予定を追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerCalendarEventTitle"><i class="fas fa-calendar-plus" aria-hidden="true"></i> 予定を追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <div class="mb-3"><label class="form-label" for="registerCalendarEventTitleValue"><small class="text-dark">予定</small></label><input type="text" class="form-control registerCalendarEventTitleValue" id="registerCalendarEventTitleValue" maxlength="128" required></div>
             <div class="row g-2"><div class="mb-3 col-6"><label class="form-label" for="registerCalendarEventStartDate"><small class="text-dark">開始日</small></label><input type="date" class="form-control registerCalendarEventStartDate" id="registerCalendarEventStartDate" required></div><div class="mb-3 col-6"><label class="form-label" for="registerCalendarEventEndDate"><small class="text-dark">終了日</small></label><input type="date" class="form-control registerCalendarEventEndDate" id="registerCalendarEventEndDate" required></div></div>
@@ -1515,7 +1515,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <div class="modal fade" id="changeCalendarEvent" tabindex="-1" role="dialog" aria-labelledby="changeCalendarEventTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="changeCalendarEventForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeCalendarEventTitle"><i class="far fa-calendar-check" aria-hidden="true"></i> 予定を変更</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeCalendarEventTitle"><i class="far fa-calendar-check" aria-hidden="true"></i> 予定を変更</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <input type="hidden" class="changeCalendarEventId">
             <input type="hidden" class="changeCalendarOccurrenceOriginalStartDate">
@@ -1544,7 +1544,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
         <div class="modal-content">
             <div class="modal-header" style="color: #fff; background-color: #555;">
                 <h5 class="modal-title" id="accountSettingsTitle"><i class="fas fa-user-cog" aria-hidden="true"></i> アカウント設定</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
                 <section aria-labelledby="accountEmailTitle">
@@ -1579,7 +1579,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
         <div class="modal-content">
             <div class="modal-header" style="color: #fff; background-color: #333;">
                 <h5 class="modal-title" id="saveContentTitle"><i class="fas fa-bookmark" aria-hidden="true"></i> Stockへ保存</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
             <div class="modal-body">
 
@@ -1605,7 +1605,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="stockTaskTargetTitle"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i> Taskへ追加</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                    <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-0">
