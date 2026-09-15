@@ -165,12 +165,12 @@ function mail_google_oauth_begin(int $userId): array
 
     $state = mail_google_oauth_base64url(random_bytes(32));
     $verifier = mail_google_oauth_base64url(random_bytes(48));
-    $_SESSION['mail_google_oauth'] = [
-        'owner_id' => $userId,
-        'state_hash' => hash('sha256', $state),
-        'code_verifier' => $verifier,
-        'started_at' => time(),
-    ];
+    app_session_mail_google_oauth_store(
+        $userId,
+        hash('sha256', $state),
+        $verifier,
+        time()
+    );
 
     $query = http_build_query([
         'client_id' => (string) APP_MAIL_GOOGLE_OAUTH_CLIENT_ID,
@@ -200,8 +200,7 @@ function mail_google_oauth_complete(
     ?callable $transport = null,
     ?int $now = null
 ): array {
-    $pending = $_SESSION['mail_google_oauth'] ?? null;
-    unset($_SESSION['mail_google_oauth']);
+    $pending = app_session_mail_google_oauth_take();
     $timestamp = $now ?? time();
 
     if (!is_array($pending)

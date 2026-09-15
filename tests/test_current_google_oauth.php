@@ -8,15 +8,24 @@ define('APP_MAIL_GOOGLE_OAUTH_REDIRECT_URI', 'https://reader.example.test/mail_o
 define('APP_MAIL_GOOGLE_OAUTH_ALLOWED_EMAIL', '');
 
 $testUserId = 7;
+$testOAuthPending = null;
 function app_session_is_authenticated(): bool { return true; }
 function app_session_user_id(): ?int { return 7; }
+function app_session_mail_google_oauth_store(int $ownerId, string $stateHash, string $codeVerifier, int $startedAt): void
+{
+    global $testOAuthPending;
+    $testOAuthPending = ['owner_id' => $ownerId, 'state_hash' => $stateHash, 'code_verifier' => $codeVerifier, 'started_at' => $startedAt];
+}
+function app_session_mail_google_oauth_take(): ?array
+{
+    global $testOAuthPending;
+    $pending = $testOAuthPending;
+    $testOAuthPending = null;
+    return $pending;
+}
 
 require_once dirname(__DIR__) . '/app/mail/mail_google_oauth.php';
 require_once dirname(__DIR__) . '/app/mail/mail_smtp_client.php';
-
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
 
 $results = [];
 $check = static function (bool $condition, string $message) use (&$results): void {
@@ -52,7 +61,7 @@ $transport = static function (string $url, string $method, array $form, ?string 
 $complete = mail_google_oauth_complete($testUserId, (string) $query['state'], 'test-auth-code', $transport);
 $check($complete['email'] === 'owner@example.com', 'callback accepts a verified Google email');
 $check($complete['refresh_token'] === 'refresh-token-for-test', 'callback returns only durable authorization material');
-$check(!isset($_SESSION['mail_google_oauth']), 'callback state is consumed exactly once');
+$check($testOAuthPending === null, 'callback state is consumed exactly once');
 $check(($requests[0][2]['code_verifier'] ?? '') !== '', 'token exchange submits the session-bound PKCE verifier');
 
 $replayRejected = false;

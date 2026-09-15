@@ -18,7 +18,7 @@ $code = isset($_GET['code']) && is_string($_GET['code']) ? $_GET['code'] : '';
 $providerError = isset($_GET['error']) && is_string($_GET['error']) ? $_GET['error'] : '';
 
 if ($userId === null || $providerError !== '' || $state === '' || $code === '') {
-    unset($_SESSION['mail_google_oauth']);
+    app_session_mail_google_oauth_clear();
     header('Location: ./?mail_oauth=error', true, 303);
     exit;
 }

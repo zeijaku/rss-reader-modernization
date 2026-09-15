@@ -152,6 +152,47 @@ function app_session_release(): void
     }
 }
 
+/** Store one short-lived Gmail OAuth callback challenge in the current session. */
+function app_session_mail_google_oauth_store(int $ownerId, string $stateHash, string $codeVerifier, int $startedAt): void
+{
+    if ($ownerId <= 0
+        || preg_match('/\A[a-f0-9]{64}\z/D', $stateHash) !== 1
+        || preg_match('/\A[A-Za-z0-9_-]{43,128}\z/D', $codeVerifier) !== 1
+        || $startedAt <= 0) {
+        throw new InvalidArgumentException('Invalid Gmail OAuth session state.');
+    }
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        app_session_start();
+    }
+    if (app_session_user_id() !== $ownerId) {
+        throw new RuntimeException('Gmail OAuth owner does not match the authenticated session.');
+    }
+    $_SESSION['mail_google_oauth'] = [
+        'owner_id' => $ownerId,
+        'state_hash' => $stateHash,
+        'code_verifier' => $codeVerifier,
+        'started_at' => $startedAt,
+    ];
+}
+
+/** Consume the Gmail OAuth callback challenge exactly once. */
+function app_session_mail_google_oauth_take(): ?array
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        return null;
+    }
+    $pending = $_SESSION['mail_google_oauth'] ?? null;
+    unset($_SESSION['mail_google_oauth']);
+    return is_array($pending) ? $pending : null;
+}
+
+function app_session_mail_google_oauth_clear(): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        unset($_SESSION['mail_google_oauth']);
+    }
+}
+
 function app_session_is_authenticated(): bool
 {
     return isset($_SESSION['user_id']) && (int) $_SESSION['user_id'] > 0;
