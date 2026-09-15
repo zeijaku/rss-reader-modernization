@@ -37,6 +37,20 @@ function mail_client_socket_address(string $transport, string $ip, int $port): s
     return $transport . '://' . $host . ':' . $port;
 }
 
+/** Retrieve a message by UID across supported ImapEngine versions. */
+function mail_client_find_message_by_uid(
+    DirectoryTree\ImapEngine\MessageQuery $query,
+    int $uid
+): ?DirectoryTree\ImapEngine\MessageInterface {
+    if ($uid <= 0) {
+        return null;
+    }
+    if (enum_exists(DirectoryTree\ImapEngine\Enums\ImapFetchIdentifier::class)) {
+        return $query->find($uid, DirectoryTree\ImapEngine\Enums\ImapFetchIdentifier::Uid);
+    }
+    return $query->find($uid);
+}
+
 if (class_exists(DirectoryTree\ImapEngine\Connection\Streams\ImapStream::class)) {
     final class AppMailPinnedImapStream extends DirectoryTree\ImapEngine\Connection\Streams\ImapStream
     {
@@ -101,6 +115,7 @@ function mail_client_test_credentials(array $account, string $password, ?callabl
         return ['ok' => false, 'code' => $target['error_code']];
     }
     $username = mail_account_validate_username($account['username'] ?? null);
+    $authentication = ($account['authentication'] ?? 'plain') === 'oauth' ? 'oauth' : 'plain';
 
     foreach ($target['ips'] as $ip) {
         $mailbox = null;
@@ -114,7 +129,7 @@ function mail_client_test_credentials(array $account, string $password, ?callabl
                 'password' => $password,
                 'encryption' => $target['encryption'],
                 'validate_cert' => true,
-                'authentication' => 'plain',
+                'authentication' => $authentication,
             ]);
             $stream = new AppMailPinnedImapStream($target['host'], $ip);
             $connection = new DirectoryTree\ImapEngine\Connection\ImapConnection($stream, null);

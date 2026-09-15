@@ -99,7 +99,7 @@ function mail_reply_read_context(
                 'password' => $password,
                 'encryption' => $target['encryption'],
                 'validate_cert' => true,
-                'authentication' => 'plain',
+                'authentication' => ($account['authentication'] ?? 'plain') === 'oauth' ? 'oauth' : 'plain',
             ]);
             $stream = new AppMailPinnedImapStream($target['host'], $ip);
             $connection = new DirectoryTree\ImapEngine\Connection\ImapConnection($stream, null);
@@ -112,10 +112,10 @@ function mail_reply_read_context(
                 $imapFolder,
                 new DirectoryTree\ImapEngine\Connection\ImapQueryBuilder()
             );
-            $message = $query
+            $query
                 ->withHeaders()
-                ->leaveUnread()
-                ->find($uid);
+                ->leaveUnread();
+            $message = mail_client_find_message_by_uid($query, $uid);
 
             if (!$message instanceof DirectoryTree\ImapEngine\MessageInterface) {
                 $mailbox->disconnect();

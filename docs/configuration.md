@@ -49,6 +49,8 @@ Logには運用情報が含まれるため、Gitや配布ZIPへ含めません�
 | `SESSION_COOKIE_NAME` | `iguguru_session` | 変更すると既存Browser sessionは継続しない |
 | `SESSION_IDLE_TIMEOUT` | `7200` | 最小300秒 |
 | `SESSION_ABSOLUTE_TIMEOUT` | `43200` | Idle timeout以上 |
+| `AUTH_2FA_PENDING_TIMEOUT` | `300` | Password確認後に2FA入力を完了するまでの秒数。60〜900秒 |
+| `AUTH_REMEMBER_2FA_TRUST_SECONDS` | `86400` | Remember Me端末で2FA確認を再利用する秒数。3600〜604800秒 |
 | `LOGIN_RATE_WINDOW` | `900` | 最小60秒 |
 | `LOGIN_RATE_MAX_PAIR` | `5` | 最小2 |
 | `LOGIN_RATE_MAX_IP` | `30` | Pair上限以上 |
@@ -96,7 +98,7 @@ TimeoutやSize上限を緩めても、private address拒否、redirect再検証�
 Cache / Lock / Fetch stateは `var/cache/feed/` に置きます。このPathはRuntimeで固定され、`public/` 外です。
 
 
-## Mail Widget（V1.34）
+## Mail Widget（V1.34 / V1.35）
 
 Mail WidgetのIMAP受信とSMTP送信は、保存CredentialをServer側の専用鍵で暗号化して扱います。SMTPは465 SSL/TLSまたは587 STARTTLSだけを許可し、TLS peer／hostname検証と既存のpublic-address-only target validationを維持します。
 
@@ -106,8 +108,16 @@ Mail WidgetのIMAP受信とSMTP送信は、保存CredentialをServer側の専用
 | `APP_MAIL_CREDENTIAL_KEY_B64` | 空 | 必須。32-byte乱数をBase64化した値。DB／Git／Browserへ出さない |
 | `APP_MAIL_IMAP_TIMEOUT_SECONDS` | `5` | IMAP接続／Commandのbounded Timeout |
 | `APP_MAIL_SMTP_TIMEOUT_SECONDS` | `5` | SMTP接続／Commandのbounded Timeout |
+| `APP_MAIL_GOOGLE_OAUTH_CLIENT_ID` | 空 | Google CloudのWeb application client ID |
+| `APP_MAIL_GOOGLE_OAUTH_CLIENT_SECRET` | 空 | Google Cloudのclient secret。Git／Browserへ出さない |
+| `APP_MAIL_GOOGLE_OAUTH_REDIRECT_URI` | 空 | Google Cloudへ登録した完全一致のHTTPS callback URL |
+| `APP_MAIL_GOOGLE_OAUTH_ALLOWED_EMAIL` | 空 | 任意。自分用運用で接続可能なGmail addressを1件に固定する |
 
 Mail Account保存後にCredential keyを変更・紛失すると、既存IMAP Credentialと個別SMTP Credentialを復号できなくなります。Keyを変更した場合は対象AccountのCredential再入力が必要です。
+
+Gmail OAuth2を使う場合は、Google CloudでOAuth consent screenとWeb application clientを作成し、Authorized redirect URIへ`APP_MAIL_GOOGLE_OAUTH_REDIRECT_URI`と同じURLを登録します。自分用のTesting運用では利用するGoogle AccountをTest userへ登録してください。Mail Widgetの「Gmailを接続」から同意すると、refresh tokenだけを既存Mail鍵で暗号化保存し、短命access tokenは接続時に取得してDBへ保存しません。IMAP / SMTP用scopeは`https://mail.google.com/`のため、一般公開する場合はGoogleの審査要件を別途満たす必要があります。
+
+Google CloudのUser typeがExternalかつPublishing statusがTestingの場合、Gmail scopeを含むrefresh tokenは原則7日で失効します。長期利用ではGoogle Cloud側の公開状態と審査要件を確認し、失効時はMail Account管理の「Gmail再接続」で再認可してください。
 
 送信添付のApplication上限は最大5件、1件10 MiB、合計20 MiBです。ただしHosting側の`upload_max_filesize`、`post_max_size`、Web Server request-body limit、Mail provider側のmessage-size policyの方が小さい場合は、そちらが実質上限になります。受信メール／Sentメールでは添付ファイル一覧を表示し、1ファイルあたりdecoded content 25 MiBを上限としてダウンロードできます。IMAP接続は既存のOwner scope、Folder一致、public-address-only target validation、validated-IP pinningを維持します。
 
@@ -180,6 +190,7 @@ Shared hosting等で環境変数が使いにくい場合は `config/local.php` �
 - `config/local.php`
 - `APP_HASH_KEY`を保管するSecret store
 - `APP_MAIL_CREDENTIAL_KEY_B64`を保管するSecret store（Mail利用時）
+- `APP_MAIL_GOOGLE_OAUTH_CLIENT_SECRET`を保管するSecret store（Gmail OAuth2利用時）
 - `APP_REMOTE_CREDENTIAL_KEY_B64`を保管するSecret store（Remote Files利用時）
 - SFTPで使用する検証済みknown_hosts／private keyの保管場所
 - Database接続情報

@@ -26,6 +26,8 @@ return [
 
     // V1.32: TOTP 2FA pending challenge and dedicated factor throttling.
     'AUTH_2FA_PENDING_TIMEOUT' => '300',
+    // Ask for 2FA again after 24 hours even when Remember Me remains valid.
+    'AUTH_REMEMBER_2FA_TRUST_SECONDS' => '86400',
     'AUTH_2FA_RATE_WINDOW' => '900',
     'AUTH_2FA_RATE_MAX_PAIR' => '5',
     'AUTH_2FA_RATE_MAX_IP' => '30',
@@ -79,6 +81,19 @@ return [
     'APP_X_CACHE_TTL_SECONDS' => '300',
     'APP_X_STALE_MAX_AGE_SECONDS' => '3600',
     'APP_X_TIMEOUT_MS' => '5000',
+
+
+    // V1.34/V1.35 Mail credentials and Gmail OAuth2.
+    // Generate the credential key with: php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"
+    'APP_MAIL_CREDENTIAL_KEY_ID' => 'primary',
+    'APP_MAIL_CREDENTIAL_KEY_B64' => 'replace-with-base64-encoded-32-byte-key',
+    'APP_MAIL_IMAP_TIMEOUT_SECONDS' => '5',
+    'APP_MAIL_SMTP_TIMEOUT_SECONDS' => '5',
+    'APP_MAIL_GOOGLE_OAUTH_CLIENT_ID' => '',
+    'APP_MAIL_GOOGLE_OAUTH_CLIENT_SECRET' => '',
+    'APP_MAIL_GOOGLE_OAUTH_REDIRECT_URI' => 'https://example.com/mail_oauth_google.php',
+    // Optional: restrict OAuth connection to exactly one Gmail address.
+    'APP_MAIL_GOOGLE_OAUTH_ALLOWED_EMAIL' => '',
 
 
     // V1.29+ Remote File Manager. Generate with: php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"

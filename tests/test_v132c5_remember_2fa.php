@@ -59,6 +59,7 @@ final class V132c5RememberStatement extends PDOStatement
                 'remember_token_created_at' => (string) $params[':created_at'],
                 'remember_token_expires_at' => (string) $params[':expires_at'],
                 'remember_token_last_used_at' => null,
+                'remember_token_second_factor_verified_at' => $params[':second_factor_verified_at'] ?? null,
             ];
             $this->affected = 1;
             return true;
@@ -69,6 +70,19 @@ final class V132c5RememberStatement extends PDOStatement
                 if ($token['remember_token_selector'] === $selector) {
                     $user = $this->pdo->users[(int) $token['remember_token_user_id']] ?? null;
                     $this->rows[] = $token + ['user_flag' => is_array($user) ? $user['user_flag'] : null];
+                    break;
+                }
+            }
+            return true;
+        }
+        if (str_starts_with($sql, 'UPDATE `ig_remember_token` SET remember_token_second_factor_verified_at')) {
+            $selector = (string) ($params[':selector'] ?? '');
+            $userId = (int) ($params[':user_id'] ?? 0);
+            foreach (array_keys($this->pdo->tokens) as $id) {
+                if ($this->pdo->tokens[$id]['remember_token_selector'] === $selector
+                    && (int) $this->pdo->tokens[$id]['remember_token_user_id'] === $userId) {
+                    $this->pdo->tokens[$id]['remember_token_second_factor_verified_at'] = (string) $params[':verified_at'];
+                    $this->affected = 1;
                     break;
                 }
             }
@@ -191,6 +205,18 @@ $compatBefore = session_id();
 $check(persistent_login_restore_session(), 'non-2FA Remember restoration still succeeds');
 $check(app_session_user_id() === 1 && app_session_is_authenticated(), 'non-2FA Remember restoration still grants the authenticated session');
 $check(session_id() !== $compatBefore, 'non-2FA Remember restoration still rotates the session identifier');
+
+persistent_login_revoke_current();
+
+// V1.35: a token issued immediately after successful 2FA can silently restore
+// for one bounded day even when the normal idle session has expired.
+$v132c5TwoFactorEnabled = true;
+$check(persistent_login_issue_for_user(1, true), '2FA-verified Remember Token can be issued');
+app_session_clear_authentication();
+$trustedBefore = session_id();
+$check(persistent_login_restore_session(), '2FA-verified Remember Token restores within its trust window');
+$check(app_session_user_id() === 1 && !app_session_has_pending_auth(), 'trusted browser does not ask for 2FA again within 24 hours');
+$check(session_id() !== $trustedBefore, 'trusted Remember restoration still rotates the session identifier');
 
 persistent_login_revoke_current();
 app_session_logout();

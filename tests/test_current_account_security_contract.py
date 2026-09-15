@@ -62,8 +62,8 @@ check(set(raw_pending_refs) <= {'app/session.php'}, 'raw pending user id remains
 # Password and Remember paths require TOTP when enabled.
 check('auth_totp_status($authenticatedUserId)' in index and 'app_session_begin_pending_auth($authenticatedUserId' in index, 'password login branches 2FA-enabled users into pending state')
 check(index.index('app_session_begin_pending_auth($authenticatedUserId') < index.index("header('Location: ./?auth=2fa'"), 'password 2FA challenge is established before redirect')
-check("if ($twoFactorEnabled)" in persistent and "app_session_begin_pending_auth($userId, 'remember'" in persistent, 'Remember restoration cannot bypass enabled 2FA')
-check("app_session_login($userId)" in persistent, 'Remember restoration retains direct login only for accounts without 2FA')
+check("if ($twoFactorEnabled && !$secondFactorTrusted)" in persistent and "app_session_begin_pending_auth($userId, 'remember'" in persistent, 'Remember restoration requires 2FA unless the exact browser token has a bounded trust marker')
+check('AUTH_REMEMBER_2FA_TRUST_SECONDS' in persistent and "app_session_login($userId)" in persistent, 'Remember restoration permits direct login only without 2FA or inside the bounded trusted-browser window')
 
 # TOTP login completion and replay resistance.
 check('auth_totp_verify_enabled_code($pendingUserId, $code)' in index, 'pending login verifies TOTP before completion')

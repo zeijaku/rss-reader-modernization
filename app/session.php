@@ -152,6 +152,121 @@ function app_session_release(): void
     }
 }
 
+/** Store one short-lived Gmail OAuth callback challenge in the current session. */
+function app_session_mail_google_oauth_store(int $ownerId, string $stateHash, string $codeVerifier, int $startedAt): void
+{
+    if ($ownerId <= 0
+        || preg_match('/\A[a-f0-9]{64}\z/D', $stateHash) !== 1
+        || preg_match('/\A[A-Za-z0-9_-]{43,128}\z/D', $codeVerifier) !== 1
+        || $startedAt <= 0) {
+        throw new InvalidArgumentException('Invalid Gmail OAuth session state.');
+    }
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        app_session_start();
+    }
+    if (app_session_user_id() !== $ownerId) {
+        throw new RuntimeException('Gmail OAuth owner does not match the authenticated session.');
+    }
+    $_SESSION['mail_google_oauth'] = [
+        'owner_id' => $ownerId,
+        'state_hash' => $stateHash,
+        'code_verifier' => $codeVerifier,
+        'started_at' => $startedAt,
+    ];
+}
+
+/** Consume the Gmail OAuth callback challenge exactly once. */
+function app_session_mail_google_oauth_take(): ?array
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        return null;
+    }
+    $pending = $_SESSION['mail_google_oauth'] ?? null;
+    unset($_SESSION['mail_google_oauth']);
+    return is_array($pending) ? $pending : null;
+}
+
+function app_session_mail_google_oauth_clear(): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        unset($_SESSION['mail_google_oauth']);
+    }
+}
+
+/** Return a still-valid Gmail access token bound to this user/account/refresh credential. */
+function app_session_mail_google_access_token_get(
+    int $ownerId,
+    int $accountId,
+    string $refreshHash,
+    ?int $now = null
+): ?string {
+    if ($ownerId <= 0
+        || $accountId <= 0
+        || preg_match('/\A[a-f0-9]{64}\z/D', $refreshHash) !== 1
+        || app_session_user_id() !== $ownerId) {
+        return null;
+    }
+
+    $entry = $_SESSION['mail_google_access_tokens'][(string) $accountId] ?? null;
+    $timestamp = $now ?? time();
+    if (!is_array($entry)
+        || (int) ($entry['owner_id'] ?? 0) !== $ownerId
+        || !is_string($entry['refresh_hash'] ?? null)
+        || !hash_equals((string) $entry['refresh_hash'], $refreshHash)
+        || !is_string($entry['access_token'] ?? null)
+        || $entry['access_token'] === ''
+        || strlen($entry['access_token']) > 8192
+        || preg_match('/[\x00-\x20\x7F]/', $entry['access_token']) === 1
+        || (int) ($entry['expires_at'] ?? 0) <= ($timestamp + 120)) {
+        return null;
+    }
+
+    return $entry['access_token'];
+}
+
+/** Store a short-lived Gmail access token without holding the session lock during IMAP I/O. */
+function app_session_mail_google_access_token_store(
+    int $ownerId,
+    int $accountId,
+    string $refreshHash,
+    string $accessToken,
+    int $expiresAt
+): void {
+    if ($ownerId <= 0
+        || $accountId <= 0
+        || preg_match('/\A[a-f0-9]{64}\z/D', $refreshHash) !== 1
+        || $accessToken === ''
+        || strlen($accessToken) > 8192
+        || preg_match('/[\x00-\x20\x7F]/', $accessToken) === 1
+        || $expiresAt <= (time() + 120)
+        || $expiresAt > (time() + 86400)) {
+        throw new InvalidArgumentException('Invalid Gmail OAuth access-token cache entry.');
+    }
+
+    $openedHere = session_status() !== PHP_SESSION_ACTIVE;
+    if ($openedHere) {
+        app_session_start();
+    }
+    try {
+        if (app_session_user_id() !== $ownerId) {
+            throw new RuntimeException('Gmail OAuth access-token owner does not match the authenticated session.');
+        }
+        if (!isset($_SESSION['mail_google_access_tokens']) || !is_array($_SESSION['mail_google_access_tokens'])) {
+            $_SESSION['mail_google_access_tokens'] = [];
+        }
+        $_SESSION['mail_google_access_tokens'][(string) $accountId] = [
+            'owner_id' => $ownerId,
+            'refresh_hash' => $refreshHash,
+            'access_token' => $accessToken,
+            'expires_at' => $expiresAt,
+        ];
+    } finally {
+        if ($openedHere) {
+            app_session_release();
+        }
+    }
+}
+
 function app_session_is_authenticated(): bool
 {
     return isset($_SESSION['user_id']) && (int) $_SESSION['user_id'] > 0;

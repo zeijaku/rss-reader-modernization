@@ -129,6 +129,7 @@ if ($token === 'login' && !$authCsrfInvalid) {
                 auth_2fa_throttle_record_success($pendingUserId, $ipAddress);
                 $pendingSource = app_session_pending_source();
                 $rememberRequested = app_session_pending_remember_requested();
+                $rememberSelector = app_session_pending_remember_selector();
                 $completedUserId = app_session_complete_pending_auth();
                 if ($completedUserId === null) {
                     throw new RuntimeException('Pending authentication state changed before completion.');
@@ -136,9 +137,16 @@ if ($token === 'login' && !$authCsrfInvalid) {
 
                 if ($pendingSource === 'password') {
                     if ($rememberRequested) {
-                        persistent_login_issue_for_user($completedUserId);
+                        persistent_login_issue_for_user($completedUserId, true);
                     } else {
                         persistent_login_revoke_current();
+                    }
+                }
+                if ($pendingSource === 'remember' && $rememberSelector !== null) {
+                    if (!remember_token_mark_second_factor_verified($completedUserId, $rememberSelector)) {
+                        // Login is valid, but do not pretend this browser gained
+                        // a new trust window when the exact token was not updated.
+                        error_log('Remember Token second-factor trust update did not affect one row.');
                     }
                 }
 
@@ -264,6 +272,7 @@ if ($tabParam === 'stock') {
         <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/dashboard.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/utility-widgets.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/mini-game.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/cursor-field.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/clock-timer.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/memo-widget.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <?php if ($currentUserId === null): ?>
@@ -565,6 +574,7 @@ function search_feed_form_fields(string $prefix): string
 <script src="<?php echo htmlspecialchars(app_asset_url('js/bootstrap.bundle-5.3.8.min.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/mini-game.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/lights-out.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/cursor-field.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/clock-timer.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/totp-qr.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>

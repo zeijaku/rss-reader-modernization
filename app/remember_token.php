@@ -14,7 +14,7 @@ const REMEMBER_TOKEN_TTL_SECONDS = 2592000; // Fixed 30 days.
  *
  * @return array{ok:bool,cookie_value?:string,expires_at?:int,reason?:string}
  */
-function remember_token_issue(int $userId, ?int $now = null): array
+function remember_token_issue(int $userId, ?int $now = null, bool $secondFactorVerified = false): array
 {
     if ($userId <= 0) {
         return ['ok' => false, 'reason' => 'invalid_user'];
@@ -44,9 +44,10 @@ function remember_token_issue(int $userId, ?int $now = null): array
         $stmt = $pdo->prepare(
             'INSERT INTO ' . db_table_identifier('remember_token') . ' ('
             . 'remember_token_user_id, remember_token_selector, remember_token_validator_hash, '
-            . 'remember_token_created_at, remember_token_expires_at, remember_token_last_used_at'
+            . 'remember_token_created_at, remember_token_expires_at, remember_token_last_used_at, '
+            . 'remember_token_second_factor_verified_at'
             . ') VALUES ('
-            . ':user_id, :selector, :validator_hash, :created_at, :expires_at, NULL'
+            . ':user_id, :selector, :validator_hash, :created_at, :expires_at, NULL, :second_factor_verified_at'
             . ')'
         );
         $stmt->execute([
@@ -55,6 +56,7 @@ function remember_token_issue(int $userId, ?int $now = null): array
             ':validator_hash' => remember_token_hash_validator($material['validator']),
             ':created_at' => remember_token_datetime($timestamp),
             ':expires_at' => remember_token_datetime($expiresAt),
+            ':second_factor_verified_at' => $secondFactorVerified ? remember_token_datetime($timestamp) : null,
         ]);
 
         remember_token_commit_if_started($pdo, $started);
@@ -72,7 +74,7 @@ function remember_token_issue(int $userId, ?int $now = null): array
 /**
  * Validate a cookie token and rotate its validator while keeping fixed expiry.
  *
- * @return array{ok:bool,user_id?:int,cookie_value?:string,expires_at?:int,reason?:string}
+ * @return array{ok:bool,user_id?:int,cookie_value?:string,expires_at?:int,second_factor_verified_at?:int|null,reason?:string}
  */
 function remember_token_validate_and_rotate(string $cookieValue, ?int $now = null): array
 {
@@ -87,7 +89,8 @@ function remember_token_validate_and_rotate(string $cookieValue, ?int $now = nul
 
     try {
         $sql = 'SELECT rt.remember_token_id, rt.remember_token_user_id, '
-            . 'rt.remember_token_validator_hash, rt.remember_token_expires_at, ui.user_flag '
+            . 'rt.remember_token_validator_hash, rt.remember_token_expires_at, '
+            . 'rt.remember_token_second_factor_verified_at, ui.user_flag '
             . 'FROM ' . db_table_identifier('remember_token') . ' rt '
             . 'LEFT JOIN ' . db_table_identifier('user_info') . ' ui '
             . 'ON ui.user_id = rt.remember_token_user_id '
@@ -109,6 +112,11 @@ function remember_token_validate_and_rotate(string $cookieValue, ?int $now = nul
         $userFlag = $row['user_flag'] ?? null;
         $storedHash = (string) ($row['remember_token_validator_hash'] ?? '');
         $expiresAt = remember_token_datetime_to_timestamp((string) ($row['remember_token_expires_at'] ?? ''));
+        $secondFactorVerifiedAt = remember_token_datetime_to_timestamp(
+            is_string($row['remember_token_second_factor_verified_at'] ?? null)
+                ? $row['remember_token_second_factor_verified_at']
+                : ''
+        );
 
         if ($tokenId <= 0 || $userId <= 0 || $userFlag === null || (int) $userFlag !== 0) {
             remember_token_delete_by_id($pdo, $tokenId);
@@ -156,11 +164,33 @@ function remember_token_validate_and_rotate(string $cookieValue, ?int $now = nul
             'user_id' => $userId,
             'cookie_value' => remember_token_encode($parsed['selector'], $newValidator),
             'expires_at' => $expiresAt,
+            'second_factor_verified_at' => $secondFactorVerifiedAt,
         ];
     } catch (Throwable $exception) {
         remember_token_rollback_if_started($pdo, $started);
         throw $exception;
     }
+}
+
+/** Mark this exact rotated browser token as having just completed a second factor. */
+function remember_token_mark_second_factor_verified(int $userId, string $selector, ?int $now = null): bool
+{
+    if ($userId <= 0 || preg_match('/\A[a-f0-9]{24}\z/D', $selector) !== 1) {
+        return false;
+    }
+    $stmt = conn_db()->prepare(
+        'UPDATE ' . db_table_identifier('remember_token') . ' '
+        . 'SET remember_token_second_factor_verified_at = :verified_at '
+        . 'WHERE remember_token_user_id = :user_id AND remember_token_selector = :selector '
+        . 'AND remember_token_expires_at > :verified_at'
+    );
+    $verifiedAt = remember_token_datetime($now ?? time());
+    $stmt->execute([
+        ':verified_at' => $verifiedAt,
+        ':user_id' => $userId,
+        ':selector' => $selector,
+    ]);
+    return $stmt->rowCount() === 1;
 }
 
 /** Revoke the token identified by a cookie value. */

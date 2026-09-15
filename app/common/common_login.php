@@ -49,7 +49,7 @@ function view_login(?string $message = null, string $messageType = 'danger', boo
                         <input type="checkbox" id="loginRememberMe" name="remember_me" value="1" class="auth-remember-input">
                         <label for="loginRememberMe" class="auth-remember-label">この端末で30日間ログイン状態を維持</label>
                     </div>
-                    <p class="auth-remember-note">共用端末では選択しないでください。</p>
+                    <p class="auth-remember-note">共用端末では選択しないでください。選択時、2FA確認はこの端末で24時間保持します。</p>
                     <button class="auth-button" type="submit"><span data-submit-label>ログイン</span><i class="fas fa-sign-in-alt" aria-hidden="true"></i></button>
                 </form>
 

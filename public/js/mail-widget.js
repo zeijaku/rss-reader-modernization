@@ -9,6 +9,7 @@
     var mailNoticeTimer = null;
     var lastMailNoticeMessage = '';
     var composeMailFiles = [];
+    var mailInteractiveTimeout = 30000;
 
     function csrfToken() {
         return $('meta[name="csrf-token"]').attr('content') || '';
@@ -159,7 +160,7 @@
             + '<div class="modal-footer"><button type="button" class="btn btn-outline-danger me-auto delete-mail-widget">削除</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">変更</button></div></form></div></div></div>'
             + '<div class="modal fade" id="registerMailAccount" tabindex="-1" role="dialog" aria-labelledby="registerMailAccountTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="registerMailAccountForm" autocomplete="off">'
             + '<div class="modal-header mail-modal-header"><h5 class="modal-title" id="registerMailAccountTitle"><i class="fas fa-at" aria-hidden="true"></i> Mail Accountを追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>'
-            + '<div class="modal-body"><div class="mb-3"><label class="form-label">表示名</label><input type="text" class="form-control mailAccountDisplayName" maxlength="128" required></div><div class="mb-3"><label class="form-label">IMAP Host</label><input type="text" class="form-control mailAccountHost" maxlength="253" placeholder="imap.example.com" required></div>'
+            + '<div class="modal-body"><div class="border rounded p-3 mb-3"><strong>Gmail</strong><p class="small text-muted mb-2">Google OAuth2で接続します。GoogleのパスワードはRSS Readerへ保存しません。</p><button type="button" class="btn btn-outline-primary connect-google-oauth"><i class="fab fa-google me-1" aria-hidden="true"></i>Gmailを接続</button></div><div class="text-center text-muted small mb-3">または Password / App Passwordで設定</div><div class="mb-3"><label class="form-label">表示名</label><input type="text" class="form-control mailAccountDisplayName" maxlength="128" required></div><div class="mb-3"><label class="form-label">IMAP Host</label><input type="text" class="form-control mailAccountHost" maxlength="253" placeholder="imap.example.com" required></div>'
             + '<div class="row g-2"><div class="mb-3 col-6"><label class="form-label">暗号化</label><select class="form-select mailAccountEncryption"><option value="ssl" selected>SSL/TLS</option><option value="starttls">STARTTLS</option></select></div><div class="mb-3 col-6"><label class="form-label">Port</label><input type="number" class="form-control mailAccountPort" min="1" max="65535" value="993" required></div></div>'
             + '<div class="mb-3"><label class="form-label">User</label><input type="text" class="form-control mailAccountUsername" maxlength="320" autocomplete="username" required></div><div class="mb-3"><label class="form-label">Password / App Password</label><input type="password" class="form-control mailAccountPassword" maxlength="8192" autocomplete="new-password" required></div><small class="form-text text-muted">IMAP Passwordは暗号化して保存します。</small>'
             + '<hr class="my-3"><div class="form-check mb-3"><input type="checkbox" class="form-check-input mailAccountSmtpEnabled" id="mailAccountSmtpEnabled"><label class="form-check-label" for="mailAccountSmtpEnabled">SMTP送信を有効にする</label></div>'
@@ -174,10 +175,10 @@
             + '<div class="modal fade" id="manageMailAccounts" tabindex="-1" role="dialog" aria-labelledby="manageMailAccountsTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">'
             + '<div class="modal-header mail-modal-header"><h5 class="modal-title" id="manageMailAccountsTitle"><i class="fas fa-at" aria-hidden="true"></i> Mail Account管理</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>'
             + '<div class="modal-body"><div class="mail-account-manage-list"></div></div>'
-            + '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="button" class="btn btn-primary open-mail-account-register-from-manage">Mail Accountを追加</button></div></div></div></div>'
+            + '<div class="modal-footer"><button type="button" class="btn btn-outline-primary me-auto connect-google-oauth"><i class="fab fa-google me-1" aria-hidden="true"></i>Gmailを接続</button><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="button" class="btn btn-primary open-mail-account-register-from-manage">Mail Accountを追加</button></div></div></div></div>'
             + '<div class="modal fade" id="editMailAccount" tabindex="-1" role="dialog" aria-labelledby="editMailAccountTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content"><form id="editMailAccountForm" autocomplete="off">'
             + '<div class="modal-header mail-modal-header"><h5 class="modal-title" id="editMailAccountTitle"><i class="fas fa-at" aria-hidden="true"></i> Mail Accountを変更</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>'
-            + '<div class="modal-body"><input type="hidden" class="editMailAccountId"><div class="mb-3"><label class="form-label">表示名</label><input type="text" class="form-control editMailAccountDisplayName" maxlength="128" required></div><div class="mb-3"><label class="form-label">IMAP Host</label><input type="text" class="form-control editMailAccountHost" maxlength="253" required></div>'
+            + '<div class="modal-body"><input type="hidden" class="editMailAccountId"><div class="alert alert-info py-2 editMailOAuthNote d-none">Google OAuth2接続です。接続先とGoogle Accountは固定されます。再認可する場合は「Gmailを再接続」を使用してください。</div><div class="mb-3"><label class="form-label">表示名</label><input type="text" class="form-control editMailAccountDisplayName" maxlength="128" required></div><div class="mb-3"><label class="form-label">IMAP Host</label><input type="text" class="form-control editMailAccountHost" maxlength="253" required></div>'
             + '<div class="row g-2"><div class="mb-3 col-6"><label class="form-label">暗号化</label><select class="form-select editMailAccountEncryption"><option value="ssl">SSL/TLS</option><option value="starttls">STARTTLS</option></select></div><div class="mb-3 col-6"><label class="form-label">Port</label><input type="number" class="form-control editMailAccountPort" min="1" max="65535" required></div></div>'
             + '<div class="mb-3"><label class="form-label">User</label><input type="text" class="form-control editMailAccountUsername" maxlength="320" autocomplete="username" required></div><div class="mb-3"><label class="form-label">新しいPassword / App Password</label><input type="password" class="form-control editMailAccountPassword" maxlength="8192" autocomplete="new-password"><small class="form-text text-muted">変更しない場合は空欄のまま保存してください。</small></div>'
             + '<hr class="my-3"><div class="form-check mb-3"><input type="checkbox" class="form-check-input editMailAccountSmtpEnabled" id="editMailAccountSmtpEnabled"><label class="form-check-label" for="editMailAccountSmtpEnabled">SMTP送信を有効にする</label></div>'
@@ -309,6 +310,9 @@
             if (smtpEnabled) {
                 $('<span>').addClass('badge ms-1 bg-info text-dark').text('SMTP').appendTo($title);
             }
+            if (account.auth_type === 'google_oauth') {
+                $('<span>').addClass('badge ms-1 bg-primary').text('Google OAuth2').appendTo($title);
+            }
             $('<div>')
                 .addClass('mail-account-manage-detail text-muted')
                 .text('IMAP: ' + String(account.username || '') + ' / ' + String(account.host || '') + ':' + String(account.port || ''))
@@ -338,6 +342,13 @@
                 .addClass('btn btn-sm btn-outline-info test-mail-account-list')
                 .text('SMTP確認')
                 .appendTo($actions);
+            if (account.auth_type === 'google_oauth') {
+                $('<button>')
+                    .attr({'type': 'button', 'title': 'Googleの認可を更新します'})
+                    .addClass('btn btn-sm btn-outline-primary connect-google-oauth')
+                    .text('Gmail再接続')
+                    .appendTo($actions);
+            }
         });
     }
 
@@ -359,6 +370,7 @@
     }
 
     function syncEditSmtpUi() {
+        var googleOAuth = $('#editMailAccount').attr('data-mail-auth-type') === 'google_oauth';
         var enabled = $('.editMailAccountSmtpEnabled').prop('checked');
         var useImap = $('.editMailAccountSmtpUseImapCredentials').prop('checked');
         var accountEnabled = $('.editMailAccountEnabled').prop('checked');
@@ -371,6 +383,10 @@
         $('.editMailAccountSmtpPassword').prop('required', false);
         $('.test-mail-smtp-account').prop('disabled', !accountEnabled || !enabled);
         $('.test-mail-account').prop('disabled', !accountEnabled);
+        $('.editMailOAuthNote').toggleClass('d-none', !googleOAuth);
+        $('.editMailAccountHost, .editMailAccountPort, .editMailAccountEncryption, .editMailAccountUsername, .editMailAccountSmtpEnabled, .editMailAccountSmtpHost, .editMailAccountSmtpPort, .editMailAccountSmtpEncryption, .editMailAccountSmtpUseImapCredentials, .editMailAccountSmtpUsername, .editMailAccountFromAddress')
+            .prop('disabled', googleOAuth);
+        $('.editMailAccountPassword, .editMailAccountSmtpPassword').closest('.mb-3').toggleClass('d-none', googleOAuth);
     }
 
     function openEditAccount(accountId) {
@@ -381,6 +397,7 @@
         }
 
         $('.editMailAccountId').val(String(account.mail_account_id || ''));
+        $('#editMailAccount').attr('data-mail-auth-type', String(account.auth_type || 'password'));
         $('.editMailAccountDisplayName').val(String(account.display_name || ''));
         $('.editMailAccountHost').val(String(account.host || ''));
         $('.editMailAccountPort').val(String(account.port || ''));
@@ -438,6 +455,46 @@
         renderAccountManagement();
     }
 
+    function startGoogleOAuth($button) {
+        if ($button.prop('disabled')) { return; }
+        $button.prop('disabled', true);
+        apiRequest('mail.oauth.google.begin', {}, 7000)
+            .done(function (response) {
+                var data = responseData(response);
+                var target = data && data.authorization_url ? String(data.authorization_url) : '';
+                try {
+                    var parsed = new window.URL(target);
+                    if (parsed.protocol !== 'https:' || parsed.hostname !== 'accounts.google.com') {
+                        throw new Error('invalid_oauth_url');
+                    }
+                    window.location.assign(parsed.href);
+                } catch (error) {
+                    showNotice('Gmail OAuth2の開始URLを確認できませんでした', 'danger');
+                    $button.prop('disabled', false);
+                }
+            })
+            .fail(function (xhr, textStatus) {
+                showNotice(errorMessage(xhr, textStatus), 'danger');
+                $button.prop('disabled', false);
+            });
+    }
+
+    function showGoogleOAuthResult() {
+        var params = new window.URLSearchParams(window.location.search || '');
+        var result = params.get('mail_oauth');
+        if (!result) { return; }
+        if (result === 'success') {
+            showNotice('Gmail OAuth2を接続しました', 'success');
+        } else if (result === 'migration') {
+            showNotice('Gmail OAuth2用のDB Migrationを適用してください', 'danger');
+        } else {
+            showNotice('Gmail OAuth2接続を完了できませんでした。もう一度お試しください', 'danger');
+        }
+        params.delete('mail_oauth');
+        var query = params.toString();
+        window.history.replaceState(null, '', window.location.pathname + (query ? '?' + query : '') + window.location.hash);
+    }
+
     function saveAccountChanges($form) {
         var $button = $form.find('button[type="submit"]');
         if ($button.prop('disabled')) { return; }
@@ -477,7 +534,7 @@
             return;
         }
         if ($button && $button.length) { $button.prop('disabled', true); }
-        apiRequest('mail.account.test', {'mail_account_id': id, 'connection': type}, type === 'smtp' ? 20000 : 12000)
+        apiRequest('mail.account.test', {'mail_account_id': id, 'connection': type}, type === 'smtp' ? 20000 : mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 clearMailNotice();
@@ -673,7 +730,7 @@
             'widget_id': widgetId,
             'mail_uid': uid,
             'mail_folder': folder
-        }, 12000)
+        }, mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 if (!data || !/^\d+$/.test(String(data.mail_account_id || '')) || String(data.to || '') === '') {
@@ -1051,7 +1108,7 @@
     }
 
     function loadReceivedAttachments($body, widgetId, uid, folder) {
-        apiRequest('mail.message.attachments', {'widget_id': widgetId, 'mail_uid': uid, 'mail_folder': folder}, 12000)
+        apiRequest('mail.message.attachments', {'widget_id': widgetId, 'mail_uid': uid, 'mail_folder': folder}, mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 if (data === null) { return; }
@@ -1133,7 +1190,7 @@
         $toggle.prop('disabled', true);
         setMessageToggleExpanded($toggle, true);
 
-        apiRequest('mail.widget.message', {'widget_id': widgetId, 'mail_uid': uid, 'mail_folder': folder}, 12000)
+        apiRequest('mail.widget.message', {'widget_id': widgetId, 'mail_uid': uid, 'mail_folder': folder}, mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 if (data === null) {
@@ -1170,7 +1227,7 @@
     function loadFolderOptions($card) {
         var widgetId = String($card.attr('data-dashboard-widget-id') || '');
         if (!/^\d+$/.test(widgetId)) { return $.Deferred().resolve().promise(); }
-        return apiRequest('mail.widget.folders', {'widget_id': widgetId}, 12000)
+        return apiRequest('mail.widget.folders', {'widget_id': widgetId}, mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 if (data === null) { return; }
@@ -1185,7 +1242,13 @@
         var folder = String($select.val() || '');
         if (!/^\d+$/.test(widgetId) || folder === '' || folder === previous) { return; }
         $select.prop('disabled', true);
-        apiRequest('mail.widget.folder.update', {'widget_id': widgetId, 'mail_folder': folder}, 12000)
+        var payload = {'widget_id': widgetId, 'mail_folder': folder};
+        var searchQuery = String($card.find('.mail-search-query').val() || '').trim();
+        if (searchQuery !== '') {
+            payload.mail_search_type = String($card.find('.mail-search-type').val() || 'subject');
+            payload.mail_search_query = searchQuery;
+        }
+        apiRequest('mail.widget.folder.update', payload, mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 if (data === null) { $select.val(previous); return; }
@@ -1199,7 +1262,7 @@
                     widget.widget_config.folder = resolved;
                     widgetCache[String(widget.widget_id || widgetId)] = widget;
                 }
-                fetchWidget(widgetId, true);
+                renderMessages($card, data);
             })
             .fail(function (xhr, textStatus) {
                 $select.val(previous);
@@ -1220,7 +1283,7 @@
             payload.mail_search_type = String($card.find('.mail-search-type').val() || 'subject');
             payload.mail_search_query = searchQuery;
         }
-        return apiRequest('mail.widget.fetch', payload, 12000)
+        return apiRequest('mail.widget.fetch', payload, mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 if (data !== null) { renderMessages($card, data); }
@@ -1334,7 +1397,7 @@
         var id = String(account.mail_account_id || '');
         if (!/^\d+$/.test(id)) { return; }
 
-        apiRequest('mail.account.test', {'mail_account_id': id, 'connection': 'imap'}, 12000)
+        apiRequest('mail.account.test', {'mail_account_id': id, 'connection': 'imap'}, mailInteractiveTimeout)
             .done(function (imapResponse) {
                 var imapData = responseData(imapResponse);
                 if (account.smtp_enabled !== true) {
@@ -1413,6 +1476,7 @@
             .off('click' + ns, '.open-mail-account-register').on('click' + ns, '.open-mail-account-register', function () { $('#registerMailWidget').modal('hide'); $('#registerMailAccount').modal('show'); })
             .off('click' + ns, '.open-mail-account-register-from-manage').on('click' + ns, '.open-mail-account-register-from-manage', function () { $('#manageMailAccounts').modal('hide'); $('#registerMailAccount').modal('show'); })
             .off('click' + ns, '.open-mail-account-manage').on('click' + ns, '.open-mail-account-manage', openAccountManagement)
+            .off('click' + ns, '.connect-google-oauth').on('click' + ns, '.connect-google-oauth', function () { startGoogleOAuth($(this)); })
             .off('click' + ns, '.edit-mail-account').on('click' + ns, '.edit-mail-account', function () { openEditAccount($(this).attr('data-mail-account-id')); })
             .off('click' + ns, '.test-mail-account-list').on('click' + ns, '.test-mail-account-list', function () { testAccount($(this).attr('data-mail-account-id'), $(this), $(this).attr('data-mail-connection')); })
             .off('change' + ns, '.mailAccountEncryption').on('change' + ns, '.mailAccountEncryption', function () { $('.mailAccountPort').val($(this).val() === 'starttls' ? '143' : '993'); })
@@ -1478,6 +1542,7 @@
         loadAssets();
         addUi();
         bindEvents();
+        showGoogleOAuthResult();
         loadWidgets();
     }
 
