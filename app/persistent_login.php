@@ -180,7 +180,7 @@ function persistent_login_restore_session(): bool
             auth_session_registry_bind_remember_selector($userId, $rememberSelector);
         }
         if ((!$twoFactorEnabled || $secondFactorTrusted) && function_exists('auth_audit_log_record')) {
-            auth_audit_log_record('login', 'success', $userId, null, $secondFactorTrusted ? 'remember+trusted_totp' : 'remember');
+            auth_audit_log_record('login', 'success', $userId, null, 'remember');
         }
         return true;
     } catch (Throwable $exception) {
