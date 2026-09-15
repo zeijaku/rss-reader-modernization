@@ -230,10 +230,10 @@ function mail_received_attachment_read(
                 $imapFolder,
                 new DirectoryTree\ImapEngine\Connection\ImapQueryBuilder()
             );
-            $message = $query
+            $query
                 ->withBodyStructure()
-                ->leaveUnread()
-                ->find($uid);
+                ->leaveUnread();
+            $message = mail_client_find_message_by_uid($query, $uid);
             if (!$message instanceof DirectoryTree\ImapEngine\MessageInterface) {
                 $mailbox->disconnect();
                 return ['ok' => false, 'code' => 'message_not_found'];

@@ -37,6 +37,20 @@ function mail_client_socket_address(string $transport, string $ip, int $port): s
     return $transport . '://' . $host . ':' . $port;
 }
 
+/** Retrieve a message by UID across supported ImapEngine versions. */
+function mail_client_find_message_by_uid(
+    DirectoryTree\ImapEngine\MessageQuery $query,
+    int $uid
+): ?DirectoryTree\ImapEngine\MessageInterface {
+    if ($uid <= 0) {
+        return null;
+    }
+    if (enum_exists(DirectoryTree\ImapEngine\Enums\ImapFetchIdentifier::class)) {
+        return $query->find($uid, DirectoryTree\ImapEngine\Enums\ImapFetchIdentifier::Uid);
+    }
+    return $query->find($uid);
+}
+
 if (class_exists(DirectoryTree\ImapEngine\Connection\Streams\ImapStream::class)) {
     final class AppMailPinnedImapStream extends DirectoryTree\ImapEngine\Connection\Streams\ImapStream
     {

@@ -9,6 +9,7 @@ define('APP_MAIL_GOOGLE_OAUTH_ALLOWED_EMAIL', '');
 
 $testUserId = 7;
 $testOAuthPending = null;
+$testAccessTokens = [];
 function app_session_is_authenticated(): bool { return true; }
 function app_session_user_id(): ?int { return 7; }
 function app_session_mail_google_oauth_store(int $ownerId, string $stateHash, string $codeVerifier, int $startedAt): void
@@ -22,6 +23,27 @@ function app_session_mail_google_oauth_take(): ?array
     $pending = $testOAuthPending;
     $testOAuthPending = null;
     return $pending;
+}
+function app_session_mail_google_access_token_get(int $ownerId, int $accountId, string $refreshHash): ?string
+{
+    global $testAccessTokens;
+    $entry = $testAccessTokens[$ownerId . ':' . $accountId] ?? null;
+    return is_array($entry) && hash_equals((string) ($entry['refresh_hash'] ?? ''), $refreshHash)
+        ? (string) ($entry['access_token'] ?? '')
+        : null;
+}
+function app_session_mail_google_access_token_store(int $ownerId, int $accountId, string $refreshHash, string $accessToken, int $expiresAt): void
+{
+    global $testAccessTokens;
+    $testAccessTokens[$ownerId . ':' . $accountId] = [
+        'refresh_hash' => $refreshHash,
+        'access_token' => $accessToken,
+        'expires_at' => $expiresAt,
+    ];
+}
+function mail_crypto_decrypt(int $ownerId, int $accountId, string $envelope): string
+{
+    return $envelope;
 }
 
 require_once dirname(__DIR__) . '/app/mail/mail_google_oauth.php';
@@ -76,6 +98,31 @@ $refresh = mail_google_oauth_refresh_access_token('refresh-token-for-test', $tra
 $check($refresh === 'access-token-for-test', 'refresh grant returns the short-lived access token');
 $lastRequest = $requests[count($requests) - 1];
 $check(($lastRequest[2]['grant_type'] ?? '') === 'refresh_token', 'runtime credential uses the refresh-token grant');
+
+$cachedHash = hash('sha256', 'refresh-token-for-test');
+$testAccessTokens['7:41'] = [
+    'refresh_hash' => $cachedHash,
+    'access_token' => 'session-cached-access-token',
+    'expires_at' => time() + 3600,
+];
+$requestCountBeforeCacheRead = count($requests);
+$cachedAuth = mail_account_runtime_imap_auth(7, 41, [
+    'mail_account_auth_type' => 'google_oauth',
+    'mail_account_username' => 'owner@example.com',
+    'mail_account_secret' => 'refresh-token-for-test',
+], $transport);
+$check($cachedAuth['credential'] === 'session-cached-access-token', 'runtime reuses a session-cached unexpired access token');
+$check(count($requests) === $requestCountBeforeCacheRead, 'session-cached runtime credential avoids another Google token request');
+
+$runtimeAuth = mail_account_runtime_imap_auth(7, 42, [
+    'mail_account_auth_type' => 'google_oauth',
+    'mail_account_username' => 'owner@example.com',
+    'mail_account_secret' => 'another-refresh-token',
+], $transport);
+$storedRuntime = $testAccessTokens['7:42'] ?? null;
+$check($runtimeAuth['credential'] === 'access-token-for-test', 'runtime refresh still returns the access token on a cache miss');
+$check(is_array($storedRuntime) && ($storedRuntime['access_token'] ?? '') === 'access-token-for-test'
+    && (int) ($storedRuntime['expires_at'] ?? 0) > time() + 300, 'runtime stores the refreshed access token with a bounded expiry');
 
 $check(mail_phpmailer_load(), 'bundled PHPMailer OAuth boundary is available');
 $mailer = new PHPMailer\PHPMailer\PHPMailer(true);

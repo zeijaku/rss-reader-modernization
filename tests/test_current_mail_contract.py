@@ -35,6 +35,21 @@ assert 'mail_google_oauth_mail_scope_granted' in oauth
 assert 'mail_crypto_decrypt' in oauth
 assert 'APP_MAIL_GOOGLE_OAUTH_CLIENT_SECRET' in oauth
 assert 'error_log' not in oauth
+assert 'mail_google_oauth_refresh_access_token_result' in oauth
+assert 'app_session_mail_google_access_token_get' in oauth
+assert 'app_session_mail_google_access_token_store' in oauth
+
+session = read('app/session.php')
+assert 'function app_session_mail_google_access_token_get' in session
+assert 'function app_session_mail_google_access_token_store' in session
+
+mail_client = read('app/mail/mail_client.php')
+assert 'mail_client_find_message_by_uid' in mail_client
+assert 'ImapFetchIdentifier::Uid' in mail_client
+
+widget = read('app/mail/mail_widget.php')
+assert "'messages' => $result['messages'] ?? []" in widget
+assert 'mail_widget_read_latest([' in widget[widget.index('function mail_widget_update_folder'):widget.index('function mail_widget_fetch(')]
 
 assert all((root / path).is_file() for path in (
     'app/mail/mail_sent.php',
@@ -62,6 +77,14 @@ assert 'mail.message.attachments' in js
 assert 'mail-attachment-download' in js
 assert 'connect-google-oauth' in js
 assert 'Google OAuth2' in js
+assert 'var mailInteractiveTimeout = 30000;' in js
+folder_update = js[js.index("apiRequest('mail.widget.folder.update'"):js.index('function fetchWidget')]
+assert 'renderMessages($card, data);' in folder_update
+assert 'fetchWidget(widgetId, true);' not in folder_update
+
+public_htaccess = read('public/.htaccess')
+php_deny_rule = next(line for line in public_htaccess.splitlines() if line.startswith('RewriteRule ^(?!api_v1'))
+assert 'mail_oauth_google\\.php$' in php_deny_rule
 assert not (root / 'config/local.php').exists()
 
 print('PASS: current Mail feature contract')

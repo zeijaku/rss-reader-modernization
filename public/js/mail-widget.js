@@ -9,6 +9,7 @@
     var mailNoticeTimer = null;
     var lastMailNoticeMessage = '';
     var composeMailFiles = [];
+    var mailInteractiveTimeout = 30000;
 
     function csrfToken() {
         return $('meta[name="csrf-token"]').attr('content') || '';
@@ -533,7 +534,7 @@
             return;
         }
         if ($button && $button.length) { $button.prop('disabled', true); }
-        apiRequest('mail.account.test', {'mail_account_id': id, 'connection': type}, type === 'smtp' ? 20000 : 12000)
+        apiRequest('mail.account.test', {'mail_account_id': id, 'connection': type}, type === 'smtp' ? 20000 : mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 clearMailNotice();
@@ -729,7 +730,7 @@
             'widget_id': widgetId,
             'mail_uid': uid,
             'mail_folder': folder
-        }, 12000)
+        }, mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 if (!data || !/^\d+$/.test(String(data.mail_account_id || '')) || String(data.to || '') === '') {
@@ -1107,7 +1108,7 @@
     }
 
     function loadReceivedAttachments($body, widgetId, uid, folder) {
-        apiRequest('mail.message.attachments', {'widget_id': widgetId, 'mail_uid': uid, 'mail_folder': folder}, 12000)
+        apiRequest('mail.message.attachments', {'widget_id': widgetId, 'mail_uid': uid, 'mail_folder': folder}, mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 if (data === null) { return; }
@@ -1189,7 +1190,7 @@
         $toggle.prop('disabled', true);
         setMessageToggleExpanded($toggle, true);
 
-        apiRequest('mail.widget.message', {'widget_id': widgetId, 'mail_uid': uid, 'mail_folder': folder}, 12000)
+        apiRequest('mail.widget.message', {'widget_id': widgetId, 'mail_uid': uid, 'mail_folder': folder}, mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 if (data === null) {
@@ -1226,7 +1227,7 @@
     function loadFolderOptions($card) {
         var widgetId = String($card.attr('data-dashboard-widget-id') || '');
         if (!/^\d+$/.test(widgetId)) { return $.Deferred().resolve().promise(); }
-        return apiRequest('mail.widget.folders', {'widget_id': widgetId}, 12000)
+        return apiRequest('mail.widget.folders', {'widget_id': widgetId}, mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 if (data === null) { return; }
@@ -1241,7 +1242,13 @@
         var folder = String($select.val() || '');
         if (!/^\d+$/.test(widgetId) || folder === '' || folder === previous) { return; }
         $select.prop('disabled', true);
-        apiRequest('mail.widget.folder.update', {'widget_id': widgetId, 'mail_folder': folder}, 12000)
+        var payload = {'widget_id': widgetId, 'mail_folder': folder};
+        var searchQuery = String($card.find('.mail-search-query').val() || '').trim();
+        if (searchQuery !== '') {
+            payload.mail_search_type = String($card.find('.mail-search-type').val() || 'subject');
+            payload.mail_search_query = searchQuery;
+        }
+        apiRequest('mail.widget.folder.update', payload, mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 if (data === null) { $select.val(previous); return; }
@@ -1255,7 +1262,7 @@
                     widget.widget_config.folder = resolved;
                     widgetCache[String(widget.widget_id || widgetId)] = widget;
                 }
-                fetchWidget(widgetId, true);
+                renderMessages($card, data);
             })
             .fail(function (xhr, textStatus) {
                 $select.val(previous);
@@ -1276,7 +1283,7 @@
             payload.mail_search_type = String($card.find('.mail-search-type').val() || 'subject');
             payload.mail_search_query = searchQuery;
         }
-        return apiRequest('mail.widget.fetch', payload, 12000)
+        return apiRequest('mail.widget.fetch', payload, mailInteractiveTimeout)
             .done(function (response) {
                 var data = responseData(response);
                 if (data !== null) { renderMessages($card, data); }
@@ -1390,7 +1397,7 @@
         var id = String(account.mail_account_id || '');
         if (!/^\d+$/.test(id)) { return; }
 
-        apiRequest('mail.account.test', {'mail_account_id': id, 'connection': 'imap'}, 12000)
+        apiRequest('mail.account.test', {'mail_account_id': id, 'connection': 'imap'}, mailInteractiveTimeout)
             .done(function (imapResponse) {
                 var imapData = responseData(imapResponse);
                 if (account.smtp_enabled !== true) {

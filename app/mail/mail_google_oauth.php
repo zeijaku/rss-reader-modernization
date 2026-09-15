@@ -262,7 +262,8 @@ function mail_google_oauth_complete(
     return ['email' => $email, 'refresh_token' => $refreshToken];
 }
 
-function mail_google_oauth_refresh_access_token(string $refreshToken, ?callable $transport = null): string
+/** @return array{access_token:string,expires_at:int} */
+function mail_google_oauth_refresh_access_token_result(string $refreshToken, ?callable $transport = null): array
 {
     if (!mail_google_oauth_configured() || $refreshToken === '' || strlen($refreshToken) > 8192) {
         throw new AppMailGoogleOAuthException('Google OAuth refresh credential is unavailable.');
@@ -284,7 +285,19 @@ function mail_google_oauth_refresh_access_token(string $refreshToken, ?callable 
         || preg_match('/[\x00-\x20\x7F]/', $accessToken) === 1) {
         throw new AppMailGoogleOAuthException('Google OAuth access token is unavailable.');
     }
-    return $accessToken;
+    $expiresInValue = $tokens['expires_in'] ?? null;
+    $expiresIn = is_int($expiresInValue)
+        ? $expiresInValue
+        : (is_string($expiresInValue) && preg_match('/\A[0-9]{1,10}\z/D', $expiresInValue) === 1
+            ? (int) $expiresInValue
+            : 3600);
+    $expiresIn = max(1, min(86400, $expiresIn));
+    return ['access_token' => $accessToken, 'expires_at' => time() + $expiresIn];
+}
+
+function mail_google_oauth_refresh_access_token(string $refreshToken, ?callable $transport = null): string
+{
+    return mail_google_oauth_refresh_access_token_result($refreshToken, $transport)['access_token'];
 }
 
 /** @return array{username:string,credential:string,authentication:string} */
@@ -308,12 +321,29 @@ function mail_account_runtime_imap_auth(int $ownerId, int $accountId, array $acc
 
     try {
         $cacheKey = $ownerId . ':' . $accountId . ':' . hash('sha256', $secret);
-        if ($transport === null && isset($requestCache[$cacheKey]) && is_string($requestCache[$cacheKey])) {
+        $refreshHash = hash('sha256', $secret);
+        if (isset($requestCache[$cacheKey]) && is_string($requestCache[$cacheKey])) {
             $accessToken = $requestCache[$cacheKey];
+        } elseif (function_exists('app_session_mail_google_access_token_get')
+            && ($cached = app_session_mail_google_access_token_get($ownerId, $accountId, $refreshHash)) !== null) {
+            $accessToken = $cached;
+            $requestCache[$cacheKey] = $accessToken;
         } else {
-            $accessToken = mail_google_oauth_refresh_access_token($secret, $transport);
-            if ($transport === null) {
-                $requestCache[$cacheKey] = $accessToken;
+            $refreshed = mail_google_oauth_refresh_access_token_result($secret, $transport);
+            $accessToken = $refreshed['access_token'];
+            $requestCache[$cacheKey] = $accessToken;
+            if (function_exists('app_session_mail_google_access_token_store')) {
+                try {
+                    app_session_mail_google_access_token_store(
+                        $ownerId,
+                        $accountId,
+                        $refreshHash,
+                        $accessToken,
+                        $refreshed['expires_at']
+                    );
+                } catch (Throwable) {
+                    // A cache write must not turn a valid Google credential into a Mail failure.
+                }
             }
         }
     } finally {
