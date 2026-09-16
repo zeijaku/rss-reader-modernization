@@ -46,10 +46,14 @@ assert 'function app_session_mail_google_access_token_store' in session
 mail_client = read('app/mail/mail_client.php')
 assert 'mail_client_find_message_by_uid' in mail_client
 assert 'ImapFetchIdentifier::Uid' in mail_client
+assert 'mail_client_latest_uid_values' in mail_client
 
 widget = read('app/mail/mail_widget.php')
 assert "'messages' => $result['messages'] ?? []" in widget
 assert 'mail_widget_read_latest([' in widget[widget.index('function mail_widget_update_folder'):widget.index('function mail_widget_fetch(')]
+assert 'connection()->search([$search->toImap()])' in widget
+assert 'mail_client_latest_uid_values' in widget
+assert 'usort($messages' in widget
 
 assert all((root / path).is_file() for path in (
     'app/mail/mail_sent.php',

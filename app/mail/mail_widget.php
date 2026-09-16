@@ -234,24 +234,35 @@ function mail_widget_read_latest(array $account, string $password, int $limit, ?
             // Keep the selected folder read-only. MessageQuery is created directly so
             // Folder::messages() cannot issue SELECT after this EXAMINE command.
             $mailbox->connection()->examine($resolvedFolder);
-            $query = new DirectoryTree\ImapEngine\MessageQuery(
-                $folder,
-                new DirectoryTree\ImapEngine\Connection\ImapQueryBuilder()
-            );
+            $search = new DirectoryTree\ImapEngine\Connection\ImapQueryBuilder();
             if ($validatedSearchQuery !== '') {
                 if ($validatedSearchType === 'from') {
-                    $query->from($validatedSearchQuery);
+                    $search->from($validatedSearchQuery);
                 } else {
-                    $query->subject($validatedSearchQuery);
+                    $search->subject($validatedSearchQuery);
                 }
             }
-            $collection = $query
-                ->withHeaders()
-                ->withFlags()
-                ->leaveUnread()
-                ->newest()
-                ->limit($limit)
-                ->get();
+            if ($search->isEmpty()) {
+                $search->all();
+            }
+
+            // UID SEARCH returns the authoritative mailbox UID set. Normalize and
+            // sort it numerically before limiting so older ImapEngine ordering
+            // behavior cannot omit newly arrived Gmail messages.
+            $searchResponse = $mailbox->connection()->search([$search->toImap()]);
+            $latestUids = mail_client_latest_uid_values($searchResponse->tokensAfter(2), $limit);
+            $collection = [];
+            if ($latestUids !== []) {
+                $fetch = new DirectoryTree\ImapEngine\Connection\ImapQueryBuilder();
+                $fetch->uid($latestUids);
+                $query = new DirectoryTree\ImapEngine\MessageQuery($folder, $fetch);
+                $collection = $query
+                    ->withHeaders()
+                    ->withFlags()
+                    ->leaveUnread()
+                    ->limit(count($latestUids))
+                    ->get();
+            }
 
             $messages = [];
             foreach ($collection as $message) {
@@ -276,6 +287,7 @@ function mail_widget_read_latest(array $account, string $password, int $limit, ?
                     'unread' => !$message->isSeen(),
                 ];
             }
+            usort($messages, static fn (array $left, array $right): int => ((int) $right['uid']) <=> ((int) $left['uid']));
             $mailbox->disconnect();
             return [
                 'ok' => true,

@@ -164,9 +164,12 @@ node --check "$ROOT/public/js/remote-permissions.js"
 
 echo '== Current feature contracts: Mail =='
 python3 "$SCRIPT_DIR/test_current_mail_contract.py"
+php "$SCRIPT_DIR/test_current_mail_latest_uids.php"
 php "$SCRIPT_DIR/test_current_google_oauth.php"
 php "$SCRIPT_DIR/test_current_google_oauth_session_cache.php"
 php -l "$ROOT/app/mail/mail_google_oauth.php"
+php -l "$ROOT/app/mail/mail_client.php"
+php -l "$ROOT/app/mail/mail_widget.php"
 php -l "$ROOT/public/mail_oauth_google.php"
 php -l "$ROOT/app/mail/mail_account.php"
 php -l "$ROOT/app/mail/mail_api.php"
