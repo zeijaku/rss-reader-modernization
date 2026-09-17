@@ -2,10 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.34.2`
-Release tag: `v1.34.2`
+**Stable release:** `RSS Reader Modernization 1.35.0`
+Release tag: `v1.35.0`
 
-Version 1.34.2は表示・操作性改善のPatch Releaseです。Smartphone Modal背景、Calendar予定のコピー、PCでの通常予定／繰り返しOccurrenceの日付Drag & Drop、Dashboardカード上でのページスクロールを改善します。日付移動後はCalendarカードのみ更新し、409競合時の再同期を維持します。暗色ヘッダーのModal closeボタンはBootstrap 5.3方式へ統一します。V1.34.1の受信／Sent添付表示・Downloadを含む既存機能を維持し、DB／API／新規Dependencyの変更はありません。
+Version 1.35.0はGmail OAuth2、Mail Widgetの応答性と最新メール取得、視覚効果のみのCursor Field、2FA成功後24時間の信頼端末Tokenを追加します。既存のPassword方式Mail AccountとUser dataを維持し、加算型Migration `028_mail_google_oauth.sql`、`029_account_2fa_trust.sql`を番号順に適用します。
 
 このブランチの正式版メタデータは公開準備用です。merge・Tag作成・GitHub Release公開は別途承認後に行います。
 

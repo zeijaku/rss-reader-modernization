@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
+from version_contract_utils import current_asset_revision
 
 ROOT = Path(__file__).resolve().parents[1]
 drag = (ROOT / 'public/js/calendar-drag-drop.js').read_text(encoding='utf-8')
@@ -8,16 +9,20 @@ loader = (ROOT / 'public/js/calendar.js').read_text(encoding='utf-8')
 core = (ROOT / 'public/js/calendar-core.js').read_text(encoding='utf-8')
 polish = (ROOT / 'public/js/calendar-polish.js').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
-workflow = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
+runner = (ROOT / 'tests/run-current-features.sh').read_text(encoding='utf-8')
+asset_revision = current_asset_revision(ROOT)
+asset_suffix = f'?v={asset_revision}'
 checks = []
 
 def check(ok, msg):
     checks.append(bool(ok)); print(('PASS' if ok else 'FAIL') + ': ' + msg)
 
-check("./js/calendar-drag-drop.js?v=1.34.2" in loader, 'drag module uses dev.8 cache key')
-check("./css/calendar-drag-drop.css?v=1.34.2" in loader, 'drag style uses dev.8 cache key')
-check(loader.find('calendar-copy.js?v=1.34.2') < loader.find('calendar-drag-drop.js?v=1.34.2'), 'drag module loads after Calendar edit/copy controllers')
-check("const APP_VERSION = '1.34.2';" in version and "const APP_ASSET_REVISION = '1.34.2';" in version, 'version and asset revision are dev.8')
+check(f"./js/calendar-drag-drop.js{asset_suffix}" in loader, 'drag module uses the current asset revision')
+check(f"./css/calendar-drag-drop.css{asset_suffix}" in loader, 'drag style uses the current asset revision')
+copy_pos = loader.find(f'calendar-copy.js{asset_suffix}')
+drag_pos = loader.find(f'calendar-drag-drop.js{asset_suffix}')
+check(-1 not in (copy_pos, drag_pos) and copy_pos < drag_pos, 'drag module loads after Calendar edit/copy controllers')
+check(f"const APP_ASSET_REVISION = '{asset_revision}';" in version, 'Calendar loader revision matches app/version.php')
 check("calendar.color.update" in drag and "calendar.occurrence.update" in drag, 'existing normal and occurrence update actions are reused')
 check("./calendar_color_api.php" in drag and "./calendar_recurrence_api.php" in drag, 'existing Calendar endpoints are reused')
 check('original_occurrence_start_date' in drag and 'occurrence_revision' in drag, 'occurrence move retains original identity and optimistic revision')
@@ -39,7 +44,7 @@ check('refreshVisibleCalendars' in core and 'loadUpcoming();' in polish,
       'Calendar synchronization refreshes every visible Calendar and the upcoming projection')
 check('window.location.reload' not in drag, 'drag and drop never reloads the whole Dashboard')
 check('innerHTML' not in drag and '.html(' not in drag, 'drag module introduces no HTML assignment sink')
-check('test_v1_34_2_c_calendar_drag_drop_contract.py' in workflow and 'test_v1_34_2_c_calendar_drag_drop.js' in workflow, 'CI runs C static and runtime tests')
+check('test_v1_34_2_c_calendar_drag_drop_contract.py' in runner and 'test_v1_34_2_c_calendar_drag_drop.js' in runner, 'current feature gate runs C static and runtime tests')
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
 raise SystemExit(1 if failed else 0)

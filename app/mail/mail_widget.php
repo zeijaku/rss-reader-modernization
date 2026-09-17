@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/mail_google_oauth.php';
+
 function mail_widget_validate_title(mixed $value): ?string
 {
     return app_validate_text($value, 32, false);
@@ -207,7 +209,7 @@ function mail_widget_read_latest(array $account, string $password, int $limit, ?
                 'password' => $password,
                 'encryption' => $target['encryption'],
                 'validate_cert' => true,
-                'authentication' => 'plain',
+                'authentication' => ($account['authentication'] ?? 'plain') === 'oauth' ? 'oauth' : 'plain',
             ]);
             $stream = new AppMailPinnedImapStream($target['host'], $ip);
             $connection = new DirectoryTree\ImapEngine\Connection\ImapConnection($stream, null);
@@ -232,24 +234,35 @@ function mail_widget_read_latest(array $account, string $password, int $limit, ?
             // Keep the selected folder read-only. MessageQuery is created directly so
             // Folder::messages() cannot issue SELECT after this EXAMINE command.
             $mailbox->connection()->examine($resolvedFolder);
-            $query = new DirectoryTree\ImapEngine\MessageQuery(
-                $folder,
-                new DirectoryTree\ImapEngine\Connection\ImapQueryBuilder()
-            );
+            $search = new DirectoryTree\ImapEngine\Connection\ImapQueryBuilder();
             if ($validatedSearchQuery !== '') {
                 if ($validatedSearchType === 'from') {
-                    $query->from($validatedSearchQuery);
+                    $search->from($validatedSearchQuery);
                 } else {
-                    $query->subject($validatedSearchQuery);
+                    $search->subject($validatedSearchQuery);
                 }
             }
-            $collection = $query
-                ->withHeaders()
-                ->withFlags()
-                ->leaveUnread()
-                ->newest()
-                ->limit($limit)
-                ->get();
+            if ($search->isEmpty()) {
+                $search->all();
+            }
+
+            // UID SEARCH returns the authoritative mailbox UID set. Normalize and
+            // sort it numerically before limiting so older ImapEngine ordering
+            // behavior cannot omit newly arrived Gmail messages.
+            $searchResponse = $mailbox->connection()->search([$search->toImap()]);
+            $latestUids = mail_client_latest_uid_values($searchResponse->tokensAfter(2), $limit);
+            $collection = [];
+            if ($latestUids !== []) {
+                $fetch = new DirectoryTree\ImapEngine\Connection\ImapQueryBuilder();
+                $fetch->uid($latestUids);
+                $query = new DirectoryTree\ImapEngine\MessageQuery($folder, $fetch);
+                $collection = $query
+                    ->withHeaders()
+                    ->withFlags()
+                    ->leaveUnread()
+                    ->limit(count($latestUids))
+                    ->get();
+            }
 
             $messages = [];
             foreach ($collection as $message) {
@@ -274,6 +287,7 @@ function mail_widget_read_latest(array $account, string $password, int $limit, ?
                     'unread' => !$message->isSeen(),
                 ];
             }
+            usort($messages, static fn (array $left, array $right): int => ((int) $right['uid']) <=> ((int) $left['uid']));
             $mailbox->disconnect();
             return [
                 'ok' => true,
@@ -331,7 +345,7 @@ function mail_widget_read_folders(array $account, string $password, ?callable $r
                 'password' => $password,
                 'encryption' => $target['encryption'],
                 'validate_cert' => true,
-                'authentication' => 'plain',
+                'authentication' => ($account['authentication'] ?? 'plain') === 'oauth' ? 'oauth' : 'plain',
             ]);
             $stream = new AppMailPinnedImapStream($target['host'], $ip);
             $connection = new DirectoryTree\ImapEngine\Connection\ImapConnection($stream, null);
@@ -422,7 +436,7 @@ function mail_widget_read_message_text(array $account, string $password, int $ui
                 'password' => $password,
                 'encryption' => $target['encryption'],
                 'validate_cert' => true,
-                'authentication' => 'plain',
+                'authentication' => ($account['authentication'] ?? 'plain') === 'oauth' ? 'oauth' : 'plain',
             ]);
             $stream = new AppMailPinnedImapStream($target['host'], $ip);
             $connection = new DirectoryTree\ImapEngine\Connection\ImapConnection($stream, null);
@@ -437,11 +451,11 @@ function mail_widget_read_message_text(array $account, string $password, int $ui
                 $folder,
                 new DirectoryTree\ImapEngine\Connection\ImapQueryBuilder()
             );
-            $message = $query
+            $query
                 ->withBodyStructure()
                 ->withFlags()
-                ->leaveUnread()
-                ->find($uid);
+                ->leaveUnread();
+            $message = mail_client_find_message_by_uid($query, $uid);
             if (!$message instanceof DirectoryTree\ImapEngine\MessageInterface) {
                 $mailbox->disconnect();
                 return array_merge($empty, ['code' => 'message_not_found']);
@@ -660,8 +674,8 @@ function mail_widget_fetch_folders(int $ownerId, int $widgetId): array
     }
     $config = mail_widget_config_from_storage($widget['widget_config'] ?? null, (string) ($account['mail_account_display_name'] ?? 'Mail'));
     try {
-        $password = mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''));
-    } catch (AppMailCredentialException) {
+        $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return ['ok' => false, 'code' => 'credential_unavailable'];
     }
     try {
@@ -669,8 +683,9 @@ function mail_widget_fetch_folders(int $ownerId, int $widgetId): array
             'host' => $account['mail_account_host'] ?? null,
             'port' => $account['mail_account_port'] ?? null,
             'encryption' => $account['mail_account_encryption'] ?? null,
-            'username' => $account['mail_account_username'] ?? null,
-        ], $password);
+            'username' => $auth['username'],
+            'authentication' => $auth['authentication'],
+        ], $auth['credential']);
         if (($result['ok'] ?? false) !== true) {
             return $result;
         }
@@ -682,13 +697,19 @@ function mail_widget_fetch_folders(int $ownerId, int $widgetId): array
         ];
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($password);
+            sodium_memzero($auth['credential']);
         }
     }
 }
 
-/** @return array{ok:bool,code:string,folder?:string,folders?:list<array{path:string,name:string}>} */
-function mail_widget_update_folder(int $ownerId, int $widgetId, string $folderPath): array
+/** @return array{ok:bool,code:string,folder?:string,folders?:list<array{path:string,name:string}>,messages?:list<array<string,mixed>>,unread_count?:int,fetched_at?:string,search_type?:string,search_query?:string} */
+function mail_widget_update_folder(
+    int $ownerId,
+    int $widgetId,
+    string $folderPath,
+    string $searchType = '',
+    string $searchQuery = ''
+): array
 {
     $validatedFolder = mail_widget_validate_folder($folderPath);
     if ($ownerId <= 0 || $widgetId <= 0 || $validatedFolder === null) {
@@ -707,26 +728,27 @@ function mail_widget_update_folder(int $ownerId, int $widgetId, string $folderPa
         return ['ok' => false, 'code' => 'disabled'];
     }
     try {
-        $password = mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''));
-    } catch (AppMailCredentialException) {
+        $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return ['ok' => false, 'code' => 'credential_unavailable'];
     }
     try {
-        $result = mail_widget_read_folders([
+        $config = mail_widget_config_from_storage($widget['widget_config'] ?? null, (string) ($account['mail_account_display_name'] ?? 'Mail'));
+        $result = mail_widget_read_latest([
             'host' => $account['mail_account_host'] ?? null,
             'port' => $account['mail_account_port'] ?? null,
             'encryption' => $account['mail_account_encryption'] ?? null,
-            'username' => $account['mail_account_username'] ?? null,
-        ], $password);
+            'username' => $auth['username'],
+            'authentication' => $auth['authentication'],
+        ], $auth['credential'], $config['item_limit'], null, $searchType, $searchQuery, $validatedFolder);
         if (($result['ok'] ?? false) !== true) {
             return $result;
         }
         $folders = is_array($result['folders'] ?? null) ? $result['folders'] : [];
-        $resolvedFolder = mail_widget_resolve_folder($folders, $validatedFolder);
+        $resolvedFolder = mail_widget_validate_folder($result['folder'] ?? null);
         if ($resolvedFolder === null) {
             return ['ok' => false, 'code' => 'folder_not_found', 'folders' => $folders];
         }
-        $config = mail_widget_config_from_storage($widget['widget_config'] ?? null, (string) ($account['mail_account_display_name'] ?? 'Mail'));
         $config['schema'] = 2;
         $config['folder'] = $resolvedFolder;
         $stmt = conn_db()->prepare(
@@ -739,10 +761,13 @@ function mail_widget_update_folder(int $ownerId, int $widgetId, string $folderPa
             ':widget_id' => $widgetId,
             ':owner' => $ownerId,
         ]);
-        return ['ok' => true, 'code' => 'updated', 'folder' => $resolvedFolder, 'folders' => $folders];
+        $result['code'] = 'updated';
+        $result['folder'] = $resolvedFolder;
+        $result['folders'] = $folders;
+        return $result;
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($password);
+            sodium_memzero($auth['credential']);
         }
     }
 }
@@ -764,8 +789,8 @@ function mail_widget_fetch(int $ownerId, int $widgetId, string $searchType = '',
     }
     $config = mail_widget_config_from_storage($widget['widget_config'] ?? null, (string) ($account['mail_account_display_name'] ?? 'Mail'));
     try {
-        $password = mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''));
-    } catch (AppMailCredentialException) {
+        $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return ['ok' => false, 'code' => 'credential_unavailable', 'messages' => []];
     }
     try {
@@ -773,11 +798,12 @@ function mail_widget_fetch(int $ownerId, int $widgetId, string $searchType = '',
             'host' => $account['mail_account_host'] ?? null,
             'port' => $account['mail_account_port'] ?? null,
             'encryption' => $account['mail_account_encryption'] ?? null,
-            'username' => $account['mail_account_username'] ?? null,
-        ], $password, $config['item_limit'], null, $searchType, $searchQuery, $config['folder']);
+            'username' => $auth['username'],
+            'authentication' => $auth['authentication'],
+        ], $auth['credential'], $config['item_limit'], null, $searchType, $searchQuery, $config['folder']);
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($password);
+            sodium_memzero($auth['credential']);
         }
     }
 }
@@ -811,8 +837,8 @@ function mail_widget_fetch_message_text(int $ownerId, int $widgetId, int $uid, ?
         return array_merge($empty, ['code' => 'disabled']);
     }
     try {
-        $password = mail_crypto_decrypt($ownerId, $accountId, (string) ($account['mail_account_secret'] ?? ''));
-    } catch (AppMailCredentialException) {
+        $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
         return array_merge($empty, ['code' => 'credential_unavailable']);
     }
     try {
@@ -820,11 +846,12 @@ function mail_widget_fetch_message_text(int $ownerId, int $widgetId, int $uid, ?
             'host' => $account['mail_account_host'] ?? null,
             'port' => $account['mail_account_port'] ?? null,
             'encryption' => $account['mail_account_encryption'] ?? null,
-            'username' => $account['mail_account_username'] ?? null,
-        ], $password, $uid, $folderToRead);
+            'username' => $auth['username'],
+            'authentication' => $auth['authentication'],
+        ], $auth['credential'], $uid, $folderToRead);
     } finally {
         if (function_exists('sodium_memzero')) {
-            sodium_memzero($password);
+            sodium_memzero($auth['credential']);
         }
     }
 }
@@ -898,15 +925,26 @@ function api_mail_widget_dispatch(string $action, int $userId, array $input): ar
             if ($widgetId === null || $folder === null) {
                 return api_validation_error('widget_id and mail_folder are invalid.');
             }
-            $result = mail_widget_update_folder($userId, $widgetId, $folder);
+            $searchType = mail_widget_validate_search_type($input['mail_search_type'] ?? '');
+            $searchQuery = mail_widget_validate_search_query($input['mail_search_query'] ?? '');
+            if ($searchType === null || $searchQuery === null) {
+                return api_validation_error('Mail search settings are invalid.');
+            }
+            $result = mail_widget_update_folder($userId, $widgetId, $folder, $searchType, $searchQuery);
             return match ($result['code']) {
                 'updated' => api_success([
                     'folder' => $result['folder'] ?? $folder,
                     'folders' => $result['folders'] ?? [],
+                    'messages' => $result['messages'] ?? [],
+                    'unread_count' => $result['unread_count'] ?? 0,
+                    'fetched_at' => $result['fetched_at'] ?? '',
+                    'search_type' => $result['search_type'] ?? '',
+                    'search_query' => $result['search_query'] ?? '',
                 ]),
                 'not_found' => api_error('not_found', 'Mail Widget was not found.', 404),
                 'disabled' => api_error('mail_account_disabled', 'Mail account is disabled.', 409),
                 'invalid_folder' => api_validation_error('Mail folder is invalid.'),
+                'invalid_search' => api_validation_error('Mail search settings are invalid.'),
                 'folder_not_found' => api_error('mail_folder_not_found', 'Selected Mail folder is not available.', 422),
                 'dependency_unavailable' => api_error('mail_dependency_unavailable', 'Mail dependency is unavailable.', 503),
                 'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail credential must be re-entered.', 503),

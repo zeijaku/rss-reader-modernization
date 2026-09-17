@@ -12,11 +12,15 @@
 
 ## Tests
 
-変更前後で次を実行してください。
+通常の変更では、Push前にGitHub Actionsと同じ現在契約を一括確認してください。
 
 ```bash
-bash tests/run.sh
+bash tests/run-ci.sh
 ```
+
+このGateが完了するまでは途中経過を連続Pushせず、関連する変更を一つのCommitへまとめます。これにより、同じPull Requestで古いCIをCancelして新しいCIを繰り返す待ち時間を抑えます。
+
+過去Version固有の挙動を調査する場合だけ、歴史的な全Testを含む`bash tests/run.sh`または対応する`tests/run-v*.sh`を追加実行してください。
 
 PHP、Python、Node.js、必要なPHP extensionが揃わない環境では一部TestがSKIPになります。SKIPをPASSへ読み替えず、理由をPull Requestへ記載してください。
 

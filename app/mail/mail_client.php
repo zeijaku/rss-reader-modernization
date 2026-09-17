@@ -37,6 +37,63 @@ function mail_client_socket_address(string $transport, string $ip, int $port): s
     return $transport . '://' . $host . ':' . $port;
 }
 
+/** Retrieve a message by UID across supported ImapEngine versions. */
+function mail_client_find_message_by_uid(
+    DirectoryTree\ImapEngine\MessageQuery $query,
+    int $uid
+): ?DirectoryTree\ImapEngine\MessageInterface {
+    if ($uid <= 0) {
+        return null;
+    }
+    if (enum_exists(DirectoryTree\ImapEngine\Enums\ImapFetchIdentifier::class)) {
+        return $query->find($uid, DirectoryTree\ImapEngine\Enums\ImapFetchIdentifier::Uid);
+    }
+    return $query->find($uid);
+}
+
+/**
+ * Normalize IMAP UID SEARCH tokens into the newest numeric UIDs.
+ *
+ * ImapEngine versions have differed in how they sort numeric-looking UID
+ * strings before applying a limit. Sort them explicitly so a digit-width
+ * boundary (for example 99999 -> 100000) cannot hide new messages.
+ *
+ * @return list<int>
+ */
+function mail_client_latest_uid_values(iterable $tokens, int $limit): array
+{
+    if ($limit < 1) {
+        return [];
+    }
+
+    $uids = [];
+    foreach ($tokens as $token) {
+        $value = $token;
+        if (is_object($token)) {
+            if (!property_exists($token, 'value')) {
+                continue;
+            }
+            $value = $token->value;
+        }
+        if (!is_int($value) && !is_string($value)) {
+            continue;
+        }
+        $text = (string) $value;
+        if (preg_match('/^[1-9][0-9]{0,9}$/', $text) !== 1) {
+            continue;
+        }
+        $uid = (int) $text;
+        if ($uid < 1 || $uid > 4294967295) {
+            continue;
+        }
+        $uids[$uid] = $uid;
+    }
+
+    $uids = array_values($uids);
+    rsort($uids, SORT_NUMERIC);
+    return array_slice($uids, 0, $limit);
+}
+
 if (class_exists(DirectoryTree\ImapEngine\Connection\Streams\ImapStream::class)) {
     final class AppMailPinnedImapStream extends DirectoryTree\ImapEngine\Connection\Streams\ImapStream
     {
@@ -101,6 +158,7 @@ function mail_client_test_credentials(array $account, string $password, ?callabl
         return ['ok' => false, 'code' => $target['error_code']];
     }
     $username = mail_account_validate_username($account['username'] ?? null);
+    $authentication = ($account['authentication'] ?? 'plain') === 'oauth' ? 'oauth' : 'plain';
 
     foreach ($target['ips'] as $ip) {
         $mailbox = null;
@@ -114,7 +172,7 @@ function mail_client_test_credentials(array $account, string $password, ?callabl
                 'password' => $password,
                 'encryption' => $target['encryption'],
                 'validate_cert' => true,
-                'authentication' => 'plain',
+                'authentication' => $authentication,
             ]);
             $stream = new AppMailPinnedImapStream($target['host'], $ip);
             $connection = new DirectoryTree\ImapEngine\Connection\ImapConnection($stream, null);

@@ -104,7 +104,7 @@ Prefix:   rss_
 
 ## 6. Schemaと現行Migrationを投入
 
-`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`（Migration 013）、V1.24のStock状態Column（Migration 017）、V1.25のCalendar終日／時刻／URL（Migration 018）と繰り返し（Migration 019）、V1.33のOccurrence例外Table（Migration 025）を取り込んでいます。Mail / Links / Stock Tags / RSS Highlightに加え、V1.22のFeed Metadata / Feed Health / RSS Rulesは009〜012、014〜016を番号順に適用し、V1.34のMail SMTP / Sent設定は026〜027を続けて適用します。
+`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`（Migration 013）、V1.24のStock状態Column（Migration 017）、V1.25のCalendar終日／時刻／URL（Migration 018）と繰り返し（Migration 019）、V1.33のOccurrence例外Table（Migration 025）を取り込んでいます。Mail / Links / Stock Tags / RSS Highlightに加え、V1.22のFeed Metadata / Feed Health / RSS Rulesは009〜012、014〜016を番号順に適用し、V1.34のMail SMTP / Sent設定（026〜027）、V1.35のGmail OAuth2と2FA信頼時間（028〜029）を続けて適用します。
 
 まず `database/schema.sql` 冒頭の値を、`DB_TABLE_PREFIX` と同じにします。
 
@@ -130,6 +130,8 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\schema.sql
 016_v1_22_rss_rules.sql
 026_v1_34_mail_smtp.sql
 027_v1_34_mail_sent_save_mode.sql
+028_v1_35_mail_google_oauth.sql
+029_v1_35_remember_2fa_trust.sql
 ```
 
 CLI例:
@@ -144,9 +146,11 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\015
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\016_v1_22_rss_rules.sql
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\026_v1_34_mail_smtp.sql
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\027_v1_34_mail_sent_save_mode.sql
+mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\028_v1_35_mail_google_oauth.sql
+mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\029_v1_35_remember_2fa_trust.sql
 ```
 
-phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016、026〜027を同じ順番でImportします。V1.20.1のCalendar色Column（013）、V1.24のStock状態Column（017）、V1.25のCalendar終日／時刻／URL／繰り返しColumn（018 / 019）、V1.27 user file（020）、V1.29 Remote Connection（021）、V1.32 Account Security（022〜024）、V1.33 Calendar Occurrence例外（025）は`schema.sql`へ統合済みのため、新規Installではこれらを追加実行しません。
+phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016、026〜029を同じ順番でImportします。V1.20.1のCalendar色Column（013）、V1.24のStock状態Column（017）、V1.25のCalendar終日／時刻／URL／繰り返しColumn（018 / 019）、V1.27 user file（020）、V1.29 Remote Connection（021）、V1.32 Account Security（022〜024）、V1.33 Calendar Occurrence例外（025）は`schema.sql`へ統合済みのため、新規Installではこれらを追加実行しません。
 
 Prefixが `rss_` の場合、V1.34 fresh installでは最終的に次の26 tableが存在します。
 
@@ -207,6 +211,8 @@ V1.33.1からV1.34.0へ更新する既存Databaseでは、Backup取得後に次�
 ```
 
 Migration 026は既存Mail AccountへSMTP送信設定を追加し、027はSent保存方式を追加します。どちらも既存IMAP設定やCredentialを削除しない加算型です。V1.34の本番確認で026 / 027を適用済みの場合は、正式Releaseへの更新だけを理由に再実行しません。
+
+V1.34.2からV1.35.0へ更新する既存Databaseでは、Backup取得後に`028_v1_35_mail_google_oauth.sql`、続けて`029_v1_35_remember_2fa_trust.sql`を各1回適用します。028は既存Mail Accountを`password`方式のまま保って認証方式Columnを追加し、029は既存Remember Tokenを未信頼のまま保って2FA確認時刻Columnを追加します。既存のPassword、暗号化Credential、Remember Tokenの有効期限は変更しません。
 
 V1.24.0からV1.25.0へ更新する既存Databaseでは、Backup取得後に次を**この順番で1回ずつ**適用します。
 

@@ -1,0 +1,64 @@
+/* V1.35: Cursor Field is a passive, pointer-driven Canvas toy. */
+.cursor-field-panel {
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 0;
+    flex-direction: column;
+    align-items: center;
+}
+
+.cursor-field-canvas-wrap {
+    width: 100%;
+    max-width: 760px;
+    min-height: 170px;
+    overflow: hidden;
+    border: 1px solid rgba(var(--bs-body-color-rgb, 33, 37, 41), .16);
+    border-radius: .35rem;
+    background:
+        radial-gradient(circle at 50% 45%, rgba(var(--bs-primary-rgb, 13, 110, 253), .08), transparent 70%),
+        rgba(var(--bs-body-color-rgb, 33, 37, 41), .025);
+    aspect-ratio: 16 / 10;
+}
+
+.cursor-field-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 170px;
+    cursor: crosshair;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cursor-field-canvas:focus-visible {
+    outline: 3px solid var(--bs-primary, #0d6efd);
+    outline-offset: -3px;
+}
+
+.cursor-field-help {
+    width: 100%;
+    margin: .45rem 0 0;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: .72rem;
+    line-height: 1.35;
+    text-align: center;
+}
+
+.mini-game-card[data-widget-height="2"] .cursor-field-canvas-wrap {
+    max-height: 390px;
+}
+
+@media (max-width: 575.98px) {
+    .cursor-field-canvas-wrap,
+    .cursor-field-canvas {
+        min-height: 155px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cursor-field-canvas {
+        scroll-behavior: auto !important;
+    }
+}

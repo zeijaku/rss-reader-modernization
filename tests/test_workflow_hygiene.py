@@ -39,9 +39,11 @@ for path in workflow_paths:
 
 ci = (WORKFLOWS / 'ci.yml').read_text(encoding='utf-8')
 release = (WORKFLOWS / 'release.yml').read_text(encoding='utf-8')
+local_ci = (ROOT / 'tests/run-ci.sh').read_text(encoding='utf-8')
 check('contents: read' in ci, 'CI token remains read-only')
 check('pull_request_target' not in ci, 'CI does not use pull_request_target')
-check('tests/test_workflow_hygiene.py' in ci, 'CI runs workflow hygiene guard')
+check('bash tests/run-ci.sh' in ci, 'CI uses the locally reproducible gate')
+check('tests/test_workflow_hygiene.py' in local_ci, 'local CI gate runs workflow hygiene guard')
 
 check('workflow_dispatch:' in release, 'Release workflow keeps manual workflow_dispatch support')
 check('\n  push:' in release, 'Release workflow supports browser-only release requests through a restricted push trigger')

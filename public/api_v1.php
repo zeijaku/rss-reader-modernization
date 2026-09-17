@@ -23,19 +23,10 @@ if (is_file($composerAutoload)) {
     require_once $composerAutoload;
 }
 
-if (!defined('APP_MAIL_CREDENTIAL_KEY_ID')) {
-    define('APP_MAIL_CREDENTIAL_KEY_ID', app_env('APP_MAIL_CREDENTIAL_KEY_ID', 'primary'));
-}
-if (!defined('APP_MAIL_CREDENTIAL_KEY_B64')) {
-    define('APP_MAIL_CREDENTIAL_KEY_B64', app_env('APP_MAIL_CREDENTIAL_KEY_B64', ''));
-}
-if (!defined('APP_MAIL_IMAP_TIMEOUT_SECONDS')) {
-    define('APP_MAIL_IMAP_TIMEOUT_SECONDS', max(2, min(30, (int) app_env('APP_MAIL_IMAP_TIMEOUT_SECONDS', '5'))));
-}
-
 require_once dirname(__DIR__) . '/app/mail/mail_crypto.php';
 require_once dirname(__DIR__) . '/app/mail/mail_target.php';
 require_once dirname(__DIR__) . '/app/mail/mail_account.php';
+require_once dirname(__DIR__) . '/app/mail/mail_google_oauth.php';
 require_once dirname(__DIR__) . '/app/mail/mail_client.php';
 require_once dirname(__DIR__) . '/app/mail/mail_message.php';
 require_once dirname(__DIR__) . '/app/mail/mail_service.php';
@@ -98,6 +89,7 @@ function api_action_requires_open_session(string $action): bool
         'account.password.update',
         'account.security.stepup.verify',
         'account.security.totp.disable',
+        'mail.oauth.google.begin',
     ], true);
 }
 
@@ -164,6 +156,9 @@ try {
     }
     if (str_starts_with($action, 'mail.account.')) {
         api_emit(api_mail_account_dispatch($action, $userId, $_POST));
+    }
+    if ($action === 'mail.oauth.google.begin') {
+        api_emit(api_mail_google_oauth_begin($userId));
     }
     if (str_starts_with($action, 'mail.message.')) {
         if ($action === 'mail.message.attachment.download') {

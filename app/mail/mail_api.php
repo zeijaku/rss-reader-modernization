@@ -67,6 +67,25 @@ function api_mail_account_list(int $userId, array $input): array
     }
 }
 
+/** @return array{status:int,body:array<string,mixed>} */
+function api_mail_google_oauth_begin(int $userId): array
+{
+    try {
+        $result = mail_google_oauth_begin($userId);
+        return api_success([
+            'authorization_url' => $result['authorization_url'],
+        ]);
+    } catch (AppMailGoogleOAuthException $exception) {
+        return api_error(
+            'mail_google_oauth_unavailable',
+            'Gmail OAuth2 is not configured or could not be started.',
+            503
+        );
+    } catch (Throwable $exception) {
+        return api_mail_internal_failure('oauth.google.begin', $userId, $exception);
+    }
+}
+
 /** @return array<string,mixed> */
 function api_mail_account_input(array $input, bool $includeSmtp): array
 {
@@ -327,4 +346,3 @@ function api_mail_message_reply_context(int $userId, array $input): array
         default => api_error('mail_connection_failed', 'Could not prepare the Mail reply.', 502),
     };
 }
-
