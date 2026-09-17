@@ -1,3 +1,21 @@
+## 1.35.0 - 2026-09-17
+
+### Gmail OAuth2 and Mail Widget
+- Add Google OAuth 2.0 Authorization Code + PKCE support, encrypted refresh-token storage, and short-lived XOAUTH2 credentials for Gmail IMAP/SMTP.
+- Reuse valid access tokens within the session, remove duplicate folder-switch connections, make UID lookup semantics explicit, and align client waits with server-side mail operations.
+- Normalize Gmail IMAP UID search results numerically before applying the 5/10-message display limit so the newest messages are selected consistently.
+- Allow the Google OAuth callback in `public/.htaccess` while retaining the existing authentication, CSRF, owner, TLS, and secret-handling boundaries.
+- Verify Gmail connection, current/new message listing, body display, folder switching, compose, reply, Sent storage, and inbound/outbound attachments in the production environment.
+
+### Cursor Field, account security, and CI
+- Add the visual-only Cursor Field effect without scoring, persistence, network access, or new dependencies.
+- Add an exact 24-hour trusted-browser token for successful 2FA; existing tokens remain untrusted until the next successful 2FA challenge.
+- Add `tests/run-ci.sh` as the common local and GitHub Actions regression gate.
+
+### Database and release
+- Add additive migrations `028_mail_google_oauth.sql` and `029_account_2fa_trust.sql`; existing password-based mail accounts, credentials, Remember-token expiry, and user data remain unchanged.
+- Promote the tested V1.35 development checkpoints to the formal `1.35.0` release and standard release workflow.
+
 ## 1.34.2 - 2026-09-14
 
 ### Display and interaction improvements
