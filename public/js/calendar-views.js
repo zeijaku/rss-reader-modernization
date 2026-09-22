@@ -64,6 +64,8 @@
         var mode = validMode(modeValue);
         var anchor = isoDate(anchorValue);
         var date;
+        var startDate;
+        var endDate;
         var start;
         var end;
         if (anchor === '') {
@@ -86,6 +88,16 @@
             start = date.getUTCFullYear() + '-' + pad(date.getUTCMonth() + 1) + '-01';
             end = date.getUTCFullYear() + '-' + pad(date.getUTCMonth() + 1) + '-'
                 + pad(new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0)).getUTCDate());
+            startDate = parseDate(start);
+            endDate = parseDate(end);
+            start = addDays(start, -startDate.getUTCDay());
+            end = addDays(end, 6 - endDate.getUTCDay());
+            if (start < '2000-01-01') {
+                start = '2000-01-01';
+            }
+            if (end > '2100-12-31') {
+                end = '2100-12-31';
+            }
         }
         return {mode: mode, anchor: anchor, start: start, end: end};
     }
@@ -140,6 +152,13 @@
         var endValue = value.end || value.range_end;
         var start = parseDate(startValue);
         var end = parseDate(endValue);
+        var anchor;
+        if (mode === 'month') {
+            anchor = parseDate(value.anchor || value.anchor_date);
+            if (anchor) {
+                return anchor.getUTCFullYear() + '年' + (anchor.getUTCMonth() + 1) + '月';
+            }
+        }
         if (!start || !end) {
             return '----';
         }

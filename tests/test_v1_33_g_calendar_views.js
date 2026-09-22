@@ -27,7 +27,8 @@ check(views.validMode('day') === 'day' && views.validMode('week') === 'week'
     && views.validMode('bad') === 'month', 'view mode allowlist falls back to the compatible month view');
 
 const leapMonth = views.period('month', '2028-02-29');
-check(leapMonth.start === '2028-02-01' && leapMonth.end === '2028-02-29', 'month range supports leap day');
+check(leapMonth.start === '2028-01-30' && leapMonth.end === '2028-03-04',
+    'month grid range includes leap day and its adjacent week dates');
 const crossMonthWeek = views.period('week', '2026-09-30');
 check(crossMonthWeek.start === '2026-09-27' && crossMonthWeek.end === '2026-10-03', 'week remains Sunday-first across a month boundary');
 const crossYearWeek = views.period('week', '2027-01-01');

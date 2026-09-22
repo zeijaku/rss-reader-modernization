@@ -2,12 +2,12 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.35.0`
-Release tag: `v1.35.0`
+**Stable release:** `RSS Reader Modernization 1.35.1`
+Release tag: `v1.35.1`
+
+Version 1.35.1は、Calendar月表示の前月／次月部分にも日付と予定を薄く表示し、PC系入力環境では予定追加ModalのTitleへ自動focusします。Remote Text Editorには保存本文と分離した行番号を追加します。DB Migration、必須Config、外部Dependencyの追加はありません。
 
 Version 1.35.0はGmail OAuth2、Mail Widgetの応答性と最新メール取得、視覚効果のみのCursor Field、2FA成功後24時間の信頼端末Tokenを追加します。既存のPassword方式Mail AccountとUser dataを維持し、加算型Migration `028_mail_google_oauth.sql`、`029_account_2fa_trust.sql`を番号順に適用します。
-
-このブランチの正式版メタデータは公開準備用です。merge・Tag作成・GitHub Release公開は別途承認後に行います。
 
 Version 1.34.1はV1.34.0のCorrection Releaseです。V1.34開発中および本番で動作確認済みだった受信メール／Sentメールの添付ファイル表示・ダウンロード実装が、正式Release作成時に誤って無効化されたため、安全境界を維持した既存実装を復元します。DB Migration、必須Config／Secretの追加はありません。
 

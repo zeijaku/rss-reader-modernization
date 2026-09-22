@@ -177,16 +177,21 @@ if (!is_string($initialJson)) {
         </div>
 
         <label class="visually-hidden" for="remoteEditorText">Remote text content</label>
-        <textarea
-          class="form-control remote-editor-text d-none"
-          id="remoteEditorText"
-          spellcheck="false"
-          autocomplete="off"
-          autocapitalize="off"
-          wrap="off"
-          disabled
-          aria-describedby="remoteEditorPhaseHelp"
-        ></textarea>
+        <div class="remote-editor-surface d-none" id="remoteEditorSurface">
+          <div class="remote-editor-line-numbers" id="remoteEditorLineNumbers" aria-hidden="true">
+            <pre id="remoteEditorLineNumbersContent">1</pre>
+          </div>
+          <textarea
+            class="form-control remote-editor-text d-none"
+            id="remoteEditorText"
+            spellcheck="false"
+            autocomplete="off"
+            autocapitalize="off"
+            wrap="off"
+            disabled
+            aria-describedby="remoteEditorPhaseHelp"
+          ></textarea>
+        </div>
 
         <div class="form-text mt-2" id="remoteEditorPhaseHelp">
           UTF-8 / 最大 <?php echo app_html(user_file_library_format_bytes(APP_REMOTE_EDITOR_MAX_BYTES)); ?>。保存時は元FileのLF / CRLFとUTF-8 BOMを可能な範囲で維持します。
