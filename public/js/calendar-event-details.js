@@ -503,9 +503,44 @@
             });
     }
 
+    function canAutoFocusAddTitle() {
+        if (typeof window.matchMedia !== 'function') {
+            return false;
+        }
+        try {
+            return window.matchMedia('(hover: hover) and (pointer: fine)').matches === true;
+        } catch (error) {
+            return false;
+        }
+    }
+
+    function focusAddTitle() {
+        if (!canAutoFocusAddTitle()) {
+            return;
+        }
+        var title = this && typeof this.querySelector === 'function'
+            ? this.querySelector('.registerCalendarEventTitleValue')
+            : null;
+        if (!title || title.disabled || typeof title.focus !== 'function') {
+            return;
+        }
+        try {
+            title.focus({preventScroll: true});
+        } catch (error) {
+            title.focus();
+        }
+    }
+
+    function bindAddModalFocus() {
+        $(document)
+            .off('shown.bs.modal' + namespace, '#registerCalendarEvent')
+            .on('shown.bs.modal' + namespace, '#registerCalendarEvent', focusAddTitle);
+    }
+
     document.addEventListener('submit', captureSubmit, true);
     document.addEventListener('click', captureClick, true);
     bindMonthLoadObserver();
     bindFieldChanges();
+    bindAddModalFocus();
     $(ensureFields);
 }(jQuery, window, document));
