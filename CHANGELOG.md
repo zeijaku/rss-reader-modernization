@@ -1,3 +1,15 @@
+## 1.35.2 - 2026-09-22
+
+### Calendar event partial refresh
+- Replace the full Dashboard reload after ordinary and recurring-series event creation, update and deletion with the existing Calendar projection refresh path.
+- Close the completed event modal, show the existing success notice, and refresh every visible Calendar card plus the upcoming-event projection without disturbing other Dashboard state.
+
+### Compatibility
+- Calendar Widget creation, setting changes and deletion intentionally retain their existing full-page reload because they change Dashboard structure.
+- Existing occurrence-only operations and desktop date Drag & Drop retain their partial-refresh behavior.
+- No database migration, required configuration, dependency, endpoint or credential change is introduced.
+- Production verification completed for ordinary event creation, update and deletion without a full Dashboard reload.
+
 ## 1.35.1 - 2026-09-22
 
 ### Calendar and Remote Editor usability

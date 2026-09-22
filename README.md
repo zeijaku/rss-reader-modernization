@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.35.1`
-Release tag: `v1.35.1`
+**Stable release:** `RSS Reader Modernization 1.35.2`
+Release tag: `v1.35.2`
+
+Version 1.35.2は、通常予定および繰り返しシリーズの追加・変更・削除後にDashboard全体を再読み込みせず、表示中のCalendar Cardと直近予定だけを更新します。Calendar Widget自体の追加・設定変更・削除は従来どおりページ更新を維持します。DB Migration、必須Config、外部Dependencyの追加はありません。
 
 Version 1.35.1は、Calendar月表示の前月／次月部分にも日付と予定を薄く表示し、PC系入力環境では予定追加ModalのTitleへ自動focusします。Remote Text Editorには保存本文と分離した行番号を追加します。DB Migration、必須Config、外部Dependencyの追加はありません。
 
