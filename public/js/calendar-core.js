@@ -594,8 +594,8 @@
             });
         }
 
-        var firstDay = new Date(year, month - 1, 1).getDay();
-        var dayCount = new Date(year, month, 0).getDate();
+        var firstDay = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+        var dayCount = new Date(Date.UTC(year, month, 0)).getUTCDate();
         var cellCount = Math.ceil((firstDay + dayCount) / 7) * 7;
         var today = localIsoDate(new Date());
         var $days = $card.find('.calendar-days')
@@ -607,15 +607,16 @@
             .attr('aria-busy', 'false')
             .toggleClass('calendar-month-layout-ready', Boolean(monthLayout && typeof monthLayout.place === 'function'));
         for (var cell = 0; cell < cellCount; cell += 1) {
-            var dayNumber = cell - firstDay + 1;
-            if (dayNumber < 1 || dayNumber > dayCount) {
-                $days.append($('<div>').addClass('calendar-day calendar-day-empty').attr('aria-hidden', 'true'));
-                continue;
-            }
-            var date = year + '-' + pad(month) + '-' + pad(dayNumber);
+            var cellDate = new Date(Date.UTC(year, month - 1, 1 - firstDay + cell));
+            var cellMonth = cellDate.getUTCMonth() + 1;
+            var dayNumber = cellDate.getUTCDate();
+            var outsideMonth = cellDate.getUTCFullYear() !== year || cellMonth !== month;
+            var date = cellDate.getUTCFullYear() + '-' + pad(cellMonth) + '-' + pad(dayNumber);
+            var supportedDate = date >= '2000-01-01' && date <= '2100-12-31';
             var holidayName = typeof holidays[date] === 'string' ? String(holidays[date]).trim() : '';
             var $day = $('<div>')
                 .addClass('calendar-day')
+                .toggleClass('calendar-day-outside-month', outsideMonth)
                 .toggleClass('calendar-day-today', date === today)
                 .toggleClass('calendar-day-holiday', holidayName !== '')
                 .attr('role', 'gridcell')
@@ -627,11 +628,16 @@
                 .attr('type', 'button')
                 .addClass('calendar-day-number calendar-day-add-trigger')
                 .attr('data-calendar-date', date)
-                .attr('data-bs-toggle', 'modal')
-                .attr('data-bs-target', '#registerCalendarEvent')
-                .attr('aria-label', holidayName !== '' ? date + ' ' + holidayName + '。予定を追加' : date + 'に予定を追加')
+                .attr('aria-label', supportedDate
+                    ? (holidayName !== '' ? date + ' ' + holidayName + '。予定を追加' : date + 'に予定を追加')
+                    : date + 'は対応範囲外です')
                 .attr('title', holidayName !== '' ? holidayName : null)
                 .text(String(dayNumber));
+            if (supportedDate) {
+                $dateButton.attr('data-bs-toggle', 'modal').attr('data-bs-target', '#registerCalendarEvent');
+            } else {
+                $dateButton.prop('disabled', true).removeClass('calendar-day-add-trigger');
+            }
             $day.append($dateButton);
             var $entries = $('<div>').addClass('calendar-day-entries');
             (itemsByDate[date] || []).forEach(function (item) {

@@ -2088,8 +2088,18 @@ select:focus,
     border-left: 1px solid rgba(0, 0, 0, 0.12);
 }
 
-.calendar-day-empty {
+.calendar-day-empty,
+.calendar-day-outside-month {
     background: #f4f4f4;
+}
+
+.calendar-day-outside-month .calendar-day-number {
+    color: var(--bs-secondary-color, #6c757d);
+    font-weight: 400;
+}
+
+.calendar-day-outside-month .calendar-day-entries {
+    opacity: 0.82;
 }
 
 .calendar-day-today {
@@ -2672,6 +2682,7 @@ legend.text-dark {
 
 .calendar-weekdays,
 .calendar-day-empty,
+.calendar-day-outside-month,
 .stock-tag-editor {
     background-color: rgba(var(--bs-body-color-rgb, 33, 37, 41), 0.045);
 }

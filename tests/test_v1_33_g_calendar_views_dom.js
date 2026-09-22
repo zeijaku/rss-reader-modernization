@@ -141,8 +141,10 @@ vm.runInNewContext(monthSource, context, {filename: 'calendar-month-layout.js'})
 vm.runInNewContext(viewsSource, context, {filename: 'calendar-views.js'});
 vm.runInNewContext(coreSource, context, {filename: 'calendar-core.js'});
 
-check(requests.length === 1 && requests[0].settings.data.calendar_range_start.endsWith('-01'),
-    'startup remains one month-range request');
+check(requests.length === 1
+    && new Date(requests[0].settings.data.calendar_range_start + 'T00:00:00Z').getUTCDay() === 0
+    && new Date(requests[0].settings.data.calendar_range_end + 'T00:00:00Z').getUTCDay() === 6,
+    'startup remains one request covering complete visible month weeks');
 check(card.classes.includes('calendar-view-compact'), 'actual narrow card width enables compact behavior on desktop');
 check(typeof handlers['.calendar-view-mode'] === 'function', 'day/week/month switch handler is delegated');
 
