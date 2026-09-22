@@ -9,14 +9,20 @@
 .remote-editor-meta-hash { grid-column: 1 / -1; }
 .remote-editor-meta-hash code { display: block; overflow: hidden; color: inherit; text-overflow: ellipsis; white-space: nowrap; }
 .remote-editor-loading { display: flex; min-height: 420px; align-items: center; justify-content: center; gap: .55rem; color: var(--bs-secondary-color,#6c757d); }
-.remote-editor-text { width: 100%; min-height: 420px; height: clamp(420px,calc(100dvh - 360px),760px); resize: vertical; font-family: var(--bs-font-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace); font-size: .84rem; line-height: 1.55; tab-size: 4; white-space: pre; overflow: auto; }
+.remote-editor-surface { display: grid; width: 100%; min-height: 420px; height: clamp(420px,calc(100dvh - 360px),760px); grid-template-columns: minmax(3.25rem,max-content) minmax(0,1fr); overflow: hidden; resize: vertical; border: 1px solid var(--bs-border-color,#ced4da); border-radius: var(--bs-border-radius,.375rem); background: var(--bs-body-bg,#fff); }
+.remote-editor-surface.d-none { display: none; }
+.remote-editor-surface:focus-within { border-color: var(--bs-primary,#0d6efd); box-shadow: 0 0 0 .25rem rgba(var(--bs-primary-rgb,13,110,253),.25); }
+.remote-editor-line-numbers { min-width: 3.25rem; height: 100%; padding: .375rem .55rem; overflow: hidden; border-right: 1px solid var(--bs-border-color,#ced4da); background: var(--bs-tertiary-bg,#f8f9fa); color: var(--bs-secondary-color,#6c757d); font-family: var(--bs-font-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace); font-size: .84rem; font-variant-numeric: tabular-nums; line-height: 1.55; text-align: right; user-select: none; }
+.remote-editor-line-numbers pre { margin: 0; color: inherit; font: inherit; line-height: inherit; white-space: pre; }
+.remote-editor-text { width: 100%; min-width: 0; min-height: 0; height: 100%; resize: none; border: 0; border-radius: 0; box-shadow: none !important; font-family: var(--bs-font-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace); font-size: .84rem; line-height: 1.55; tab-size: 4; white-space: pre; overflow: auto; }
 .remote-editor-toolbar { display: flex; justify-content: flex-end; gap: .5rem; flex-wrap: wrap; }
 @media (pointer: coarse) {
   .remote-editor-toolbar .btn, #remoteEditorBack { min-height: 44px; }
 }
 @media (max-width: 767.98px) {
   .remote-editor-meta { grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .remote-editor-text { min-height: 52dvh; height: 58dvh; font-size: .8rem; }
+  .remote-editor-surface { min-height: 52dvh; height: 58dvh; }
+  .remote-editor-text, .remote-editor-line-numbers { font-size: .8rem; }
 }
 @media (max-width: 575.98px) {
   .remote-editor-shell { padding-right: 4px; padding-left: 4px; }
@@ -26,5 +32,7 @@
   .remote-editor-meta > div { padding: .45rem .5rem; }
   .remote-editor-toolbar { display: grid; grid-template-columns: 1fr 1fr; }
   .remote-editor-toolbar .btn { width: 100%; }
-  .remote-editor-text { min-height: 56dvh; height: 62dvh; padding: .65rem; font-size: 16px; }
+  .remote-editor-surface { min-height: 56dvh; height: 62dvh; }
+  .remote-editor-text { padding: .65rem; font-size: 16px; }
+  .remote-editor-line-numbers { padding-top: .65rem; padding-bottom: .65rem; font-size: 16px; }
 }

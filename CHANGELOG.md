@@ -1,3 +1,15 @@
+## 1.35.1-dev.1 - 2026-09-22
+
+### Calendar and Remote Editor usability
+- Show the dates, events, cancelled occurrences, holidays and Tasks in the visible previous/next-month cells while retaining a dimmed adjacent-month treatment.
+- Request only the complete 28/35/42-day visible month grid through the existing bounded Calendar range API; keep the toolbar label anchored to the selected month.
+- Focus the add-event title after its modal opens only when the primary input supports hover and a fine pointer, avoiding automatic Smartphone software-keyboard display.
+- Add synchronized, visual-only line numbers to the Remote Text Editor without changing textarea content, Base64 save transport, conflict detection, line endings or UTF-8 BOM handling.
+
+### Compatibility
+- No database migration, required configuration, dependency, endpoint or credential change is introduced.
+- Existing owner scope, CSRF, output escaping, Calendar range limits and Remote Editor security boundaries remain unchanged.
+
 ## 1.35.0 - 2026-09-17
 
 ### Gmail OAuth2 and Mail Widget

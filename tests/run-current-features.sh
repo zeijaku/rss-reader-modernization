@@ -85,6 +85,8 @@ node --check "$ROOT/public/js/calendar-event-details.js"
 node --check "$ROOT/public/js/calendar-source-actions.js"
 node --check "$ROOT/public/js/calendar-polish.js"
 node --check "$ROOT/public/js/calendar-polish-r3.js"
+node "$SCRIPT_DIR/test_current_calendar_adjacent_months.js"
+node "$SCRIPT_DIR/test_current_calendar_modal_focus.js"
 
 echo '== Current feature contracts: V1.34.2 Dashboard interactions =='
 python3 "$SCRIPT_DIR/test_v1_34_2_a_modal_background.py"
@@ -153,6 +155,8 @@ node "$SCRIPT_DIR/remote_editor_v130d_ui_runtime_test.js"
 node "$SCRIPT_DIR/remote_editor_v130d_r3_navigation_runtime_test.js"
 php "$SCRIPT_DIR/remote_editor_v130e_roundtrip_test.php"
 node "$SCRIPT_DIR/remote_editor_v130e_ui_runtime_test.js"
+node "$SCRIPT_DIR/test_current_remote_editor_line_numbers.js"
+python3 "$SCRIPT_DIR/test_current_calendar_editor_usability_contract.py"
 node --check "$ROOT/public/js/remote-editor.js"
 node --check "$ROOT/public/js/remote-files.js"
 

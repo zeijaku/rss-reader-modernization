@@ -5,6 +5,10 @@
 **Stable release:** `RSS Reader Modernization 1.35.0`
 Release tag: `v1.35.0`
 
+**Development checkpoint:** `RSS Reader Modernization 1.35.1-dev.1`
+
+V1.35.1-dev.1は、Calendar月表示の前月／次月部分にも日付と予定を薄く表示し、PC系入力環境では予定追加ModalのTitleへ自動focusします。Remote Text Editorには保存本文と分離した行番号を追加します。DB Migration、必須Config、外部Dependencyの追加はありません。
+
 Version 1.35.0はGmail OAuth2、Mail Widgetの応答性と最新メール取得、視覚効果のみのCursor Field、2FA成功後24時間の信頼端末Tokenを追加します。既存のPassword方式Mail AccountとUser dataを維持し、加算型Migration `028_mail_google_oauth.sql`、`029_account_2fa_trust.sql`を番号順に適用します。
 
 このブランチの正式版メタデータは公開準備用です。merge・Tag作成・GitHub Release公開は別途承認後に行います。

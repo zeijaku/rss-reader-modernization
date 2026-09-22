@@ -23,7 +23,8 @@
         loading: false,
         saving: false,
         initialText: '',
-        sha256: ''
+        sha256: '',
+        lineNumberCount: 0
     };
 
     var el = {
@@ -32,6 +33,9 @@
         phaseNote: document.querySelector('.remote-editor-phase-note'),
         back: document.getElementById('remoteEditorBack'),
         loading: document.getElementById('remoteEditorLoading'),
+        surface: document.getElementById('remoteEditorSurface'),
+        lineNumbers: document.getElementById('remoteEditorLineNumbers'),
+        lineNumbersContent: document.getElementById('remoteEditorLineNumbersContent'),
         text: document.getElementById('remoteEditorText'),
         reload: document.getElementById('remoteEditorReload'),
         save: document.getElementById('remoteEditorSave'),
@@ -109,6 +113,42 @@
 
     function normalizeEditorText(value) {
         return String(value || '').replace(/\r\n/g, '\n');
+    }
+
+    function editorLineCount(value) {
+        var source = String(value || '');
+        var count = 1;
+        var index;
+        for (index = 0; index < source.length; index += 1) {
+            if (source.charCodeAt(index) === 10) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    function syncLineNumberScroll() {
+        if (!el.text || !el.lineNumbers) {
+            return;
+        }
+        el.lineNumbers.scrollTop = el.text.scrollTop;
+    }
+
+    function syncLineNumbers() {
+        if (!el.text || !el.lineNumbersContent) {
+            return;
+        }
+        var count = editorLineCount(el.text.value);
+        if (state.lineNumberCount !== count) {
+            var lines = [];
+            var line;
+            for (line = 1; line <= count; line += 1) {
+                lines.push(String(line));
+            }
+            el.lineNumbersContent.textContent = lines.join('\n');
+            state.lineNumberCount = count;
+        }
+        syncLineNumberScroll();
     }
 
     function updateConflictUi() {
@@ -204,6 +244,9 @@
         if (el.loading) {
             el.loading.classList.toggle('d-none', !state.loading);
         }
+        if (el.surface) {
+            el.surface.classList.toggle('d-none', state.loading || (!state.loading && !state.loaded));
+        }
         if (el.reload) {
             el.reload.disabled = state.loading || state.saving || !state.available;
         }
@@ -267,6 +310,7 @@
             var data = payload.data;
             var text = normalizeEditorText(typeof data.text === 'string' ? data.text : '');
             el.text.value = text;
+            syncLineNumbers();
             state.initialText = el.text.value;
             state.sha256 = typeof data.sha256 === 'string' ? data.sha256 : '';
             state.loaded = true;
@@ -284,6 +328,7 @@
                 if (el.text) {
                     el.text.value = previous.text;
                 }
+                syncLineNumbers();
                 updateConflictUi();
                 setDirty(previous.dirty);
                 showNotice((error.message || 'Remote textを再読込できませんでした。') + ' ローカル入力は保持しています。', 'danger');
@@ -297,6 +342,7 @@
                     el.text.value = '';
                     el.text.disabled = true;
                 }
+                syncLineNumbers();
                 setDirty(false);
                 showNotice(error.message || 'Remote textを読み込めませんでした。', 'danger');
             }
@@ -355,6 +401,7 @@
 
             var data = payload.data;
             el.text.value = normalizeEditorText(typeof data.text === 'string' ? data.text : el.text.value);
+            syncLineNumbers();
             state.initialText = el.text.value;
             state.sha256 = typeof data.sha256 === 'string' ? data.sha256 : '';
             state.conflicted = false;
@@ -386,11 +433,13 @@
 
     if (el.text) {
         el.text.addEventListener('input', function () {
+            syncLineNumbers();
             if (!state.loaded) {
                 return;
             }
             setDirty(el.text.value !== state.initialText);
         });
+        el.text.addEventListener('scroll', syncLineNumberScroll);
         el.text.addEventListener('keydown', function (event) {
             if ((event.ctrlKey || event.metaKey) && String(event.key || '').toLowerCase() === 's') {
                 event.preventDefault();
@@ -431,6 +480,7 @@
     if (el.phaseNote) {
         el.phaseNote.textContent = 'V1.30-E checkpoint：競合時はSaveを停止してローカル入力を保持します。LF / CRLFとUTF-8 BOMは元Remoteの形式を基準に保存します。';
     }
+    syncLineNumbers();
     updateConflictUi();
     setDirty(false);
     setSaving(false);
