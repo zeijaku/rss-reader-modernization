@@ -115,6 +115,18 @@
         $button.data('request-pending', false).prop('disabled', false);
     }
 
+    function completeCalendarEventMutation($source, message) {
+        var modal = $source && $source.length ? $source.closest('.modal')[0] : null;
+        showNotice(message, 'success');
+        if (modal && window.bootstrap && window.bootstrap.Modal) {
+            var instance = window.bootstrap.Modal.getInstance(modal);
+            if (instance) {
+                instance.hide();
+            }
+        }
+        $(document).trigger('calendar:occurrenceChanged');
+    }
+
     function appendLoadingText($target, message) {
         $target.empty();
         var $loading = $('<span>').addClass('loading-inline').appendTo($target);
@@ -280,7 +292,7 @@
         apiRequest('calendar.event.create', calendarEventPayload('register'), 3000)
             .done(function (data) {
                 if (apiResponseData(data) !== null) {
-                    window.location.reload();
+                    completeCalendarEventMutation($form, '予定を追加しました');
                 }
             })
             .fail(function (xhr, textStatus) {
@@ -309,7 +321,7 @@
         apiRequest('calendar.event.update', payload, 3000)
             .done(function (data) {
                 if (apiResponseData(data) !== null) {
-                    window.location.reload();
+                    completeCalendarEventMutation($form, '予定を変更しました');
                 }
             })
             .fail(function (xhr, textStatus) {
@@ -332,7 +344,7 @@
         apiRequest('calendar.event.delete', {'event_id': eventId}, 3000)
             .done(function (data) {
                 if (apiResponseData(data) !== null) {
-                    window.location.reload();
+                    completeCalendarEventMutation($button, '予定を削除しました');
                 }
             })
             .fail(function (xhr, textStatus) {

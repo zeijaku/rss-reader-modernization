@@ -202,6 +202,18 @@
         setPending(form, loading);
     }
 
+    function completeEventMutation(form, message) {
+        var modal = form && typeof form.closest === 'function' ? form.closest('.modal') : null;
+        showNotice(message, 'success');
+        if (modal && window.bootstrap && window.bootstrap.Modal) {
+            var instance = window.bootstrap.Modal.getInstance(modal);
+            if (instance) {
+                instance.hide();
+            }
+        }
+        $(document).trigger('calendar:occurrenceChanged');
+    }
+
     function resetAddFields() {
         var form = document.getElementById('registerCalendarEventForm');
         if (!form) {
@@ -267,7 +279,7 @@
         request(isChange ? 'calendar.color.update' : 'calendar.color.create', payload, 3000)
             .done(function (response) {
                 if (response && response.ok === true) {
-                    window.location.reload();
+                    completeEventMutation(form, isChange ? '予定を変更しました' : '予定を追加しました');
                     return;
                 }
                 showNotice(

@@ -87,6 +87,9 @@ node --check "$ROOT/public/js/calendar-polish.js"
 node --check "$ROOT/public/js/calendar-polish-r3.js"
 node "$SCRIPT_DIR/test_current_calendar_adjacent_months.js"
 node "$SCRIPT_DIR/test_current_calendar_modal_focus.js"
+node "$SCRIPT_DIR/test_current_calendar_event_partial_refresh.js"
+node "$SCRIPT_DIR/test_current_calendar_recurrence_partial_refresh.js"
+python3 "$SCRIPT_DIR/test_current_calendar_event_partial_refresh_contract.py"
 
 echo '== Current feature contracts: V1.34.2 Dashboard interactions =='
 python3 "$SCRIPT_DIR/test_v1_34_2_a_modal_background.py"
