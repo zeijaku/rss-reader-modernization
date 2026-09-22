@@ -1,4 +1,4 @@
-## 1.35.1-dev.1 - 2026-09-22
+## 1.35.1 - 2026-09-22
 
 ### Calendar and Remote Editor usability
 - Show the dates, events, cancelled occurrences, holidays and Tasks in the visible previous/next-month cells while retaining a dimmed adjacent-month treatment.
@@ -9,6 +9,7 @@
 ### Compatibility
 - No database migration, required configuration, dependency, endpoint or credential change is introduced.
 - Existing owner scope, CSRF, output escaping, Calendar range limits and Remote Editor security boundaries remain unchanged.
+- Production verification completed for adjacent-month Calendar entries, PC title focus, Smartphone keyboard avoidance, and Remote Editor line-number behavior.
 
 ## 1.35.0 - 2026-09-17
 

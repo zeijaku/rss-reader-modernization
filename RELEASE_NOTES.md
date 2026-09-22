@@ -1,58 +1,50 @@
-# RSS Reader Modernization 1.35.0
+# RSS Reader Modernization 1.35.1
 
-V1.35.0 adds Gmail OAuth2 support, improves Mail Widget responsiveness and newest-message selection, introduces the visual-only Cursor Field effect, and adds an exact 24-hour trusted-browser period after successful 2FA.
+V1.35.1 is a focused usability release for the Calendar month view and Remote Text Editor.
 
 ## Main changes
 
-- Add Gmail OAuth 2.0 Authorization Code + PKCE connection with encrypted refresh-token storage and short-lived XOAUTH2 credentials for IMAP and SMTP.
-- Reuse valid Google access tokens within the session, remove duplicate folder-switch connections, make UID handling explicit, and allow sufficient client wait time for mail operations.
-- Sort Gmail IMAP UID search results numerically before applying the 5/10-message display limit, ensuring the newest available messages are selected consistently.
-- Allow the OAuth callback route in `public/.htaccess` without exposing secrets or weakening existing access controls.
-- Add the Cursor Field visual effect without scoring, persistence, network access, or additional dependencies.
-- Add a 24-hour 2FA trusted-browser token. Existing tokens are not trusted automatically and become eligible only after a successful 2FA challenge.
-- Add `tests/run-ci.sh` as the shared regression entry point for local checks and GitHub Actions.
+### Calendar
 
-## Database upgrade
+- Show dates, events, cancelled occurrences, holidays, and Tasks in the visible previous/next-month cells while retaining a dimmed treatment.
+- Request the complete visible 28/35/42-day grid through the existing bounded Calendar range API while keeping the toolbar label anchored to the selected month.
+- Focus the add-event title after the modal opens only on hover + fine-pointer input environments. Touch-first devices do not automatically open the software keyboard.
 
-Apply these additive migrations in order:
+### Remote Text Editor
 
-1. `database/migrations/028_mail_google_oauth.sql`
-2. `database/migrations/029_account_2fa_trust.sql`
+- Add synchronized visual line numbers beside the existing textarea.
+- Keep the gutter aligned while scrolling and update numbering as text changes or remote content is reloaded.
+- Keep line numbers outside the textarea and Base64 save transport so they never enter the saved file.
 
-The migrations do not remove existing data. Password-based mail accounts, stored credentials, Remember-token expiry, and existing user data remain compatible.
+## Database and configuration
 
-## Gmail OAuth configuration
-
-Configure a Google OAuth web application and provide the private Client ID, Client Secret, exact callback URL, allowed Gmail address, and the existing mail encryption key in the private server configuration. Do not place credentials in public files or commit them to the repository.
+- No database migration is required when updating from V1.35.0.
+- No required configuration, credential, dependency, or endpoint change is introduced.
+- Existing Gmail OAuth2 and password-based Mail Account settings remain unchanged.
 
 ## Security and compatibility
 
-- Existing authentication, owner scope, CSRF, session, step-up verification, IMAP SSRF/DNS-pinning/TLS, and size-limit boundaries remain in place.
-- OAuth codes, access tokens, refresh tokens, client secrets, and XOAUTH2 payloads are not written to application logs.
-- Remember login remains 30 days; normal session idle and absolute limits remain 2 hours and 12 hours.
-- This release does not delete or rewrite existing user content.
+- Existing authentication, owner scope, CSRF, output escaping, Calendar range limits, and date bounds remain unchanged.
+- Remote Editor conflict detection, size/type limits, UTF-8 validation, line endings, UTF-8 BOM handling, and Base64 transport remain unchanged.
+- Adjacent-month cells outside the supported 2000-01-01 through 2100-12-31 range remain disabled.
 
 ## Production verification completed
 
-- Gmail OAuth connection and IMAP connection test
-- Current and newly received message listing
-- Message body display and folder switching
-- New-message composition, reply, and Sent-folder storage
-- Received attachment download and outgoing attachment delivery
-- Gmail IMAP search diagnostics: the application sends the requested `SUBJECT` search and renders the UID set returned by Gmail; it does not emulate substring matching locally
+- Previous/next-month Calendar dates and entries display with dimmed styling.
+- Calendar add-event title focus works on PC-style pointer input without automatically opening the Smartphone keyboard.
+- Remote Editor line numbers update and scroll correctly without changing saved file content.
 
 ## Verification limits
 
-- Final PHP 8.1 and PHP 8.4 CI and the release workflow must pass for the formal tag and assets to be published.
-- Gmail OAuth was verified with the configured allowed Gmail account; other Google Workspace policies may require separate administrator approval.
-- The 24-hour trust boundary is covered by automated time-bound tests; a manual 24-hour wait was not performed.
-- Cursor Field rendering remains browser-dependent and is visual only.
+- Final PHP 8.1 and PHP 8.4 CI and the release workflow must pass before the immutable tag and assets are published.
+- Browser rendering can vary slightly by operating system, browser, theme, font, and input device.
+- External Calendar, Remote File, mail, and network services retain their existing environment-specific behavior.
 
 ## Release assets
 
 The release workflow publishes:
 
-- `rss-reader-modernization-1.35.0.zip`
-- `rss-reader-modernization-1.35.0.zip.sha256`
-- `rss-reader-modernization-complete-1.35.0.zip`
-- `rss-reader-modernization-complete-1.35.0.zip.sha256`
+- `rss-reader-modernization-1.35.1.zip`
+- `rss-reader-modernization-1.35.1.zip.sha256`
+- `rss-reader-modernization-1.35.1-complete.zip`
+- `rss-reader-modernization-1.35.1-complete.zip.sha256`
