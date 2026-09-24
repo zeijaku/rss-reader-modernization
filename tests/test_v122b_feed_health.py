@@ -54,7 +54,7 @@ check('Feed Healthの取得に失敗しました' in management and "$('#rssMana
       'Health failure leaves the RSS list visible with a bounded warning')
 check('$.when(feedsRequest, healthRequest)' not in management, 'Health failure can no longer fail the OPML/RSS list request as one combined promise')
 check(bool(asset_revision), 'Current application asset revision is available')
-check(f'./js/feed-health.js?v={asset_revision}' in calendar, 'Dashboard loads Feed Health under the current application asset key')
+check("assetUrl('./js/feed-health.js')" in calendar, 'Dashboard loads Feed Health through the centralized asset URL')
 
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed}')

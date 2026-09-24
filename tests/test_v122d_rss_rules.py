@@ -43,15 +43,15 @@ check('rule_highlight' in display and 'rss-rule-highlight' in display, 'Client r
 check('renderFeedKeywordTitle' not in display, 'Rule display layer does not replace existing keyword highlight logic')
 check(bool(asset_revision), 'Current application asset revision is available')
 check(
-    f"rss-rules.js?v={asset_revision}" in management and
-    f"rss-rules-integration.js?v={asset_revision}" in management,
-    'RSS Management loads Rule assets with the current application revision'
+    "assetUrl('./js/rss-rules.js')" in management and
+    "assetUrl('./js/rss-rules-integration.js')" in management,
+    'RSS Management loads Rule assets through the centralized asset URL'
 )
 check('Auto Stockは一致記事を重複を避けてStockへ追加' in guidance, 'Rules UI explains D action behavior')
 check(
-    f"rss-rule-display.js?v={asset_revision}" in calendar and
-    f"rss-rule-display.css?v={asset_revision}" in calendar,
-    'Dashboard loads Rule display assets with the current application revision'
+    "assetUrl('./js/rss-rule-display.js')" in calendar and
+    "assetUrl('./css/rss-rule-display.css')" in calendar,
+    'Dashboard loads Rule display assets through the centralized asset URL'
 )
 
 failed = len(checks) - sum(checks)
