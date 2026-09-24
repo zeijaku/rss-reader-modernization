@@ -52,8 +52,12 @@ for asset in [
     './js/camera-video.js', './js/camera-video-playback.js', './js/camera-video-streaming.js',
     './js/x-widget.js', './js/widget-settings-no-reload.js'
 ]:
-    check(bool(active_revision) and asset + '?v=' + active_revision in calendar, f"Dynamic asset loader uses current revision: {asset}")
-check(bool(active_revision) and "./css/camera-video-streaming.css?v=" + active_revision in camera_streaming, "Camera streaming fallback CSS uses current revision")
+    check(bool(active_revision) and f"assetUrl('{asset}')" in calendar,
+          f"Dynamic asset loader uses the centralized revision URL: {asset}")
+check(bool(active_revision)
+      and 'document.currentScript' in camera_streaming
+      and "assetUrl('./css/camera-video-streaming.css')" in camera_streaming,
+      "Camera streaming fallback CSS inherits the entry-script revision")
 check('sha384-5E8B0pTlZZJMabWpC0fyYf6OUpe15jJij34BqBAh4NXoHAlLNOjCPRrwtOXOQFAn' in camera_streaming, "hls.js SRI retains the browser-computed SHA-384 digest")
 
 failed = [m for ok, m in checks if not ok]
