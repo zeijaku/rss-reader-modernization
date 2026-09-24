@@ -9,8 +9,8 @@ style = (root / 'public/css/stock-state-ui.css').read_text(encoding='utf-8')
 loader = (root / 'public/js/calendar.js').read_text(encoding='utf-8')
 state = (root / 'app/stock_state.php').read_text(encoding='utf-8')
 asset_revision = current_asset_revision(root)
-stock_style_url = f'stock-state-ui.css?v={asset_revision}'
-stock_script_url = f'stock-state-ui.js?v={asset_revision}'
+stock_style_url = "assetUrl('./css/stock-state-ui.css')"
+stock_script_url = "assetUrl('./js/stock-state-ui.js')"
 
 checks = [
     ("['all', 'unprocessed', 'processed']" in db, 'processed request filter uses a fixed allowlist'),
@@ -32,8 +32,8 @@ checks = [
     ("name: name" in script and "processed" in script and "important" in script and "archive" in script, 'state filters are submitted with the existing search form'),
     ('preserveFiltersOnPagination(filters)' in script, 'state filters are preserved on pagination links'),
     ('stateWouldLeaveFilter(filters, state, payload.value)' in script and 'window.location.reload();' in script, 'individual changes that leave the current filter resync counts and pagination'),
-    (loader.count(stock_style_url) == 1, 'E stylesheet uses the current application asset revision exactly once'),
-    (loader.count(stock_script_url) == 1, 'E script uses the current application asset revision exactly once'),
+    (bool(asset_revision) and loader.count(stock_style_url) == 1, 'E stylesheet uses the centralized asset URL exactly once'),
+    (bool(asset_revision) and loader.count(stock_script_url) == 1, 'E script uses the centralized asset URL exactly once'),
     ('@media (pointer: coarse)' in style and 'min-height: 44px;' in style, 'touch targets keep the 44px rule'),
     ('@media (max-width: 575.98px)' in style and '.stock-bulk-action' in style, 'bulk UI has a Smartphone layout'),
     ("'stock.state.bulk' => api_stock_state_bulk" in state, 'existing server bulk endpoint remains available'),

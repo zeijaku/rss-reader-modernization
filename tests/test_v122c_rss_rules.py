@@ -31,8 +31,8 @@ for action in ['rss.rule.list', 'rss.rule.create', 'rss.rule.update', 'rss.rule.
 check('conditions_json' in api and 'JSON_THROW_ON_ERROR' in api, 'Condition JSON is bounded and strictly decoded')
 check('RSS Rules' in ui and 'rssRuleForm' in ui, 'RSS Management UI exposes Rules CRUD')
 check(bool(asset_revision), 'Current application asset revision is available')
-check(f"rss-rules.js?v={asset_revision}" in loader, 'RSS Management loads Rules UI under the current application asset key')
-check(f"feed-health.js?v={asset_revision}" in calendar, 'Dashboard assets use the current application cache key')
+check("assetUrl('./js/rss-rules.js')" in loader, 'RSS Management loads Rules UI through the centralized asset URL')
+check("assetUrl('./js/feed-health.js')" in calendar, 'Dashboard assets use the centralized asset URL')
 check('preg_match' not in ui and 'RegExp' not in ui, 'No client Regex rule mode is introduced')
 
 failed = len(checks) - sum(checks)

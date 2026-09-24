@@ -1,3 +1,18 @@
+## 1.35.3 - 2026-09-24
+
+### Documentation maintenance
+- Align README current capabilities, frontend dependencies, roadmap wording, and GitHub Actions description with the implemented repository state.
+- Record Gmail OAuth2, received/Sent attachment download, 24-hour trusted 2FA browsers, adjacent-month Calendar entries, Calendar partial refresh, and Remote Editor line numbers as established behavior.
+
+### Asset revision centralization
+- Keep `app/version.php` as the single asset-revision input and derive dynamically loaded Calendar, Camera streaming, and RSS management child asset URLs from their PHP-versioned entry script.
+- Remove 51 copied release markers from dynamic JavaScript/CSS references while preserving dependency order, bounded retry behavior, duplicate-load markers, and revision-free fallback behavior.
+- Add static and runtime contracts for revision propagation, unsupported-token rejection, query isolation, missing-revision fallback, and loader ordering.
+
+### Compatibility
+- No database migration, required configuration, dependency, endpoint, credential, or application feature change is introduced.
+- Production verification completed for Dashboard and Calendar operation after applying the V1.35.3 checkpoint.
+
 ## 1.35.2 - 2026-09-22
 
 ### Calendar event partial refresh

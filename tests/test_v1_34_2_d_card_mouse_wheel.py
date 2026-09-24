@@ -28,8 +28,8 @@ check('overscroll-behavior: contain' in memo_css,
       'test fixture retains a bounded internal card scroller that D must override at its boundary')
 check('overscroll-behavior: contain' in dashboard_css,
       'non-card Drawer containment remains present and outside D scope')
-check(f"./css/dashboard-card-wheel.css?v={asset_revision}" in loader,
-      'D stylesheet is loaded with the current asset revision')
+check("assetUrl('./css/dashboard-card-wheel.css')" in loader,
+      'D stylesheet is loaded through the centralized asset URL')
 check("data-dashboard-card-wheel-style" in loader,
       'D stylesheet has a duplicate-load marker')
 check(f"const APP_ASSET_REVISION = '{asset_revision}';" in version,

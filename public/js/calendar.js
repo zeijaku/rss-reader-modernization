@@ -1,6 +1,11 @@
-(function (document) {
+(function (document, window) {
     'use strict';
 
+    var sourceScript = document.currentScript;
+    var revisionMatch = sourceScript && typeof sourceScript.src === 'string'
+        ? /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(sourceScript.src)
+        : null;
+    var assetRevision = revisionMatch ? revisionMatch[1] : '';
     var ASSET_RETRY_LIMIT = 1;
     var ASSET_RETRY_DELAY_MS = 600;
     var STYLE_BATCH_SIZE = 4;
@@ -8,6 +13,7 @@
     var scriptQueue = [];
     var styleQueue = [];
 
+    function assetUrl(path) { return assetRevision === '' ? path : path + (path.indexOf('?') === -1 ? '?' : '&') + 'v=' + encodeURIComponent(assetRevision); }
     function retryUrl(url, attempt) { return url + (url.indexOf('?') === -1 ? '?' : '&') + 'asset_retry=' + attempt; }
     function reportAssetFailure(type, url) { if (typeof console !== 'undefined' && typeof console.error === 'function') { console.error(type + ' asset could not be loaded after retry: ' + url); } }
     function loadScript(src) { scriptQueue.push(src); }
@@ -36,57 +42,57 @@
     }
     function startStyleQueue() { var index = 0; function nextBatch() { var limit = Math.min(index + STYLE_BATCH_SIZE, styleQueue.length); while (index < limit) { if (!document.querySelector('link[' + styleQueue[index].marker + ']')) { appendStyle(styleQueue[index], 0, null); } index += 1; } if (index < styleQueue.length) { setTimeout(nextBatch, STYLE_BATCH_DELAY_MS); } } nextBatch(); }
 
-    loadStyle('./css/mail-widget.css?v=1.35.2', 'data-mail-widget-style');
-    loadStyle('./css/camera-video.css?v=1.35.2', 'data-camera-video-style');
-    loadStyle('./css/camera-video-playback.css?v=1.35.2', 'data-camera-video-playback-style');
-    loadStyle('./css/camera-video-streaming.css?v=1.35.2', 'data-camera-video-streaming-style');
-    loadStyle('./css/x-widget.css?v=1.35.2', 'data-x-widget-style');
-    loadStyle('./css/rss-rule-display.css?v=1.35.2', 'data-rss-rule-display-style');
-    loadStyle('./css/memo-refresh.css?v=1.35.2', 'data-memo-refresh-style');
-    loadStyle('./css/dashboard-card-wheel.css?v=1.35.2', 'data-dashboard-card-wheel-style');
-    loadStyle('./css/calendar-colors.css?v=1.35.2', 'data-calendar-colors-style');
-    loadStyle('./css/calendar-event-details.css?v=1.35.2', 'data-calendar-event-details-style');
-    loadStyle('./css/calendar-recurrence.css?v=1.35.2', 'data-calendar-recurrence-style');
-    loadStyle('./css/calendar-occurrence.css?v=1.35.2', 'data-calendar-occurrence-style');
-    loadStyle('./css/calendar-drag-drop.css?v=1.35.2', 'data-calendar-drag-drop-style');
-    loadStyle('./css/calendar-month-layout.css?v=1.35.2', 'data-calendar-month-layout-style');
-    loadStyle('./css/calendar-views.css?v=1.35.2', 'data-calendar-views-style');
-    loadStyle('./css/calendar-polish.css?v=1.35.2', 'data-calendar-polish-style');
-    loadStyle('./css/calendar-polish-r3.css?v=1.35.2', 'data-calendar-polish-r3-style');
-    loadStyle('./css/block-collapse.css?v=1.35.2', 'data-block-collapse-style');
-    loadStyle('./css/stock-state-ui.css?v=1.35.2', 'data-stock-state-ui-style');
+    loadStyle(assetUrl('./css/mail-widget.css'), 'data-mail-widget-style');
+    loadStyle(assetUrl('./css/camera-video.css'), 'data-camera-video-style');
+    loadStyle(assetUrl('./css/camera-video-playback.css'), 'data-camera-video-playback-style');
+    loadStyle(assetUrl('./css/camera-video-streaming.css'), 'data-camera-video-streaming-style');
+    loadStyle(assetUrl('./css/x-widget.css'), 'data-x-widget-style');
+    loadStyle(assetUrl('./css/rss-rule-display.css'), 'data-rss-rule-display-style');
+    loadStyle(assetUrl('./css/memo-refresh.css'), 'data-memo-refresh-style');
+    loadStyle(assetUrl('./css/dashboard-card-wheel.css'), 'data-dashboard-card-wheel-style');
+    loadStyle(assetUrl('./css/calendar-colors.css'), 'data-calendar-colors-style');
+    loadStyle(assetUrl('./css/calendar-event-details.css'), 'data-calendar-event-details-style');
+    loadStyle(assetUrl('./css/calendar-recurrence.css'), 'data-calendar-recurrence-style');
+    loadStyle(assetUrl('./css/calendar-occurrence.css'), 'data-calendar-occurrence-style');
+    loadStyle(assetUrl('./css/calendar-drag-drop.css'), 'data-calendar-drag-drop-style');
+    loadStyle(assetUrl('./css/calendar-month-layout.css'), 'data-calendar-month-layout-style');
+    loadStyle(assetUrl('./css/calendar-views.css'), 'data-calendar-views-style');
+    loadStyle(assetUrl('./css/calendar-polish.css'), 'data-calendar-polish-style');
+    loadStyle(assetUrl('./css/calendar-polish-r3.css'), 'data-calendar-polish-r3-style');
+    loadStyle(assetUrl('./css/block-collapse.css'), 'data-block-collapse-style');
+    loadStyle(assetUrl('./css/stock-state-ui.css'), 'data-stock-state-ui-style');
     startStyleQueue();
 
     document.querySelectorAll('.mini-game-card[data-mini-game-type="block_collapse"]').forEach(function (card) { card.setAttribute('data-mini-game-initialized', '1'); });
 
-    loadScript('./js/app-notice.js?v=1.35.2');
-    loadScript('./js/stock-state-ui.js?v=1.35.2');
-    loadScript('./js/feed-health.js?v=1.35.2');
-    loadScript('./js/rss-rule-display.js?v=1.35.2');
-    loadScript('./js/widget-card-refresh.js?v=1.35.2');
-    loadScript('./js/memo-refresh.js?v=1.35.2');
-    loadScript('./js/information-widget-watchdog.js?v=1.35.2');
-    loadScript('./js/calendar-month-layout.js?v=1.35.2');
-    loadScript('./js/calendar-views.js?v=1.35.2');
-    loadScript('./js/calendar-core.js?v=1.35.2');
-    loadScript('./js/calendar-occurrence.js?v=1.35.2');
-    loadScript('./js/calendar-recurrence.js?v=1.35.2');
-    loadScript('./js/calendar-event-details.js?v=1.35.2');
-    loadScript('./js/calendar-copy.js?v=1.35.2');
-    loadScript('./js/calendar-drag-drop.js?v=1.35.2');
-    loadScript('./js/calendar-colors.js?v=1.35.2');
-    loadScript('./js/calendar-source-actions.js?v=1.35.2');
-    loadScript('./js/calendar-polish.js?v=1.35.2');
-    loadScript('./js/calendar-polish-r3.js?v=1.35.2');
-    loadScript('./js/block-collapse.js?v=1.35.2');
-    loadScript('./js/mail-widget-watchdog.js?v=1.35.2');
-    loadScript('./js/camera-video-watchdog.js?v=1.35.2');
-    loadScript('./js/mail-widget.js?v=1.35.2');
-    loadScript('./js/camera-video.js?v=1.35.2');
-    loadScript('./js/camera-video-playback.js?v=1.35.2');
-    loadScript('./js/camera-video-streaming.js?v=1.35.2');
-    loadScript('./js/x-widget.js?v=1.35.2');
-    loadScript('./js/widget-settings-no-reload.js?v=1.35.2');
-    loadScript('./js/drawer-categories.js?v=1.35.2');
+    loadScript(assetUrl('./js/app-notice.js'));
+    loadScript(assetUrl('./js/stock-state-ui.js'));
+    loadScript(assetUrl('./js/feed-health.js'));
+    loadScript(assetUrl('./js/rss-rule-display.js'));
+    loadScript(assetUrl('./js/widget-card-refresh.js'));
+    loadScript(assetUrl('./js/memo-refresh.js'));
+    loadScript(assetUrl('./js/information-widget-watchdog.js'));
+    loadScript(assetUrl('./js/calendar-month-layout.js'));
+    loadScript(assetUrl('./js/calendar-views.js'));
+    loadScript(assetUrl('./js/calendar-core.js'));
+    loadScript(assetUrl('./js/calendar-occurrence.js'));
+    loadScript(assetUrl('./js/calendar-recurrence.js'));
+    loadScript(assetUrl('./js/calendar-event-details.js'));
+    loadScript(assetUrl('./js/calendar-copy.js'));
+    loadScript(assetUrl('./js/calendar-drag-drop.js'));
+    loadScript(assetUrl('./js/calendar-colors.js'));
+    loadScript(assetUrl('./js/calendar-source-actions.js'));
+    loadScript(assetUrl('./js/calendar-polish.js'));
+    loadScript(assetUrl('./js/calendar-polish-r3.js'));
+    loadScript(assetUrl('./js/block-collapse.js'));
+    loadScript(assetUrl('./js/mail-widget-watchdog.js'));
+    loadScript(assetUrl('./js/camera-video-watchdog.js'));
+    loadScript(assetUrl('./js/mail-widget.js'));
+    loadScript(assetUrl('./js/camera-video.js'));
+    loadScript(assetUrl('./js/camera-video-playback.js'));
+    loadScript(assetUrl('./js/camera-video-streaming.js'));
+    loadScript(assetUrl('./js/x-widget.js'));
+    loadScript(assetUrl('./js/widget-settings-no-reload.js'));
+    loadScript(assetUrl('./js/drawer-categories.js'));
     startScriptQueue();
-})(document);
+})(document, window);

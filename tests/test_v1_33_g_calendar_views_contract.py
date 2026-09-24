@@ -43,12 +43,12 @@ check(version_match is not None and tuple(map(int, version_match.groups()[:3])) 
       'G contract runs on V1.33.1 or later')
 check(bool(current_revision) and current_revision == current_version,
       'current asset revision matches the application version')
-check(loader.index(f'calendar-month-layout.js?v={current_revision}')
-      < loader.index(f'calendar-views.js?v={current_revision}')
-      < loader.index(f'calendar-core.js?v={current_revision}'),
-      'pure layout modules load before the Calendar DOM core with the current cache revision')
-check(f'calendar-views.css?v={current_revision}' in loader,
-      'responsive view CSS uses the current cache revision')
+check(loader.index("assetUrl('./js/calendar-month-layout.js')")
+      < loader.index("assetUrl('./js/calendar-views.js')")
+      < loader.index("assetUrl('./js/calendar-core.js')"),
+      'pure layout modules load before the Calendar DOM core through the centralized asset URL')
+check("assetUrl('./css/calendar-views.css')" in loader,
+      'responsive view CSS uses the centralized asset URL')
 
 check("action: 'calendar.range.list'" in core and 'calendar_range_start: period.start' in core
       and 'calendar_range_end: period.end' in core,

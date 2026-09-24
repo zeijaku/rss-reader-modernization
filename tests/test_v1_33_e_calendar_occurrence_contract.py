@@ -44,8 +44,8 @@ for modal in modals:
 check(loader.index('calendar-occurrence.js') < loader.index('calendar-recurrence.js'), 'occurrence handler loads before series submit handler')
 check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1), 'E contract runs on V1.33.1 or later')
 check(bool(current_revision) and current_revision == current_version, 'current asset revision matches the application version')
-check(f'calendar-occurrence.css?v={current_revision}' in loader, 'occurrence CSS uses the current cache revision')
-check(f'calendar-occurrence.js?v={current_revision}' in loader, 'occurrence JavaScript uses the current cache revision')
+check("assetUrl('./css/calendar-occurrence.css')" in loader, 'occurrence CSS uses the centralized asset URL')
+check("assetUrl('./js/calendar-occurrence.js')" in loader, 'occurrence JavaScript uses the centralized asset URL')
 
 for field in ('source_title', 'source_note', 'source_color', 'source_all_day', 'source_start_time', 'source_end_time', 'source_url'):
     check(f"'{field}'" in domain and f"'{field}'" in exception, f'{field} survives base and override responses')

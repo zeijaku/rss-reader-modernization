@@ -30,10 +30,8 @@ if (preg_match("/const APP_ASSET_REVISION = '([^']+)';/", $version, $assetMatch)
 $checks = [
     'current APP_VERSION is defined' => is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?$/', $appVersion) === 1,
     'active asset revision is defined' => is_string($assetRevision) && preg_match('/^[A-Za-z0-9._-]+$/', $assetRevision) === 1,
-    'F CSS uses current asset cache key' => is_string($assetRevision)
-        && str_contains($loader, 'calendar-polish.css?v=' . $assetRevision),
-    'F JS uses current asset cache key' => is_string($assetRevision)
-        && str_contains($loader, 'calendar-polish.js?v=' . $assetRevision),
+    'F CSS uses the centralized asset URL' => str_contains($loader, "assetUrl('./css/calendar-polish.css')"),
+    'F JS uses the centralized asset URL' => str_contains($loader, "assetUrl('./js/calendar-polish.js')"),
     'upcoming window is fixed to 14 days' => str_contains($upcoming, 'CALENDAR_UPCOMING_DAYS = 14'),
     'upcoming result is bounded to 8 events' => str_contains($upcoming, 'CALENDAR_UPCOMING_LIMIT = 8')
         && str_contains($upcoming, 'array_slice($events, 0, CALENDAR_UPCOMING_LIMIT)'),
@@ -90,8 +88,8 @@ $checks = [
         && str_contains($css, '.calendar-day'),
 ];
 
-$sourcePos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-source-actions.js?v={$assetRevision}');") : false;
-$polishPos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-polish.js?v={$assetRevision}');") : false;
+$sourcePos = strpos($loader, "loadScript(assetUrl('./js/calendar-source-actions.js'));");
+$polishPos = strpos($loader, "loadScript(assetUrl('./js/calendar-polish.js'));");
 $checks['F polish loads after E source actions'] = is_int($sourcePos) && is_int($polishPos) && $sourcePos < $polishPos;
 
 $failed = [];

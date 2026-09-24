@@ -8,7 +8,6 @@ loader = (ROOT / 'public/js/calendar.js').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 runner = (ROOT / 'tests/run-current-features.sh').read_text(encoding='utf-8')
 asset_revision = current_asset_revision(ROOT)
-asset_suffix = f'?v={asset_revision}'
 checks: list[bool] = []
 
 def check(condition: bool, message: str) -> None:
@@ -26,11 +25,11 @@ check("bootstrap.Modal.getOrCreateInstance(registerModal).show()" in copy_js, 'c
 check("data-calendar-copy-source" in copy_js, 'destination form records non-sensitive copy origin state for UI/test visibility')
 check("registerForm.setAttribute('data-calendar-recurrence-submit-ready', '1')" in copy_js and copy_js.find("registerForm.setAttribute('data-calendar-recurrence-submit-ready', '1')") > copy_js.find("setValue(registerForm, '.registerCalendarEventRepeatUntil'"), 'copied recurrence data becomes save-ready only after all recurrence values are populated')
 check("registerForm.setAttribute('aria-busy', 'false')" in copy_js and '.calendar-event-recurrence-loading' in copy_js, 'copy clears stale recurrence loading state before user review')
-check(f"./js/calendar-copy.js{asset_suffix}" in loader, 'Calendar copy module uses the current asset revision')
-occurrence_pos = loader.find(f"./js/calendar-occurrence.js{asset_suffix}")
-recurrence_pos = loader.find(f"./js/calendar-recurrence.js{asset_suffix}")
-detail_pos = loader.find(f"./js/calendar-event-details.js{asset_suffix}")
-copy_pos = loader.find(f"./js/calendar-copy.js{asset_suffix}")
+check("assetUrl('./js/calendar-copy.js')" in loader, 'Calendar copy module uses the centralized asset URL')
+occurrence_pos = loader.find("assetUrl('./js/calendar-occurrence.js')")
+recurrence_pos = loader.find("assetUrl('./js/calendar-recurrence.js')")
+detail_pos = loader.find("assetUrl('./js/calendar-event-details.js')")
+copy_pos = loader.find("assetUrl('./js/calendar-copy.js')")
 check(-1 not in (occurrence_pos, recurrence_pos, detail_pos, copy_pos) and occurrence_pos < recurrence_pos < detail_pos < copy_pos, 'copy module loads after occurrence, recurrence and event-detail form controllers')
 check(f"const APP_ASSET_REVISION = '{asset_revision}';" in version, 'Calendar loader revision matches app/version.php')
 check('test_v1_34_2_b_calendar_copy_contract.py' in runner and 'test_v1_34_2_b_calendar_copy.js' in runner, 'current feature gate executes both static and runtime Calendar copy tests')

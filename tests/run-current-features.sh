@@ -9,6 +9,13 @@ SCRIPT_DIR="$ROOT/tests"
 # available for targeted investigation, but active CI/Release must not stack
 # them indefinitely.
 
+echo '== Current feature contracts: Asset revision propagation =='
+python3 "$SCRIPT_DIR/test_current_asset_revision_contract.py"
+node "$SCRIPT_DIR/test_current_asset_revision_runtime.js"
+node --check "$ROOT/public/js/calendar.js"
+node --check "$ROOT/public/js/camera-video-streaming.js"
+node --check "$ROOT/public/js/rss-management.js"
+
 echo '== Current feature contracts: Security hardening =='
 python3 "$SCRIPT_DIR/test_v119c_registration_throttle.py"
 python3 "$SCRIPT_DIR/test_v119c_api_request_limit.py"

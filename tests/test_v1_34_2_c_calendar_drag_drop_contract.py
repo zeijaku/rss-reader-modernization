@@ -11,16 +11,15 @@ polish = (ROOT / 'public/js/calendar-polish.js').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 runner = (ROOT / 'tests/run-current-features.sh').read_text(encoding='utf-8')
 asset_revision = current_asset_revision(ROOT)
-asset_suffix = f'?v={asset_revision}'
 checks = []
 
 def check(ok, msg):
     checks.append(bool(ok)); print(('PASS' if ok else 'FAIL') + ': ' + msg)
 
-check(f"./js/calendar-drag-drop.js{asset_suffix}" in loader, 'drag module uses the current asset revision')
-check(f"./css/calendar-drag-drop.css{asset_suffix}" in loader, 'drag style uses the current asset revision')
-copy_pos = loader.find(f'calendar-copy.js{asset_suffix}')
-drag_pos = loader.find(f'calendar-drag-drop.js{asset_suffix}')
+check("assetUrl('./js/calendar-drag-drop.js')" in loader, 'drag module uses the centralized asset URL')
+check("assetUrl('./css/calendar-drag-drop.css')" in loader, 'drag style uses the centralized asset URL')
+copy_pos = loader.find("assetUrl('./js/calendar-copy.js')")
+drag_pos = loader.find("assetUrl('./js/calendar-drag-drop.js')")
 check(-1 not in (copy_pos, drag_pos) and copy_pos < drag_pos, 'drag module loads after Calendar edit/copy controllers')
 check(f"const APP_ASSET_REVISION = '{asset_revision}';" in version, 'Calendar loader revision matches app/version.php')
 check("calendar.color.update" in drag and "calendar.occurrence.update" in drag, 'existing normal and occurrence update actions are reused')

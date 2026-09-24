@@ -6,9 +6,10 @@ const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/calendar.js'), 'utf8');
-const expectedScripts = Array.from(source.matchAll(/loadScript\('([^']+)'\);/g), match => match[1]);
-const expectedStyles = Array.from(source.matchAll(/loadStyle\('([^']+)', '([^']+)'\);/g), match => ({
-    href: match[1], marker: match[2]
+const testRevision = 'runtime-test.1';
+const expectedScripts = Array.from(source.matchAll(/loadScript\(assetUrl\('([^']+)'\)\);/g), match => match[1] + '?v=' + testRevision);
+const expectedStyles = Array.from(source.matchAll(/loadStyle\(assetUrl\('([^']+)'\), '([^']+)'\);/g), match => ({
+    href: match[1] + '?v=' + testRevision, marker: match[2]
 }));
 let passed = 0;
 let failed = 0;
@@ -70,6 +71,7 @@ const body = createParent('body');
 const documentObject = {
     head,
     body,
+    currentScript: {src: 'https://reader.example/js/calendar.js?ignored=1&v=' + testRevision + '&asset_retry=1'},
     createElement(tagName) {
         return {
             tagName: String(tagName).toUpperCase(),
@@ -125,6 +127,7 @@ function failScriptNode(node) {
 
 const context = {
     document: documentObject,
+    window: {},
     setTimeout: setTimeoutFake,
     Math,
     console: {

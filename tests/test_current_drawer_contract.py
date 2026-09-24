@@ -24,8 +24,8 @@ settings = text('public/settings.php')
 
 check(bool(revision), 'current asset revision is available for Drawer loading')
 check(
-    bool(revision) and "loadScript('./js/drawer-categories.js?v=" + revision + "');" in calendar,
-    'Dashboard / Stock loads the Drawer organizer with the current asset revision',
+    bool(revision) and "loadScript(assetUrl('./js/drawer-categories.js'));" in calendar,
+    'Dashboard / Stock loads the Drawer organizer through the centralized asset URL',
 )
 check(
     "app_asset_url('js/drawer-categories.js')" in settings,

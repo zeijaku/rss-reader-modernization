@@ -1,7 +1,11 @@
 (function ($, document, window) {
     'use strict';
 
+    var sourceScript = document.currentScript;
+    var revisionMatch = sourceScript && typeof sourceScript.src === 'string' ? /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(sourceScript.src) : null;
+    var assetRevision = revisionMatch ? revisionMatch[1] : '';
     var apiUrl = './api_v1.php';
+    function assetUrl(path) { return assetRevision === '' ? path : path + (path.indexOf('?') === -1 ? '?' : '&') + 'v=' + encodeURIComponent(assetRevision); }
     function csrfToken() { return $('meta[name="csrf-token"]').attr('content') || ''; }
     function setAlert($target, type, message) { $target.removeClass('alert-success alert-danger alert-warning alert-info alert-light').addClass('alert-' + type).text(message).prop('hidden', false); }
     function apiPost(action, extra) { var data = $.extend({action: action, csrf_token: csrfToken()}, extra || {}); return $.ajax({url: apiUrl, method: 'POST', data: data, dataType: 'json'}); }
@@ -29,6 +33,6 @@
     $('#opmlExportButton').on('click', function () {
         var $button = $(this).prop('disabled', true); setAlert($('#opmlExportResult'), 'info', 'Exportデータを作成しています。'); apiPost('opml.export').done(function (response) { var data = response && response.data ? response.data : {}; if (typeof data.content !== 'string' || typeof data.filename !== 'string') { setAlert($('#opmlExportResult'), 'danger', 'Exportデータが不正です。'); return; } var blob = new Blob([data.content], {type: data.mime || 'text/x-opml;charset=UTF-8'}); var url = window.URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = data.filename; document.body.appendChild(a); a.click(); a.remove(); window.setTimeout(function () { window.URL.revokeObjectURL(url); }, 0); setAlert($('#opmlExportResult'), 'success', (data.count || 0) + '件のRSSをExportしました。'); }).fail(function (xhr) { var message = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error.message : 'OPML Exportに失敗しました。'; setAlert($('#opmlExportResult'), 'danger', message); }).always(function () { $button.prop('disabled', false); });
     });
-    $.getScript('./js/rss-rules.js?v=1.35.2').done(function () { $.getScript('./js/rss-rules-integration.js?v=1.35.2'); });
+    $.getScript(assetUrl('./js/rss-rules.js')).done(function () { $.getScript(assetUrl('./js/rss-rules-integration.js')); });
     $(loadFeeds);
 })(jQuery, document, window);

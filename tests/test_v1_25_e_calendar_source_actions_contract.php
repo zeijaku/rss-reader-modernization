@@ -26,8 +26,7 @@ if (preg_match("/const APP_ASSET_REVISION = '([^']+)';/", $version, $assetMatch)
 $checks = [
     'current APP_VERSION is defined' => is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?$/', $appVersion) === 1,
     'active asset revision is defined' => is_string($assetRevision) && preg_match('/^[A-Za-z0-9._-]+$/', $assetRevision) === 1,
-    'source action module uses current asset cache key' => is_string($assetRevision)
-        && str_contains($loader, 'calendar-source-actions.js?v=' . $assetRevision),
+    'source action module uses the centralized asset URL' => str_contains($loader, "assetUrl('./js/calendar-source-actions.js')"),
     'article action menu is reused' => str_contains($sourceActions, "$('#articleActionsMenu')"),
     'Calendar action is added after Task when available' => str_contains($sourceActions, ".article-action-task")
         && str_contains($sourceActions, "insertAdjacentElement('afterend', button)"),
@@ -55,11 +54,11 @@ $checks = [
     'source action does not use eval' => !preg_match('/\beval\s*\(/', $sourceActions),
 ];
 
-$corePos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-core.js?v={$assetRevision}');") : false;
-$repeatPos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-recurrence.js?v={$assetRevision}');") : false;
-$detailPos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-event-details.js?v={$assetRevision}');") : false;
-$colorPos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-colors.js?v={$assetRevision}');") : false;
-$sourcePos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-source-actions.js?v={$assetRevision}');") : false;
+$corePos = strpos($loader, "loadScript(assetUrl('./js/calendar-core.js'));");
+$repeatPos = strpos($loader, "loadScript(assetUrl('./js/calendar-recurrence.js'));");
+$detailPos = strpos($loader, "loadScript(assetUrl('./js/calendar-event-details.js'));");
+$colorPos = strpos($loader, "loadScript(assetUrl('./js/calendar-colors.js'));");
+$sourcePos = strpos($loader, "loadScript(assetUrl('./js/calendar-source-actions.js'));");
 $checks['source action loads after Calendar core/detail/recurrence/color layers'] = is_int($corePos)
     && is_int($repeatPos)
     && is_int($detailPos)
