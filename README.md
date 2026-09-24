@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.35.2`
-Release tag: `v1.35.2`
+**Stable release:** `RSS Reader Modernization 1.35.3`
+Release tag: `v1.35.3`
+
+Version 1.35.3は、READMEの現行機能・Dependency・Release Workflow記述を実装へ揃え、動的に読み込むJavaScript／CSSのAsset Revisionを`app/version.php`から継承する方式へ一元化します。Application機能、DB Migration、必須Config、外部Dependencyの追加はありません。
 
 Version 1.35.2は、通常予定および繰り返しシリーズの追加・変更・削除後にDashboard全体を再読み込みせず、表示中のCalendar Cardと直近予定だけを更新します。Calendar Widget自体の追加・設定変更・削除は従来どおりページ更新を維持します。DB Migration、必須Config、外部Dependencyの追加はありません。
 
@@ -78,10 +80,11 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 
 ## 現在できること
 
-- Mail WidgetによるIMAP受信／検索／Folder切替、SMTP Plain Text送信／Reply、Sent保存、複数添付送信
+- Mail WidgetによるPassword／Gmail OAuth2でのIMAP受信・検索・Folder切替、SMTP Plain Text送信・Reply、Sent保存、送受信添付Fileの表示・Download、送信時複数添付
 
 - ユーザー登録 / ログイン / ログアウト
 - Account Settingsからのメールアドレス変更・パスワード変更
+- TOTP 2FA、Recovery Code、Step-up Authentication、Session管理、Authentication Security Audit Log、2FA成功後24時間の信頼端末
 - ユーザーごとのFeed URL登録・変更・論理削除
 - 4タブ（location 0〜3）へのFeed配置
 - RSS 2.0 / RSS 1.0 / Atomの表示
@@ -104,7 +107,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - Clock Widgetの追加・変更・削除、12／24時間、日付・秒表示
 - Memo Widgetの追加・変更・削除、改行を保持した本文表示、長文のWidget内Scroll、4000文字Counter
 - Task Widgetの追加・変更・削除、完了切替、期限、優先度
-- Calendar Widgetの日／週／月表示、通常予定、Task期限連動、終日／時刻／URL、赤／青／緑／黄／紫、毎日／毎週／毎月／毎年の繰り返し、Occurrence単位変更／削除、月表示の複数日連結、Today、14日以内の直近予定、RSS／Stock記事からの予定作成
+- Calendar Widgetの日／週／月表示、通常予定、Task期限連動、終日／時刻／URL、赤／青／緑／黄／紫、毎日／毎週／毎月／毎年の繰り返し、Occurrence単位変更／削除、月表示の複数日連結・前後月日付／予定表示、予定変更後のCard内更新、Today、14日以内の直近予定、RSS／Stock記事からの予定作成
 - Weather Widgetの地域別天気表示
 - Earthquake Widgetの気象庁最新地震情報表示
 - Sun / Moon Widgetの日の出・日の入り・月齢・月相表示
@@ -114,7 +117,7 @@ M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Mod
 - X Timeline Widgetによる指定した公開X Accountの最近の投稿表示（上級者向け、X Developer Platform／Pay Per Use／Server-side Bearer Tokenが必要）
 - File LibraryへのJPEG／PNG／GIF／WebP／PDF／TXT／CSV／ZIP保存、Image／PDF／TXT／CSV Preview、Download／Delete
 - Remote File ManagerによるFTP／明示FTPS／SFTP／HTTPS WebDAV接続、Directory操作、Upload／Download、File Libraryとの相互転送
-- Remote Text EditorによるUTF-8 Text/Source編集、SHA-256競合検出、LF／CRLF・BOM維持、WAF-safe保存
+- Remote Text EditorによるUTF-8 Text/Source編集、行番号、SHA-256競合検出、LF／CRLF・BOM維持、WAF-safe保存
 - スマートフォンでの左右スワイプによるタブ切り替え
 - Feed／Calendar読込中のSpinner表示
 - 記事リンクのStock保存と一覧表示
@@ -216,9 +219,9 @@ M1-Aの詳細は [`docs/m1-a-implementation.md`](docs/m1-a-implementation.md)、
 
 M2-Aの詳細は [`docs/m2-a-implementation.md`](docs/m2-a-implementation.md)、M2-Bは [`docs/m2-b-implementation.md`](docs/m2-b-implementation.md)、M2-Cは [`docs/m2-c-implementation.md`](docs/m2-c-implementation.md)、M2-Dは [`docs/m2-d-implementation.md`](docs/m2-d-implementation.md)、M2-Eは [`docs/m2-e-implementation.md`](docs/m2-e-implementation.md)、M2-Fは [`docs/m2-f-implementation.md`](docs/m2-f-implementation.md)、M2-Gは [`docs/m2-g-implementation.md`](docs/m2-g-implementation.md) を参照してください。M2全体の要約は [`docs/m2-completion-summary.md`](docs/m2-completion-summary.md)、test結果は [`docs/test-report-m2-a.md`](docs/test-report-m2-a.md) から [`docs/test-report-m2-g.md`](docs/test-report-m2-g.md) に記録しています。
 
-## M4 progress
+## Historical M4 progress
 
-M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4-AではM2-GをRelease Baselineとして固定し、M4-BではREADME、CHANGELOG、Project License、Third-party noticeを実際の配布Assetへ合わせました。M4-Cでは新規設置、更新、設定、Backup、Restore、Rollbackを実コードと設定Defaultに合わせて整理しました。M4-DではGitHub Actionsの最小CI、Security reporting、Contribution方針、Repository設定Checklist、Portfolio掲載用メモを追加しました。M4-EではCheckpoint ZIPとRuntime Release ZIPを分離し、deterministic build、内部Manifest、外部SHA-256、Release Notes、Tag / GitHub Release手順を追加しました。Application機能、DB、公開API、Security境界、Frontend Runtime Assetは変更していません。M4-Fでは`1.0.0-rc1`を作成し、実MySQL、Feed、Browser、Restore結果をPrivate Evidenceへ記録するGateを追加しました。M4-GではRC1からApplication Runtimeを変更せず、Version、Release Notes、Final Package、Tag / GitHub Release手順を`1.0.0`へ確定しました。自動RegressionとPackage検証はPASSしていますが、Privateな実環境EvidenceはRepositoryへ収録していません。
+M4はVersion 1.0.0公開時にRelease基盤を整備した完了済みの履歴です。M4-A〜GでRelease Baseline、README／License、設置・Backup・Rollback手順、GitHub Actions、deterministic Package、SHA-256、Tag／GitHub Release手順を確立しました。現在のRelease判断やVersionはこの表ではなく、冒頭のStable release、`app/version.php`、Current Test、GitHub Releaseを確認してください。
 
 | Work unit | 内容 | 状態 |
 |---|---|---|
@@ -232,22 +235,11 @@ M4は新機能追加ではなく、Version 1.0.0の正式公開準備です。M4
 
 詳細は [`docs/m4-f-implementation.md`](docs/m4-f-implementation.md)、[`docs/m4-f-validation.md`](docs/m4-f-validation.md)、[`docs/m4-e-implementation.md`](docs/m4-e-implementation.md)、[`docs/release-package.md`](docs/release-package.md)、[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
 
-## Version 1.19.0 release package
+## Release packages
 
-GitHub作業Folder相当の完全統合ZIPと、Server配置用Runtime ZIPを分けて生成します。
+正式ReleaseではGitHub Actionsの共通Release Workflowが、GitHub作業Folder相当のComplete Source ZIPとServer配置用Runtime ZIPを分けて生成し、SHA-256、secret scan、clean-room検証後にTag／GitHub Releaseへ添付します。Productionへは自動Deployしません。
 
-```bash
-python tools/build_complete_package.py --output-dir ../release-output
-python tools/build_release_package.py --mode final --output-dir ../release-output
-python tools/verify_complete_package.py \
-  ../release-output/rss-reader-modernization-1.19.0-complete.zip \
-  ../release-output/rss-reader-modernization-1.19.0-complete.zip.sha256
-python tools/verify_release_package.py \
-  ../release-output/rss-reader-modernization-1.19.0.zip \
-  ../release-output/rss-reader-modernization-1.19.0.zip.sha256
-```
-
-Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag / GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、検証限界は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)を参照してください。
+Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag／GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、現在の検証範囲は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)を参照してください。
 
 ## Runtime requirements
 
@@ -409,54 +401,43 @@ Legacy版は比較・解析対象として保持し、Secure BaselineのRuntime�
 
 ## Current limitations / deferred modernization
 
-Secure Baseline以降も、M2-G完了時点では次を残しています。
+現在も次の制約・設計上の選択を維持しています。
 
 - Server-side cacheは固定TTL + ETag / Last-Modified + 最大24時間のstale-if-error。FrontendはLoading / Empty / Errorを表示するが、Cache / Retryの内部状態は公開しない
 - Feed提供元がValidatorを返さない場合はTTL経過後に通常のHTTP 200取得
 - Feed取得は表示時の同期処理
 - Foreign Key未導入
-- Dashboard固有JS/CSS、Feed描画、semantic HTML、Keyboard / Focus / ARIA、Responsive layout、基本的な表示文言と通知は整理済み
-- 未使用Frontend配布物はM2-Eで整理済み。jQueryとFont AwesomeはM2-Fで互換更新済み。Bootstrap / Bootswatch 4.1.3、Popper 1系、Drawer、iScrollのmajor migrationと、全Themeのcontrast最終調整は別途検討
+- Dashboard固有JS/CSS、Feed描画、semantic HTML、Keyboard / Focus / ARIA、Responsive layout、基本的な表示文言と通知は継続的に整理する
+- FrontendはBootstrap / Bootswatch 5.3.8、jQuery 3.7.1、Font Awesome Free 6.7.2を同梱する。右DrawerはBootstrap Offcanvasを使用し、旧jquery-drawer／iScroll／standalone PopperはRuntimeから削除済み
 - Source abstractionはFetcher / FeedSource / Parser dispatcher / RSS 2.0・RSS 1.0・Atom Adapter / Normalized Item / deterministic Item identity / cache-aware Feed serviceまで導入済み
 - X Timelineは公開Accountの最近の投稿をRead Onlyで表示する範囲に限定。X本体の「おすすめ / For You」Feedの再現と、User Context OAuthを使うHome Timelineは将来課題
 
-これらはM2完了後の別工程へ意図的に分離しています。
+未実装候補を現在機能として扱わず、必要性・安全境界・既存構成との整合を確認してRelease単位で判断します。
 
 ## Roadmap
 
-```text
-Secure Baseline SB-15 / R3
-  ↓
-M1 Source / RSS Engine (M1-G complete)
-  ↓
-M2 Frontend (M2-G complete)
-  ↓
-M4 Release preparation (M4-F RC prepared / real environment HOLD)
-  ↓
-Version 1.0.0 / Portfolio
-```
+Secure Baseline、RSS Engine、Frontend Modernization、公開／Release基盤は完了しています。現在は、安定版を基準にBug Fix、既存機能の操作改善、必要性を確認した機能追加を小さなReleaseへ分けて進めます。次期VersionをREADMEへ固定せず、実装時点のIssue、User確認、Current Test、Release情報を正とします。
 
-M1ではRSS専用処理に固定しすぎず、将来のJSON Feed、REST API、HTML等も同じItemモデルへ正規化できるSource / Fetcher / Parser(Adapter)構成へ段階的に移行します。M1-AでFetcher / Parser分離と共通Itemモデル、M1-Bでowner-scoped contentからFeedSourceへの変換境界、M1-Cで形式別Adapterと共通Date normalizer、M1-DでFeed URL scope付きの決定的Item identity、M1-Eで正常Feed本文のServer-side cacheとURL単位の重複Fetch抑制、M1-FでETag / Last-Modified / HTTP 304による再確認、M1-GでFetch state、Retry-After、Backoff、期限付きstale-if-errorまで完了しています。
-
-詳細: [`docs/roadmap.md`](docs/roadmap.md)
+初期Modernization工程の履歴: [`docs/roadmap.md`](docs/roadmap.md)
 
 ## GitHub repository / Portfolio
 
-公開Repositoryには、読取専用のGitHub Actions CI、Security reporting、Contribution方針、Bug report templateを収録しています。WorkflowはDeployやReleaseを行わず、`main`へのpush / Pull Requestで既存Regressionを実行します。
+公開Repositoryには、GitHub Actions CI、正式Release Workflow、Security reporting、Contribution方針、Bug report templateを収録しています。CIは`main`へのpush／Pull RequestでRegressionを実行します。Release Workflowは`main`上の明示Versionを検証し、TagとGitHub Release、Runtime／Complete Package、SHA-256を作成します。Productionへの自動Deployは行いません。
 
 - CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) / [`docs/ci.md`](docs/ci.md)
+- Release: [`.github/workflows/release.yml`](.github/workflows/release.yml) / [`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)
 - Security report: [`SECURITY.md`](SECURITY.md)
 - Contribution: [`CONTRIBUTING.md`](CONTRIBUTING.md)
 - GitHub設定: [`docs/github-publication.md`](docs/github-publication.md)
 - Portfolio掲載用メモ: [`docs/portfolio.md`](docs/portfolio.md)
 
-M4-D以降のpush後、GitHub hosted runnerのPHP 8.1 / 8.4 Job、Private vulnerability reporting、Repository Description / Topicsを画面で確認してください。GitHub hosted runnerのPHP 8.1 / 8.4結果は、M4-F Evidenceへrun番号またはURLを記録します。Connectorからstatusを取得できない場合はActions画面で確認します。
+Pull Request／`main`更新後はGitHub hosted runnerのPHP 8.1 / 8.4 Jobを確認し、Greenになるまでmerge／正式Releaseを行いません。正式Releaseは共通WorkflowのVersion・main SHA・既存Tag・Package内容・secret scan・clean-room検証を通過した場合だけ公開します。
 
 ## License and third-party components
 
 Project独自codeとModernizationで追加・変更した部分は [`LICENSE`](LICENSE) のMIT Licenseで公開します。同梱するFrontend libraryには各上流Licenseが適用され、ProjectのMIT Licenseで再Licenseしません。
 
-現在の主な同梱VersionはjQuery 3.7.1、Font Awesome Free 6.7.2、Bootstrap / Bootswatch 4.1.3、jquery-drawer 3.2.2、iScroll 5.2.0-snapshotです。詳細は [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) と [`docs/dependencies.md`](docs/dependencies.md) を参照してください。
+現在の主な同梱VersionはjQuery 3.7.1、Font Awesome Free 6.7.2、Bootstrap / Bootswatch 5.3.8、PHPMailer 7.1.1です。旧jquery-drawer／iScroll／standalone PopperはRuntimeから削除済みです。詳細は [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) と [`docs/dependencies.md`](docs/dependencies.md) を参照してください。
 
 ## Repository safety
 
@@ -477,12 +458,6 @@ Sanitizedされた `database/` のschema/audit/migration/fake fixtureだけを�
 
 詳細: [`docs/sensitive-data-manifest.md`](docs/sensitive-data-manifest.md)
 
-## Initial Commit status
+## Historical baseline
 
-SB-15のInitial Commit gateは合格と判定しています。根拠と公開前に残る作業は [`docs/initial-commit-gate.md`](docs/initial-commit-gate.md) を参照してください。
-
-**注意:** Initial Commit可能と「公開GitHub Release可能」は同義ではありません。M4-Fで`1.0.0-rc1`と検証Gateを作成しましたが、RC ZIPは`publishable=no`です。実MySQL / Browser / Feed / RestoreのEvidenceが全項目PASSになった後、M4-GでVersion 1.0.0とTagを確定します。
-
-
-## V1.2-C
-Search Feed（登録RSS横断検索、共通RSS、AND/OR、カード個別更新）を追加。DB Schema変更なし。
+SB-15のInitial Commit gateとVersion 1.0.0公開準備は完了済みです。当時の判断根拠は [`docs/initial-commit-gate.md`](docs/initial-commit-gate.md) とM4資料へ履歴として残しています。現在の公開可否は共通CI／Release Workflowと最新Release情報を基準にします。
