@@ -30,10 +30,8 @@ if (preg_match("/const APP_ASSET_REVISION = '([^']+)';/", $version, $assetMatch)
 $checks = [
     'current APP_VERSION is defined' => is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?$/', $appVersion) === 1,
     'active asset revision is defined' => is_string($assetRevision) && preg_match('/^[A-Za-z0-9._-]+$/', $assetRevision) === 1,
-    'detail CSS is staged by Calendar loader' => is_string($assetRevision)
-        && str_contains($loader, 'calendar-event-details.css?v=' . $assetRevision),
-    'detail JS is staged by Calendar loader' => is_string($assetRevision)
-        && str_contains($loader, 'calendar-event-details.js?v=' . $assetRevision),
+    'detail CSS is staged through the centralized asset URL' => str_contains($loader, "assetUrl('./css/calendar-event-details.css')"),
+    'detail JS is staged through the centralized asset URL' => str_contains($loader, "assetUrl('./js/calendar-event-details.js')"),
     'all-day field exists' => str_contains($details, "CalendarEventAllDay"),
     'start time field exists' => str_contains($details, "CalendarEventStartTime"),
     'end time field exists' => str_contains($details, "CalendarEventEndTime"),
@@ -55,15 +53,9 @@ $checks = [
     'smartphone time inputs can stack' => str_contains($details, 'col-12 col-sm-6'),
 ];
 
-$corePos = is_string($assetRevision)
-    ? strpos($loader, "loadScript('./js/calendar-core.js?v={$assetRevision}');")
-    : false;
-$detailPos = is_string($assetRevision)
-    ? strpos($loader, "loadScript('./js/calendar-event-details.js?v={$assetRevision}');")
-    : false;
-$colorPos = is_string($assetRevision)
-    ? strpos($loader, "loadScript('./js/calendar-colors.js?v={$assetRevision}');")
-    : false;
+$corePos = strpos($loader, "loadScript(assetUrl('./js/calendar-core.js'));");
+$detailPos = strpos($loader, "loadScript(assetUrl('./js/calendar-event-details.js'));");
+$colorPos = strpos($loader, "loadScript(assetUrl('./js/calendar-colors.js'));");
 $checks['script order is core -> details -> color'] = is_int($corePos) && is_int($detailPos) && is_int($colorPos)
     && $corePos < $detailPos && $detailPos < $colorPos;
 

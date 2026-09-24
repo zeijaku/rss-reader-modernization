@@ -60,9 +60,14 @@ $check(!str_contains($src['css'], '@import') && !preg_match('/url\s*\(\s*["\']?h
 $check(str_contains($src['htaccess'], 'file_preview_api\\.php$'), 'Preview API remains explicitly allowlisted');
 $check(str_contains($src['runner'], 'file_preview_current_v128g_test.php') && str_contains($src['runner'], 'file_library_current_v128g_test.php'), 'Current suite includes V1.28 integration gates');
 $check(!str_contains($src['runner'], 'file_library_image_viewer_v127f_test.php') && !str_contains($src['runner'], 'test_v127g_current_contract.php'), 'stale V1.27 phase-final UI gates are not active Current gates');
+$dynamicAssetCalls = [
+    'calendar' => "assetUrl('./js/app-notice.js')",
+    'rssJs' => "assetUrl('./js/rss-rules.js')",
+    'camera' => "assetUrl('./css/camera-video-streaming.css')",
+];
 foreach (['calendar','rssJs','camera'] as $key) {
     $check(!str_contains($src[$key], '?v=1.27.0'), $key . ' has no stale V1.27 runtime cache key');
-    $check(is_string($assetRevision) && str_contains($src[$key], '?v=' . $assetRevision), $key . ' follows the active asset revision');
+    $check(str_contains($src[$key], 'document.currentScript') && str_contains($src[$key], $dynamicAssetCalls[$key]), $key . ' derives child assets from its versioned entry script');
 }
 $check(str_contains($src['doc'], '64 KiB') && str_contains($src['doc'], '512 KiB') && str_contains($src['doc'], 'ZIP remains download-only'), 'V1.28 docs record bounds and ZIP policy');
 $check(str_contains($src['checklist'], 'V1.28-H') && str_contains($src['checklist'], 'different authenticated user'), 'production checklist covers H boundary and owner isolation');

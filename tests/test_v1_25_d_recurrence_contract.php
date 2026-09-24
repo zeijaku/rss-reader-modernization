@@ -64,15 +64,14 @@ $checks = [
     'UI renders recurring marker' => str_contains($ui, 'calendar-event-repeat-label') && str_contains($css, '.calendar-event-repeat-label'),
     'UI does not assign innerHTML' => !preg_match('/\.innerHTML\s*=/', $ui),
     'UI does not use eval' => !preg_match('/\beval\s*\(/', $ui),
-    'recurrence layer is loaded with current asset cache key' => is_string($assetRevision)
-        && str_contains($loader, 'calendar-recurrence.js?v=' . $assetRevision)
-        && str_contains($loader, 'calendar-recurrence.css?v=' . $assetRevision),
+    'recurrence layer uses the centralized asset URL' => str_contains($loader, "assetUrl('./js/calendar-recurrence.js')")
+        && str_contains($loader, "assetUrl('./css/calendar-recurrence.css')"),
 ];
 
-$corePos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-core.js?v={$assetRevision}');") : false;
-$repeatPos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-recurrence.js?v={$assetRevision}');") : false;
-$detailPos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-event-details.js?v={$assetRevision}');") : false;
-$colorPos = is_string($assetRevision) ? strpos($loader, "loadScript('./js/calendar-colors.js?v={$assetRevision}');") : false;
+$corePos = strpos($loader, "loadScript(assetUrl('./js/calendar-core.js'));");
+$repeatPos = strpos($loader, "loadScript(assetUrl('./js/calendar-recurrence.js'));");
+$detailPos = strpos($loader, "loadScript(assetUrl('./js/calendar-event-details.js'));");
+$colorPos = strpos($loader, "loadScript(assetUrl('./js/calendar-colors.js'));");
 $checks['script order is core -> recurrence -> details -> color'] = is_int($corePos) && is_int($repeatPos) && is_int($detailPos) && is_int($colorPos)
     && $corePos < $repeatPos && $repeatPos < $detailPos && $detailPos < $colorPos;
 

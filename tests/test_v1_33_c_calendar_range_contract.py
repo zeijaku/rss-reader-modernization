@@ -91,8 +91,8 @@ current_revision = asset_revision_match.group(1) if asset_revision_match else ''
 check(bool(current_version), 'current release version is defined')
 check(bool(current_revision), 'current cache revision is defined')
 check('1.33.0-dev.1' not in loader, 'Calendar loader contains no stale B cache key')
-check(f"calendar-core.js?v={current_revision}" in loader, 'Calendar core uses the current cache revision')
-check(f"calendar-recurrence.js?v={current_revision}" in loader, 'Calendar recurrence layer uses the current cache revision')
+check("assetUrl('./js/calendar-core.js')" in loader, 'Calendar core uses the centralized asset URL')
+check("assetUrl('./js/calendar-recurrence.js')" in loader, 'Calendar recurrence layer uses the centralized asset URL')
 check("`calendar_event_color` VARCHAR(8) NOT NULL DEFAULT ''blue''" in schema, 'fresh schema remains compatible without C migration')
 
 check("calendar.event.create" not in core[core.find('function loadCalendar'):core.find('function moveCalendarMonth')], 'range load cannot enter a save action')

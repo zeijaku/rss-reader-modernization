@@ -1,48 +1,48 @@
-# RSS Reader Modernization 1.35.2
+# RSS Reader Modernization 1.35.3
 
-V1.35.2 is a focused Calendar interaction release that removes unnecessary full Dashboard reloads after event changes.
+V1.35.3 is a maintenance release that aligns current project documentation and centralizes revision propagation for dynamically loaded frontend assets.
 
 ## Main changes
 
-### Calendar event operations
+### Documentation maintenance
 
-- Refresh every visible Calendar card after an ordinary event is created, updated, or deleted.
-- Apply the same partial-refresh path to recurring-series creation, update, and deletion.
-- Refresh the upcoming-event projection together with the visible Calendar cards.
-- Close the completed event modal and show the existing success notice without disturbing unrelated Dashboard state or scroll position.
+- Align the README feature list, frontend dependency versions, GitHub Actions description, release workflow, and roadmap wording with the implemented repository state.
+- Clearly distinguish current behavior from historical V1.0 and Milestone 4 descriptions.
+- Record Gmail OAuth2, received/Sent attachment download, 24-hour trusted 2FA browsers, adjacent-month Calendar entries, Calendar partial refresh, and Remote Editor line numbers as established behavior.
 
-### Intentional boundary
+### Asset revision centralization
 
-- Calendar Widget creation, setting changes, and deletion continue to reload the full page because they change Dashboard structure.
-- Occurrence-only operations and desktop date Drag & Drop retain their existing partial-refresh behavior.
+- Keep `app/version.php` as the single release and asset-revision input.
+- Derive Calendar, Camera streaming, and RSS management child asset revisions from their PHP-versioned entry scripts.
+- Remove 51 copied version markers: 48 from Calendar, one from Camera streaming, and two from RSS management.
+- Preserve dependency order, bounded static-asset retry, duplicate-load markers, and revision-free fallback behavior.
 
 ## Database and configuration
 
-- No database migration is required when updating from V1.35.1.
+- No database migration is required when updating from V1.35.2.
 - No required configuration, credential, dependency, or endpoint change is introduced.
 
 ## Security and compatibility
 
-- Existing authentication, owner scope, CSRF protection, Calendar validation, recurrence handling, and optimistic occurrence conflict checks remain unchanged.
-- Existing event API actions and request payloads remain unchanged; only successful client-side completion behavior is updated.
+- Dynamic loaders accept only revision characters in `[A-Za-z0-9._-]`.
+- Only the `v` revision is inherited; unrelated entry-script query parameters are not copied to child assets.
+- No new external request, API, or application feature is introduced.
 
 ## Production verification completed
 
-- Ordinary event creation updates Calendar content without a full Dashboard reload.
-- Ordinary event changes update Calendar content without a full Dashboard reload.
-- Ordinary event deletion updates Calendar content without a full Dashboard reload.
+- The V1.35.3 development checkpoint was applied to the production environment without observed problems.
+- Dashboard and Calendar operation were confirmed after the documentation and asset-revision changes.
 
 ## Verification limits
 
-- Final PHP 8.1 and PHP 8.4 CI and the release workflow must pass before the immutable tag and assets are published.
-- Browser rendering and perceived redraw timing can vary slightly by operating system, browser, theme, and device performance.
-- External Calendar and network services retain their existing environment-specific behavior.
+- Final PHP 8.1 and PHP 8.4 CI and the release workflow must pass before the immutable tag and assets are considered complete.
+- Browser cache behavior can vary slightly by browser and intermediary cache configuration.
 
 ## Release assets
 
 The release workflow publishes:
 
-- `rss-reader-modernization-1.35.2.zip`
-- `rss-reader-modernization-1.35.2.zip.sha256`
-- `rss-reader-modernization-1.35.2-complete.zip`
-- `rss-reader-modernization-1.35.2-complete.zip.sha256`
+- `rss-reader-modernization-1.35.3.zip`
+- `rss-reader-modernization-1.35.3.zip.sha256`
+- `rss-reader-modernization-1.35.3-complete.zip`
+- `rss-reader-modernization-1.35.3-complete.zip.sha256`

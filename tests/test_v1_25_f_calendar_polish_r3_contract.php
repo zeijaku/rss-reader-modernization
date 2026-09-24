@@ -27,12 +27,9 @@ if (preg_match("/const APP_ASSET_REVISION = '([^']+)';/", $version, $assetMatch)
 $checks = [
     'current APP_VERSION is defined' => is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?$/', $appVersion) === 1,
     'active asset revision is defined' => is_string($assetRevision) && preg_match('/^[A-Za-z0-9._-]+$/', $assetRevision) === 1,
-    'R2 Calendar polish uses current asset cache key' => is_string($assetRevision)
-        && str_contains($loader, 'calendar-polish.js?v=' . $assetRevision),
-    'R3 CSS uses current asset cache key' => is_string($assetRevision)
-        && str_contains($loader, 'calendar-polish-r3.css?v=' . $assetRevision),
-    'R3 JS uses current asset cache key' => is_string($assetRevision)
-        && str_contains($loader, 'calendar-polish-r3.js?v=' . $assetRevision),
+    'R2 Calendar polish uses the centralized asset URL' => str_contains($loader, "assetUrl('./js/calendar-polish.js')"),
+    'R3 CSS uses the centralized asset URL' => str_contains($loader, "assetUrl('./css/calendar-polish-r3.css')"),
+    'R3 JS uses the centralized asset URL' => str_contains($loader, "assetUrl('./js/calendar-polish-r3.js')"),
     'upcoming collapsed limit is three' => str_contains($ui, 'upcomingCollapsedLimit = 3'),
     'upcoming extra items are hidden while collapsed' => str_contains($ui, 'index >= upcomingCollapsedLimit')
         && str_contains($ui, ".prop('hidden', !expanded"),
@@ -58,8 +55,8 @@ $checks = [
         && str_contains($css, '.calendar-upcoming-toggle'),
 ];
 
-$r2Pos = is_string($assetRevision) ? strpos($loader, "calendar-polish.js?v={$assetRevision}") : false;
-$r3Pos = is_string($assetRevision) ? strpos($loader, "calendar-polish-r3.js?v={$assetRevision}") : false;
+$r2Pos = strpos($loader, "assetUrl('./js/calendar-polish.js')");
+$r3Pos = strpos($loader, "assetUrl('./js/calendar-polish-r3.js')");
 $checks['R3 JS loads after R2 polish'] = is_int($r2Pos) && is_int($r3Pos) && $r2Pos < $r3Pos;
 
 $failed = [];

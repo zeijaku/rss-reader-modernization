@@ -68,11 +68,11 @@ check(camera.includes("['mjpeg', 'MJPEG']") && camera.includes("['hls', 'HLS']")
 check(camera.includes("['iframe', 'iframe（未対応）']"), 'Unsupported iframe remains clearly labeled');
 check(!playback.includes('function updateModalHelp()'), 'Playback module no longer overwrites final modal help');
 check(!streaming.includes('function updateModalHelp()'), 'Streaming module no longer overwrites final modal help');
-check(activeRevision !== '' && calendar.includes('./js/camera-video.js?v=' + activeRevision), 'Camera base uses the active release cache marker');
-check(activeRevision !== '' && calendar.includes('./js/camera-video-playback.js?v=' + activeRevision), 'Playback uses the active release cache marker');
-check(activeRevision !== '' && calendar.includes('./js/camera-video-streaming.js?v=' + activeRevision), 'Streaming uses the active release cache marker');
-check(activeRevision !== '' && calendar.includes('./css/camera-video.css?v=' + activeRevision), 'Camera CSS is preloaded with the active release cache marker');
-check(activeRevision !== '' && calendar.includes('./css/camera-video-streaming.css?v=' + activeRevision), 'Streaming CSS is preloaded with the active release cache marker');
+check(activeRevision !== '' && calendar.includes("assetUrl('./js/camera-video.js')"), 'Camera base uses the centralized asset URL');
+check(activeRevision !== '' && calendar.includes("assetUrl('./js/camera-video-playback.js')"), 'Playback uses the centralized asset URL');
+check(activeRevision !== '' && calendar.includes("assetUrl('./js/camera-video-streaming.js')"), 'Streaming uses the centralized asset URL');
+check(activeRevision !== '' && calendar.includes("assetUrl('./css/camera-video.css')"), 'Camera CSS is preloaded through the centralized asset URL');
+check(activeRevision !== '' && calendar.includes("assetUrl('./css/camera-video-streaming.css')"), 'Streaming CSS is preloaded through the centralized asset URL');
 check(cameraCss.includes('.camera-video-links .btn') && cameraCss.includes('min-height: 40px;'), 'Mobile Camera actions keep a touch-friendly height');
 check(streamingCss.includes('.camera-video-stream-actions .btn') && streamingCss.includes('min-height: 40px;'), 'Mobile MJPEG reconnect keeps a touch-friendly height');
 check(cameraCss.includes('#registerCameraVideo .modal-dialog') && cameraCss.includes('margin: 0.5rem;'), 'Camera modal fits narrow mobile screens');

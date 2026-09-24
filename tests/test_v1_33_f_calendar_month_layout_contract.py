@@ -52,8 +52,8 @@ check('bootstrap-solar' in css and 'bootstrap-slate' in css, 'connected layout a
 check(loader.index('calendar-month-layout.js') < loader.index('calendar-core.js'), 'placement module loads before Calendar core')
 check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1), 'F contract runs on V1.33.1 or later')
 check(bool(current_revision) and current_revision == current_version, 'current asset revision matches the application version')
-check(f'calendar-month-layout.css?v={current_revision}' in loader, 'connected CSS uses the current cache revision')
-check(f'calendar-month-layout.js?v={current_revision}' in loader, 'placement JavaScript uses the current cache revision')
+check("assetUrl('./css/calendar-month-layout.css')" in loader, 'connected CSS uses the centralized asset URL')
+check("assetUrl('./js/calendar-month-layout.js')" in loader, 'placement JavaScript uses the centralized asset URL')
 check(not list((ROOT / 'database/migrations').glob('026*v1_33*')), 'F adds no database migration')
 check('calendar.range.list' not in layout, 'F reuses C range data without a new API action')
 
