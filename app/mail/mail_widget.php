@@ -675,8 +675,8 @@ function mail_widget_fetch_folders(int $ownerId, int $widgetId): array
     $config = mail_widget_config_from_storage($widget['widget_config'] ?? null, (string) ($account['mail_account_display_name'] ?? 'Mail'));
     try {
         $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
-    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
-        return ['ok' => false, 'code' => 'credential_unavailable'];
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException $exception) {
+        return ['ok' => false, 'code' => mail_log_auth_failure('widget.folders', $ownerId, $accountId, $exception)];
     }
     try {
         $result = mail_widget_read_folders([
@@ -729,8 +729,8 @@ function mail_widget_update_folder(
     }
     try {
         $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
-    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
-        return ['ok' => false, 'code' => 'credential_unavailable'];
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException $exception) {
+        return ['ok' => false, 'code' => mail_log_auth_failure('widget.folder.update', $ownerId, $accountId, $exception)];
     }
     try {
         $config = mail_widget_config_from_storage($widget['widget_config'] ?? null, (string) ($account['mail_account_display_name'] ?? 'Mail'));
@@ -790,8 +790,12 @@ function mail_widget_fetch(int $ownerId, int $widgetId, string $searchType = '',
     $config = mail_widget_config_from_storage($widget['widget_config'] ?? null, (string) ($account['mail_account_display_name'] ?? 'Mail'));
     try {
         $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
-    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
-        return ['ok' => false, 'code' => 'credential_unavailable', 'messages' => []];
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException $exception) {
+        return [
+            'ok' => false,
+            'code' => mail_log_auth_failure('widget.fetch', $ownerId, $accountId, $exception),
+            'messages' => [],
+        ];
     }
     try {
         return mail_widget_read_latest([
@@ -838,8 +842,10 @@ function mail_widget_fetch_message_text(int $ownerId, int $widgetId, int $uid, ?
     }
     try {
         $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
-    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
-        return array_merge($empty, ['code' => 'credential_unavailable']);
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException $exception) {
+        return array_merge($empty, [
+            'code' => mail_log_auth_failure('widget.message', $ownerId, $accountId, $exception),
+        ]);
     }
     try {
         return mail_widget_read_message_text([
@@ -906,17 +912,21 @@ function api_mail_widget_dispatch(string $action, int $userId, array $input): ar
                 return api_validation_error('widget_id must be a positive integer.');
             }
             $result = mail_widget_fetch_folders($userId, $widgetId);
+            $authFailure = api_mail_error_from_code((string) ($result['code'] ?? ''));
+            if ($authFailure !== null) {
+                return $authFailure;
+            }
             return match ($result['code']) {
                 'loaded' => api_success([
                     'folder' => $result['folder'] ?? 'INBOX',
                     'folders' => $result['folders'] ?? [],
                 ]),
                 'not_found' => api_error('not_found', 'Mail Widget was not found.', 404),
-                'disabled' => api_error('mail_account_disabled', 'Mail account is disabled.', 409),
-                'dependency_unavailable' => api_error('mail_dependency_unavailable', 'Mail dependency is unavailable.', 503),
-                'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail credential must be re-entered.', 503),
-                'imap_rejected' => api_error('mail_imap_rejected', 'IMAP server rejected the connection or authentication.', 422),
-                default => api_error('mail_connection_failed', 'Could not load IMAP folders.', 502),
+                'disabled' => api_error('mail_account_disabled', 'Mail Accountが無効です。Account管理で有効にしてください。', 409),
+                'dependency_unavailable' => api_error('mail_dependency_unavailable', 'IMAP接続に必要なMail機能を利用できません。Server設定を確認してください。', 503),
+                'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail認証情報を利用できません。Mail Account設定を確認してください。', 503),
+                'imap_rejected' => api_error('mail_imap_rejected', 'IMAP Serverが接続または認証を拒否しました。IMAP設定と認証情報を確認してください。', 422),
+                default => api_error('mail_connection_failed', 'IMAP Folder一覧を取得できませんでした。接続設定を確認してください。', 502),
             };
         }
         if ($action === 'mail.widget.folder.update') {
@@ -931,6 +941,10 @@ function api_mail_widget_dispatch(string $action, int $userId, array $input): ar
                 return api_validation_error('Mail search settings are invalid.');
             }
             $result = mail_widget_update_folder($userId, $widgetId, $folder, $searchType, $searchQuery);
+            $authFailure = api_mail_error_from_code((string) ($result['code'] ?? ''));
+            if ($authFailure !== null) {
+                return $authFailure;
+            }
             return match ($result['code']) {
                 'updated' => api_success([
                     'folder' => $result['folder'] ?? $folder,
@@ -942,14 +956,14 @@ function api_mail_widget_dispatch(string $action, int $userId, array $input): ar
                     'search_query' => $result['search_query'] ?? '',
                 ]),
                 'not_found' => api_error('not_found', 'Mail Widget was not found.', 404),
-                'disabled' => api_error('mail_account_disabled', 'Mail account is disabled.', 409),
-                'invalid_folder' => api_validation_error('Mail folder is invalid.'),
-                'invalid_search' => api_validation_error('Mail search settings are invalid.'),
-                'folder_not_found' => api_error('mail_folder_not_found', 'Selected Mail folder is not available.', 422),
-                'dependency_unavailable' => api_error('mail_dependency_unavailable', 'Mail dependency is unavailable.', 503),
-                'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail credential must be re-entered.', 503),
-                'imap_rejected' => api_error('mail_imap_rejected', 'IMAP server rejected the connection or authentication.', 422),
-                default => api_error('mail_connection_failed', 'Could not verify the selected IMAP folder.', 502),
+                'disabled' => api_error('mail_account_disabled', 'Mail Accountが無効です。Account管理で有効にしてください。', 409),
+                'invalid_folder' => api_validation_error('Mail Folderが正しくありません。'),
+                'invalid_search' => api_validation_error('Mail検索条件が正しくありません。'),
+                'folder_not_found' => api_error('mail_folder_not_found', '選択したMail Folderが見つかりません。Folder一覧を更新してください。', 422),
+                'dependency_unavailable' => api_error('mail_dependency_unavailable', 'IMAP接続に必要なMail機能を利用できません。Server設定を確認してください。', 503),
+                'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail認証情報を利用できません。Mail Account設定を確認してください。', 503),
+                'imap_rejected' => api_error('mail_imap_rejected', 'IMAP Serverが接続または認証を拒否しました。IMAP設定と認証情報を確認してください。', 422),
+                default => api_error('mail_connection_failed', '選択したIMAP Folderを確認できませんでした。接続設定を確認してください。', 502),
             };
         }
         if ($action === 'mail.widget.message') {
@@ -960,6 +974,10 @@ function api_mail_widget_dispatch(string $action, int $userId, array $input): ar
                 return api_validation_error('widget_id, mail_uid, and mail_folder are invalid.');
             }
             $result = mail_widget_fetch_message_text($userId, $widgetId, $uid, $folder);
+            $authFailure = api_mail_error_from_code((string) ($result['code'] ?? ''));
+            if ($authFailure !== null) {
+                return $authFailure;
+            }
             return match ($result['code']) {
                 'loaded' => api_success([
                     'uid' => $result['uid'],
@@ -976,14 +994,14 @@ function api_mail_widget_dispatch(string $action, int $userId, array $input): ar
                     'folder' => $result['folder'] ?? $folder,
                 ]),
                 'not_found', 'message_not_found' => api_error('not_found', 'Mail message was not found.', 404),
-                'folder_changed' => api_error('mail_folder_changed', 'Mail folder changed. Refresh the Widget and try again.', 409),
-                'invalid_folder' => api_validation_error('Mail folder is invalid.'),
-                'disabled' => api_error('mail_account_disabled', 'Mail account is disabled.', 409),
+                'folder_changed' => api_error('mail_folder_changed', 'Folderが切り替わっています。Mail Widgetを更新してから再試行してください。', 409),
+                'invalid_folder' => api_validation_error('Mail Folderが正しくありません。'),
+                'disabled' => api_error('mail_account_disabled', 'Mail Accountが無効です。Account管理で有効にしてください。', 409),
                 'body_too_large' => api_error('mail_body_too_large', 'Mail body is too large to preview.', 413),
-                'dependency_unavailable' => api_error('mail_dependency_unavailable', 'Mail dependency is unavailable.', 503),
-                'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail credential must be re-entered.', 503),
-                'imap_rejected' => api_error('mail_imap_rejected', 'IMAP server rejected the connection or authentication.', 422),
-                default => api_error('mail_connection_failed', 'Could not load the Mail body.', 502),
+                'dependency_unavailable' => api_error('mail_dependency_unavailable', '本文取得に必要なMail機能を利用できません。Server設定を確認してください。', 503),
+                'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail認証情報を利用できません。Mail Account設定を確認してください。', 503),
+                'imap_rejected' => api_error('mail_imap_rejected', 'IMAP Serverが接続または認証を拒否しました。IMAP設定と認証情報を確認してください。', 422),
+                default => api_error('mail_connection_failed', 'Mail本文を取得できませんでした。IMAP接続を確認してください。', 502),
             };
         }
         if ($action === 'mail.widget.fetch') {
@@ -1002,6 +1020,10 @@ function api_mail_widget_dispatch(string $action, int $userId, array $input): ar
                 $searchType = 'subject';
             }
             $result = mail_widget_fetch($userId, $widgetId, $searchType, $searchQuery);
+            $authFailure = api_mail_error_from_code((string) ($result['code'] ?? ''));
+            if ($authFailure !== null) {
+                return $authFailure;
+            }
             return match ($result['code']) {
                 'loaded' => api_success([
                     'messages' => $result['messages'],
@@ -1013,14 +1035,14 @@ function api_mail_widget_dispatch(string $action, int $userId, array $input): ar
                     'folders' => $result['folders'] ?? [],
                 ]),
                 'not_found' => api_error('not_found', 'Mail Widget was not found.', 404),
-                'disabled' => api_error('mail_account_disabled', 'Mail account is disabled.', 409),
-                'dependency_unavailable' => api_error('mail_dependency_unavailable', 'Mail dependency is unavailable.', 503),
-                'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail credential must be re-entered.', 503),
-                'invalid_search' => api_validation_error('Mail search settings are invalid.'),
-                'invalid_folder' => api_validation_error('Mail folder is invalid.'),
-                'folder_not_found' => api_error('mail_folder_not_found', 'Selected Mail folder is not available.', 422),
-                'imap_rejected' => api_error('mail_imap_rejected', 'IMAP server rejected the connection or authentication.', 422),
-                default => api_error('mail_connection_failed', 'Could not load the selected IMAP folder.', 502),
+                'disabled' => api_error('mail_account_disabled', 'Mail Accountが無効です。Account管理で有効にしてください。', 409),
+                'dependency_unavailable' => api_error('mail_dependency_unavailable', 'Mail一覧取得に必要なIMAP機能を利用できません。Server設定を確認してください。', 503),
+                'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail認証情報を利用できません。Mail Account設定を確認してください。', 503),
+                'invalid_search' => api_validation_error('Mail検索条件が正しくありません。'),
+                'invalid_folder' => api_validation_error('Mail Folderが正しくありません。'),
+                'folder_not_found' => api_error('mail_folder_not_found', '選択したMail Folderが見つかりません。Folder一覧を更新してください。', 422),
+                'imap_rejected' => api_error('mail_imap_rejected', 'IMAP Serverが接続または認証を拒否しました。IMAP設定と認証情報を確認してください。', 422),
+                default => api_error('mail_connection_failed', '選択したIMAP Folderを取得できませんでした。接続設定を確認してください。', 502),
             };
         }
         return api_error('unknown_action', 'Unknown API action.', 400);
@@ -1029,7 +1051,7 @@ function api_mail_widget_dispatch(string $action, int $userId, array $input): ar
     } catch (AppMailValidationException $exception) {
         return api_validation_error(api_mail_validation_message($exception->reason()));
     } catch (PDOException $exception) {
-        return api_error('mail_widget_unavailable', 'Mail Widget storage is unavailable.', 503);
+        return api_mail_storage_failure();
     } catch (Throwable $exception) {
         return api_mail_internal_failure('widget.' . $action, $userId, $exception);
     }

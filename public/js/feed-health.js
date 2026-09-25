@@ -41,7 +41,8 @@
             ['HTTP Status', 'feedHealthHttpStatus'],
             ['連続失敗回数', 'feedHealthFailureCount'],
             ['Redirect', 'feedHealthRedirect'],
-            ['Error Reason', 'feedHealthErrorReason']
+            ['Error分類', 'feedHealthErrorCategory'],
+            ['Error詳細', 'feedHealthErrorReason']
         ];
         rows.forEach(function (row) {
             var $line = $('<div>').addClass('row g-1 small mb-1');
@@ -126,6 +127,7 @@
         $('#feedHealthHttpStatus').text(Number(health.http_status || 0) > 0 ? String(health.http_status) : '-');
         $('#feedHealthFailureCount').text(String(Number(health.consecutive_failure_count || 0)));
         $('#feedHealthRedirect').text(health.redirected === true ? 'あり' : 'なし');
+        $('#feedHealthErrorCategory').text(health.error_category || '-');
         $('#feedHealthErrorReason').text(health.error_reason || health.error_code || '-');
         renderCardHealth(health.content_id || $('.changeContentId').val(), health);
     }

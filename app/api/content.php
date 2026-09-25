@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once dirname(__DIR__) . '/feed/feed_error.php';
+
 /**
  * V1.19-B broad module extracted from the v1.18.0 facade.
  * Function bodies are intentionally kept unchanged.
@@ -350,42 +352,46 @@ function api_feed_fetch(int $userId, array $input): array
 
     $url = app_validate_feed_url($content['content_value'] ?? null);
     if ($url === null) {
-        return api_error('upstream_blocked', 'Stored Feed URL is not allowed by the outbound policy.', 422);
+        $details = feed_public_error_details('fetch', 'invalid_url');
+        return api_error($details['code'], $details['message'], $details['status']);
     }
 
     $sourceMapper = new FeedSourceMapper();
     $source = $sourceMapper->fromOwnedContent($content, $userId, $url);
     if ($source === null) {
-        error_log(sprintf(
-            'Feed source mapping rejected user_id=%d content_id=%d',
-            $userId,
-            $contentId
-        ));
-        return api_error('internal_error', 'Feed source could not be resolved.', 500);
-    }
-
-    $service = FeedFetchService::fromRuntimeConfiguration();
-    $loaded = $service->load($source);
-    if (($loaded['ok'] ?? false) !== true) {
-        if (($loaded['error_type'] ?? '') === 'fetch') {
-            $fetch = is_array($loaded['fetch'] ?? null) ? $loaded['fetch'] : [];
-            $code = (string) ($fetch['error_code'] ?? 'upstream_error');
-            $blocked = in_array($code, ['invalid_url', 'port_not_allowed', 'non_public_address', 'invalid_redirect'], true);
-            return api_error(
-                $blocked ? 'upstream_blocked' : 'upstream_error',
-                $blocked ? 'Feed URL was blocked by the outbound security policy.' : 'Feed could not be fetched.',
-                $blocked ? 422 : 502
-            );
-        }
-
-        $parseReason = preg_replace('/[\r\n]+/', ' ', (string) ($loaded['parse_error'] ?? 'unknown parse error'));
-        error_log(sprintf(
-            'Feed parse rejected user_id=%d content_id=%d reason=%s',
+        return api_feed_internal_failure(
+            'feed.source.map',
             $userId,
             $contentId,
-            is_string($parseReason) ? $parseReason : 'unknown parse error'
+            new RuntimeException('Feed source mapping rejected.')
+        );
+    }
+
+    try {
+        $service = FeedFetchService::fromRuntimeConfiguration();
+        $loaded = $service->load($source);
+    } catch (Throwable $exception) {
+        return api_feed_internal_failure('feed.fetch', $userId, $contentId, $exception);
+    }
+    if (($loaded['ok'] ?? false) !== true) {
+        $errorType = ($loaded['error_type'] ?? '') === 'parse' ? 'parse' : 'fetch';
+        $fetch = is_array($loaded['fetch'] ?? null) ? $loaded['fetch'] : [];
+        $details = feed_public_error_details(
+            $errorType,
+            (string) ($fetch['error_code'] ?? ''),
+            (int) ($fetch['status'] ?? 0)
+        );
+        error_log(sprintf(
+            'RSS upstream failure user_id=%d content_id=%d category=%s internal_code=%s http_status=%d',
+            $userId,
+            $contentId,
+            $details['code'],
+            preg_match('/\A[a-z0-9_]{1,64}\z/D', (string) ($fetch['error_code'] ?? '')) === 1
+                ? (string) $fetch['error_code']
+                : 'unknown',
+            max(0, min(599, (int) ($fetch['status'] ?? 0)))
         ));
-        return api_error('invalid_feed', 'Upstream response is not a supported RSS or Atom feed.', 502);
+        return api_error($details['code'], $details['message'], $details['status']);
     }
 
     $resultFeed = is_array($loaded['result_feed'] ?? null) ? $loaded['result_feed'] : [];
@@ -398,18 +404,7 @@ function api_feed_fetch(int $userId, array $input): array
             isset($resultFeed['item']) && is_array($resultFeed['item']) ? $resultFeed['item'] : []
         );
     } catch (Throwable $exception) {
-        error_log(sprintf(
-            'Feed item state failed user_id=%d content_id=%d [%s]: %s',
-            $userId,
-            $contentId,
-            $exception::class,
-            $exception->getMessage()
-        ));
-        return api_error(
-            'feed_item_state_unavailable',
-            'Feed item state is unavailable. Apply the Version 1.1-C database migration and try again.',
-            503
-        );
+        return api_feed_internal_failure('feed.item.state', $userId, $contentId, $exception);
     }
 
     $resultFeed['item'] = $state['items'];

@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-final class AppMailCredentialException extends RuntimeException
-{
-}
+require_once __DIR__ . '/mail_error.php';
 
 function mail_crypto_base64url_encode(string $value): string
 {
@@ -29,7 +27,7 @@ function mail_crypto_key_id(): string
 {
     $keyId = (string) APP_MAIL_CREDENTIAL_KEY_ID;
     if (preg_match('/\A[A-Za-z0-9_-]{1,32}\z/D', $keyId) !== 1) {
-        throw new AppMailCredentialException('Mail credential key ID is invalid.');
+        throw new AppMailCredentialException('key_id_invalid');
     }
     return $keyId;
 }
@@ -37,17 +35,17 @@ function mail_crypto_key_id(): string
 function mail_crypto_decode_key(string $encoded): string
 {
     if (!function_exists('sodium_crypto_aead_xchacha20poly1305_ietf_encrypt')) {
-        throw new AppMailCredentialException('Sodium extension is unavailable.');
+        throw new AppMailCredentialException('crypto_unavailable');
     }
 
     $encoded = trim($encoded);
     if ($encoded === '') {
-        throw new AppMailCredentialException('Mail credential key is not configured.');
+        throw new AppMailCredentialException('key_missing');
     }
 
     $key = base64_decode($encoded, true);
     if (!is_string($key) || strlen($key) !== SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_KEYBYTES) {
-        throw new AppMailCredentialException('Mail credential key is invalid.');
+        throw new AppMailCredentialException('key_invalid');
     }
 
     return $key;
@@ -61,7 +59,7 @@ function mail_crypto_key(): string
 function mail_crypto_aad(int $ownerId, int $accountId): string
 {
     if ($ownerId <= 0 || $accountId <= 0) {
-        throw new AppMailCredentialException('Mail credential context is invalid.');
+        throw new AppMailCredentialException('context_invalid');
     }
     return 'rss-reader:mail-account:' . $ownerId . ':' . $accountId . ':v1';
 }
@@ -69,7 +67,7 @@ function mail_crypto_aad(int $ownerId, int $accountId): string
 function mail_crypto_encrypt(int $ownerId, int $accountId, string $plaintext): string
 {
     if ($plaintext === '' || strlen($plaintext) > 8192 || str_contains($plaintext, "\0")) {
-        throw new AppMailCredentialException('Mail credential value is invalid.');
+        throw new AppMailCredentialException('value_invalid');
     }
 
     $key = mail_crypto_key();
@@ -95,18 +93,18 @@ function mail_crypto_decrypt(int $ownerId, int $accountId, string $envelope): st
 {
     $parts = explode('.', $envelope);
     if (count($parts) !== 4 || $parts[0] !== 'v1') {
-        throw new AppMailCredentialException('Mail credential envelope is invalid.');
+        throw new AppMailCredentialException('envelope_invalid');
     }
 
     $expectedKeyId = mail_crypto_key_id();
     if (!hash_equals($expectedKeyId, $parts[1])) {
-        throw new AppMailCredentialException('Mail credential key ID does not match.');
+        throw new AppMailCredentialException('key_mismatch');
     }
 
     $nonce = mail_crypto_base64url_decode($parts[2]);
     $ciphertext = mail_crypto_base64url_decode($parts[3]);
     if (!is_string($nonce) || strlen($nonce) !== SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES || !is_string($ciphertext)) {
-        throw new AppMailCredentialException('Mail credential envelope is invalid.');
+        throw new AppMailCredentialException('envelope_invalid');
     }
 
     $key = mail_crypto_key();
@@ -118,7 +116,7 @@ function mail_crypto_decrypt(int $ownerId, int $accountId, string $envelope): st
             $key
         );
         if (!is_string($plaintext) || $plaintext === '' || strlen($plaintext) > 8192 || str_contains($plaintext, "\0")) {
-            throw new AppMailCredentialException('Mail credential could not be decrypted.');
+            throw new AppMailCredentialException('decrypt_failed');
         }
         return $plaintext;
     } finally {
@@ -133,7 +131,7 @@ function mail_crypto_decrypt(int $ownerId, int $accountId, string $envelope): st
 function mail_crypto_smtp_aad(int $ownerId, int $accountId): string
 {
     if ($ownerId <= 0 || $accountId <= 0) {
-        throw new AppMailCredentialException('Mail SMTP credential context is invalid.');
+        throw new AppMailCredentialException('smtp_context_invalid');
     }
     return 'rss-reader:mail-account-smtp:' . $ownerId . ':' . $accountId . ':v1';
 }
@@ -141,7 +139,7 @@ function mail_crypto_smtp_aad(int $ownerId, int $accountId): string
 function mail_crypto_encrypt_smtp(int $ownerId, int $accountId, string $plaintext): string
 {
     if ($plaintext === '' || strlen($plaintext) > 8192 || str_contains($plaintext, "\0")) {
-        throw new AppMailCredentialException('Mail SMTP credential value is invalid.');
+        throw new AppMailCredentialException('smtp_value_invalid');
     }
 
     $key = mail_crypto_key();
@@ -167,18 +165,18 @@ function mail_crypto_decrypt_smtp(int $ownerId, int $accountId, string $envelope
 {
     $parts = explode('.', $envelope);
     if (count($parts) !== 4 || $parts[0] !== 'v1') {
-        throw new AppMailCredentialException('Mail SMTP credential envelope is invalid.');
+        throw new AppMailCredentialException('smtp_envelope_invalid');
     }
 
     $expectedKeyId = mail_crypto_key_id();
     if (!hash_equals($expectedKeyId, $parts[1])) {
-        throw new AppMailCredentialException('Mail SMTP credential key ID does not match.');
+        throw new AppMailCredentialException('smtp_key_mismatch');
     }
 
     $nonce = mail_crypto_base64url_decode($parts[2]);
     $ciphertext = mail_crypto_base64url_decode($parts[3]);
     if (!is_string($nonce) || strlen($nonce) !== SODIUM_CRYPTO_AEAD_XCHACHA20POLY1305_IETF_NPUBBYTES || !is_string($ciphertext)) {
-        throw new AppMailCredentialException('Mail SMTP credential envelope is invalid.');
+        throw new AppMailCredentialException('smtp_envelope_invalid');
     }
 
     $key = mail_crypto_key();
@@ -190,7 +188,7 @@ function mail_crypto_decrypt_smtp(int $ownerId, int $accountId, string $envelope
             $key
         );
         if (!is_string($plaintext) || $plaintext === '' || strlen($plaintext) > 8192 || str_contains($plaintext, "\0")) {
-            throw new AppMailCredentialException('Mail SMTP credential could not be decrypted.');
+            throw new AppMailCredentialException('smtp_decrypt_failed');
         }
         return $plaintext;
     } finally {

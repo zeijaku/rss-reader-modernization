@@ -26,7 +26,7 @@ if version_value and label_value:
         stage_match = version_value.replace(" ", " / ", 1) == label_value.replace("RSS Engine ", "").replace("Frontend ", "").replace("Release ", "")
     elif re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+-dev\.[1-9][0-9]*", version_value):
         version_prefix = '.'.join(version_value.split('.', 2)[:2])
-        stage_match = development_checkpoint_label and ("V" + version_prefix + "-") in label_value
+        stage_match = release_label or (development_checkpoint_label and ("V" + version_prefix + "-") in label_value)
     elif is_semver:
         stage_match = release_label
 

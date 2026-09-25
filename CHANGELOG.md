@@ -1,1305 +1,17 @@
-## 1.35.3 - 2026-09-24
-
-### Documentation maintenance
-- Align README current capabilities, frontend dependencies, roadmap wording, and GitHub Actions description with the implemented repository state.
-- Record Gmail OAuth2, received/Sent attachment download, 24-hour trusted 2FA browsers, adjacent-month Calendar entries, Calendar partial refresh, and Remote Editor line numbers as established behavior.
-
-### Asset revision centralization
-- Keep `app/version.php` as the single asset-revision input and derive dynamically loaded Calendar, Camera streaming, and RSS management child asset URLs from their PHP-versioned entry script.
-- Remove 51 copied release markers from dynamic JavaScript/CSS references while preserving dependency order, bounded retry behavior, duplicate-load markers, and revision-free fallback behavior.
-- Add static and runtime contracts for revision propagation, unsupported-token rejection, query isolation, missing-revision fallback, and loader ordering.
-
-### Compatibility
-- No database migration, required configuration, dependency, endpoint, credential, or application feature change is introduced.
-- Production verification completed for Dashboard and Calendar operation after applying the V1.35.3 checkpoint.
-
-## 1.35.2 - 2026-09-22
-
-### Calendar event partial refresh
-- Replace the full Dashboard reload after ordinary and recurring-series event creation, update and deletion with the existing Calendar projection refresh path.
-- Close the completed event modal, show the existing success notice, and refresh every visible Calendar card plus the upcoming-event projection without disturbing other Dashboard state.
-
-### Compatibility
-- Calendar Widget creation, setting changes and deletion intentionally retain their existing full-page reload because they change Dashboard structure.
-- Existing occurrence-only operations and desktop date Drag & Drop retain their partial-refresh behavior.
-- No database migration, required configuration, dependency, endpoint or credential change is introduced.
-- Production verification completed for ordinary event creation, update and deletion without a full Dashboard reload.
-
-## 1.35.1 - 2026-09-22
-
-### Calendar and Remote Editor usability
-- Show the dates, events, cancelled occurrences, holidays and Tasks in the visible previous/next-month cells while retaining a dimmed adjacent-month treatment.
-- Request only the complete 28/35/42-day visible month grid through the existing bounded Calendar range API; keep the toolbar label anchored to the selected month.
-- Focus the add-event title after its modal opens only when the primary input supports hover and a fine pointer, avoiding automatic Smartphone software-keyboard display.
-- Add synchronized, visual-only line numbers to the Remote Text Editor without changing textarea content, Base64 save transport, conflict detection, line endings or UTF-8 BOM handling.
-
-### Compatibility
-- No database migration, required configuration, dependency, endpoint or credential change is introduced.
-- Existing owner scope, CSRF, output escaping, Calendar range limits and Remote Editor security boundaries remain unchanged.
-- Production verification completed for adjacent-month Calendar entries, PC title focus, Smartphone keyboard avoidance, and Remote Editor line-number behavior.
-
-## 1.35.0 - 2026-09-17
-
-### Gmail OAuth2 and Mail Widget
-- Add Google OAuth 2.0 Authorization Code + PKCE support, encrypted refresh-token storage, and short-lived XOAUTH2 credentials for Gmail IMAP/SMTP.
-- Reuse valid access tokens within the session, remove duplicate folder-switch connections, make UID lookup semantics explicit, and align client waits with server-side mail operations.
-- Normalize Gmail IMAP UID search results numerically before applying the 5/10-message display limit so the newest messages are selected consistently.
-- Allow the Google OAuth callback in `public/.htaccess` while retaining the existing authentication, CSRF, owner, TLS, and secret-handling boundaries.
-- Verify Gmail connection, current/new message listing, body display, folder switching, compose, reply, Sent storage, and inbound/outbound attachments in the production environment.
-
-### Cursor Field, account security, and CI
-- Add the visual-only Cursor Field effect without scoring, persistence, network access, or new dependencies.
-- Add an exact 24-hour trusted-browser token for successful 2FA; existing tokens remain untrusted until the next successful 2FA challenge.
-- Add `tests/run-ci.sh` as the common local and GitHub Actions regression gate.
-
-### Database and release
-- Add additive migrations `028_mail_google_oauth.sql` and `029_account_2fa_trust.sql`; existing password-based mail accounts, credentials, Remember-token expiry, and user data remain unchanged.
-- Promote the tested V1.35 development checkpoints to the formal `1.35.0` release and standard release workflow.
-
-## 1.34.2 - 2026-09-14
-
-### Display and interaction improvements
-- Made Smartphone Bootstrap modal content/body/footer use an opaque active-theme background.
-- Added Calendar copy-to-new for ordinary events, individual occurrences and recurring series through the existing creation flow.
-- Added desktop date Drag & Drop for ordinary events and individual recurring occurrences, preserving duration and other event fields.
-- Refresh only the affected Calendar card after a move; retain 409 occurrence conflict resynchronization and repeated-drag binding after redraw.
-- Allow native page scrolling over Dashboard cards while preserving internal scroll areas.
-- Use Bootstrap 5.3 `btn-close` with `data-bs-theme="dark"` for dark modal headers in Dashboard, Stock, Settings and dynamically created Widget dialogs.
-
-### Release readiness / compatibility
-- Synchronize application version, label, asset revision and Aâ€“E contracts to `1.34.2`, with the current PHP 8.1 / 8.4 regression gates retained.
-- Preserve existing functionality, including received/Sent Mail attachments restored in V1.34.1, and all existing authentication, owner scope, CSRF and validation boundaries.
-- No DB migration, API change, mandatory configuration, secret or dependency is introduced.
-- Final metadata prepares this branch for approval; merge, immutable tag creation and GitHub Release publication remain separate pending actions.
-
-## 1.34.1 - 2026-09-11
-
-### Mail received attachments correction
-- Restored the existing received/Sent attachment list and download backend that had been mistakenly disabled during V1.34.0 final release preparation.
-- Preserved the existing Mail UI/API routes, owner/folder scope, IMAP SSRF/DNS-pinning/TLS boundaries, filename/content-type sanitization, and bounded attachment size handling.
-- No database migration, mandatory configuration or secret change is required for this correction release.
-
-## 1.34.0 - 2026-09-11
-
-### Mail Send / Reply / Sent
-- Added bounded SMTP settings to each Mail Account with 465 SSL/TLS or 587 STARTTLS, optional encrypted separate SMTP credentials, From Address/Name, and a connection/authentication test that sends no message.
-- Added Plain Text Compose and Reply, including Reply-To preference, validated threading headers, and a visible send-progress state.
-- Added Sent save modes Auto / Server / RSS Reader. Auto checks immediately, after 1 second, and after a further 2 seconds before bounded IMAP APPEND fallback; SMTP is never resent because Sent storage failed.
-
-### Attachments
-- Added outbound attachments for Compose and Reply: up to 5 files, 10 MiB per file and 20 MiB total, with malformed upload, dangerous executable/script extension, and clearly dangerous MIME rejection.
-- Received/Sent attachment display and download are intentionally deferred beyond V1.34.
-
-### Security / compatibility
-- Preserved Authentication, Session, CSRF, owner scope, IMAP/SMTP SSRF validation and validated-IP pinning, TLS verification, input validation and existing read-only IMAP list/search/body behavior.
-- Bundled the required PHPMailer 7.1.1 subset with its upstream LICENSE. OAuthTokenProvider preparation is present, but OAuth2 authentication itself is not implemented.
-
-### Database / finalization
-- Added additive/idempotent migrations `026_v1_34_mail_smtp.sql` and `027_v1_34_mail_sent_save_mode.sql`. Existing Mail Accounts remain SMTP-disabled until configured; Sent mode defaults to `auto`.
-- Production checkpoint verification completed for SMTP send, Reply, Sent handling and outbound attachments before formal release.
-- Promoted the V1.34 Mail contract into the current feature suite and finalized application/asset revision at `1.34.0`.
-
-## 1.33.1 - 2026-09-09
-
-### Remote Files
-- Added multiple file selection to the Remote Files Upload dialog.
-- Uploads selected files sequentially through the existing single-file endpoint, preserving per-request CSRF refresh, same-origin credentials, owner scope and server-side validation.
-- Reports successful and failed files together and continues the queue after an individual failure; duplicate submissions are disabled while processing.
-
-### Compatibility
-- No database migration, configuration, secret, public API contract or existing single-file server behavior changed.
-
-## 1.33.0 - 2026-09-09
-
-### Calendar Enhancement
-- Finalized the five-color Calendar, shared date-range and occurrence identity, occurrence-only recurring-event exceptions, connected multi-day month bars, and day/week/month views verified through the V1.33 RC cycle.
-- Retained existing `red` / `blue` / `green` data, series-wide operations, owner scope, CSRF, output escaping, PDO parameterization and all V1.32 authentication boundaries.
-
-### Finalization
-- Promoted the accepted RC2 source and immutable asset revision to formal `1.33.0` without adding new Calendar behavior.
-- Retained bounded, dependency-ordered Dashboard JavaScript loading, ordered stylesheet batches and a single static-asset retry; API mutations remain non-retried.
-- Kept Migration 025 additive and one-time, with no destructive change and no new required configuration or secret.
-- Deferred schedule copy and Calendar Drag & Drop to a later version with their design constraints recorded separately.
-
-## 1.33.0-RC2 - 2026-09-09
-
-### Asset loading stabilization
-- Kept the V1.33 Calendar feature scope and UI unchanged while replacing the Dashboard dynamic asset burst with an ordered JavaScript queue.
-- Starts stylesheets in small declaration-order batches so their cascade remains stable without issuing every cold-cache request at once.
-- Retries a failed JavaScript or stylesheet request once after a bounded delay; update/create/delete API requests are not automatically retried.
-- Advanced the application and immutable asset revision to `1.33.0-RC2` so RC1 browser caches cannot retain the previous loader.
-
-## 1.33.0-RC1 - 2026-09-09
-
-### Calendar Enhancement
-- Expanded existing Calendar colors from three to five while preserving stored `red` / `blue` / `green` values; added accessible `yellow` and `purple` presentation for light and dark themes.
-- Unified single-day, multi-day and recurring occurrence ranges so month, week and day views share the same owner-scoped event identity and inclusive date semantics.
-- Added occurrence-only edit, delete and restore for recurring events through an additive exception record; series edit/delete remains available and â€œthis and followingâ€ remains deferred.
-- Added visually connected multi-day bars in month view, including week-boundary and month-boundary continuation states.
-- Added day/week/month view switching, timed placement in day/week timelines and a compact responsive Calendar toolbar.
-
-### Database / security / compatibility
-- Added additive Migration `025_v1_33_calendar_event_exception.sql` and integrated `calendar_event_exception` into fresh-install `database/schema.sql`; no existing table or event row is dropped or rewritten.
-- Preserved Authentication, owner scope, CSRF, XSS escaping, PDO parameterization, input validation, Session, Step-up Authentication, 2FA, Recovery Code, Session Registry and Authentication Security Audit Log boundaries.
-- Preserved existing event dates, recurrence rules, colors and API behavior; exception-aware fields and view metadata are additive.
-
-### Finalization
-- Promoted V1.33 Calendar PHP, HTTP, DOM, JavaScript and static contracts into the current feature runner.
-- Prepared `1.33.0-RC1` as the V1.33-H production-verification candidate. It is not the formal `v1.33.0` release.
-- Recorded schedule copy and schedule Drag & Drop as post-V1.33 improvements, with recurring-event scope confirmation, conflict handling and mobile fallback required before implementation.
-
-## 1.32.0 - 2026-09-07
-
-### Account Security
-- Added TOTP-based 2FA enrollment and login verification using a dedicated server-side encryption key for TOTP secrets.
-- Added one-time Recovery Codes stored only as password hashes, with bounded generation/regeneration and one-time consumption.
-- Added shared Step-up Authentication for sensitive Account Security actions with a short configurable validity window.
-- Added owner-scoped Session Management backed by a registry token hash while keeping PHP session contents filesystem-backed.
-- Added bounded Authentication Security Activity logging for login, 2FA, Recovery Code, Step-up, account changes, Session revocation and Logout events.
-
-### Security / privacy
-- Kept Passwords, TOTP values, Recovery Codes, TOTP secrets, encryption keys and full PHP Session identifiers out of the Security Activity log.
-- Stores only a privacy-bounded Browser/platform label and a keyed digest of `REMOTE_ADDR`; raw IP addresses and full User-Agent strings are not stored in the audit table.
-- Preserved CSRF, login/2FA throttling, session fixation prevention, Remember Me boundaries, owner scope and sensitive-operation Step-up checks.
-- Session Registry and Audit Log database failures are handled so an absent optional audit table does not itself turn authentication into a 500; required Session Registry migration remains a deployment prerequisite.
-
-### Database / configuration
-- Added additive Migration `022_v1_32_auth_2fa.sql` for `auth_totp` and `auth_recovery_code`.
-- Added additive Migration `023_v1_32_auth_session.sql` for Session Management.
-- Added additive Migration `024_v1_32_auth_audit_log.sql` for Authentication Security Activity.
-- Integrated all four V1.32 Account Security tables into `database/schema.sql` for fresh installs.
-- Added `APP_TOTP_SECRET_KEY_ID`, `APP_TOTP_SECRET_KEY_B64`, `APP_TOTP_ISSUER`, V1.32 2FA rate-limit settings and `AUTH_STEP_UP_TIMEOUT` examples. Existing TOTP encryption keys must not be replaced after enrollment.
-
-### Finalization / verification
-- Promoted V1.32 TOTP, Recovery Code, Step-up, Session Registry and Authentication Audit contracts into the version-neutral current feature suite.
-- Repaired legacy current-test fixtures that assumed pre-V1.32 authentication/session behavior without weakening the production security boundary.
-- V1.32-G Session Management, V1.32-H Security Audit Log and V1.32-I RC1 completed production smoke verification before formal release.
-- Final publication is gated by the generic GitHub Release workflow, including PHP 8.1/8.4 regression, release-ready validation, secret scan, deterministic package verification and clean-room checks before the immutable `v1.32.0` tag.
-
-## 1.31.0 - 2026-09-04
-
-### Remote Permissions
-- Added best-effort Unix permission display and preset-only chmod controls to the authenticated owner-scoped Remote File Manager.
-- Added the optional `RemotePermissionProvider` capability boundary plus permission capability/chmod API actions without widening the common Remote provider contract.
-- Added File presets `600` / `640` / `644` and Directory presets `700` / `750` / `755`; free-form and special-bit chmod are not exposed.
-
-### FTP / FTPS / SFTP behavior
-- Kept MLSD as the authoritative FTP/FTPS listing and now reads `UNIX.mode` when available; when permission metadata is absent, a best-effort Unix LIST supplements permission only and does not replace MLSD name/size/time/type data.
-- FTP/FTPS `SITE CHMOD` accepts only 2xx as success, maps 500/502/504 to unsupported, and keeps 550 as a target/user-specific denial rather than disabling chmod for the whole connection.
-- Hardened SFTP quote paths used by chmod, mkdir, rename and delete so spaces and quote characters remain bounded to the intended Remote path.
-
-### Security / finalization
-- Preserved authentication, CSRF, owner scope, Base Path confinement, control-character/traversal rejection, server-side safe-path checks, known-symlink rejection and strict three-digit octal validation.
-- Added no database migration, schema change, or new required secret/configuration; existing Remote credential/private-key/known_hosts boundaries remain unchanged.
-- Promoted V1.31 permission contracts into the durable current feature regression suite and retained the generic PHP 8.1/8.4 CI and Release gates.
-- Production FTPS verification confirmed permission enrichment and actual server-side `SITE CHMOD` changes. Final production SFTP endpoint verification is not claimed; SFTP behavior is covered by focused and final automated tests.
-
-## 1.30.0 - 2026-09-03
-
-### Remote Text Editor
-- Added an authenticated owner-scoped Remote Text Editor on top of the V1.29 Remote File Manager for `txt`, `md`, `csv`, `json`, `xml`, `html`, `htm`, `css`, `js`, `php`, `ini`, `conf`, `yml`, and `yaml`.
-- Added bounded UTF-8 reads and saves with a default 512 KiB editor ceiling, raw-byte SHA-256 metadata, UTF-8 BOM awareness, and LF/CRLF preservation for supported source files.
-- Added a dedicated responsive editor UI with dirty state, Save/Reload controls, Ctrl/Cmd+S, safe return to the previous Remote connection/directory, and explicit conflict recovery.
-
-### Save / conflict safety
-- Added optimistic SHA-256 conflict checks before staging and again before replacement; stale editors stop with HTTP 409 and never expose a force-overwrite bypass.
-- Added random same-directory staged saves, bounded read-back verification, best-effort staged cleanup, and zero-byte save support through the common provider contract.
-- Added Base64 JSON transport for editor text so hosting WAF/ModSecurity rules do not need to be disabled for PHP/HTML/JS source saves; Base64 is transport encoding, not encryption.
-- Kept the editor protocol-neutral across FTP, explicit FTPS, SFTP, and HTTPS WebDAV. Atomic replacement and Remote file locking are not claimed.
-
-### UI / compatibility / deployment
-- Differentiated Remote Files action icons and file-type icons by shape plus color while keeping filename, title, and aria-label cues.
-- Improved narrow/mobile editor behavior and retained spellcheck/autocomplete/autocapitalize hardening and 44px coarse-pointer targets.
-- Added the private `var/remote-tmp/.gitkeep` placeholder while keeping actual temp contents ignored/private; production temp storage must remain writable by PHP and outside `public/`.
-- No V1.30 database migration, provider schema change, or new required credential/secret is introduced. Existing V1.29 Remote configuration remains in force.
-
-### Finalization
-- Promoted durable V1.30 Remote Text Editor contracts into the current feature regression suite.
-- Finalized `APP_VERSION`, visible label, and `APP_ASSET_REVISION` at `1.30.0`.
-- Retained the generic PHP 8.1/8.4 CI and Release gates, deterministic Runtime/Complete packages, secret scan, and clean-room verification before immutable tag publication.
-
-## 1.29.0 - 2026-09-01
-
-### Remote File Manager
-- Added authenticated owner-scoped Remote File Manager support for FTP, explicit FTPS, SFTP and HTTPS WebDAV.
-- Added connection registration/test, directory navigation/listing, upload/download, mkdir, rename/move, delete and refresh.
-- Added Remote -> File Library and File Library -> Remote transfer paths plus bounded Image/PDF/TXT/CSV preview reuse.
-- Grouped new backend code under `app/remote_file/` and kept public Remote endpoints explicitly allowlisted.
-
-### Security / deployment
-- Added Migration `021_v1_29_remote_connection.sql` for owner-scoped Remote connection metadata and an authenticated-ciphertext credential envelope.
-- Added Sodium XChaCha20-Poly1305 AEAD credential encryption with owner/connection-bound AAD; the encryption key remains outside the database and repository.
-- Added host/port validation, DNS answer validation/pinning, DNS-rebinding controls, public-IP default policy, explicit administrator CIDR allowlist for private networks, and permanent loopback/link-local denial.
-- Added Base Path confinement, traversal rejection, bounded transfer/temp storage, symbolic-link/unknown-entry fail-closed checks where server metadata permits, and same-origin/base-path WebDAV redirect validation.
-- SFTP requires verified `known_hosts`; FTPS/WebDAV keep peer/hostname TLS verification enabled. Plain FTP remains visibly marked as unencrypted.
-- Added `tools/remote_file_env_check.php` to validate cURL protocol capability, SimpleXML/Sodium/OpenSSL availability, credential-key shape and private temp-directory readiness without printing secrets.
-
-### Finalization
-- Hardened password/private-key form serialization and client-side required-credential checks after production checkpoint testing.
-- Finalized `APP_VERSION`, visible label, active asset revision and dynamic V1.29 asset keys at `1.29.0`.
-- Added V1.29 Remote File Manager contracts to the durable current feature suite and retained the generic PHP 8.1/8.4 CI/Release gates.
-
-# Changelog
-
-## 1.28.0 - 2026-08-31
-
-- Extended the authenticated V1.27 File Library without changing its metadata-only database schema or private-storage boundary.
-- Added File Detail for original filename, MIME, extension, size, upload time, numeric file id, and image dimensions when available; stored physical names, owner ids, and filesystem paths are not returned.
-- Added protected PDF preview for validated PDF files using the browser-native viewer; no PDF.js, CDN dependency, server PDF parser, or arbitrary path input is added.
-- Added UTF-8 TXT Preview bounded to 64 KiB and 300 lines; UTF-8 BOM is accepted and invalid encoding fails closed while full download remains available.
-- Added UTF-8 CSV Preview bounded to 512 KiB, 50 data rows, 30 columns, and 64 KiB per logical record using bounded `fgetcsv` parsing.
-- Rendered TXT/CSV dynamic content as text rather than HTML and kept preview/detail access authenticated, owner-scoped, private-path resolved, and revalidated at serve time.
-- Polished File Library actions and Modals for Smartphone/narrow layouts, including touch-friendly four-action 2x2 presentation and long filename/metadata wrapping.
-- Removed development phase badges from current File Library/RSS Management UI while retaining the central application version marker.
-- ZIP remains download-only and is never opened, extracted, or executed by the application.
-- No V1.28 database migration, schema change, new required secret, environment variable, or permission change is introduced.
-- Finalized application and active public asset revision markers at 1.28.0.
-
-## 1.27.0 - 2026-08-30
-
-- Expanded article URL tracking-parameter cleanup while leaving registered Feed URLs unchanged.
-- Normalized remaining Dashboard header/touch targets without changing the established grid or drag-and-drop model.
-- Added authenticated secure file upload backed by private `var/uploads/` storage and owner-scoped metadata.
-- Added the `/file-library` page with 24-item pagination, responsive cards, thumbnails, download, delete, upload progress, and drag-and-drop file selection.
-- Added an in-page Bootstrap Image Viewer that uses the existing authenticated owner-scoped content endpoint rather than exposing physical paths.
-- Default per-file upload limit is 10 MiB; allowed types are JPEG, PNG, GIF, WebP, PDF, TXT, CSV, and ZIP.
-- Browser MIME is not trusted. Server Fileinfo plus image/content/signature validation is authoritative; physical names use 256-bit random values.
-- ZIP files are stored/downloaded only and are never extracted or executed by the application.
-- Added Migration `020_v1_27_user_files.sql`; the fresh-install schema contains the same metadata-only `user_file` table contract.
-- Preserved authentication, CSRF, owner scope, deny-by-default public PHP endpoints, `nosniff`, same-origin resource policy, restrictive CSP, and private-path non-disclosure.
-- Finalized application and public asset revision markers at 1.27.0.
-
-## 1.26.0 - 2026-08-30
-
-- Added the Dashboard Information Board Widget for All RSS or a specific owner-scoped Feed.
-- NEWS and the current article title remain fixed while only the sanitized RSS summary scrolls right-to-left.
-- Added 5/10/20 item limits, slow/normal/fast speed, summary ON/OFF, previous/next navigation, source/date/count footer, NEXT preview, and summary progress.
-- Uses existing RSS description/content only, bounded by the existing 4096-character RSS safety ceiling; no article-page scraping or secondary article fetch is added.
-- Preserved reduced-motion, hover/focus/touch/page-hidden pause behavior, and aligned the Information Board header with the existing 44px Dashboard header/touch targets.
-- Finalized application and asset revision markers at 1.26.0.
-- Existing authentication, authorization, CSRF, owner-scope, SSRF-safe Feed retrieval, and text-sanitization boundaries are preserved.
-- No database migration or new required secret/configuration is introduced.
-
-## 1.25.0 - 2026-08-28
-
-### Calendar event details
-- Extended the existing Calendar event model with all-day/timed scheduling, optional start/end time, and an optional related HTTP/HTTPS URL without introducing server-side URL fetching.
-- Kept existing events all-day by default and retained the existing Calendar / Task separation.
-- Reused the existing Calendar create/edit transaction path and color handling rather than adding a parallel Event implementation.
-
-### Recurrence
-- Added `none` / `daily` / `weekly` / `monthly` / `yearly` recurrence with optional repeat-until date.
-- Kept V1.25 recurrence edits/deletes at series level and intentionally deferred per-occurrence exceptions.
-- Added explicit owner scope and recurrence resource bounds, including active-series and month-expansion limits.
-
-### RSS / Stock to Calendar
-- Added `Calendarã¸è¿½åŠ ` to the shared article actions menu for RSS and Stock.
-- Article title and URL pre-fill the existing Calendar registration modal without auto-saving.
-- Calendar creation does not change processed / important / archived / Stockè§£é™¤ state and does not create a hard relation to the source item.
-
-### Today / upcoming / Smartphone
-- Polished the existing Today flow, current-day emphasis, focus behavior, and Smartphone Calendar layout.
-- Added a server-derived 14-day upcoming list bounded to eight events, with three items shown initially and `ã‚‚ã£ã¨è¦‹ã‚‹` / `é–‰ã˜ã‚‹` controls.
-- Corrected Calendar modal focus handling so a focused descendant is blurred before Bootstrap hides the modal and focus is restored only after it is fully hidden.
-- Reduced month-switch layout shift by temporarily holding the current Calendar grid height while asynchronous redraw completes.
-
-### Database / Security
-- Added `018_v1_25_calendar_event_time_url.sql` for all-day/time/URL columns and `019_v1_25_calendar_recurrence.sql` for recurrence columns; existing V1.24 installations apply them in numeric order after backup.
-- Integrated Migrations 018/019 into the fresh-install schema together with the existing integrated 013/017 state.
-- Calendar recurrence/upcoming operations remain authenticated POST + CSRF + request-size limited, fixed-action allowlisted, and owner-scoped.
-- Calendar URLs are stored/validated only; no new SSRF fetch path, external Calendar credential, reminder scheduler, or required secret was added.
-
-### Release verification
-- Promoted V1.25 B-F/R3 Calendar contracts into the current CI/release feature suite.
-- Finalized `APP_VERSION`, visible label, `APP_ASSET_REVISION`, and all V1.25 staged Calendar asset keys to `1.25.0`.
-- Formal release uses the generic full regression, compatibility, security, version/dependency hygiene, deterministic package, clean-room, and secret-scan gates before tag publication.
-
-## 1.24.0 - 2026-08-27
-
-### Memo
-- Kept long Memo content inside the selected Dashboard Widget Height so only the Memo body scrolls instead of enlarging the Grid row.
-- Added live `current/4000` character counters to Dashboard Memo, register, and edit UI while preserving the existing 4000-character server validation limit.
-
-### Stock state workflow
-- Added independent `stock_processed`, `stock_important`, and `stock_archived` states while keeping `stock_flag` dedicated to Stockè§£é™¤.
-- Added owner-scoped state list/update controls for æœªå‡¦ç†ï¼å‡¦ç†æ¸ˆã¿, é€šå¸¸ï¼é‡è¦, and Archiveï¼Archiveæ¸ˆã¿.
-- Default Stock list now excludes archived rows; processed, important, and Archive filters coexist with existing text search, Stock Tags, sorting, and pagination.
-- Added current-page selection and bulk state updates for processed/unprocessed, important/normal, and archive/unarchive. Bulk Stockè§£é™¤ is intentionally not added.
-- Added responsive Smartphone presentation and retained touch-friendly controls.
-
-### Database / Security
-- Added `017_v1_24_stock_state.sql` for existing installations and integrated the same Stock state columns/index into the fresh-install `database/schema.sql`.
-- State API operations remain authenticated POST + CSRF, owner-scoped, active-Stock-only, fixed-state allowlisted, and transactionally all-or-nothing for bulk requests.
-- Bulk submitted IDs are positive integers, deduplicated, and capped at 100 raw IDs; mixed-owner/unavailable requests do not partially update.
-- Invalid Stock filter values are converted to fixed safe defaults rather than interpolated into SQL.
-- No new required secret or external API credential is introduced.
-
-### Release verification
-- Promoted V1.24 Memo and Stock feature contracts into the current CI/release feature suite.
-- Finalized `APP_VERSION`, visible label, and immutable public asset revision to `1.24.0`.
-- Formal release uses the generic full regression, security, deterministic package, clean-room, and secret-scan gates before tag publication.
-
-## 1.23.0 - 2026-08-27
-
-### Repository / Documentation
-- Removed transient root-level checkpoint handoff documents from the current tree while retaining historical evidence in Git history and release tags.
-- Documented the current documentation policy and kept Runtime package scope from expanding through a new archive directory.
-
-### Version / Test maintenance
-- Added a shared current-version contract reader and removed current-following test assertions that froze `APP_ASSET_REVISION` to Version 1.22.0.
-- Kept feature compatibility gates while removing historical finalization gates from Current CI.
-- Added guards against stale current asset keys and version-specific workflow regression.
-
-### GitHub Actions / Release flow
-- Reduced active GitHub Actions to `ci.yml` and the generic `release.yml`; Version-specific historical workflows remain available through Git history and release tags.
-- Added a manual final Release workflow that accepts explicit `X.Y.Z`, requires release-ready `main`, rechecks the remote `main` SHA before publication, and refuses to overwrite an existing tag on another commit.
-- Existing GitHub Releases are left unchanged on rerun.
-
-### Package / Verification
-- Parameterized Runtime and Complete Source package builders/verifiers with explicit `--release X.Y.Z` instead of hardcoded release constants.
-- Retained deterministic ZIP generation, SHA-256 sidecars/manifests, private/runtime file exclusion, high-signal secret scan, and clean-room package checks.
-- No database schema, migration, public API, application feature, UI, or new required configuration/secret changes are introduced in Version 1.23.0.
-
-## 1.22.0 - 2026-08-26
-
-### RSS Management / OPML
-- Added `/rss-management` with an RSS list and OPML Import / Export for the authenticated user.
-- OPML import validates XML locally without fetching imported URLs, limits size/feed count/depth, rejects DOCTYPE / ENTITY, and preserves optional feed title, site URL, and category path metadata.
-- Existing feed fetches may fill a blank metadata title from the successfully parsed channel title without an extra outbound request.
-
-### Feed Health
-- Added per-feed health state derived from owned content: last check / success, latest article date, HTTP result, failure reason/count, redirect state, and effective URL.
-- Manual recheck reuses the stored owned feed URL and the existing SSRF-safe feed pipeline; arbitrary request URLs are not accepted.
-
-### RSS Rules
-- Added owner-scoped RSS Rules with ordered conditions and explicit match mode / action.
-- Integrated server-evaluated article actions for Highlight, Hide, Stock, and Task while retaining existing Article Actions and ownership boundaries.
-- Rule condition rows do not duplicate user ownership; ownership is derived from the parent rule.
-
-### Database / Security
-- Added `014_v1_22_opml_feed_metadata.sql`, `015_v1_22_feed_health.sql`, and `016_v1_22_rss_rules.sql`. Existing databases apply them in numeric order after backup.
-- No new required secret or external API credential is introduced.
-- Public API authentication, POST/CSRF/request-size/action validation, owner scope, and SSRF-safe feed fetching remain in place.
-
-### Release verification
-- V1.22-A/B/C focused gates and V1.22-D integration gate are retained.
-- V1.22-E adds the formal 1.22.0 contract, PHP 8.1 / 8.4 regression, historical compatibility gates, source secret scan, deterministic Runtime / Complete Source package verification, and clean-room checks before tag publication.
-
-## 1.21.0 - 2026-08-25
-
-### Drawer / Navigation
-- Reorganized the Drawer into DISPLAY, FEED, PRODUCTIVITY, INFORMATION, MEDIA, GAME, SETTINGS, USER LINKS, and ACCOUNT without rebuilding existing actions.
-- Kept Mail in PRODUCTIVITY and Camera / Video in MEDIA while preserving their existing dynamic insertion and feature implementations.
-- Preserved configured user links for Smartphone while keeping the existing PC Navbar presentation.
-
-### Visual hierarchy
-- Added a restrained light-gray Drawer surface, clearer section headers, compact icon tiles, and more visible hover / focus states.
-- Kept a single blue Current indicator and removed the similar blue section-header marker after Production review.
-- Kept Logout in a restrained Danger treatment.
-
-### Smartphone / Touch
-- Kept 44px touch targets, improved Drawer scrolling and dynamic viewport / safe-area handling, and prevented long labels from causing horizontal overflow.
-- Kept tall Modals within the Smartphone viewport without changing the existing Offcanvas-to-Modal lifecycle.
-- Moved the RSS / Information Widget Catalog accordion chevron slightly inward from the right edge for easier touch operation.
-
-### Compatibility / scope
-- Bootstrap 5 Offcanvas and the existing jQuery-assisted behavior remain in place; no unrelated JavaScript modernization was introduced.
-- No database schema or migration changes are required for Version 1.21.0.
-- No `config/local.php` changes are required.
-- File Upload / File Library / Image Viewer, Imgur Widget, and whole-grid Height 2 alignment remain deferred.
-
-### Verification
-- V1.21-A/B/C focused and compatibility tests were completed during development.
-- Version 1.21.0 finalization runs the full current regression suite, compatibility gates, source secret scan, package verification, and clean-room package checks before release publication.
-
-## RSS Reader Modernization 1.20.1 â€” 2026-08-25
-
-### Dashboard compact / Memo refresh / Calendar color / Block Collapse
-
-- V1.20.1-A: Widget Drag Handleã‚’Compactãª`[=]`è¡¨ç¤ºã¸æ•´ç†ã—ã€Runtimeã§æ³¨å…¥ã•ã‚Œã‚‹æ—§`::before`æ ã‚’æŠ‘æ­¢ã€‚Drag / Touch / Keyboard reorderã®æ“ä½œé ˜åŸŸã¯ç¶­æŒã€‚Navbarã‚’Desktop 56pxâ†’48pxã¸CompactåŒ–ã—ã€coarse pointerã®44pxæ“ä½œé ˜åŸŸã‚’ç¶­æŒã€‚
-- V1.20.1-B: Memoã®Height 1 / 2ç¯„å›²å†…ã§æœ¬æ–‡ã ã‘ã‚’Scrollã•ã›ã€é•·æ–‡ã«ã‚ˆã‚‹Cardå…¨ä½“ã®éä¼¸é•·ã‚’æŠ‘åˆ¶ã€‚å¯¾è±¡Memoã ã‘ã‚’`widget.list`ã§å†å–å¾—ã™ã‚‹æ‰‹å‹•Refreshã¨æœªä¿å­˜ç·¨é›†ç¢ºèªã‚’è¿½åŠ ã€‚
-- V1.20.1-C: Calendaräºˆå®šã¸`red / blue / green`ã‚’è¿½åŠ ã—ã€æ—¢å­˜äºˆå®šã¯`blue`ã‚’DefaultåŒ–ã€‚TaskæœŸé™ã¯æ—¢å­˜Priorityã‚’`high=èµ¤ / normal=é’ / low=ç·‘`ã§è¡¨ç¤ºã€‚æ—¢å­˜DBå‘ã‘Migration `013_v1_20_1_calendar_event_color.sql`ã‚’è¿½åŠ ã—ã€æ–°è¦Installç”¨`database/schema.sql`ã«ã‚‚åŒColumnã‚’çµ±åˆã€‚
-- V1.20.1-C2: Calendarè‰²å°‚ç”¨Endpointã‚’Public PHP deny-by-default Matrixã¸æ˜ç¤ºè¿½åŠ ã€‚POST / Authentication / CSRF / Request Size / Action Allowlist / Owner scopeã‚’ç¶­æŒã€‚
-- V1.20.1-D: Game Widgetã¸Block Collapseã‚’è¿½åŠ ã€‚Canvas + Vanilla JavaScriptã§Breakåˆ¶é™ã€Score / Comboã€Chainã€Stabilityã€å±é™ºåŸŸã®å¼±æ”¯æŒBlockãšã‚Œã€Mouse / Touch / Keyboardæ“ä½œã¸å¯¾å¿œã€‚Sound / Network request / GameçŠ¶æ…‹DBä¿å­˜ã¯è¿½åŠ ã—ãªã„ã€‚
-- V1.20.1-E: `APP_VERSION` / Label / Asset Revisionã‚’`1.20.1`ã¸ç¢ºå®šã—ã€dynamic Asset cache keyã¨fresh-install schemaã‚’çµ±åˆã€‚Current / Compatibility / V1.20.1 Gateã€Security / Syntax / Packageæ¤œè¨¼ã‚’å®Ÿæ–½ã€‚
-- Widgetä¸‹ç«¯ã®å®Œå…¨çµ±ä¸€ã¯Dashboard Gridå…¨ä½“ã¸å½±éŸ¿ã™ã‚‹ãŸã‚V1.20.1ã§ã¯ä¿ç•™ã—ã€å°†æ¥ã®Layoutæ”¹å–„ã¸åˆ†é›¢ã€‚
-- æ–°è¦å¿…é ˆConfig / Secretã¯ãªã—ã€‚DBå¤‰æ›´ã¯`calendar_event_color`Column 1ã¤ã®ã¿ã€‚
-
-## RSS Reader Modernization 1.20.0 â€” 2026-08-23
-
-### Card Header Compact / RSS Typing / Wire Defense / All RSS Recent
-
-- V1.20-B: Dashboard Widget Headerã‚’40pxã¸CompactåŒ–ã€‚é€šå¸¸RSSï¼Search Feedã¯`thead`å†…ã®å„Layerã‚‚40pxã¸æƒãˆã€æ—¢å­˜æ“ä½œé ˜åŸŸã‚’ç¶­æŒã€‚
-- V1.20-C: é€šå¸¸RSS Cardã¸60ç§’ã®RSS Typingã‚’è¿½åŠ ã€‚Japanese IMEã€Scoreï¼Bestã€hidden-tab pauseã€Browser storage fallbackã«å¯¾å¿œã—ã€Search Feedã¯å¯¾è±¡å¤–ã€‚
-- V1.20-D: Wire Defenseã‚’è¿½åŠ ã€‚å…­è§’å½¢ï¼‹Serveré¢¨COREã€ã‚¯ãƒªãƒƒã‚¯åœ°ç‚¹ã¸ã®interceptor missileã€ç€å¼¾çˆ†ç™ºï¼chainã€1ç§’reload gaugeã€Livesåˆ¥ã®ç·‘â†’Orangeâ†’èµ¤ã€straightï¼curveï¼wave routeã‚’å®Ÿè£…ã€‚
-- V1.20-E: ã€Œå…¨RSSæ–°ç€ã€ã‚’è¿½åŠ ã€‚æ‰€æœ‰RSSã ã‘ã‚’æ—¢å­˜FeedFetchServiceçµŒç”±ã§å–å¾—ã—ã€é‡è¤‡sourceï¼è¨˜äº‹ã‚’é™¤å¤–ã—ã¦publication dateé †ã«é›†ç´„ã€‚5ï¼10ï¼20ï¼30ä»¶è¡¨ç¤ºã«å¯¾å¿œã€‚
-- V1.20-F: æ­£å¼v1.19.0 Complete Sourceã¸Bã€œEã‚’çµ±åˆã—`1.20.0-RC1`ã¨ã—ã¦Full Regressionï¼Compatibilityï¼Securityï¼Package Gateã‚’å®Ÿæ–½ã€‚æœ¬ç•ªç’°å¢ƒã§ä¸»è¦æ©Ÿèƒ½ã‚’ç¢ºèªã€‚
-- V1.20-G: `APP_VERSION`ã€Labelã€Asset Revisionã‚’`1.20.0`ã¸ç¢ºå®šã—ã€Final Package toolingï¼Release Gateï¼Documentationã‚’æ­£å¼ç‰ˆã¸æ˜‡æ ¼ã€‚
-- DB Tableï¼Columnã€Migrationã€SQLã€æ–°è¦å¿…é ˆConfigï¼Secretã®è¿½åŠ å¤‰æ›´ã¯ãªã—ã€‚
-
-## RSS Reader Modernization 1.20.0-RC1 â€” 2026-08-23
-
-### Card Header Compact / RSS Typing / Wire Defense / All RSS Recent / RC integration
-
-- V1.20-B: Dashboard Widget Headerã‚’40pxã¸CompactåŒ–ã€‚é€šå¸¸RSSï¼Search Feedã¯`thead`å†…ã®å„Layerã‚‚40pxã¸æƒãˆã€è¨˜äº‹æœ¬æ–‡ãƒ»Article Actionsç­‰ã®æ—¢å­˜æ“ä½œé ˜åŸŸã¯ç¶­æŒã€‚
-- V1.20-C: é€šå¸¸RSS Cardã¸RSS Typingã‚’è¿½åŠ ã€‚è¡¨ç¤ºæ¸ˆã¿RSS titleã‚’ä½¿ã†60ç§’Gameã€Japanese IMEã€Scoreï¼Bestï¼Roundï¼Missã€hidden-tab pauseã€localStorageâ†’sessionStorageâ†’memory fallbackã«å¯¾å¿œã€‚Search Feedã¯å¯¾è±¡å¤–ã€‚
-- V1.20-D: Gameã¸Wire Defenseã‚’è¿½åŠ ã€‚COREã¸å‘ã‹ã†packetã‚’interceptor missileã§é˜²è¡›ã—ã€1ç§’Reload gaugeã€Livesåˆ¥CORE paletteã€straightï¼curveï¼wave routeã€Bestï¼Max Chainã‚’Browserå´ã¸ä¿å­˜ã€‚Soundï¼Network requestã¯è¿½åŠ ã—ãªã„ã€‚
-- V1.20-E: RSS Catalogã¸ã€Œå…¨RSSæ–°ç€ã€ã‚’è¿½åŠ ã€‚æ‰€æœ‰RSSã ã‘ã‚’æ—¢å­˜FeedFetchServiceçµŒç”±ã§å–å¾—ã—ã€é‡è¤‡sourceï¼è¨˜äº‹ã‚’é™¤å¤–ã—ã¦publication dateé †ã«é›†ç´„ã€‚5ï¼10ï¼20ï¼30ä»¶è¡¨ç¤ºã€‚æ—¢å­˜Search Feedã®`dashboard_widget` schemaã‚’å†åˆ©ç”¨ã—DB Migrationã‚’è¿½åŠ ã—ãªã„ã€‚
-- V1.20-F: Bã€œEã‚’æ­£å¼v1.19.0 Complete Sourceã¸çµ±åˆã—ã€`APP_VERSION=1.20.0-rc1`ã€`APP_ASSET_REVISION=1.20.0-rc1`ã¸åˆ‡æ›¿ã€‚å‹•çš„Asset loaderã‚‚RC revisionã¸çµ±ä¸€ã€‚
-- Current Full Regressionã€V1.17ï¼1.17.1ï¼1.17.2ï¼1.18ï¼V1.19 Architectureãƒ»Securityäº’æ›Gateã€V1.20å°‚ç”¨Gameï¼å…¨RSSæ–°ç€Testã€Syntaxï¼Secret scanï¼Package integrityã‚’Release Candidate Gateã¨ã—ã¦å®Ÿæ–½ã€‚
-- DB Tableï¼Columnã€Migrationã€SQLã€æ–°è¦å¿…é ˆConfigï¼Secretã®è¿½åŠ å¤‰æ›´ã¯ãªã—ã€‚RCã¯`publishable=no`ã§ã€æ­£å¼Tagï¼GitHub Releaseã¯ä½œæˆã—ãªã„ã€‚
-
-## RSS Reader Modernization 1.19.0 â€” 2026-08-22
-
-### Architecture / Security / Documentation Maintenance Release
-
-- `app/api.php`ã¨`app/dashboard_widget.php`ã‚’Facade/Coreã¨ã—ã¦æ®‹ã—ã€API 4åˆ†é¡ãƒ»Dashboard Widget 3åˆ†é¡ã¸è²¬å‹™å˜ä½ã§æœ€å°åˆ†å‰²ã€‚æ—¢å­˜API Action / Function contractã€DBã€å…¬é–‹Endpointã‚’ç¶­æŒã€‚
-- Registration IP throttleã€Authenticated API request-size guardã€CSP `object-src 'none'`ã€Public PHP endpoint whitelistã‚’è¿½åŠ ã€‚
-- hls.js 1.6.16ã®SRIå€¤ã‚’å®ŸCDN bytesã‹ã‚‰SHA-384è¨ˆç®—ã—ã¦ä¿®æ­£ã—ã€V1.19 final Asset Revisionã‚’`1.19.0`ã¸ç¢ºå®šã€‚
-- Architectureã€Public Endpoint Matrixã€Deployment/Security Boundaryã€æ–°æ©Ÿèƒ½è¿½åŠ æ™‚Security Checklistã‚’DocumentationåŒ–ã€‚
-- Account Password Formã¸éè¡¨ç¤º`autocomplete="username"`è£œåŠ©Fieldã‚’è¿½åŠ ã—ã€Browserã®Password Formæ§‹é€ è­¦å‘Šã‚’Cleanupã€‚Raw login emailã®ä¿å­˜ãƒ»è¡¨ç¤ºã¯è¿½åŠ ã—ãªã„ã€‚
-- V1.19.0-RC1ã§Current full regressionã€V1.17ï½V1.18 compatibilityã€V1.19 focused/security/package gateã‚’å®Ÿæ–½ã—ã€æœ¬ç•ªäº’æ›ç¢ºèªã§ç›®ç«‹ã£ãŸæ©Ÿèƒ½å•é¡ŒãŒãªã„ã“ã¨ã‚’ç¢ºèªã—ã¦æ­£å¼åŒ–ã€‚
-- `APP_VERSION=1.19.0`ã€`APP_VERSION_LABEL=RSS Reader Modernization 1.19.0`ã€`APP_ASSET_REVISION=1.19.0`ã¸ç¢ºå®šã€‚
-- DB Migrationã€SQLã€æ–°è¦å¿…é ˆconfig/secretã€ä¸»è¦æ©Ÿèƒ½è¿½åŠ ã¯ãªã—ã€‚
-
-## RSS Reader Modernization 1.19.0-RC1 â€” 2026-08-21
-
-- V1.19-B: `app/api.php`ã¨`app/dashboard_widget.php`ã‚’Facade/Coreã¨ã—ã¦æ®‹ã—ã€API 4åˆ†é¡ãƒ»Dashboard Widget 3åˆ†é¡ã¸è²¬å‹™å˜ä½ã§åˆ†å‰²ã€‚Actionåã€DBã€å…¬é–‹Endpointã¯ç¶­æŒã€‚
-- V1.19-C: èªè¨¼æ¸ˆã¿APIã¸1MiBã®request size guardã€Registrationã¸IPå˜ä½Throttleã€CSPã¸`object-src 'none'`ã€`public/`ç›´ä¸‹PHPã¸æ˜ç¤ºWhitelistã‚’è¿½åŠ ã€‚
-- V1.19-C follow-up: hls.js 1.6.16ã®SRIã‚’Browserå®Ÿå–å¾—bytesã‹ã‚‰SHA-384è¨ˆç®—ã—ã¦ä¿®æ­£ã€‚
-- V1.19-D: Architecture / Public Endpoint Matrix / Security Boundary / Security Checklistã‚’æ–‡æ›¸åŒ–ã—ã€Account Password Formã®Password Managerå‘ã‘username hintã‚’è¿½åŠ ã€‚
-- V1.19-E: `APP_VERSION=1.19.0-rc1`ã€`APP_ASSET_REVISION=1.19.0-rc1`ã¸åˆ‡æ›¿ã€‚V1.18ã¾ã§ã®å›å¸°ã¨V1.19 focused/security/package gateã‚’ã¾ã¨ã‚ã¦å®Ÿè¡Œã™ã‚‹Release Candidateå·¥ç¨‹ã¸ç§»è¡Œã€‚
-- DB Migrationã€SQLã€æ–°è¦å¿…é ˆconfig/secretã€ä¸»è¦æ©Ÿèƒ½è¿½åŠ ã¯ãªã—ã€‚
-
-## RSS Reader Modernization 1.18.0 â€” 2026-08-20
-
-### Connection Monitor / latency history / outage state / Release Gate
-
-- Dashboardã®Informationã‚«ãƒ†ã‚´ãƒªã¸Connection Monitor Widgetã‚’è¿½åŠ ã—ã€Browserï¼Deviceã‹ã‚‰ã“ã®RSS Readerè‡ªèº«ã¸ã®æ¥ç¶šçŠ¶æ…‹ã‚’å¯è¦–åŒ–ã€‚ä»»æ„URLã‚„ç¬¬ä¸‰è€…Monitorã§ã¯ãªãã€åŒä¸€Originã®`connection_probe.php`ã ã‘ã‚’æ¸¬å®šå¯¾è±¡ã¨ã™ã‚‹ã€‚
-- è»½é‡GET Probeã¯HTTP 204ãƒ»empty bodyãƒ»no-storeã§è¿”ã—ã€Sessionï¼DBï¼Application bootstrapï¼å¤–éƒ¨é€šä¿¡ã‚’é€šã•ãªã„ã€‚GETä»¥å¤–ã¯405ã¨ã—ã€Client IPã‚„Local IPç­‰ã®åé›†ã¯è¡Œã‚ãªã„ã€‚
-- Foregroundã§ã¯ç´„5ç§’é–“éš”ã§å‰å›Requestå®Œäº†å¾Œã«æ¬¡å›ã‚’äºˆç´„ã—ã€Request overlapã‚’é˜²æ­¢ã€‚Background tabã§ã¯å®šæœŸProbeã‚’åœæ­¢ã—ã€è¡¨ç¤ºå¾©å¸°æ™‚ã«å³æ™‚ç¢ºèªã™ã‚‹ã€‚
-- Connection Monitorã‚’è¤‡æ•°é…ç½®ã—ã¦ã‚‚Pageå†…ã§1æœ¬ã®Probe streamã‚’å…±æœ‰ã—ã€Widgetæ•°ã«å¿œã˜ã¦é€šä¿¡é‡ãŒå¢—ãˆãªã„ã‚ˆã†ã«ã™ã‚‹ã€‚
-- ç¾åœ¨Latencyã«åŠ ãˆã€30ç§’ï¼60ç§’ï¼5åˆ†ã®In-memoryå±¥æ­´ã€SVG Graphã€Avgã€Maxã€HTTP RTTå·®åˆ†ã‚’ä½¿ã£ãŸJitterè¡¨ç¤ºã‚’è¿½åŠ ã€‚Offlineï¼é•·æ™‚é–“ç©ºç™½ã‚’å·¨å¤§Latencyã¨ã—ã¦æ‰±ã‚ãšã€Graphã¨Jitterè¨ˆç®—ã‚’åˆ†æ–­ã™ã‚‹ã€‚
-- 2å›é€£ç¶šã®åˆ°é”ä¸èƒ½ã§Offlineã‚’ç¢ºå®šã—ã€Last Disconnectã€é€²è¡Œä¸­Downtimeã€å¾©æ—§å¾ŒLast Downtimeã€ç´„15ç§’ã®Recoveredè¡¨ç¤ºã‚’è¿½åŠ ã€‚HTTP 500ç­‰ã¯åˆ°é”ä¸èƒ½ã¨æ··åŒã›ãšProbe Errorã¨ã—ã¦åˆ†é›¢ã™ã‚‹ã€‚
-- å“è³ªåˆ¤å®šã‚’Excellentï¼ˆ79msä»¥ä¸‹ï¼‰ï¼Goodï¼ˆ80â€“149msï¼‰ï¼Fairï¼ˆ150â€“299msï¼‰ï¼Slowï¼ˆ300msä»¥ä¸Šï¼‰ï¼Offlineã¸æ•´ç†ã€‚ç›´è¿‘5åˆ†ã®æˆåŠŸå€¤ä¸­å¤®å€¤ã‚’Baselineã¨ã—ã¦ã€ååˆ†ãªå·®ãŒ2å›é€£ç¶šã—ãŸå ´åˆã ã‘ã€Œé€šå¸¸ã‚ˆã‚Šé…ã„ã€ã‚’è¡¨ç¤ºã™ã‚‹ã€‚
-- PCï¼Tabletã®Height 1ã¯ä¸»è¦æƒ…å ±ã‚’æ®‹ã—ãŸCompactè¡¨ç¤ºã€Height 2ã¯Baselineï¼çµŒè·¯ï¼ç«¯æœ«åˆ¤å®šã‚’å«ã‚€è©³ç´°è¡¨ç¤ºã¨ã—ã€Smartphoneã§ã¯Heightå·®ã«ã‚ˆã‚‹æƒ…å ±æ¬ è½ã‚’é¿ã‘ã‚‹ã€‚Bootstrapï¼Bootswatch Themeå¤‰æ•°ã¸è¿½å¾“ã™ã‚‹è¡¨ç¤ºã¸èª¿æ•´ã€‚
-- å±¥æ­´ã€Baselineã€åˆ‡æ–­çŠ¶æ…‹ã¯Browser memoryã ã‘ã«ä¿æŒã—ã€DBï¼localStorageï¼sessionStorageã¸æ°¸ç¶šåŒ–ã—ãªã„ã€‚
-- V1.18-Fã§å¤–éƒ¨Internet Probeã€å›ºå®šGoogleï¼Cloudflareç­‰ã¸ã®Probeã€ä»»æ„Probe URLã€Speed Testã€WebRTCç­‰ã«ã‚ˆã‚‹IPæ¢ç´¢ã‚’V1.18ã®éå¯¾è±¡ã¨ã—ã¦å›ºå®šã€‚
-- `APP_VERSION`ï¼`APP_VERSION_LABEL`ã¯`1.18.0`ã¸ç¢ºå®šã€‚å®Ÿæ©Ÿç¢ºèªå¾Œã®Calendarï¼Dashboard CSSä¿®æ­£ã‚’ç¢ºå®Ÿã«å–å¾—ã•ã›ã‚‹ãŸã‚ã€æœ€çµ‚Asset Cache keyã¯`APP_ASSET_REVISION=1.18.0-r2`ã¨ã—ã€å‹•çš„Asset loaderã‚‚åŒã˜Revisionã¸çµ±ä¸€ã€‚Runtimeï¼Complete package builderãƒ»verifierã€CIï¼Release Gateã€Release Documentationã¯1.18.0ã‚’å¯¾è±¡ã¨ã™ã‚‹ã€‚
-- Releaseå‰ç¢ºèªã§ã€é•·æ™‚é–“æ”¾ç½®å¾Œã«Remember Meã‹ã‚‰Sessionã‚’è‡ªå‹•å¾©æ—§ã—ãŸéš›ã€é–‹ã„ãŸã¾ã¾ã®PageãŒæ—§CSRF Tokenã‚’ä¿æŒã—ã¦APIæ›´æ–°ãŒ403ã«ãªã‚‹Caseã‚’ä¿®æ­£ã€‚å¾©æ—§æ™‚ã ã‘æ—§Tokenã‚’çŸ­æ™‚é–“Graceã¨ã—ã¦å—ã‘å…¥ã‚Œã€API Response Headerã‹ã‚‰æ–°Tokenã¸Pageå´ã‚’åŒæœŸã™ã‚‹ã€‚Remember MeãŒç„¡åŠ¹ã§èªè¨¼è‡ªä½“ãŒå¤±åŠ¹ã—ãŸå ´åˆã¯é€šå¸¸ã®Loginç”»é¢ã¸æˆ»ã™ã€‚
-- Smartphone CalendarãŒ`min-width: 500px`ã‚’å¼·åˆ¶ã—ã¦Cardå¹…ã‚’è¶…ãˆã‚‹Caseã‚’ä¿®æ­£ã€‚575.98pxä»¥ä¸‹ã§ã¯7åˆ—Gridã‚’Cardå¹…ã¸åã‚ã€Desktopã®ç‹­ã„Calendarã¯å¿…è¦ãªæ¨ªOverflowã‚’Cardå†…ã¸é–‰ã˜è¾¼ã‚ã‚‹ã€‚
-- DB Tableï¼Columnï¼Migrationã€å¿…é ˆconfigã€å¤–éƒ¨JavaScript Libraryã®è¿½åŠ å¤‰æ›´ã¯ãªã—ã€‚
-
-## RSS Reader Modernization 1.17.2 â€” 2026-08-19
-
-### X Timeline Widget / Bearer Token guidance / Release Gate
-
-- Dashboardã¸ä¸Šç´šè€…å‘ã‘X Timeline Widgetã‚’è¿½åŠ ã—ã€æŒ‡å®šã—ãŸå…¬é–‹X Accountã®æœ€è¿‘ã®æŠ•ç¨¿ã‚’Read Onlyã§è¡¨ç¤ºã€‚æ—¢å­˜`dashboard_widget.widget_config`ã¸è¨­å®šã‚’ä¿å­˜ã—ã€æ–°è¦Tableï¼Columnï¼Migrationã¯è¿½åŠ ã—ãªã„ã€‚
-- usernameã€3ï¼5ï¼10ä»¶è¡¨ç¤ºã€Replyï¼Repostã®å«æœ‰è¨­å®šã€Titleï¼Header colorï¼Widthï¼Heightã€æ‰‹å‹•Refreshã«å¯¾å¿œã€‚
-- X API requestã¯Serverå´ã ã‘ã§å®Ÿè¡Œã—ã€Browserã‹ã‚‰`api.x.com`ã¸ç›´æ¥æ¥ç¶šã—ãªã„ã€‚`APP_X_BEARER_TOKEN`ã¯Server-side Secretã¨ã—ã¦ä¿æŒã—ã€HTMLï¼JavaScriptï¼API responseã¸æ¸¡ã•ãªã„ã€‚
-- X API hostå›ºå®šã€TLSæ¤œè¨¼ã€bounded timeoutã€çŸ­æ™‚é–“Cacheã€æœŸé™ä»˜ãstale fallbackã‚’è¿½åŠ ã—ã€401ï¼403ç­‰ã®èªè¨¼ãƒ»æ¨©é™Errorã‚’staleã§éš ã•ãªã„ã€‚
-- X Timelineè¿½åŠ Modalã¸ã€Œä¸Šç´šè€…å‘ã‘æ©Ÿèƒ½ã€ã®æ¡ˆå†…ã‚’è¿½åŠ ã—ã€X Developer Platformã€Pay Per Useã€Server-side Bearer TokenãŒå¿…è¦ãªã“ã¨ã‚’æ˜ç¤ºã€‚
-- Bearer TokençŠ¶æ…‹ã‚’`missing`ï¼`invalid_format`ï¼`unverified`ï¼`verified`ï¼`auth_failed`ã¸åˆ†é›¢ã€‚æœªè¨­å®šï¼Localå½¢å¼ä¸æ­£ã§ã¯Frontendã¨Serverã®ä¸¡æ–¹ã§è¿½åŠ ã‚’æ‹’å¦ã—ã€HTTP 401ã‚’å—ã‘ãŸç¾åœ¨Tokenã¯èªè¨¼å¤±æ•—ã¨ã—ã¦æ¡ˆå†…ã€‚
-- Modalè¡¨ç¤ºã ã‘ã§ã¯X APIã¸Tokenæ¤œè¨¼Requestã‚’é€ã‚‰ãšã€å®ŸTimelineå–å¾—ã®çµæœã§æ¥ç¶šçŠ¶æ…‹ã‚’æ›´æ–°ã€‚çŠ¶æ…‹Cacheã«ã¯SHA-256 fingerprintã ã‘ã‚’ä¿å­˜ã—ã€Raw Tokenã¯ä¿å­˜ã—ãªã„ã€‚
-- Xè¨­å®šå¤‰æ›´ï¼å‰Šé™¤ã‚‚å…¨ç”»é¢Reloadã‚’å‰æã«ã›ãšã€ç„¡é–¢ä¿‚ãªYouTubeï¼Clock Timerç­‰ã®çŠ¶æ…‹ã‚’ä¸è¦ã«å¤±ã‚ãªã„æ—¢å­˜V1.17.1å¥‘ç´„ã‚’ç¶­æŒã€‚
-- Xæœ¬ä½“ã®ã€ŒãŠã™ã™ã‚ / For Youã€Feedå†ç¾ã¨User Context OAuthã‚’ä½¿ã†Home Timelineã¯å¯¾è±¡å¤–ã¨ã—ã€å°†æ¥èª²é¡Œã¸åˆ†é›¢ã€‚
-- `APP_VERSION`ã€`APP_VERSION_LABEL`ã€`APP_ASSET_REVISION`ã‚’`1.17.2`ã¸çµ±ä¸€ã€‚Runtimeï¼Complete builderã¨Verifierã€GitHub Actions Release Gateã‚’1.17.2ã¸æ›´æ–°ã—ã€`var/cache/`å…¨ä½“ã‚’é…å¸ƒå¯¾è±¡å¤–ã¸æ•´ç†ã€‚
-- X Timelineã‚’åˆ©ç”¨ã—ãªã„ç’°å¢ƒã§ã¯æ–°ã—ã„å¿…é ˆSecretã¯ãªãã€DB Migrationã‚‚ä¸è¦ã€‚
-
-## RSS Reader Modernization 1.17.1 â€” 2026-08-19
-
-### Stability / Session lock / Widget settings update
-
-- é€šå¸¸API Actionã¯Authenticationã€CSRFã€Action validationå®Œäº†å¾Œã«file-backed PHP Session lockã‚’æ—©æœŸè§£æ”¾ã—ã€é…ã„å¤–éƒ¨I/Oã«ã‚ˆã‚‹Dashboard API Requestã®ç›´åˆ—å¾…ã¡ã‚’æŠ‘åˆ¶ã€‚Account emailï¼passwordå¤‰æ›´ã¯Sessionæ›´æ–°ã®ãŸã‚å¾“æ¥ã©ãŠã‚ŠLockã‚’ç¶­æŒã€‚
-- Sessionè§£æ”¾å‡¦ç†ã‚’APIã®`Throwable` boundaryå†…ã¸ç§»ã—ã€`session_write_close()`å¤±æ•—æ™‚ã‚‚é€šå¸¸ã®JSON 500 responseã¨Reference IDã¸åã‚ã‚‹ã‚ˆã†ä¿®æ­£ã€‚
-- Camera / Videoã¸Snapshot 12ç§’ã€Video metadata 15ç§’ã€MJPEG 12ç§’ã®Client-side watchdogã‚’è¿½åŠ ã—ã€å›ºã¾ã£ãŸè¡¨ç¤ºã‚’å†è©¦è¡Œå¯èƒ½ãªçŠ¶æ…‹ã¸å¾©æ—§ã€‚
-- Mailã¸13.5ç§’ã€Earthquakeã¸10.5ç§’ã€Sun / Moonã¸6.5ç§’ã€Air Qualityã¸8.5ç§’ã®Client-side watchdogã‚’è¿½åŠ ã€‚
-- RSSã€Clockã€Gameã€Memoã€Taskã€Search Feedã€Linksã€Weatherã€Earthquakeã€Sun / Moonã€Air Qualityã€Calendarã€Camera / Videoã€Mailã®è¨­å®šä¿å­˜ã‚’ã€ãƒšãƒ¼ã‚¸å…¨ä½“Reloadã§ã¯ãªãå¯¾è±¡Cardä¸­å¿ƒã®æ›´æ–°ã¸å¤‰æ›´ã€‚
-- Weatherã®Titleï¼è‰²ï¼Widthï¼Heightã®ã¿ã®å¤‰æ›´ã§ã¯Dataã‚’å†å–å¾—ã›ãšã€åœ°åŸŸï¼è¡¨ç¤ºæ—¥æ•°ã‚’å¤‰æ›´ã—ãŸå ´åˆã®ã¿å†å–å¾—ã€‚
-- Camera / Videoã¨Mailã¯å¯¾è±¡Widgetã ã‘ã‚’å†æ§‹ç¯‰ã—ã€ä»–Widgetã®è¨­å®šå¤‰æ›´ã§å†ç”Ÿä¸­ã®YouTube iframeç­‰ãŒä½œã‚Šç›´ã•ã‚Œã¦åœæ­¢ã™ã‚‹å•é¡Œã‚’è§£æ¶ˆã€‚
-- Dashboardå…±é€šé€šçŸ¥ã‚’successç´„2.5ç§’ã€infoç´„3ç§’ã€dangerç´„6ç§’ã§è‡ªå‹•æ¶ˆå»ã—ã€è¨­å®šæ›´æ–°é€šçŸ¥ãŒæ®‹ã‚Šç¶šã‘ã‚‹å•é¡Œã‚’ä¿®æ­£ã€‚
-- hls.js 1.6.16ã®Versionå›ºå®šã¨anonymous CORSã‚’ç¶­æŒã—ãŸã¾ã¾ã€Subresource Integrityã®SHA-384ã‚’å®Ÿé…å¸ƒAssetã¨ä¸€è‡´ã™ã‚‹å€¤ã¸ä¿®æ­£ã€‚
-- `APP_VERSION`ã€`APP_VERSION_LABEL`ã€`APP_ASSET_REVISION`ã‚’`1.17.1`ã¸çµ±ä¸€ã€‚
-- DB Tableï¼Columnã€Migrationã€SQLã€å¿…é ˆconfigã®è¿½åŠ å¤‰æ›´ã¯ãªã—ã€‚
-- GitHub Actions PHP 8.1ï¼8.4ã®Current Regressionã€V1.17 focused testsã€V1.17.1 focused testsã€ãŠã‚ˆã³V1.17.1 Release Gateã‚’PASSã€‚
-
-## RSS Reader Modernization 1.17.0 â€” 2026-08-19
-
-### Camera / Video Widget / Asset revision / Current test policy
-
-- Dashboardã¸Camera / Video Widgetã‚’è¿½åŠ ã—ã€æ—¢å­˜`dashboard_widget.widget_config`ã¸è¨­å®šã‚’ä¿å­˜ã€‚æ–°è¦Tableï¼Columnï¼Migrationã¯è¿½åŠ ã—ãªã„ã€‚
-- Snapshotã‚’Browserã®Imageã¨ã—ã¦è¡¨ç¤ºã—ã€æ‰‹å‹•æ›´æ–°ã¨OFFï¼10ç§’ï¼30ç§’ï¼1åˆ†ï¼5åˆ†ï¼10åˆ†ã®è‡ªå‹•æ›´æ–°ã€å¤±æ•—æ™‚ã®ç›´å‰æˆåŠŸç”»åƒç¶­æŒã«å¯¾å¿œã€‚
-- YouTube watchï¼liveï¼shortsï¼embedï¼youtu.be URLã‚’æ—¢çŸ¥Hostã¨Video IDã§æ¤œè¨¼ã—ã€YouTubeæ¨™æº–Playerã§è¡¨ç¤ºã€‚
-- MP4ï¼WebMç­‰ã‚’Browseræ¨™æº–`<video>`ã§å†ç”Ÿã—ã€MJPEGã¯Image streamã¨ã—ã¦ç›´æ¥è¡¨ç¤ºã€HLSã¯Native HLSã¾ãŸã¯hls.js 1.6.16ã§å†ç”Ÿã€‚
-- hls.jsã¯Versionå›ºå®šï¼‹SRIä»˜ãã§å¿…è¦æ™‚ã ã‘èª­è¾¼ã¿ã€Apache-2.0 License noticeã‚’è¿½åŠ ã€‚
-- Auto Sourceåˆ¤å®šã¸YouTubeã€Video extensionã€HLSã€MJPEG endpointã€Snapshotç”»åƒextensionã‚’è¿½åŠ ã—ã€æ›–æ˜§ãªURLã¯Snapshotã¸æ±ºã‚æ‰“ã¡ã›ãšã€Œåˆ¤å®šä¸èƒ½ã€ã¨ã—ã¦æ‰‹å‹•é¸æŠã‚’æ¡ˆå†…ã€‚
-- Smartphoneå‘ã‘ã«Camera / Videoã®Actionã¨Modalä½™ç™½ã‚’èª¿æ•´ã—ã€Width 1ã€œ4ï¼Height 1ã€œ2ã¨æ—¢å­˜Drag & Dropã‚’ç¶­æŒã€‚
-- é•·æœŸ`immutable` Cacheç’°å¢ƒã§æ®µéšé…å¸ƒAssetãŒå¤ã„ã¾ã¾æ®‹ã‚‹å•é¡Œã«å¯¾å¿œã™ã‚‹ãŸã‚`APP_ASSET_REVISION`ã‚’å°å…¥ã—ã€æ­£å¼Releaseã§ã¯`1.17.0`ã¸ç¢ºå®šã€‚
-- TEST-1ï¼TEST-2ã§Default CIã‚’ç¾è¡ŒProduct Contractä¸­å¿ƒã¸æ•´ç†ã—ã€éå»Versionç•ªå·ã‚„éå»Assetå®Œå…¨ä¸€è‡´ã‚’å›ºå®šã™ã‚‹å±¥æ­´Testã‚’é€šå¸¸CIã‹ã‚‰åˆ†é›¢ã€‚
-- GitHub Actions PHP 8.1ï¼8.4ã§Current Regressionï¼‹V1.17 focused testsã‚’PASSã—ã€Production smokeç¢ºèªå¾Œã«Application Versionã‚’`1.17.0`ã¸ç¢ºå®šã€‚
-- DB Tableï¼Columnã€Migrationã€SQLã€å¿…é ˆconfigã®è¿½åŠ å¤‰æ›´ã¯ãªã—ã€‚
-
-## RSS Reader Modernization 1.16.0 â€” 2026-08-17
-
-### Calculator / Blind Spot Discovery / Dashboard UI
-
-- Utilityã¸Calculator Widgetã‚’è¿½åŠ ã€‚å››å‰‡æ¼”ç®—ã€Decimalã€Percentã€Signã€Backspaceã€Keyboardæ“ä½œã«å¯¾å¿œã—ã€è¨ˆç®—ã¯Browserå´ã®ã¿ã§è¡Œã„`eval()`ã¯ä½¿ç”¨ã—ãªã„ã€‚
-- Dashboard Widgetã®Title Barã‚’44pxã¸æƒãˆã€Drag Handleã®å®Ÿæ“ä½œé ˜åŸŸã‚’44pxã¸çµ±ä¸€ã€‚
-- Informationã¸Blind Spot / Discovery Widgetã‚’è¿½åŠ ã—ã€20ã‚«ãƒ†ã‚´ãƒªãƒ»å›½å†…å‘ã‘40 Feedã‹ã‚‰æ™®æ®µè¦‹ãªã„åˆ†é‡ã®è¨˜äº‹ã‚’æœ€å¤§3ä»¶è¡¨ç¤ºã€‚
-- Blind Spotã¯ç›´å‰ã‚«ãƒ†ã‚´ãƒªã‚’é¿ã‘ã€24æ™‚é–“ãƒ»æœ€å¤§18ä»¶ã®æœ€è¿‘è¨˜äº‹å±¥æ­´ã§åŒä¸€è¨˜äº‹ã®é€£ç¶šè¡¨ç¤ºã‚’æŠ‘åˆ¶ã€‚æ—¢å­˜ã®SSRF Validationã€FeedFetchServiceã€Cacheã€Parserã‚’å†åˆ©ç”¨ã€‚
-- Blind Spotã®è¨˜äº‹æ¦‚è¦ã‚’ã€Œï¼‹ï¼ï¼ã€ã§å±•é–‹ã—ã€æ—¢å­˜RSSã¨åŒã˜å³ç«¯é…ç½®ã¸çµ±ä¸€ã€‚æœ¬æ–‡ã¯`content`å„ªå…ˆã€æœªå–å¾—æ™‚ã¯`description`ã‚’ä½¿ç”¨ã€‚
-- Blind Spotã¸æ—¢å­˜Article Actionsã‚’æ¥ç¶šã—ã€Stockä¿å­˜ã€URL Copyã€XæŠ•ç¨¿ã€Taskè¿½åŠ ã‚’å…±é€šå‡¦ç†ã§åˆ©ç”¨ã€‚
-- Smartphoneã€Height 1ï¼2ã€Width 1ã€œ4ã€Solarï¼Slateã‚’å«ã‚€Themeã§Blind Spotã®æ“ä½œé ˜åŸŸã€å†…éƒ¨Scrollã€Titleè¡Œæ•°ã€Focusè¡¨ç¤ºã‚’èª¿æ•´ã€‚
-- V1.16-F Full Regressionã§Clock Timerå˜ä½“runtimeã®jQueryéä¾å­˜å¥‘ç´„ã‚’ç¢ºèªã—ã€Calculatorï¼Blind Spotè¿½åŠ éƒ¨ã‚’jQueryæœªå®šç¾©ç’°å¢ƒã§ã¯å®‰å…¨ã«skipã™ã‚‹ã‚ˆã†ä¿®æ­£ã€‚
-- DB Tableï¼Columnã€Migrationã€SQLã€å¿…é ˆconfigã®è¿½åŠ å¤‰æ›´ã¯ãªã—ã€‚Application Versionã‚’`1.16.0`ã¸æ›´æ–°ã€‚
-
-## RSS Reader Modernization 1.15.0 â€” 2026-08-16
-
-### Information Widgets / Add Widget Catalog
-
-- Drawerã®Widgetè¿½åŠ ã‚’RSSï¼Informationï¼Utilityï¼Gameã®Catalogã¸æ•´ç†ã—ã€æ—¢å­˜Modalèµ·å‹•å¥‘ç´„ã‚’ç¶­æŒã—ãŸã¾ã¾2åˆ—Tileè¡¨ç¤ºã¸å¤‰æ›´ã€‚
-- Earthquake Widgetã‚’è¿½åŠ ã—ã€æ°—è±¡åºé˜²ç½æƒ…å ±XMLã®é«˜é »åº¦Feedï¼‹é•·æœŸFeed fallbackã‹ã‚‰æœ€æ–°åœ°éœ‡ã€æœ€å¤§éœ‡åº¦ã€Mã€æ·±ã•ã€æ´¥æ³¢æ–‡è¨€ã‚’è¡¨ç¤ºã€‚
-- Sun / Moon Widgetã‚’è¿½åŠ ã—ã€Weatherã¨åŒã˜åœ°åŸŸæ¤œç´¢ã€`date_sun_info()`ã€Dashboardå‘ã‘æœˆé½¢ï¼æœˆç›¸è¨ˆç®—ã§æ—¥ã®å‡ºãƒ»æ—¥ã®å…¥ã‚Šãƒ»æœˆæƒ…å ±ã‚’è¡¨ç¤ºã€‚
-- Air Quality / UV Widgetã‚’è¿½åŠ ã—ã€Open-Meteo Air Quality APIã‹ã‚‰US AQIã€PM2.5ã€PM10ã€UV Indexã‚’15åˆ†Cacheï¼‹stale fallbackä»˜ãã§è¡¨ç¤ºã€‚
-- Weatherï¼Earthquakeï¼Sun / Moonï¼Air Qualityã®Location Validationã€Widgetä¿å­˜ã€Cacheã€FrontendçŠ¶æ…‹è¡¨ç¤ºã‚’å¿…è¦ç¯„å›²ã ã‘å…±é€šåŒ–ã€‚
-- PCï¼Smartphoneã€Height 1ï¼2ã€Solarï¼Slateã‚’å«ã‚€Bootstrap 5 Themeã§Information Widgetã®Headerã€æ“ä½œé ˜åŸŸã€æœ¬æ–‡Scrollã€Footerã€Modalè¡¨ç¤ºã‚’èª¿æ•´ã€‚
-- Dashboardç©ºç™½é ˜åŸŸã‚’Mouseã§Clickã—ãŸéš›ã®ä¸è¦ãªé’ã„Focus outlineã‚’æŠ‘åˆ¶ã—ã€Keyboardã®`:focus-visible`è¡¨ç¤ºã¯ç¶­æŒã€‚
-- DB Tableï¼Columnã€Migrationã€SQLã€å¿…é ˆconfigã®è¿½åŠ å¤‰æ›´ã¯ãªã—ã€‚Application Versionã‚’`1.15.0`ã¸æ›´æ–°ã€‚
-
-## RSS Reader Modernization 1.14.1 â€” 2026-08-15
-
-### Bootstrap / Bootswatch Theme alignment
-
-- é€šå¸¸RSSï¼Search Feedã®è¨˜äº‹Titleã¨æ¦‚è¦ã‚’`--bs-body-color`ï¼`--bs-body-bg`ã¸è¿½å¾“ã•ã›ã€Solarï¼Slateç­‰ã®Dark Themeã§æœ¬æ–‡ãŒåŒåŒ–ã™ã‚‹å•é¡Œã‚’ä¿®æ­£ã€‚
-- è¨˜äº‹Actionsã€Taskã€Stockã€Calendarã€Mailã€Linksã€Weatherã€Clock Timerã€Mini Gameï¼Lights Outã®ä¸­ç«‹Surfaceãƒ»è£œåŠ©è‰²ãƒ»Borderã‚’Bootstrap 5 Themeå¤‰æ•°ã¸æ•´ç†ã€‚
-- Stock Tagç®¡ç†Panelã‚„Smartphoneã®RSSæ¦‚è¦Iconãªã©ã€å¾Œå‹ã¡ã—ã¦ã„ãŸå›ºå®šè‰²ã‚‚Themeé€£å‹•ã¸ä¿®æ­£ã€‚
-- Keyword Highlightã€ä¼‘æ—¥ï¼é€±æœ«ã€Timerçµ‚äº†ã€Gameã®Playerï¼æ•µï¼å®ï¼Goalã€Lights Out ONç­‰ã®æ„å‘³ã‚’æŒã¤çŠ¶æ…‹è‰²ã¯æ˜ç¤ºè‰²ã‚’ç¶­æŒã€‚
-- Solarï¼Slateå°‚ç”¨ã®ä¸­ç«‹è‰²ä¸Šæ›¸ãã‚’æ¸›ã‚‰ã—ã€Bootstrap / Bootswatch 5.3.8ã®Themeå¤‰æ•°ã‚’å…±é€šå¥‘ç´„ã¨ã—ã¦åˆ©ç”¨ã€‚
-- PHPã€JavaScriptã€HTMLã€APIã€DB schemaã€Migrationã€å¿…é ˆconfigã®å¤‰æ›´ã¯ãªã—ã€‚
-- Application Versionã‚’`1.14.1`ã¸æ›´æ–°ã€‚
-
-## RSS Reader Modernization 1.14.0 â€” 2026-08-14
-
-### Version 1.14.0 frontend modernization finalization
-
-- Bootstrap / Bootswatchã‚’4.1.3ã‹ã‚‰5.3.8ã¸æ›´æ–°ã—ã€å…¨8 Themeã‚’Versionå›ºå®šAssetã¸åˆ‡æ›¿ã€‚
-- Bootstrap 4æ™‚ä»£ã®Data APIã€Formã€Utilityã€Modalç­‰ã®markupã‚’Bootstrap 5ã¸ç§»è¡Œã€‚
-- å³ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã®jquery-drawerã‚’Bootstrap Offcanvasã¸ç½®æ›ã—ã€Drawerâ†’Modalé·ç§»æ™‚ã®Backdropï¼Focusç«¶åˆã‚’å›é¿ã€‚
-- jquery-drawerã€iScrollã€standalone Popperã€ãŠã‚ˆã³ç§»è¡Œå®Œäº†å¾Œã®Bootstrap 4æ—§é…å¸ƒAssetã‚’å‰Šé™¤ã€‚
-- PCï¼Smartphoneã¨å…¨8 Themeã§Navbarã€Modalã€Offcanvasã€Stockã€Memoã€Taskã€Calendarã€Mailã€Linksã€Weatherã®è¡¨ç¤ºã‚’èª¿æ•´ã€‚
-- é€šå¸¸RSSï¼Search Feedï¼å„Widgetã®Cardè¦‹å‡ºã—ã‚’`text-bg-*`ã¸çµ±ä¸€ã—ã€èƒŒæ™¯è‰²ã«å¿œã˜ãŸæ–‡å­—ãƒ»Iconè‰²ã¸è‡ªå‹•è¿½å¾“ã€‚
-- Search Feedã®è¦‹å‡ºã—èƒŒæ™¯è‰²ã‚’`tr`ã§ã¯ãªã`th`ã¸é©ç”¨ã—ã€Bootstrap 5 TableèƒŒæ™¯ã«éš ã‚Œã‚‹å•é¡Œã‚’ä¿®æ­£ã€‚
-- jQuery 3.7.1ã€Font Awesome Free 6.7.2ã€æ—¢å­˜APIï¼DBï¼Widgetä»•æ§˜ã‚’ç¶­æŒã€‚
-- Version 1.14ã§DB schemaã€Migrationã€SQLã€å¿…é ˆconfigã®è¿½åŠ å¤‰æ›´ã¯ãªã—ã€‚
-- Application Versionã‚’`1.14.0`ã¸ç¢ºå®šã—ã€Release package builderï¼verifierã¨Dependencyï¼Release Documentationã‚’ç¾è¡Œæ§‹æˆã¸æ›´æ–°ã€‚
-
-## RSS Reader Modernization 1.13.0 â€” 2026-08-14
-
-### Version 1.13.0 structure / performance / security finalization
-- Stockä¸€è¦§ã‚’`public/stock.php`ã¸åˆ†é›¢ã—ã€Canonical routeã‚’`/stock`ã¸æ•´ç†ã€‚æ—¢å­˜`/?tab=stock`ã¯æ¤œç´¢ãƒ»ä¸¦ã³æ›¿ãˆãƒ»Pageãƒ»Tagæ¡ä»¶ã‚’ç¶­æŒã—ã¦äº’æ›Redirectã€‚
-- è¡¨ç¤ºè¨­å®šã€Tabåã€RSS Highlightè¨­å®šã‚’`public/settings.php`ã¸åˆ†é›¢ã—ã€`/settings`ã¸é›†ç´„ã€‚Account Settingsã¯å¾“æ¥ã©ãŠã‚ŠDashboard Modalã‚’ç¶­æŒã€‚
-- `public/index.php`ã®Dashboard Widgetï¼Modalè¡¨ç¤ºã‚’å†…éƒ¨Viewã¸åˆ†å‰²ã—ã€æ—¢å­˜DOMï¼CSSï¼JavaScriptï¼APIå¥‘ç´„ã‚’å¤‰ãˆãšå¯èª­æ€§ã‚’æ”¹å–„ã€‚
-- V1.13-Aï¼Eã®Performanceè¨ˆæ¸¬ã‚’æ¯”è¼ƒã—ã€Stock DB helperã‚’å«ã‚è¿½åŠ æœ€é©åŒ–ãŒå¿…è¦ãªåŠ£åŒ–ã¯ç¢ºèªã•ã‚Œãªã‹ã£ãŸãŸã‚ã€æ ¹æ‹ ã®ãªã„SQLï¼Cacheå¤‰æ›´ã¯å®Ÿæ–½ã›ãšç¾è¡ŒæŒ™å‹•ã‚’ç¶­æŒã€‚
-- V1.13-Fã§Security Headerï¼Sessionï¼CSRFï¼SSRFï¼XSSï¼APIå¢ƒç•Œã‚’å†ç¢ºèªã—ã€Healthcheckã¨æ–°è¦è¨­ç½®ï¼Security Documentationã‚’ç¾è¡Œæ§‹æˆã¸æ•´åˆã€‚
-- æ—¢å­˜Migration `009_v1_9_mail_account.sql`ã¨æ–°è¦è¨­ç½®Schemaã®èª¬æ˜ã‚’ç¾è¡ŒçŠ¶æ…‹ã¸æ•´åˆã—ãŸãŒã€DDLå¤‰æ›´ã€æ–°è¦Migrationã€å¿…é ˆconfigè¿½åŠ ã¯ãªã—ã€‚
-- Application Versionã‚’`1.13.0`ã¸ç¢ºå®šã€‚
-
-## RSS Reader Modernization 1.12.1 â€” 2026-08-11
-
-### Version 1.12.1 compatibility and regression fixes
-
-- V1.11çµ±åˆæ™‚ã«å¤±ã‚ã‚Œã¦ã„ãŸStockè§£é™¤ã®Ajaxéƒ¨åˆ†æ›´æ–°ã‚’å¾©å…ƒã—ã€å¯¾è±¡Stockã®ã¿ã‚’å‰Šé™¤ã™ã‚‹æŒ™å‹•ã‚’ç¶­æŒã€‚
-- Stockæœ€çµ‚ã‚«ãƒ¼ãƒ‰è§£é™¤æ™‚ã¯ç©ºçŠ¶æ…‹è¡¨ç¤ºã€Page 2ä»¥é™ã§ã¯å‰Pageã¸æˆ»ã‚‹æ—¢å­˜V1.8æŒ™å‹•ã‚’å¾©å…ƒã€‚
-- Stockã‹ã‚‰Taskã¸è¿½åŠ ã™ã‚‹éš›ã€Task Widget 1ä»¶æ™‚ã®ç›´æ¥è¿½åŠ ã¨è¤‡æ•°æ™‚ã®æ—¢å­˜é¸æŠModalã‚’å¾©å…ƒã€‚
-- V1.12ã®ç¾è¡Œå®Ÿè£…ã«åˆã‚ã›ã€å±¥æ­´Regressionã®V1.3-C fixtureã¨Browserä¾å­˜Testã‚’CIç’°å¢ƒã¸æ•´åˆã€‚
-- DB schemaã€Migrationã€configã®è¿½åŠ å¤‰æ›´ã¯ãªã—ã€‚Version 1.12ã®DBå¤‰æ›´ã¯å¼•ãç¶šãMigration `012_v1_12_feed_keywords.sql`ã®ã¿ã€‚
-- GitHub Actionsã®PHP 8.1 / 8.4ã§å…¨Regression PASSã‚’ç¢ºèªã€‚
-
-## RSS Reader Modernization 1.12.0 â€” 2026-08-10
-
-### Version 1.12.0 finalization
-
-- RSS Highlightã‚’è¿½åŠ ã—ã€ãƒ¦ãƒ¼ã‚¶ãƒ¼ç™»éŒ²Keywordã«ä¸€è‡´ã™ã‚‹RSS Titleéƒ¨åˆ†ã‚’é€šå¸¸RSSï¼Search Feedã®å…±é€šæç”»ã§å¼·èª¿è¡¨ç¤ºã€‚
-- Highlight Keywordã¯è¤‡æ•°ç™»éŒ²ã€è¿½åŠ ï¼å‰Šé™¤ã€é‡è¤‡é˜²æ­¢ã€æœ€å¤§50ä»¶ã€1ä»¶64æ–‡å­—ã¾ã§ã«å¯¾å¿œã€‚
-- `feed_keyword` Tableã¨Migration `012_v1_12_feed_keywords.sql`ã‚’è¿½åŠ ã€‚
-- Mail Widget Phase 2ã¨ã—ã¦ã€Folderå…¨ä½“ã®æœªèª­ä»¶æ•°ã€æœªèª­ã®ã¿è¡¨ç¤ºã€æœ€çµ‚æ›´æ–°æ™‚åˆ»ã‚’è¿½åŠ ã€‚
-- Mail Widgetã«ä»¶åï¼Fromæ¤œç´¢ã€é€ä¿¡è€…Filterã€IMAP Folderåˆ‡æ›¿ã‚’è¿½åŠ ã€‚
-- Mailæœ¬æ–‡å–å¾—ã¯Folderã¨UIDã‚’çµ„ã¿åˆã‚ã›ã¦æ¤œè¨¼ã—ã€read-onlyå¢ƒç•Œã‚’ç¶­æŒã€‚
-- Mail Folderé¸æŠã¯æ—¢å­˜`dashboard_widget.widget_config`ã®schema 2ã¨ã—ã¦ä¿å­˜ã—ã€æ—§schema 1ã¯`INBOX`ã¨ã—ã¦äº’æ›ç¶­æŒã€‚
-- Release helperã‚’Version 1.12.0å‘ã‘ã¸æ›´æ–°ã—ã€Application Versionã‚’`1.12.0`ã¸ç¢ºå®šã€‚
-- Version 1.12ã§ã®DBæ§‹é€ å¤‰æ›´ã¯RSS Highlightç”¨Migration 012ã®ã¿ã€‚Mail Phase 2ã«ã‚ˆã‚‹Tableï¼Columnè¿½åŠ ã¯ãªã—ã€‚
-
-## RSS Reader Modernization 1.2.0 â€” 2026-08-05
-
-### Version 1.2.0 finalization
-
-- V1.2-Aï½Dã¨R2ï½R5ã®ç¢ºèªæ¸ˆã¿å†…å®¹ã‚’çµ±åˆã—ã€Application Versionã‚’`1.2.0`ã¸ç¢ºå®šã€‚
-- èªè¨¼ç”»é¢ãƒ»é€šçŸ¥ãƒ»å…±é€šErrorã€è¨˜äº‹è¡¨ç¤ºãƒ»æ¦‚è¦é–‹é–‰ãƒ»å€‹åˆ¥æ›´æ–°ã€Search Feedã€è¨˜äº‹Actionsã‚’æ­£å¼Releaseç¯„å›²ã¨ã—ã¦æ•´ç†ã€‚
-- è¨˜äº‹Actionsã¯Stockä¿å­˜ã€URL Copyã€XæŠ•ç¨¿ç”»é¢ã€è¨˜äº‹Titleã®ã¿ã®Taskè¿½åŠ ã¸å¯¾å¿œã€‚
-- ä¸‰ç‚¹ãƒªãƒ¼ãƒ€ãƒ¼ã€æ¦‚è¦ã€Œï¼‹ã€ã€æ–°ç€Bellã®æ“ä½œæ€§ã¨è¨˜äº‹Titleè¡¨ç¤ºé ˜åŸŸã®èª¿æ•´ã‚’å«ã‚€ã€‚
-- Version 1.2ã§DB Tableï¼Columnã€Migrationã€SQLã€å¿…é ˆè¨­å®šã®è¿½åŠ ã¯ãªã—ã€‚
-- READMEã€Release Notesã€é…ç½®æ‰‹é †ã€Package Builderï¼Verifierã€Version 1.2 Release Gateã‚’æ›´æ–°ã€‚
-- Application Runtimeã®æ©Ÿèƒ½ä¿®æ­£ã¯è¡Œã‚ãšã€R5ã‹ã‚‰ã®Applicationå¤‰æ›´ã¯`app/version.php`ã®ã¿ã€‚
-
-## RSS Reader Modernization 1.2.0-dev.4 â€” V1.2-D / R5 â€” 2026-08-05
-
-### New Bell title layout correction
-
-- è¨˜äº‹å´ã®æ–°ç€Bellã‚’Titleã®é€šå¸¸Flexå¹…ã‹ã‚‰å¤–ã—ã€Titleå·¦ä¸Šã¸å›ºå®šã€‚
-- Bellåˆ†ã®ä½™ç™½ã‚’Titleã®1è¡Œç›®ã ã‘ã«é™å®šã—ã€2è¡Œç›®ã¯å·¦ç«¯ã‹ã‚‰è¡¨ç¤ºå‡ºæ¥ã‚‹ã‚ˆã†èª¿æ•´ã€‚
-- Bellã®22pxè¡¨ç¤ºã€è§£é™¤æ“ä½œã€Keyboard Focusã€é€šå¸¸RSSï¼Search Feedã®å…±é€šæç”»ã‚’ç¶­æŒã€‚
-- ä¸‰ç‚¹ãƒªãƒ¼ãƒ€ãƒ¼ã€RSSæ¦‚è¦ã€Œï¼‹ã€ã€è¨˜äº‹Actionsã€DBã€SQLã€è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ã€Versionç•ªå·ã¯å¤‰æ›´ãªã—ã€‚
-
-## RSS Reader Modernization 1.2.0-dev.4 â€” V1.2-D / R1 â€” 2026-08-05
-
-### Article Actions menu
-
-- é€šå¸¸RSSã¨Search Feedã®è¨˜äº‹å·¦ç«¯ã‚’Bookmarkã‹ã‚‰ä¸‰ç‚¹ãƒªãƒ¼ãƒ€ãƒ¼ã¸å¤‰æ›´ã—ã€1ã¤ã®å…±é€šè¨˜äº‹Actionsãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’è¿½åŠ ã€‚
-- æ—¢å­˜Stockä¿å­˜å‡¦ç†ã€URLã‚³ãƒ”ãƒ¼ã€X Web Intentã€è¨˜äº‹ã‚¿ã‚¤ãƒˆãƒ«ã®ã¿ã®Taskè¿½åŠ ã¸å¯¾å¿œã€‚
-- Clipboard APIãŒåˆ©ç”¨å‡ºæ¥ãªã„å ´åˆã¯ã€å¾“æ¥Copyå‡¦ç†ã¸Fallbackã€‚
-- XæŠ•ç¨¿ç”¨ã‚¿ã‚¤ãƒˆãƒ«ã¯é•·ã™ãã‚‹å ´åˆã«200æ–‡å­—ä»¥å†…ã¸èª¿æ•´ã—ã€è¨˜äº‹URLã¨ã¨ã‚‚ã«URL Encodeã€‚
-- Taskã¯ç¾åœ¨ã®ã‚¿ãƒ–ã«è¡¨ç¤ºã•ã‚Œã‚‹å…ˆé ­ã®Task Widgetã¸ã€æœŸé™ãªã—ãƒ»é€šå¸¸å„ªå…ˆåº¦ã§è¿½åŠ ã€‚è¨˜äº‹URLã¯ä¿å­˜ã—ãªã„ã€‚
-- ä»–ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’é–‹ã„ãŸæ™‚ã€å¤–å´Clickã€Escã€Scrollã€Resizeã€è¨˜äº‹å†æç”»æ™‚ã«Actionsãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’é–‰ã˜ã‚‹ã€‚
-- PCï¼Smartphoneã®44pxæ“ä½œé ˜åŸŸã€Keyboardæ“ä½œã€ariaå±æ€§ã€ã‚«ãƒ¼ãƒ‰å†…ã¸åã‚ã‚‹ä½ç½®èª¿æ•´ã‚’è¿½åŠ ã€‚
-- DBã€Tableã€Columnã€Migrationã€SQLã€å¤–éƒ¨Libraryã€`.htaccess`ã€`config/local.php`ã®å¤‰æ›´ã¯ãªã—ã€‚
-
-## RSS Reader Modernization 1.2.0-dev.3 â€” V1.2-C / R5 â€” 2026-08-05
-
-### Search Feed title color correction
-
-- Search Feedã®åˆæœŸã‚¿ã‚¤ãƒˆãƒ«æ–‡å­—è‰²ã‚’ã€æ—¢å­˜ã‚«ãƒ¼ãƒ‰ã¨åŒã˜`text-white`ã¸çµ±ä¸€ã€‚
-- åˆå›æ¤œç´¢ãŠã‚ˆã³å€‹åˆ¥æ›´æ–°å¾Œã«JavaScriptã§å¾©å…ƒã•ã‚Œã‚‹ã‚¿ã‚¤ãƒˆãƒ«ã«ã‚‚`text-white`ã‚’ç¶­æŒã€‚
-- `dark`ã‚’å«ã‚€è‰²ä»˜ãè¦‹å‡ºã—ã§ã€é»’ã„ã‚¿ã‚¤ãƒˆãƒ«ãŒèƒŒæ™¯ã¨åŒåŒ–ã™ã‚‹å•é¡Œã‚’ä¿®æ­£ã€‚
-- èƒŒæ™¯ã«å¿œã˜ãŸæ–‡å­—è‰²ã®å‹•çš„åˆ‡æ›¿ã¯ã€å…¨ã‚«ãƒ¼ãƒ‰å…±é€šã®å°†æ¥èª²é¡Œã¨ã—ã¦ä»Šå›ã¯å®Ÿæ–½ã—ãªã„ã€‚
-- DBã€APIã€Cacheã€CSSã€`.htaccess`ã€`config/local.php`ã€Versionç•ªå·ã¯å¤‰æ›´ãªã—ã€‚
-
-## RSS Reader Modernization 1.2.0-dev.3 â€” V1.2-C / R4 â€” 2026-08-05
-
-### Search Feed summary and transient notice correction
-
-- ã€ŒStockã¸ä¿å­˜ã—ã¾ã—ãŸã€ã«2.5ç§’ã®è‡ªå‹•æ¶ˆå»ã‚’è¿½åŠ ã€‚
-- é€šå¸¸Feedå°‚ç”¨ã ã£ãŸæ¦‚è¦Buttonã®ã‚«ãƒ¼ãƒ‰å‚ç…§ã‚’ã€Search Feedã«ã‚‚å¯¾å¿œã€‚
-- Search Feedã®æœ‰åŠ¹ãª`ï¼‹`ã‹ã‚‰RSSæ¦‚è¦ã‚’æ­£å¸¸ã«é–‹é–‰ã§ãã‚‹ã‚ˆã†ä¿®æ­£ã€‚
-- ã€ŒRSSæ¦‚è¦ã‚’ç¢ºèªå‡ºæ¥ã¾ã›ã‚“ã§ã—ãŸã€ã«4ç§’ã®è‡ªå‹•æ¶ˆå»ã‚’è¿½åŠ ã€‚
-- ç©ºæ¦‚è¦ã®`ï¼‹`ã¯å¾“æ¥ã©ãŠã‚Šè¡¨ç¤ºã—ãŸã¾ã¾disabledã‚’ç¶­æŒã€‚
-- Memoã®`sessionStorage`å¯¾å¿œã¯ä»Šå›ã®å¯¾è±¡å¤–ã€‚
-- DBã€APIã€Cacheã€CSSã€HTMLã€`.htaccess`ã€`config/local.php`ã€Versionç•ªå·ã¯å¤‰æ›´ãªã—ã€‚
-
-## RSS Reader Modernization 1.2.0-dev.3 â€” V1.2-C / R3 â€” 2026-08-05
-
-### Search Feed header layout correction
-
-- Search Feedã®è¦‹å‡ºã—ã‚’é€šå¸¸RSSã‚«ãƒ¼ãƒ‰ã¨åŒã˜1æ®µLayoutã¸çµ±ä¸€ã€‚
-- `ï¼ / æ¤œç´¢èªå¥ / ç·¨é›† / å†èª­ã¿è¾¼ã¿`ã‚’44pxé«˜ã®åŒä¸€è¡Œã¸é…ç½®ã€‚
-- é•·ã„æ¤œç´¢èªå¥ã¯æŠ˜ã‚Šè¿”ã—ã¦æ“ä½œButtonã‚’2æ®µç›®ã¸é€ã‚‰ãšã€çœç•¥è¡¨ç¤ºã‚’ç¶­æŒã€‚
-- ç·¨é›†ãƒ»å†èª­ã¿è¾¼ã¿Buttonã®44pxæ“ä½œé ˜åŸŸã¨Keyboard Focusè¡¨ç¤ºã‚’ç¶­æŒã€‚
-- æ¤œç´¢å‡¦ç†ã€APIã€DBã€Cacheã€è¨˜äº‹è¡¨ç¤ºã€`.htaccess`ã€`config/local.php`ã€Versionç•ªå·ã¯å¤‰æ›´ãªã—ã€‚
-
-## RSS Reader Modernization 1.2.0-dev.3 â€” V1.2-C / R2 â€” 2026-08-05
-
-### Search Feed UI correction
-
-- åˆå›æ¤œç´¢æˆåŠŸå¾Œã‚‚è¦‹å‡ºã—ãŒã€Œèª­ã¿è¾¼ã¿ä¸­...ã€ã®ã¾ã¾æ®‹ã‚‹è¡¨ç¤ºå¾©å…ƒæ¼ã‚Œã‚’ä¿®æ­£ã€‚
-- æ¤œç´¢çµæœ0ä»¶ã®å ´åˆã‚‚ã€Search Feedè¦‹å‡ºã—ã‚’ä¿å­˜æ¸ˆã¿æ¤œç´¢èªå¥ã¸æˆ»ã™ã‚ˆã†ä¿®æ­£ã€‚
-- Structured API erroræ™‚ã«åˆå›è¦‹å‡ºã—ãŒLoadingçŠ¶æ…‹ã®ã¾ã¾æ®‹ã‚‰ãªã„ã‚ˆã†Errorè¡¨ç¤ºã¸ç§»è¡Œã€‚
-- Search Feedã®è¦‹å‡ºã—è‰²ã‚’æ—¢å­˜Widgetã¨åŒã˜`success / primary / info / secondary / dark / warning / danger`è¡¨è¨˜ã¸çµ±ä¸€ã€‚
-- Search Feedã®æ¨ªå¹…è¡¨è¨˜ã‚’æ—¢å­˜Widgetã¨åŒã˜`1åˆ— / 2åˆ— / 3åˆ— / å…¨å¹…`ã¸çµ±ä¸€ã€‚
-- DBã€APIã€Cacheã€`.htaccess`ã€`config/local.php`ã€Versionç•ªå·ã¯å¤‰æ›´ãªã—ã€‚
-
-## RSS Reader Modernization 1.2.0-dev.2 â€” V1.2-B / R3 â€” 2026-08-04
-
-### Article title and summary control display correction
-
-- è¨˜äº‹Titleã‚’å›ºå®š1è¡Œã§ã¯ãªãã€å†…å®¹ã«å¿œã˜ã¦1è¡Œã¾ãŸã¯æœ€å¤§2è¡Œè¡¨ç¤ºã¸èª¿æ•´ã€‚
-- 1è¡ŒTitleã§ã¯ä¸è¦ãª2è¡Œåˆ†ã®é«˜ã•ã‚’ç¢ºä¿ã›ãšã€Stockï¼NEWï¼æ¦‚è¦Buttonã¨ã®ç¸¦ä½ç½®ã‚’è‡ªç„¶ã«æƒãˆãŸã€‚
-- æ¦‚è¦æ“ä½œã‚’Unicode `â–½`ã‹ã‚‰Font Awesomeã®`plus-square`ï¼`minus-square`ã¸å¤‰æ›´ã€‚
-- å±•é–‹ä¸­ã¯Minus Iconã€é–‰ã˜ãŸçŠ¶æ…‹ã¯Plus Iconã¨ã—ã¦è¡¨ç¤ºã—ã€44pxã®æ“ä½œé ˜åŸŸã¯ç¶­æŒã€‚
-- APIã€DBã€Cacheã€`.htaccess`ã€`config/local.php`ã€Versionç•ªå·ã¯å¤‰æ›´ãªã—ã€‚
-
-## RSS Reader Modernization 1.2.0-dev.2 â€” V1.2-B / R2 â€” 2026-08-04
-
-### R2 article action layout correction
-
-- Smartphoneå¹…ã§æ¦‚è¦`â–½`ãŒè–„ãè¦‹ãˆã€StockãŒå³å´ã¸ç§»å‹•ã—ã¦ã„ãŸè¨˜äº‹è¡ŒLayoutã‚’ä¿®æ­£ã€‚
-- è¨˜äº‹è¡Œã‚’`Stockï½œTitleï½œâ–½`ã®3åˆ—ã¸æˆ»ã—ã€Stockã‚’å¾“æ¥ä½ç½®ã®å·¦å´ã¸å¾©å¸°ã€‚
-- æ¦‚è¦`â–½`ã¯å³ç«¯ã®ç‹¬ç«‹44pxåˆ—ã¸é…ç½®ã—ã€Icon Fontã¸ä¾å­˜ã—ãªã„Unicode `â–½`ã¨Colorï¼Font Sizeã‚’æ˜ç¤ºã€‚
-- Loadingï¼Emptyï¼Errorï¼Accordion detail rowã®`colspan`ã‚’3åˆ—æ§‹æˆã¸åŒæœŸã€‚
-- DBã€APIã€Cacheã€`.htaccess`ã€`config/local.php`ã€Versionç•ªå·ã¯å¤‰æ›´ãªã—ã€‚
-- R2åˆ†å‰²Regression: PASS 3,862ï¼FAIL 0ï¼SKIP 10ã€‚
-
-### Feed article display / individual refresh
-
-- è¨˜äº‹Titleã®å›ºå®š64æ–‡å­—åˆ‡ã‚Šè©°ã‚ã‚’å»ƒæ­¢ã—ã€CSS Ellipsisã¨å®Ÿå¯¸Overflowåˆ¤å®šã¸å¤‰æ›´ã€‚
-- å®Ÿéš›ã«çœç•¥ã•ã‚ŒãŸTitleã ã‘ã€240ms Delayå¾Œã®Hoverï¼Keyboard Focusã§å…¨æ–‡Tooltipã‚’è¡¨ç¤ºã€‚
-- å„è¨˜äº‹ã¸æ¦‚è¦Toggleã‚’è¿½åŠ ã—ã€`content`ã‚’å„ªå…ˆã€ç©ºã®å ´åˆã¯`description`ã‚’ä½¿ç”¨ã€‚
-- æ¦‚è¦ã¯å±•é–‹æ™‚ã ã‘DOMã‚’ç”Ÿæˆã—ã€`.text()`ã«ã‚ˆã‚‹Plain Textè¡¨ç¤ºã€é•·æ–‡Scrollã€å…ƒè¨˜äº‹Linkã‚’ç¶­æŒã€‚
-- ç”»åƒã€iframeã€å‹•ç”»ã€Scriptç­‰ã‚’æ¦‚è¦ã¨ã—ã¦å®Ÿè¡Œãƒ»ç”Ÿæˆã—ãªã„ã€‚
-- Feedè¦‹å‡ºã—ã‚’`ï¼ Titleã€€âœ âŸ³`ã¸æ•´ç†ã—ã€ç·¨é›†ä½ç½®ã‚’ç¶­æŒã—ãŸå€‹åˆ¥æ›´æ–°Buttonã‚’è¿½åŠ ã€‚
-- å€‹åˆ¥æ›´æ–°ã¯æ—¢å­˜`feed.fetch`ã‚’å†åˆ©ç”¨ã—ã€ownerç¢ºèªã€CSRFã€Cacheã€ETagã€Last-Modifiedã€Retryã€Backoffã‚’ç¶­æŒã€‚
-- æ›´æ–°ä¸­ã¯ç¾åœ¨ã®è¨˜äº‹ã‚’æ®‹ã—ã€Buttonç„¡åŠ¹åŒ–ã¨å›è»¢è¡¨ç¤ºã‚’è¡Œã„ã€å¤±æ•—æ™‚ã‚‚æ—§è¨˜äº‹ã‚’ç¶­æŒã€‚
-- æˆåŠŸå¾Œã¯å¯¾è±¡Feedã ã‘è¨˜äº‹ã€Titleã€NEWä»¶æ•°ã‚’å·®ã—æ›¿ãˆã€ä»–Widgetã¨ãƒšãƒ¼ã‚¸å…¨ä½“ã¯æ›´æ–°ã—ãªã„ã€‚
-- Articleè¡Œã‚’Titleé ˜åŸŸã¨Actioné ˜åŸŸã¸æ•´ç†ã—ã€æ—¢å­˜Stockã‚’ç¶­æŒã—ãªãŒã‚‰ç¬¬3æ®µï¼ç¬¬4æ®µã§å…±é€šåˆ©ç”¨ã—ã‚„ã™ã„æ§‹é€ ã¸å¤‰æ›´ã€‚
-- DBã€Migrationã€SQLã€`.htaccess`ã€`config/local.php`ã€å¤–éƒ¨ä¾å­˜ã€Buildç’°å¢ƒã®è¿½åŠ ã¯ãªã—ã€‚
-- åˆ†å‰²ã—ãŸå…¨Regressionã§PASS 3,948ï¼FAIL 0ï¼SKIP 10ã€‚
-
-## RSS Reader Modernization 1.2.0-dev.1 â€” V1.2-A â€” 2026-08-04
-
-### Authentication / Notice / Common Error
-
-- Loginï¼Registrationã‚’Bootstrap sampleé¢¨Layoutã‹ã‚‰å°‚ç”¨HTMLãƒ»CSSã¸æ›´æ–°ã€‚
-- PCï¼Smartphoneã€Keyboard Focusã€Native Enter submitã€Passwordè¡¨ç¤ºåˆ‡æ›¿ã€äºŒé‡é€ä¿¡é˜²æ­¢ã¸å¯¾å¿œã€‚
-- Loginï¼Registrationã¸ä¸­ç«‹åã®Honeypotã‚’è¿½åŠ ã—ã€Serverå´åˆ¤å®šã€æ±ç”¨å¤±æ•—Messageã€Login Throttleä½µç”¨ã‚’å®Ÿè£…ã€‚
-- Logoutå¾Œã¯æ—§èªè¨¼Sessionã‚’ç ´æ£„ã—ã€æ–°ã—ã„åŒ¿åSessionã®Flashã§ã€Œãƒ­ã‚°ã‚¢ã‚¦ãƒˆã—ã¾ã—ãŸã€‚ã€ã‚’1å›ã ã‘è¡¨ç¤ºã€‚
-- Session idleï¼absolute timeoutæ™‚ã¯Session IDã‚’å†ç”Ÿæˆã—ã€Logoutã¨ã¯åˆ¥ã®æœŸé™åˆ‡ã‚ŒMessageã‚’1å›ã ã‘è¡¨ç¤ºã€‚
-- 403ï¼404ï¼500ï¼503ã®å…±é€šErrorç”»é¢ã‚’è¿½åŠ ã—ã€Statusã€noindexï¼nofollowã€æƒ…å ±éè¡¨ç¤ºã€Reference IDã‚’ç¶­æŒã€‚
-- API Bootstrapï¼Configuration errorã¯HTMLã¸å¤‰ãˆãšã€Structured JSONã‚’ç¶­æŒã€‚
-- Serverç”¨Root `.htaccess`ã®Rewriteï¼æ‹’å¦è¨­å®šã‚’ç¶­æŒã—ã€ErrorDocument 403ï¼404ï¼500ï¼503ã‚’è¿½åŠ ã€‚
-- Unknown routeã‚’Dashboardã®200ã¸Rewriteã›ãšã€æ­£ã—ã„404ã¸å¤‰æ›´ã€‚
-- GitHub main inventoryã«åˆã‚ã›ã€æ·»ä»˜ZIPã«æ®‹ã£ã¦ã„ãŸæœªå‚ç…§jQuery 3.3.1ã¨Font Awesomeæ—§Formatã‚’é™¤å¤–ã€‚
-- DBã€Migrationã€SQLã€`config/local.php`è¿½åŠ ã€Feed Cacheä»•æ§˜å¤‰æ›´ã¯ãªã—ã€‚
-- åˆ†å‰²ã—ãŸå…¨Regressionã§PASS 3,744ï¼FAIL 0ï¼SKIP 10ã€‚
-
-## Version 1.1.0 â€” 2026-08-03
-
-### V1.1-K finalization and release
-
-- V1.1-Bï½Jã®æ©Ÿèƒ½ã‚’çµ±åˆã—ã€Application Versionã‚’1.1.0ã¸ç¢ºå®šã€‚
-- Secure Baselineã€M1ã€M2ã€V1.1ã®å›å¸°Testã‚’å†å®Ÿè¡Œã€‚
-- V1.1è¿½åŠ å¾Œã«å¤ããªã£ãŸM2æ§‹é€ Testã¨Node Harnessã‚’ç¾è¡Œå®Ÿè£…ã¸åŒæœŸã€‚
-- V1.1-Cæ—¢å­˜DB Migrationã®Default Prefixã‚’`ig_`ã¸çµ±ä¸€ã€‚
-- æœªå‚ç…§ã®jQuery 3.3.1ã¨Font Awesomeæ—§å½¢å¼ã‚’å‰Šé™¤ã€‚
-- Sessionã€Feed Cacheã€Login Throttle Dataã‚’é…å¸ƒå¯¾è±¡ã‹ã‚‰é™¤å¤–ã€‚
-- READMEã€Release Notesã€Roadmapã€è¨­ç½®ãƒ»æ›´æ–°ã€Tag / GitHub Releaseæ‰‹é †ã‚’1.1.0ã¸æ•´ç†ã€‚
-- å®Œå…¨çµ±åˆZIPã¨Runtime ZIPã®Deterministic Buildã€SHA-256ã€CRC / Path Traversal / Manifestæ¤œè¨¼ã‚’è¿½åŠ ã€‚
-- DBã®è¿½åŠ å¤‰æ›´ã¯ãªãã€V1.1-J / R2é©ç”¨æ¸ˆã¿DBã¸ã®è¿½åŠ Migrationã¯ä¸è¦ã€‚
-
-## V1.1-J / R1 â€” Account Settings
-
-- Drawerã¸Account Settingsã‚’è¿½åŠ ã€‚
-- ç¾åœ¨ã®ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ç¢ºèªå¾Œã«ã€Loginç”¨ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’å¤‰æ›´å¯èƒ½ã«ã—ãŸã€‚
-- ç¾åœ¨ã®ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ç¢ºèªå¾Œã«ã€æ–°ã—ã„ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã¨ç¢ºèªå…¥åŠ›ã§ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã‚’å¤‰æ›´å¯èƒ½ã«ã—ãŸã€‚
-- ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹ã¯æ—¢å­˜ä»•æ§˜ã©ãŠã‚ŠHMAC Identityã¨ã—ã¦ä¿å­˜ã—ã€ç”»é¢ã¸ç¾åœ¨å€¤ã‚’è¡¨ç¤ºã—ãªã„ã€‚
-- ä»–Userã¨ã®Identityé‡è¤‡ã€Active Userã€Transactionã€MySQL Row Lockã€CSRFã€Throttleã‚’ç¶­æŒã—ãŸã€‚
-- æˆåŠŸå¾Œã¯Session IDã¨CSRF Tokenã‚’å†ç”Ÿæˆã—ã€LoginçŠ¶æ…‹ã‚’ç¶­æŒã™ã‚‹ã€‚
-- Account Settingsã®Tableï¼Columnï¼Migrationè¿½åŠ ã¯ãªã„ã€‚
-
-
-ã“ã®Changelogã¯Legacyç‰ˆãã®ã‚‚ã®ã®ãƒªãƒªãƒ¼ã‚¹å±¥æ­´ã§ã¯ãªãã€RSS Reader Modernization Projectã®å¤‰æ›´è¨˜éŒ²ã§ã™ã€‚
-
-
-## RSS Reader Modernization 1.1.0-dev.8 â€” V1.1-I / R2
-
-- ã‚¹ãƒãƒ¼ãƒˆãƒ•ã‚©ãƒ³å¹…ã«é™ã‚Šã€Dashboardã®å·¦å³ã‚¹ãƒ¯ã‚¤ãƒ—ã§4ã‚¿ãƒ–ã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹æ“ä½œã‚’è¿½åŠ ã€‚
-- å·¦ã‚¹ãƒ¯ã‚¤ãƒ—ã¯æ¬¡ã®ã‚¿ãƒ–ã€å³ã‚¹ãƒ¯ã‚¤ãƒ—ã¯å‰ã®ã‚¿ãƒ–ã¸ç§»å‹•ã—ã€æœ€åˆãƒ»æœ€å¾Œã®ã‚¿ãƒ–ã§ã¯å¾ªç’°ã—ãªã„ã€‚
-- Calendarã€å…¥åŠ›æ¬„ã€Buttonã€Linkã€Modalã€Drawerã€Widgetä¸¦ã³æ›¿ãˆHandleã€ç”»é¢ç«¯ã‹ã‚‰å§‹ã¾ã‚‹æ“ä½œã‚’ã‚¹ãƒ¯ã‚¤ãƒ—åˆ¤å®šã‹ã‚‰é™¤å¤–ã€‚
-- ç¸¦Scrollã¨ç«¶åˆã—ãªã„ã‚ˆã†ã€ç§»å‹•è·é›¢ã€æ¨ªæ–¹å‘ã®å„ªä½æ€§ã€æ“ä½œæ™‚é–“ã‚’åˆ¶é™ã€‚
-- Feedã¨Calendarã®èª­è¾¼ä¸­è¡¨ç¤ºã¸Font Awesome Spinnerã‚’è¿½åŠ ã—ã€æˆåŠŸãƒ»å¤±æ•—å¾Œã¯busyçŠ¶æ…‹ã¨Spinnerã‚’è§£é™¤ã€‚
-- `prefers-reduced-motion`ã§ã¯Spinnerã®å›è»¢ã‚’æ­¢ã‚ã‚‹ã€‚
-- DBã€Migrationã€APIã€å¿…é ˆè¨­å®šã¯å¤‰æ›´ãªã—ã€‚
-
-## RSS Reader Modernization 1.1.0-dev.8 â€” V1.1-I
-
-- Calendar Widgetã‚’è¿½åŠ ã—ã€æœˆè¡¨ç¤ºã€å‰æœˆãƒ»ç¿Œæœˆãƒ»ä»Šæœˆã¸ã®ç§»å‹•ã¸å¯¾å¿œã€‚
-- é€šå¸¸äºˆå®šã‚’ä¿å­˜ã™ã‚‹`calendar_event`Tableã¨æ—¢å­˜DBå‘ã‘Migration `006_v1_1_calendar_event.sql`ã‚’è¿½åŠ ã€‚
-- é€šå¸¸äºˆå®šã®è¿½åŠ ãƒ»å¤‰æ›´ãƒ»è«–ç†å‰Šé™¤ã€è¤‡æ•°æ—¥è¡¨ç¤ºã€æœ€å¤§500ä»¶ãƒ»æœ€å¤§366æ—¥ã‚’è¿½åŠ ã€‚
-- TaskæœŸé™ã¯`task`Tableã‚’ç›´æ¥å‚ç…§ã—ã€Taskåã€æœŸé™ã€å„ªå…ˆåº¦ã€å®Œäº†çŠ¶æ…‹ã®å¤‰æ›´ã‚’Calendarã¸è‡ªå‹•åæ˜ ã€‚
-- Calendar Widgetã”ã¨ã«å®Œäº†Taskã‚’è¡¨ç¤ºã™ã‚‹ã‹é¸æŠå¯èƒ½ã€‚
-- Calendar APIã€CSRFã€ownerå¢ƒç•Œã€æ—¥ä»˜Validationã€XSS-safe DOMæ§‹ç¯‰ã€Migration / Browser Testã‚’è¿½åŠ ã€‚
-- Calendar Widgetå¤‰æ›´æ™‚ã®FrontendäºŒé‡é€ä¿¡ã‚’å®Ÿè£…ä¸­ã®å›å¸°Testã§æ¤œå‡ºã—ã€1å›é€ä¿¡ã¸ä¿®æ­£ã€‚
-
-## RSS Reader Modernization 1.1.0-dev.7 â€” V1.1-H
-
-- Taské …ç›®ã‚’ä¿å­˜ã™ã‚‹`task`Tableã¨ã€æ—¢å­˜DBå‘ã‘Migration `005_v1_1_task.sql`ã‚’è¿½åŠ ã€‚
-- 1ã¤ã®Task Widgetå†…ã«è¤‡æ•°Taskã‚’ä¿æŒã—ã€è¿½åŠ ãƒ»å¤‰æ›´ãƒ»å®Œäº†åˆ‡æ›¿ãƒ»è«–ç†å‰Šé™¤ã¸å¯¾å¿œã€‚
-- Taskåã€ä»»æ„ã®æœŸé™ã€å„ªå…ˆåº¦ï¼ˆä½ï¼é€šå¸¸ï¼é«˜ï¼‰ã€å®Œäº†çŠ¶æ…‹ã€ä½œæˆé †ã‚’ä¿å­˜ã€‚
-- Taské …ç›®ã¯`task`ã€Widgetã®è¦‹å‡ºã—ãƒ»é…ç½®ãƒ»å¹…ãƒ»è‰²ãƒ»ä¸¦ã³é †ã¯`dashboard_widget`ã¸åˆ†é›¢ã—ã¦ä¿å­˜ã€‚
-- Task CRUDã‚’owner scopeã€CSRFã€Transactionã€Row Lockã€è«–ç†å‰Šé™¤ã§ä¿è­·ã—ã€ä»–Userã®æ“ä½œã‚’æ‹’å¦ã€‚
-- Taskåã¯1ã€œ128æ–‡å­—ã€æœŸé™ã¯å³å¯†ãª`Y-m-d`ã€å„ªå…ˆåº¦ã¯allowlistã€1Widgetæœ€å¤§100ä»¶ã¸åˆ¶é™ã€‚
-- Calendarå·¥ç¨‹ã§æœŸé™ã‚’åˆ©ç”¨ã§ãã‚‹ã‚ˆã†ã€ownerï¼å®Œäº†çŠ¶æ…‹ï¼æœŸé™ã®Indexã‚’è¿½åŠ ã€‚
-- æ–°è¦DBç”¨`database/schema.sql`ã€CLI applyï¼verifyã€preflightï¼postflightã€å°‚ç”¨Regressionã‚’è¿½åŠ ãƒ»æ›´æ–°ã€‚
-
-## RSS Reader Modernization 1.1.0-dev.6 â€” V1.1-G
-
-- Memoæœ¬æ–‡ã‚’ä¿å­˜ã™ã‚‹`memo`Tableã¨ã€æ—¢å­˜DBå‘ã‘Migration `004_v1_1_memo.sql`ã‚’è¿½åŠ ã€‚
-- Memo Widgetã®è¿½åŠ ãƒ»å¤‰æ›´ãƒ»è«–ç†å‰Šé™¤ã€è¦‹å‡ºã—ã€æœ¬æ–‡ã€è¦‹å‡ºã—è‰²ã€æ¨ªå¹…1ã€œ4ã¸å¯¾å¿œã€‚
-- Memoæœ¬æ–‡ã¯`memo`ã€é…ç½®ãƒ»å¹…ãƒ»è‰²ãƒ»ä¸¦ã³é †ã¯`dashboard_widget`ã¸åˆ†é›¢ã—ã¦ä¿å­˜ã€‚
-- Memo CRUDã‚’owner scopeã€CSRFã€Transactionã€è«–ç†å‰Šé™¤ã§ä¿è­·ã—ã€ä»–Userã®Memoæ“ä½œã‚’æ‹’å¦ã€‚
-- æ”¹è¡Œã‚’ä¿æŒã—ãªãŒã‚‰HTMLã¨ã—ã¦è§£é‡ˆã—ãªã„å‡ºåŠ›ã€1ã€œ32æ–‡å­—ã®è¦‹å‡ºã—ã€1ã€œ4,000æ–‡å­—ã®æœ¬æ–‡Validationã‚’è¿½åŠ ã€‚
-- æ–°è¦DBç”¨`database/schema.sql`ã€CLI applyï¼verifyã€preflightï¼postflightã€å°‚ç”¨Regressionã‚’è¿½åŠ ãƒ»æ›´æ–°ã€‚
-
-## RSS Reader Modernization 1.1.0-dev.5 â€” V1.1-F
-
-- æ—¢å­˜ã®`dashboard_widget`ã¸Clock Widgetã‚’è¿½åŠ ã€‚
-- Clockã®è¿½åŠ ãƒ»å¤‰æ›´ãƒ»è«–ç†å‰Šé™¤ã€12ï¼24æ™‚é–“ã€æ—¥ä»˜ãƒ»ç§’è¡¨ç¤ºã€è¦‹å‡ºã—è‰²ã€æ¨ªå¹…1ã€œ4ã¸å¯¾å¿œã€‚
-- Browserã®ç¾åœ¨æ™‚åˆ»ã‚’1æœ¬ã®Timerã§æ›´æ–°ã—ã€æ™‚åˆ»è¡¨ç¤ºã®ãŸã‚ã®ç¶™ç¶šAPIé€šä¿¡ã¯è¡Œã‚ãªã„ã€‚
-- Clockã‚’Feedã¨åŒã˜4ã‚¿ãƒ–ã¸é…ç½®ã—ã€V1.1-Eã®ä¸¦ã³æ›¿ãˆã«å¯¾å¿œã€‚
-- Clockè¨­å®šã¯`widget_config`ã¸åˆ¶é™ä»˜ãJSONã¨ã—ã¦ä¿å­˜ã—ã€owner scopeã€CSRFã€Transactionã‚’ç¶­æŒã€‚
-- Clockå°‚ç”¨Tableã€Columnã€Migrationã€å¿…é ˆè¨­å®šã®è¿½åŠ ãªã—ã€‚
-
-## RSS Reader Modernization 1.1.0-dev.4 â€” V1.1-E
-
-- Feed Widgetã®ã‚¿ã‚¤ãƒˆãƒ«ãƒãƒ¼ã¸ä¸¦ã³æ›¿ãˆHandleã‚’è¿½åŠ ã—ã€åŒä¸€ã‚¿ãƒ–å†…ã®Drag & Dropã«å¯¾å¿œã€‚
-- Mouseã€Touchï¼Penã€Keyboardã®çŸ¢å°ãƒ»Homeãƒ»Endæ“ä½œã‚’ç”¨æ„ã€‚
-- `widget.reorder`APIã§owner scopeã€CSRFã€Transactionã€é‡è¤‡IDæ‹’å¦ã€å¤ã„ç”»é¢ã¨ã®ç«¶åˆæ¤œå‡ºã‚’è¿½åŠ ã€‚
-- ä¸¦ã³æ›¿ãˆå¤±æ•—æ™‚ã¯ç”»é¢é †ã‚’æˆ»ã—ã€å†èª­ã¿è¾¼ã¿ã‚’æ¡ˆå†…ã€‚
-- æ–°è¦Feed Widgetã¯ç¾åœ¨ã®ä¸¦ã³é †ã®æœ«å°¾ã¸è¿½åŠ ã€‚
-- DB Tableï¼Columnã®è¿½åŠ ãªã—ã€‚V1.1-D postflight R2ä¿®æ­£ã‚’å–ã‚Šè¾¼ã¿ã€‚
-- Follow-up R2ã€œR7ã§Handleã€æŒ¿å…¥ä½ç½®è¡¨ç¤ºã€ä¿å­˜é€šçŸ¥ã€è¦‹å‡ºã—é«˜ã•ã€æ–°ç€Bellè¡¨ç¤ºã‚’èª¿æ•´ã€‚
-
-
-## RSS Reader Modernization 1.1.0-dev.3 â€” V1.1-D
-
-- `dashboard_widget`ã‚’è¿½åŠ ã—ã€Feedã€Clockã€Memoã€Taskã€Calendarã®å…±é€šé…ç½®åŸºç›¤ã‚’è¿½åŠ ã€‚
-- æ—¢å­˜Feedã‚’4ã‚¿ãƒ–ã€Styleã€è¡¨ç¤ºé †ã‚’ç¶­æŒã—ãŸFeed Widgetã¸å®‰å…¨ã«Backfillã€‚
-- Feed CRUDã¨Widgeté…ç½®ã‚’åŒã˜Transactionã§åŒæœŸã—ã€owner scopeã¨Rollbackã‚’ç¶­æŒã€‚
-- `widget.list`APIã€Widgetå¹…ã€TEXTä¿å­˜ã®è¨­å®šJSONã€V1.1-Eå‘ã‘Data Attributeã‚’è¿½åŠ ã€‚
-- Drag & Dropã¯å®Ÿè£…ã›ãšV1.1-Eã¸åˆ†é›¢ã€‚
-- Prefixã€Migrationå†å®Ÿè¡Œã€M2 Dashboard renderã€V1.1-B/C Regressionã‚’è¿½åŠ ãƒ»æ›´æ–°ã€‚
-
-
-## RSS Reader Modernization 1.1.0-dev.2 â€” V1.1-C
-
-- `feed_item_state`ã‚’è¿½åŠ ã—ã€æ—¢å­˜Item Identityã‚’ä½¿ã£ãŸæ–°ç€NEWè¡¨ç¤ºã‚’è¿½åŠ ã€‚
-- åˆå›æˆåŠŸå–å¾—ã¯Baselineæ‰±ã„ã¨ã—ã€2å›ç›®ä»¥é™ã«åˆã‚ã¦ç¾ã‚ŒãŸè¨˜äº‹ã ã‘ã‚’NEWã«ã™ã‚‹ã€‚
-- è¨˜äº‹å˜ä½ã¨Feedå˜ä½ã®æ˜ç¤ºæ“ä½œã§NEWã‚’è§£é™¤ã—ã€ç”»é¢è¡¨ç¤ºã ã‘ã§ã¯è‡ªå‹•è§£é™¤ã—ãªã„ã€‚
-- Cache hitã€HTTP 304ã€stale-if-errorã‚’å«ã‚€FeedçµŒè·¯ã§åŒã˜çŠ¶æ…‹åˆ¤å®šã‚’ä½¿ç”¨ã€‚
-- Table Prefixã€owner scopeã€CSRFã€Transactionã€Migrationå†å®Ÿè¡Œã€Rollbackæ‰‹é †ã‚’è¿½åŠ ã€‚
-
-
-## RSS Reader Modernization 1.1.0-dev.1 â€” V1.1-B
-
-- è¨˜äº‹URLã‹ã‚‰æ—¢çŸ¥ã®Tracking Parameterã‚’é™¤å»ã€‚
-- Feedè¡¨ç¤ºå‰ã€Stockä¿å­˜å‰ã€Item Identityç”Ÿæˆå‰ã¸é©ç”¨ã€‚
-- ä¸€èˆ¬Query Parameterã¨ç™»éŒ²æ¸ˆã¿Feed URLã¯ç¶­æŒã€‚
-- DB schemaã€Migrationã€å¿…é ˆè¨­å®šã®å¤‰æ›´ãªã—ã€‚
-- V1.1-Bå°‚ç”¨Testã¨æ—¢å­˜Regressionã‚’è¿½åŠ ãƒ»æ›´æ–°ã€‚
-
-
-## RSS Reader Modernization 1.0.0 â€” 2026-08-02
-
-### First stable release
-
-- `APP_VERSION`ã‚’`1.0.0`ã€è¡¨ç¤ºã‚’`RSS Reader Modernization 1.0.0`ã¸ç¢ºå®šã€‚
-- M4-F RC1ã‹ã‚‰Application Runtimeã€DB schemaã€å…¬é–‹APIã€Securityå¢ƒç•Œã€Frontend Runtime Assetã‚’å¤‰æ›´ã›ãšæ­£å¼ç‰ˆã¸æ˜‡æ ¼ã€‚
-- deterministic builderã®`final` modeã§æ­£å¼Release ZIPã¨å¤–éƒ¨SHA-256ã‚’ç”Ÿæˆã€‚
-- Final Packageã‚’`package_status=FINAL`ã€`publishable=yes`ã¨ã—ã¦RC / Previewã¨åˆ†é›¢ã€‚
-- Sourceå…¨å›å¸°ã€Checkpoint ZIPå†å±•é–‹ã€å†…éƒ¨Manifestã€å¤–éƒ¨SHA-256ã€ç§˜å¯†æƒ…å ±é™¤å¤–ã€Versionæ•´åˆã‚’å†ç¢ºèªã€‚
-- å®ŸMySQLã€å®ŸFeedã€å®ŸBrowserã€Restore drillã€GitHub hosted CIã®Private Evidenceã¯ã“ã®ä½œæ¥­ç’°å¢ƒã§ã¯æœªåéŒ²ã§ã‚ã‚‹ã“ã¨ã‚’Release Notesã¸æ˜è¨˜ã€‚
-- `v1.0.0` Tagã¨GitHub Releaseã¯ã€åˆ©ç”¨è€…ãŒCommit / Push / CIç¢ºèªå¾Œã«ä½œæˆã™ã‚‹æ‰‹é †ã¨ã—ã¦ç¢ºå®šã€‚
-- æ–°æ©Ÿèƒ½è¿½åŠ ã€DB Migrationã€å¿…é ˆè¨­å®šè¿½åŠ ã€Cache clearã€æ—§fileå‰Šé™¤ã¯ãªã—ã€‚
-
-## RSS Reader Modernization 1.0.0-RC1 â€” 2026-08-02
-
-### Release Candidate and real-environment gate
-
-- `APP_VERSION`ã‚’`1.0.0-rc1`ã€è¡¨ç¤ºã‚’`RSS Reader Modernization 1.0.0-RC1`ã¸å¤‰æ›´ã€‚
-- deterministic builderã®`rc` modeã§Release Candidate ZIPã¨å¤–éƒ¨SHA-256ã‚’ç”Ÿæˆã€‚
-- RCã‚’`package_status=RELEASE_CANDIDATE`ã€`publishable=no`ã¨ã—ã¦æ­£å¼ç‰ˆã¨åˆ†é›¢ã€‚
-- PHP Versionã€å¿…é ˆExtensionã€PDO driverã€Runtime directoryã‚’ç§˜å¯†æƒ…å ±ãªã—ã§ç¢ºèªã™ã‚‹ç’°å¢ƒProbeã‚’è¿½åŠ ã€‚
-- å®ŸMySQLã€å®ŸFeedã€å®ŸBrowserã€GitHub hosted CIã€Backup / Restoreã€Rollbackã®Evidence Templateã‚’è¿½åŠ ã€‚
-- Evidenceå½¢å¼ã€å¿…é ˆé …ç›®ã€Secretæ··å…¥ã€PASS / HOLD / FAILã‚’ç¢ºèªã™ã‚‹Gate Toolã‚’è¿½åŠ ã€‚
-- Buildç’°å¢ƒã«ãªã„`pdo_mysql`ã€cURLã€SimpleXMLã€mbstringã€MySQL Serverã€å®Œèµ°ã—ãªã„Chromiumã¯PASSã¸èª­ã¿æ›¿ãˆãšHOLDã‚’ç¶­æŒã€‚
-- DBã€å…¬é–‹APIã€Authentication / Session / CSRF / SSRF / XSSã€RSS Engineã€Frontend Runtime Assetã¯å¤‰æ›´ãªã—ã€‚
-
-## Release M4-E / R1 â€” 2026-08-02
-
-### Release package, manifest, notes and tag procedure
-
-- Checkpoint ZIPã¨åˆ©ç”¨è€…å‘ã‘Runtime Release ZIPã‚’åˆ†é›¢ã€‚
-- preview / rc / finalã‚’åˆ†ã‘ã‚‹deterministic release package builderã‚’è¿½åŠ ã€‚
-- ZIP entryé †ã€timestampã€permissionã‚’å›ºå®šã—ã€åŒä¸€Sourceã‹ã‚‰åŒã˜SHA-256ã«ãªã‚‹Buildã‚’è¿½åŠ ã€‚
-- Packageå†…éƒ¨ã®`RELEASE_MANIFEST.sha256`ã¨ã€ZIPå…¨ä½“ã®`.zip.sha256`ã‚’è¿½åŠ ã€‚
-- CRCã€unsafe pathã€Privateè¨­å®šã€å®ŸDBç³»fileã€Secretã€Version markerã‚’ç¢ºèªã™ã‚‹Verifierã‚’è¿½åŠ ã€‚
-- Version 1.0.0å‘ã‘Release Notesæº–å‚™ç‰ˆã¨ã€annotated Tag / GitHub Releaseæ‰‹é †ã‚’è¿½åŠ ã€‚
-- M4-E Previewã‚’`publishable=no`ã¨ã—ã€M4-F / M4-Gå‰ã®èª¤å…¬é–‹ã‚’é˜²æ­¢ã€‚
-- DBã€å…¬é–‹APIã€Authentication / Session / CSRF / SSRF / XSSã€RSS Engineã€Frontend Runtime Assetã¯å¤‰æ›´ãªã—ã€‚
-
-## Release M4-D / R1 â€” 2026-08-02
-
-### GitHub repository, portfolio and minimum CI
-
-- GitHub Actionsã¸PHP 8.1 / 8.4ã®æ—¢å­˜Regressionã‚’è¿½åŠ ã€‚
-- Workflow permissionã‚’`contents: read`ã¸é™å®šã—ã€Secretã€Deployã€Releaseå‡¦ç†ã‚’æŒãŸã›ãªã„ã€‚
-- SECURITY.mdã€CONTRIBUTING.mdã€Bug report templateã‚’è¿½åŠ ã€‚
-- Repository Description / Topics / Settings / Ruleset / hosted CIã®ç¢ºèªæ‰‹é †ã‚’æ•´ç†ã€‚
-- Portfolioç”¨ã®çŸ­æ–‡ã€é•·æ–‡ã€æŠ€è¡“è¦ç‚¹ã€Screenshotæ³¨æ„ã€AIæ”¯æ´èª¬æ˜ä¾‹ã‚’è¿½åŠ ã€‚
-- CIã§ç¢ºèªã™ã‚‹ç¯„å›²ã¨ã€å®ŸMySQL / Browser / Feed / Restore drillã‚’M4-Fã¸æ®‹ã™ç¯„å›²ã‚’åˆ†é›¢ã€‚
-- DBã€å…¬é–‹APIã€Authentication / Session / CSRF / SSRF / XSSã€RSS Engineã€Frontend Runtime Assetã¯å¤‰æ›´ãªã—ã€‚
-
-## Release M4-C / R1 â€” 2026-08-02
-
-### Installation, update, backup and recovery procedures
-
-- æ–°è¦ç©ºDBã¸ã®è¨­ç½®ã€Legacy DB migrationã€Git / ZIPæ›´æ–°æ‰‹é †ã‚’æ•´ç†ã€‚
-- Runtimeè¨­å®šã®èª­è¾¼é †ã€Defaultã€åˆ¶ç´„ã‚’å®Ÿã‚³ãƒ¼ãƒ‰ã¸åˆã‚ã›ãŸã€‚
-- `local.php.example` ã¨ `.env.example` ã‚’æ—¢å­˜Runtimeå¯¾å¿œKeyã¸åŒæœŸã€‚
-- Databaseã€Privateè¨­å®šã€APP_HASH_KEYã€Code Versionã®Backup / Restore drillã‚’æ•´ç†ã€‚
-- Code-only rollbackã¨DB migrationã‚’å«ã‚€rollbackã‚’åˆ†é›¢ã€‚
-- é…ç½®Checklistã¨M4-Cå°‚ç”¨testã‚’è¿½åŠ ã€‚
-- DBã€å…¬é–‹APIã€Authentication / Session / CSRF / SSRF / XSSã€RSS Engineã€Frontend Runtime Assetã¯å¤‰æ›´ãªã—ã€‚
-
-## Release M4-B / R1 â€” 2026-08-02
-
-### Documentation and third-party license alignment
-
-- READMEã€CHANGELOGã€Documentation indexã‚’M4-Bã¸åŒæœŸã€‚
-- Third-party noticeã‚’å®ŸAssetã¸åˆã‚ã›ã€jQuery 3.7.1ã¨Font Awesome Free 6.7.2ã¸æ›´æ–°ã€‚
-- M2-Eã§å‰Šé™¤æ¸ˆã¿ã®Font Awesomeé…å¸ƒPathã‚’Noticeã‹ã‚‰é™¤å»ã€‚
-- jQuery License copyã‚’OpenJS Foundationè¡¨è¨˜ã¸æ›´æ–°ã€‚
-- Font Awesome License copyã‚’6.7.2ã®å†…å®¹ã¨fileåã¸æ›´æ–°ã€‚
-- Dependency / Licenseå¯¾å¿œè¡¨ã¨M4-Bå°‚ç”¨testã‚’è¿½åŠ ã€‚
-- DBã€å…¬é–‹APIã€Authentication / Session / CSRF / SSRF / XSSã€RSS Engineã€Frontend Runtime Assetã¯å¤‰æ›´ãªã—ã€‚
-
-## Release M4-A / R1 â€” 2026-08-02
-
-### Version 1.0.0 release baseline and inventory
-
-- GitHub mainã®M2-G commitã¨æ·»ä»˜Checkpoint ZIPã‚’M4ã®Baselineã¨ã—ã¦å›ºå®šã€‚
-- M3æˆæœç‰©ãŒå­˜åœ¨ã—ãªã„ã“ã¨ã‚’è¨˜éŒ²ã—ã€Releaseã«å¿…è¦ãªé‹ç”¨ãƒ»å®Ÿç’°å¢ƒç¢ºèªã‚’M4-Dã€œFã¸å¸åã€‚
-- Version 1.0.0ã®Quality Gateã€å…¬é–‹ç‰©ã€é…å¸ƒç‰©ã€Release Blockerã€æ‰‹å‹•ç¢ºèªé …ç›®ã‚’æ•´ç†ã€‚
-- M2-Gã‹ã‚‰å¤‰æ›´ã—ã¦ã„ãªã„é‡è¦é ˜åŸŸã‚’SHA-256ã§å›ºå®šã™ã‚‹M4-A testã‚’è¿½åŠ ã€‚
-- GitHub mainã«å­˜åœ¨ã—ã¦ã„ãŸLICENSEã€Third-party noticeã€license copyã‚’Checkpoint ZIPã¸å¾©å…ƒã€‚
-- DBã€Migrationã€å…¬é–‹APIã€Authenticationã€Authorizationã€Sessionã€CSRFã€SSRFã€XSSã€RSS Engineã€Frontendå‹•ä½œã¯å¤‰æ›´ãªã—ã€‚
-
-
-## Frontend M2-G / R1 â€” 2026-08-02
-
-### M2 final regression and documentation
-
-- M2-Aã€œFã€M1-Aã€œGã€Secure Baselineã®å…¨testã‚’æ¨ªæ–­å®Ÿè¡Œã€‚
-- M2å®Œäº†ç”¨ã®final regression testã¨Documentationæ•´åˆtestã‚’è¿½åŠ ã€‚
-- ç¾åœ¨Versionã€Frontend Asset allowlistã€8ãƒ†ãƒ¼ãƒã€ä¾å­˜Versionã€ä¸»è¦UI / Accessibility invariantã‚’å†ç¢ºèªã€‚
-- READMEã€Roadmapã€Version policyã€é…ç½®Checklistã‚’M2å®Œäº†çŠ¶æ…‹ã¸æ›´æ–°ã€‚
-- M2å…¨ä½“ã®å®Ÿæ–½å†…å®¹ã€ç¶­æŒã—ãŸå¥‘ç´„ã€æ—¢çŸ¥ã®ä¿ç•™äº‹é …ã€æ‰‹å‹•Browserç¢ºèªMatrixã‚’ã¾ã¨ã‚ãŸã€‚
-- DBã€å…¬é–‹APIã€Authentication / Session / CSRF / SSRF / XSSã€M1 RSS Engineã€ç”»é¢å‡¦ç†ã€Frontendä¾å­˜Versionã¯å¤‰æ›´ãªã—ã€‚
-
-## Frontend M2-F / R1 â€” 2026-08-02
-
-### Compatible Frontend dependency refresh
-
-- jQueryã‚’3.3.1ã‹ã‚‰3.7.1 full buildã¸æ›´æ–°ã—ã€æ—¢å­˜ã®AJAXå‡¦ç†ã‚’ç¶­æŒã€‚
-- Font Awesome Freeã‚’5.3.1ã‹ã‚‰6.7.2 LTSã¸æ›´æ–°ã—ã€æ—§icon class aliasã¨local WebFontã‚’ç¶­æŒã€‚
-- Font Awesomeã®WebFontã‚’ç¾åœ¨ã®CSSãŒå‚ç…§ã™ã‚‹TTF / WOFF2 8ãƒ•ã‚¡ã‚¤ãƒ«ã¸å…¥æ›¿ãˆã€‚
-- Bootstrap / Bootswatch 4.1.3ã€Popper 1ç³»ã€Drawer 3.2.2ã€iScroll 5.2.0-snapshotã¯äº’æ›æ€§ã‚’å„ªå…ˆã—ã¦æ®ãˆç½®ãã€‚
-- Bootstrap 5ç§»è¡Œã¯dataå±æ€§ã€jQuery pluginã€Drawerã€8ãƒ†ãƒ¼ãƒã‚’æ¨ªæ–­ã™ã‚‹major migrationã¨ãªã‚‹ãŸã‚ã€ã“ã®å·¥ç¨‹ã¸æ··åœ¨ã•ã›ãªã„ã€‚
-- scriptèª­è¾¼é †ã€jQuery AJAXã€Bootstrap Modal / Collapseã€Drawerã€8ãƒ†ãƒ¼ãƒã€Font Awesome icon / fontã‚’å›å¸°testã¸è¿½åŠ ã€‚
-- DBã€å…¬é–‹APIã€Authentication / CSRF / SSRF / XSSã€M1 RSS Engineã€M2-Dã®è¡¨ç¤ºã¨æ“ä½œã¯å¤‰æ›´ãªã—ã€‚
-
-## Frontend M2-E / R2 â€” 2026-08-02
-
-### Windows PowerShell cleanup helper correction
-
-- `tools/apply_m2e_cleanup.ps1` ãŒWindows PowerShell 5.1ã§æ–‡å­—åŒ–ã‘ã—ã€Parser Errorã«ãªã‚‹å•é¡Œã‚’ä¿®æ­£ã€‚
-- UTF-8 BOMãªã—ã®æ—¥æœ¬èªmessageã‚’å»ƒæ­¢ã—ã€Scriptæœ¬ä½“ã‚’ASCIIã®ã¿ãƒ»CRLFã§ä¿å­˜ã€‚
-- å‰Šé™¤å¯¾è±¡ã€`-WhatIf`ã€Git working treeç¢ºèªã€`public/index.php`ç¢ºèªã€å®‰å…¨å¢ƒç•Œã¯R1ã‹ã‚‰å¤‰æ›´ãªã—ã€‚
-- Parser Errorã¯å‰Šé™¤å‡¦ç†é–‹å§‹å‰ã«ç™ºç”Ÿã™ã‚‹ãŸã‚ã€R1å®Ÿè¡Œæ™‚ã«Assetã¯å‰Šé™¤ã•ã‚Œãªã„ã€‚
-- cleanup helperã®æ–‡å­—ã‚³ãƒ¼ãƒ‰å›å¸°testã¨ã€é…ç½®æ–‡æ›¸å†…ã®PowerShell pathè¡¨è¨˜ã‚’ä¿®æ­£ã€‚
-
-## Frontend M2-E / R1 â€” 2026-08-02
-
-### Unused Frontend asset cleanup
-
-- PHP / HTMLã€Theme resolverã€CSS `url()` ã‹ã‚‰å®Ÿéš›ã«å‚ç…§ã•ã‚Œã‚‹Assetã‚’ä¸€è¦§åŒ–ã€‚
-- Bootstrapã®éåœ§ç¸®ç‰ˆã€bundleã€grid / rebootå˜ç‹¬ç‰ˆã€æœªä½¿ç”¨Source Mapã‚’å‰Šé™¤ã€‚
-- Font Awesomeã®æœªä½¿ç”¨JavaScriptç‰ˆã€å€‹åˆ¥CSSã€SCSS / LESSã€metadataã€SVG spriteã‚’å‰Šé™¤ã€‚
-- Drawerã®éåœ§ç¸®ç‰ˆã‚’å‰Šé™¤ã—ã€å®Ÿè¡Œæ™‚ã«ä½¿ç”¨ã™ã‚‹åœ§ç¸®ç‰ˆã‚’ç¶­æŒã€‚
-- Font Awesomeã®WebFontã¯ `all.css` ã®å‚ç…§äº’æ›ã‚’å„ªå…ˆã—ã€å…¨å½¢å¼ã‚’ç¶­æŒã€‚
-- ä½¿ç”¨ä¸­vendor fileã®License headerã€8ãƒ†ãƒ¼ãƒã€Frontend library Versionã‚’ç¶­æŒã€‚
-- æ—¢å­˜Gitä½œæ¥­ãƒ•ã‚©ãƒ«ãƒ€å‘ã‘ã«ã€å®‰å…¨ç¢ºèªä»˜ãPowerShell cleanup helperã¨å®Œå…¨å‰Šé™¤ä¸€è¦§ã‚’è¿½åŠ ã€‚
-- DBã€å…¬é–‹APIã€Authentication / CSRF / SSRF / XSSã€M1 RSS Engineã€M2-Dã®è¡¨ç¤ºã¨æ“ä½œã¯å¤‰æ›´ãªã—ã€‚
-
-## Frontend M2-D / R2 â€” 2026-08-02
-
-### Feed column and Drawer density correction
-
-- fixed layout tableã§Stockæ“ä½œåˆ—ã¨è¨˜äº‹åˆ—ãŒå‡ç­‰å¹…ã«ãªã‚‹å›å¸°ã‚’ä¿®æ­£ã€‚
-- Feed tableã¸ `colgroup` ã‚’è¿½åŠ ã—ã€Stockæ“ä½œåˆ—ã‚’44pxã€è¨˜äº‹åˆ—ã‚’æ®‹ã‚Šå¹…ã¸å›ºå®šã€‚
-- Drawerã®é€šå¸¸é …ç›®ã‚’36pxã¸æˆ»ã—ã€sectionè¦‹å‡ºã—ã¨paddingã‚’ã‚³ãƒ³ãƒ‘ã‚¯ãƒˆåŒ–ã€‚
-- coarse pointerç’°å¢ƒã§ã¯44pxã®æ“ä½œé ˜åŸŸã‚’ç¶­æŒã€‚
-- Responsive 1 / 2 / 4åˆ—ã€Keyboard / Focus / ARIAã€Feed / Stock APIã€DBã€M1 RSS Engineã¯å¤‰æ›´ãªã—ã€‚
-- M2-D R2å°‚ç”¨ã®layout regression testã¨Fake PDO renderç¢ºèªã‚’è¿½åŠ ã€‚
-
-## Frontend M2-D / R1 â€” 2026-08-01
-
-### Responsive layout and UI feedback
-
-- Feed / Stockã‚’Mobile 1åˆ—ã€Tablet 2åˆ—ã€Desktop 4åˆ—ã®Bootstrap gridã¸å¤‰æ›´ã€‚
-- PHPå´ã®4ä»¶å˜ä½rowç”Ÿæˆã‚’å¤–ã—ã€é•·ã„ã‚¿ã‚¤ãƒˆãƒ«ãƒ»URLã‚’æŠ˜è¿”ã™è¡¨ç¤ºã¸å¤‰æ›´ã€‚
-- Feed cardã®åˆæœŸé«˜ã•ã€Navbarã®é•·ã„ã‚¿ãƒ–åã€Modalã€Page Topã€Drawerã€Touch targetã‚’èª¿æ•´ã€‚
-- Feed / Stockãã‚Œãã‚Œã®ç©ºç”»é¢ã‚’åˆ†ã‘ã€RSSè¿½åŠ å…ˆã‚’Modalå†…ã¸è¡¨ç¤ºã€‚
-- RSSå‰Šé™¤ã‚’ã€ŒURLã‚’ç©ºæ¬„ã€ã‹ã‚‰ç¢ºèªä»˜ãã®æ˜ç¤ºButtonã¸å¤‰æ›´ã—ã€æ—¢å­˜ `content.delete` APIã‚’ç¶™ç¶šã€‚
-- Feedå–å¾—å¤±æ•—Cardã¸å†èª­è¾¼Buttonã‚’è¿½åŠ ã€‚
-- `alert()`ã‚’ç”»é¢å†…noticeã¸ç½®æ›ã—ã€Stockä¿å­˜æˆåŠŸã¨Mutationå¤±æ•—ã‚’è¡¨ç¤ºã€‚
-- Modal / Drawerã®ä¸»è¦æ–‡è¨€ã¨æ˜ã‚‰ã‹ãªè¡¨è¨˜æºã‚Œã‚’æ•´ç†ã€‚
-- DBã€å…¬é–‹API Responseã€Authentication / CSRF / SSRF / XSSã€M1 RSS Engineã€Frontend library Versionã¯å¤‰æ›´ãªã—ã€‚
-- Responsive / UI static testã€Mutation runtime testã€Feed retry runtimeã€Feed / Stock render testã‚’è¿½åŠ ã€‚
-
-## Frontend M2-C / R2 â€” 2026-08-01
-
-### Login layout correction
-
-- semantic `main` è¿½åŠ å¾Œã«Login / Register formãŒå·¦å¯„ã›ã«ãªã‚‹å›å¸°ã‚’ä¿®æ­£ã€‚
-- Loginç”¨ `main.login-main` ã‚’ç”»é¢å¹…ã¸åºƒã’ã€æ—¢å­˜ã® `.form-signin { margin: auto; }` ã«ã‚ˆã‚‹ä¸­å¤®é…ç½®ã‚’å¾©å…ƒã€‚
-- Login / Registerã®Formã€èªè¨¼å‡¦ç†ã€CSRFã€Collapseåˆ‡æ›¿ã€M2-Cã®Keyboard / Focus / ARIAå¯¾å¿œã¯å¤‰æ›´ãªã—ã€‚
-- åŒã˜å›å¸°ã‚’é˜²ãLogin layout testã‚’è¿½åŠ ã€‚
-
-## Frontend M2-C / R1 â€” 2026-08-01
-
-### Semantic HTML and accessibility
-
-- `<!doctype html>`ã€`lang="ja"`ã€`header`ã€`main`ã€`footer`ã€Skip linkã€page headingã‚’è¿½åŠ ã€‚
-- Feed cardã‚’åå‰ä»˜ãregionã¨ã—ã€Loadingä¸­ã® `aria-busy`ã€çŠ¶æ…‹messageã®live regionã€Errorã®alert semanticsã‚’è¿½åŠ ã€‚
-- Feedç·¨é›†ã€Stockä¿å­˜ã€Drawerå†…Modalèµ·å‹•ã‚’keyboardæ“ä½œå¯èƒ½ãªButtonã¸å¤‰æ›´ã€‚
-- RSSè¿½åŠ ãƒ»å¤‰æ›´Modalã‚’FormåŒ–ã—ã€Enter submitã¨æ—¢å­˜AJAX / pending guardã‚’ä¸€ã¤ã®çµŒè·¯ã¸çµ±ä¸€ã€‚
-- Settingsã®Navbar URL / è¡¨ç¤ºåã¸Labelã€icon radio groupã¸fieldset / legend / unique idã‚’è¿½åŠ ã€‚
-- Drawerã® `aria-expanded` / labelæ›´æ–°ã€Openæ™‚Focusã€Escape Closeã€Tabå¾ªç’°ã€Closeå¾ŒFocus returnã‚’è¿½åŠ ã€‚
-- Modalçµ‚äº†å¾Œã¯èµ·å‹•å…ƒã¸Focusã‚’æˆ»ã—ã€Page Topã¯scrollã¨åŒæ™‚ã«mainã¸Focusã‚’ç§»å‹•ã€‚
-- visible focus indicatorã¨ `prefers-reduced-motion` å¯¾å¿œã‚’è¿½åŠ ã€‚
-- Feed APIã€DB schemaã€Authentication / CSRF / SSRF / XSSã€M1 RSS Engineã€Frontend library Versionã€åŸºæœ¬ç”»é¢æ§‹æˆã¯å¤‰æ›´ãªã—ã€‚
-- M2-Cå°‚ç”¨ã®semantic / accessibility static testã¨Node runtime testã‚’è¿½åŠ ã€‚
-
-## Frontend M2-B / R1 â€” 2026-08-01
-
-### Feed rendering and state handling
-
-- Feedå–å¾—ã€çŠ¶æ…‹åˆ¤å®šã€Channel titleæç”»ã€Itemæç”»ã‚’å°ã•ãªé–¢æ•°ã¸åˆ†é›¢ã€‚
-- Feed cardã¸ `loading` / `ready` / `empty` / `error` ã®çŠ¶æ…‹ã‚’è¿½åŠ ã€‚
-- åˆæœŸè¡¨ç¤ºã«Loadingã€0ä»¶Feedã«ã€Œè¨˜äº‹ã¯ã‚ã‚Šã¾ã›ã‚“ã€ã€Timeout / 404 / upstream failureã«åˆ¶å¾¡æ¸ˆã¿messageã‚’è¡¨ç¤ºã€‚
-- ä¸æ­£ãƒ»ä¸è¶³Responseã‚„é…åˆ—ä»¥å¤–ã®Feed / Itemã‚’å®‰å…¨å´ã§å‡¦ç†ã€‚
-- Channel / Item titleæ¬ ææ™‚ã®fallbackã‚’è¿½åŠ ã—ã€è¨˜äº‹è¡¨ç¤ºã¯å¾“æ¥ã©ãŠã‚Šæœ€å¤§5ä»¶ã€‚
-- é•·ã„è¨˜äº‹ã‚¿ã‚¤ãƒˆãƒ«ã¯çµµæ–‡å­—ã®UTF-16 surrogate pairã‚’åˆ†æ–­ã›ãš64æ–‡å­—ç›¸å½“ã§çœç•¥ã€‚
-- Feed linkã¯Frontendã§ã‚‚http / httpsã ã‘ã‚’ä½¿ç”¨ã—ã€`.text()` ã¨ `noopener noreferrer` ã‚’ç¶­æŒã€‚
-- åŒã˜Feed cardã®Request pendingä¸­ã¯é‡è¤‡å–å¾—ã‚’é–‹å§‹ã—ãªã„ã€‚
-- `favicon.png` ã‚’æ˜ç¤ºçš„ã«å‚ç…§ã—ã€HTTPSç’°å¢ƒã®favicon 404 / Mixed ContentçµŒè·¯ã‚’å›é¿ã€‚
-- DB schemaã€å…¬é–‹API Responseã€M1 RSS Engineã€Frontend library Versionã€ç”»é¢æ§‹æˆã¯å¤‰æ›´ãªã—ã€‚
-- M2-Bå°‚ç”¨ã®Feed structure testã¨Node runtime testã‚’è¿½åŠ ã€‚
-
-## Frontend M2-A / R1 â€” 2026-08-01
-
-### Frontend script foundation
-
-- Dashboardå›ºæœ‰ã®ã‚¤ãƒ³ãƒ©ã‚¤ãƒ³JavaScriptã‚’ `public/js/dashboard.js` ã¸åˆ†é›¢ã€‚
-- Dashboardå›ºæœ‰ã®style blockã‚’ `public/css/dashboard.css` ã¸åˆ†é›¢ã€‚
-- PHPãŒ `fetch_content()` å‘¼å‡ºã—ã‚’ç”Ÿæˆã™ã‚‹æ–¹å¼ã‚’å»ƒæ­¢ã—ã€Feed cardã® `data-feed-content-id` ã‹ã‚‰åˆæœŸåŒ–ã€‚
-- API Requestã€errorå‡¦ç†ã€Eventç™»éŒ²ã‚’ä¸€ã¤ã®å¤–éƒ¨JSå†…ã¸æ•´ç†ã€‚
-- Event namespaceã¨åˆæœŸåŒ–æ¸ˆã¿åˆ¤å®šã‚’è¿½åŠ ã—ã€äºŒé‡Eventç™»éŒ²ã‚’é˜²æ­¢ã€‚
-- Content / Stock / Settings / Tabsã®é€šä¿¡ä¸­ã¯pendingçŠ¶æ…‹ã‚’ä¿æŒã—ã€é€£ç¶šé€ä¿¡ã‚’é˜²æ­¢ã€‚
-- Feedæç”»ã¯ `.text()`ã€validated linkã€`noopener noreferrer`ã€æœ€å¤§5ä»¶ã‚’ç¶­æŒã€‚
-- DB schemaã€å…¬é–‹API Responseã€M1 RSS Engineã€Frontend library Versionã€ç”»é¢æ§‹æˆã¯å¤‰æ›´ãªã—ã€‚
-- M2-Aå°‚ç”¨ã®Frontend structure testã¨Node runtime testã‚’è¿½åŠ ã€‚
-
-## RSS Engine M1-G / R1 â€” 2026-08-01
-
-### Fetch state, Retry-After, Backoff and bounded stale-if-error
-
-- Feed URL hashå˜ä½ã®private state JSONã¸æœ€çµ‚è©¦è¡Œã€æœ€çµ‚æˆåŠŸã€çµæœç¨®åˆ¥ã€HTTP statusã€çŸ­ã„error codeã€å¤±æ•—å›æ•°ã€æ¬¡å›è©¦è¡Œæ™‚åˆ»ã‚’ä¿å­˜ã€‚
-- stateã¸raw Feed URLã€query tokenã€Feedæœ¬æ–‡ã€è©³ç´°ãªtransport messageã‚’ä¿å­˜ã—ãªã„ã€‚
-- transient errorã¸60ç§’ / 300ç§’ / 900ç§’ / æœ€å¤§3600ç§’ã®æ®µéšçš„Backoffã‚’è¿½åŠ ã€‚
-- HTTP 429 / 503ã®å®‰å…¨ãªRetry-Afterï¼ˆdelta-seconds / HTTP-dateï¼‰ã‚’å„ªå…ˆã—ã€ä¸Šé™ã‚’é©ç”¨ã€‚
-- timeoutã€DNSã€ä¸€æ™‚HTTP errorã€temporary parse errorã§ã¯ã€æœ€å¾Œã®æ­£å¸¸ç¢ºèªã‹ã‚‰æœ€å¤§24æ™‚é–“ä»¥å†…ã®stale Cacheã‚’åˆ©ç”¨ã€‚
-- HTTP 404ç­‰ã®permanent errorã€TLSã€private addressã€invalid redirectã€response sizeè¶…éç­‰ã®Security errorã§ã¯staleã‚’ä½¿ç”¨ã—ãªã„ã€‚
-- åŒä¸€URLã®åŒæ™‚éšœå®³ã¯URLå˜ä½Lockå†…ã§1å›ã ã‘Fetchãƒ»stateæ›´æ–°ã—ã€å¾…æ©Ÿprocessã¯Backoff stateã‚’å†ç¢ºèªã€‚
-- æ–°ã—ã„Repository / Factory / Queueç­‰ã‚’è¿½åŠ ã›ãšã€å°ã•ãªhelperé–¢æ•°ã¨æ—¢å­˜FeedCache / FeedFetchServiceã®æ‹¡å¼µã«ç•™ã‚ãŸã€‚
-- DBã€Frontendã€å…¬é–‹APIã€Stockã€Parserã€Adapterã€Item identityã¯å¤‰æ›´ãªã—ã€‚
-- HTTP / state / stale boundary / concurrency / architecture / security regression testã‚’è¿½åŠ ã€‚
-
-## RSS Engine M1-F / R1 â€” 2026-08-01
-
-### Conditional Feed requests and HTTP 304 reuse
-
-- ETag / Last-Modifiedã‚’å®‰å…¨ã«å–å¾—ã—ã€Cache schema 2ã¸ä¿å­˜ã€‚
-- TTLçµŒéå¾Œã¯ `If-None-Match` / `If-Modified-Since` ã‚’ä½¿ã„ã€HTTP 304æ™‚ã¯æ—¢å­˜Feedæœ¬æ–‡ã‚’å†åˆ©ç”¨ã€‚
-- `body_fetched_at` ã¨ `validated_at` ã‚’åˆ†é›¢ã—ã€304ã§ã¯æœ¬æ–‡å–å¾—æ™‚åˆ»ã‚’å¤‰æ›´ã—ãªã„ã€‚
-- Validatorã¯å‰å›ã®effective URLã¨ä»Šå›ã®é€ä¿¡å…ˆãŒå®Œå…¨ä¸€è‡´ã™ã‚‹ã¨ãã ã‘é€ä¿¡ã—ã€redirectå…ˆå¤‰æ›´æ™‚ã®æ¼ãˆã„ã‚’é˜²æ­¢ã€‚
-- æ¡ä»¶ãªã—HTTP 304ã‚’æ‹’å¦ã—ã€HTTP 200ã§ã¯æ–°æœ¬æ–‡ã‚’ParseæˆåŠŸå¾Œã«Cacheç½®æ›ã€‚
-- M1-E Cache schema 1ã®èª­ã¿è¾¼ã¿äº’æ›ã‚’ç¶­æŒã—ã€æ¬¡å›200å–å¾—æ™‚ã«schema 2ã¸æ›´æ–°ã€‚
-- `APP_FEED_CONDITIONAL_REQUEST_ENABLED` ã‚’è¿½åŠ ã—ã€Cacheã‚’ç¶­æŒã—ãŸã¾ã¾æ¡ä»¶ä»˜ãRequestã ã‘ç„¡åŠ¹åŒ–å¯èƒ½ã€‚
-- Validatorå°‚ç”¨class hierarchyã¯è¿½åŠ ã›ãšã€å°ã•ãªhelperé–¢æ•°ã¨æ—¢å­˜Cache/Serviceã®æ‹¡å¼µã«ç•™ã‚ãŸã€‚
-- stale-if-errorã€Retryã€Fetch stateã€Cache-Control / Expiresã¯å¾Œç¶šå·¥ç¨‹ã¸åˆ†é›¢ã€‚
-- HTTP / Cache / redirect / concurrency / architecture / security regression testã‚’è¿½åŠ ã€‚
-
-## RSS Engine M1-E / R1 â€” 2026-08-01
-
-### Server-side Feed cache and duplicate Fetch suppression
-
-- `FeedFetchService` ã‚’è¿½åŠ ã—ã€owner-scoped `FeedSource` å¾Œã®å®‰å…¨Fetchãƒ»Parseãƒ»Cacheã‚’ä¸€ã¤ã®orchestration boundaryã¸é›†ç´„ã€‚
-- æ­£å¸¸ãªHTTP responseã‹ã¤RSS 2.0 / RSS 1.0 / Atomã¨ã—ã¦ParseæˆåŠŸã—ãŸFeedæœ¬æ–‡ã ã‘ã‚’ `var/cache/feed/` ã¸ä¿å­˜ã€‚
-- Cache key / Lock keyã¯configured Feed URLã®SHA-256ã¨ã—ã€raw URLã‚„query tokenã‚’ãƒ•ã‚¡ã‚¤ãƒ«åã¸éœ²å‡ºã—ãªã„ã€‚
-- Cacheæœ¬æ–‡ã¯versioned JSONã€strict Base64ã€SHA-256 integrityã§ä¿æŒã—ã€PHP serialize/unserializeã‚’ä¸ä½¿ç”¨ã€‚
-- TTLåˆæœŸå€¤60ç§’ã€Cacheç„¡åŠ¹åŒ–ã€URLå˜ä½Lock timeoutã‚’private configurationã¨ã—ã¦è¿½åŠ ã€‚
-- `flock()`ã«ã‚ˆã‚‹double-checked lockingã§ã€åŒä¸€URLã®åŒæ™‚Requestã‚’1å›ã®upstream Fetchã¸æŠ‘åˆ¶ã€‚
-- Cacheç ´æã€æ›¸è¾¼ã¿ä¸èƒ½ã€Lock timeoutã§ã¯Applicationã‚’åœæ­¢ã›ãšã€SB-09 hardened transportã¸fail-openã€‚
-- Cache hitã§ã‚‚Parser / Adapter / Item identityã‚’æ¯å›å®Ÿè¡Œã—ã€å…¬é–‹APIã€Frontendã€DBã€Stockã®contractã‚’ç¶­æŒã€‚
-- stale-if-errorã€ETag / Last-Modified / HTTP 304ã€Fetch state / Retryã¯å¾Œç¶šå·¥ç¨‹ã¸åˆ†é›¢ã€‚
-- Cache lifecycle / corruption / permission / symlink / concurrency / architecture / security regression testã‚’è¿½åŠ ã€‚
-
-## RSS Engine M1-D / R1 â€” 2026-08-01
-
-### Deterministic Feed Item identity
-
-- RSS 2.0 `guid`ã€RSS 1.0 `rdf:about`ã€Atom `id` ã‚’å½¢å¼åˆ¥Adapterã‹ã‚‰å†…éƒ¨ `sourceItemId` ã¸æŠ½å‡ºã€‚
-- `ItemIdentity` ã¨ `ItemIdentityResolver` ã‚’è¿½åŠ ã—ã€`source-id â†’ link â†’ fingerprint` ã®å„ªå…ˆé †ä½ã‚’æ˜ç¤ºã€‚
-- configured Feed URLã‚’scopeã«å«ã‚€ `m1i:v1:` + SHA-256å½¢å¼ã®ä¸é€æ˜ã§æ±ºå®šçš„ãªidentityã‚’å°å…¥ã€‚
-- `content_id` / owner IDã‚’identityã‹ã‚‰é™¤å¤–ã—ã€åŒä¸€Feedã®è¤‡æ•°ç™»éŒ²ã§åŒã˜Item identityã‚’ç¶­æŒã€‚
-- raw source ID / URL / title / contentã‚’identityå€¤ã€å…¬é–‹APIã€Frontendã¸éœ²å‡ºã—ãªã„ã€‚
-- `NormalizedItem::toArray()` ã¨æ—¢å­˜APIã®5é …ç›®contractã€DBã€Stockã€Frontendã€Fetcherã€SSRF/XSSå¢ƒç•Œã‚’ç¶­æŒã€‚
-- é‡è¤‡Itemå‰Šé™¤ã€æ–°ç€åˆ¤å®šã€æ°¸ç¶šåŒ–ã€cacheã€ETagã€Retryã¯å®Ÿè£…ã›ãšå¾Œç¶šå·¥ç¨‹ã¸åˆ†é›¢ã€‚
-- Identity priority / stability / scope / boundary / malformed input / fixture / architecture regression testã‚’è¿½åŠ ã€‚
-
-## RSS Engine M1-C / R1 â€” 2026-08-01
-
-### RSS / Atom adapters and date normalization
-
-- `FeedParser` ã‚’secure XML loadã¨Adapter dispatchä¸­å¿ƒã¸ç¸®å°ã€‚
-- `Rss2Adapter`ã€`Rss1Adapter`ã€`AtomAdapter` ã¨å…±é€š `FeedAdapterInterface` ã‚’è¿½åŠ ã€‚
-- namespaceã€channel/entry/itemã€descriptionã€`content:encoded`ã€Dublin Core dateç­‰ã®å½¢å¼åˆ¥å‡¦ç†ã‚’Adapterã¸åˆ†é›¢ã€‚
-- `FeedDateNormalizer` ã‚’è¿½åŠ ã—ã€æ—¢å­˜ `Y-m-d H:i:s` å‡ºåŠ›ã¨source timezoneéå¤‰æ›ã‚’ç¶­æŒã€‚
-- Atomã¯å¾“æ¥ã® `updated` ã‚’å„ªå…ˆã—ã€æœªè¨­å®šæ™‚ã«æ¨™æº– `published` ã‚’fallbackã¨ã—ã¦ä½¿ç”¨ã€‚
-- `FeedLinkSelector` ã¨ `FeedXmlHelper` ã‚’è¿½åŠ ã—ã€Qiita/Publickeyå‹alternate linkã€text linkã€`url` fallbackã‚’å…±é€šåŒ–ã€‚
-- `rss_parse`ã€`parse_start()`ã€`rss_normalize_date()`ã€`rss_select_link_candidate()` ã®äº’æ›å¢ƒç•Œã‚’ç¶­æŒã€‚
-- DBã€Frontendã€FeedSourceã€Fetcherã€API responseã€SSRF/XSSã€cache/ETag/Retryã¯å¤‰æ›´ãªã—ã€‚
-- Adapter/Date/fixture/architecture/security regression testã‚’è¿½åŠ ã€‚
-
-## RSS Engine M1-B / R1 â€” 2026-08-01
-
-### Feed Source model
-
-- `FeedSource` ã‚’è¿½åŠ ã—ã€æ—¢å­˜ `content_id` / `content_owner` / æ¤œè¨¼æ¸ˆã¿URLã‚’immutableãªFeed Engine modelã¨ã—ã¦è¡¨ç¾ã€‚
-- `FeedSourceMapper` ã‚’è¿½åŠ ã—ã€owner-scoped active content rowã‚’èªè¨¼æ¸ˆã¿ownerã¨å†ç…§åˆã—ã¦modelåŒ–ã€‚
-- Mapperã¯raw `content_value` ã‚’ä½¿ç”¨ã›ãšã€`app_validate_feed_url()` å¾Œã®URLã ã‘ã‚’å—ã‘å–ã‚‹æ§‹é€ ã«å¤‰æ›´ã€‚
-- `FeedFetcher` ã¯ä»»æ„URLæ–‡å­—åˆ—ã§ã¯ãªã `FeedSource` ã®ã¿ã‚’å—ã‘å–ã‚‹interfaceã¸å¤‰æ›´ã€‚
-- ä¸æ­£ãƒ»æ¬ æDB rowã¯outbound fetchå‰ã«fail-closedã—ã€generic 500 responseã¨server logã¸åˆ†é›¢ã€‚
-- DB schemaã€Frontendã€API response shapeã€SSRF/XSS boundaryã€cache/ETag/Retryã¯å¤‰æ›´ãªã—ã€‚
-- M1-Bå°‚ç”¨ã®model/mapper/transport/API failure/static architecture testã‚’è¿½åŠ ã€‚
-
-## RSS Engine M1-A / R1 â€” 2026-08-01
-
-### Fetcher / Parser responsibility split + Normalized Item
-
-- `FeedFetcher` ã‚’è¿½åŠ ã—ã€`feed.fetch` ã®HTTPå–å¾—ã‚’SB-09 `app_safe_http_fetch()` çµŒç”±ã®æ˜ç¤ºçš„å¢ƒç•Œã¸åˆ†é›¢ã€‚
-- `FeedParser` ã‚’ `app/feed/` ã¸åˆ†é›¢ã—ã€RSS 2.0 / RSS 1.0 / Atomã®æ—¢å­˜è§£æbehaviorã‚’ç¶­æŒã€‚
-- `NormalizedItem` ã‚’å°å…¥ã—ã€Parserå†…éƒ¨ã§ã¯å…±é€šItem modelã‚’ç”Ÿæˆã€‚
-- `parse_start()` ã¨ `rss_parse` compatibility aliasã‚’æ®‹ã—ã€æ—¢å­˜API array contractã‚’ç¶­æŒã€‚
-- APIã®owner lookup â†’ stored URL validation â†’ hardened fetch â†’ parse â†’ XSS-safe payloadã®é †åºã‚’ç¶­æŒã€‚
-- M1-Aå°‚ç”¨ã®å®Ÿè¡Œtest / architecture static testã‚’è¿½åŠ ã€‚
-- DB schemaã€Frontendã€cacheã€ETagã€retryã¯å¤‰æ›´ãªã—ã€‚
-
-## Secure Baseline SB-15 / R3 â€” 2026-07-30
-
-- PHP fallbackã¨DB schemaã®UI defaultã‚’çµ±ä¸€ã€‚
-- schemaã®Navbar URL defaultã‚’æ˜ç¤ºçš„HTTPSã¸çµ±ä¸€ã€‚
-- Legacy hash evidenceã‹ã‚‰Buildç’°å¢ƒå›ºæœ‰ã® `/mnt/data/` pathã‚’é™¤å»ã€‚
-- `APP_HASH_KEY` ã®ç¶™ç¶šä¿æŒãƒ»å®‰å…¨ãªbackupã«é–¢ã™ã‚‹é‹ç”¨æ³¨æ„ã‚’è¿½åŠ ã€‚
-- Version / tests / package manifest / Initial Commitè³‡æ–™ã‚’R3ã¸åŒæœŸã€‚
-
-## Secure Baseline SB-15 / R2 â€” 2026-07-30
-
-### Git pre-commit cleanup
-
-- æœªä½¿ç”¨ã®Legacyæš—å·åŒ–é–¢æ•°å‰Šé™¤å¾Œã®çŠ¶æ…‹ã‚’æ­£å¼CheckpointåŒ–ã€‚
-- å‰Šé™¤æ¸ˆã¿Tweet UIã«å¯¾ã™ã‚‹dead JavaScriptã€ç©ºã®list itemã€å¤ã„ã‚³ãƒ¡ãƒ³ãƒˆã‚’å‰Šé™¤ã€‚
-- æœªä½¿ç”¨Vue 2.5.17 asset/runtimeä¾å­˜ã®å‰Šé™¤æ¸ˆã¿çŠ¶æ…‹ã¸README/Roadmapç­‰ã‚’åŒæœŸã€‚
-- Visible version markerã‚’SB-15 R2ã¸æ›´æ–°ã€‚
-- Package manifestã‚’æœ€çµ‚å†…å®¹ã‹ã‚‰å†ç”Ÿæˆã€‚
-- Productã®RSS/Auth/API/DB behaviorå¤‰æ›´ãªã—ã€‚
-
-## Secure Baseline SB-15 / R1 â€” 2026-07-30
-
-### Documentation / Initial Commit gate
-
-- READMEã‚’Secure Baselineå®Œæˆæ™‚ç‚¹ã¸æ›´æ–°ã€‚
-- Legacyè§£æã€Modernizationã€Securityã€Change mapã€Roadmapã€Initial Commit gateã‚’æ–‡æ›¸åŒ–ã€‚
-- Production deployment / new DB / table prefixæ‰‹é †ã‚’æ•´ç†ã€‚
-- Secure Baselineã§æ„å›³çš„ã«æ®‹ã—ãŸåˆ¶ç´„ã‚’æ˜ç¤ºã€‚
-- GitHub Initial Commitå¯¾è±¡ã‹ã‚‰secret/data/log/sessionç­‰ã‚’é™¤å¤–ã™ã‚‹æ¡ä»¶ã‚’å†ç¢ºèªã€‚
-- Runtimeæ©Ÿèƒ½å¤‰æ›´ãªã—ã€‚Visible version markerã®ã¿SB-15ã¸æ›´æ–°ã€‚
-
-## Secure Baseline SB-14 / R1 â€” 2026-07-30
-
-### Final regression/security matrix
-
-- Authentication transaction rollbackè©¦é¨“ã‚’è¿½åŠ ã€‚
-- SSRF special-use address matrixã‚’æ‹¡å¼µã€‚
-- XSSã€Parser fixtureã€CSRF surfaceã€4-tabã€repository leak scanã‚’æ¨ªæ–­ç¢ºèªã€‚
-- æ‹¡å¼µè©¦é¨“ã§æ¤œå‡ºã—ãŸç‰¹æ®Šç”¨é€”IPv4/IPv6åˆ¤å®šã®ä¸è¶³ã‚’æ˜ç¤ºCIDRæ‹’å¦ã§è£œå¼·ã€‚
-- ZIPå†å±•é–‹å¾Œã®å…¨å›å¸°è©¦é¨“ãƒ»secret scanãƒ»manifestç…§åˆã‚’Release GateåŒ–ã€‚
-
-## Secure Baseline SB-13 / R2 â€” 2026-07-30
-
-### Schema / data integrity / table prefix
-
-- MySQL 8å‘ã‘sanitized schemaã‚’æ•´å‚™ã€‚
-- `utf8mb4_unicode_ci`ã€relationship IDã®UNSIGNEDåŒ–ã€query patternç”¨Indexã€`user_conf.user_id` UNIQUEã‚’å®šç¾©ã€‚
-- `DB_TABLE_PREFIX` ã‚’å°å…¥ã—ã€Runtimeã®å›ºå®š `ig_*` ä¾å­˜ã‚’é™¤å»ã€‚
-- `schema.sql` / audit / migration / fixtureã‚’prefixå¯¾å¿œã€‚
-- æ–°ã—ã„ç©ºDBã‹ã‚‰é–‹å§‹ã™ã‚‹çµŒè·¯ã‚’è¿½åŠ ã€‚
-- Existing Legacy DBå‘ã‘preflight / migration / postflightã‚’ç”¨æ„ã€‚
-- Legacy duplicate/orphanã‚’è‡ªå‹•å‰Šé™¤ãƒ»çµ±åˆã—ãªã„æ–¹é‡ã‚’ç¶­æŒã€‚
-
-## Secure Baseline SB-12 / R2 â€” 2026-07-30
-
-### Atom link hotfix
-
-- Atomã® `<link href="...">`ã€`rel="alternate"`ã€è¤‡æ•°linkã‚’å®‰å…¨ã«é¸æŠã™ã‚‹å‡¦ç†ã‚’ä¿®æ­£ã€‚
-- Qiitaå‹ / Publickeyå‹ã®Atom fixtureã‚’è¿½åŠ ã€‚
-
-## Secure Baseline SB-11ã€œ12 / R1 â€” 2026-07-30
-
-### Legacy bug fixes / PHP 8 stabilization
-
-- 4ã‚¿ãƒ–locationã‚’0/1/2/3ã¸çµ±ä¸€ã€‚
-- Feed 0ä»¶ãƒ»5ä»¶æœªæº€ãƒ»4ã®å€æ•°ä»¥å¤–ã®è¡¨ç¤ºä¸å…·åˆã‚’ä¿®æ­£ã€‚
-- Feed typeåˆ¤å®šã€è¨­å®šå€¤ä¿æŒã€äºŒé‡submitã€HTMLæ§‹é€ ç­‰ã®Legacyä¸å…·åˆã‚’æ•´ç†ã€‚
-- PHP 8.1+ã‚’Runtimeæœ€ä½è¦ä»¶ã¨ã—ã¦æ˜ç¤ºã€‚
-- Warning/Notice/Deprecated/TypeErrorã«ã¤ãªãŒã‚‹å¢ƒç•Œã‚’æ•´ç†ã€‚
-- RSS 2.0 / RSS 1.0 / Atom parserã®å¤±æ•—æ‰±ã„ã‚’æ”¹å–„ã€‚
-
-## Secure Baseline SB-08ã€œ10 / R1 â€” 2026-07-30
-
-### Validation / SSRF / XSS
-
-- IDã€enumã€lengthã€URLã®strict validationã‚’è¿½åŠ ã€‚
-- Feed fetchã‚’server-side registered URLã‹ã‚‰å®Ÿè¡Œã€‚
-- HTTP/HTTPSé™å®šã€DNS/IPæ¤œè¨¼ã€redirectå†æ¤œè¨¼ã€TLS verificationã€timeoutã€bodyä¸Šé™ã‚’å°å…¥ã€‚
-- Stockä¿å­˜æ™‚ã®è¨˜äº‹ãƒšãƒ¼ã‚¸å†Fetchã‚’å»ƒæ­¢ã€‚
-- Feed/DB/UIå‡ºåŠ›ã‚’escapeã—ã€Feed payloadã‚’plain text + validated URLã¸æ­£è¦åŒ–ã€‚
-
-## Secure Baseline SB-05ã€œ07 / R1 â€” 2026-07-30
-
-### API / authorization / CSRF
-
-- `public/api_v1.php` ã‚’thin HTTP boundaryã¸ç¸®å°ã—ã€`app/api.php` ã«dispatcherã‚’åˆ†é›¢ã€‚
-- POST-only explicit action APIã¸æ•´ç†ã€‚
-- ownerã¯requestå€¤ã§ã¯ãªãèªè¨¼æ¸ˆã¿Sessionã‹ã‚‰æ±ºå®šã€‚
-- Content/settings/tabs/stock/feed fetchã¸ownership enforcementã‚’è¿½åŠ ã€‚
-- Login / Register / API / Logoutã¸CSRFã‚’é©ç”¨ã€‚
-
-## Secure Baseline SB-03ã€œ04 / R2 â€” 2026-07-29
-
-### Session / authentication
-
-- Sessionå‡¦ç†ã‚’ä¸­å¤®åŒ–ã—ã€private `var/session/` ã¸ä¿å­˜ã€‚
-- strict modeã€cookie-onlyã€HttpOnlyã€SameSite=Laxã€HTTPSæ™‚Secureã‚’è¨­å®šã€‚
-- Loginæ™‚Session IDã‚’å†ç”Ÿæˆã€‚
-- idle / absolute timeoutã‚’å°å…¥ã€‚
-- `password_hash()` / `password_verify()` ã¸ç§»è¡Œã€‚
-- normalized email identity + HMACã‚’æ¡ç”¨ã€‚
-- Duplicate identityã‚’fail closedã€‚
-- Registration switchã¨Login throttleã‚’è¿½åŠ ã€‚
-- Legacy credentialè‡ªå‹•ç§»è¡Œã¯è¡Œã‚ãªã„æ–¹é‡ã¸ç¢ºå®šã€‚
-
-## Secure Baseline SB-00ã€œ02 â€” 2026-07-29
-
-### Legacy freeze / boundary / PDO foundation
-
-- Legacy sourceã®hash / treeã‚’å‡çµè¨˜éŒ²ã€‚
-- `public/` ã‚’å”¯ä¸€ã®Webå…¬é–‹é ˜åŸŸã¸åˆ†é›¢ã€‚
-- secrets / DB dump / logs / sessionã‚’å…¬é–‹å¯¾è±¡ã‹ã‚‰åˆ†é›¢ã€‚
-- PDO exception modeã€native prepareã€assoc fetchã€MySQL `utf8mb4`ã‚’è¨­å®šã€‚
-- SQL parameter bindingã‚’å°å…¥ã€‚
-- user + user_confä½œæˆã‚’transactionåŒ–ã€‚
-- æ—¥æ™‚formatã‚’ `Y-m-d H:i:s` ã¸ä¿®æ­£ã€‚
-
-
-## V1.2-C
-Search Feedï¼ˆç™»éŒ²RSSæ¨ªæ–­æ¤œç´¢ã€å…±é€šRSSã€AND/ORã€ã‚«ãƒ¼ãƒ‰å€‹åˆ¥æ›´æ–°ï¼‰ã‚’è¿½åŠ ã€‚DB Schemaå¤‰æ›´ãªã—.
+YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éíß»Ñ:-jZ.¶›­–)Ş³R22ã3RãBÒ##bÓ’Ó#P ¢222%52W'&÷"F–væ÷7F–70¢ÒÖF†RW†—7F–ær%52G&ç7÷'BæB'6W"&W7VÇG2–çFò6—‚V&Æ–26FVv÷&–W3¢U$Â÷6V7W&—G’&Æö6¶–ærÂDå2ö6öææV7F–öâf–ÇW&RÂF–ÖV÷WB÷FV×÷&'’f–ÇW&RÂ…EE&V¦V7F–öâ÷&FRÆ–Ö—F–ærÂ–çfÆ–BfVVBf÷&ÖBÂæBÆö6Â%52&VFW"6W'fW"f–ÇW&Rà¢Ò6†÷röæÇ’F†R6—‚ÆÆ÷rÖÆ—7FVBÖW76vW2–â%526&G2v†–ÆR&WF–æ–ærF†R7W'&VçBvVæW&–2fÆÆ&6²f÷"Væ¶æ÷vâ’÷&÷f–FW"FW‡Bà¢ÒG&ç6ÆFRW'6—7FVBfVVB†VÇF‚f–ÇW&W2–çFòF†R6ÖR6fR6FVv÷'’æB¦æW6RwV–Fæ6Rv—F†÷WBW‡÷6–ær&r5U$Â÷&÷f–FW"ÖW76vW2à¢Ò&W6W'fRF†RW†—7F–ær6fRfWF6‚&÷VæF'’ÂDå2–ææ–ærÂDÅ2fW&–f–6F–öâÂ&W7öç6RÆ–Ö—G2Â&WG'’õ&WG'’ÔgFW"Â66†RÂ7FÆRÖöâÖW'&÷"ÂfVVB†VÇF‚W'6—7FVæ6RæB'6W"&V†f–÷"à ¢222Ö–ÂW'&÷"F–væ÷7F–70¢Ò&WÆ6RF†R6–ævÆRÖ–Â7&VFVçF–Â&RÖVçG'’&W7öç6Rv—F‚f—†VBÂ7F–öæ&ÆR&V6öâ6öFW2f÷"Ö—76–ær÷"–çfÆ–BVæ7'—F–öâ¶W—2Â¶W’Ö—6ÖF6‚ÂFÖvVBVæ7'—FVBFFÂôWF‚&V6öææV7F–öâÂW‡—&VB÷"Ö—6ÖF6†VBôWF‚7FFRÂFVæ–VB÷"–æ6ö×ÆWFRvöövÆRWF†÷&—¦F–öâÂvöövÆRF–ÖV÷WBõDÅ2÷&W7öç6Rf–ÇW&W2Â–çfÆ–BôWF‚6W'fW"6öæf–wW&F–öâÂæBÖ–Â7F÷&vRf–ÇW&Rà¢Ò&W6W'fR6W&FR”ÔÂ4ÕEÂfÆ–FF–öâÂF—6&ÆVBÖ66÷VçBÂföÆFW"æBGF6†ÖVçBf–ÇW&W2v†–ÆR&WGW&æ–ær6ÆV&W"¦æW6RwV–Fæ6Rg&öÒF†RW†—7F–ær’&÷VæF'’à¢ÒF—7F–æwV—6‚7V66W76gVÂ6VæBföÆÆ÷vVB'’6VçBÖföÆFW"6fRf–ÇW&RæBv&âv†VââVæ6W'F–â6fR×W7Bæ÷B&R&WG&–VBWFöÖF–6ÆÇ’à¢ÒFB6fR"Ö6†&7FW"&VfW&Væ6RFòVæW‡V7FVBÖ–ÂæBôWF‚6ÆÆ&6²f–ÇW&W2v—F†÷WBÆövv–ær&÷f–FW"ÖW76vW2Â7&VFVçF–Ç2ÂFö¶Vç2ÂWF†÷&—¦F–öâ6öFW2Â÷"77v÷&G2à ¢2226ö×F–&–Æ—G¢ÒæòFF&6RÖ–w&F–öâÂ&WV—&VB6öæf–wW&F–öâÂW‡FW&æÂFWVæFVæ7’ÂVæGö–çB÷"7&VFVçF–Âf÷&ÖB6†ævR—2–çG&öGV6VBà¢ÒW†—7F–ær7&VFVçF–ÂVæ7'—F–öâÂôWF‚´4RÂ”Ôõ4ÕE&V†f–÷"Â%52fWF6†–ærÂ&WG'’ö66†R&V†f–÷"ÂæBfVVB'6–ær&VÖ–âVæ6†ævVC²F†—2&VÆV6R&Vf–æW2W'&÷"6Æ76–f–6F–öâæB&W6VçFF–öâà ¢22ã3Rã2Ò##bÓ’Ó#@ ¢222Fö7VÖVçFF–öâÖ–çFVææ6P¢ÒÆ–vâ$TDÔR7W'&VçB6&–Æ—F–W2Âg&öçFVæBFWVæFVæ6–W2Â&öFÖv÷&F–ærÂæBv—D‡V"7F–öç2FW67&—F–öâv—F‚F†R–×ÆVÖVçFVB&W÷6—F÷'’7FFRà¢Ò&V6÷&BvÖ–ÂôWFƒ"Â&V6V—fVBõ6VçBGF6†ÖVçBF÷væÆöBÂ#BÖ†÷W"G'W7FVB$d'&÷w6W'2ÂF¦6VçBÖÖöçF‚6ÆVæF"VçG&–W2Â6ÆVæF"'F–Â&Vg&W6‚ÂæB&VÖ÷FRVF—F÷"Æ–æRçVÖ&W'22W7F&Æ—6†VB&V†f–÷"à ¢22276WB&Wf—6–öâ6VçG&Æ—¦F–öà¢Ò¶VW÷fW'6–öâç‡2F†R6–ævÆR76WB×&Wf—6–öâ–çWBæBFW&—fRG–æÖ–6ÆÇ’ÆöFVB6ÆVæF"Â6ÖW&7G&VÖ–ærÂæB%52ÖævVÖVçB6†–ÆB76WBU$Ç2g&öÒF†V—"…×fW'6–öæVBVçG'’67&—Bà¢Ò&VÖ÷fRS6÷–VB&VÆV6RÖ&¶W'2g&öÒG–æÖ–2¦f67&—Bô552&VfW&Væ6W2v†–ÆR&W6W'f–ærFWVæFVæ7’÷&FW"Â&÷VæFVB&WG'’&V†f–÷"ÂGWÆ–6FRÖÆöBÖ&¶W'2ÂæB&Wf—6–öâÖg&VRfÆÆ&6²&V†f–÷"à¢ÒFB7FF–2æB'VçF–ÖR6öçG&7G2f÷"&Wf—6–öâ&÷vF–öâÂVç7W÷'FVB×Fö¶Vâ&V¦V7F–öâÂVW'’—6öÆF–öâÂÖ—76–ær×&Wf—6–öâfÆÆ&6²ÂæBÆöFW"÷&FW&–ærà ¢2226ö×F–&–Æ—G¢ÒæòFF&6RÖ–w&F–öâÂ&WV—&VB6öæf–wW&F–öâÂFWVæFVæ7’ÂVæGö–çBÂ7&VFVçF–ÂÂ÷"Æ–6F–öâfVGW&R6†ævR—2–çG&öGV6VBà¢Ò&öGV7F–öâfW&–f–6F–öâ6ö×ÆWFVBf÷"F6†&ö&BæB6ÆVæF"÷W&F–öâgFW"Ç––ærF†Rcã3Rã26†V6·ö–çBà ¢22ã3Rã"Ò##bÓ’Ó#  ¢2226ÆVæF"WfVçB'F–Â&Vg&W6€¢Ò&WÆ6RF†RgVÆÂF6†&ö&B&VÆöBgFW"÷&F–æ'’æB&V7W'&–ær×6W&–W2WfVçB7&VF–öâÂWFFRæBFVÆWF–öâv—F‚F†RW†—7F–ær6ÆVæF"&ö¦V7F–öâ&Vg&W6‚F‚à¢Ò6Æ÷6RF†R6ö×ÆWFVBWfVçBÖöFÂÂ6†÷rF†RW†—7F–ær7V66W72æ÷F–6RÂæB&Vg&W6‚WfW'’f—6–&ÆR6ÆVæF"6&BÇW2F†RW6öÖ–ærÖWfVçB&ö¦V7F–öâv—F†÷WBF—7GW&&–ær÷F†W"F6†&ö&B7FFRà ¢2226ö×F–&–Æ—G¢Ò6ÆVæF"v–FvWB7&VF–öâÂ6WGF–ær6†ævW2æBFVÆWF–öâ–çFVçF–öæÆÇ’&WF–âF†V—"W†—7F–ærgVÆÂ×vR&VÆöB&V6W6RF†W’6†ævRF6†&ö&B7G'V7GW&Rà¢ÒW†—7F–ærö67W'&Væ6RÖöæÇ’÷W&F–öç2æBFW6·F÷FFRG&rbG&÷&WF–âF†V—"'F–Â×&Vg&W6‚&V†f–÷"à¢ÒæòFF&6RÖ–w&F–öâÂ&WV—&VB6öæf–wW&F–öâÂFWVæFVæ7’ÂVæGö–çB÷"7&VFVçF–Â6†ævR—2–çG&öGV6VBà¢Ò&öGV7F–öâfW&–f–6F–öâ6ö×ÆWFVBf÷"÷&F–æ'’WfVçB7&VF–öâÂWFFRæBFVÆWF–öâv—F†÷WBgVÆÂF6†&ö&B&VÆöBà ¢22ã3RãÒ##bÓ’Ó#  ¢2226ÆVæF"æB&VÖ÷FRVF—F÷"W6&–Æ—G¢Ò6†÷rF†RFFW2ÂWfVçG2Â6æ6VÆÆVBö67W'&Væ6W2Â†öÆ–F—2æBF6·2–âF†Rf—6–&ÆR&Wf–÷W2öæW‡BÖÖöçF‚6VÆÇ2v†–ÆR&WF–æ–ærF–ÖÖVBF¦6VçBÖÖöçF‚G&VFÖVçBà¢Ò&WVW7BöæÇ’F†R6ö×ÆWFR#‚ó3RóC"ÖF’f—6–&ÆRÖöçF‚w&–BF‡&÷Vv‚F†RW†—7F–ær&÷VæFVB6ÆVæF"&ævR“²¶VWF†RFööÆ&"Æ&VÂæ6†÷&VBFòF†R6VÆV7FVBÖöçF‚à¢Òfö7W2F†RFBÖWfVçBF—FÆRgFW"—G2ÖöFÂ÷Vç2öæÇ’v†VâF†R&–Ö'’–çWB7W÷'G2†÷fW"æBf–æRö–çFW"Âfö–F–ærWFöÖF–26Ö'G†öæR6ögGv&RÖ¶W–&ö&BF—7Æ’à¢ÒFB7–æ6‡&öæ—¦VBÂf—7VÂÖöæÇ’Æ–æRçVÖ&W'2FòF†R&VÖ÷FRFW‡BVF—F÷"v—F†÷WB6†æv–ærFW‡F&V6öçFVçBÂ&6ScB6fRG&ç7÷'BÂ6öæfÆ–7BFWFV7F–öâÂÆ–æRVæF–æw2÷"UDbÓ‚$ôÒ†æFÆ–ærà ¢2226ö×F–&–Æ—G¢ÒæòFF&6RÖ–w&F–öâÂ&WV—&VB6öæf–wW&F–öâÂFWVæFVæ7’ÂVæGö–çB÷"7&VFVçF–Â6†ævR—2–çG&öGV6VBà¢ÒW†—7F–ær÷væW"66÷RÂ55$bÂ÷WGWBW66–ærÂ6ÆVæF"&ævRÆ–Ö—G2æB&VÖ÷FRVF—F÷"6V7W&—G’&÷VæF&–W2&VÖ–âVæ6†ævVBà¢Ò&öGV7F–öâfW&–f–6F–öâ6ö×ÆWFVBf÷"F¦6VçBÖÖöçF‚6ÆVæF"VçG&–W2Â2F—FÆRfö7W2Â6Ö'G†öæR¶W–&ö&Bfö–Fæ6RÂæB&VÖ÷FRVF—F÷"Æ–æRÖçVÖ&W"&V†f–÷"à ¢22ã3RãÒ##bÓ’Óp ¢222vÖ–ÂôWFƒ"æBÖ–Âv–FvW@¢ÒFBvöövÆRôWF‚"ãWF†÷&—¦F–öâ6öFR²´4R7W÷'BÂVæ7'—FVB&Vg&W6‚×Fö¶Vâ7F÷&vRÂæB6†÷'BÖÆ—fVB„ôUDƒ"7&VFVçF–Ç2f÷"vÖ–Â”Ôõ4ÕEà¢Ò&WW6RfÆ–B66W72Fö¶Vç2v—F†–âF†R6W76–öâÂ&VÖ÷fRGWÆ–6FRföÆFW"×7v—F6‚6öææV7F–öç2ÂÖ¶RT”BÆöö·W6VÖçF–72W‡Æ–6—BÂæBÆ–vâ6Æ–VçBv—G2v—F‚6W'fW"×6–FRÖ–Â÷W&F–öç2à¢Òæ÷&ÖÆ—¦RvÖ–Â”ÔT”B6V&6‚&W7VÇG2çVÖW&–6ÆÇ’&Vf÷&RÇ––ærF†RRóÖÖW76vRF—7Æ’Æ–Ö—B6òF†RæWvW7BÖW76vW2&R6VÆV7FVB6öç6—7FVçFÇ’à¢ÒÆÆ÷rF†RvöövÆRôWF‚6ÆÆ&6²–âV&Æ–2òæ‡F66W76v†–ÆR&WF–æ–ærF†RW†—7F–ærWF†VçF–6F–öâÂ55$bÂ÷væW"ÂDÅ2ÂæB6V7&WBÖ†æFÆ–ær&÷VæF&–W2à¢ÒfW&–g’vÖ–Â6öææV7F–öâÂ7W'&VçBöæWrÖW76vRÆ—7F–ærÂ&öG’F—7Æ’ÂföÆFW"7v—F6†–ærÂ6ö×÷6RÂ&WÇ’Â6VçB7F÷&vRÂæB–æ&÷VæBö÷WF&÷VæBGF6†ÖVçG2–âF†R&öGV7F–öâVçf—&öæÖVçBà ¢2227W'6÷"f–VÆBÂ66÷VçB6V7W&—G’ÂæB4¢ÒFBF†Rf—7VÂÖöæÇ’7W'6÷"f–VÆBVffV7Bv—F†÷WB66÷&–ærÂW'6—7FVæ6RÂæWGv÷&²66W72Â÷"æWrFWVæFVæ6–W2à¢ÒFBâW†7B#BÖ†÷W"G'W7FVBÖ'&÷w6W"Fö¶Vâf÷"7V66W76gVÂ$d²W†—7F–ærFö¶Vç2&VÖ–âVçG'W7FVBVçF–ÂF†RæW‡B7V66W76gVÂ$d6†ÆÆVævRà¢ÒFBFW7G2÷'VâÖ6’ç6†2F†R6öÖÖöâÆö6ÂæBv—D‡V"7F–öç2&Vw&W76–öâvFRà ¢222FF&6RæB&VÆV6P¢ÒFBFF—F—fRÖ–w&F–öç2#…öÖ–ÅövöövÆUööWF‚ç7ÆæB#•ö66÷VçEó&f÷G'W7Bç7Æ²W†—7F–ær77v÷&BÖ&6VBÖ–Â66÷VçG2Â7&VFVçF–Ç2Â&VÖVÖ&W"×Fö¶VâW‡—'’ÂæBW6W"FF&VÖ–âVæ6†ævVBà¢Ò&öÖ÷FRF†RFW7FVBcã3RFWfVÆ÷ÖVçB6†V6·ö–çG2FòF†Rf÷&ÖÂã3Rã&VÆV6RæB7FæF&B&VÆV6Rv÷&¶fÆ÷rà ¢22ã3Bã"Ò##bÓ’Ó@ ¢222F—7Æ’æB–çFW&7F–öâ–×&÷fVÖVçG0¢ÒÖFR6Ö'G†öæR&ö÷G7G&ÖöFÂ6öçFVçBö&öG’öfö÷FW"W6Râ÷VR7F—fR×F†VÖR&6¶w&÷VæBà¢ÒFFVB6ÆVæF"6÷’×FòÖæWrf÷"÷&F–æ'’WfVçG2Â–æF—f–GVÂö67W'&Væ6W2æB&V7W'&–ær6W&–W2F‡&÷Vv‚F†RW†—7F–ær7&VF–öâfÆ÷rà¢ÒFFVBFW6·F÷FFRG&rbG&÷f÷"÷&F–æ'’WfVçG2æB–æF—f–GVÂ&V7W'&–ærö67W'&Væ6W2Â&W6W'f–ærGW&F–öâæB÷F†W"WfVçBf–VÆG2à¢Ò&Vg&W6‚öæÇ’F†RffV7FVB6ÆVæF"6&BgFW"Ö÷fS²&WF–âC’ö67W'&Væ6R6öæfÆ–7B&W7–æ6‡&öæ—¦F–öâæB&WVFVBÖG&r&–æF–ærgFW"&VG&rà¢ÒÆÆ÷ræF—fRvR67&öÆÆ–ær÷fW"F6†&ö&B6&G2v†–ÆR&W6W'f–ær–çFW&æÂ67&öÆÂ&V2à¢ÒW6R&ö÷G7G&Rã2'FâÖ6Æ÷6Vv—F‚FFÖ'2×F†VÖSÒ&F&²&f÷"F&²ÖöFÂ†VFW'2–âF6†&ö&BÂ7Fö6²Â6WGF–æw2æBG–æÖ–6ÆÇ’7&VFVBv–FvWBF–Æöw2à ¢222&VÆV6R&VF–æW72ò6ö×F–&–Æ—G¢Ò7–æ6‡&öæ—¦RÆ–6F–öâfW'6–öâÂÆ&VÂÂ76WB&Wf—6–öâæB(	4R6öçG&7G2Fòã3Bã&Âv—F‚F†R7W'&VçB…‚ãò‚ãB&Vw&W76–öâvFW2&WF–æVBà¢Ò&W6W'fRW†—7F–ærgVæ7F–öæÆ—G’Â–æ6ÇVF–ær&V6V—fVBõ6VçBÖ–ÂGF6†ÖVçG2&W7F÷&VB–âcã3BãÂæBÆÂW†—7F–ærWF†VçF–6F–öâÂ÷væW"66÷RÂ55$bæBfÆ–FF–öâ&÷VæF&–W2à¢ÒæòD"Ö–w&F–öâÂ’6†ævRÂÖæFF÷'’6öæf–wW&F–öâÂ6V7&WB÷"FWVæFVæ7’—2–çG&öGV6VBà¢Òf–æÂÖWFFF&W&W2F†—2'&æ6‚f÷"&÷fÃ²ÖW&vRÂ–Ö×WF&ÆRFr7&VF–öâæBv—D‡V"&VÆV6RV&Æ–6F–öâ&VÖ–â6W&FRVæF–ær7F–öç2à ¢22ã3BãÒ##bÓ’Ó ¢222Ö–Â&V6V—fVBGF6†ÖVçG26÷'&V7F–öà¢Ò&W7F÷&VBF†RW†—7F–ær&V6V—fVBõ6VçBGF6†ÖVçBÆ—7BæBF÷væÆöB&6¶VæBF†B†B&VVâÖ—7F¶VæÇ’F—6&ÆVBGW&–ærcã3Bãf–æÂ&VÆV6R&W&F–öâà¢Ò&W6W'fVBF†RW†—7F–ærÖ–ÂT’ô’&÷WFW2Â÷væW"öföÆFW"66÷RÂ”Ô55$bôDå2×–ææ–ærõDÅ2&÷VæF&–W2Âf–ÆVæÖRö6öçFVçB×G—R6æ—F—¦F–öâÂæB&÷VæFVBGF6†ÖVçB6—¦R†æFÆ–ærà¢ÒæòFF&6RÖ–w&F–öâÂÖæFF÷'’6öæf–wW&F–öâ÷"6V7&WB6†ævR—2&WV—&VBf÷"F†—26÷'&V7F–öâ&VÆV6Rà ¢22ã3BãÒ##bÓ’Ó ¢222Ö–Â6VæBò&WÇ’ò6Vç@¢ÒFFVB&÷VæFVB4ÕE6WGF–æw2FòV6‚Ö–Â66÷VçBv—F‚CcR54ÂõDÅ2÷"Sƒr5D%EDÅ2Â÷F–öæÂVæ7'—FVB6W&FR4ÕE7&VFVçF–Ç2Âg&öÒFG&W72ôæÖRÂæB6öææV7F–öâöWF†VçF–6F–öâFW7BF†B6VæG2æòÖW76vRà¢ÒFFVBÆ–âFW‡B6ö×÷6RæB&WÇ’Â–æ6ÇVF–ær&WÇ’ÕFò&VfW&Væ6RÂfÆ–FFVBF‡&VF–ær†VFW'2ÂæBf—6–&ÆR6VæB×&öw&W727FFRà¢ÒFFVB6VçB6fRÖöFW2WFòò6W'fW"ò%52&VFW"âWFò6†V6·2–ÖÖVF–FVÇ’ÂgFW"6V6öæBÂæBgFW"gW'F†W""6V6öæG2&Vf÷&R&÷VæFVB”ÔTäBfÆÆ&6³²4ÕE—2æWfW"&W6VçB&V6W6R6VçB7F÷&vRf–ÆVBà ¢222GF6†ÖVçG0¢ÒFFVB÷WF&÷VæBGF6†ÖVçG2f÷"6ö×÷6RæB&WÇ“¢WFòRf–ÆW2ÂÖ”"W"f–ÆRæB#Ö”"F÷FÂÂv—F‚ÖÆf÷&ÖVBWÆöBÂFævW&÷W2W†V7WF&ÆR÷67&—BW‡FVç6–öâÂæB6ÆV&Ç’FævW&÷W2Ô”ÔR&V¦V7F–öâà¢Ò&V6V—fVBõ6VçBGF6†ÖVçBF—7Æ’æBF÷væÆöB&R–çFVçF–öæÆÇ’FVfW'&VB&W–öæBcã3Bà ¢2226V7W&—G’ò6ö×F–&–Æ—G¢Ò&W6W'fVBWF†VçF–6F–öâÂ6W76–öâÂ55$bÂ÷væW"66÷RÂ”Ôõ4ÕE55$bfÆ–FF–öâæBfÆ–FFVBÔ•–ææ–ærÂDÅ2fW&–f–6F–öâÂ–çWBfÆ–FF–öâæBW†—7F–ær&VBÖöæÇ’”ÔÆ—7B÷6V&6‚ö&öG’&V†f–÷"à¢Ò'VæFÆVBF†R&WV—&VB…Ö–ÆW"rãã7V'6WBv—F‚—G2W7G&VÒÄ”4Tå4RâôWF…Fö¶Vå&÷f–FW"&W&F–öâ—2&W6VçBÂ'WBôWFƒ"WF†VçF–6F–öâ—G6VÆb—2æ÷B–×ÆVÖVçFVBà ¢222FF&6Ròf–æÆ—¦F–öà¢ÒFFVBFF—F—fRö–FV×÷FVçBÖ–w&F–öç2#e÷có3EöÖ–Å÷6×Gç7ÆæB#u÷có3EöÖ–Å÷6VçE÷6fUöÖöFRç7ÆâW†—7F–ærÖ–Â66÷VçG2&VÖ–â4ÕEÖF—6&ÆVBVçF–Â6öæf–wW&VC²6VçBÖöFRFVfVÇG2FòWFöà¢Ò&öGV7F–öâ6†V6·ö–çBfW&–f–6F–öâ6ö×ÆWFVBf÷"4ÕE6VæBÂ&WÇ’Â6VçB†æFÆ–æræB÷WF&÷VæBGF6†ÖVçG2&Vf÷&Rf÷&ÖÂ&VÆV6Rà¢Ò&öÖ÷FVBF†Rcã3BÖ–Â6öçG&7B–çFòF†R7W'&VçBfVGW&R7V—FRæBf–æÆ—¦VBÆ–6F–öâö76WB&Wf—6–öâBã3Bãà ¢22ã32ãÒ##bÓ’Ó ¢222&VÖ÷FRf–ÆW0¢ÒFFVB×VÇF—ÆRf–ÆR6VÆV7F–öâFòF†R&VÖ÷FRf–ÆW2WÆöBF–Æörà¢ÒWÆöG26VÆV7FVBf–ÆW26WVVçF–ÆÇ’F‡&÷Vv‚F†RW†—7F–ær6–ævÆRÖf–ÆRVæGö–çBÂ&W6W'f–ærW"×&WVW7B55$b&Vg&W6‚Â6ÖRÖ÷&–v–â7&VFVçF–Ç2Â÷væW"66÷RæB6W'fW"×6–FRfÆ–FF–öâà¢Ò&W÷'G27V66W76gVÂæBf–ÆVBf–ÆW2FövWF†W"æB6öçF–çVW2F†RVWVRgFW"â–æF—f–GVÂf–ÇW&S²GWÆ–6FR7V&Ö—76–öç2&RF—6&ÆVBv†–ÆR&ö6W76–ærà ¢2226ö×F–&–Æ—G¢ÒæòFF&6RÖ–w&F–öâÂ6öæf–wW&F–öâÂ6V7&WBÂV&Æ–2’6öçG&7B÷"W†—7F–ær6–ævÆRÖf–ÆR6W'fW"&V†f–÷"6†ævVBà ¢22ã32ãÒ##bÓ’Ó ¢2226ÆVæF"Væ†æ6VÖVç@¢Òf–æÆ—¦VBF†Rf—fRÖ6öÆ÷"6ÆVæF"Â6†&VBFFR×&ævRæBö67W'&Væ6R–FVçF—G’Âö67W'&Væ6RÖöæÇ’&V7W'&–ærÖWfVçBW†6WF–öç2Â6öææV7FVB×VÇF’ÖF’ÖöçF‚&'2ÂæBF’÷vVV²öÖöçF‚f–Ww2fW&–f–VBF‡&÷Vv‚F†Rcã32$27–6ÆRà¢Ò&WF–æVBW†—7F–ær&VFò&ÇVVòw&VVæFFÂ6W&–W2×v–FR÷W&F–öç2Â÷væW"66÷RÂ55$bÂ÷WGWBW66–ærÂDò&ÖWFW&—¦F–öâæBÆÂcã3"WF†VçF–6F–öâ&÷VæF&–W2à ¢222f–æÆ—¦F–öà¢Ò&öÖ÷FVBF†R66WFVB$3"6÷W&6RæB–Ö×WF&ÆR76WB&Wf—6–öâFòf÷&ÖÂã32ãv—F†÷WBFF–æræWr6ÆVæF"&V†f–÷"à¢Ò&WF–æVB&÷VæFVBÂFWVæFVæ7’Ö÷&FW&VBF6†&ö&B¦f67&—BÆöF–ærÂ÷&FW&VB7G–ÆW6†VWB&F6†W2æB6–ævÆR7FF–2Ö76WB&WG'“²’×WFF–öç2&VÖ–âæöâ×&WG&–VBà¢Ò¶WBÖ–w&F–öâ#RFF—F—fRæBöæR×F–ÖRÂv—F‚æòFW7G'V7F—fR6†ævRæBæòæWr&WV—&VB6öæf–wW&F–öâ÷"6V7&WBà¢ÒFVfW'&VB66†VGVÆR6÷’æB6ÆVæF"G&rbG&÷FòÆFW"fW'6–öâv—F‚F†V—"FW6–vâ6öç7G&–çG2&V6÷&FVB6W&FVÇ’à ¢22ã32ãÕ$3"Ò##bÓ’Ó ¢22276WBÆöF–ær7F&–Æ—¦F–öà¢Ò¶WBF†Rcã326ÆVæF"fVGW&R66÷RæBT’Væ6†ævVBv†–ÆR&WÆ6–ærF†RF6†&ö&BG–æÖ–276WB'W'7Bv—F‚â÷&FW&VB¦f67&—BVWVRà¢Ò7F'G27G–ÆW6†VWG2–â6ÖÆÂFV6Æ&F–öâÖ÷&FW"&F6†W26òF†V—"666FR&VÖ–ç27F&ÆRv—F†÷WB—77V–ærWfW'’6öÆBÖ66†R&WVW7BBöæ6Rà¢Ò&WG&–W2f–ÆVB¦f67&—B÷"7G–ÆW6†VWB&WVW7Böæ6RgFW"&÷VæFVBFVÆ“²WFFRö7&VFRöFVÆWFR’&WVW7G2&Ræ÷BWFöÖF–6ÆÇ’&WG&–VBà¢ÒGfæ6VBF†RÆ–6F–öâæB–Ö×WF&ÆR76WB&Wf—6–öâFòã32ãÕ$3&6ò$3'&÷w6W"66†W26ææ÷B&WF–âF†R&Wf–÷W2ÆöFW"à ¢22ã32ãÕ$3Ò##bÓ’Ó ¢2226ÆVæF"Væ†æ6VÖVç@¢ÒW‡æFVBW†—7F–ær6ÆVæF"6öÆ÷'2g&öÒF‡&VRFòf—fRv†–ÆR&W6W'f–ær7F÷&VB&VFò&ÇVVòw&VVæfÇVW3²FFVB66W76–&ÆR–VÆÆ÷væBW'ÆV&W6VçFF–öâf÷"Æ–v‡BæBF&²F†VÖW2à¢ÒVæ–f–VB6–ævÆRÖF’Â×VÇF’ÖF’æB&V7W'&–ærö67W'&Væ6R&ævW26òÖöçF‚ÂvVV²æBF’f–Ww26†&RF†R6ÖR÷væW"×66÷VBWfVçB–FVçF—G’æB–æ6ÇW6—fRFFR6VÖçF–72à¢ÒFFVBö67W'&Væ6RÖöæÇ’VF—BÂFVÆWFRæB&W7F÷&Rf÷"&V7W'&–ærWfVçG2F‡&÷Vv‚âFF—F—fRW†6WF–öâ&V6÷&C²6W&–W2VF—BöFVÆWFR&VÖ–ç2f–Æ&ÆRæB(	ÇF†—2æBföÆÆ÷v–æ~(	Ò&VÖ–ç2FVfW'&VBà¢ÒFFVBf—7VÆÇ’6öææV7FVB×VÇF’ÖF’&'2–âÖöçF‚f–WrÂ–æ6ÇVF–ærvVV²Ö&÷VæF'’æBÖöçF‚Ö&÷VæF'’6öçF–çVF–öâ7FFW2à¢ÒFFVBF’÷vVV²öÖöçF‚f–Wr7v—F6†–ærÂF–ÖVBÆ6VÖVçB–âF’÷vVV²F–ÖVÆ–æW2æB6ö×7B&W7öç6—fR6ÆVæF"FööÆ&"à ¢222FF&6Rò6V7W&—G’ò6ö×F–&–Æ—G¢ÒFFVBFF—F—fRÖ–w&F–öâ#U÷có35ö6ÆVæF%öWfVçEöW†6WF–öâç7ÆæB–çFVw&FVB6ÆVæF%öWfVçEöW†6WF–öæ–çFòg&W6‚Ö–ç7FÆÂFF&6R÷66†VÖç7Æ²æòW†—7F–ærF&ÆR÷"WfVçB&÷r—2G&÷VB÷"&Ww&—GFVâà¢Ò&W6W'fVBWF†VçF–6F–öâÂ÷væW"66÷RÂ55$bÂ…52W66–ærÂDò&ÖWFW&—¦F–öâÂ–çWBfÆ–FF–öâÂ6W76–öâÂ7FW×WWF†VçF–6F–öâÂ$dÂ&V6÷fW'’6öFRÂ6W76–öâ&Vv—7G'’æBWF†VçF–6F–öâ6V7W&—G’VF—BÆör&÷VæF&–W2à¢Ò&W6W'fVBW†—7F–ærWfVçBFFW2Â&V7W'&Væ6R'VÆW2Â6öÆ÷'2æB’&V†f–÷#²W†6WF–öâÖv&Rf–VÆG2æBf–WrÖWFFF&RFF—F—fRà ¢222f–æÆ—¦F–öà¢Ò&öÖ÷FVBcã326ÆVæF"…Â…EEÂDôÒÂ¦f67&—BæB7FF–26öçG&7G2–çFòF†R7W'&VçBfVGW&R'VææW"à¢Ò&W&VBã32ãÕ$32F†Rcã32Ô‚&öGV7F–öâ×fW&–f–6F–öâ6æF–FFRâ—B—2æ÷BF†Rf÷&ÖÂcã32ã&VÆV6Rà¢Ò&V6÷&FVB66†VGVÆR6÷’æB66†VGVÆRG&rbG&÷2÷7BÕcã32–×&÷fVÖVçG2Âv—F‚&V7W'&–ærÖWfVçB66÷R6öæf—&ÖF–öâÂ6öæfÆ–7B†æFÆ–æræBÖö&–ÆRfÆÆ&6²&WV—&VB&Vf÷&R–×ÆVÖVçFF–öâà ¢22ã3"ãÒ##bÓ’Óp ¢22266÷VçB6V7W&—G¢ÒFFVBDõEÖ&6VB$dVç&öÆÆÖVçBæBÆöv–âfW&–f–6F–öâW6–ærFVF–6FVB6W'fW"×6–FRVæ7'—F–öâ¶W’f÷"DõE6V7&WG2à¢ÒFFVBöæR×F–ÖR&V6÷fW'’6öFW27F÷&VBöæÇ’277v÷&B†6†W2Âv—F‚&÷VæFVBvVæW&F–öâ÷&VvVæW&F–öâæBöæR×F–ÖR6öç7V×F–öâà¢ÒFFVB6†&VB7FW×WWF†VçF–6F–öâf÷"6Vç6—F—fR66÷VçB6V7W&—G’7F–öç2v—F‚6†÷'B6öæf–wW&&ÆRfÆ–F—G’v–æF÷rà¢ÒFFVB÷væW"×66÷VB6W76–öâÖævVÖVçB&6¶VB'’&Vv—7G'’Fö¶Vâ†6‚v†–ÆR¶VW–ær…6W76–öâ6öçFVçG2f–ÆW7—7FVÒÖ&6¶VBà¢ÒFFVB&÷VæFVBWF†VçF–6F–öâ6V7W&—G’7F—f—G’Æövv–ærf÷"Æöv–âÂ$dÂ&V6÷fW'’6öFRÂ7FW×WÂ66÷VçB6†ævW2Â6W76–öâ&Wfö6F–öâæBÆöv÷WBWfVçG2à ¢2226V7W&—G’ò&—f7¢Ò¶WB77v÷&G2ÂDõEfÇVW2Â&V6÷fW'’6öFW2ÂDõE6V7&WG2ÂVæ7'—F–öâ¶W—2æBgVÆÂ…6W76–öâ–FVçF–f–W'2÷WBöbF†R6V7W&—G’7F—f—G’Æörà¢Ò7F÷&W2öæÇ’&—f7’Ö&÷VæFVB'&÷w6W"÷ÆFf÷&ÒÆ&VÂæB¶W–VBF–vW7Böb$TÔõDUôDE&²&r•FG&W76W2æBgVÆÂW6W"ÔvVçB7G&–æw2&Ræ÷B7F÷&VB–âF†RVF—BF&ÆRà¢Ò&W6W'fVB55$bÂÆöv–âó$dF‡&÷GFÆ–ærÂ6W76–öâf—†F–öâ&WfVçF–öâÂ&VÖVÖ&W"ÖR&÷VæF&–W2Â÷væW"66÷RæB6Vç6—F—fRÖ÷W&F–öâ7FW×W6†V6·2à¢Ò6W76–öâ&Vv—7G'’æBVF—BÆörFF&6Rf–ÇW&W2&R†æFÆVB6òâ'6VçB÷F–öæÂVF—BF&ÆRFöW2æ÷B—G6VÆbGW&âWF†VçF–6F–öâ–çFòS²&WV—&VB6W76–öâ&Vv—7G'’Ö–w&F–öâ&VÖ–ç2FWÆ÷–ÖVçB&W&WV—6—FRà ¢222FF&6Rò6öæf–wW&F–öà¢ÒFFVBFF—F—fRÖ–w&F–öâ#%÷có3%öWF…ó&fç7Æf÷"WF…÷F÷GæBWF…÷&V6÷fW'•ö6öFVà¢ÒFFVBFF—F—fRÖ–w&F–öâ#5÷có3%öWF…÷6W76–öâç7Æf÷"6W76–öâÖævVÖVçBà¢ÒFFVBFF—F—fRÖ–w&F–öâ#E÷có3%öWF…öVF—EöÆörç7Æf÷"WF†VçF–6F–öâ6V7W&—G’7F—f—G’à¢Ò–çFVw&FVBÆÂf÷W"cã3"66÷VçB6V7W&—G’F&ÆW2–çFòFF&6R÷66†VÖç7Æf÷"g&W6‚–ç7FÆÇ2à¢ÒFFVBõDõEõ4T5$UEô´U•ô”FÂõDõEõ4T5$UEô´U•ô#cFÂõDõEô•55TU&Âcã3"$d&FRÖÆ–Ö—B6WGF–æw2æBUD…õ5DUõUõD”ÔTõUFW†×ÆW2âW†—7F–ærDõEVæ7'—F–öâ¶W—2×W7Bæ÷B&R&WÆ6VBgFW"Vç&öÆÆÖVçBà ¢222f–æÆ—¦F–öâòfW&–f–6F–öà¢Ò&öÖ÷FVBcã3"DõEÂ&V6÷fW'’6öFRÂ7FW×WÂ6W76–öâ&Vv—7G'’æBWF†VçF–6F–öâVF—B6öçG&7G2–çFòF†RfW'6–öâÖæWWG&Â7W'&VçBfVGW&R7V—FRà¢Ò&W—&VBÆVv7’7W'&VçB×FW7Bf—‡GW&W2F†B77VÖVB&RÕcã3"WF†VçF–6F–öâ÷6W76–öâ&V†f–÷"v—F†÷WBvV¶Væ–ærF†R&öGV7F–öâ6V7W&—G’&÷VæF'’à¢Òcã3"Ôr6W76–öâÖævVÖVçBÂcã3"Ô‚6V7W&—G’VF—BÆöræBcã3"Ô’$36ö×ÆWFVB&öGV7F–öâ6Öö¶RfW&–f–6F–öâ&Vf÷&Rf÷&ÖÂ&VÆV6Rà¢Òf–æÂV&Æ–6F–öâ—2vFVB'’F†RvVæW&–2v—D‡V"&VÆV6Rv÷&¶fÆ÷rÂ–æ6ÇVF–ær…‚ãó‚ãB&Vw&W76–öâÂ&VÆV6R×&VG’fÆ–FF–öâÂ6V7&WB66âÂFWFW&Ö–æ—7F–26¶vRfW&–f–6F–öâæB6ÆVâ×&ööÒ6†V6·2&Vf÷&RF†R–Ö×WF&ÆRcã3"ãFrà ¢22ã3ãÒ##bÓ’Ó@ ¢222&VÖ÷FRW&Ö—76–öç0¢ÒFFVB&W7BÖVff÷'BVæ—‚W&Ö—76–öâF—7Æ’æB&W6WBÖöæÇ’6†ÖöB6öçG&öÇ2FòF†RWF†VçF–6FVB÷væW"×66÷VB&VÖ÷FRf–ÆRÖævW"à¢ÒFFVBF†R÷F–öæÂ&VÖ÷FUW&Ö—76–öå&÷f–FW&6&–Æ—G’&÷VæF'’ÇW2W&Ö—76–öâ6&–Æ—G’ö6†ÖöB’7F–öç2v—F†÷WBv–FVæ–ærF†R6öÖÖöâ&VÖ÷FR&÷f–FW"6öçG&7Bà¢ÒFFVBf–ÆR&W6WG2còcCòcCFæBF—&V7F÷'’&W6WG2sòsSòsSV²g&VRÖf÷&ÒæB7V6–ÂÖ&—B6†ÖöB&Ræ÷BW‡÷6VBà ¢222eEòeE2ò4eE&V†f–÷ ¢Ò¶WBÔÅ4B2F†RWF†÷&—FF—fReEôeE2Æ—7F–æræBæ÷r&VG2Tä•‚æÖöFVv†Vâf–Æ&ÆS²v†VâW&Ö—76–öâÖWFFF—2'6VçBÂ&W7BÖVff÷'BVæ—‚Ä•5B7WÆVÖVçG2W&Ö—76–öâöæÇ’æBFöW2æ÷B&WÆ6RÔÅ4BæÖR÷6—¦R÷F–ÖR÷G—RFFà¢ÒeEôeE24•DR4„ÔôF66WG2öæÇ’'‡‚27V66W72ÂÖ2SóS"óSBFòVç7W÷'FVBÂæB¶VW2SS2F&vWB÷W6W"×7V6–f–2FVæ–Â&F†W"F†âF—6&Æ–ær6†ÖöBf÷"F†Rv†öÆR6öææV7F–öâà¢Ò†&FVæVB4eEV÷FRF‡2W6VB'’6†ÖöBÂÖ¶F—"Â&VæÖRæBFVÆWFR6ò76W2æBV÷FR6†&7FW'2&VÖ–â&÷VæFVBFòF†R–çFVæFVB&VÖ÷FRF‚à ¢2226V7W&—G’òf–æÆ—¦F–öà¢Ò&W6W'fVBWF†VçF–6F–öâÂ55$bÂ÷væW"66÷RÂ&6RF‚6öæf–æVÖVçBÂ6öçG&öÂÖ6†&7FW"÷G&fW'6Â&V¦V7F–öâÂ6W'fW"×6–FR6fR×F‚6†V6·2Â¶æ÷vâ×7–ÖÆ–æ²&V¦V7F–öâæB7G&–7BF‡&VRÖF–v—Bö7FÂfÆ–FF–öâà¢ÒFFVBæòFF&6RÖ–w&F–öâÂ66†VÖ6†ævRÂ÷"æWr&WV—&VB6V7&WBö6öæf–wW&F–öã²W†—7F–ær&VÖ÷FR7&VFVçF–Â÷&—fFRÖ¶W’ö¶æ÷våö†÷7G2&÷VæF&–W2&VÖ–âVæ6†ævVBà¢Ò&öÖ÷FVBcã3W&Ö—76–öâ6öçG&7G2–çFòF†RGW&&ÆR7W'&VçBfVGW&R&Vw&W76–öâ7V—FRæB&WF–æVBF†RvVæW&–2…‚ãó‚ãB4’æB&VÆV6RvFW2à¢Ò&öGV7F–öâeE2fW&–f–6F–öâ6öæf—&ÖVBW&Ö—76–öâVç&–6†ÖVçBæB7GVÂ6W'fW"×6–FR4•DR4„ÔôF6†ævW2âf–æÂ&öGV7F–öâ4eEVæGö–çBfW&–f–6F–öâ—2æ÷B6Æ–ÖVC²4eE&V†f–÷"—26÷fW&VB'’fö7W6VBæBf–æÂWFöÖFVBFW7G2à ¢22ã3ãÒ##bÓ’Ó0 ¢222&VÖ÷FRFW‡BVF—F÷ ¢ÒFFVBâWF†VçF–6FVB÷væW"×66÷VB&VÖ÷FRFW‡BVF—F÷"öâF÷öbF†Rcã#’&VÖ÷FRf–ÆRÖævW"f÷"G‡FÂÖFÂ77fÂ§6öæÂ†ÖÆÂ‡FÖÆÂ‡FÖÂ776Â§6Â‡Â–æ–Â6öæfÂ–ÖÆÂæB–ÖÆà¢ÒFFVB&÷VæFVBUDbÓ‚&VG2æB6fW2v—F‚FVfVÇBS"¶”"VF—F÷"6V–Æ–ærÂ&rÖ'—FR4„Ó#SbÖWFFFÂUDbÓ‚$ôÒv&VæW72ÂæBÄbô5$Äb&W6W'fF–öâf÷"7W÷'FVB6÷W&6Rf–ÆW2à¢ÒFFVBFVF–6FVB&W7öç6—fRVF—F÷"T’v—F‚F—'G’7FFRÂ6fRõ&VÆöB6öçG&öÇ2Â7G&Âô6ÖBµ2Â6fR&WGW&âFòF†R&Wf–÷W2&VÖ÷FR6öææV7F–öâöF—&V7F÷'’ÂæBW‡Æ–6—B6öæfÆ–7B&V6÷fW'’à ¢2226fRò6öæfÆ–7B6fWG¢ÒFFVB÷F–Ö—7F–24„Ó#Sb6öæfÆ–7B6†V6·2&Vf÷&R7Fv–æræBv–â&Vf÷&R&WÆ6VÖVçC²7FÆRVF—F÷'27F÷v—F‚…EEC’æBæWfW"W‡÷6Rf÷&6RÖ÷fW'w&—FR'—72à¢ÒFFVB&æFöÒ6ÖRÖF—&V7F÷'’7FvVB6fW2Â&÷VæFVB&VBÖ&6²fW&–f–6F–öâÂ&W7BÖVff÷'B7FvVB6ÆVçWÂæB¦W&òÖ'—FR6fR7W÷'BF‡&÷Vv‚F†R6öÖÖöâ&÷f–FW"6öçG&7Bà¢ÒFFVB&6ScB¥4ôâG&ç7÷'Bf÷"VF—F÷"FW‡B6ò†÷7F–ærtbôÖöE6V7W&—G’'VÆW2Fòæ÷BæVVBFò&RF—6&ÆVBf÷"…ô…DÔÂô¥26÷W&6R6fW3²&6ScB—2G&ç7÷'BVæ6öF–ærÂæ÷BVæ7'—F–öâà¢Ò¶WBF†RVF—F÷"&÷Fö6öÂÖæWWG&Â7&÷72eEÂW‡Æ–6—BeE2Â4eEÂæB…EE2vV$DbâFöÖ–2&WÆ6VÖVçBæB&VÖ÷FRf–ÆRÆö6¶–ær&Ræ÷B6Æ–ÖVBà ¢222T’ò6ö×F–&–Æ—G’òFWÆ÷–ÖVç@¢ÒF–ffW&VçF–FVB&VÖ÷FRf–ÆW27F–öâ–6öç2æBf–ÆR×G—R–6öç2'’6†RÇW26öÆ÷"v†–ÆR¶VW–ærf–ÆVæÖRÂF—FÆRÂæB&–ÖÆ&VÂ7VW2à¢Ò–×&÷fVBæ'&÷röÖö&–ÆRVF—F÷"&V†f–÷"æB&WF–æVB7VÆÆ6†V6²öWFö6ö×ÆWFRöWFö6—FÆ—¦R†&FVæ–æræBCG‚6ö'6R×ö–çFW"F&vWG2à¢ÒFFVBF†R&—fFRf"÷&VÖ÷FR×F×òæv—F¶VWÆ6V†öÆFW"v†–ÆR¶VW–ær7GVÂFV×6öçFVçG2–væ÷&VB÷&—fFS²&öGV7F–öâFV×7F÷&vR×W7B&VÖ–âw&—F&ÆR'’…æB÷WG6–FRV&Æ–2öà¢Òæòcã3FF&6RÖ–w&F–öâÂ&÷f–FW"66†VÖ6†ævRÂ÷"æWr&WV—&VB7&VFVçF–Â÷6V7&WB—2–çG&öGV6VBâW†—7F–ærcã#’&VÖ÷FR6öæf–wW&F–öâ&VÖ–ç2–âf÷&6Rà ¢222f–æÆ—¦F–öà¢Ò&öÖ÷FVBGW&&ÆRcã3&VÖ÷FRFW‡BVF—F÷"6öçG&7G2–çFòF†R7W'&VçBfVGW&R&Vw&W76–öâ7V—FRà¢Òf–æÆ—¦VBõdU%4”ôæÂf—6–&ÆRÆ&VÂÂæBô54UEõ$Ud•4”ôæBã3ãà¢Ò&WF–æVBF†RvVæW&–2…‚ãó‚ãB4’æB&VÆV6RvFW2ÂFWFW&Ö–æ—7F–2'VçF–ÖRô6ö×ÆWFR6¶vW2Â6V7&WB66âÂæB6ÆVâ×&ööÒfW&–f–6F–öâ&Vf÷&R–Ö×WF&ÆRFrV&Æ–6F–öâà ¢22ã#’ãÒ##bÓ’Ó ¢222&VÖ÷FRf–ÆRÖævW ¢ÒFFVBWF†VçF–6FVB÷væW"×66÷VB&VÖ÷FRf–ÆRÖævW"7W÷'Bf÷"eEÂW‡Æ–6—BeE2Â4eEæB…EE2vV$Dbà¢ÒFFVB6öææV7F–öâ&Vv—7G&F–öâ÷FW7BÂF—&V7F÷'’æf–vF–öâöÆ—7F–ærÂWÆöBöF÷væÆöBÂÖ¶F—"Â&VæÖRöÖ÷fRÂFVÆWFRæB&Vg&W6‚à¢ÒFFVB&VÖ÷FRÓâf–ÆRÆ–'&'’æBf–ÆRÆ–'&'’Óâ&VÖ÷FRG&ç6fW"F‡2ÇW2&÷VæFVB–ÖvRõDbõE…Bô55b&Wf–Wr&WW6Rà¢Òw&÷WVBæWr&6¶VæB6öFRVæFW"÷&VÖ÷FUöf–ÆRöæB¶WBV&Æ–2&VÖ÷FRVæGö–çG2W‡Æ–6—FÇ’ÆÆ÷vÆ—7FVBà ¢2226V7W&—G’òFWÆ÷–ÖVç@¢ÒFFVBÖ–w&F–öâ#÷có#•÷&VÖ÷FUö6öææV7F–öâç7Æf÷"÷væW"×66÷VB&VÖ÷FR6öææV7F–öâÖWFFFæBâWF†VçF–6FVBÖ6—†W'FW‡B7&VFVçF–ÂVçfVÆ÷Rà¢ÒFFVB6öF—VÒ„6†6†#ÕöÇ“3RTB7&VFVçF–ÂVæ7'—F–öâv—F‚÷væW"ö6öææV7F–öâÖ&÷VæBC²F†RVæ7'—F–öâ¶W’&VÖ–ç2÷WG6–FRF†RFF&6RæB&W÷6—F÷'’à¢ÒFFVB†÷7B÷÷'BfÆ–FF–öâÂDå2ç7vW"fÆ–FF–öâ÷–ææ–ærÂDå2×&V&–æF–ær6öçG&öÇ2ÂV&Æ–2Ô•FVfVÇBöÆ–7’ÂW‡Æ–6—BFÖ–æ—7G&F÷"4”E"ÆÆ÷vÆ—7Bf÷"&—fFRæWGv÷&·2ÂæBW&ÖæVçBÆö÷&6²öÆ–æ²ÖÆö6ÂFVæ–Âà¢ÒFFVB&6RF‚6öæf–æVÖVçBÂG&fW'6Â&V¦V7F–öâÂ&÷VæFVBG&ç6fW"÷FV×7F÷&vRÂ7–Ö&öÆ–2ÖÆ–æ²÷Væ¶æ÷vâÖVçG'’f–ÂÖ6Æ÷6VB6†V6·2v†W&R6W'fW"ÖWFFFW&Ö—G2ÂæB6ÖRÖ÷&–v–âö&6R×F‚vV$Db&VF—&V7BfÆ–FF–öâà¢Ò4eE&WV—&W2fW&–f–VB¶æ÷våö†÷7G6²eE2õvV$Db¶VWVW"ö†÷7FæÖRDÅ2fW&–f–6F–öâVæ&ÆVBâÆ–âeE&VÖ–ç2f—6–&Ç’Ö&¶VB2VæVæ7'—FVBà¢ÒFFVBFööÇ2÷&VÖ÷FUöf–ÆUöVçeö6†V6²ç‡FòfÆ–FFR5U$Â&÷Fö6öÂ6&–Æ—G’Â6–×ÆU„ÔÂõ6öF—VÒô÷Vå54Âf–Æ&–Æ—G’Â7&VFVçF–ÂÖ¶W’6†RæB&—fFRFV×ÖF—&V7F÷'’&VF–æW72v—F†÷WB&–çF–ær6V7&WG2à ¢222f–æÆ—¦F–öà¢Ò†&FVæVB77v÷&B÷&—fFRÖ¶W’f÷&Ò6W&–Æ—¦F–öâæB6Æ–VçB×6–FR&WV—&VBÖ7&VFVçF–Â6†V6·2gFW"&öGV7F–öâ6†V6·ö–çBFW7F–ærà¢Òf–æÆ—¦VBõdU%4”ôæÂf—6–&ÆRÆ&VÂÂ7F—fR76WB&Wf—6–öâæBG–æÖ–2cã#’76WB¶W—2Bã#’ãà¢ÒFFVBcã#’&VÖ÷FRf–ÆRÖævW"6öçG&7G2FòF†RGW&&ÆR7W'&VçBfVGW&R7V—FRæB&WF–æVBF†RvVæW&–2…‚ãó‚ãB4’õ&VÆV6RvFW2à ¢26†ævVÆöp ¢22ã#‚ãÒ##bÓ‚Ó3 ¢ÒW‡FVæFVBF†RWF†VçF–6FVBcã#rf–ÆRÆ–'&'’v—F†÷WB6†æv–ær—G2ÖWFFFÖöæÇ’FF&6R66†VÖ÷"&—fFR×7F÷&vR&÷VæF'’à¢ÒFFVBf–ÆRFWF–Âf÷"÷&–v–æÂf–ÆVæÖRÂÔ”ÔRÂW‡FVç6–öâÂ6—¦RÂWÆöBF–ÖRÂçVÖW&–2f–ÆR–BÂæB–ÖvRF–ÖVç6–öç2v†Vâf–Æ&ÆS²7F÷&VB‡—6–6ÂæÖW2Â÷væW"–G2ÂæBf–ÆW7—7FVÒF‡2&Ræ÷B&WGW&æVBà¢ÒFFVB&÷FV7FVBDb&Wf–Wrf÷"fÆ–FFVBDbf–ÆW2W6–ærF†R'&÷w6W"ÖæF—fRf–WvW#²æòDbæ§2Â4DâFWVæFVæ7’Â6W'fW"Db'6W"Â÷"&&—G&'’F‚–çWB—2FFVBà¢ÒFFVBUDbÓ‚E…B&Wf–Wr&÷VæFVBFòcB¶”"æB3Æ–æW3²UDbÓ‚$ôÒ—266WFVBæB–çfÆ–BVæ6öF–ærf–Ç26Æ÷6VBv†–ÆRgVÆÂF÷væÆöB&VÖ–ç2f–Æ&ÆRà¢ÒFFVBUDbÓ‚55b&Wf–Wr&÷VæFVBFòS"¶”"ÂSFF&÷w2Â36öÇVÖç2ÂæBcB¶”"W"Æöv–6Â&V6÷&BW6–ær&÷VæFVBfvWF77f'6–ærà¢Ò&VæFW&VBE…Bô55bG–æÖ–26öçFVçB2FW‡B&F†W"F†â…DÔÂæB¶WB&Wf–WröFWF–Â66W72WF†VçF–6FVBÂ÷væW"×66÷VBÂ&—fFR×F‚&W6öÇfVBÂæB&WfÆ–FFVBB6W'fRF–ÖRà¢ÒöÆ—6†VBf–ÆRÆ–'&'’7F–öç2æBÖöFÇ2f÷"6Ö'G†öæRöæ'&÷rÆ–÷WG2Â–æ6ÇVF–ærF÷V6‚Ög&–VæFÇ’f÷W"Ö7F–öâ'ƒ"&W6VçFF–öâæBÆöærf–ÆVæÖRöÖWFFFw&–ærà¢Ò&VÖ÷fVBFWfVÆ÷ÖVçB†6R&FvW2g&öÒ7W'&VçBf–ÆRÆ–'&'’õ%52ÖævVÖVçBT’v†–ÆR&WF–æ–ærF†R6VçG&ÂÆ–6F–öâfW'6–öâÖ&¶W"à¢Ò¤•&VÖ–ç2F÷væÆöBÖöæÇ’æB—2æWfW"÷VæVBÂW‡G&7FVBÂ÷"W†V7WFVB'’F†RÆ–6F–öâà¢Òæòcã#‚FF&6RÖ–w&F–öâÂ66†VÖ6†ævRÂæWr&WV—&VB6V7&WBÂVçf—&öæÖVçBf&–&ÆRÂ÷"W&Ö—76–öâ6†ævR—2–çG&öGV6VBà¢Òf–æÆ—¦VBÆ–6F–öâæB7F—fRV&Æ–276WB&Wf—6–öâÖ&¶W'2Bã#‚ãà ¢22ã#rãÒ##bÓ‚Ó3  ¢ÒW‡æFVB'F–6ÆRU$ÂG&6¶–ær×&ÖWFW"6ÆVçWv†–ÆRÆVf–ær&Vv—7FW&VBfVVBU$Ç2Væ6†ævVBà¢Òæ÷&ÖÆ—¦VB&VÖ–æ–ærF6†&ö&B†VFW"÷F÷V6‚F&vWG2v—F†÷WB6†æv–ærF†RW7F&Æ—6†VBw&–B÷"G&rÖæBÖG&÷ÖöFVÂà¢ÒFFVBWF†VçF–6FVB6V7W&Rf–ÆRWÆöB&6¶VB'’&—fFRf"÷WÆöG2ö7F÷&vRæB÷væW"×66÷VBÖWFFFà¢ÒFFVBF†Röf–ÆRÖÆ–'&'–vRv—F‚#BÖ—FVÒv–æF–öâÂ&W7öç6—fR6&G2ÂF‡VÖ&æ–Ç2ÂF÷væÆöBÂFVÆWFRÂWÆöB&öw&W72ÂæBG&rÖæBÖG&÷f–ÆR6VÆV7F–öâà¢ÒFFVBâ–â×vR&ö÷G7G&–ÖvRf–WvW"F†BW6W2F†RW†—7F–ærWF†VçF–6FVB÷væW"×66÷VB6öçFVçBVæGö–çB&F†W"F†âW‡÷6–ær‡—6–6ÂF‡2à¢ÒFVfVÇBW"Öf–ÆRWÆöBÆ–Ö—B—2Ö”#²ÆÆ÷vVBG—W2&R¥TrÂärÂt”bÂvV%ÂDbÂE…BÂ55bÂæB¤•à¢Ò'&÷w6W"Ô”ÔR—2æ÷BG'W7FVBâ6W'fW"f–ÆV–æfòÇW2–ÖvRö6öçFVçB÷6–væGW&RfÆ–FF–öâ—2WF†÷&—FF—fS²‡—6–6ÂæÖW2W6R#SbÖ&—B&æFöÒfÇVW2à¢Ò¤•f–ÆW2&R7F÷&VBöF÷væÆöFVBöæÇ’æB&RæWfW"W‡G&7FVB÷"W†V7WFVB'’F†RÆ–6F–öâà¢ÒFFVBÖ–w&F–öâ#÷có#u÷W6W%öf–ÆW2ç7Æ²F†Rg&W6‚Ö–ç7FÆÂ66†VÖ6öçF–ç2F†R6ÖRÖWFFFÖöæÇ’W6W%öf–ÆVF&ÆR6öçG&7Bà¢Ò&W6W'fVBWF†VçF–6F–öâÂ55$bÂ÷væW"66÷RÂFVç’Ö'’ÖFVfVÇBV&Æ–2…VæGö–çG2Âæ÷6æ–ffÂ6ÖRÖ÷&–v–â&W6÷W&6RöÆ–7’Â&W7G&–7F—fR55ÂæB&—fFR×F‚æöâÖF—66Æ÷7W&Rà¢Òf–æÆ—¦VBÆ–6F–öâæBV&Æ–276WB&Wf—6–öâÖ&¶W'2Bã#rãà ¢22ã#bãÒ##bÓ‚Ó3  ¢ÒFFVBF†RF6†&ö&B–æf÷&ÖF–öâ&ö&Bv–FvWBf÷"ÆÂ%52÷"7V6–f–2÷væW"×66÷VBfVVBà¢ÒäUu2æBF†R7W'&VçB'F–6ÆRF—FÆR&VÖ–âf—†VBv†–ÆRöæÇ’F†R6æ—F—¦VB%527VÖÖ'’67&öÆÇ2&–v‡B×FòÖÆVgBà¢ÒFFVBRóó#—FVÒÆ–Ö—G2Â6Æ÷röæ÷&ÖÂöf7B7VVBÂ7VÖÖ'’ôâôôdbÂ&Wf–÷W2öæW‡Bæf–vF–öâÂ6÷W&6RöFFRö6÷VçBfö÷FW"ÂäU…B&Wf–WrÂæB7VÖÖ'’&öw&W72à¢ÒW6W2W†—7F–ær%52FW67&—F–öâö6öçFVçBöæÇ’Â&÷VæFVB'’F†RW†—7F–ærC“bÖ6†&7FW"%526fWG’6V–Æ–æs²æò'F–6ÆR×vR67&–ær÷"6V6öæF'’'F–6ÆRfWF6‚—2FFVBà¢Ò&W6W'fVB&VGV6VBÖÖ÷F–öâÂ†÷fW"öfö7W2÷F÷V6‚÷vRÖ†–FFVâW6R&V†f–÷"ÂæBÆ–væVBF†R–æf÷&ÖF–öâ&ö&B†VFW"v—F‚F†RW†—7F–ærCG‚F6†&ö&B†VFW"÷F÷V6‚F&vWG2à¢Òf–æÆ—¦VBÆ–6F–öâæB76WB&Wf—6–öâÖ&¶W'2Bã#bãà¢ÒW†—7F–ærWF†VçF–6F–öâÂWF†÷&—¦F–öâÂ55$bÂ÷væW"×66÷RÂ55$b×6fRfVVB&WG&–WfÂÂæBFW‡B×6æ—F—¦F–öâ&÷VæF&–W2&R&W6W'fVBà¢ÒæòFF&6RÖ–w&F–öâ÷"æWr&WV—&VB6V7&WBö6öæf–wW&F–öâ—2–çG&öGV6VBà ¢22ã#RãÒ##bÓ‚Ó#€ ¢2226ÆVæF"WfVçBFWF–Ç0¢ÒW‡FVæFVBF†RW†—7F–ær6ÆVæF"WfVçBÖöFVÂv—F‚ÆÂÖF’÷F–ÖVB66†VGVÆ–ærÂ÷F–öæÂ7F'BöVæBF–ÖRÂæBâ÷F–öæÂ&VÆFVB…EEô…EE2U$Âv—F†÷WB–çG&öGV6–ær6W'fW"×6–FRU$ÂfWF6†–ærà¢Ò¶WBW†—7F–ærWfVçG2ÆÂÖF’'’FVfVÇBæB&WF–æVBF†RW†—7F–ær6ÆVæF"òF6²6W&F–öâà¢Ò&WW6VBF†RW†—7F–ær6ÆVæF"7&VFRöVF—BG&ç67F–öâF‚æB6öÆ÷"†æFÆ–ær&F†W"F†âFF–ær&ÆÆVÂWfVçB–×ÆVÖVçFF–öâà ¢222&V7W'&Væ6P¢ÒFFVBæöæVòF–Ç–òvVV¶Ç–òÖöçF†Ç–ò–V&Ç–&V7W'&Væ6Rv—F‚÷F–öæÂ&WVB×VçF–ÂFFRà¢Ò¶WBcã#R&V7W'&Væ6RVF—G2öFVÆWFW2B6W&–W2ÆWfVÂæB–çFVçF–öæÆÇ’FVfW'&VBW"Öö67W'&Væ6RW†6WF–öç2à¢ÒFFVBW‡Æ–6—B÷væW"66÷RæB&V7W'&Væ6R&W6÷W&6R&÷VæG2Â–æ6ÇVF–ær7F—fR×6W&–W2æBÖöçF‚ÖW‡ç6–öâÆ–Ö—G2à ¢222%52ò7Fö6²Fò6ÆVæF ¢ÒFFVB6ÆVæF.8‹ûŞXªFòF†R6†&VB'F–6ÆR7F–öç2ÖVçRf÷"%52æB7Fö6²à¢Ò'F–6ÆRF—FÆRæBU$Â&RÖf–ÆÂF†RW†—7F–ær6ÆVæF"&Vv—7G&F–öâÖöFÂv—F†÷WBWFò×6f–ærà¢Ò6ÆVæF"7&VF–öâFöW2æ÷B6†ævR&ö6W76VBò–×÷'FçBò&6†—fVBò7Fö6¾Šz>™šB7FFRæBFöW2æ÷B7&VFR†&B&VÆF–öâFòF†R6÷W&6R—FVÒà ¢222FöF’òW6öÖ–ærò6Ö'G†öæP¢ÒöÆ—6†VBF†RW†—7F–ærFöF’fÆ÷rÂ7W'&VçBÖF’V×†6—2Âfö7W2&V†f–÷"ÂæB6Ö'G†öæR6ÆVæF"Æ–÷WBà¢ÒFFVB6W'fW"ÖFW&—fVBBÖF’W6öÖ–ærÆ—7B&÷VæFVBFòV–v‡BWfVçG2Âv—F‚F‡&VR—FV×26†÷vâ–æ—F–ÆÇ’æB8(.8>8Šh¾8(¶ò™h88(¶6öçG&öÇ2à¢Ò6÷'&V7FVB6ÆVæF"ÖöFÂfö7W2†æFÆ–ær6òfö7W6VBFW66VæFçB—2&ÇW'&VB&Vf÷&R&ö÷G7G&†–FW2F†RÖöFÂæBfö7W2—2&W7F÷&VBöæÇ’gFW"—B—2gVÆÇ’†–FFVâà¢Ò&VGV6VBÖöçF‚×7v—F6‚Æ–÷WB6†–gB'’FV×÷&&–Ç’†öÆF–ærF†R7W'&VçB6ÆVæF"w&–B†V–v‡Bv†–ÆR7–æ6‡&öæ÷W2&VG&r6ö×ÆWFW2à ¢222FF&6Rò6V7W&—G¢ÒFFVB…÷có#Uö6ÆVæF%öWfVçE÷F–ÖU÷W&Âç7Æf÷"ÆÂÖF’÷F–ÖRõU$Â6öÇVÖç2æB•÷có#Uö6ÆVæF%÷&V7W'&Væ6Rç7Æf÷"&V7W'&Væ6R6öÇVÖç3²W†—7F–ærcã#B–ç7FÆÆF–öç2Ç’F†VÒ–âçVÖW&–2÷&FW"gFW"&6·Wà¢Ò–çFVw&FVBÖ–w&F–öç2‚ó’–çFòF†Rg&W6‚Ö–ç7FÆÂ66†VÖFövWF†W"v—F‚F†RW†—7F–ær–çFVw&FVB2ór7FFRà¢Ò6ÆVæF"&V7W'&Væ6R÷W6öÖ–ær÷W&F–öç2&VÖ–âWF†VçF–6FVBõ5B²55$b²&WVW7B×6—¦RÆ–Ö—FVBÂf—†VBÖ7F–öâÆÆ÷vÆ—7FVBÂæB÷væW"×66÷VBà¢Ò6ÆVæF"U$Ç2&R7F÷&VB÷fÆ–FFVBöæÇ“²æòæWr55$bfWF6‚F‚ÂW‡FW&æÂ6ÆVæF"7&VFVçF–ÂÂ&VÖ–æFW"66†VGVÆW"Â÷"&WV—&VB6V7&WBv2FFVBà ¢222&VÆV6RfW&–f–6F–öà¢Ò&öÖ÷FVBcã#R"Ôbõ#26ÆVæF"6öçG&7G2–çFòF†R7W'&VçB4’÷&VÆV6RfVGW&R7V—FRà¢Òf–æÆ—¦VBõdU%4”ôæÂf—6–&ÆRÆ&VÂÂô54UEõ$Ud•4”ôæÂæByÛ½-¢G§²ÚîÆ­yÖ–FvWN8î‹ûŞXª8;¾ZHi»N8;¾Š¹nynX˜®™šN8Šh¾X{®8~8iÊÎih~8Šh¾X{®8~ˆ›.8jŠ®[˜S8	ÃN8Zûî[ùÎ8 ¢ÒÖVÖşiÊÎih~8öÖVÖö8˜XŞ{Úî8;¾[˜^8;¾ˆ›.8;¾KŠn8>šn8öF6†&ö&E÷v–FvWF8Xˆn™º.8~8nKùŞZÙ8 ¢ÒÖVÖò5%TN8)&÷væW"66÷^855$n8G&ç67F–öî8Š¹nynX˜®™šN8~KùŞŠÛ~8~8K¹eW6W.8äÖVÖşi8ŞKÙÎ8).h¹.Y
+n8 ¢ÒiKŠÎ8).KùŞhÈ8~8®8Î8(”…DÔÎ88~8nŠz>˜x8~8®8NX{®X©¾88	Ã3.ih~ZÙ~8îŠh¾X{®8~88	ÃBÃih~ZÙ~8îiÊÎihufÆ–FF–öî8).‹ûŞXª8 ¢ÒikŠhôD.yJ†FF&6R÷66†VÖç7Æ84Ä’ÇûÈ÷fW&–g8&VfÆ–v‡NûÈ÷÷7FfÆ–v‡N8[.yJ…&Vw&W76–öî8).‹ûŞXª8;¾i»Nik8  ¢22%52&VFW"ÖöFW&æ—¦F–öâããÖFWbãR(	BcãÔ` ¢Òiz.ZÙ8æF6†&ö&E÷v–FvWF8„6Æö6²v–FvWN8).‹ûŞXª8 ¢Ò6Æö6¾8î‹ûŞXª8;¾ZHi»N8;¾Š¹nynX˜®™šN8.ûÈó#Ni˜.™i>8iz^K¹8;¾zy.ŠzK®8Šh¾X{®8~ˆ›.8jŠ®[˜S8	ÃN8Zûî[ùÎ8 ¢Ò'&÷w6W.8îxûîYÊi˜.X‹¾8)#iÊÎ8åF–ÖW.8~i»Nik8~8i˜.X‹¾ŠzK®8î8ş8(8î{i{i¤˜	®Kú8şŠÎ8(ş8®8N8 ¢Ò6Æö6¾8)$fVVN8YÎ8ƒN8+ş89n8˜XŞ{Úî8~8cãÔ^8îKŠn8>i»ş88¾Zûî[ùÎ8 ¢Ò6Æö6¾ŠŠŞZé®8öv–FvWEö6öæf–v8X‹n™™K¹8Ô¥4ôî88~8nKùŞZÙ8~8÷væW"66÷^855$n8G&ç67F–öî8).{jŞhÈ8 ¢Ò6Æö6¾[.yJ…F&Æ^86öÇVÖî8Ö–w&F–öî8[ø^šŠŠŞZé®8î‹ûŞXª8®8~8  ¢22%52&VFW"ÖöFW&æ—¦F–öâããÖFWbãB(	BcãÔP ¢ÒfVVBv–FvWN8î8+ş8*N888:¾898;Î8KŠn8>i»ş8„†æFÆ^8).‹ûŞXª8~8YÎKˆ8+ş89nXh^8äG&rbG&÷8¾Zûî[ùÎ8 ¢ÒÖ÷W6^8F÷V6ûÈõVî8¶W–&ö&N8îyú.XÛ8;´†öÖ^8;´VæNi8ŞKÙÎ8).yJhHş8 ¢Òv–FvWBç&V÷&FW&8v÷væW"66÷^855$n8G&ç67F–öî8˜xŞŠHt”Nh¹.Y
+n8XúN8NyK¾™Ú.88îz»nYjIÎX{®8).‹ûŞXª8 ¢ÒKŠn8>i»ş8ZKiY~i˜.8şyK¾™Ú.šn8).h‹¾8~8XhŞŠªŞ8ş‹ëÎ8ş8).jXh^8 ¢ÒikŠhôfVVBv–FvWN8şxûîYÊ8îKŠn8>šn8îiÊ¾[î8‹ûŞXª8 ¢ÒD"F&Æ^ûÈô6öÇVÖî8î‹ûŞXª8®8~8%cãÔB÷7FfÆ–v‡B#.KúîjÚ>8).Xùn8(®‹ëÎ8ş8 ¢ÒföÆÆ÷r×W#.8	Å#~8t†æFÆ^8hËşXZ^KØŞ{ÚîŠzK®8KùŞZÙ˜	®yú^8Šh¾X{®8~š¹8^8ikyØ&VÆÎŠzK®8).Š«şi[N8   ¢22%52&VFW"ÖöFW&æ—¦F–öâããÖFWbã2(	BcãÔ@ ¢ÒF6†&ö&E÷v–FvWF8).‹ûŞXª8~8fVVN86Æö6¾8ÖVÖş8F6¾86ÆVæF.8îX[˜	®˜XŞ{ÚîYû®yºN8).‹ûŞXª8 ¢Òiz.ZÙ„fVVN8)#N8+ş89n87G–Æ^8ŠzK®šn8).{jŞhÈ8~8ôfVVBv–FvWN8ZèXZ8´&6¶f–ÆÎ8 ¢ÒfVVB5%TN8…v–FvWN˜XŞ{Úî8).YÎ8…G&ç67F–öî8~YÎiÉş8~8÷væW"66÷^8…&öÆÆ&6¾8).{jŞhÈ8 ¢Òv–FvWBæÆ—7F8v–FvWN[˜^8DU…NKùŞZÙ8îŠŠŞZé¤¥4ôî8cãÔ^Y	8FFGG&–'WF^8).‹ûŞXª8 ¢ÒG&rbG&÷8şZéşŠ8^8¾8¥cãÔ^8Xˆn™º.8 ¢Ò&Vf—8Ö–w&F–öîXhŞZéşŠÎ8Ó"F6†&ö&B&VæFW.8cãÔ"ô2&Vw&W76–öî8).‹ûŞXª8;¾i»Nik8   ¢22%52&VFW"ÖöFW&æ—¦F–öâããÖFWbã"(	BcãÔ0 ¢ÒfVVEö—FVÕ÷7FFV8).‹ûŞXª8~8iz.ZÙ„—FVÒ–FVçF—G8).KÛş8>8şikyØäU~ŠzK®8).‹ûŞXª8 ¢ÒX‰ŞY¹îh‰X©şXùn[é~8ô&6VÆ–æ^h›8N88~8.Y¹îyºîKº^™˜Ş8¾X‰Ş8(8nxûî8(Î8şŠ‰K¨¾888)$äU~8¾88(¾8 ¢ÒŠ‰K¨¾XÙKØŞ8„fVVNXÙKØŞ8îiˆîzK®i8ŞKÙÎ8täU~8).Šz>™šN8~8yK¾™Ú.ŠzK®888~8şˆz®X¹^Šz>™šN8~8®8N8 ¢Ò66†R†—N8…EE3N87FÆRÖ–bÖW'&÷.8).Y
+¾8(fVVN{XÎ‹zş8~YÎ8x«nhX¾XŠNZé®8).KÛşyJ8 ¢ÒF&ÆR&Vf—8÷væW"66÷^855$n8G&ç67F–öî8Ö–w&F–öîXhŞZéşŠÎ8&öÆÆ&6¾h˜¾šn8).‹ûŞXª8   ¢22%52&VFW"ÖöFW&æ—¦F–öâããÖFWbã(	BcãÔ  ¢ÒŠ‰K¨µU$Î8¾8(iz.yú^8åG&6¶–ær&ÖWFW.8).™šNXë¾8 ¢ÒfVVNŠzK®X˜Ş87Fö6¾KùŞZÙX˜Ş8—FVÒ–FVçF—GyIşh‰X˜Ş8˜yJ8 ¢ÒKˆˆŠÅVW'’&ÖWFW.8y›¾˜Ë.kˆ8ôfVVBU$Î8ş{jŞhÈ8 ¢ÒD"66†VÖ8Ö–w&F–öî8[ø^šŠŠŞZé®8îZHi»N8®8~8 ¢ÒcãÔ.[.yJ…FW7N8iz.ZÙ…&Vw&W76–öî8).‹ûŞXª8;¾i»Nik8   ¢22%52&VFW"ÖöFW&æ—¦F–öâãã(	B##bÓ‚Ó  ¢222f—'7B7F&ÆR&VÆV6P ¢ÒõdU%4”ôæ8)&ãã8ŠzK®8)&%52&VFW"ÖöFW&æ—¦F–öâãã8z+®Zé®8 ¢ÒÓBÔb$38¾8(”Æ–6F–öâ'VçF–Ö^8D"66†VÖ8XZÎ™h´86V7W&—GZ(>yXÎ8g&öçFVæB'VçF–ÖR76WN8).ZHi»N8¾8®jÚ>[Èşx˜8iˆ~jÎ8 ¢ÒFWFW&Ö–æ—7F–2'V–ÆFW.8æf–æÆÖöF^8~jÚ>[Èõ&VÆV6R¤•8ZIn˜:…4„Ó#Sn8).yIşh‰8 ¢Òf–æÂ6¶v^8)&6¶vU÷7FGW3Ôd”äÆ8V&Æ—6†&ÆS×–W688~8e$2ò&Wf–W~8Xˆn™º.8 ¢Ò6÷W&6^XZY¹î[‹86†V6·ö–çB¤•XhŞ[^™h¾8Xh^˜:„Öæ–fW7N8ZIn˜:…4„Ó#Sn8zyZønh8^Z™šNZIn8fW'6–öîi[NY8).XhŞz+®Š¨Ş8 ¢ÒZéô×•5Î8ZéôfVVN8Zéô'&÷w6W.8&W7F÷&RG&–ÆÎ8v—D‡V"†÷7FVB48å&—fFRWf–FVæ6^8ş8>8îKÙÎjZŞy+Z(>8~8şiÊ®Xøî˜Ë.8~8.8(¾8>88)%&VÆV6Ræ÷FW>8iˆîŠ‰8 ¢ÒcããF~8„v—D‡V"&VÆV6^8ş8XŠyJˆ^8Ä6öÖÖ—BòW6‚ò4z+®Š¨Ş[èÎ8¾KÙÎh‰88(¾h˜¾šn88~8nz+®Zé®8 ¢Òikj™şˆ;Ş‹ûŞXª8D"Ö–w&F–öî8[ø^šŠŠŞZé®‹ûŞXª866†R6ÆV.8izvf–Æ^X˜®™šN8ş8®8~8  ¢22%52&VFW"ÖöFW&æ—¦F–öâããÕ$3(	B##bÓ‚Ó  ¢222&VÆV6R6æF–FFRæB&VÂÖVçf—&öæÖVçBvFP ¢ÒõdU%4”ôæ8)&ãã×&38ŠzK®8)&%52&VFW"ÖöFW&æ—¦F–öâããÕ$38ZHi»N8 ¢ÒFWFW&Ö–æ—7F–2'V–ÆFW.8æ&6ÖöF^8u&VÆV6R6æF–FFR¤•8ZIn˜:…4„Ó#Sn8).yIşh‰8 ¢Ò$>8)&6¶vU÷7FGW3Õ$TÄT4Uô4äD”DDV8V&Æ—6†&ÆSÖæö88~8njÚ>[Èşx˜8Xˆn™º.8 ¢Ò…fW'6–öî8[ø^š„W‡FVç6–öî8DòG&—fW.8'VçF–ÖRF—&V7F÷'8).zyZønh8^Z8®8~8~z+®Š¨Ş88(¾y+Z(5&ö&^8).‹ûŞXª8 ¢ÒZéô×•5Î8ZéôfVVN8Zéô'&÷w6W.8v—D‡V"†÷7FVB48&6·Wò&W7F÷&^8&öÆÆ&6¾8äWf–FVæ6RFV×ÆF^8).‹ûŞXª8 ¢ÒWf–FVæ6^[Ú.[Èş8[ø^šš^yºî86V7&WNk{~XZ^852ò„ôÄBòd”Î8).z+®Š¨Ş88(´vFRFööÎ8).‹ûŞXª8 ¢Ò'V–ÆNy+Z(>8¾8®8FFõö×—7Æ85U$Î86–×ÆU„ÔÎ8Ö'7G&–æ~8×•5Â6W'fW.8ZèÎ‹[8~8®8D6‡&öÖ—VŞ8õ5>8ŠªŞ8şi»ş88¤„ôÄN8).{jŞhÈ8 ¢ÒD.8XZÎ™h´8WF†VçF–6F–öâò6W76–öâò55$bò55$bò…5>8%52Væv–æ^8g&öçFVæB'VçF–ÖR76WN8şZHi»N8®8~8  ¢22&VÆV6RÓBÔRò#(	B##bÓ‚Ó  ¢222&VÆV6R6¶vRÂÖæ–fW7BÂæ÷FW2æBFr&ö6VGW&P ¢Ò6†V6·ö–çB¤•8XŠyJˆ^Y	8'VçF–ÖR&VÆV6R¤•8).Xˆn™º.8 ¢Ò&Wf–Wrò&2òf–æÎ8).Xˆn88(¶FWFW&Ö–æ—7F–2&VÆV6R6¶vR'V–ÆFW.8).‹ûŞXª8 ¢Ò¤•VçG'šn8F–ÖW7F×8W&Ö—76–öî8).Y»®Zé®8~8YÎKˆ6÷W&6^8¾8(YÎ8…4„Ó#Sn8¾8®8(´'V–ÆN8).‹ûŞXª8 ¢Ò6¶v^Xh^˜:8æ$TÄT4UôÔä”dU5Bç6†#Sf88¤•XZKÙ>8æç¦—ç6†#Sf8).‹ûŞXª8 ¢Ò5$>8Vç6fRF8&—fF^ŠŠŞZé®8ZéôD.{;¶f–Æ^86V7&WN8fW'6–öâÖ&¶W.8).z+®Š¨Ş88(µfW&–f–W.8).‹ûŞXª8 ¢ÒfW'6–öâããY	8&VÆV6Ræ÷FW>k©nX)x˜88ææ÷FFVBFròv—D‡V"&VÆV6^h˜¾šn8).‹ûŞXª8 ¢ÒÓBÔR&Wf–W~8)&V&Æ—6†&ÆSÖæö88~8ÓBÔbòÓBÔ~X˜Ş8îŠªNXZÎ™h¾8).™‹.jÚ.8 ¢ÒD.8XZÎ™h´8WF†VçF–6F–öâò6W76–öâò55$bò55$bò…5>8%52Væv–æ^8g&öçFVæB'VçF–ÖR76WN8şZHi»N8®8~8  ¢22&VÆV6RÓBÔBò#(	B##bÓ‚Ó  ¢222v—D‡V"&W÷6—F÷'’Â÷'FföÆ–òæBÖ–æ–×VÒ4 ¢Òv—D‡V"7F–öç>8……‚ãò‚ãN8îiz.ZÙ…&Vw&W76–öî8).‹ûŞXª8 ¢Òv÷&¶fÆ÷rW&Ö—76–öî8)&6öçFVçG3¢&VF8™™Zé®8~86V7&WN8FWÆ÷8&VÆV6^Xznyn8).hÈ8ş8¾8®8N8 ¢Ò4T5U$•E’æÖN84ôåE$”%UD”äræÖN8'Vr&W÷'BFV×ÆF^8).‹ûŞXª8 ¢Ò&W÷6—F÷'’FW67&—F–öâòF÷–72ò6WGF–æw2ò'VÆW6WBò†÷7FVB48îz+®Š¨Şh˜¾šn8).i[Nyn8 ¢Ò÷'FföÆ–şyJ8îyúŞih~8™[~ih~8h¨Š>Šhx+867&VVç6†÷Nk:hHş8iJşhûNŠªÎiˆîKè¾8).‹ûŞXª8 ¢Ò48~z+®Š¨Ş88(¾zøNY».88Zéô×•5Âò'&÷w6W"òfVVBò&W7F÷&RG&–ÆÎ8)$ÓBÔn8jè¾8zøNY».8).Xˆn™º.8 ¢ÒD.8XZÎ™h´8WF†VçF–6F–öâò6W76–öâò55$bò55$bò…5>8%52Væv–æ^8g&öçFVæB'VçF–ÖR76WN8şZHi»N8®8~8  ¢22&VÆV6RÓBÔ2ò#(	B##bÓ‚Ó  ¢222–ç7FÆÆF–öâÂWFFRÂ&6·WæB&V6÷fW'’&ö6VGW&W0 ¢ÒikŠhşz›¤D.88îŠŠŞ{Úî8ÆVv7’D"Ö–w&F–öî8v—Bò¤•i»Nikh˜¾šn8).i[Nyn8 ¢Ò'VçF–Ö^ŠŠŞZé®8îŠªŞ‹ëÎšn8FVfVÇN8X‹n{HN8).Zéş8+>8;Î888Y8(ş8¾8ş8 ¢ÒÆö6Âç‡æW†×ÆV8‚æVçbæW†×ÆV8).iz.ZÙ…'VçF–Ö^Zûî[ùÄ¶W8YÎiÉş8 ¢ÒFF&6^8&—fF^ŠŠŞZé®8ô„4…ô´U86öFRfW'6–öî8ä&6·Wò&W7F÷&RG&–ÆÎ8).i[Nyn8 ¢Ò6öFRÖöæÇ’&öÆÆ&6¾8„D"Ö–w&F–öî8).Y
+¾8(&öÆÆ&6¾8).Xˆn™º.8 ¢Ò˜XŞ{Úä6†V6¶Æ—7N8„ÓBÔ>[.yJ‡FW7N8).‹ûŞXª8 ¢ÒD.8XZÎ™h´8WF†VçF–6F–öâò6W76–öâò55$bò55$bò…5>8%52Væv–æ^8g&öçFVæB'VçF–ÖR76WN8şZHi»N8®8~8  ¢22&VÆV6RÓBÔ"ò#(	B##bÓ‚Ó  ¢222Fö7VÖVçFF–öâæBF†—&B×'G’Æ–6Vç6RÆ–væÖVç@ ¢Ò$TDÔ^84„ätTÄô~8Fö7VÖVçFF–öâ–æFW8)$ÓBÔ.8YÎiÉş8 ¢ÒF†—&B×'G’æ÷F–6^8).Zéô76WN8Y8(ş8¾8¥VW'’2ãrã8„föçBvW6öÖRg&VRbãrã.8i»Nik8 ¢ÒÓ"Ô^8~X˜®™šNkˆ8ş8äföçBvW6öÖ^˜XŞ[ˆ5F8)$æ÷F–6^8¾8(™šNXë¾8 ¢Ò¥VW'’Æ–6Vç6R6÷8)$÷Vä¥2f÷VæFF–öîŠŠ‰8i»Nik8 ¢ÒföçBvW6öÖRÆ–6Vç6R6÷8)#bãrã.8îXh^Zë8†f–Æ^YŞ8i»Nik8 ¢ÒFWVæFVæ7’òÆ–6Vç6^Zûî[ùÎŠ8„ÓBÔ.[.yJ‡FW7N8).‹ûŞXª8 ¢ÒD.8XZÎ™h´8WF†VçF–6F–öâò6W76–öâò55$bò55$bò…5>8%52Væv–æ^8g&öçFVæB'VçF–ÖR76WN8şZHi»N8®8~8  ¢22&VÆV6RÓBÔò#(	B##bÓ‚Ó  ¢222fW'6–öâãã&VÆV6R&6VÆ–æRæB–çfVçF÷' ¢Òv—D‡V"Ö–î8äÓ"Ôr6öÖÖ—N8k{¾K¹„6†V6·ö–çB¤•8)$ÓN8ä&6VÆ–æ^88~8nY»®Zé®8 ¢ÒÓ>h‰iéÎxš8ÎZÙYÊ8~8®8N8>88).Š‰˜Ë.8~8&VÆV6^8¾[ø^Šh8®˜¾yJ8;¾Zéşy+Z(>z+®Š¨Ş8)$ÓBÔN8	Än8YXøî8 ¢ÒfW'6–öâãã8åVÆ—G’vF^8XZÎ™h¾xš8˜XŞ[ˆ>xš8&VÆV6R&Æö6¶W.8h˜¾X¹^z+®Š¨Şš^yºî8).i[Nyn8 ¢ÒÓ"Ô~8¾8(ZHi»N8~8n8N8®8N˜xŞŠhš	Yùş8)%4„Ó#Sn8~Y»®Zé®88(´ÓBÔFW7N8).‹ûŞXª8 ¢Òv—D‡V"Ö–î8¾ZÙYÊ8~8n8N8ôÄ”4Tå4^8F†—&B×'G’æ÷F–6^8Æ–6Vç6R6÷8)$6†V6·ö–çB¤•8[êXX>8 ¢ÒD.8Ö–w&F–öî8XZÎ™h´8WF†VçF–6F–öî8WF†÷&—¦F–öî86W76–öî855$n855$n8…5>8%52Væv–æ^8g&öçFVæNX¹^KÙÎ8şZHi»N8®8~8   ¢22g&öçFVæBÓ"Ôrò#(	B##bÓ‚Ó  ¢222Ó"f–æÂ&Vw&W76–öâæBFö7VÖVçFF–öà ¢ÒÓ"Ô8	Än8ÓÔ8	Ä~86V7W&R&6VÆ–æ^8îXZ‡FW7N8).jŠ®ijŞZéşŠÎ8 ¢ÒÓ.ZèÎK¨nyJ8æf–æÂ&Vw&W76–öâFW7N8„Fö7VÖVçFF–öîi[NY‡FW7N8).‹ûŞXª8 ¢ÒxûîYÊ…fW'6–öî8g&öçFVæB76WBÆÆ÷vÆ—7N888n8;Î89î8KéŞZÙ…fW'6–öî8K‹¾ŠhT’ò66W76–&–Æ—G’–çf&–çN8).XhŞz+®Š¨Ş8 ¢Ò$TDÔ^8&öFÖ8fW'6–öâöÆ–78˜XŞ{Úä6†V6¶Æ—7N8)$Ó.ZèÎK¨nx«nhX¾8i»Nik8 ¢ÒÓ.XZKÙ>8îZéşikŞXh^Zë8{jŞhÈ8~8şZY{HN8iz.yú^8îKùŞyYK¨¾š^8h˜¾X¹T'&÷w6W.z+®Š¨ÔÖG&—8).8î88(8ş8 ¢ÒD.8XZÎ™h´8WF†VçF–6F–öâò6W76–öâò55$bò55$bò…5>8Ó%52Væv–æ^8yK¾™Ú.Xznyn8g&öçFVæNKéŞZÙ…fW'6–öî8şZHi»N8®8~8  ¢22g&öçFVæBÓ"Ôbò#(	B##bÓ‚Ó  ¢2226ö×F–&ÆRg&öçFVæBFWVæFVæ7’&Vg&W6€ ¢Ò¥VW'8)#2ã2ã8¾8(“2ãrãgVÆÂ'V–ÆN8i»Nik8~8iz.ZÙ8ä¤Xznyn8).{jŞhÈ8 ¢ÒföçBvW6öÖRg&V^8)#Rã2ã8¾8(“bãrã"ÅE>8i»Nik8~8izv–6öâ6Æ72Æ–>8†Æö6ÂvV$föçN8).{jŞhÈ8 ¢ÒföçBvW6öÖ^8åvV$föçN8).xûîYÊ8ä55>8ÎXø.xZ~88(µEDbòtôdc"89^8*8*N8:¾8XZ^i»ş88 ¢Ò&ö÷G7G&ò&ö÷G7vF6‚Bãã>8÷W"{;¾8G&vW"2ã"ã.8•67&öÆÂRã"ã×6æ6†÷N8şK©.hù¾h
+~8).XJ®XX8~8nhÚî8{Úî8Ş8 ¢Ò&ö÷G7G&^z{¾ŠÎ8öFF[îh
+~8¥VW'’ÇVv–î8G&vW.888n8;Î89î8).jŠ®ijŞ88(¶Ö¦÷"Ö–w&F–öî88®8(¾8ş8(88>8î[z^zˆ¾8k{~YÊ8^8¾8®8N8 ¢Ò67&—NŠªŞ‹ëÎšn8¥VW'’¤8&ö÷G7G&ÖöFÂò6öÆÆ6^8G&vW.888n8;Î89î8föçBvW6öÖR–6öâòföçN8).Y¹î[‹FW7N8‹ûŞXª8 ¢ÒD.8XZÎ™h´8WF†VçF–6F–öâò55$bò55$bò…5>8Ó%52Væv–æ^8Ó"ÔN8îŠzK®8i8ŞKÙÎ8şZHi»N8®8~8  ¢22g&öçFVæBÓ"ÔRò#"(	B##bÓ‚Ó  ¢222v–æF÷w2÷vW%6†VÆÂ6ÆVçW†VÇW"6÷'&V7F–öà ¢ÒFööÇ2öÇ•öÓ&Uö6ÆVçWç38Åv–æF÷w2÷vW%6†VÆÂRã8~ih~ZÙ~XÉn88~8'6W"W'&÷.8¾8®8(¾YXşšÎ8).KúîjÚ>8 ¢ÒUDbÓ‚$ôŞ8®8~8îiz^iÊÎŠ©æÖW76v^8).[¸>jÚ.8~867&—NiÊÎKÙ>8)$44”8î8ş8;´5$Än8~KùŞZÙ8 ¢ÒX˜®™šNZûî‹8Õv†D–f8v—Bv÷&¶–ærG&V^z+®Š¨Ş8V&Æ–2ö–æFW‚ç‡z+®Š¨Ş8ZèXZZ(>yXÎ8õ#8¾8(ZHi»N8®8~8 ¢Ò'6W"W'&÷.8şX˜®™šNXznyn™h¾Zx¾X˜Ş8¾y›®yIş88(¾8ş8(8#ZéşŠÎi˜.8´76WN8şX˜®™šN8^8(Î8®8N8 ¢Ò6ÆVçW†VÇW.8îih~ZÙ~8+>8;Î88Y¹î[‹FW7N88˜XŞ{Úîih~i»Xh^8å÷vW%6†VÆÂFŠŠ‰8).KúîjÚ>8  ¢22g&öçFVæBÓ"ÔRò#(	B##bÓ‚Ó  ¢222VçW6VBg&öçFVæB76WB6ÆVçW  ¢Ò…ò…DÔÎ8F†VÖR&W6öÇfW.8552W&Â‚–8¾8(Zéş™©¾8¾Xø.xZ~8^8(Î8(´76WN8).KˆŠj~XÉn8 ¢Ò&ö÷G7G&8î™ÙîYÊ~{Šîx˜8'VæFÆ^8w&–Bò&V&ö÷NXÙxºÎx˜8iÊ®KÛşyJ…6÷W&6RÖ8).X˜®™šN8 ¢ÒföçBvW6öÖ^8îiÊ®KÛşyJ„¦f67&—Nx˜8X¾XŠT55>84552òÄU5>8ÖWFFF85dr7&—F^8).X˜®™šN8 ¢ÒG&vW.8î™ÙîYÊ~{Šîx˜8).X˜®™šN8~8ZéşŠÎi˜.8¾KÛşyJ88(¾YÊ~{Šîx˜8).{jŞhÈ8 ¢ÒföçBvW6öÖ^8åvV$föçN8òÆÂæ7768îXø.xZ~K©.hù¾8).XJ®XX8~8XZ[Ú.[Èş8).{jŞhÈ8 ¢ÒKÛşyJKŠ×fVæF÷"f–Æ^8äÆ–6Vç6R†VFW.888n8;Î89î8g&öçFVæBÆ–'&'’fW'6–öî8).{jŞhÈ8 ¢Òiz.ZÙ„v—NKÙÎjZŞ89^8*8:¾88Y	88¾8ZèXZz+®Š¨ŞK¹8Õ÷vW%6†VÆÂ6ÆVçW†VÇW.8ZèÎXZX˜®™šNKˆŠj~8).‹ûŞXª8 ¢ÒD.8XZÎ™h´8WF†VçF–6F–öâò55$bò55$bò…5>8Ó%52Væv–æ^8Ó"ÔN8îŠzK®8i8ŞKÙÎ8şZHi»N8®8~8  ¢22g&öçFVæBÓ"ÔBò#"(	B##bÓ‚Ó  ¢222fVVB6öÇVÖâæBG&vW"FVç6—G’6÷'&V7F–öà ¢Òf—†VBÆ–÷WBF&Æ^8u7Fö6¾i8ŞKÙÎX‰~8Š‰K¨¾X‰~8ÎYØ~zØ[˜^8¾8®8(¾Y¹î[‹8).KúîjÚ>8 ¢ÒfVVBF&Æ^8‚6öÆw&÷W8).‹ûŞXª8~87Fö6¾i8ŞKÙÎX‰~8)#CG8Š‰K¨¾X‰~8).jè¾8(®[˜^8Y»®Zé®8 ¢ÒG&vW.8î˜	®[‹š^yºî8)#3g8h‹¾8~86V7F–öîŠh¾X{®8~8‡FF–æ~8).8+>8;>898*ş88XÉn8 ¢Ò6ö'6Rö–çFW.y+Z(>8~8óCG8îi8ŞKÙÎš	Yùş8).{jŞhÈ8 ¢Ò&W7öç6—fRò"òNX‰~8¶W–&ö&Bòfö7W2ò$”8fVVBò7Fö6²8D.8Ó%52Væv–æ^8şZHi»N8®8~8 ¢ÒÓ"ÔB#.[.yJ8æÆ–÷WB&Vw&W76–öâFW7N8„f¶RDò&VæFW.z+®Š¨Ş8).‹ûŞXª8  ¢22g&öçFVæBÓ"ÔBò#(	B##bÓ‚Ó ¢222&W7öç6—fRÆ–÷WBæBT’fVVF&6° ¢ÒfVVBò7Fö6¾8)$Öö&–ÆRX‰~8F&ÆWB.X‰~8FW6·F÷NX‰~8ä&ö÷G7G&w&–N8ZHi»N8 ¢Ò…XN8ãNK»nXÙKØ×&÷~yIşh‰8).ZIn8~8™[~8N8+ş8*N888:¾8;µU$Î8).h©‹ùN8ŠzK®8ZHi»N8 ¢ÒfVVB6&N8îX‰ŞiÉşš¹8^8æf&.8î™[~8N8+ş89nYŞ8ÖöFÎ8vRF÷8G&vW.8F÷V6‚F&vWN8).Š«şi[N8 ¢ÒfVVBò7Fö6¾8Ş8(Î8î8(Î8îz›®yK¾™Ú.8).Xˆn88%5>‹ûŞXªXX8)$ÖöFÎXh^8ŠzK®8 ¢Ò%5>X˜®™šN8).8ÅU$Î8).z›®jÈN8Ş8¾8(z+®Š¨ŞK¹8Ş8îiˆîzK¤'WGFöî8ZHi»N8~8iz.ZÙ‚6öçFVçBæFVÆWFV8).{i{i®8 ¢ÒfVVNXùn[é~ZKiYt6&N8XhŞŠªŞ‹ëÄ'WGFöî8).‹ûŞXª8 ¢ÒÆW'B‚–8).yK¾™Ú.XhVæ÷F–6^8{Úîhù¾8~87Fö6¾KùŞZÙh‰X©ş8„×WFF–öîZKiY~8).ŠzK®8 ¢ÒÖöFÂòG&vW.8îK‹¾Šhih~Šˆ8iˆî8(8¾8®ŠŠ‰hû®8(Î8).i[Nyn8 ¢ÒD.8XZÎ™h´’&W7öç6^8WF†VçF–6F–öâò55$bò55$bò…5>8Ó%52Væv–æ^8g&öçFVæBÆ–'&'’fW'6–öî8şZHi»N8®8~8 ¢Ò&W7öç6—fRòT’7FF–2FW7N8×WFF–öâ'VçF–ÖRFW7N8fVVB&WG'’'VçF–Ö^8fVVBò7Fö6²&VæFW"FW7N8).‹ûŞXª8  ¢22g&öçFVæBÓ"Ô2ò#"(	B##bÓ‚Ó ¢222Æöv–âÆ–÷WB6÷'&V7F–öà ¢Ò6VÖçF–2Ö–æ‹ûŞXª[èÎ8´Æöv–âò&Vv—7FW"f÷&Ş8Î[znZøN8¾8¾8®8(¾Y¹î[‹8).KúîjÚ>8 ¢ÒÆöv–îyJ‚Ö–âæÆöv–âÖÖ–æ8).yK¾™Ú.[˜^8[¨>8.8iz.ZÙ8âæf÷&Ò×6–væ–â²Ö&v–ã¢WFó²Ö8¾8(8(¾KŠŞZJî˜XŞ{Úî8).[êXX>8 ¢ÒÆöv–âò&Vv—7FW.8äf÷&Ş8Š¨ŞŠ‹ÎXznyn855$n86öÆÆ6^Xˆ~i»ş8Ó"Ô>8ä¶W–&ö&Bòfö7W2ò$”Zûî[ùÎ8şZHi»N8®8~8 ¢ÒYÎ8Y¹î[‹8).™‹.8Æöv–âÆ–÷WBFW7N8).‹ûŞXª8  ¢22g&öçFVæBÓ"Ô2ò#(	B##bÓ‚Ó ¢2226VÖçF–2…DÔÂæB66W76–&–Æ—G ¢ÒÂFö7G—R‡FÖÃæ8ÆæsÒ&¦&8†VFW&8Ö–æ8fö÷FW&86¶—Æ–æ¾8vR†VF–æ~8).‹ûŞXª8 ¢ÒfVVB6&N8).YŞX˜ŞK¹8×&Vv–öî88~8ÆöF–æ~KŠŞ8â&–Ö'W7–8x«nhX¶ÖW76v^8æÆ—fR&Vv–öî8W'&÷.8æÆW'B6VÖçF–7>8).‹ûŞXª8 ¢ÒfVVN{z™¸n87Fö6¾KùŞZÙ8G&vW.XhTÖöFÎ‹[~X¹^8)&¶W–&ö&Ni8ŞKÙÎXúşˆ;Ş8¤'WGFöî8ZHi»N8 ¢Ò%5>‹ûŞXª8;¾ZHi»DÖöFÎ8)$f÷&ŞXÉn8~8VçFW"7V&Ö—N8iz.ZÙ„¤‚òVæF–ærwV&N8).Kˆ8N8î{XÎ‹zş8{[Kˆ8 ¢Ò6WGF–æw>8äæf&"U$ÂòŠzK®YŞ8„Æ&VÎ8–6öâ&F–òw&÷W8†f–VÆG6WBòÆVvVæBòVæ—VR–N8).‹ûŞXª8 ¢ÒG&vW.8â&–ÖW‡æFVFòÆ&VÎi»Nik8÷Vîi˜$fö7W>8W66R6Æ÷6^8F.[ê®y+86Æ÷6^[èÄfö7W2&WGW&î8).‹ûŞXª8 ¢ÒÖöFÎ{X.K¨n[èÎ8ş‹[~X¹^XX>8„fö7W>8).h‹¾8~8vRF÷8÷67&öÆÎ8YÎi˜.8¶Ö–î8„fö7W>8).z{¾X¹^8 ¢Òf—6–&ÆRfö7W2–æF–6F÷.8‚&VfW'2×&VGV6VBÖÖ÷F–öæZûî[ùÎ8).‹ûŞXª8 ¢ÒfVVB8D"66†VÖ8WF†VçF–6F–öâò55$bò55$bò…5>8Ó%52Væv–æ^8g&öçFVæBÆ–'&'’fW'6–öî8Yû®iÊÎyK¾™Ú.jx¾h‰8şZHi»N8®8~8 ¢ÒÓ"Ô>[.yJ8ç6VÖçF–2ò66W76–&–Æ—G’7FF–2FW7N8„æöFR'VçF–ÖRFW7N8).‹ûŞXª8  ¢22g&öçFVæBÓ"Ô"ò#(	B##bÓ‚Ó ¢222fVVB&VæFW&–æræB7FFR†æFÆ–æp ¢ÒfVVNXùn[é~8x«nhX¾XŠNZé®86†ææVÂF—FÆ^høşyK¾8—FVŞhøşyK¾8).[ş8^8®™j.i[8Xˆn™º.8 ¢ÒfVVB6&N8‚ÆöF–ævò&VG–òV×G–òW'&÷&8îx«nhX¾8).‹ûŞXª8 ¢ÒX‰ŞiÉşŠzK®8´ÆöF–æ~8K»dfVVN8¾8ÎŠ‰K¨¾8ş8.8(®8î8¾8)>8Ş8F–ÖV÷WBòCBòW7G&VÒf–ÇW&^8¾X‹n[êkˆ8öÖW76v^8).ŠzK®8 ¢ÒKˆŞjÚ>8;¾KˆŞ‹k5&W7öç6^8(N˜XŞX‰~Kº^ZIn8äfVVBò—FVŞ8).ZèXZXN8~Xznyn8 ¢Ò6†ææVÂò—FVÒF—FÆ^jÊiŞi˜.8æfÆÆ&6¾8).‹ûŞXª8~8Š‰K¨¾ŠzK®8ş[é>iÚ^88®8(®iÈZJs^K»n8 ¢Ò™[~8NŠ‰K¨¾8+ş8*N888:¾8ş{[^ih~ZÙ~8åUDbÓb7W'&övFR—.8).XˆnijŞ8¾8£cNih~ZÙ~y»[Ù>8~yÈyZ^8 ¢ÒfVVBÆ–æ¾8ôg&öçFVæN8~8(&‡GGò‡GG>888).KÛşyJ8~8çFW‡B‚–8‚æö÷VæW"æ÷&VfW'&W&8).{jŞhÈ8 ¢ÒYÎ8„fVVB6&N8å&WVW7BVæF–æ~KŠŞ8ş˜xŞŠH~Xùn[é~8).™h¾Zx¾8~8®8N8 ¢Òff–6öâçæv8).iˆîzK®y¨N8¾Xø.xZ~8~8…EE>y+Z(>8æff–6öâCBòÖ—†VB6öçFVçN{XÎ‹zş8).Y¹î˜ş8 ¢ÒD"66†VÖ8XZÎ™h´’&W7öç6^8Ó%52Væv–æ^8g&öçFVæBÆ–'&'’fW'6–öî8yK¾™Ú.jx¾h‰8şZHi»N8®8~8 ¢ÒÓ"Ô.[.yJ8äfVVB7G'V7GW&RFW7N8„æöFR'VçF–ÖRFW7N8).‹ûŞXª8  ¢22g&öçFVæBÓ"Ôò#(	B##bÓ‚Ó ¢222g&öçFVæB67&—Bf÷VæFF–öà ¢ÒF6†&ö&NY»®iÈ8î8*N8;>8:8*N8;4¦f67&—N8)"V&Æ–2ö§2öF6†&ö&Bæ§68Xˆn™º.8 ¢ÒF6†&ö&NY»®iÈ8ç7G–ÆR&Æö6¾8)"V&Æ–2ö772öF6†&ö&Bæ7768Xˆn™º.8 ¢Ò…8ÂfWF6…ö6öçFVçB‚–YÎX{®8~8).yIşh‰88(¾ik[Èş8).[¸>jÚ.8~8fVVB6&N8âFFÖfVVBÖ6öçFVçBÖ–F8¾8(X‰ŞiÉşXÉn8 ¢Ò’&WVW7N8W'&÷.Xznyn8WfVçNy›¾˜Ë.8).Kˆ8N8îZIn˜:„¥>Xh^8i[Nyn8 ¢ÒWfVçBæÖW76^8X‰ŞiÉşXÉnkˆ8şXŠNZé®8).‹ûŞXª8~8K¨Î˜xÔWfVçNy›¾˜Ë.8).™‹.jÚ.8 ¢Ò6öçFVçBò7Fö6²ò6WGF–æw2òF'>8î˜	®KúKŠŞ8÷VæF–æ~x«nhX¾8).KùŞhÈ8~8˜
+>{i®˜Kú8).™‹.jÚ.8 ¢ÒfVVNhøşyK¾8òçFW‡B‚–8fÆ–FFVBÆ–æ¾8æö÷VæW"æ÷&VfW'&W&8iÈZJs^K»n8).{jŞhÈ8 ¢ÒD"66†VÖ8XZÎ™h´’&W7öç6^8Ó%52Væv–æ^8g&öçFVæBÆ–'&'’fW'6–öî8yK¾™Ú.jx¾h‰8şZHi»N8®8~8 ¢ÒÓ"Ô[.yJ8äg&öçFVæB7G'V7GW&RFW7N8„æöFR'VçF–ÖRFW7N8).‹ûŞXª8  ¢22%52Væv–æRÓÔrò#(	B##bÓ‚Ó ¢222fWF6‚7FFRÂ&WG'’ÔgFW"Â&6¶öfbæB&÷VæFVB7FÆRÖ–bÖW'&÷  ¢ÒfVVBU$Â†6XÙKØŞ8ç&—fFR7FFR¥4ôî8iÈ{X.ŠšnŠÎ8iÈ{X.h‰X©ş8{YiéÎzŠîXŠ^8…EE7FGW>8yúŞ8FW'&÷"6öF^8ZKiY~Y¹îi[8jÊY¹îŠšnŠÎi˜.X‹¾8).KùŞZÙ8 ¢Ò7FF^8‡&rfVVBU$Î8VW'’Fö¶Vî8fVVNiÊÎih~8Š›>{K8§G&ç7÷'BÖW76v^8).KùŞZÙ8~8®8N8 ¢ÒG&ç6–VçBW'&÷.8ƒczy"ò3zy"ò“zy"òiÈZJs3czy.8îjë^™¨îy¨D&6¶öfn8).‹ûŞXª8 ¢Ò…EEC#’òS>8îZèXZ8¥&WG'’ÔgFW.ûÈ†FVÇF×6V6öæG2ò…EEÖFF^ûÈ8).XJ®XX8~8Kˆ®™™8).˜yJ8 ¢ÒF–ÖV÷WN8Då>8Kˆi˜$…EEW'&÷.8FV×÷&'’'6RW'&÷.8~8ş8iÈ[èÎ8îjÚ>[‹z+®Š¨Ş8¾8(iÈZJs#Ni˜.™i>Kº^Xh^8ç7FÆR66†^8).XŠyJ8 ¢Ò…EECNzØ8çW&ÖæVçBW'&÷.8DÅ>8&—fFRFG&W7>8–çfÆ–B&VF—&V7N8&W7öç6R6—¦^‹h^˜îzØ8å6V7W&—G’W'&÷.8~8÷7FÆ^8).KÛşyJ8~8®8N8 ¢ÒYÎKˆU$Î8îYÎi˜.™©ÎZë>8õU$ÎXÙKØÔÆö6¾Xh^8sY¹î88fWF68;·7FF^i»Nik8~8[è^j™÷&ö6W7>8ô&6¶öfb7FF^8).XhŞz+®Š¨Ş8 ¢Òik8~8E&W÷6—F÷'’òf7F÷'’òVWV^zØ8).‹ûŞXª8¾8®8[ş8^8¦†VÇW.™j.i[8iz.ZÙ„fVVD66†RòfVVDfWF6…6W'f–6^8îhº[Ë^8¾yY8(8ş8 ¢ÒD.8g&öçFVæN8XZÎ™h´87Fö6¾8'6W.8FFW.8—FVÒ–FVçF—G8şZHi»N8®8~8 ¢Ò…EEò7FFRò7FÆR&÷VæF'’ò6öæ7W'&Væ7’ò&6†—FV7GW&Rò6V7W&—G’&Vw&W76–öâFW7N8).‹ûŞXª8  ¢22%52Væv–æRÓÔbò#(	B##bÓ‚Ó ¢2226öæF—F–öæÂfVVB&WVW7G2æB…EE3B&WW6P ¢ÒUFròÆ7BÔÖöF–f–VN8).ZèXZ8¾Xùn[é~8~866†R66†VÖ.8KùŞZÙ8 ¢ÒEDÎ{XÎ˜î[èÎ8ò–bÔæöæRÔÖF6†ò–bÔÖöF–f–VBÕ6–æ6V8).KÛş8N8…EE3Ni˜.8şiz.ZÙ„fVVNiÊÎih~8).XhŞXŠyJ8 ¢Ò&öG•öfWF6†VEöF8‚fÆ–FFVEöF8).Xˆn™º.8~83N8~8şiÊÎih~Xùn[é~i˜.X‹¾8).ZHi»N8~8®8N8 ¢ÒfÆ–FF÷.8şX˜ŞY¹î8æVffV7F—fRU$Î8K¸®Y¹î8î˜KúXX8ÎZèÎXZKˆˆ{N88(¾88Ş88˜Kú8~8&VF—&V7NXXZHi»Ni˜.8îkÈş88N8).™‹.jÚ.8 ¢ÒiÚK»n8®8t…EE3N8).h¹.Y
+n8~8…EE#8~8şikiÊÎih~8)%'6^h‰X©ş[èÎ8´66†^{Úîhù¾8 ¢ÒÓÔR66†R66†VÖ8îŠªŞ8ş‹ëÎ8şK©.hù¾8).{jŞhÈ8~8jÊY¹ã#Xùn[é~i˜.8·66†VÖ.8i»Nik8 ¢ÒôdTTEô4ôäD•D”ôäÅõ$UTU5EôTä$ÄTF8).‹ûŞXª8~866†^8).{jŞhÈ8~8ş8î8îiÚK»nK¹8Õ&WVW7N88xJX«XÉnXúşˆ;Ş8 ¢ÒfÆ–FF÷.[.yJ†6Æ72†–W&&6‡8ş‹ûŞXª8¾8®8[ş8^8¦†VÇW.™j.i[8iz.ZÙ„66†Rõ6W'f–6^8îhº[Ë^8¾yY8(8ş8 ¢Ò7FÆRÖ–bÖW'&÷.8&WG'8fWF6‚7FF^866†RÔ6öçG&öÂòW‡—&W>8ş[èÎ{i®[z^zˆ¾8Xˆn™º.8 ¢Ò…EEò66†Rò&VF—&V7Bò6öæ7W'&Væ7’ò&6†—FV7GW&Rò6V7W&—G’&Vw&W76–öâFW7N8).‹ûŞXª8  ¢22%52Væv–æRÓÔRò#(	B##bÓ‚Ó ¢2226W'fW"×6–FRfVVB66†RæBGWÆ–6FRfWF6‚7W&W76–öà ¢ÒfVVDfWF6…6W'f–6V8).‹ûŞXª8~8÷væW"×66÷VBfVVE6÷W&6V[èÎ8îZèXZ„fWF68;µ'6^8;´66†^8).Kˆ8N8æ÷&6†W7G&F–öâ&÷VæF'8™¸n{HN8 ¢ÒjÚ>[‹8¤…EE&W7öç6^8¾8E%52"ãò%52ãòFöŞ88~8e'6^h‰X©ş8~8ôfVVNiÊÎih~888)"f"ö66†RöfVVBö8KùŞZÙ8 ¢Ò66†R¶W’òÆö6²¶W8ö6öæf–wW&VBfVVBU$Î8å4„Ó#Sn88~8&rU$Î8(GVW'’Fö¶Vî8).89^8*8*N8:¾YŞ8™Ë.X{®8~8®8N8 ¢Ò66†^iÊÎih~8÷fW'6–öæVB¥4ôî87G&–7B&6ScN84„Ó#Sb–çFVw&—G8~KùŞhÈ8~8…6W&–Æ—¦R÷Vç6W&–Æ—¦^8).KˆŞKÛşyJ8 ¢ÒEDÎX‰ŞiÉşX
+Cczy.866†^xJX«XÉn8U$ÎXÙKØÔÆö6²F–ÖV÷WN8)'&—fFR6öæf–wW&F–öî88~8n‹ûŞXª8 ¢ÒfÆö6²‚–8¾8(8(¶F÷V&ÆRÖ6†V6¶VBÆö6¶–æ~8~8YÎKˆU$Î8îYÎi˜%&WVW7N8)#Y¹î8çW7G&VÒfWF68h©X‹n8 ¢Ò66†^zNiŞ8i»‹ëÎ8şKˆŞˆ;Ş8Æö6²F–ÖV÷WN8~8ôÆ–6F–öî8).XÎjÚ.8¾8®84"Ó’†&FVæVBG&ç7÷'N8†f–ÂÖ÷Vî8 ¢Ò66†R†—N8~8(%'6W"òFFW"ò—FVÒ–FVçF—G8).jøîY¹îZéşŠÎ8~8XZÎ™h´8g&öçFVæN8D.87Fö6¾8æ6öçG&7N8).{jŞhÈ8 ¢Ò7FÆRÖ–bÖW'&÷.8UFròÆ7BÔÖöF–f–VBò…EE3N8fWF6‚7FFRò&WG'8ş[èÎ{i®[z^zˆ¾8Xˆn™º.8 ¢Ò66†RÆ–fV7–6ÆRò6÷''WF–öâòW&Ö—76–öâò7–ÖÆ–æ²ò6öæ7W'&Væ7’ò&6†—FV7GW&Rò6V7W&—G’&Vw&W76–öâFW7N8).‹ûŞXª8  ¢22%52Væv–æRÓÔBò#(	B##bÓ‚Ó ¢222FWFW&Ö–æ—7F–2fVVB—FVÒ–FVçF—G ¢Ò%52"ãwV–F8%52ã&Fc¦&÷WF8FöÒ–F8).[Ú.[ÈşXŠTFFW.8¾8(Xh^˜:‚6÷W&6T—FVÔ–F8h«ŞX{®8 ¢Ò—FVÔ–FVçF—G–8‚—FVÔ–FVçF—G•&W6öÇfW&8).‹ûŞXª8~86÷W&6RÖ–B(i"Æ–æ²(i"f–ævW'&–çF8îXJ®XXšnKØŞ8).iˆîzK®8 ¢Ò6öæf–wW&VBfVVBU$Î8)'66÷^8¾Y
+¾8(Ó“§c¦²4„Ó#Sn[Ú.[Èş8îKˆŞ˜şiˆî8~k®Zé®y¨N8¦–FVçF—G8).[îXZ^8 ¢Ò6öçFVçEö–Fò÷væW"”N8)&–FVçF—G8¾8(™šNZIn8~8YÎKˆfVVN8îŠH~i[y›¾˜Ë.8~YÎ8„—FVÒ–FVçF—G8).{jŞhÈ8 ¢Ò&r6÷W&6R”BòU$ÂòF—FÆRò6öçFVçN8)&–FVçF—GX
+N8XZÎ™h´8g&öçFVæN8™Ë.X{®8~8®8N8 ¢Òæ÷&ÖÆ—¦VD—FVÓ£§Fô'&’‚–8iz.ZÙ„8ã^š^yºæ6öçG&7N8D.87Fö6¾8g&öçFVæN8fWF6†W.855$bõ…5>Z(>yXÎ8).{jŞhÈ8 ¢Ò˜xŞŠHt—FVŞX˜®™šN8ikyØXŠNZé®8k{i®XÉn866†^8UF~8&WG'8şZéşŠ8^8¾8®[èÎ{i®[z^zˆ¾8Xˆn™º.8 ¢Ò–FVçF—G’&–÷&—G’ò7F&–Æ—G’ò66÷Rò&÷VæF'’òÖÆf÷&ÖVB–çWBòf—‡GW&Rò&6†—FV7GW&R&Vw&W76–öâFW7N8).‹ûŞXª8  ¢22%52Væv–æRÓÔ2ò#(	B##bÓ‚Ó ¢222%52òFöÒFFW'2æBFFRæ÷&ÖÆ—¦F–öà ¢ÒfVVE'6W&8)'6V7W&R„ÔÂÆöN8„FFW"F—7F6KŠŞ[ø>8{Šî[ş8 ¢Ò'73$FFW&8'73FFW&8FöÔFFW&8X[˜	¢fVVDFFW$–çFW&f6V8).‹ûŞXª8 ¢ÒæÖW76^86†ææVÂöVçG'’ö—FVŞ8FW67&—F–öî86öçFVçC¦Væ6öFVF8GV&Æ–â6÷&RFF^zØ8î[Ú.[ÈşXŠ^Xznyn8)$FFW.8Xˆn™º.8 ¢ÒfVVDFFTæ÷&ÖÆ—¦W&8).‹ûŞXª8~8iz.ZÙ‚’ÖÒÖBƒ¦“§6X{®X©¾8‡6÷W&6RF–ÖW¦öæ^™ÙîZHhù¾8).{jŞhÈ8 ¢ÒFöŞ8ş[é>iÚ^8âWFFVF8).XJ®XX8~8iÊ®ŠŠŞZé®i˜.8¾j‰k©bV&Æ—6†VF8)&fÆÆ&6¾88~8nKÛşyJ8 ¢ÒfVVDÆ–æµ6VÆV7F÷&8‚fVVE†ÖÄ†VÇW&8).‹ûŞXª8~8–—FõV&Æ–6¶WYè¶ÇFW&æFRÆ–æ¾8FW‡BÆ–æ¾8W&ÆfÆÆ&6¾8).X[˜	®XÉn8 ¢Ò'75÷'6V8'6U÷7F'B‚–8'75öæ÷&ÖÆ—¦UöFFR‚–8'75÷6VÆV7EöÆ–æµö6æF–FFR‚–8îK©.hù¾Z(>yXÎ8).{jŞhÈ8 ¢ÒD.8g&öçFVæN8fVVE6÷W&6^8fWF6†W.8’&W7öç6^855$bõ…5>866†RôUFrõ&WG'8şZHi»N8®8~8 ¢ÒFFW"ôFFRöf—‡GW&Rö&6†—FV7GW&R÷6V7W&—G’&Vw&W76–öâFW7N8).‹ûŞXª8  ¢22%52Væv–æRÓÔ"ò#(	B##bÓ‚Ó ¢222fVVB6÷W&6RÖöFVÀ ¢ÒfVVE6÷W&6V8).‹ûŞXª8~8iz.ZÙ‚6öçFVçEö–Fò6öçFVçEö÷væW&òjIÎŠ‹Îkˆ8õU$Î8)&–Ö×WF&Æ^8¤fVVBVæv–æRÖöFVÎ88~8nŠxûî8 ¢ÒfVVE6÷W&6TÖW&8).‹ûŞXª8~8÷væW"×66÷VB7F—fR6öçFVçB&÷~8).Š¨ŞŠ‹Îkˆ8ö÷væW.8XhŞxZ~Y8~8fÖöFVÎXÉn8 ¢ÒÖW.8÷&r6öçFVçE÷fÇVV8).KÛşyJ8¾8®8÷fÆ–FFUöfVVE÷W&Â‚–[èÎ8åU$Î888).Xù~8Xùn8(¾jx¾˜
+8¾ZHi»N8 ¢ÒfVVDfWF6†W&8şK»¾hHõU$Îih~ZÙ~X‰~8~8ş8®8òfVVE6÷W&6V8î8ş8).Xù~8Xùn8(¶–çFW&f6^8ZHi»N8 ¢ÒKˆŞjÚ>8;¾jÊiÔD"&÷~8ö÷WF&÷VæBfWF6X˜Ş8¶f–ÂÖ6Æ÷6VN8~8vVæW&–2S&W7öç6^8‡6W'fW"Æö~8Xˆn™º.8 ¢ÒD"66†VÖ8g&öçFVæN8’&W7öç6R6†^855$bõ…52&÷VæF'866†RôUFrõ&WG'8şZHi»N8®8~8 ¢ÒÓÔ.[.yJ8æÖöFVÂöÖW"÷G&ç7÷'Bô’f–ÇW&R÷7FF–2&6†—FV7GW&RFW7N8).‹ûŞXª8  ¢22%52Væv–æRÓÔò#(	B##bÓ‚Ó ¢222fWF6†W"ò'6W"&W7öç6–&–Æ—G’7Æ—B²æ÷&ÖÆ—¦VB—FVĞ ¢ÒfVVDfWF6†W&8).‹ûŞXª8~8fVVBæfWF6†8ä…EEXùn[é~8)%4"Ó’÷6fUö‡GGöfWF6‚‚–{XÎyK8îiˆîzK®y¨NZ(>yXÎ8Xˆn™º.8 ¢ÒfVVE'6W&8)"öfVVBö8Xˆn™º.8~8%52"ãò%52ãòFöŞ8îiz.ZÙŠz>ié&V†f–÷.8).{jŞhÈ8 ¢Òæ÷&ÖÆ—¦VD—FVÖ8).[îXZ^8~8'6W.Xh^˜:8~8şX[˜	¤—FVÒÖöFVÎ8).yIşh‰8 ¢Ò'6U÷7F'B‚–8‚'75÷'6V6ö×F–&–Æ—G’Æ–>8).jè¾8~8iz.ZÙ„’'&’6öçG&7N8).{jŞhÈ8 ¢Ò8æ÷væW"Æöö·W(i"7F÷&VBU$ÂfÆ–FF–öâ(i"†&FVæVBfWF6‚(i"'6R(i"…52×6fR–ÆöN8îšn[¨ş8).{jŞhÈ8 ¢ÒÓÔ[.yJ8îZéşŠÇFW7Bò&6†—FV7GW&R7FF–2FW7N8).‹ûŞXª8 ¢ÒD"66†VÖ8g&öçFVæN866†^8UF~8&WG'8şZHi»N8®8~8  ¢226V7W&R&6VÆ–æR4"ÓRò#2(	B##bÓrÓ3  ¢Ò…fÆÆ&6¾8„D"66†VÖ8åT’FVfVÇN8).{[Kˆ8 ¢Ò66†VÖ8äæf&"U$ÂFVfVÇN8).iˆîzK®y¨D…EE>8{[Kˆ8 ¢ÒÆVv7’†6‚Wf–FVæ6^8¾8(”'V–ÆNy+Z(>Y»®iÈ8âöÖçBöFFöF8).™šNXë¾8 ¢Òô„4…ô´U–8î{i{i®KùŞhÈ8;¾ZèXZ8¦&6·W8¾™j.88(¾˜¾yJk:hHş8).‹ûŞXª8 ¢ÒfW'6–öâòFW7G2ò6¶vRÖæ–fW7Bò–æ—F–Â6öÖÖ—N‹8~ii8)%#>8YÎiÉş8  ¢226V7W&R&6VÆ–æR4"ÓRò#"(	B##bÓrÓ3  ¢222v—B&RÖ6öÖÖ—B6ÆVçW  ¢ÒiÊ®KÛşyJ8äÆVv7i©~Xû~XÉn™j.i[X˜®™šN[èÎ8îx«nhX¾8).jÚ>[Èô6†V6·ö–çNXÉn8 ¢ÒX˜®™šNkˆ8õGvVWBT8¾Zûî88(¶FVB¦f67&—N8z›®8æÆ—7B—FVŞ8XúN8N8+>8:8;>888).X˜®™šN8 ¢ÒiÊ®KÛşyJ…gVR"ãRãr76WB÷'VçF–Ö^KéŞZÙ8îX˜®™šNkˆ8şx«nhX¾8…$TDÔRõ&öFÖzØ8).YÎiÉş8 ¢Òf—6–&ÆRfW'6–öâÖ&¶W.8)%4"ÓR#.8i»Nik8 ¢Ò6¶vRÖæ–fW7N8).iÈ{X.Xh^Zë8¾8(XhŞyIşh‰8 ¢Ò&öGV7N8å%52ôWF‚ô’ôD"&V†f–÷.ZHi»N8®8~8  ¢226V7W&R&6VÆ–æR4"ÓRò#(	B##bÓrÓ3  ¢222Fö7VÖVçFF–öâò–æ—F–Â6öÖÖ—BvFP ¢Ò$TDÔ^8)%6V7W&R&6VÆ–æ^ZèÎh‰i˜.x+8i»Nik8 ¢ÒÆVv7Šz>ié8ÖöFW&æ—¦F–öî86V7W&—G86†ævRÖ8&öFÖ8–æ—F–Â6öÖÖ—BvF^8).ih~i»XÉn8 ¢Ò&öGV7F–öâFWÆ÷–ÖVçBòæWrD"òF&ÆR&Vf—h˜¾šn8).i[Nyn8 ¢Ò6V7W&R&6VÆ–æ^8~hHşY»>y¨N8¾jè¾8~8şX‹n{HN8).iˆîzK®8 ¢Òv—D‡V"–æ—F–Â6öÖÖ—NZûî‹8¾8(—6V7&WBöFFöÆör÷6W76–öîzØ8).™šNZIn88(¾iÚK»n8).XhŞz+®Š¨Ş8 ¢Ò'VçF–Ö^j™şˆ;ŞZHi»N8®8~8%f—6–&ÆRfW'6–öâÖ&¶W.8î8õ4"Ó^8i»Nik8  ¢226V7W&R&6VÆ–æR4"ÓBò#(	B##bÓrÓ3  ¢222f–æÂ&Vw&W76–öâ÷6V7W&—G’ÖG&—€ ¢ÒWF†VçF–6F–öâG&ç67F–öâ&öÆÆ&6¾Ššnš‰>8).‹ûŞXª8 ¢Ò55$b7V6–Â×W6RFG&W72ÖG&—8).hº[Ë^8 ¢Ò…5>8'6W"f—‡GW&^855$b7W&f6^8B×F.8&W÷6—F÷'’ÆV²66î8).jŠ®ijŞz+®Š¨Ş8 ¢Òhº[Ë^Ššnš‰>8~jIÎX{®8~8şx›jè®yJ˜	D•cBô•cnXŠNZé®8îKˆŞ‹k>8).iˆîzK¤4”E.h¹.Y
+n8~Š9Î[Ë~8 ¢Ò¤•XhŞ[^™h¾[èÎ8îXZY¹î[‹Ššnš‰>8;·6V7&WB66î8;¶Öæ–fW7NxZ~Y8)%&VÆV6RvF^XÉn8  ¢226V7W&R&6VÆ–æR4"Ó2ò#"(	B##bÓrÓ3  ¢22266†VÖòFF–çFVw&—G’òF&ÆR&Vf—€ ¢Ò×•5ÂY	86æ—F—¦VB66†VÖ8).i[NX)8 ¢ÒWFc†Ö#E÷Væ–6öFUö6–8&VÆF–öç6†—”N8åTå4”täTNXÉn8VW'’GFW&îyJ„–æFW8W6W%ö6öæbçW6W%ö–FTä•T^8).Zé®{ê8 ¢ÒD%õD$ÄUõ$Td•†8).[îXZ^8~8'VçF–Ö^8îY»®Zé¢–uò¦KéŞZÙ8).™šNXë¾8 ¢Ò66†VÖç7ÆòVF—BòÖ–w&F–öâòf—‡GW&^8)'&Vf—Zûî[ùÎ8 ¢Òik8~8Nz›¤D.8¾8(™h¾Zx¾88(¾{XÎ‹zş8).‹ûŞXª8 ¢ÒW†—7F–ærÆVv7’D.Y	8&VfÆ–v‡BòÖ–w&F–öâò÷7FfÆ–v‡N8).yJhHş8 ¢ÒÆVv7’GWÆ–6FRö÷'†î8).ˆz®X¹^X˜®™šN8;¾{[Y8~8®8Nik˜yŞ8).{jŞhÈ8  ¢226V7W&R&6VÆ–æR4"Ó"ò#"(	B##bÓrÓ3  ¢222FöÒÆ–æ²†÷Ff—€ ¢ÒFöŞ8âÆÆ–æ²‡&VcÒ"âââ#æ8&VÃÒ&ÇFW&æFR&8ŠH~i[Æ–æ¾8).ZèXZ8¾˜h©î88(¾Xznyn8).KúîjÚ>8 ¢Ò–—FYè²òV&Æ–6¶WYè¾8äFöÒf—‡GW&^8).‹ûŞXª8  ¢226V7W&R&6VÆ–æR4"Ó8	Ã"ò#(	B##bÓrÓ3  ¢222ÆVv7’'Vrf—†W2ò…‚7F&–Æ—¦F–öà ¢ÒN8+ş89fÆö6F–öî8)#óó"ó>8{[Kˆ8 ¢ÒfVVBK»n8;³^K»niÊ®k¨8;³N8îXŞi[Kº^ZIn8îŠzK®KˆŞX[~Y8).KúîjÚ>8 ¢ÒfVVBG—^XŠNZé®8ŠŠŞZé®X
+NKùŞhÈ8K¨Î˜x×7V&Ö—N8…DÔÎjx¾˜
+zØ8äÆVv7KˆŞX[~Y8).i[Nyn8 ¢Ò…‚ã¾8)%'VçF–Ö^iÈKØîŠhK»n88~8niˆîzK®8 ¢Òv&æ–ærôæ÷F–6RôFW&V6FVBõG—TW'&÷.8¾8N8®8Î8(¾Z(>yXÎ8).i[Nyn8 ¢Ò%52"ãò%52ãòFöÒ'6W.8îZKiY~h›8N8).iKYhN8  ¢226V7W&R&6VÆ–æR4"Ó8	Ãò#(	B##bÓrÓ3  ¢222fÆ–FF–öâò55$bò…50 ¢Ò”N8VçVŞ8ÆVæwF8U$Î8ç7G&–7BfÆ–FF–öî8).‹ûŞXª8 ¢ÒfVVBfWF68)'6W'fW"×6–FR&Vv—7FW&VBU$Î8¾8(ZéşŠÎ8 ¢Ò…EEô…EE>™™Zé®8Då2ô•jIÎŠ‹Î8&VF—&V7NXhŞjIÎŠ‹Î8DÅ2fW&–f–6F–öî8F–ÖV÷WN8&öGKˆ®™™8).[îXZ^8 ¢Ò7Fö6¾KùŞZÙi˜.8îŠ‰K¨¾89®8;Î8+XhÔfWF68).[¸>jÚ.8 ¢ÒfVVBôD"õTX{®X©¾8)&W66^8~8fVVB–ÆöN8)'Æ–âFW‡B²fÆ–FFVBU$Î8jÚ>ŠhşXÉn8  ¢226V7W&R&6VÆ–æR4"Ó^8	Ãrò#(	B##bÓrÓ3  ¢222’òWF†÷&—¦F–öâò55$` ¢ÒV&Æ–2ö•÷cç‡8)'F†–â…EE&÷VæF'8{Šî[ş8~8ö’ç‡8¶F—7F6†W.8).Xˆn™º.8 ¢Òõ5BÖöæÇ’W‡Æ–6—B7F–öâ8i[Nyn8 ¢Ò÷væW.8÷&WVW7NX
+N8~8ş8®8şŠ¨ŞŠ‹Îkˆ8õ6W76–öî8¾8(k®Zé®8 ¢Ò6öçFVçB÷6WGF–æw2÷F'2÷7Fö6²öfVVBfWF68†÷væW'6†—Væf÷&6VÖVçN8).‹ûŞXª8 ¢ÒÆöv–âò&Vv—7FW"ò’òÆöv÷WN8„55$n8).˜yJ8  ¢226V7W&R&6VÆ–æR4"Ó>8	ÃBò#"(	B##bÓrÓ# ¢2226W76–öâòWF†VçF–6F–öà ¢Ò6W76–öîXznyn8).KŠŞZJîXÉn8~8&—fFRf"÷6W76–öâö8KùŞZÙ8 ¢Ò7G&–7BÖöF^86öö¶–RÖöæÇ8‡GGöæÇ86ÖU6—FSÔÆ8…EE>i˜%6V7W&^8).ŠŠŞZé®8 ¢ÒÆöv–îi˜%6W76–öâ”N8).XhŞyIşh‰8 ¢Ò–FÆRò'6öÇWFRF–ÖV÷WN8).[îXZ^8 ¢Ò77v÷&Eö†6‚‚–ò77v÷&E÷fW&–g’‚–8z{¾ŠÎ8 ¢Òæ÷&ÖÆ—¦VBVÖ–Â–FVçF—G’²„Ô>8).hêyJ8 ¢ÒGWÆ–6FR–FVçF—G8)&f–Â6Æ÷6VN8 ¢Ò&Vv—7G&F–öâ7v—F68„Æöv–âF‡&÷GFÆ^8).‹ûŞXª8 ¢ÒÆVv7’7&VFVçF–Îˆz®X¹^z{¾ŠÎ8şŠÎ8(ş8®8Nik˜yŞ8z+®Zé®8  ¢226V7W&R&6VÆ–æR4"Ó8	Ã"(	B##bÓrÓ# ¢222ÆVv7’g&VW¦Rò&÷VæF'’òDòf÷VæFF–öà ¢ÒÆVv7’6÷W&6^8æ†6‚òG&V^8).XxŞ{YŠ‰˜Ë.8 ¢ÒV&Æ–2ö8).YJşKˆ8åvV.XZÎ™h¾š	Yùş8Xˆn™º.8 ¢Ò6V7&WG2òD"GV×òÆöw2ò6W76–öî8).XZÎ™h¾Zûî‹8¾8(Xˆn™º.8 ¢ÒDòW†6WF–öâÖöF^8æF—fR&W&^876ö2fWF68×•5ÂWFc†Ö#F8).ŠŠŞZé®8 ¢Ò5Â&ÖWFW"&–æF–æ~8).[îXZ^8 ¢ÒW6W"²W6W%ö6öænKÙÎh‰8)'G&ç67F–öîXÉn8 ¢Òiz^i˜&f÷&ÖN8)"’ÖÒÖBƒ¦“§68KúîjÚ>8   ¢22cã"Ô0¥6V&6‚fVVNûÈy›¾˜Ë%%5>jŠ®ijŞjIÎ{J.8X[˜	¥%5>8äBôõ.88*¾8;Î88X¾XŠ^i»NikûÈ8).‹ûŞXª8$D"66†VÖZHi»N8®8rà

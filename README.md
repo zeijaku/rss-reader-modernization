@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.35.3`
-Release tag: `v1.35.3`
+**Stable release:** `RSS Reader Modernization 1.35.4`
+Release tag: `v1.35.4`
+
+Version 1.35.4は、MailとRSSの失敗を安全で具体的な分類へ整理し、利用者が再接続・再試行・設定確認・管理者確認のどれを行うべきか判断しやすくします。Mailでは暗号鍵、OAuth state、Google通信、IMAP／SMTP、添付、Sent保存などを区別し、RSSではURL／Security拒否、接続失敗、一時障害、HTTP拒否、Feed形式不正、RSS Reader内部障害の6分類をCardとFeed Healthで共通化します。Providerの生Message、Credential、Tokenは表示せず、DB Migration、必須Config、外部Dependencyの追加はありません。
 
 Version 1.35.3は、READMEの現行機能・Dependency・Release Workflow記述を実装へ揃え、動的に読み込むJavaScript／CSSのAsset Revisionを`app/version.php`から継承する方式へ一元化します。Application機能、DB Migration、必須Config、外部Dependencyの追加はありません。
 

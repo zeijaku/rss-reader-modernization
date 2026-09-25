@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/feed/feed_error.php';
+
 const FEED_HEALTH_ERROR_REASON_MAX_LENGTH = 255;
 const FEED_HEALTH_ERROR_CODE_MAX_LENGTH = 64;
 const FEED_HEALTH_EFFECTIVE_URL_MAX_LENGTH = 1024;
@@ -24,6 +26,7 @@ function feed_health_unknown_payload(int $contentId = 0): array
         'last_successful_fetch_at' => '',
         'latest_article_at' => '',
         'http_status' => 0,
+        'error_category' => '',
         'error_code' => '',
         'error_reason' => '',
         'consecutive_failure_count' => 0,
@@ -126,6 +129,15 @@ function feed_health_payload_from_row(array $row): array
     }
 
     $labels = ['normal' => 'Normal', 'warning' => 'Warning', 'error' => 'Error', 'unknown' => 'Unknown'];
+    $httpStatus = max(0, min(599, (int) ($row['http_status'] ?? 0)));
+    $internalErrorCode = feed_health_error_code($row['error_code'] ?? '', '');
+    $publicError = ($status === 'error' || $internalErrorCode !== '')
+        ? feed_public_error_details(
+            $internalErrorCode === 'parse_error' ? 'parse' : 'fetch',
+            $internalErrorCode !== '' ? $internalErrorCode : 'transport_error',
+            $httpStatus
+        )
+        : null;
     return [
         'content_id' => $contentId,
         'status' => $status,
@@ -133,9 +145,11 @@ function feed_health_payload_from_row(array $row): array
         'last_checked_at' => $lastChecked,
         'last_successful_fetch_at' => feed_health_datetime_value($row['last_successful_fetch_at'] ?? ''),
         'latest_article_at' => $latestArticle,
-        'http_status' => max(0, min(599, (int) ($row['http_status'] ?? 0))),
-        'error_code' => feed_health_error_code($row['error_code'] ?? '', ''),
-        'error_reason' => feed_health_safe_text($row['error_reason'] ?? '', FEED_HEALTH_ERROR_REASON_MAX_LENGTH),
+        'http_status' => $httpStatus,
+        'error_category' => $publicError['code'] ?? '',
+        'error_code' => $internalErrorCode,
+        'error_reason' => $publicError['message']
+            ?? feed_health_safe_text($row['error_reason'] ?? '', FEED_HEALTH_ERROR_REASON_MAX_LENGTH),
         'consecutive_failure_count' => $failures,
         'redirected' => $redirected,
         'effective_url' => feed_health_effective_url($row['effective_url'] ?? ''),

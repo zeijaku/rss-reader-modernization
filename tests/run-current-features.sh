@@ -27,6 +27,10 @@ node --check "$ROOT/public/js/drawer-categories.js"
 echo '== Current feature contracts: Feed Health =='
 python3 "$SCRIPT_DIR/test_v122b_feed_health.py"
 php "$SCRIPT_DIR/test_v122b_feed_health_runtime.php"
+python3 "$SCRIPT_DIR/test_current_feed_error_diagnostics_contract.py"
+node "$SCRIPT_DIR/test_current_feed_error_ui.js"
+php "$SCRIPT_DIR/test_current_feed_error_diagnostics.php"
+php -l "$ROOT/app/feed/feed_error.php"
 node --check "$ROOT/public/js/feed-health.js"
 node --check "$ROOT/public/js/rss-management.js"
 
@@ -178,9 +182,12 @@ node --check "$ROOT/public/js/remote-permissions.js"
 
 echo '== Current feature contracts: Mail =='
 python3 "$SCRIPT_DIR/test_current_mail_contract.py"
+python3 "$SCRIPT_DIR/test_current_mail_error_diagnostics_contract.py"
 php "$SCRIPT_DIR/test_current_mail_latest_uids.php"
 php "$SCRIPT_DIR/test_current_google_oauth.php"
 php "$SCRIPT_DIR/test_current_google_oauth_session_cache.php"
+php "$SCRIPT_DIR/test_current_mail_error_diagnostics.php"
+php -l "$ROOT/app/mail/mail_error.php"
 php -l "$ROOT/app/mail/mail_google_oauth.php"
 php -l "$ROOT/app/mail/mail_client.php"
 php -l "$ROOT/app/mail/mail_widget.php"

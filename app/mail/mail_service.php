@@ -45,8 +45,8 @@ function mail_service_test_account(int $ownerId, int $accountId): array
 
     try {
         $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
-    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
-        return ['ok' => false, 'code' => 'credential_unavailable'];
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException $exception) {
+        return ['ok' => false, 'code' => mail_log_auth_failure('account.test.imap', $ownerId, $accountId, $exception)];
     }
 
     try {
@@ -93,8 +93,8 @@ function mail_service_test_smtp_account(int $ownerId, int $accountId): array
                 'authentication' => 'plain',
             ];
         }
-    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
-        return ['ok' => false, 'code' => 'smtp_credential_unavailable'];
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException $exception) {
+        return ['ok' => false, 'code' => mail_log_auth_failure('account.test.smtp', $ownerId, $accountId, $exception)];
     }
 
     try {
@@ -161,8 +161,8 @@ function mail_service_send_plain_text(int $ownerId, int $accountId, array $input
                 'authentication' => 'plain',
             ];
         }
-    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
-        return ['ok' => false, 'code' => 'smtp_credential_unavailable'];
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException $exception) {
+        return ['ok' => false, 'code' => mail_log_auth_failure('message.send.smtp', $ownerId, $accountId, $exception)];
     }
 
     try {
@@ -212,13 +212,13 @@ function mail_service_send_plain_text(int $ownerId, int $accountId, array $input
     // username/password. Decrypt only after a known successful SMTP send.
     try {
         $imapAuth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
-    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException $exception) {
         return [
             'ok' => true,
             'code' => 'sent',
             'sent_save_status' => 'failed',
             'sent_save_source' => 'none',
-            'sent_save_code' => 'credential_unavailable',
+            'sent_save_code' => mail_log_auth_failure('message.sent.imap', $ownerId, $accountId, $exception),
         ];
     }
 
@@ -290,8 +290,8 @@ function mail_service_reply_context(int $ownerId, int $widgetId, int $uid, strin
 
     try {
         $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
-    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
-        return ['ok' => false, 'code' => 'credential_unavailable'];
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException $exception) {
+        return ['ok' => false, 'code' => mail_log_auth_failure('message.reply.imap', $ownerId, $accountId, $exception)];
     }
 
     try {
