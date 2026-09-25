@@ -779,3 +779,55 @@ function api_link_item_delete(int $userId, array $input): array
     }
     return api_success(['link_id' => $linkId]);
 }
+
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_notification_list(int $userId, array $input): array
+{
+    $limit = app_validate_positive_int($input['limit'] ?? 50) ?? 50;
+    try {
+        return api_success(notification_list($userId, min(100, $limit)));
+    } catch (PDOException $exception) {
+        error_log('Notification list failed: ' . $exception->getMessage());
+        return api_error('notification_unavailable', 'Notification Center migration is required.', 503);
+    }
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_notification_read(int $userId, array $input): array
+{
+    $id = api_positive_int($input, 'notification_id');
+    if ($id === null) return api_validation_error('notification_id must be a positive integer.');
+    try {
+        if (!notification_mark_read($userId, $id)) return api_error('not_found', 'Notification was not found.', 404);
+        return api_success(['notification_id' => $id]);
+    } catch (PDOException $exception) {
+        error_log('Notification read failed: ' . $exception->getMessage());
+        return api_error('notification_unavailable', 'Notification Center is unavailable.', 503);
+    }
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_notification_read_all(int $userId, array $input): array
+{
+    try {
+        return api_success(['updated' => notification_mark_all_read($userId)]);
+    } catch (PDOException $exception) {
+        error_log('Notification read-all failed: ' . $exception->getMessage());
+        return api_error('notification_unavailable', 'Notification Center is unavailable.', 503);
+    }
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_notification_hide(int $userId, array $input): array
+{
+    $id = api_positive_int($input, 'notification_id');
+    if ($id === null) return api_validation_error('notification_id must be a positive integer.');
+    try {
+        if (!notification_hide($userId, $id)) return api_error('not_found', 'Notification was not found.', 404);
+        return api_success(['notification_id' => $id]);
+    } catch (PDOException $exception) {
+        error_log('Notification hide failed: ' . $exception->getMessage());
+        return api_error('notification_unavailable', 'Notification Center is unavailable.', 503);
+    }
+}
