@@ -270,6 +270,7 @@ if ($tabParam === 'stock') {
     <!-- Fontawesome -->
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/all.css'), ENT_QUOTES, 'UTF-8'); ?>">
         <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/dashboard.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/notification-center.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/utility-widgets.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/mini-game.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/cursor-field.css'), ENT_QUOTES, 'UTF-8'); ?>">
@@ -411,6 +412,8 @@ function search_feed_form_fields(string $prefix): string
     </span>
   </div>
 
+  <button type="button" class="app-notification-button d-lg-none ms-auto" data-notification-open aria-label="通知センターを開く"><i class="far fa-bell" aria-hidden="true"></i><span class="app-notification-badge" data-notification-badge hidden>0</span></button>
+
   <button class="navbar-toggler drawer-toggle app-navbar-menu-button" type="button" data-bs-toggle="offcanvas" data-bs-target="#drawerMenu" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
     <i class="fas fa-bars" aria-hidden="true"></i>
   </button>
@@ -431,12 +434,31 @@ function search_feed_form_fields(string $prefix): string
         }
     ?>
     </ul>
+    <button type="button" class="app-notification-button me-2" data-notification-open aria-label="通知センターを開く"><i class="far fa-bell" aria-hidden="true"></i><span class="app-notification-badge" data-notification-badge hidden>0</span></button>
     <button class="btn drawer-toggle app-navbar-menu-button app-navbar-menu-button-desktop" type="button" data-bs-toggle="offcanvas" data-bs-target="#drawerMenu" aria-controls="drawerMenu" aria-expanded="false" aria-label="メニューを開く">
       <i class="fas fa-bars" aria-hidden="true"></i>
     </button>
   </div>
 </nav><!-- /Navbar -->
 </header>
+
+
+<div class="modal fade notification-center-modal" id="notificationCenterModal" tabindex="-1" aria-labelledby="notificationCenterModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title fs-5" id="notificationCenterModalLabel"><i class="far fa-bell me-2" aria-hidden="true"></i>通知センター</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex justify-content-end mb-2"><button type="button" class="btn btn-sm btn-outline-secondary" id="notificationMarkAllRead">すべて既読</button></div>
+        <div id="notificationCenterStatus" class="notification-center-status" role="status" aria-live="polite" hidden></div>
+        <div id="notificationCenterList" class="notification-center-list"></div>
+        <div id="notificationCenterEmpty" class="notification-center-empty" hidden>現在の通知はありません。</div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="app-notice" class="app-notice alert" role="status" aria-live="polite" aria-atomic="true" tabindex="-1" hidden></div>
 
