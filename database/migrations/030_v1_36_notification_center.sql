@@ -1,6 +1,7 @@
 -- V1.36-A Dashboard Notification Center foundation.
 -- Apply after 029_v1_35_remember_2fa_trust.sql.
 -- Set @table_prefix to the same value as DB_TABLE_PREFIX before execution.
+-- Rollback (only after rolling application code back): DROP TABLE <DB_TABLE_PREFIX>notification;
 
 SET NAMES utf8mb4;
 SET @table_prefix = 'ig_';
