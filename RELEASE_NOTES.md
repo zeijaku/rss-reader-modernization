@@ -1,48 +1,53 @@
-# RSS Reader Modernization 1.35.3
+# RSS Reader Modernization 1.35.4
 
-V1.35.3 is a maintenance release that aligns current project documentation and centralizes revision propagation for dynamically loaded frontend assets.
+V1.35.4 is a diagnostics release that makes Mail and RSS failures more specific and actionable while keeping provider messages, credentials, and tokens out of the browser response.
 
 ## Main changes
 
-### Documentation maintenance
+### Mail error diagnostics
 
-- Align the README feature list, frontend dependency versions, GitHub Actions description, release workflow, and roadmap wording with the implemented repository state.
-- Clearly distinguish current behavior from historical V1.0 and Milestone 4 descriptions.
-- Record Gmail OAuth2, received/Sent attachment download, 24-hour trusted 2FA browsers, adjacent-month Calendar entries, Calendar partial refresh, and Remote Editor line numbers as established behavior.
+- Replace the broad credential re-entry response with fixed reason codes and safe Japanese guidance.
+- Distinguish missing or invalid encryption keys, key mismatch, damaged encrypted data, OAuth reconnection, expired or mismatched OAuth state, denied or incomplete Google authorization, Google timeout/TLS/response failures, invalid OAuth server configuration, and Mail storage failure.
+- Preserve separate IMAP, SMTP, input validation, disabled-account, folder, received-attachment, and sent-attachment failures.
+- Distinguish a successful send followed by a Sent-folder save failure, including the case where an uncertain save must not be retried automatically.
+- Add a safe 12-character reference to unexpected Mail and OAuth callback failures without exposing raw provider details.
 
-### Asset revision centralization
+### RSS error diagnostics
 
-- Keep `app/version.php` as the single release and asset-revision input.
-- Derive Calendar, Camera streaming, and RSS management child asset revisions from their PHP-versioned entry scripts.
-- Remove 51 copied version markers: 48 from Calendar, one from Camera streaming, and two from RSS management.
-- Preserve dependency order, bounded static-asset retry, duplicate-load markers, and revision-free fallback behavior.
+- Map existing RSS transport and parser outcomes into six public categories: URL/security blocking, DNS/connection failure, timeout/temporary failure, HTTP rejection or rate limiting, invalid Feed format, and local RSS Reader server failure.
+- Use only the six allow-listed messages in RSS Cards and retain a generic fallback for unknown API or provider text.
+- Show the same classification and safe Japanese guidance in Feed Health for persisted failures.
+- Keep the existing fetch boundary, DNS pinning, TLS verification, response limits, retry and Retry-After behavior, cache, stale-on-error behavior, persistence, and parser behavior unchanged.
 
 ## Database and configuration
 
-- No database migration is required when updating from V1.35.2.
-- No required configuration, credential, dependency, or endpoint change is introduced.
+- No database migration is required when updating from V1.35.3.
+- No required configuration, credential format, external dependency, or endpoint change is introduced.
 
 ## Security and compatibility
 
-- Dynamic loaders accept only revision characters in `[A-Za-z0-9._-]`.
-- Only the `v` revision is inherited; unrelated entry-script query parameters are not copied to child assets.
-- No new external request, API, or application feature is introduced.
+- Browser responses use fixed allow-listed messages rather than raw provider or cURL messages.
+- Credentials, passwords, OAuth tokens, authorization codes, and encryption material are not added to error responses or diagnostic references.
+- Existing Password and Gmail OAuth2 Mail accounts remain compatible.
+- Existing RSS URLs, Feed Health records, retry state, and cache files remain compatible.
 
-## Production verification completed
+## Verification completed
 
-- The V1.35.3 development checkpoint was applied to the production environment without observed problems.
-- Dashboard and Calendar operation were confirmed after the documentation and asset-revision changes.
+- Static contracts cover Mail reason mapping, OAuth callback failures, unexpected-reference formatting, the six RSS categories, allow-listed Card messages, and Feed Health translation.
+- JavaScript runtime checks cover the RSS Card display mapping and fallback behavior.
+- Current Mail, Feed Health, version, asset-revision, workflow-hygiene, and dependency-hygiene checks are included in the release gate.
 
 ## Verification limits
 
 - Final PHP 8.1 and PHP 8.4 CI and the release workflow must pass before the immutable tag and assets are considered complete.
-- Browser cache behavior can vary slightly by browser and intermediary cache configuration.
+- Provider-specific failures can only be reproduced when the corresponding external failure occurs; unknown failures continue to use a safe generic message and reference.
+- The release does not automatically deploy to the production environment.
 
 ## Release assets
 
 The release workflow publishes:
 
-- `rss-reader-modernization-1.35.3.zip`
-- `rss-reader-modernization-1.35.3.zip.sha256`
-- `rss-reader-modernization-1.35.3-complete.zip`
-- `rss-reader-modernization-1.35.3-complete.zip.sha256`
+- `rss-reader-modernization-1.35.4.zip`
+- `rss-reader-modernization-1.35.4.zip.sha256`
+- `rss-reader-modernization-1.35.4-complete.zip`
+- `rss-reader-modernization-1.35.4-complete.zip.sha256`

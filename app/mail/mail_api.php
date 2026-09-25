@@ -2,42 +2,84 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/mail_error.php';
+
+/** @return array{status:int,body:array<string,mixed>}|null */
+function api_mail_error_from_code(string $code): ?array
+{
+    $normalized = match ($code) {
+        'credential_unavailable' => 'mail_credential_unavailable',
+        'smtp_credential_unavailable' => 'mail_smtp_credential_unavailable',
+        default => $code,
+    };
+    $details = mail_public_error_details($normalized);
+    return $details === null
+        ? null
+        : api_error($details['code'], $details['message'], $details['status']);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_mail_storage_failure(): array
+{
+    return api_mail_error_from_code('mail_storage_unavailable')
+        ?? api_error('mail_storage_unavailable', 'Mail Accountの保存領域を利用できません。', 503);
+}
+
 function api_mail_validation_message(string $reason): string
 {
     return match ($reason) {
-        'invalid_display_name' => 'Mail account display name is invalid.',
-        'invalid_username' => 'IMAP username is invalid.',
-        'password_required' => 'IMAP password is required.',
-        'invalid_password' => 'IMAP password is invalid.',
-        'invalid_enabled' => 'enabled must be 0 or 1.',
-        'invalid_host' => 'IMAP host must be a valid public FQDN or IP address.',
-        'invalid_transport' => 'Use SSL on port 993 or STARTTLS on port 143.',
-        'dns_failed' => 'IMAP host could not be resolved.',
-        'non_public_address' => 'IMAP host resolves to a non-public address.',
-        'invalid_smtp_enabled' => 'SMTP enabled must be 0 or 1.',
-        'invalid_smtp_use_imap_credentials' => 'SMTP credential mode is invalid.',
-        'invalid_smtp_host' => 'SMTP host must be a valid public FQDN or IP address.',
-        'invalid_smtp_transport' => 'Use SSL/TLS on port 465 or STARTTLS on port 587 for SMTP.',
-        'smtp_dns_failed' => 'SMTP host could not be resolved.',
-        'smtp_non_public_address' => 'SMTP host resolves to a non-public address.',
-        'smtp_username_required' => 'SMTP username is required when IMAP credentials are not reused.',
-        'invalid_smtp_username' => 'SMTP username is invalid.',
-        'smtp_password_required' => 'SMTP password is required when IMAP credentials are not reused.',
-        'invalid_smtp_password' => 'SMTP password is invalid.',
-        'invalid_from_address' => 'From address is invalid.',
-        'invalid_from_name' => 'From name is invalid.',
-        'invalid_sent_save_mode' => 'Sent save mode must be auto, server, or reader.',
-        'invalid_recipient' => 'To address is invalid.',
-        'invalid_subject' => 'Subject is invalid.',
-        'invalid_body' => 'Mail body is invalid.',
-        'invalid_reply_reference' => 'Mail reply reference is invalid.',
-        'invalid_attachment_name' => 'Attachment file name is invalid.',
-        'attachment_type_blocked' => 'This attachment file type is not allowed.',
-        'attachment_count_exceeded' => 'Up to 5 attachment files are allowed.',
-        'attachment_too_large' => 'Each attachment must be 10 MB or smaller.',
-        'attachment_total_too_large' => 'Total attachment size must be 20 MB or smaller.',
-        'invalid_attachment_upload' => 'Attachment upload failed.',
-        default => 'Mail account settings are invalid.',
+        'invalid_display_name' => 'Mail Accountの表示名が正しくありません。',
+        'invalid_username' => 'IMAP User名が正しくありません。',
+        'password_required' => 'IMAP Passwordを入力してください。',
+        'invalid_password' => 'IMAP Passwordが正しくありません。',
+        'invalid_enabled' => 'Mail Accountの有効・無効設定が正しくありません。',
+        'invalid_host' => 'IMAP Hostには公開FQDNまたは公開IP Addressを指定してください。',
+        'invalid_transport' => 'IMAPはSSL（993）またはSTARTTLS（143）を指定してください。',
+        'dns_failed' => 'IMAP Hostの名前解決に失敗しました。Host名を確認してください。',
+        'non_public_address' => 'IMAP HostがPrivate Addressを指しています。公開Addressを指定してください。',
+        'invalid_smtp_enabled' => 'SMTPの有効・無効設定が正しくありません。',
+        'invalid_smtp_use_imap_credentials' => 'SMTP認証情報の選択が正しくありません。',
+        'invalid_smtp_host' => 'SMTP Hostには公開FQDNまたは公開IP Addressを指定してください。',
+        'invalid_smtp_transport' => 'SMTPはSSL/TLS（465）またはSTARTTLS（587）を指定してください。',
+        'smtp_dns_failed' => 'SMTP Hostの名前解決に失敗しました。Host名を確認してください。',
+        'smtp_non_public_address' => 'SMTP HostがPrivate Addressを指しています。公開Addressを指定してください。',
+        'smtp_username_required' => 'IMAP認証情報を共用しない場合はSMTP User名が必要です。',
+        'invalid_smtp_username' => 'SMTP User名が正しくありません。',
+        'smtp_password_required' => 'IMAP認証情報を共用しない場合はSMTP Passwordが必要です。',
+        'invalid_smtp_password' => 'SMTP Passwordが正しくありません。',
+        'invalid_from_address' => '差出人Addressが正しくありません。',
+        'invalid_from_name' => '差出人名が正しくありません。',
+        'invalid_sent_save_mode' => '送信済み保存方式が正しくありません。',
+        'invalid_recipient' => '送信先Addressが正しくありません。',
+        'invalid_subject' => '件名が正しくありません。',
+        'invalid_body' => 'Mail本文が正しくありません。',
+        'invalid_reply_reference' => '返信元Mailの識別情報が正しくありません。',
+        'invalid_attachment_name' => '添付ファイル名が正しくありません。',
+        'attachment_type_blocked' => 'この種類の添付ファイルは送信できません。',
+        'attachment_count_exceeded' => '添付ファイルは5個までです。',
+        'attachment_too_large' => '添付ファイル1個の上限は10 MBです。',
+        'attachment_total_too_large' => '添付ファイル合計の上限は20 MBです。',
+        'invalid_attachment_upload' => '添付ファイルのUploadに失敗しました。',
+        default => 'Mail Account設定が正しくありません。',
+    };
+}
+
+function api_mail_sent_save_message(string $code): string
+{
+    $details = mail_public_error_details($code);
+    if ($details !== null) {
+        return $details['message'];
+    }
+    return match ($code) {
+        '' => '',
+        'sent_folder_unavailable' => '送信済みFolderを確認できませんでした。',
+        'sent_save_uncertain' => '送信済みへの保存結果を確認できません。重複防止のため自動再試行しません。',
+        'message_unavailable' => '送信済みへ保存するMailデータを作成できませんでした。',
+        'dependency_unavailable' => '送信済みへの保存に必要なMail機能を利用できません。',
+        'invalid_folder' => '送信済みFolderの設定が正しくありません。',
+        'imap_rejected' => 'Mailは送信しましたが、IMAP Serverが送信済みへの保存を拒否しました。',
+        'connection_failed' => 'Mailは送信しましたが、IMAP Serverへ接続できず送信済みに保存できませんでした。',
+        default => 'Mailは送信しましたが、送信済みへの保存を確認できませんでした。',
     };
 }
 
@@ -46,13 +88,23 @@ function api_mail_internal_failure(string $operation, int $userId, Throwable $ex
 {
     // Do not log exception messages here: IMAP/SMTP/library messages may contain
     // endpoint data and this layer must never risk credential leakage.
+    try {
+        $reference = bin2hex(random_bytes(6));
+    } catch (Throwable) {
+        $reference = substr(hash('sha256', uniqid('', true)), 0, 12);
+    }
     error_log(sprintf(
-        'Mail API failure operation=%s user_id=%d class=%s',
+        'Mail API failure ref=%s operation=%s user_id=%d class=%s',
+        $reference,
         $operation,
         $userId,
         $exception::class
     ));
-    return api_error('mail_operation_failed', 'Mail operation failed.', 500);
+    return api_error(
+        'mail_operation_failed',
+        'Mail処理を完了できませんでした。参照番号: ' . $reference,
+        500
+    );
 }
 
 /** @return array{status:int,body:array<string,mixed>} */
@@ -61,7 +113,7 @@ function api_mail_account_list(int $userId, array $input): array
     try {
         return api_success(['accounts' => mail_service_list_accounts($userId)]);
     } catch (PDOException $exception) {
-        return api_error('mail_account_unavailable', 'Mail account migration is required.', 503);
+        return api_mail_storage_failure();
     } catch (Throwable $exception) {
         return api_mail_internal_failure('account.list', $userId, $exception);
     }
@@ -76,11 +128,9 @@ function api_mail_google_oauth_begin(int $userId): array
             'authorization_url' => $result['authorization_url'],
         ]);
     } catch (AppMailGoogleOAuthException $exception) {
-        return api_error(
-            'mail_google_oauth_unavailable',
-            'Gmail OAuth2 is not configured or could not be started.',
-            503
-        );
+        $code = mail_log_auth_failure('oauth.google.begin', $userId, null, $exception);
+        return api_mail_error_from_code($code)
+            ?? api_error('mail_oauth_unavailable', 'Gmail OAuth2を開始できませんでした。', 503);
     } catch (Throwable $exception) {
         return api_mail_internal_failure('oauth.google.begin', $userId, $exception);
     }
@@ -128,9 +178,11 @@ function api_mail_account_create(int $userId, array $input): array
     } catch (AppMailValidationException $exception) {
         return api_validation_error(api_mail_validation_message($exception->reason()));
     } catch (AppMailCredentialException $exception) {
-        return api_error('mail_credential_unavailable', 'Mail credential encryption is unavailable.', 503);
+        $code = mail_log_auth_failure('account.create', $userId, null, $exception);
+        return api_mail_error_from_code($code)
+            ?? api_error('mail_credential_unavailable', 'Mail認証情報を保存できませんでした。', 503);
     } catch (PDOException $exception) {
-        return api_error('mail_account_unavailable', 'Mail account migration is required.', 503);
+        return api_mail_storage_failure();
     } catch (Throwable $exception) {
         return api_mail_internal_failure('account.create', $userId, $exception);
     }
@@ -151,14 +203,16 @@ function api_mail_account_update(int $userId, array $input): array
     try {
         $account = mail_service_update_account($userId, $accountId, api_mail_account_input($input, $includeSmtp));
         return $account === null
-            ? api_error('not_found', 'Mail account was not found.', 404)
+            ? api_error('not_found', 'Mail Accountが見つかりません。', 404)
             : api_success(['account' => $account]);
     } catch (AppMailValidationException $exception) {
         return api_validation_error(api_mail_validation_message($exception->reason()));
     } catch (AppMailCredentialException $exception) {
-        return api_error('mail_credential_unavailable', 'Mail credential encryption is unavailable.', 503);
+        $code = mail_log_auth_failure('account.update', $userId, $accountId, $exception);
+        return api_mail_error_from_code($code)
+            ?? api_error('mail_credential_unavailable', 'Mail認証情報を保存できませんでした。', 503);
     } catch (PDOException $exception) {
-        return api_error('mail_account_unavailable', 'Mail account migration is required.', 503);
+        return api_mail_storage_failure();
     } catch (Throwable $exception) {
         return api_mail_internal_failure('account.update', $userId, $exception);
     }
@@ -174,7 +228,7 @@ function api_mail_account_delete(int $userId, array $input): array
 
     try {
         if (mail_account_find_owned($userId, $accountId, false, false) === null) {
-            return api_error('not_found', 'Mail account was not found.', 404);
+            return api_error('not_found', 'Mail Accountが見つかりません。', 404);
         }
         if (mail_account_active_widget_count($userId, $accountId) > 0) {
             return api_error(
@@ -185,9 +239,9 @@ function api_mail_account_delete(int $userId, array $input): array
         }
         return mail_service_delete_account($userId, $accountId)
             ? api_success(['mail_account_id' => $accountId])
-            : api_error('not_found', 'Mail account was not found.', 404);
+            : api_error('not_found', 'Mail Accountが見つかりません。', 404);
     } catch (PDOException $exception) {
-        return api_error('mail_account_unavailable', 'Mail account migration is required.', 503);
+        return api_mail_storage_failure();
     } catch (Throwable $exception) {
         return api_mail_internal_failure('account.delete', $userId, $exception);
     }
@@ -215,35 +269,40 @@ function api_mail_account_test(int $userId, array $input): array
     } catch (AppMailValidationException $exception) {
         return api_validation_error(api_mail_validation_message($exception->reason()));
     } catch (PDOException $exception) {
-        return api_error('mail_account_unavailable', 'Mail account migration is required.', 503);
+        return api_mail_storage_failure();
     } catch (Throwable $exception) {
         return api_mail_internal_failure('account.test.' . $connection, $userId, $exception);
+    }
+
+    $authFailure = api_mail_error_from_code((string) ($result['code'] ?? ''));
+    if ($authFailure !== null) {
+        return $authFailure;
     }
 
     if ($connection === 'smtp') {
         return match ($result['code']) {
             'connected' => api_success(['connected' => true, 'connection' => 'smtp']),
-            'not_found' => api_error('not_found', 'Mail account was not found.', 404),
-            'disabled' => api_error('mail_account_disabled', 'Mail account is disabled.', 409),
-            'smtp_disabled' => api_error('mail_smtp_disabled', 'SMTP sending is disabled for this account.', 409),
-            'smtp_dependency_unavailable' => api_error('mail_smtp_dependency_unavailable', 'SMTP dependency is unavailable.', 503),
-            'smtp_credential_unavailable' => api_error('mail_smtp_credential_unavailable', 'SMTP credential must be re-entered.', 503),
+            'not_found' => api_error('not_found', 'Mail Accountが見つかりません。', 404),
+            'disabled' => api_error('mail_account_disabled', 'Mail Accountが無効です。Account管理で有効にしてください。', 409),
+            'smtp_disabled' => api_error('mail_smtp_disabled', 'このMail AccountではSMTP送信が無効です。', 409),
+            'smtp_dependency_unavailable' => api_error('mail_smtp_dependency_unavailable', 'SMTP接続に必要なMail機能を利用できません。Server設定を確認してください。', 503),
+            'smtp_credential_unavailable' => api_error('mail_smtp_credential_unavailable', 'SMTP認証情報を利用できません。Mail Account設定を確認してください。', 503),
             'invalid_smtp_host', 'invalid_smtp_transport', 'smtp_dns_failed', 'smtp_non_public_address'
                 => api_validation_error(api_mail_validation_message($result['code'])),
-            'smtp_rejected' => api_error('mail_smtp_rejected', 'SMTP server rejected the connection or authentication.', 422),
-            default => api_error('mail_smtp_connection_failed', 'Could not connect to the SMTP server.', 502),
+            'smtp_rejected' => api_error('mail_smtp_rejected', 'SMTP Serverが接続または認証を拒否しました。SMTP設定と認証情報を確認してください。', 422),
+            default => api_error('mail_smtp_connection_failed', 'SMTP Serverへ接続できませんでした。Host・Port・暗号化方式を確認してください。', 502),
         };
     }
 
     return match ($result['code']) {
         'connected' => api_success(['connected' => true]),
-        'not_found' => api_error('not_found', 'Mail account was not found.', 404),
-        'disabled' => api_error('mail_account_disabled', 'Mail account is disabled.', 409),
-        'dependency_unavailable' => api_error('mail_dependency_unavailable', 'Mail dependency is unavailable.', 503),
-        'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail credential must be re-entered.', 503),
+        'not_found' => api_error('not_found', 'Mail Accountが見つかりません。', 404),
+        'disabled' => api_error('mail_account_disabled', 'Mail Accountが無効です。Account管理で有効にしてください。', 409),
+        'dependency_unavailable' => api_error('mail_dependency_unavailable', 'IMAP接続に必要なMail機能を利用できません。Server設定を確認してください。', 503),
+        'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail認証情報を利用できません。Mail Account設定を確認してください。', 503),
         'invalid_host', 'invalid_transport', 'dns_failed', 'non_public_address' => api_validation_error(api_mail_validation_message($result['code'])),
-        'imap_rejected' => api_error('mail_imap_rejected', 'IMAP server rejected the connection or authentication.', 422),
-        default => api_error('mail_connection_failed', 'Could not connect to the IMAP server.', 502),
+        'imap_rejected' => api_error('mail_imap_rejected', 'IMAP Serverが接続または認証を拒否しました。IMAP設定と認証情報を確認してください。', 422),
+        default => api_error('mail_connection_failed', 'IMAP Serverへ接続できませんでした。Host・Port・暗号化方式を確認してください。', 502),
     };
 }
 
@@ -271,9 +330,14 @@ function api_mail_message_send(int $userId, array $input, array $files = []): ar
     } catch (AppMailValidationException $exception) {
         return api_validation_error(api_mail_validation_message($exception->reason()));
     } catch (PDOException $exception) {
-        return api_error('mail_account_unavailable', 'Mail account migration is required.', 503);
+        return api_mail_storage_failure();
     } catch (Throwable $exception) {
         return api_mail_internal_failure('message.send', $userId, $exception);
+    }
+
+    $authFailure = api_mail_error_from_code((string) ($result['code'] ?? ''));
+    if ($authFailure !== null) {
+        return $authFailure;
     }
 
     return match ($result['code']) {
@@ -282,21 +346,22 @@ function api_mail_message_send(int $userId, array $input, array $files = []): ar
             'sent_save_status' => (string) ($result['sent_save_status'] ?? 'failed'),
             'sent_save_source' => (string) ($result['sent_save_source'] ?? 'none'),
             'sent_save_code' => (string) ($result['sent_save_code'] ?? ''),
+            'sent_save_message' => api_mail_sent_save_message((string) ($result['sent_save_code'] ?? '')),
             'sent_folder' => (string) ($result['sent_folder'] ?? ''),
         ]),
-        'not_found' => api_error('not_found', 'Mail account was not found.', 404),
-        'disabled' => api_error('mail_account_disabled', 'Mail account is disabled.', 409),
-        'smtp_disabled' => api_error('mail_smtp_disabled', 'SMTP sending is disabled for this account.', 409),
-        'smtp_dependency_unavailable' => api_error('mail_smtp_dependency_unavailable', 'SMTP dependency is unavailable.', 503),
-        'smtp_credential_unavailable' => api_error('mail_smtp_credential_unavailable', 'SMTP credential must be re-entered.', 503),
-        'smtp_configuration_unavailable' => api_error('mail_smtp_configuration_unavailable', 'SMTP sender configuration is unavailable.', 409),
+        'not_found' => api_error('not_found', 'Mail Accountが見つかりません。', 404),
+        'disabled' => api_error('mail_account_disabled', 'Mail Accountが無効です。Account管理で有効にしてください。', 409),
+        'smtp_disabled' => api_error('mail_smtp_disabled', 'このMail AccountではSMTP送信が無効です。', 409),
+        'smtp_dependency_unavailable' => api_error('mail_smtp_dependency_unavailable', 'SMTP送信に必要なMail機能を利用できません。Server設定を確認してください。', 503),
+        'smtp_credential_unavailable' => api_error('mail_smtp_credential_unavailable', 'SMTP認証情報を利用できません。Mail Account設定を確認してください。', 503),
+        'smtp_configuration_unavailable' => api_error('mail_smtp_configuration_unavailable', 'SMTPの差出人設定を利用できません。Mail Account設定を確認してください。', 409),
         'invalid_smtp_host', 'invalid_smtp_transport', 'smtp_dns_failed', 'smtp_non_public_address'
             => api_validation_error(api_mail_validation_message($result['code'])),
-        'smtp_message_invalid' => api_validation_error('Mail message is invalid.'),
-        'smtp_attachment_invalid' => api_validation_error('Mail attachment is invalid.'),
-        'smtp_rejected' => api_error('mail_smtp_rejected', 'SMTP server rejected the connection or authentication.', 422),
-        'smtp_send_failed' => api_error('mail_send_failed', 'Mail could not be sent. The result is uncertain; do not automatically retry.', 502),
-        default => api_error('mail_send_failed', 'Mail could not be sent.', 502),
+        'smtp_message_invalid' => api_validation_error('送信するMailの内容が正しくありません。'),
+        'smtp_attachment_invalid' => api_validation_error('送信する添付ファイルが正しくありません。'),
+        'smtp_rejected' => api_error('mail_smtp_rejected', 'SMTP Serverが接続または認証を拒否しました。SMTP設定と認証情報を確認してください。', 422),
+        'smtp_send_failed' => api_error('mail_send_failed', 'Mailの送信結果を確認できません。重複送信を避けるため自動再試行はしないでください。', 502),
+        default => api_error('mail_send_failed', 'Mailを送信できませんでした。', 502),
     };
 }
 
@@ -317,9 +382,14 @@ function api_mail_message_reply_context(int $userId, array $input): array
     } catch (AppMailValidationException $exception) {
         return api_validation_error(api_mail_validation_message($exception->reason()));
     } catch (PDOException $exception) {
-        return api_error('mail_account_unavailable', 'Mail account migration is required.', 503);
+        return api_mail_storage_failure();
     } catch (Throwable $exception) {
         return api_mail_internal_failure('message.reply.context', $userId, $exception);
+    }
+
+    $authFailure = api_mail_error_from_code((string) ($result['code'] ?? ''));
+    if ($authFailure !== null) {
+        return $authFailure;
     }
 
     return match ($result['code']) {
@@ -332,17 +402,17 @@ function api_mail_message_reply_context(int $userId, array $input): array
             'recipient_source' => $result['recipient_source'] ?? 'from',
             'folder' => $result['folder'] ?? $folder,
         ]),
-        'not_found', 'message_not_found' => api_error('not_found', 'Mail message was not found.', 404),
-        'folder_changed' => api_error('mail_folder_changed', 'Mail folder changed. Refresh the Widget and try again.', 409),
-        'invalid_folder' => api_validation_error('Mail folder is invalid.'),
-        'disabled' => api_error('mail_account_disabled', 'Mail account is disabled.', 409),
-        'smtp_disabled' => api_error('mail_smtp_disabled', 'SMTP sending is disabled for this account.', 409),
-        'dependency_unavailable' => api_error('mail_dependency_unavailable', 'Mail dependency is unavailable.', 503),
-        'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail credential must be re-entered.', 503),
+        'not_found', 'message_not_found' => api_error('not_found', '返信元Mailが見つかりません。Widgetを更新してください。', 404),
+        'folder_changed' => api_error('mail_folder_changed', 'Folderが切り替わっています。Mail Widgetを更新してから再試行してください。', 409),
+        'invalid_folder' => api_validation_error('Mail Folderが正しくありません。'),
+        'disabled' => api_error('mail_account_disabled', 'Mail Accountが無効です。Account管理で有効にしてください。', 409),
+        'smtp_disabled' => api_error('mail_smtp_disabled', 'このMail AccountではSMTP送信が無効です。', 409),
+        'dependency_unavailable' => api_error('mail_dependency_unavailable', '返信準備に必要なMail機能を利用できません。Server設定を確認してください。', 503),
+        'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail認証情報を利用できません。Mail Account設定を確認してください。', 503),
         'invalid_host', 'invalid_transport', 'dns_failed', 'non_public_address'
             => api_validation_error(api_mail_validation_message($result['code'])),
-        'no_reply_address' => api_error('mail_reply_address_unavailable', 'A valid Reply-To or From address was not found.', 422),
-        'imap_rejected' => api_error('mail_imap_rejected', 'IMAP server rejected the connection or authentication.', 422),
-        default => api_error('mail_connection_failed', 'Could not prepare the Mail reply.', 502),
+        'no_reply_address' => api_error('mail_reply_address_unavailable', '返信先として使用できるReply-ToまたはFrom Addressがありません。', 422),
+        'imap_rejected' => api_error('mail_imap_rejected', 'IMAP Serverが接続または認証を拒否しました。IMAP設定と認証情報を確認してください。', 422),
+        default => api_error('mail_connection_failed', '返信元Mailを取得できませんでした。IMAP接続を確認してください。', 502),
     };
 }

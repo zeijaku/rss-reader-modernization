@@ -53,7 +53,7 @@ function api_feed_fetch_with_health(int $userId, array $input): array
                         'parse_error',
                         'Upstream response is not a supported RSS or Atom feed.'
                     );
-                } elseif (!in_array($errorCode, ['upstream_error', 'upstream_blocked'], true)) {
+                } elseif (!feed_public_error_is_upstream_code($errorCode)) {
                     // The HTTP fetch/parser succeeded and a downstream local feature failed.
                     // Feed Health should still record the upstream feed as healthy.
                     feed_health_finalize_success($source, [], $observation);

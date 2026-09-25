@@ -357,8 +357,11 @@ function mail_received_attachment_for_user(
 
     try {
         $auth = mail_account_runtime_imap_auth($ownerId, $accountId, $account);
-    } catch (AppMailCredentialException|AppMailGoogleOAuthException) {
-        return ['ok' => false, 'code' => 'credential_unavailable'];
+    } catch (AppMailCredentialException|AppMailGoogleOAuthException $exception) {
+        return [
+            'ok' => false,
+            'code' => mail_log_auth_failure('message.attachment.imap', $ownerId, $accountId, $exception),
+        ];
     }
 
     try {
@@ -387,22 +390,26 @@ function api_mail_received_attachment_list(int $ownerId, array $input): array
     }
 
     $result = mail_received_attachment_for_user($ownerId, $widgetId, $uid, $folder);
+    $authFailure = api_mail_error_from_code((string) ($result['code'] ?? ''));
+    if ($authFailure !== null) {
+        return $authFailure;
+    }
     return match ($result['code'] ?? '') {
         'loaded' => api_success([
             'attachments' => $result['attachments'] ?? [],
             'attachment_count' => count($result['attachments'] ?? []),
             'folder' => $result['folder'] ?? $folder,
         ]),
-        'not_found', 'message_not_found' => api_error('not_found', 'Mail message was not found.', 404),
-        'folder_changed' => api_error('mail_folder_changed', 'Mail folder changed. Refresh the Widget and try again.', 409),
-        'invalid_folder', 'invalid_attachment' => api_validation_error('Mail attachment request is invalid.'),
-        'disabled' => api_error('mail_account_disabled', 'Mail account is disabled.', 409),
-        'dependency_unavailable' => api_error('mail_dependency_unavailable', 'Mail dependency is unavailable.', 503),
-        'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail credential must be re-entered.', 503),
+        'not_found', 'message_not_found' => api_error('not_found', '添付元のMailが見つかりません。Widgetを更新してください。', 404),
+        'folder_changed' => api_error('mail_folder_changed', 'Folderが切り替わっています。Mail Widgetを更新してから再試行してください。', 409),
+        'invalid_folder', 'invalid_attachment' => api_validation_error('Mail添付ファイルの要求が正しくありません。'),
+        'disabled' => api_error('mail_account_disabled', 'Mail Accountが無効です。Account管理で有効にしてください。', 409),
+        'dependency_unavailable' => api_error('mail_dependency_unavailable', '添付取得に必要なMail機能を利用できません。Server設定を確認してください。', 503),
+        'credential_unavailable' => api_error('mail_credential_unavailable', 'Mail認証情報を利用できません。Mail Account設定を確認してください。', 503),
         'invalid_host', 'invalid_transport', 'dns_failed', 'non_public_address'
             => api_validation_error(api_mail_validation_message((string) $result['code'])),
-        'imap_rejected' => api_error('mail_imap_rejected', 'IMAP server rejected the connection or authentication.', 422),
-        default => api_error('mail_connection_failed', 'Could not load Mail attachments.', 502),
+        'imap_rejected' => api_error('mail_imap_rejected', 'IMAP Serverが接続または認証を拒否しました。IMAP設定と認証情報を確認してください。', 422),
+        default => api_error('mail_connection_failed', 'Mail添付ファイル一覧を取得できませんでした。IMAP接続を確認してください。', 502),
     };
 }
 
@@ -427,22 +434,37 @@ function mail_received_attachment_download_emit(int $ownerId, array $input): nev
         header('Content-Type: text/plain; charset=UTF-8');
         header('X-Content-Type-Options: nosniff');
         app_send_no_store_headers();
-        echo 'Mail attachment request is invalid.';
+        echo 'Mail添付ファイルの要求が正しくありません。';
         exit;
     }
 
     try {
         $result = mail_received_attachment_for_user($ownerId, $widgetId, $uid, $folder, $partId);
     } catch (Throwable $exception) {
-        error_log(sprintf('Mail attachment download failure user_id=%d class=%s', $ownerId, $exception::class));
-        $result = ['ok' => false, 'code' => 'internal_error'];
+        try {
+            $reference = bin2hex(random_bytes(6));
+        } catch (Throwable) {
+            $reference = substr(hash('sha256', uniqid('', true)), 0, 12);
+        }
+        error_log(sprintf(
+            'Mail attachment download failure ref=%s user_id=%d class=%s',
+            $reference,
+            $ownerId,
+            $exception::class
+        ));
+        $result = ['ok' => false, 'code' => 'internal_error', 'error_reference' => $reference];
     }
 
     if (($result['ok'] ?? false) !== true || ($result['code'] ?? '') !== 'downloaded') {
-        $status = match ($result['code'] ?? '') {
+        $resultCode = (string) ($result['code'] ?? '');
+        $normalizedAuthCode = $resultCode === 'credential_unavailable'
+            ? 'mail_credential_unavailable'
+            : $resultCode;
+        $authDetails = mail_public_error_details($normalizedAuthCode);
+        $status = $authDetails !== null ? $authDetails['status'] : match ($resultCode) {
             'not_found', 'message_not_found', 'attachment_not_found' => 404,
             'folder_changed', 'disabled' => 409,
-            'dependency_unavailable', 'credential_unavailable' => 503,
+            'dependency_unavailable' => 503,
             'attachment_too_large' => 413,
             'invalid_folder', 'invalid_attachment' => 400,
             'imap_rejected' => 422,
@@ -454,9 +476,23 @@ function mail_received_attachment_download_emit(int $ownerId, array $input): nev
         header('X-Content-Type-Options: nosniff');
         header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'");
         app_send_no_store_headers();
-        echo ($result['code'] ?? '') === 'attachment_too_large'
-            ? 'This attachment is too large to download in the Mail Widget.'
-            : 'Mail attachment download failed.';
+        echo $authDetails !== null
+            ? $authDetails['message']
+            : match ($resultCode) {
+                'not_found', 'message_not_found', 'attachment_not_found'
+                    => '添付ファイルまたは元のMailが見つかりません。Widgetを更新してください。',
+                'folder_changed' => 'Folderが切り替わっています。Mail Widgetを更新してから再試行してください。',
+                'disabled' => 'Mail Accountが無効です。Account管理で有効にしてください。',
+                'dependency_unavailable' => '添付取得に必要なMail機能を利用できません。Server設定を確認してください。',
+                'attachment_too_large' => '添付ファイルがMail WidgetのDownload上限を超えています。',
+                'invalid_folder', 'invalid_attachment' => 'Mail添付ファイルの要求が正しくありません。',
+                'imap_rejected' => 'IMAP Serverが接続または認証を拒否しました。IMAP設定と認証情報を確認してください。',
+                'attachment_fetch_failed' => 'IMAP Serverから添付ファイル本体を取得できませんでした。',
+                'attachment_decode_failed' => '添付ファイルの形式を読み取れませんでした。',
+                'internal_error' => 'Mail添付ファイルをDownloadできませんでした。参照番号: '
+                    . (string) ($result['error_reference'] ?? 'unknown'),
+                default => 'Mail添付ファイルをDownloadできませんでした。IMAP接続を確認してください。',
+            };
         exit;
     }
 

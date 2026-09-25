@@ -1,3 +1,21 @@
+## 1.35.4 - 2026-09-25
+
+### RSS error diagnostics
+- Map the existing RSS transport and parser results into six public categories: URL/security blocking, DNS/connection failure, timeout/temporary failure, HTTP rejection/rate limiting, invalid Feed format, and local RSS Reader server failure.
+- Show only the six allow-listed messages in RSS Cards while retaining the current generic fallback for unknown API/provider text.
+- Translate persisted Feed Health failures into the same safe category and Japanese guidance without exposing raw cURL/provider messages.
+- Preserve the existing safe fetch boundary, DNS pinning, TLS verification, response limits, Retry/Retry-After, Cache, stale-on-error, Feed Health persistence and parser behavior.
+
+### Mail error diagnostics
+- Replace the single Mail credential re-entry response with fixed, actionable reason codes for missing or invalid encryption keys, key mismatch, damaged encrypted data, OAuth reconnection, expired or mismatched OAuth state, denied or incomplete Google authorization, Google timeout/TLS/response failures, invalid OAuth server configuration, and Mail storage failure.
+- Preserve separate IMAP, SMTP, validation, disabled-account, folder and attachment failures while returning clearer Japanese guidance from the existing API boundary.
+- Distinguish a successful send followed by a Sent-folder save failure and warn when an uncertain save must not be retried automatically.
+- Add a safe 12-character reference to unexpected Mail and OAuth callback failures without logging provider messages, credentials, tokens, authorization codes, or passwords.
+
+### Compatibility
+- No database migration, required configuration, external dependency, endpoint or credential format change is introduced.
+- Existing credential encryption, OAuth PKCE, IMAP/SMTP behavior, RSS fetching, retry/cache behavior, and Feed parsing remain unchanged; this release refines error classification and presentation.
+
 ## 1.35.3 - 2026-09-24
 
 ### Documentation maintenance

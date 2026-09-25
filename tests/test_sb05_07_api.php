@@ -370,7 +370,7 @@ $savedContentId = $pdo->contents[$contentA]['content_id'];
 unset($pdo->contents[$contentA]['content_id']);
 $fetchCountBeforeInvalidSource = count($GLOBALS['test_fetched_urls']);
 $r = api_dispatch('feed.fetch', 10, ['content_id' => (string) $contentA]);
-api_check($r['status'] === 500 && ($r['body']['error']['code'] ?? '') === 'internal_error', 'malformed owned DB row fails closed at FeedSource mapping boundary');
+api_check($r['status'] === 503 && ($r['body']['error']['code'] ?? '') === 'rss_server_unavailable', 'malformed owned DB row fails closed at FeedSource mapping boundary');
 api_check(count($GLOBALS['test_fetched_urls']) === $fetchCountBeforeInvalidSource, 'invalid FeedSource mapping performs no outbound fetch');
 $pdo->contents[$contentA]['content_id'] = $savedContentId;
 

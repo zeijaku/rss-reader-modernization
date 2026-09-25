@@ -2061,6 +2061,21 @@
         if (xhr && xhr.status === 404) {
             return '登録されたコンテンツが見つかりませんでした';
         }
+        if (xhr && xhr.responseJSON && xhr.responseJSON.error) {
+            var code = String(xhr.responseJSON.error.code || '');
+            var message = String(xhr.responseJSON.error.message || '');
+            var safeCodes = [
+                'upstream_blocked',
+                'rss_connection_failed',
+                'rss_temporarily_unavailable',
+                'rss_http_error',
+                'invalid_feed',
+                'rss_server_unavailable'
+            ];
+            if (safeCodes.indexOf(code) !== -1 && message !== '') {
+                return message;
+            }
+        }
         return 'しばらくしてから再度お試しください';
     }
 

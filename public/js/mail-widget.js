@@ -482,15 +482,56 @@
     function showGoogleOAuthResult() {
         var params = new window.URLSearchParams(window.location.search || '');
         var result = params.get('mail_oauth');
+        var reason = String(params.get('mail_oauth_reason') || '');
+        var reference = String(params.get('mail_oauth_ref') || '');
+        var messages = {
+            mail_oauth_session_invalid: 'Login Sessionを確認できませんでした。再Login後にGmailを再接続してください。',
+            mail_oauth_reconnect_required: 'Gmailの認証期限が切れているか、認証が無効になっています。「Gmail再接続」を実行してください。',
+            mail_oauth_state_missing: 'Gmail認証の開始情報がありません。Account管理の「Gmail再接続」からやり直してください。',
+            mail_oauth_state_expired: 'Gmail認証操作の有効期限（10分）が切れました。「Gmail再接続」からやり直してください。',
+            mail_oauth_state_mismatch: 'Gmail認証状態が一致しません。古い認証画面や別タブを閉じ、「Gmail再接続」からやり直してください。',
+            mail_oauth_access_denied: 'Google側でGmail接続がキャンセルまたは拒否されました。許可内容を確認して再接続してください。',
+            mail_oauth_authorization_code_invalid: 'Googleの認証コードを確認できませんでした。古い認証画面を閉じて再接続してください。',
+            mail_oauth_offline_access_missing: 'Gmailの継続利用に必要な認証情報を取得できませんでした。Googleの許可画面から再接続してください。',
+            mail_oauth_scope_missing: '必要なGmail権限が許可されていません。権限を許可して再接続してください。',
+            mail_oauth_email_unverified: 'Googleアカウントの確認済みメールアドレスを取得できませんでした。',
+            mail_oauth_account_not_allowed: 'このGoogleアカウントはRSS Readerでの利用を許可されていません。',
+            mail_oauth_dependency_unavailable: 'Google認証に必要なcURL機能を利用できません。Server設定を確認してください。',
+            mail_oauth_google_timeout: 'Google認証サーバーとの通信がタイムアウトしました。時間を置いて再試行してください。',
+            mail_oauth_google_tls_failed: 'Google認証サーバーとの安全な接続に失敗しました。Serverの証明書設定を確認してください。',
+            mail_oauth_google_unavailable: 'Google認証サーバーとの通信に失敗しました。時間を置いて再試行してください。',
+            mail_oauth_response_invalid: 'Google認証サーバーから有効な応答を取得できませんでした。再試行してください。',
+            mail_oauth_configuration_invalid: 'Gmail OAuth2のServer設定を利用できません。Client ID・Secret・Redirect URIを確認してください。',
+            mail_credential_key_missing: 'Mail認証情報の暗号鍵が設定されていません。Server設定を確認してください。',
+            mail_credential_key_config_invalid: 'Mail認証情報の暗号化設定を利用できません。Server設定を確認してください。',
+            mail_credential_key_invalid: 'Mail認証情報の暗号化設定を利用できません。Server設定を確認してください。',
+            mail_credential_crypto_unavailable: 'Mail認証情報の暗号化設定を利用できません。Server設定を確認してください。',
+            mail_credential_context_invalid: 'Mail認証情報の保存対象を確認できませんでした。Mail Account設定を確認してください。',
+            mail_credential_unavailable: 'Mail認証情報を利用できません。Mail Account設定を確認してください。',
+            mail_credential_key_mismatch: '保存時と現在のMail暗号鍵が一致しません。以前の鍵を戻すか、Mail Accountを再接続してください。',
+            mail_smtp_credential_key_mismatch: '保存時と現在のMail暗号鍵が一致しません。以前の鍵を戻すか、Mail Accountを再接続してください。',
+            mail_credential_data_invalid: '保存済みのMail認証情報を読み出せません。Mail Accountを再接続してください。',
+            mail_credential_decrypt_failed: '保存済みのMail認証情報を読み出せません。Mail Accountを再接続してください。',
+            mail_smtp_credential_data_invalid: '保存済みのSMTP認証情報を読み出せません。Mail Account設定を更新してください。',
+            mail_smtp_credential_decrypt_failed: '保存済みのSMTP認証情報を読み出せません。Mail Account設定を更新してください。',
+            mail_storage_unavailable: 'Mail Accountの保存領域を利用できません。Server側のDB状態とMail Migrationを確認してください。',
+            mail_oauth_unavailable: 'Gmail OAuth2接続を完了できませんでした。「Gmail再接続」からやり直してください。'
+        };
         if (!result) { return; }
         if (result === 'success') {
             showNotice('Gmail OAuth2を接続しました', 'success');
         } else if (result === 'migration') {
             showNotice('Gmail OAuth2用のDB Migrationを適用してください', 'danger');
         } else {
-            showNotice('Gmail OAuth2接続を完了できませんでした。もう一度お試しください', 'danger');
+            var message = messages[reason] || messages.mail_oauth_unavailable;
+            if (/^[a-f0-9]{12}$/.test(reference)) {
+                message += ' 参照番号: ' + reference;
+            }
+            showNotice(message, 'danger', 10000);
         }
         params.delete('mail_oauth');
+        params.delete('mail_oauth_reason');
+        params.delete('mail_oauth_ref');
         var query = params.toString();
         window.history.replaceState(null, '', window.location.pathname + (query ? '?' + query : '') + window.location.hash);
     }
@@ -785,7 +826,12 @@
                 $('#composeMail').modal('hide');
                 resetComposeFields();
                 if (sentSaveStatus === 'failed') {
-                    showNotice(wasReply ? 'Mailは返信しましたが、送信済みへの保存を確認できませんでした' : 'Mailは送信しましたが、送信済みへの保存を確認できませんでした', 'warning', 8000);
+                    var sentSaveMessage = String(data.sent_save_message || '');
+                    showNotice(
+                        sentSaveMessage || (wasReply ? 'Mailは返信しましたが、送信済みへの保存を確認できませんでした' : 'Mailは送信しましたが、送信済みへの保存を確認できませんでした'),
+                        'warning',
+                        10000
+                    );
                     return;
                 }
                 if (sentSaveStatus === 'server_managed') {

@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-final class AppMailGoogleOAuthException extends RuntimeException
-{
-}
+require_once __DIR__ . '/mail_error.php';
 
 const MAIL_GOOGLE_OAUTH_SCOPE = 'openid email https://mail.google.com/';
 const MAIL_GOOGLE_OAUTH_STATE_TTL_SECONDS = 600;
@@ -37,7 +35,7 @@ function mail_google_oauth_allowed_email(): ?string
         return null;
     }
     if (strlen($email) > 320 || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-        throw new AppMailGoogleOAuthException('Google OAuth allowed email is invalid.');
+        throw new AppMailGoogleOAuthException('allowed_email_invalid');
     }
     return $email;
 }
@@ -66,7 +64,7 @@ function mail_google_oauth_http_request(
     if ($transport !== null) {
         $result = $transport($url, $method, $form, $bearerToken);
         if (!is_array($result)) {
-            throw new AppMailGoogleOAuthException('Google OAuth transport returned an invalid response.');
+            throw new AppMailGoogleOAuthException('transport_invalid');
         }
         return [
             'ok' => ($result['ok'] ?? false) === true,
@@ -76,27 +74,27 @@ function mail_google_oauth_http_request(
     }
 
     if (!function_exists('curl_init')) {
-        throw new AppMailGoogleOAuthException('cURL is unavailable.');
+        throw new AppMailGoogleOAuthException('dependency_unavailable');
     }
     if (!in_array($url, [
         'https://oauth2.googleapis.com/token',
         'https://openidconnect.googleapis.com/v1/userinfo',
     ], true)) {
-        throw new AppMailGoogleOAuthException('Google OAuth endpoint is invalid.');
+        throw new AppMailGoogleOAuthException('endpoint_invalid');
     }
 
     $body = '';
     $headers = ['Accept: application/json'];
     if ($bearerToken !== null) {
         if ($bearerToken === '' || strlen($bearerToken) > 8192 || preg_match('/[\x00-\x20\x7F]/', $bearerToken) === 1) {
-            throw new AppMailGoogleOAuthException('Google OAuth access token is invalid.');
+            throw new AppMailGoogleOAuthException('access_token_invalid');
         }
         $headers[] = 'Authorization: Bearer ' . $bearerToken;
     }
 
     $handle = curl_init($url);
     if ($handle === false) {
-        throw new AppMailGoogleOAuthException('Google OAuth request could not be initialized.');
+        throw new AppMailGoogleOAuthException('request_init_failed');
     }
     $options = [
         CURLOPT_CUSTOMREQUEST => $method,
@@ -126,8 +124,20 @@ function mail_google_oauth_http_request(
     try {
         $executed = curl_exec($handle);
         $status = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+        if ($executed !== true) {
+            $errorNo = curl_errno($handle);
+            if (defined('CURLE_OPERATION_TIMEDOUT') && $errorNo === CURLE_OPERATION_TIMEDOUT) {
+                throw new AppMailGoogleOAuthException('google_timeout');
+            }
+            if ((defined('CURLE_SSL_CONNECT_ERROR') && $errorNo === CURLE_SSL_CONNECT_ERROR)
+                || (defined('CURLE_PEER_FAILED_VERIFICATION') && $errorNo === CURLE_PEER_FAILED_VERIFICATION)
+                || (defined('CURLE_SSL_CACERT') && $errorNo === CURLE_SSL_CACERT)) {
+                throw new AppMailGoogleOAuthException('google_tls_failed');
+            }
+            throw new AppMailGoogleOAuthException('google_unavailable');
+        }
         return [
-            'ok' => $executed === true && $status >= 200 && $status < 300,
+            'ok' => $status >= 200 && $status < 300,
             'status' => $status,
             'body' => $body,
         ];
@@ -136,19 +146,54 @@ function mail_google_oauth_http_request(
     }
 }
 
-/** @return array<string,mixed> */
-function mail_google_oauth_json_response(array $response): array
+function mail_google_oauth_provider_error_reason(string $providerError, string $operation): string
 {
-    if (($response['ok'] ?? false) !== true || strlen((string) ($response['body'] ?? '')) > 65536) {
-        throw new AppMailGoogleOAuthException('Google OAuth request failed.');
+    return match (strtolower(trim($providerError))) {
+        'invalid_grant' => $operation === 'refresh_token' ? 'refresh_token_expired' : 'authorization_code_invalid',
+        'invalid_request' => $operation === 'refresh_token' ? 'refresh_credential_missing' : 'authorization_code_invalid',
+        'access_denied' => 'authorization_denied',
+        'invalid_client', 'unauthorized_client' => 'client_invalid',
+        'invalid_scope' => 'scope_missing',
+        'temporarily_unavailable', 'server_error' => 'google_unavailable',
+        default => 'provider_rejected',
+    };
+}
+
+function mail_google_oauth_callback_provider_reason(string $providerError): string
+{
+    return mail_google_oauth_provider_error_reason($providerError, 'authorization_code');
+}
+
+/** @return array<string,mixed> */
+function mail_google_oauth_json_response(array $response, string $operation = 'generic'): array
+{
+    $body = (string) ($response['body'] ?? '');
+    if (strlen($body) > 65536) {
+        throw new AppMailGoogleOAuthException('response_invalid');
+    }
+    if (($response['ok'] ?? false) !== true) {
+        $providerError = '';
+        try {
+            $failure = json_decode($body, true, 16, JSON_THROW_ON_ERROR);
+            if (is_array($failure) && is_string($failure['error'] ?? null)) {
+                $providerError = $failure['error'];
+            }
+        } catch (JsonException) {
+            $providerError = '';
+        }
+        throw new AppMailGoogleOAuthException(
+            $providerError !== ''
+                ? mail_google_oauth_provider_error_reason($providerError, $operation)
+                : 'google_unavailable'
+        );
     }
     try {
-        $decoded = json_decode((string) $response['body'], true, 32, JSON_THROW_ON_ERROR);
+        $decoded = json_decode($body, true, 32, JSON_THROW_ON_ERROR);
     } catch (JsonException $exception) {
-        throw new AppMailGoogleOAuthException('Google OAuth response is invalid.', 0, $exception);
+        throw new AppMailGoogleOAuthException('response_invalid', $exception);
     }
     if (!is_array($decoded)) {
-        throw new AppMailGoogleOAuthException('Google OAuth response is invalid.');
+        throw new AppMailGoogleOAuthException('response_invalid');
     }
     return $decoded;
 }
@@ -157,10 +202,10 @@ function mail_google_oauth_json_response(array $response): array
 function mail_google_oauth_begin(int $userId): array
 {
     if ($userId <= 0 || !app_session_is_authenticated() || app_session_user_id() !== $userId) {
-        throw new AppMailGoogleOAuthException('Authenticated owner is required.');
+        throw new AppMailGoogleOAuthException('owner_invalid');
     }
     if (!mail_google_oauth_configured()) {
-        throw new AppMailGoogleOAuthException('Google OAuth is not configured.');
+        throw new AppMailGoogleOAuthException('not_configured');
     }
 
     $state = mail_google_oauth_base64url(random_bytes(32));
@@ -203,21 +248,29 @@ function mail_google_oauth_complete(
     $pending = app_session_mail_google_oauth_take();
     $timestamp = $now ?? time();
 
-    if (!is_array($pending)
-        || $userId <= 0
-        || (int) ($pending['owner_id'] ?? 0) !== $userId
-        || !is_string($pending['state_hash'] ?? null)
+    if (!is_array($pending)) {
+        throw new AppMailGoogleOAuthException('state_missing');
+    }
+    if ($userId <= 0 || (int) ($pending['owner_id'] ?? 0) !== $userId) {
+        throw new AppMailGoogleOAuthException('state_mismatch');
+    }
+    if (!is_string($pending['state_hash'] ?? null)
         || !is_string($pending['code_verifier'] ?? null)
         || (int) ($pending['started_at'] ?? 0) <= 0
-        || ($timestamp - (int) $pending['started_at']) > MAIL_GOOGLE_OAUTH_STATE_TTL_SECONDS
-        || (int) $pending['started_at'] > ($timestamp + 60)
-        || $state === ''
-        || !hash_equals((string) $pending['state_hash'], hash('sha256', $state))
-        || preg_match('/\A[A-Za-z0-9._~\/-]{1,2048}\z/D', $code) !== 1) {
-        throw new AppMailGoogleOAuthException('Google OAuth callback state is invalid or expired.');
+        || (int) $pending['started_at'] > ($timestamp + 60)) {
+        throw new AppMailGoogleOAuthException('state_invalid');
+    }
+    if (($timestamp - (int) $pending['started_at']) > MAIL_GOOGLE_OAUTH_STATE_TTL_SECONDS) {
+        throw new AppMailGoogleOAuthException('state_expired');
+    }
+    if ($state === '' || !hash_equals((string) $pending['state_hash'], hash('sha256', $state))) {
+        throw new AppMailGoogleOAuthException('state_mismatch');
+    }
+    if (preg_match('/\A[A-Za-z0-9._~\/-]{1,2048}\z/D', $code) !== 1) {
+        throw new AppMailGoogleOAuthException('authorization_code_invalid');
     }
     if (!mail_google_oauth_configured()) {
-        throw new AppMailGoogleOAuthException('Google OAuth is not configured.');
+        throw new AppMailGoogleOAuthException('not_configured');
     }
 
     $tokens = mail_google_oauth_json_response(mail_google_oauth_http_request(
@@ -233,13 +286,17 @@ function mail_google_oauth_complete(
         ],
         null,
         $transport
-    ));
+    ), 'authorization_code');
     $accessToken = $tokens['access_token'] ?? null;
     $refreshToken = $tokens['refresh_token'] ?? null;
-    if (!is_string($accessToken) || $accessToken === '' || strlen($accessToken) > 8192
-        || !is_string($refreshToken) || $refreshToken === '' || strlen($refreshToken) > 8192
-        || !mail_google_oauth_mail_scope_granted($tokens['scope'] ?? null)) {
-        throw new AppMailGoogleOAuthException('Google did not return the required offline authorization.');
+    if (!is_string($accessToken) || $accessToken === '' || strlen($accessToken) > 8192) {
+        throw new AppMailGoogleOAuthException('access_token_missing');
+    }
+    if (!is_string($refreshToken) || $refreshToken === '' || strlen($refreshToken) > 8192) {
+        throw new AppMailGoogleOAuthException('offline_authorization_missing');
+    }
+    if (!mail_google_oauth_mail_scope_granted($tokens['scope'] ?? null)) {
+        throw new AppMailGoogleOAuthException('scope_missing');
     }
 
     $profile = mail_google_oauth_json_response(mail_google_oauth_http_request(
@@ -248,15 +305,15 @@ function mail_google_oauth_complete(
         [],
         $accessToken,
         $transport
-    ));
+    ), 'userinfo');
     $email = is_string($profile['email'] ?? null) ? strtolower(trim($profile['email'])) : '';
     $verified = ($profile['email_verified'] ?? false) === true;
     if (!$verified || filter_var($email, FILTER_VALIDATE_EMAIL) === false || strlen($email) > 320) {
-        throw new AppMailGoogleOAuthException('Google account email could not be verified.');
+        throw new AppMailGoogleOAuthException('email_unverified');
     }
     $allowedEmail = mail_google_oauth_allowed_email();
     if ($allowedEmail !== null && !hash_equals($allowedEmail, $email)) {
-        throw new AppMailGoogleOAuthException('This Google account is not allowed.');
+        throw new AppMailGoogleOAuthException('account_not_allowed');
     }
 
     return ['email' => $email, 'refresh_token' => $refreshToken];
@@ -266,7 +323,9 @@ function mail_google_oauth_complete(
 function mail_google_oauth_refresh_access_token_result(string $refreshToken, ?callable $transport = null): array
 {
     if (!mail_google_oauth_configured() || $refreshToken === '' || strlen($refreshToken) > 8192) {
-        throw new AppMailGoogleOAuthException('Google OAuth refresh credential is unavailable.');
+        throw new AppMailGoogleOAuthException(
+            !mail_google_oauth_configured() ? 'not_configured' : 'refresh_credential_missing'
+        );
     }
     $tokens = mail_google_oauth_json_response(mail_google_oauth_http_request(
         'https://oauth2.googleapis.com/token',
@@ -279,11 +338,11 @@ function mail_google_oauth_refresh_access_token_result(string $refreshToken, ?ca
         ],
         null,
         $transport
-    ));
+    ), 'refresh_token');
     $accessToken = $tokens['access_token'] ?? null;
     if (!is_string($accessToken) || $accessToken === '' || strlen($accessToken) > 8192
         || preg_match('/[\x00-\x20\x7F]/', $accessToken) === 1) {
-        throw new AppMailGoogleOAuthException('Google OAuth access token is unavailable.');
+        throw new AppMailGoogleOAuthException('access_token_missing');
     }
     $expiresInValue = $tokens['expires_in'] ?? null;
     $expiresIn = is_int($expiresInValue)
@@ -316,7 +375,7 @@ function mail_account_runtime_imap_auth(int $ownerId, int $accountId, array $acc
         if (function_exists('sodium_memzero')) {
             sodium_memzero($secret);
         }
-        throw new AppMailGoogleOAuthException('Mail account authentication type is unsupported.');
+        throw new AppMailGoogleOAuthException('auth_type_unsupported');
     }
 
     try {
