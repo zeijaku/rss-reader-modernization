@@ -223,4 +223,10 @@ python3 "$SCRIPT_DIR/test_current_account_security_release_gate.py"
 node --check "$ROOT/public/js/account-2fa.js"
 node --check "$ROOT/public/js/totp-qr.js"
 
+echo '== Current feature contracts: V1.36 Notification Center =='
+python3 "$SCRIPT_DIR/test_current_notification_center_contract.py"
+php "$SCRIPT_DIR/test_current_notification_center.php"
+php -l "$ROOT/app/notification.php"
+node --check "$ROOT/public/js/notification-center.js"
+
 echo 'PASS: current feature contract suite completed'
