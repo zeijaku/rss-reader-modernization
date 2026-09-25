@@ -6,7 +6,7 @@ def test_notification_center_contract():
     index=read("public/index.php"); js=read("public/js/notification-center.js")
     mig=read("database/migrations/030_v1_36_notification_center.sql"); schema=read("database/schema.sql")
     assert "'notification'" in conf and "notification.php" in boot
-    for action in ["notification.list","notification.read","notification.read_all","notification.hide"]: assert action in api
+    for action in ["notification.list","notification.read","notification.readall","notification.hide"]: assert action in api
     assert 'id="notificationCenterModal"' in index
     assert "data-notification-open" in index and "data-notification-badge" in index
     assert "notification-center.js" in index and "notification-center.css" in index
