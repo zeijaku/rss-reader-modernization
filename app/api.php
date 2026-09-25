@@ -164,7 +164,7 @@ function api_dispatch(string $action, int $userId, array $input): array
         'opml.export' => api_opml_dispatch($action, $userId, $input),
         'notification.list' => api_notification_list($userId, $input),
         'notification.read' => api_notification_read($userId, $input),
-        'notification.read_all' => api_notification_read_all($userId, $input),
+        'notification.readall' => api_notification_read_all($userId, $input),
         'notification.hide' => api_notification_hide($userId, $input),
         'widget.list' => api_widget_list($userId, $input),
         'widget.reorder' => api_widget_reorder($userId, $input),
