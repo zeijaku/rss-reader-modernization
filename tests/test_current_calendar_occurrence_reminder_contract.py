@@ -28,7 +28,7 @@ def test_occurrence_reminder_backend_contract():
     assert "Calendar reminder sync skipped:" in dashboard and "catch (Throwable $exception)" in dashboard
     assert "catch (PDOException $exception)" in notification and "$racedId" in notification
     assert "繰り返し予定のリマインダーは次の段階で対応します。" not in recurrence_api
-    assert "1.36.0-dev.3" in version
+    assert "1.36.0-dev.4" in version
 
 def test_occurrence_reminder_ui_contract():
     details = read("public/js/calendar-event-details.js")
