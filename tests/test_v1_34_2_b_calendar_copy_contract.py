@@ -19,6 +19,7 @@ check('snapshotChangeForm' in copy_js and 'applySnapshot' in copy_js, 'copy work
 for token in ('CalendarEventTitleValue','CalendarEventStartDate','CalendarEventEndDate','CalendarEventNote','CalendarEventColor','CalendarEventAllDay','CalendarEventStartTime','CalendarEventEndTime','CalendarEventUrl','CalendarEventReminder','CalendarEventRepeatType','CalendarEventRepeatUntil'):
     check(token in copy_js, f'copy workflow preserves {token}')
 check("repeat: occurrenceOnly ? 'none'" in copy_js and "repeatUntil: occurrenceOnly ? ''" in copy_js, 'copying one recurrence occurrence creates a standalone non-recurring event')
+check("reminder: occurrenceOnly ? 'none'" in copy_js, 'occurrence-only copy clears inherited series reminder while series copy preserves it')
 check("selected.value !== 'series'" in copy_js, 'series scope remains distinguishishable from occurrence-only copy')
 check('calendar.recurrence.create' not in copy_js and '$.ajax' not in copy_js and 'api_v1.php' not in copy_js, 'copy itself performs no save or direct API request before user confirmation')
 check("bootstrap.Modal.getOrCreateInstance(registerModal).show()" in copy_js, 'copy opens the existing new-event modal for review before save')
