@@ -138,6 +138,19 @@ function calendar_event_reminder_apply(PDO $pdo, int $ownerId, int $eventId, str
     if ($ownerId <= 0 || $eventId <= 0 || $reminder === null) {
         throw new InvalidArgumentException('Calendar reminder settings are invalid.');
     }
+    $check = $pdo->prepare(
+        'SELECT calendar_event_repeat_type FROM ' . db_table_identifier('calendar_event') . ' '
+        . 'WHERE calendar_event_id = :event_id AND calendar_event_owner = :owner AND calendar_event_flag = 0'
+    );
+    $check->execute([':event_id' => $eventId, ':owner' => $ownerId]);
+    $repeatType = $check->fetchColumn();
+    if ($repeatType === false) {
+        throw new OutOfBoundsException('Calendar event was not found.');
+    }
+    if ((string) $repeatType !== 'none' && $reminder !== 'none') {
+        throw new InvalidArgumentException('Recurring Calendar reminders are not available in V1.36-B.');
+    }
+
     $stmt = $pdo->prepare(
         'UPDATE ' . db_table_identifier('calendar_event') . ' '
         . 'SET calendar_event_reminder = :reminder '
@@ -148,16 +161,6 @@ function calendar_event_reminder_apply(PDO $pdo, int $ownerId, int $eventId, str
         ':event_id' => $eventId,
         ':owner' => $ownerId,
     ]);
-    if ($stmt->rowCount() === 0) {
-        $check = $pdo->prepare(
-            'SELECT calendar_event_id FROM ' . db_table_identifier('calendar_event') . ' '
-            . 'WHERE calendar_event_id = :event_id AND calendar_event_owner = :owner AND calendar_event_flag = 0'
-        );
-        $check->execute([':event_id' => $eventId, ':owner' => $ownerId]);
-        if ($check->fetchColumn() === false) {
-            throw new OutOfBoundsException('Calendar event was not found.');
-        }
-    }
 }
 
 function calendar_event_reminder_reconcile(PDO $pdo, int $ownerId, int $eventId): void
