@@ -1,3 +1,33 @@
+<!-- V1.38-A Reader Mode: RSS本文をDashboard内で読む -->
+<div class="modal fade reader-mode-modal" id="readerModeModal" tabindex="-1" role="dialog" aria-labelledby="readerModeTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl reader-mode-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="reader-mode-heading">
+                    <div class="reader-mode-kicker"><i class="fas fa-book-open" aria-hidden="true"></i> Reader Mode</div>
+                    <h2 class="modal-title fs-5" id="readerModeTitle">記事を読み込み中...</h2>
+                </div>
+                <button type="button" class="btn-close reader-mode-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+            </div>
+            <div class="modal-body">
+                <div class="reader-mode-meta text-muted small" aria-label="記事情報">
+                    <span id="readerModeSource"></span>
+                    <time id="readerModeDate" datetime=""></time>
+                </div>
+                <div id="readerModeStatus" class="reader-mode-status" role="status" aria-live="polite">RSS本文を読み込んでいます...</div>
+                <article id="readerModeBody" class="reader-mode-body" tabindex="0" hidden></article>
+                <p id="readerModeEmpty" class="reader-mode-empty text-muted" hidden>RSS本文がありません。元記事を開いて確認してください。</p>
+            </div>
+            <div class="modal-footer">
+                <a id="readerModeOriginalLink" class="btn btn-outline-primary reader-mode-original-link" href="#" target="_blank" rel="noopener noreferrer" hidden>
+                    <i class="fas fa-external-link-alt" aria-hidden="true"></i> 元記事を開く
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- 追加モーダルボタン -->
 <!-- <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#registerContent"><i class="fas fa-edit fa-fw fa-2x" ></i></button> -->
 <!-- 追加モーダル本体 -->
