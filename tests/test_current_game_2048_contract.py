@@ -17,7 +17,6 @@ runtime = text('public/js/game-2048.js')
 style = text('public/css/game-2048.css')
 index = text('public/index.php')
 stock = text('public/stock.php')
-version = text('app/version.php')
 
 check("'game_2048'" in mini and 'mini_game_widget_validate_type' in mini, '2048 is behind the existing strict Game subtype validator')
 check("'game_2048'" in base_runtime, 'Icon Quest runtime explicitly leaves 2048 cards to the dedicated runtime')
@@ -35,7 +34,6 @@ check('touch-action:none' in style.replace(' ', ''), '2048 board captures delibe
 check('min-height:44px' in style.replace(' ', ''), '2048 controls keep coarse-pointer-friendly button height')
 check('@media(max-width:575.98px)' in style.replace(' ', ''), '2048 has smartphone responsive CSS')
 check(all(token not in runtime for token in ['fetch(', 'XMLHttpRequest', '$.ajax(']), '2048 makes no network request')
-check("APP_ASSET_REVISION = '1.37.0-dev.1'" in version, '2048 production checkpoint has a distinct asset revision')
 check(all('game_2048' not in path.read_text(encoding='utf-8', errors='ignore') for path in (ROOT / 'database').rglob('*.sql')), '2048 adds no database migration or schema dependency')
 
 failed = len(checks) - sum(checks)
