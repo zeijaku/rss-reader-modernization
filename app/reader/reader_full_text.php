@@ -132,10 +132,11 @@ function reader_full_text_parse_document(string $html): ?object
         if (defined('LIBXML_COMPACT')) {
             $flags |= LIBXML_COMPACT;
         }
-        $loaded = $document->loadHTML(
-            '<!doctype html><html><head><meta charset="utf-8"></head><body>' . $html . '</body></html>',
-            $flags
-        );
+        // The fixed XML encoding declaration makes DOMDocument treat the
+        // fetched bytes as UTF-8 without wrapping a complete remote document in
+        // a second html/body tree. DOMDocument still repairs fragment HTML.
+        $loaded = $document->loadHTML('<?xml encoding="UTF-8">' . $html, $flags);
+        $document->encoding = 'UTF-8';
     } finally {
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
