@@ -1020,9 +1020,19 @@
         $('#readerModeSource').text('');
         $('#readerModeDate').text('').attr('datetime', '');
         $('#readerModeStatus').prop('hidden', false).text('RSS本文を読み込んでいます...');
+        $('#readerModeFullTextStatus').prop('hidden', true).text('');
         $('#readerModeBody').prop('hidden', true).text('');
         $('#readerModeEmpty').prop('hidden', true);
+        $('#readerModeFullTextButton')
+            .prop('hidden', true)
+            .prop('disabled', false)
+            .removeData('request-pending')
+            .find('i').removeClass('fa-spin fa-spinner').addClass('fa-file-alt');
+        $('#readerModeFullTextButton').contents().filter(function () {
+            return this.nodeType === 3;
+        }).last().replaceWith(' 全文を取得');
         $('#readerModeOriginalLink').prop('hidden', true).attr('href', '#');
+        $('#readerModeModal').removeData('reader-context');
     }
 
     function renderReaderModePayload(reader) {
@@ -1046,6 +1056,68 @@
         $('#readerModeOriginalLink')
             .prop('hidden', articleUrl === '')
             .attr('href', articleUrl !== '' ? articleUrl : '#');
+        $('#readerModeFullTextButton')
+            .prop('hidden', articleUrl === '')
+            .prop('disabled', articleUrl === '');
+    }
+
+    function readerFullTextErrorMessage(xhr, textStatus) {
+        if (textStatus === 'timeout') {
+            return '元記事の取得がタイムアウトしました。RSS本文を表示しています。';
+        }
+        if (xhr && xhr.responseJSON && xhr.responseJSON.error) {
+            var code = String(xhr.responseJSON.error.code || '');
+            var message = String(xhr.responseJSON.error.message || '');
+            if (/^reader_full_text_[a-z0-9_]+$/.test(code) && message !== '') {
+                return message;
+            }
+        }
+        return '元記事を取得できませんでした。RSS本文を表示しています。';
+    }
+
+    function fetchReaderFullText($button) {
+        var $modal = $('#readerModeModal');
+        var context = $modal.data('reader-context');
+        var $status = $('#readerModeFullTextStatus');
+        if (!context || !/^\d+$/.test(String(context.content_id || ''))
+            || !/^m1i:v1:[a-f0-9]{64}$/.test(String(context.item_identity || ''))
+        ) {
+            $status.prop('hidden', false).text('全文取得用の記事情報を確認できませんでした。RSS本文を表示しています。');
+            return;
+        }
+        if ($button.data('request-pending') === true) {
+            return;
+        }
+
+        $button.data('request-pending', true).prop('disabled', true);
+        $button.find('i').removeClass('fa-file-alt').addClass('fa-spinner fa-spin');
+        $status.prop('hidden', false).text('元記事を安全に取得しています...');
+
+        apiRequest('feed.reader.full_text', context, 25000)
+            .done(function (data) {
+                var fetched = data && data.ok === true && data.data && data.data.full_text_fetch;
+                if (!fetched || fetched.fetched !== true) {
+                    $status.text('元記事を取得できませんでした。RSS本文を表示しています。');
+                    return;
+                }
+
+                var stale = fetched.stale === true;
+                $status.text(stale
+                    ? 'Cache済みの元記事を利用できました。本文抽出は次の段階で反映します。'
+                    : '元記事を取得しました。本文抽出は次の段階で反映します。');
+                $button.find('i').removeClass('fa-spinner fa-spin').addClass('fa-check');
+                $button.contents().filter(function () {
+                    return this.nodeType === 3;
+                }).last().replaceWith(' 全文取得済み');
+            })
+            .fail(function (xhr, textStatus) {
+                $status.text(readerFullTextErrorMessage(xhr, textStatus));
+                $button.prop('disabled', false);
+                $button.find('i').removeClass('fa-spinner fa-spin').addClass('fa-file-alt');
+            })
+            .always(function () {
+                $button.removeData('request-pending');
+            });
     }
 
     function openReaderMode() {
@@ -1060,6 +1132,7 @@
 
         closeArticleActionsMenu(false);
         resetReaderModeModal();
+        $modal.data('reader-context', context);
         if (trigger) {
             $modal.data('return-focus', trigger);
         }
@@ -2936,6 +3009,11 @@
             .on('click' + eventNamespace, '.article-action-reader', function (event) {
                 event.preventDefault();
                 openReaderMode();
+            })
+            .off('click' + eventNamespace, '#readerModeFullTextButton')
+            .on('click' + eventNamespace, '#readerModeFullTextButton', function (event) {
+                event.preventDefault();
+                fetchReaderFullText($(this));
             })
             .off('click' + eventNamespace, '.article-action-stock')
             .on('click' + eventNamespace, '.article-action-stock', function (event) {
