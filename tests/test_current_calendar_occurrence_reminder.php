@@ -52,6 +52,7 @@ function app_now(): string
     return $testNow;
 }
 
+require __DIR__ . '/../app/validation.php';
 require __DIR__ . '/../app/calendar.php';
 require __DIR__ . '/../app/calendar_color.php';
 require __DIR__ . '/../app/calendar_time.php';
