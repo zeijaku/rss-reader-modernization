@@ -65,8 +65,22 @@ function notification_upsert(int $ownerId, string $type, string $sourceType, ?st
     }
 
     $insert = $pdo->prepare('INSERT INTO ' . db_table_identifier('notification') . ' (notification_owner,notification_type,notification_source_type,notification_source_id,notification_source_key,notification_title,notification_body,notification_target_url,notification_due_at,notification_read_at,notification_hidden_at,notification_created_at,notification_updated_at) VALUES (:owner,:type,:source_type,:source_id,:source_key,:title,:body,:target_url,:due_at,NULL,NULL,:created_at,:updated_at)');
-    $insert->execute([':owner'=>$ownerId, ':type'=>$type, ':source_type'=>$sourceType, ':source_id'=>$sourceId, ':source_key'=>$sourceKey, ':title'=>$title, ':body'=>$body, ':target_url'=>$targetUrl, ':due_at'=>$dueAt, ':created_at'=>$now, ':updated_at'=>$now]);
-    return ['notification_id'=>(int)$pdo->lastInsertId(), 'created'=>true];
+    try {
+        $insert->execute([':owner'=>$ownerId, ':type'=>$type, ':source_type'=>$sourceType, ':source_id'=>$sourceId, ':source_key'=>$sourceKey, ':title'=>$title, ':body'=>$body, ':target_url'=>$targetUrl, ':due_at'=>$dueAt, ':created_at'=>$now, ':updated_at'=>$now]);
+        return ['notification_id'=>(int)$pdo->lastInsertId(), 'created'=>true];
+    } catch (PDOException $exception) {
+        // Another Dashboard tab can materialize the same reminder between the
+        // SELECT above and this INSERT. Treat that unique-key race as an
+        // ordinary upsert, while rethrowing unrelated database failures.
+        $select->execute([':owner'=>$ownerId, ':source_type'=>$sourceType, ':source_key'=>$sourceKey, ':type'=>$type]);
+        $racedId = $select->fetchColumn();
+        if ($racedId === false) {
+            throw $exception;
+        }
+        $update = $pdo->prepare('UPDATE ' . db_table_identifier('notification') . ' SET notification_source_id=:source_id, notification_title=:title, notification_body=:body, notification_due_at=:due_at, notification_target_url=:target_url, notification_updated_at=:updated_at WHERE notification_id=:id AND notification_owner=:owner');
+        $update->execute([':source_id'=>$sourceId, ':title'=>$title, ':body'=>$body, ':due_at'=>$dueAt, ':target_url'=>$targetUrl, ':updated_at'=>$now, ':id'=>(int)$racedId, ':owner'=>$ownerId]);
+        return ['notification_id'=>(int)$racedId, 'created'=>false];
+    }
 }
 
 /** @return array{notifications:list<array<string,mixed>>,unread_count:int} */
