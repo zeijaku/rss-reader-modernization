@@ -5,6 +5,7 @@
     var params;
     var eventId = '';
     var targetDate = '';
+    var originalStart = '';
     var handled = false;
     var navigating = false;
     var navigationAttempted = false;
@@ -15,12 +16,15 @@
             params = new URLSearchParams(window.location.search || '');
             eventId = String(params.get('calendar_event_id') || '');
             targetDate = String(params.get('calendar_date') || '');
+            originalStart = String(params.get('calendar_occurrence_start') || '');
         } catch (error) {
             params = null;
         }
-        if (!/^[1-9][0-9]*$/.test(eventId) || !/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
+        if (!/^[1-9][0-9]*$/.test(eventId) || !/^\d{4}-\d{2}-\d{2}$/.test(targetDate)
+            || (originalStart !== '' && !/^\d{4}-\d{2}-\d{2}$/.test(originalStart))) {
             eventId = '';
             targetDate = '';
+            originalStart = '';
         }
     }
 
@@ -32,6 +36,7 @@
             var url = new URL(window.location.href);
             url.searchParams.delete('calendar_event_id');
             url.searchParams.delete('calendar_date');
+            url.searchParams.delete('calendar_occurrence_start');
             window.history.replaceState(window.history.state, document.title, url.pathname + (url.search ? url.search : '') + (url.hash ? url.hash : ''));
         } catch (error) {
             return;
@@ -51,7 +56,8 @@
 
         var $entry = $card.find('.calendar-event-edit-trigger[data-event-id="' + eventId + '"]').filter(function () {
             var occurrenceDate = String($(this).attr('data-calendar-occurrence-start-date') || $(this).attr('data-event-start-date') || '');
-            return occurrenceDate === targetDate;
+            var occurrenceOriginal = String($(this).attr('data-calendar-original-occurrence-start-date') || '');
+            return occurrenceDate === targetDate && (originalStart === '' || occurrenceOriginal === originalStart);
         }).first();
         if ($entry.length > 0) {
             handled = true;
