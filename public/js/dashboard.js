@@ -1002,7 +1002,7 @@
         var index = Number($row.attr('data-feed-item-index'));
         var items = $card.data('feed-render-items');
         var contentId = String($card.attr('data-feed-content-id') || '');
-        if (!/^\\d+$/.test(contentId) || !Number.isInteger(index) || !Array.isArray(items) || !items[index]) {
+        if (!/^\d+$/.test(contentId) || !Number.isInteger(index) || !Array.isArray(items) || !items[index]) {
             return null;
         }
         var itemIdentity = String(items[index].item_identity || '');
