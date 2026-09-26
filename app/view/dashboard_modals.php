@@ -15,10 +15,14 @@
                     <time id="readerModeDate" datetime=""></time>
                 </div>
                 <div id="readerModeStatus" class="reader-mode-status" role="status" aria-live="polite">RSS本文を読み込んでいます...</div>
+                <div id="readerModeFullTextStatus" class="reader-mode-status reader-mode-full-text-status" role="status" aria-live="polite" hidden></div>
                 <article id="readerModeBody" class="reader-mode-body" tabindex="0" hidden></article>
                 <p id="readerModeEmpty" class="reader-mode-empty text-muted" hidden>RSS本文がありません。元記事を開いて確認してください。</p>
             </div>
             <div class="modal-footer">
+                <button type="button" id="readerModeFullTextButton" class="btn btn-outline-secondary reader-mode-full-text" hidden>
+                    <i class="fas fa-file-alt" aria-hidden="true"></i> 全文を取得
+                </button>
                 <a id="readerModeOriginalLink" class="btn btn-outline-primary reader-mode-original-link" href="#" target="_blank" rel="noopener noreferrer" hidden>
                     <i class="fas fa-external-link-alt" aria-hidden="true"></i> 元記事を開く
                 </a>
