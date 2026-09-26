@@ -1,3 +1,30 @@
+## 1.36.0 - 2026-09-26
+
+### Dashboard Notification Center
+- Add an authenticated in-app Notification Center with navbar bell badge, persistent notification records, read / mark-all-read / hide actions, owner scope, CSRF protection, and safe target URLs.
+- Keep Notification Center failures isolated from the Dashboard so a notification-side error does not prevent the main application from loading.
+
+### Calendar reminders
+- Add reminder choices for Calendar events: none, at event time, 10 minutes, 30 minutes, 1 hour, or 1 day before the event.
+- Use 09:00 Asia/Tokyo as the reference time for all-day reminders.
+- Extend reminders to recurring series and individual occurrences. Occurrences inherit the series reminder, moved occurrences reschedule from their effective start, cancellation removes only the pending occurrence reminder, and restore recreates it.
+- Preserve already-due notification history and use stable occurrence source keys to avoid duplicate materialization.
+- Keep reminder synchronization bounded to a rolling window and reuse the existing Calendar projection / exception model without a new occurrence-reminder table.
+
+### Calendar and Dashboard usability
+- Preserve the existing event duration when a start date or start time is moved, including multi-day and cross-midnight events; a user-edited end becomes the new duration baseline.
+- Add client-side minimum constraints so end date/time cannot be selected before the effective start range.
+- Rework Calendar add/edit dialogs to use a wider internally scrollable layout on larger screens and a single-column Smartphone layout without removing features.
+- Keep URL and Memo under an expandable Details section that opens automatically when existing content is present, compact recurrence / occurrence controls, and reduce the initial Memo height.
+- Keep the Dashboard navbar visible while scrolling with sticky positioning below modal / offcanvas layers.
+
+### Database, compatibility, and release
+- Add additive migration `030_v1_36_notification_center.sql` for the Notification Center table and `031_v1_36_calendar_reminder.sql` for the Calendar reminder setting; apply them in numeric order to existing databases.
+- Integrate the notification table and Calendar reminder column into `database/schema.sql` for fresh installations.
+- Preserve existing Calendar events, recurrence / occurrence exceptions, authentication, owner scope, CSRF, Mail, RSS, and other Dashboard functionality.
+- No new required configuration, external dependency, background cron, web push, or email notification delivery is introduced.
+- Promote the production-verified V1.36 checkpoints to the formal `1.36.0` release and standard release workflow.
+
 ## 1.35.4 - 2026-09-25
 
 ### RSS error diagnostics
