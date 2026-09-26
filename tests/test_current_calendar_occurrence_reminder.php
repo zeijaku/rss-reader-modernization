@@ -159,6 +159,10 @@ calendar_event_reminder_sync_owner(1);
 $rows = $pdo->query("SELECT * FROM notification WHERE notification_owner = 1 ORDER BY notification_source_key")->fetchAll();
 c_assert(count($rows) >= 10, 'rolling sync materializes multiple recurring occurrence reminders');
 c_assert(count($rows) === count(array_unique(array_column($rows, 'notification_source_key'))), 'each occurrence uses a unique notification source key');
+$olderKey = calendar_event_reminder_source_key(1, c_date($today, -2));
+$olderStmt = $pdo->prepare('SELECT COUNT(*) FROM notification WHERE notification_owner = 1 AND notification_source_key = ?');
+$olderStmt->execute([$olderKey]);
+c_assert((int) $olderStmt->fetchColumn() === 0, 'rolling sync does not backfill recurring reminders older than yesterday');
 c_assert((int) $pdo->query("SELECT COUNT(*) FROM notification WHERE notification_owner = 2")->fetchColumn() === 0, 'owner sync does not materialize another owner notifications');
 
 $futureOriginal = c_date($today, 2);
@@ -170,9 +174,14 @@ c_assert(is_array($beforeMove), 'future recurring occurrence has a pending remin
 c_assert(($beforeMove['notification_due_at'] ?? '') === $futureOriginal . ' 14:30:00', 'recurring occurrence uses the series 30-minute reminder');
 
 $countBefore = (int) $pdo->query("SELECT COUNT(*) FROM notification WHERE notification_owner = 1")->fetchColumn();
+$unchangedUpdatedAt = (string) ($beforeMove['notification_updated_at'] ?? '');
+$testNow = $today->setTime(12, 1, 0)->format('Y-m-d H:i:s');
 calendar_event_reminder_sync_owner(1);
 $countAfter = (int) $pdo->query("SELECT COUNT(*) FROM notification WHERE notification_owner = 1")->fetchColumn();
 c_assert($countBefore === $countAfter, 'repeated recurring sync does not duplicate reminders');
+$stmt->execute([$sourceKey]);
+$afterNoopSync = $stmt->fetch();
+c_assert(is_array($afterNoopSync) && ($afterNoopSync['notification_updated_at'] ?? '') === $unchangedUpdatedAt, 'unchanged recurring reminder sync performs no database rewrite');
 
 $state = calendar_range_event_state(1, c_date($today, -2), c_date($today, 8));
 $source = c_occurrence($state['events'], 1, $futureOriginal);
