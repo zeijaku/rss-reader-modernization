@@ -27,7 +27,7 @@ function v16c_check(bool $condition, string $message): void
     }
 }
 
-v16c_check(mini_game_widget_types() === ['icon_quest', 'lights_out', 'wire_defense', 'block_collapse', 'cursor_field', 'game_2048'], 'Game subtype order keeps existing types and adds 2048');
+v16c_check(mini_game_widget_types() === ['icon_quest', 'lights_out', 'wire_defense', 'block_collapse', 'cursor_field', 'game_2048', 'reversi'], 'Game subtype order keeps existing types and adds 2048 / Reversi');
 v16c_check(mini_game_widget_validate_type('lights_out') === 'lights_out', 'Lights Out is accepted by the existing Game validator');
 $config = mini_game_widget_config_from_input(['game_title' => 'Lights Out', 'game_type' => 'lights_out']);
 v16c_check($config === ['schema' => 1, 'title' => 'Lights Out', 'game' => 'lights_out'], 'Lights Out uses the existing widget_config schema');
@@ -47,6 +47,10 @@ v16c_check(mini_game_widget_validate_type('cursor-field') === null, 'unapproved 
 $game2048Config = mini_game_widget_config_from_input(['game_title' => '2048', 'game_type' => 'game_2048']);
 v16c_check($game2048Config === ['schema' => 1, 'title' => '2048', 'game' => 'game_2048'], '2048 uses the existing widget_config schema');
 v16c_check(mini_game_widget_validate_type('2048') === null, 'numeric display name is not accepted as the internal Game subtype');
+
+$reversiConfig = mini_game_widget_config_from_input(['game_title' => 'Reversi', 'game_type' => 'reversi']);
+v16c_check($reversiConfig === ['schema' => 1, 'title' => 'Reversi', 'game' => 'reversi'], 'Reversi uses the existing widget_config schema');
+v16c_check(mini_game_widget_validate_type('othello') === null, 'unapproved Reversi alias is rejected');
 
 printf("RESULT: %s %d / FAIL %d / SKIP 0\n", $failures === 0 ? 'PASS' : 'FAIL', $checks, $failures);
 exit($failures === 0 ? 0 : 1);
