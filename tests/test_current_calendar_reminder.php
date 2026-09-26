@@ -112,6 +112,13 @@ $pdo->exec("UPDATE rss_calendar_event SET calendar_event_repeat_type = 'weekly',
 calendar_event_reminder_reconcile($pdo, 1, 1);
 reminder_assert((int) $pdo->query('SELECT COUNT(*) FROM rss_notification')->fetchColumn() === 0, 'recurring-series pending reminder was not removed');
 
+try {
+    calendar_event_reminder_apply($pdo, 1, 1, '30m');
+    throw new RuntimeException('recurring reminder was accepted');
+} catch (InvalidArgumentException $exception) {
+    reminder_assert(str_contains($exception->getMessage(), 'V1.36-B'), 'unexpected recurring reminder rejection');
+}
+
 $pdo->exec("INSERT INTO rss_calendar_event (calendar_event_id, calendar_event_updated_at, calendar_event_flag, calendar_event_owner, calendar_event_title, calendar_event_start_date, calendar_event_all_day, calendar_event_start_time, calendar_event_repeat_type, calendar_event_reminder) VALUES (2, '2020-01-01 00:00:00', 0, 1, 'Past event', '2020-01-02', 0, '15:00:00', 'none', '30m')");
 calendar_event_reminder_reconcile($pdo, 1, 2);
 $pastDue = (string) $pdo->query('SELECT notification_due_at FROM rss_notification WHERE notification_source_id = "2"')->fetchColumn();
