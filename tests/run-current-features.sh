@@ -229,4 +229,15 @@ php "$SCRIPT_DIR/test_current_notification_center.php"
 php -l "$ROOT/app/notification.php"
 node --check "$ROOT/public/js/notification-center.js"
 
+echo '== Current feature contracts: V1.36 Calendar Reminder =='
+python3 "$SCRIPT_DIR/test_current_calendar_reminder_contract.py"
+php "$SCRIPT_DIR/test_current_calendar_reminder.php"
+php -l "$ROOT/app/calendar_reminder.php"
+php -l "$ROOT/public/calendar_color_api.php"
+php -l "$ROOT/public/calendar_recurrence_api.php"
+node --check "$ROOT/public/js/calendar-event-details.js"
+node --check "$ROOT/public/js/calendar-recurrence.js"
+node --check "$ROOT/public/js/calendar-reminder-target.js"
+node --check "$ROOT/public/js/notification-center.js"
+
 echo 'PASS: current feature contract suite completed'
