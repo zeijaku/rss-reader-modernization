@@ -108,16 +108,26 @@ $pdo->exec("UPDATE rss_calendar_event SET calendar_event_reminder = '10m' WHERE 
 calendar_event_reminder_reconcile($pdo, 1, 1);
 reminder_assert((int) $pdo->query('SELECT COUNT(*) FROM rss_notification')->fetchColumn() === 1, 're-enabled reminder was not recreated');
 
-$pdo->exec("UPDATE rss_calendar_event SET calendar_event_repeat_type = 'weekly', calendar_event_reminder = 'none' WHERE calendar_event_id = 1");
-calendar_event_reminder_reconcile($pdo, 1, 1);
-reminder_assert((int) $pdo->query('SELECT COUNT(*) FROM rss_notification')->fetchColumn() === 0, 'recurring-series pending reminder was not removed');
-
-try {
-    calendar_event_reminder_apply($pdo, 1, 1, '30m');
-    throw new RuntimeException('recurring reminder was accepted');
-} catch (InvalidArgumentException $exception) {
-    reminder_assert(str_contains($exception->getMessage(), 'V1.36-B'), 'unexpected recurring reminder rejection');
-}
+$occurrence = [
+    'occurrence_start_date' => '2099-06-08',
+    'original_occurrence_start_date' => '2099-06-08',
+    'all_day' => false,
+    'start_time' => '15:00',
+    'title' => 'Weekly meeting',
+];
+reminder_assert(
+    calendar_event_reminder_occurrence_source_key(1, '2099-06-08') === 'event:1:occurrence:2099-06-08:reminder',
+    'occurrence reminder source key is unstable'
+);
+reminder_assert(
+    calendar_event_reminder_occurrence_due_at($occurrence, '30m') === '2099-06-08 14:30:00',
+    'occurrence reminder due calculation failed'
+);
+calendar_event_reminder_apply($pdo, 1, 1, '30m');
+reminder_assert(
+    (string) $pdo->query('SELECT calendar_event_reminder FROM rss_calendar_event WHERE calendar_event_id = 1')->fetchColumn() === '30m',
+    'recurring-compatible reminder apply failed'
+);
 
 $pdo->exec("INSERT INTO rss_calendar_event (calendar_event_id, calendar_event_updated_at, calendar_event_flag, calendar_event_owner, calendar_event_title, calendar_event_start_date, calendar_event_all_day, calendar_event_start_time, calendar_event_repeat_type, calendar_event_reminder) VALUES (2, '2020-01-01 00:00:00', 0, 1, 'Past event', '2020-01-02', 0, '15:00:00', 'none', '30m')");
 calendar_event_reminder_reconcile($pdo, 1, 2);
