@@ -218,7 +218,7 @@ $moved = calendar_event_occurrence_update(
 $stmt->execute([$sourceKey]);
 $afterMove = $stmt->fetch();
 c_assert(is_array($afterMove) && ($afterMove['notification_due_at'] ?? '') === $movedDate . ' 16:30:00', 'individual occurrence move reschedules the pending reminder');
-c_assert(($afterMove['notification_target_url'] ?? '') === './?tab=2&calendar_date=' . $movedDate . '&calendar_event_id=1', 'moved occurrence notification opens the effective date');
+c_assert(($afterMove['notification_target_url'] ?? '') === './?tab=2&calendar_date=' . $movedDate . '&calendar_event_id=1&calendar_occurrence_start=' . $futureOriginal, 'moved occurrence notification opens the exact effective occurrence');
 c_assert(($moved['original_occurrence_start_date'] ?? '') === $futureOriginal, 'moved occurrence keeps stable original identity');
 
 $cancelOriginal = c_date($today, 4);
