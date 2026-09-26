@@ -419,6 +419,108 @@ function api_feed_fetch(int $userId, array $input): array
 }
 
 /** @return array{status:int,body:array<string,mixed>} */
+function api_feed_reader(int $userId, array $input): array
+{
+    $contentId = api_positive_int($input, 'content_id');
+    $itemIdentity = feed_item_state_valid_identity($input['item_identity'] ?? null);
+    if ($contentId === null) {
+        return api_validation_error('content_id must be a positive integer.');
+    }
+    if ($itemIdentity === null) {
+        return api_validation_error('item_identity is invalid.');
+    }
+
+    // Reader Modeも通常Feedと同じく、共有Cacheを見る前に必ず所有権を確認する。
+    $content = find_owned_active_content($userId, $contentId);
+    if ($content === null) {
+        return api_error('not_found', 'Content was not found.', 404);
+    }
+
+    $url = app_validate_feed_url($content['content_value'] ?? null);
+    if ($url === null) {
+        $details = feed_public_error_details('fetch', 'invalid_url');
+        return api_error($details['code'], $details['message'], $details['status']);
+    }
+
+    $source = (new FeedSourceMapper())->fromOwnedContent($content, $userId, $url);
+    if ($source === null) {
+        return api_feed_internal_failure(
+            'feed.reader.source.map',
+            $userId,
+            $contentId,
+            new RuntimeException('Feed source mapping rejected.')
+        );
+    }
+
+    try {
+        // V1.38-Aは元記事を取得しない。既存RSS Cache/Fetch経路だけを再利用する。
+        $loaded = FeedFetchService::fromRuntimeConfiguration()->load($source);
+    } catch (Throwable $exception) {
+        return api_feed_internal_failure('feed.reader', $userId, $contentId, $exception);
+    }
+
+    if (($loaded['ok'] ?? false) !== true) {
+        $errorType = ($loaded['error_type'] ?? '') === 'parse' ? 'parse' : 'fetch';
+        $fetch = is_array($loaded['fetch'] ?? null) ? $loaded['fetch'] : [];
+        $details = feed_public_error_details(
+            $errorType,
+            (string) ($fetch['error_code'] ?? ''),
+            (int) ($fetch['status'] ?? 0)
+        );
+        return api_error($details['code'], $details['message'], $details['status']);
+    }
+
+    $feed = is_array($loaded['result_feed'] ?? null) ? $loaded['result_feed'] : [];
+    $items = isset($feed['item']) && is_array($feed['item']) ? $feed['item'] : [];
+    $target = null;
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $identity = feed_item_state_valid_identity($item['item_identity'] ?? null);
+        if ($identity !== null && hash_equals($itemIdentity, $identity)) {
+            $target = $item;
+            break;
+        }
+    }
+    if ($target === null) {
+        return api_error('reader_item_not_found', 'Reader content was not found.', 404);
+    }
+
+    $contentText = api_reader_plain_text($target['content'] ?? '', 65536);
+    $descriptionText = api_reader_plain_text($target['description'] ?? '', 32768);
+    $bodySource = 'none';
+    $body = '';
+    if ($contentText !== '') {
+        $body = $contentText;
+        $bodySource = 'content';
+    } elseif ($descriptionText !== '') {
+        $body = $descriptionText;
+        $bodySource = 'description';
+    }
+
+    $channel = isset($feed['channel']) && is_array($feed['channel']) ? $feed['channel'] : [];
+    $articleUrl = app_validate_external_link($target['link'] ?? null, 2048);
+    if ($articleUrl !== null) {
+        $articleUrl = app_remove_tracking_parameters($articleUrl);
+    }
+
+    return api_success([
+        'content_id' => $contentId,
+        'reader' => [
+            'title' => api_feed_text($target['title'] ?? '', 512),
+            'source' => api_feed_text($channel['title'] ?? '', 512),
+            'date' => api_feed_text($target['date'] ?? '', 64),
+            'body' => $body,
+            'body_source' => $bodySource,
+            'article_url' => $articleUrl ?? '',
+            'item_identity' => $itemIdentity,
+            'full_text' => false,
+        ],
+    ]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
 function api_feed_new_clear(int $userId, array $input): array
 {
     $contentId = api_positive_int($input, 'content_id');
