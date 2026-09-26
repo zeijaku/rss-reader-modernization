@@ -395,7 +395,11 @@ function calendar_event_reminder_reconcile(PDO $pdo, int $ownerId, int $eventId)
     }
 
     $reminder = calendar_event_reminder_validate($event['calendar_event_reminder'] ?? null) ?? 'none';
-    $repeatType = calendar_event_recurrence_validate_type($event['calendar_event_repeat_type'] ?? null) ?? 'none';
+    $repeatValue = is_string($event['calendar_event_repeat_type'] ?? null)
+        ? (string) $event['calendar_event_repeat_type'] : 'none';
+    $repeatType = function_exists('calendar_event_recurrence_validate_type')
+        ? (calendar_event_recurrence_validate_type($repeatValue) ?? 'none')
+        : ($repeatValue === 'none' ? 'none' : $repeatValue);
     if ((int) ($event['calendar_event_flag'] ?? 1) !== 0 || $reminder === 'none') {
         calendar_event_reminder_cancel_pending($pdo, $ownerId, $eventId);
         return;
