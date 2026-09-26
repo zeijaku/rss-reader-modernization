@@ -1,8 +1,8 @@
--- RSS Reader Modernization base new-install schema (through migration 008 / V1.7, plus integrated 013, 017-024 where applicable).
+-- RSS Reader Modernization base new-install schema (through migration 008 / V1.7, plus integrated 013, 017-025 and 030-031 where applicable).
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
 -- Current fresh installs must also apply migrations 009-012 and 014-016 in numeric order.
--- V1.20.1 Calendar color (013), V1.24 Stock state (017), V1.25 Calendar time/URL/recurrence (018/019), V1.27 user file metadata (020), V1.29 remote connection metadata (021), and V1.32 Account Security tables (022-024) are integrated here.
+-- V1.20.1 Calendar color (013), V1.24 Stock state (017), V1.25 Calendar time/URL/recurrence (018/019), V1.27 user file metadata (020), V1.29 remote connection metadata (021), V1.32 Account Security tables (022-024), V1.33 Calendar occurrence exceptions (025), and V1.36 Notification Center / Calendar reminder (030/031) are integrated here.
 -- See docs/installation.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
