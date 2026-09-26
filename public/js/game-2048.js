@@ -304,6 +304,19 @@
         state.best = state.score;
         saveBest(state.userId, state.widgetId, state.best);
     }
+    function animateMove(state, direction) {
+        if (!state || !state.boardNode || ['left', 'right', 'up', 'down'].indexOf(direction) === -1) return;
+        var classes = ['game-2048-move-left', 'game-2048-move-right', 'game-2048-move-up', 'game-2048-move-down'];
+        for (var i = 0; i < classes.length; i++) state.boardNode.classList.remove(classes[i]);
+        void state.boardNode.offsetWidth;
+        var activeClass = 'game-2048-move-' + direction;
+        state.boardNode.classList.add(activeClass);
+        if (state.moveAnimationTimer !== null && typeof window.clearTimeout === 'function') window.clearTimeout(state.moveAnimationTimer);
+        state.moveAnimationTimer = typeof window.setTimeout === 'function' ? window.setTimeout(function () {
+            state.boardNode.classList.remove(activeClass);
+            state.moveAnimationTimer = null;
+        }, 150) : null;
+    }
     function applyMove(state, direction) {
         if (!state || state.gameOver) return false;
         var result = moveBoard(state.board, direction);
@@ -325,6 +338,7 @@
             setStatus(state, 'Game Over。New GameまたはRestartで再開できます。', 'danger');
         } else setStatus(state, 'Arrow KeyまたはSwipeで同じ数字を合わせてください。', '');
         render(state);
+        animateMove(state, direction);
         return true;
     }
     function resetFromBoard(state, board, rememberInitial) {
@@ -395,7 +409,7 @@
             score:0, best:loadBest(userId, widgetId), gameOver:false, reached2048:false, boardNode:boardNode,
             cells:Array.prototype.slice.call(boardNode.querySelectorAll('.game-2048-cell')),
             scoreNode:panel.querySelector('.game-2048-score'), bestNode:panel.querySelector('.game-2048-best'),
-            status:panel.querySelector('.game-2048-status'), pointerId:null, pointerStartX:0, pointerStartY:0
+            status:panel.querySelector('.game-2048-status'), pointerId:null, pointerStartX:0, pointerStartY:0, moveAnimationTimer:null
         };
         states.push(state);
         card.__rssGame2048State = state;
