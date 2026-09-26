@@ -537,9 +537,6 @@ function calendar_event_occurrence_update(
         if (function_exists('calendar_event_reminder_reconcile')) {
             calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
         }
-        if (function_exists('calendar_event_reminder_reconcile')) {
-            calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
-        }
         if ($started) {
             $pdo->commit();
         }
