@@ -60,26 +60,3 @@ jobs:
 
       - name: Run the local CI-equivalent gate
         run: bash tests/run-ci.sh
-
-      - name: Build V1.37 dev.4 production overlay
-        if: ${{ matrix.php == '8.4' }}
-        run: |
-          zip -q v1.37-game-enhancement-production-overlay-dev4.zip \
-            app/mini_game.php \
-            app/version.php \
-            public/css/game-2048.css \
-            public/css/reversi.css \
-            public/index.php \
-            public/js/game-2048.js \
-            public/js/mini-game.js \
-            public/js/reversi.js \
-            public/stock.php
-
-      - name: Upload V1.37 dev.4 production overlay
-        if: ${{ matrix.php == '8.4' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: v1.37-game-enhancement-production-overlay-dev4
-          path: v1.37-game-enhancement-production-overlay-dev4.zip
-          if-no-files-found: error
-          retention-days: 7
