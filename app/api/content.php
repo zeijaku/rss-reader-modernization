@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/feed/feed_error.php';
+require_once dirname(__DIR__) . '/reader/reader_full_text.php';
 
 /**
  * V1.19-B broad module extracted from the v1.18.0 facade.
@@ -415,6 +416,217 @@ function api_feed_fetch(int $userId, array $input): array
     return api_success([
         'content_id' => $contentId,
         'result_feed' => $safeFeed,
+    ]);
+}
+
+/** @return array{title:string,source:string,date:string,body:string,body_source:string,article_url:string,item_identity:string,full_text:bool}|null */
+function api_feed_reader_payload(array $feed, string $itemIdentity): ?array
+{
+    $items = isset($feed['item']) && is_array($feed['item']) ? $feed['item'] : [];
+    $target = null;
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $identity = feed_item_state_valid_identity($item['item_identity'] ?? null);
+        if ($identity !== null && hash_equals($itemIdentity, $identity)) {
+            $target = $item;
+            break;
+        }
+    }
+    if ($target === null) {
+        return null;
+    }
+
+    $contentText = api_reader_plain_text($target['content'] ?? '', 65536);
+    $descriptionText = api_reader_plain_text($target['description'] ?? '', 32768);
+    $bodySource = 'none';
+    $body = '';
+    if ($contentText !== '') {
+        $body = $contentText;
+        $bodySource = 'content';
+    } elseif ($descriptionText !== '') {
+        $body = $descriptionText;
+        $bodySource = 'description';
+    }
+
+    $channel = isset($feed['channel']) && is_array($feed['channel']) ? $feed['channel'] : [];
+    $articleUrl = app_validate_external_link($target['link'] ?? null, 2048);
+    if ($articleUrl !== null) {
+        $articleUrl = app_remove_tracking_parameters($articleUrl);
+    }
+
+    return [
+        'title' => api_feed_text($target['title'] ?? '', 512),
+        'source' => api_feed_text($channel['title'] ?? '', 512),
+        'date' => api_feed_text($target['date'] ?? '', 64),
+        'body' => $body,
+        'body_source' => $bodySource,
+        'article_url' => $articleUrl ?? '',
+        'item_identity' => $itemIdentity,
+        'full_text' => false,
+    ];
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_feed_reader(int $userId, array $input): array
+{
+    $contentId = api_positive_int($input, 'content_id');
+    $itemIdentity = feed_item_state_valid_identity($input['item_identity'] ?? null);
+    if ($contentId === null) {
+        return api_validation_error('content_id must be a positive integer.');
+    }
+    if ($itemIdentity === null) {
+        return api_validation_error('item_identity is invalid.');
+    }
+
+    // Reader Modeも通常Feedと同じく、共有Cacheを見る前に必ず所有権を確認する。
+    $content = find_owned_active_content($userId, $contentId);
+    if ($content === null) {
+        return api_error('not_found', 'Content was not found.', 404);
+    }
+
+    $url = app_validate_feed_url($content['content_value'] ?? null);
+    if ($url === null) {
+        $details = feed_public_error_details('fetch', 'invalid_url');
+        return api_error($details['code'], $details['message'], $details['status']);
+    }
+
+    $source = (new FeedSourceMapper())->fromOwnedContent($content, $userId, $url);
+    if ($source === null) {
+        return api_feed_internal_failure(
+            'feed.reader.source.map',
+            $userId,
+            $contentId,
+            new RuntimeException('Feed source mapping rejected.')
+        );
+    }
+
+    try {
+        // V1.38-Aは元記事を取得しない。既存RSS Cache/Fetch経路だけを再利用する。
+        $loaded = FeedFetchService::fromRuntimeConfiguration()->load($source);
+    } catch (Throwable $exception) {
+        return api_feed_internal_failure('feed.reader', $userId, $contentId, $exception);
+    }
+
+    if (($loaded['ok'] ?? false) !== true) {
+        $errorType = ($loaded['error_type'] ?? '') === 'parse' ? 'parse' : 'fetch';
+        $fetch = is_array($loaded['fetch'] ?? null) ? $loaded['fetch'] : [];
+        $details = feed_public_error_details(
+            $errorType,
+            (string) ($fetch['error_code'] ?? ''),
+            (int) ($fetch['status'] ?? 0)
+        );
+        return api_error($details['code'], $details['message'], $details['status']);
+    }
+
+    $feed = is_array($loaded['result_feed'] ?? null) ? $loaded['result_feed'] : [];
+    $reader = api_feed_reader_payload($feed, $itemIdentity);
+    if ($reader === null) {
+        return api_error('reader_item_not_found', 'Reader content was not found.', 404);
+    }
+
+    return api_success([
+        'content_id' => $contentId,
+        'reader' => $reader,
+    ]);
+}
+
+/** @return array{status:int,body:array<string,mixed>} */
+function api_feed_reader_full_text(int $userId, array $input): array
+{
+    // Resolve the article URL from the authenticated user's owned Feed and the
+    // server-known item identity. Never accept a client-supplied article URL.
+    $readerResponse = api_feed_reader($userId, $input);
+    if (($readerResponse['status'] ?? 500) !== 200) {
+        return $readerResponse;
+    }
+
+    $contentId = api_positive_int($input, 'content_id');
+    $reader = $readerResponse['body']['data']['reader'] ?? null;
+    if ($contentId === null || !is_array($reader)) {
+        return api_error('reader_full_text_unavailable', '元記事を取得できませんでした。RSS本文を表示しています。', 502);
+    }
+
+    $articleUrl = is_string($reader['article_url'] ?? null) ? (string) $reader['article_url'] : '';
+    if ($articleUrl === '') {
+        return api_error('reader_full_text_no_url', '元記事URLがないため全文を取得できません。RSS本文を表示しています。', 422);
+    }
+
+    try {
+        $loaded = ReaderFullTextService::fromRuntimeConfiguration()->load($articleUrl);
+    } catch (Throwable $exception) {
+        return api_feed_internal_failure('feed.reader.full_text', $userId, $contentId, $exception);
+    }
+
+    if (($loaded['ok'] ?? false) !== true) {
+        $internalCode = is_string($loaded['error_code'] ?? null)
+            && preg_match('/\A[a-z0-9_]{1,64}\z/D', (string) $loaded['error_code']) === 1
+            ? (string) $loaded['error_code']
+            : 'transport_error';
+        $httpStatus = max(0, min(599, (int) ($loaded['status'] ?? 0)));
+
+        error_log(sprintf(
+            'Reader Full Text fetch failure user_id=%d content_id=%d internal_code=%s http_status=%d',
+            $userId,
+            $contentId,
+            $internalCode,
+            $httpStatus
+        ));
+
+        if (in_array($internalCode, ['invalid_url', 'port_not_allowed', 'non_public_address', 'invalid_redirect'], true)) {
+            return api_error(
+                'reader_full_text_blocked',
+                '元記事の取得先を安全に確認できませんでした。RSS本文を表示しています。',
+                422
+            );
+        }
+        if ($internalCode === 'unsupported_content_type') {
+            return api_error(
+                'reader_full_text_unsupported',
+                '元記事はReader Modeで扱えない形式でした。RSS本文を表示しています。',
+                415
+            );
+        }
+        if ($internalCode === 'response_too_large') {
+            return api_error(
+                'reader_full_text_too_large',
+                '元記事が大きすぎるため全文を取得できませんでした。RSS本文を表示しています。',
+                413
+            );
+        }
+        if ($internalCode === 'timeout') {
+            return api_error(
+                'reader_full_text_timeout',
+                '元記事の取得がタイムアウトしました。RSS本文を表示しています。',
+                504
+            );
+        }
+
+        return api_error(
+            'reader_full_text_unavailable',
+            '元記事を取得できませんでした。RSS本文を表示しています。',
+            502
+        );
+    }
+
+    $cacheStatus = is_string($loaded['cache_status'] ?? null) ? (string) $loaded['cache_status'] : 'miss';
+    if (!in_array($cacheStatus, ['hit', 'miss', 'stale', 'disabled'], true)) {
+        $cacheStatus = 'miss';
+    }
+    $contentType = reader_full_text_content_type($loaded['content_type'] ?? null) ?? '';
+    $body = is_string($loaded['body'] ?? null) ? (string) $loaded['body'] : '';
+
+    return api_success([
+        'content_id' => $contentId,
+        'item_identity' => (string) ($reader['item_identity'] ?? ''),
+        'full_text_fetch' => [
+            'fetched' => true,
+            'cache_status' => $cacheStatus,
+            'stale' => ($loaded['stale'] ?? false) === true,
+            'content_type' => $contentType,
+            'bytes' => strlen($body),
+        ],
     ]);
 }
 
