@@ -29,6 +29,8 @@ check("id="readerModeBody"" in modals and "tabindex="0"" in modals, "Reader arti
 check("id="readerModeOriginalLink"" in modals and 'rel="noopener noreferrer"' in modals, "Original article link is isolated from the opener")
 check("article-action-reader" in index, "Article Actions exposes Reader Mode for RSS articles")
 check("function openReaderMode()" in js and "apiRequest('feed.reader'" in js, "Reader UI loads article data on demand")
+check("if (!/^\\d+$/.test(contentId)" in js, "Reader accepts numeric content IDs with the standard digit regex")
+check("if (!/^\\\\d+$/.test(contentId)" not in js, "Reader does not use an over-escaped content ID regex")
 check("$('#readerModeBody')" in js and ".text(body)" in js, "Reader renders body as text rather than injecting HTML")
 check("safeFeedLink(payload.article_url)" in js, "Reader validates the browser-side original article link")
 check(".reader-mode-body" in css and "max-width: 52rem" in css, "Reader body keeps a readable PC line width")
