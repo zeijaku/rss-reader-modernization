@@ -1,6 +1,6 @@
 .calendar-occurrence-scope {
     margin: 0;
-    padding: .75rem;
+    padding: .55rem .7rem;
     border: 1px solid rgba(13, 110, 253, .28);
     border-radius: .5rem;
     background: rgba(13, 110, 253, .055);
@@ -9,7 +9,7 @@
 .calendar-occurrence-scope-options {
     display: flex;
     flex-wrap: wrap;
-    gap: .5rem 1rem;
+    gap: .35rem 1rem;
 }
 
 .calendar-occurrence-context {
@@ -35,9 +35,9 @@
 
 @media (max-width: 575.98px) {
     .calendar-occurrence-scope-options {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: .35rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: .35rem .8rem;
     }
 
     #changeCalendarEvent .modal-footer {
@@ -61,4 +61,14 @@
         background: rgba(33, 37, 41, .82);
         color: #f8f9fa;
     }
+}
+
+
+.calendar-occurrence-scope .form-label {
+    margin-bottom: .25rem;
+}
+
+.calendar-occurrence-scope-help {
+    margin-top: .2rem;
+    font-size: .78rem;
 }
