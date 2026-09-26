@@ -82,7 +82,7 @@ check('CREATE TABLE' in migration and 'DROP ' not in migration.upper()
       'Migration 025 is additive and does not alter or destroy existing tables')
 check('calendar_event_exception' in schema and 'calendar_event_exception' in installation,
       'fresh-install schema and installation guide include the exception table')
-table_count_match = re.search(r'次の(\\d+) table', installation)
+table_count_match = re.search(r'次の(\d+) table', installation)
 check(table_count_match is not None and int(table_count_match.group(1)) >= 26
       and 'rss_calendar_event_exception' in installation,
       'fresh-install table inventory remains updated for V1.33 and later')
