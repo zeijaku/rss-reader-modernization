@@ -418,6 +418,55 @@ function api_feed_fetch(int $userId, array $input): array
     ]);
 }
 
+/** @return array{title:string,source:string,date:string,body:string,body_source:string,article_url:string,item_identity:string,full_text:bool}|null */
+function api_feed_reader_payload(array $feed, string $itemIdentity): ?array
+{
+    $items = isset($feed['item']) && is_array($feed['item']) ? $feed['item'] : [];
+    $target = null;
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $identity = feed_item_state_valid_identity($item['item_identity'] ?? null);
+        if ($identity !== null && hash_equals($itemIdentity, $identity)) {
+            $target = $item;
+            break;
+        }
+    }
+    if ($target === null) {
+        return null;
+    }
+
+    $contentText = api_reader_plain_text($target['content'] ?? '', 65536);
+    $descriptionText = api_reader_plain_text($target['description'] ?? '', 32768);
+    $bodySource = 'none';
+    $body = '';
+    if ($contentText !== '') {
+        $body = $contentText;
+        $bodySource = 'content';
+    } elseif ($descriptionText !== '') {
+        $body = $descriptionText;
+        $bodySource = 'description';
+    }
+
+    $channel = isset($feed['channel']) && is_array($feed['channel']) ? $feed['channel'] : [];
+    $articleUrl = app_validate_external_link($target['link'] ?? null, 2048);
+    if ($articleUrl !== null) {
+        $articleUrl = app_remove_tracking_parameters($articleUrl);
+    }
+
+    return [
+        'title' => api_feed_text($target['title'] ?? '', 512),
+        'source' => api_feed_text($channel['title'] ?? '', 512),
+        'date' => api_feed_text($target['date'] ?? '', 64),
+        'body' => $body,
+        'body_source' => $bodySource,
+        'article_url' => $articleUrl ?? '',
+        'item_identity' => $itemIdentity,
+        'full_text' => false,
+    ];
+}
+
 /** @return array{status:int,body:array<string,mixed>} */
 function api_feed_reader(int $userId, array $input): array
 {
@@ -471,52 +520,14 @@ function api_feed_reader(int $userId, array $input): array
     }
 
     $feed = is_array($loaded['result_feed'] ?? null) ? $loaded['result_feed'] : [];
-    $items = isset($feed['item']) && is_array($feed['item']) ? $feed['item'] : [];
-    $target = null;
-    foreach ($items as $item) {
-        if (!is_array($item)) {
-            continue;
-        }
-        $identity = feed_item_state_valid_identity($item['item_identity'] ?? null);
-        if ($identity !== null && hash_equals($itemIdentity, $identity)) {
-            $target = $item;
-            break;
-        }
-    }
-    if ($target === null) {
+    $reader = api_feed_reader_payload($feed, $itemIdentity);
+    if ($reader === null) {
         return api_error('reader_item_not_found', 'Reader content was not found.', 404);
-    }
-
-    $contentText = api_reader_plain_text($target['content'] ?? '', 65536);
-    $descriptionText = api_reader_plain_text($target['description'] ?? '', 32768);
-    $bodySource = 'none';
-    $body = '';
-    if ($contentText !== '') {
-        $body = $contentText;
-        $bodySource = 'content';
-    } elseif ($descriptionText !== '') {
-        $body = $descriptionText;
-        $bodySource = 'description';
-    }
-
-    $channel = isset($feed['channel']) && is_array($feed['channel']) ? $feed['channel'] : [];
-    $articleUrl = app_validate_external_link($target['link'] ?? null, 2048);
-    if ($articleUrl !== null) {
-        $articleUrl = app_remove_tracking_parameters($articleUrl);
     }
 
     return api_success([
         'content_id' => $contentId,
-        'reader' => [
-            'title' => api_feed_text($target['title'] ?? '', 512),
-            'source' => api_feed_text($channel['title'] ?? '', 512),
-            'date' => api_feed_text($target['date'] ?? '', 64),
-            'body' => $body,
-            'body_source' => $bodySource,
-            'article_url' => $articleUrl ?? '',
-            'item_identity' => $itemIdentity,
-            'full_text' => false,
-        ],
+        'reader' => $reader,
     ]);
 }
 
