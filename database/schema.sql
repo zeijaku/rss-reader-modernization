@@ -175,6 +175,7 @@ SET @sql = CONCAT(
   '`calendar_event_url` VARCHAR(2048) NULL DEFAULT NULL,',
   '`calendar_event_repeat_type` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none'',',
   '`calendar_event_repeat_until` DATE NULL DEFAULT NULL,',
+  '`calendar_event_reminder` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none'',
   'PRIMARY KEY (`calendar_event_id`),',
   'KEY `idx_calendar_event_owner_range` (`calendar_event_owner`, `calendar_event_flag`, `calendar_event_start_date`, `calendar_event_end_date`, `calendar_event_id`)',
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Calendar予定保管'''
