@@ -45,7 +45,7 @@ def test_occurrence_reminder_ui_contract():
     assert "data-calendar-source-reminder" in recurrence
     assert "data-calendar-event-reminder" in recurrence
     assert "calendar_event_reminder" in recurrence
-    assert "occurrenceOnly ? 'none'" in copy
+    assert "reminder: fieldValue(form, '.changeCalendarEventReminder')" in copy
     assert "calendar_occurrence_start" in target
     assert "data-calendar-original-occurrence-start-date" in target
 
