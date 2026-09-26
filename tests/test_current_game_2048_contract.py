@@ -33,6 +33,10 @@ check('localStorage' in runtime and 'sessionStorage' in runtime and 'memoryStora
 check('touch-action:none' in style.replace(' ', ''), '2048 board captures deliberate smartphone swipes')
 check('min-height:44px' in style.replace(' ', ''), '2048 controls keep coarse-pointer-friendly button height')
 check('@media(max-width:575.98px)' in style.replace(' ', ''), '2048 has smartphone responsive CSS')
+check('animateMove(state, direction)' in runtime and 'game-2048-move-' in runtime, 'successful moves trigger the lightweight directional animation')
+check(all(name in style for name in ['game2048-slide-left', 'game2048-slide-right', 'game2048-slide-up', 'game2048-slide-down']), '2048 provides four directional slide keyframes')
+check('.12s ease-out' in style and 'translateX(9px)' in style and 'translateY(9px)' in style, '2048 movement animation stays short and subtle')
+check('@media(prefers-reduced-motion:reduce)' in style.replace(' ', '') and 'animation:none!important' in style.replace(' ', ''), 'reduced-motion preference disables the slide animation')
 check(all(token not in runtime for token in ['fetch(', 'XMLHttpRequest', '$.ajax(']), '2048 makes no network request')
 check(all('game_2048' not in path.read_text(encoding='utf-8', errors='ignore') for path in (ROOT / 'database').rglob('*.sql')), '2048 adds no database migration or schema dependency')
 
