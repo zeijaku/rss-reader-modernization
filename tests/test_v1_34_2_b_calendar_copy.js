@@ -77,7 +77,7 @@ check(normal.note === '議事録を準備' && normal.color === 'purple' && norma
     'normal copy preserves note, color and URL');
 check(normal.allDay === false && normal.startTime === '09:30' && normal.endTime === '10:45',
     'normal copy preserves timed-event settings');
-check(normal.reminder === 'none', 'recurring series copy keeps reminder disabled');
+check(normal.reminder === '30m', 'recurring series copy preserves reminder setting');
 check(normal.repeat === 'weekly' && normal.repeatUntil === '2026-12-31',
     'series copy preserves recurrence settings');
 const reminderMap = Object.assign({}, normalMap, {
@@ -137,8 +137,8 @@ check(registerMap['.registerCalendarEventAllDay'].checked === false
       && registerMap['.registerCalendarEventStartTime'].value === '09:30'
       && registerMap['.registerCalendarEventEndTime'].value === '10:45',
     'register form receives timed-event state');
-check(registerMap['.registerCalendarEventReminder'].value === 'none',
-    'recurring register form keeps reminder disabled');
+check(registerMap['.registerCalendarEventReminder'].value === '30m',
+    'recurring register form receives reminder state');
 check(registerMap['.registerCalendarEventRepeatType'].value === 'weekly'
       && registerMap['.registerCalendarEventRepeatUntil'].value === '2026-12-31',
     'register form receives recurrence state');
