@@ -112,12 +112,11 @@ $pdo->exec("UPDATE rss_calendar_event SET calendar_event_repeat_type = 'weekly',
 calendar_event_reminder_reconcile($pdo, 1, 1);
 reminder_assert((int) $pdo->query('SELECT COUNT(*) FROM rss_notification')->fetchColumn() === 0, 'recurring-series pending reminder was not removed');
 
-try {
-    calendar_event_reminder_apply($pdo, 1, 1, '30m');
-    throw new RuntimeException('recurring reminder was accepted');
-} catch (InvalidArgumentException $exception) {
-    reminder_assert(str_contains($exception->getMessage(), 'V1.36-B'), 'unexpected recurring reminder rejection');
-}
+calendar_event_reminder_apply($pdo, 1, 1, '30m');
+$storedRecurringReminder = (string) $pdo->query('SELECT calendar_event_reminder FROM rss_calendar_event WHERE calendar_event_id = 1')->fetchColumn();
+reminder_assert($storedRecurringReminder === '30m', 'recurring series reminder was not stored');
+calendar_event_reminder_reconcile($pdo, 1, 1);
+reminder_assert((int) $pdo->query('SELECT COUNT(*) FROM rss_notification WHERE notification_source_id = "1"')->fetchColumn() === 0, 'recurring parent reminder was incorrectly materialized as a normal event reminder');
 
 $pdo->exec("INSERT INTO rss_calendar_event (calendar_event_id, calendar_event_updated_at, calendar_event_flag, calendar_event_owner, calendar_event_title, calendar_event_start_date, calendar_event_all_day, calendar_event_start_time, calendar_event_repeat_type, calendar_event_reminder) VALUES (2, '2020-01-01 00:00:00', 0, 1, 'Past event', '2020-01-02', 0, '15:00:00', 'none', '30m')");
 calendar_event_reminder_reconcile($pdo, 1, 2);
