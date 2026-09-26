@@ -298,6 +298,9 @@ function calendar_delete_event(int $ownerId, int $eventId): bool
             . 'WHERE calendar_event_id = :event_id AND calendar_event_owner = :owner AND calendar_event_flag = 0'
         );
         $stmt->execute([':updated_at' => app_now(), ':event_id' => $eventId, ':owner' => $ownerId]);
+        if (function_exists('calendar_event_reminder_cancel_pending')) {
+            calendar_event_reminder_cancel_pending($pdo, $ownerId, $eventId);
+        }
         if ($started) {
             $pdo->commit();
         }
