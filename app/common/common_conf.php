@@ -227,6 +227,25 @@ if (!defined('APP_FEED_ITEM_STATE_RETENTION_DAYS')) {
     define('APP_FEED_ITEM_STATE_RETENTION_DAYS', max(1, min(3650, (int) app_env('APP_FEED_ITEM_STATE_RETENTION_DAYS', '90'))));
 }
 
+if (!defined('APP_READER_FULL_TEXT_CACHE_ENABLED')) {
+    define('APP_READER_FULL_TEXT_CACHE_ENABLED', app_env_bool('APP_READER_FULL_TEXT_CACHE_ENABLED', true));
+}
+if (!defined('APP_READER_FULL_TEXT_CACHE_TTL_SECONDS')) {
+    define('APP_READER_FULL_TEXT_CACHE_TTL_SECONDS', max(1, min(86400, (int) app_env('APP_READER_FULL_TEXT_CACHE_TTL_SECONDS', '900'))));
+}
+if (!defined('APP_READER_FULL_TEXT_STALE_MAX_AGE_SECONDS')) {
+    define(
+        'APP_READER_FULL_TEXT_STALE_MAX_AGE_SECONDS',
+        max(
+            APP_READER_FULL_TEXT_CACHE_TTL_SECONDS,
+            min(604800, (int) app_env('APP_READER_FULL_TEXT_STALE_MAX_AGE_SECONDS', '86400'))
+        )
+    );
+}
+if (!defined('APP_READER_FULL_TEXT_CACHE_DIR')) {
+    define('APP_READER_FULL_TEXT_CACHE_DIR', dirname(__DIR__, 2) . '/var/cache/reader-full-text');
+}
+
 if (!defined('APP_HOLIDAY_CSV_URL')) {
     define('APP_HOLIDAY_CSV_URL', app_env('APP_HOLIDAY_CSV_URL', 'https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv'));
 }
