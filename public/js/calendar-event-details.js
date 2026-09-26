@@ -189,11 +189,31 @@
             body.appendChild(wrapper);
         }
         syncTimeState(form);
+        syncReminderAvailability(form);
     }
 
     function ensureFields() {
         createEventDetailFields('registerCalendarEventForm', 'register');
         createEventDetailFields('changeCalendarEventForm', 'change');
+    }
+
+    function syncReminderAvailability(form) {
+        var reminder = form ? form.querySelector('[class*="CalendarEventReminder"]') : null;
+        var repeat = form ? form.querySelector('[class*="CalendarEventRepeatType"]') : null;
+        var help = form ? form.querySelector('.calendar-event-reminder-help') : null;
+        if (!reminder) {
+            return;
+        }
+        var recurring = repeat && String(repeat.value || 'none') !== 'none';
+        reminder.disabled = Boolean(recurring);
+        if (recurring) {
+            reminder.value = 'none';
+        }
+        if (help) {
+            help.textContent = recurring
+                ? 'V1.36-Bでは繰り返し予定のリマインダーは設定出来ません。V1.36-Cで対応します。'
+                : '終日予定は09:00を予定時刻として通知時刻を計算します。';
+        }
     }
 
     function syncTimeState(form) {
@@ -254,6 +274,7 @@
         $('.registerCalendarEventUrl').val('');
         $('.registerCalendarEventReminder').val('none');
         syncTimeState(form);
+        syncReminderAvailability(form);
         setMetaLoading(form, false);
     }
 
@@ -450,6 +471,7 @@
         $('.changeCalendarEventUrl').val(String(trigger.getAttribute('data-calendar-event-url') || ''));
         $('.changeCalendarEventReminder').val(String(trigger.getAttribute('data-calendar-event-reminder') || 'none'));
         syncTimeState(form);
+        syncReminderAvailability(form);
         setMetaLoading(form, false);
     }
 
