@@ -150,6 +150,32 @@
         urlGroup.appendChild(help);
         wrapper.appendChild(urlGroup);
 
+        var reminderGroup = document.createElement('div');
+        reminderGroup.className = 'mb-3 calendar-event-reminder-field';
+        var reminder = document.createElement('select');
+        reminder.className = 'form-select ' + prefix + 'CalendarEventReminder';
+        reminder.id = prefix + 'CalendarEventReminder';
+        [
+            ['none', 'なし'],
+            ['at_time', '予定時刻'],
+            ['10m', '10分前'],
+            ['30m', '30分前'],
+            ['1h', '1時間前'],
+            ['1d', '前日']
+        ].forEach(function (optionData) {
+            var option = document.createElement('option');
+            option.value = optionData[0];
+            option.textContent = optionData[1];
+            reminder.appendChild(option);
+        });
+        reminderGroup.appendChild(createSmallLabel('リマインダー', reminder.id));
+        reminderGroup.appendChild(reminder);
+        var reminderHelp = document.createElement('div');
+        reminderHelp.className = 'form-text calendar-event-reminder-help';
+        reminderHelp.textContent = '終日予定は09:00を予定時刻として通知時刻を計算します。';
+        reminderGroup.appendChild(reminderHelp);
+        wrapper.appendChild(reminderGroup);
+
         var loading = document.createElement('div');
         loading.className = 'small text-muted calendar-event-detail-loading';
         loading.setAttribute('role', 'status');
@@ -226,6 +252,7 @@
         $('.registerCalendarEventStartTime').val('');
         $('.registerCalendarEventEndTime').val('');
         $('.registerCalendarEventUrl').val('');
+        $('.registerCalendarEventReminder').val('none');
         syncTimeState(form);
         setMetaLoading(form, false);
     }
@@ -244,7 +271,8 @@
             calendar_event_all_day: isAllDay ? '1' : '0',
             calendar_event_start_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventStartTime'),
             calendar_event_end_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventEndTime'),
-            calendar_event_url: formValue(form, '.' + prefix + 'CalendarEventUrl')
+            calendar_event_url: formValue(form, '.' + prefix + 'CalendarEventUrl'),
+            calendar_event_reminder: formValue(form, '.' + prefix + 'CalendarEventReminder') || 'none'
         };
     }
 
@@ -323,7 +351,8 @@
             all_day: !(item && item.all_day === false),
             start_time: publicTime(item && item.start_time),
             end_time: publicTime(item && item.end_time),
-            url: url
+            url: url,
+            reminder: item && typeof item.reminder === 'string' ? item.reminder : 'none'
         };
     }
 
@@ -352,7 +381,8 @@
             .attr('data-calendar-event-all-day', meta.all_day ? '1' : '0')
             .attr('data-calendar-event-start-time', meta.start_time)
             .attr('data-calendar-event-end-time', meta.end_time)
-            .attr('data-calendar-event-url', meta.url);
+            .attr('data-calendar-event-url', meta.url)
+            .attr('data-calendar-event-reminder', meta.reminder);
 
         $entry.find('.calendar-event-time-label').remove();
         var label = timeLabelForEntry($entry, meta);
@@ -383,7 +413,8 @@
                 all_day: true,
                 start_time: '',
                 end_time: '',
-                url: ''
+                url: '',
+                reminder: 'none'
             };
             decorateEntry($entry, meta);
         });
@@ -417,6 +448,7 @@
         $('.changeCalendarEventStartTime').val(String(trigger.getAttribute('data-calendar-event-start-time') || ''));
         $('.changeCalendarEventEndTime').val(String(trigger.getAttribute('data-calendar-event-end-time') || ''));
         $('.changeCalendarEventUrl').val(String(trigger.getAttribute('data-calendar-event-url') || ''));
+        $('.changeCalendarEventReminder').val(String(trigger.getAttribute('data-calendar-event-reminder') || 'none'));
         syncTimeState(form);
         setMetaLoading(form, false);
     }
