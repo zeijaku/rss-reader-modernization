@@ -965,6 +965,11 @@
             .data('stock-title', articleActionValue($trigger, 'title'))
             .data('article-context', stockContext ? 'stock' : 'feed')
             .data('stock-id', hasStockId ? stockId : 0);
+        var readerContext = !stockContext && $trigger.closest('[data-feed-content-id]').length > 0;
+        $menu.find('.article-action-reader')
+            .prop('hidden', !readerContext)
+            .prop('disabled', !readerContext)
+            .attr('aria-disabled', readerContext ? 'false' : 'true');
         $menu.find('.article-action-stock')
             .prop('hidden', stockContext)
             .prop('disabled', stockContext || articleUrl === '')
@@ -988,6 +993,91 @@
         if ($items.length > 0) {
             (focusLast === true ? $items.last() : $items.first()).focus();
         }
+    }
+
+    function readerItemContext(trigger) {
+        var $trigger = trigger ? $(trigger) : $();
+        var $row = $trigger.closest('.feed-item-row');
+        var $card = $trigger.closest('[data-feed-content-id]');
+        var index = Number($row.attr('data-feed-item-index'));
+        var items = $card.data('feed-render-items');
+        var contentId = String($card.attr('data-feed-content-id') || '');
+        if (!/^\d+$/.test(contentId) || !Number.isInteger(index) || !Array.isArray(items) || !items[index]) {
+            return null;
+        }
+        var itemIdentity = String(items[index].item_identity || '');
+        if (!/^m1i:v1:[a-f0-9]{64}$/.test(itemIdentity)) {
+            return null;
+        }
+        return {
+            content_id: contentId,
+            item_identity: itemIdentity
+        };
+    }
+
+    function resetReaderModeModal() {
+        $('#readerModeTitle').text('記事を読み込み中...');
+        $('#readerModeSource').text('');
+        $('#readerModeDate').text('').attr('datetime', '');
+        $('#readerModeStatus').prop('hidden', false).text('RSS本文を読み込んでいます...');
+        $('#readerModeBody').prop('hidden', true).text('');
+        $('#readerModeEmpty').prop('hidden', true);
+        $('#readerModeOriginalLink').prop('hidden', true).attr('href', '#');
+    }
+
+    function renderReaderModePayload(reader) {
+        var payload = reader && typeof reader === 'object' ? reader : {};
+        var title = String(payload.title || '').trim() || 'タイトルなし';
+        var source = String(payload.source || '').trim();
+        var date = String(payload.date || '').trim();
+        var body = String(payload.body || '');
+        var articleUrl = safeFeedLink(payload.article_url);
+
+        $('#readerModeTitle').text(title);
+        $('#readerModeSource').text(source !== '' ? source : 'RSS');
+        $('#readerModeDate')
+            .text(date !== '' ? date : '')
+            .attr('datetime', date !== '' ? date : '');
+        $('#readerModeStatus').prop('hidden', true).text('');
+        $('#readerModeBody')
+            .prop('hidden', body === '')
+            .text(body);
+        $('#readerModeEmpty').prop('hidden', body !== '');
+        $('#readerModeOriginalLink')
+            .prop('hidden', articleUrl === '')
+            .attr('href', articleUrl !== '' ? articleUrl : '#');
+    }
+
+    function openReaderMode() {
+        var trigger = articleActionsTrigger;
+        var context = readerItemContext(trigger);
+        var $modal = $('#readerModeModal');
+        if (context === null || $modal.length === 0) {
+            closeArticleActionsMenu(true);
+            showNotice('Readerで開く記事を確認出来ませんでした', 'danger');
+            return;
+        }
+
+        closeArticleActionsMenu(false);
+        resetReaderModeModal();
+        if (trigger) {
+            $modal.data('return-focus', trigger);
+        }
+        $modal.modal('show');
+
+        apiRequest('feed.reader', context, 25000)
+            .done(function (data) {
+                if (!data || data.ok !== true || !data.data || !data.data.reader) {
+                    $('#readerModeStatus').prop('hidden', false).text('RSS本文を表示出来ませんでした。');
+                    return;
+                }
+                renderReaderModePayload(data.data.reader);
+            })
+            .fail(function (xhr, textStatus) {
+                $('#readerModeStatus')
+                    .prop('hidden', false)
+                    .text(feedRequestErrorMessage(xhr, textStatus));
+            });
     }
 
     function legacyCopyText(text) {
@@ -1979,6 +2069,8 @@
                 link: itemLink,
                 description: String(item.description || ''),
                 content: String(item.content || ''),
+                date: String(item.date || ''),
+                item_identity: String(item.item_identity || ''),
                 summary: summary,
                 summary_id: summaryId
             });
@@ -2840,6 +2932,11 @@
                     openArticleActionsMenu($(this), event.key === 'ArrowUp');
                 }
             })
+            .off('click' + eventNamespace, '.article-action-reader')
+            .on('click' + eventNamespace, '.article-action-reader', function (event) {
+                event.preventDefault();
+                openReaderMode();
+            })
             .off('click' + eventNamespace, '.article-action-stock')
             .on('click' + eventNamespace, '.article-action-stock', function (event) {
                 event.preventDefault();
@@ -3395,6 +3492,9 @@
             })
             .off('hidden.bs.modal' + eventNamespace, '.modal')
             .on('hidden.bs.modal' + eventNamespace, '.modal', function () {
+                if (this.id === 'readerModeModal') {
+                    resetReaderModeModal();
+                }
                 var returnFocus = $(this).data('return-focus');
                 if (returnFocus && typeof returnFocus.focus === 'function') {
                     returnFocus.focus();

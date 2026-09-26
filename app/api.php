@@ -82,6 +82,52 @@ function api_feed_text(mixed $value, int $maxLength): string
     return substr($text, 0, $maxLength);
 }
 
+/**
+ * Reader Mode用の厳格なplain-text sanitizer。
+ *
+ * V1.38-AではRSS内本文だけを対象とし、BrowserへHTMLを渡さない。
+ * block要素の区切りは改行へ変換し、script等の危険要素は内容ごと除去する。
+ */
+function api_reader_plain_text(mixed $value, int $maxLength = 65536): string
+{
+    if (!is_string($value) || $value === '' || !app_is_valid_utf8($value) || $maxLength <= 0) {
+        return '';
+    }
+
+    $text = str_replace(["\r\n", "\r"], "\n", $value);
+    $text = preg_replace(
+        '~<(script|style|iframe|object|embed|form)\\b[^>]*>.*?</\\1\\s*>~is',
+        ' ',
+        $text
+    ) ?? '';
+    $text = preg_replace('~<(script|style|iframe|object|embed|form)\\b[^>]*?/?>~is', ' ', $text) ?? '';
+    $text = preg_replace('~<br\\s*/?>~i', "\n", $text) ?? '';
+    $text = preg_replace(
+        '~</(?:p|div|section|article|main|header|footer|aside|h[1-6]|li|ul|ol|blockquote|pre|tr|table)>~i',
+        "\n",
+        $text
+    ) ?? '';
+    $text = strip_tags($text);
+    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = preg_replace('/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]/u', '', $text) ?? '';
+    $text = preg_replace('/[ \\t]+/u', ' ', $text) ?? '';
+    $text = preg_replace('/ *\\n */u', "\n", $text) ?? '';
+    $text = preg_replace('/\\n{3,}/u', "\n\n", $text) ?? '';
+    $text = trim($text);
+
+    if (app_text_length($text) <= $maxLength) {
+        return $text;
+    }
+    if (function_exists('mb_substr')) {
+        return mb_substr($text, 0, $maxLength, 'UTF-8');
+    }
+    if (function_exists('iconv_substr')) {
+        $truncated = iconv_substr($text, 0, $maxLength, 'UTF-8');
+        return is_string($truncated) ? $truncated : '';
+    }
+    return substr($text, 0, $maxLength);
+}
+
 /** @return array{channel:array{title:string,link:string,description:string},item:list<array{title:string,link:string,description:string,content:string,date:string}>} */
 function api_safe_feed_payload(array $feed, string $sourceUrl): array
 {
@@ -148,6 +194,7 @@ function api_dispatch(string $action, int $userId, array $input): array
         'account.password.update' => api_account_password_update($userId, $input),
         'tabs.update' => api_tabs_update($userId, $input),
         'feed.fetch' => api_feed_fetch_with_health($userId, $input),
+        'feed.reader' => api_feed_reader($userId, $input),
         'feed.new.clear' => api_feed_new_clear($userId, $input),
         'feed.keyword.create' => api_feed_keyword_create($userId, $input),
         'feed.keyword.delete' => api_feed_keyword_delete($userId, $input),
