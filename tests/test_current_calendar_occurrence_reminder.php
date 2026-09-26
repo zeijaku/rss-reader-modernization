@@ -21,31 +21,6 @@ function db_table_identifier(string $name): string
     return '"' . str_replace('"', '""', $name) . '"';
 }
 
-function app_validate_positive_int(mixed $value): ?int
-{
-    if (is_int($value)) {
-        return $value > 0 ? $value : null;
-    }
-    return is_string($value) && preg_match('/^[1-9][0-9]*$/', $value) === 1 ? (int) $value : null;
-}
-
-function app_validate_text(mixed $value, int $maxLength, bool $allowEmpty): ?string
-{
-    if (!is_string($value) || (!$allowEmpty && trim($value) === '') || mb_strlen($value, 'UTF-8') > $maxLength) {
-        return null;
-    }
-    return $value;
-}
-
-function app_validate_external_link(mixed $value, int $maxLength): ?string
-{
-    if (!is_string($value) || strlen($value) > $maxLength) {
-        return null;
-    }
-    $scheme = strtolower((string) parse_url($value, PHP_URL_SCHEME));
-    return in_array($scheme, ['http', 'https'], true) ? $value : null;
-}
-
 function app_now(): string
 {
     global $testNow;
