@@ -154,6 +154,16 @@ $insert->execute([
     2, $start, $testNow, 2, 'Other owner', $start, $start, '', 'green', 0,
     '10:00:00', null, null, 'daily', $until, '1h'
 ]);
+$weeklyStart = c_date($today, 1);
+$insert->execute([
+    4, $weeklyStart, $testNow, 1, 'Weekly all day', $weeklyStart, $weeklyStart, '', 'yellow', 1,
+    null, null, null, 'weekly', $until, '1d'
+]);
+$deleteSeriesStart = c_date($today, 1);
+$insert->execute([
+    5, $deleteSeriesStart, $testNow, 1, 'Temporary series', $deleteSeriesStart, $deleteSeriesStart, '', 'red', 0,
+    '18:00:00', null, null, 'daily', c_date($today, 5), '10m'
+]);
 
 calendar_event_reminder_sync_owner(1);
 $rows = $pdo->query("SELECT * FROM notification WHERE notification_owner = 1 ORDER BY notification_source_key")->fetchAll();
@@ -164,6 +174,18 @@ $olderStmt = $pdo->prepare('SELECT COUNT(*) FROM notification WHERE notification
 $olderStmt->execute([$olderKey]);
 c_assert((int) $olderStmt->fetchColumn() === 0, 'rolling sync does not backfill recurring reminders older than yesterday');
 c_assert((int) $pdo->query("SELECT COUNT(*) FROM notification WHERE notification_owner = 2")->fetchColumn() === 0, 'owner sync does not materialize another owner notifications');
+
+$weeklyKey = calendar_event_reminder_source_key(4, $weeklyStart);
+$weeklyStmt = $pdo->prepare('SELECT * FROM notification WHERE notification_owner = 1 AND notification_source_key = ?');
+$weeklyStmt->execute([$weeklyKey]);
+$weeklyReminder = $weeklyStmt->fetch();
+c_assert(is_array($weeklyReminder) && ($weeklyReminder['notification_due_at'] ?? '') === $today->format('Y-m-d') . ' 09:00:00', 'weekly all-day occurrence uses the previous-day 09:00 reminder reference');
+
+$deleteSeriesCount = (int) $pdo->query("SELECT COUNT(*) FROM notification WHERE notification_owner = 1 AND notification_source_id = '5' AND notification_due_at > '" . $testNow . "'")->fetchColumn();
+c_assert($deleteSeriesCount > 0, 'recurring series delete test has pending occurrence reminders');
+c_assert(calendar_delete_event(1, 5), 'recurring series delete succeeds');
+$deleteSeriesAfter = (int) $pdo->query("SELECT COUNT(*) FROM notification WHERE notification_owner = 1 AND notification_source_id = '5' AND notification_due_at > '" . $testNow . "'")->fetchColumn();
+c_assert($deleteSeriesAfter === 0, 'deleting a recurring series removes all future occurrence reminders');
 
 $futureOriginal = c_date($today, 2);
 $sourceKey = calendar_event_reminder_source_key(1, $futureOriginal);
@@ -203,6 +225,7 @@ $moved = calendar_event_occurrence_update(
 $stmt->execute([$sourceKey]);
 $afterMove = $stmt->fetch();
 c_assert(is_array($afterMove) && ($afterMove['notification_due_at'] ?? '') === $movedDate . ' 16:30:00', 'individual occurrence move reschedules the pending reminder');
+c_assert(($afterMove['notification_title'] ?? '') === '予定: Moved standup', 'individual occurrence edit updates the pending reminder title');
 c_assert(($afterMove['notification_target_url'] ?? '') === './?tab=2&calendar_date=' . $movedDate . '&calendar_event_id=1&calendar_occurrence_start=' . $futureOriginal, 'moved occurrence notification opens the exact effective occurrence');
 c_assert(($moved['original_occurrence_start_date'] ?? '') === $futureOriginal, 'moved occurrence keeps stable original identity');
 
