@@ -10,6 +10,7 @@ def test_occurrence_reminder_backend_contract():
     exception = read("app/calendar_exception.php")
     dashboard = read("app/api/dashboard.php")
     recurrence_api = read("public/calendar_recurrence_api.php")
+    notification = read("app/notification.php")
     version = read("app/version.php")
 
     assert "event:' . $eventId . ':occurrence:'" in reminder
@@ -23,6 +24,7 @@ def test_occurrence_reminder_backend_contract():
     assert "calendar_event_reminder_reconcile_occurrence($pdo, $ownerId, $result)" in exception
     assert "calendar_event_reminder_cancel_pending_occurrence($pdo, $ownerId, $eventId, $originalStart)" in exception
     assert "calendar_event_reminder_sync_owner($userId)" in dashboard
+    assert "catch (PDOException $exception)" in notification and "$racedId" in notification
     assert "繰り返し予定のリマインダーは次の段階で対応します。" not in recurrence_api
     assert "1.36.0-dev.3" in version
 
