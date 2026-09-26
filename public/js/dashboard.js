@@ -1021,7 +1021,7 @@
         $('#readerModeDate').text('').attr('datetime', '');
         $('#readerModeStatus').prop('hidden', false).text('RSS本文を読み込んでいます...');
         $('#readerModeFullTextStatus').prop('hidden', true).text('');
-        $('#readerModeBody').prop('hidden', true).text('');
+        $('#readerModeBody').prop('hidden', true).removeClass('reader-mode-body-rich').text('');
         $('#readerModeEmpty').prop('hidden', true);
         $('#readerModeFullTextButton')
             .prop('hidden', true)
@@ -1051,6 +1051,7 @@
         $('#readerModeStatus').prop('hidden', true).text('');
         $('#readerModeBody')
             .prop('hidden', body === '')
+            .removeClass('reader-mode-body-rich')
             .text(body);
         $('#readerModeEmpty').prop('hidden', body !== '');
         $('#readerModeOriginalLink')
@@ -1096,19 +1097,29 @@
         apiRequest('feed.reader.full_text', context, 25000)
             .done(function (data) {
                 var fetched = data && data.ok === true && data.data && data.data.full_text_fetch;
-                if (!fetched || fetched.fetched !== true) {
-                    $status.text('元記事を取得できませんでした。RSS本文を表示しています。');
+                var fullText = data && data.ok === true && data.data && data.data.full_text;
+                var safeHtml = fullText && typeof fullText.html === 'string' ? fullText.html : '';
+                if (!fetched || fetched.fetched !== true || safeHtml.trim() === '') {
+                    $status.text('元記事から本文を抽出できませんでした。RSS本文を表示しています。');
                     return;
                 }
 
+                // full_text.html is produced only by the server-side allowlist sanitizer.
+                // RSS content/description never enters this HTML rendering path.
+                $('#readerModeBody')
+                    .prop('hidden', false)
+                    .addClass('reader-mode-body-rich')
+                    .html(safeHtml);
+                $('#readerModeEmpty').prop('hidden', true);
+
                 var stale = fetched.stale === true;
                 $status.text(stale
-                    ? 'Cache済みの元記事を利用できました。本文抽出は次の段階で反映します。'
-                    : '元記事を取得しました。本文抽出は次の段階で反映します。');
+                    ? 'Cache済みの元記事から本文を表示しています。'
+                    : '元記事から本文を表示しています。');
                 $button.find('i').removeClass('fa-spinner fa-spin').addClass('fa-check');
                 $button.contents().filter(function () {
                     return this.nodeType === 3;
-                }).last().replaceWith(' 全文取得済み');
+                }).last().replaceWith(' 全文表示中');
             })
             .fail(function (xhr, textStatus) {
                 $status.text(readerFullTextErrorMessage(xhr, textStatus));
