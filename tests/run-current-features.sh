@@ -122,6 +122,11 @@ python3 "$SCRIPT_DIR/test_current_game_2048_contract.py"
 node "$SCRIPT_DIR/test_current_game_2048_runtime.js"
 node --check "$ROOT/public/js/game-2048.js"
 
+echo '== Current feature contracts: V1.37-B Reversi =='
+python3 "$SCRIPT_DIR/test_current_reversi_contract.py"
+node "$SCRIPT_DIR/test_current_reversi_runtime.js"
+node --check "$ROOT/public/js/reversi.js"
+
 echo '== Current feature contracts: V1.26 Information Board backend =='
 php "$SCRIPT_DIR/test_v1_26_b_info_board_backend.php"
 python3 "$SCRIPT_DIR/test_v1_26_b_info_board_static.py"
