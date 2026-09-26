@@ -44,3 +44,8 @@ def test_occurrence_reminder_ui_contract():
 def test_occurrence_reminder_version_contract():
     version = read("app/version.php")
     assert "1.36.0-dev.3" in version
+
+test_occurrence_reminder_backend_contract()
+test_occurrence_reminder_ui_contract()
+test_occurrence_reminder_version_contract()
+print("calendar occurrence reminder contract tests passed")
