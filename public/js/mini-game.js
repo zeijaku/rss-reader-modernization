@@ -540,7 +540,7 @@
         moveCard(card, direction, true);
     }
     function initCard(card) {
-        if (!card || ['lights_out', 'wire_defense', 'block_collapse', 'cursor_field'].indexOf(card.getAttribute('data-mini-game-type')) !== -1 || card.getAttribute('data-mini-game-initialized') === '1') return;
+        if (!card || ['lights_out', 'wire_defense', 'block_collapse', 'cursor_field', 'game_2048'].indexOf(card.getAttribute('data-mini-game-type')) !== -1 || card.getAttribute('data-mini-game-initialized') === '1') return;
         card.setAttribute('data-mini-game-initialized', '1');
         var widgetId = card.getAttribute('data-dashboard-widget-id'), loadedResult = loadStateResult(cardUserId(), widgetId), loaded = loadedResult.state;
         var restored = loaded.moves > 0 || loaded.status !== 'playing' || loaded.levelId !== LEVELS[0].id;
