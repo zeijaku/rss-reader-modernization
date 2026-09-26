@@ -240,4 +240,11 @@ node --check "$ROOT/public/js/calendar-recurrence.js"
 node --check "$ROOT/public/js/calendar-reminder-target.js"
 node --check "$ROOT/public/js/notification-center.js"
 
+echo '== Current feature contracts: V1.36 Calendar Occurrence Reminder =='
+python3 "$SCRIPT_DIR/test_current_calendar_occurrence_reminder_contract.py"
+php "$SCRIPT_DIR/test_current_calendar_occurrence_reminder.php"
+php -l "$ROOT/app/calendar_exception.php"
+node --check "$ROOT/public/js/calendar-occurrence.js"
+node --check "$ROOT/public/js/calendar-copy.js"
+
 echo 'PASS: current feature contract suite completed'
