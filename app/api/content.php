@@ -616,6 +616,35 @@ function api_feed_reader_full_text(int $userId, array $input): array
     }
     $contentType = reader_full_text_content_type($loaded['content_type'] ?? null) ?? '';
     $body = is_string($loaded['body'] ?? null) ? (string) $loaded['body'] : '';
+    $effectiveUrl = is_string($loaded['effective_url'] ?? null)
+        ? app_validate_feed_url((string) $loaded['effective_url'])
+        : null;
+
+    if ($effectiveUrl === null || $body === '') {
+        return api_error(
+            'reader_full_text_extract_failed',
+            '元記事から本文を抽出できませんでした。RSS本文を表示しています。',
+            422
+        );
+    }
+
+    try {
+        $extracted = reader_full_text_extract($body, $effectiveUrl);
+    } catch (Throwable $exception) {
+        return api_feed_internal_failure('feed.reader.full_text.extract', $userId, $contentId, $exception);
+    }
+    if ($extracted === null) {
+        error_log(sprintf(
+            'Reader Full Text extraction failed user_id=%d content_id=%d',
+            $userId,
+            $contentId
+        ));
+        return api_error(
+            'reader_full_text_extract_failed',
+            '元記事から本文を抽出できませんでした。RSS本文を表示しています。',
+            422
+        );
+    }
 
     return api_success([
         'content_id' => $contentId,
@@ -626,6 +655,11 @@ function api_feed_reader_full_text(int $userId, array $input): array
             'stale' => ($loaded['stale'] ?? false) === true,
             'content_type' => $contentType,
             'bytes' => strlen($body),
+        ],
+        'full_text' => [
+            'html' => (string) $extracted['html'],
+            'text_length' => (int) $extracted['text_length'],
+            'strategy' => (string) $extracted['strategy'],
         ],
     ]);
 }
