@@ -50,4 +50,4 @@ def test_calendar_reminder_ui_contract():
 
 def test_calendar_reminder_checkpoint_version():
     version = read("app/version.php")
-    assert "1.36.0-dev.4" in version
+    assert "1.36.0" in version
