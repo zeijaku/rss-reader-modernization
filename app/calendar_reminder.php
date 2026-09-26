@@ -103,8 +103,13 @@ function calendar_event_reminder_due_at(array $event): ?string
     return $due->format('Y-m-d H:i:s');
 }
 
-function calendar_event_reminder_target_url(PDO $pdo, int $ownerId, int $eventId, string $startDate): string
-{
+function calendar_event_reminder_target_url(
+    PDO $pdo,
+    int $ownerId,
+    int $eventId,
+    string $startDate,
+    ?string $originalStart = null
+): string {
     $stmt = $pdo->prepare(
         'SELECT widget_location FROM ' . db_table_identifier('dashboard_widget') . ' '
         . "WHERE widget_owner = :owner AND widget_type = 'calendar' AND widget_flag = 0 "
@@ -114,9 +119,17 @@ function calendar_event_reminder_target_url(PDO $pdo, int $ownerId, int $eventId
     $location = $stmt->fetchColumn();
     $tab = is_numeric($location) ? max(0, min(3, (int) $location)) : 0;
 
-    return './?tab=' . $tab
+    $url = './?tab=' . $tab
         . '&calendar_date=' . rawurlencode($startDate)
         . '&calendar_event_id=' . $eventId;
+    if ($originalStart !== null) {
+        $originalStart = calendar_validate_date($originalStart);
+        if ($originalStart === null) {
+            throw new InvalidArgumentException('Calendar reminder occurrence target is invalid.');
+        }
+        $url .= '&calendar_occurrence_start=' . rawurlencode($originalStart);
+    }
+    return $url;
 }
 
 function calendar_event_reminder_body(array $event): string
@@ -265,7 +278,7 @@ function calendar_event_reminder_reconcile_occurrence(
         '予定: ' . (string) ($occurrence['title'] ?? ''),
         calendar_event_reminder_body($occurrence),
         $dueAt,
-        calendar_event_reminder_target_url($pdo, $ownerId, $eventId, $effectiveStart)
+        calendar_event_reminder_target_url($pdo, $ownerId, $eventId, $effectiveStart, $originalStart)
     );
 }
 
