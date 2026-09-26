@@ -31,6 +31,8 @@ def test_calendar_reminder_ui_contract():
     loader = read("public/js/calendar.js")
     notification = read("public/js/notification-center.js")
     target = read("public/js/calendar-reminder-target.js")
+    drag = read("public/js/calendar-drag-drop.js")
+    copy = read("public/js/calendar-copy.js")
 
     for label in ["予定時刻", "10分前", "30分前", "1時間前", "前日"]:
         assert label in details
@@ -43,6 +45,8 @@ def test_calendar_reminder_ui_contract():
     assert "calendar-event-edit-trigger" in target
     assert "60000" in notification
     assert "calendar:occurrenceChanged" in notification
+    assert "calendar_event_reminder" in drag and "data-calendar-event-reminder" in drag
+    assert "changeCalendarEventReminder" in copy and "registerCalendarEventReminder" in copy
 
 def test_calendar_reminder_checkpoint_version():
     version = read("app/version.php")
