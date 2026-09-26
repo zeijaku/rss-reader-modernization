@@ -94,7 +94,8 @@
                 allDay: attribute(trigger, 'data-calendar-event-all-day', '1') !== '0',
                 startTime: attribute(trigger, 'data-calendar-event-start-time', ''),
                 endTime: attribute(trigger, 'data-calendar-event-end-time', ''),
-                url: attribute(trigger, 'data-calendar-event-url', '')
+                url: attribute(trigger, 'data-calendar-event-url', ''),
+                reminder: attribute(trigger, 'data-calendar-event-reminder', 'none')
             },
             series: {
                 title: attribute(trigger, 'data-calendar-source-title', trigger.getAttribute('data-event-title')),
@@ -106,6 +107,7 @@
                 startTime: attribute(trigger, 'data-calendar-source-start-time', trigger.getAttribute('data-calendar-event-start-time')),
                 endTime: attribute(trigger, 'data-calendar-source-end-time', trigger.getAttribute('data-calendar-event-end-time')),
                 url: attribute(trigger, 'data-calendar-source-url', trigger.getAttribute('data-calendar-event-url')),
+                reminder: attribute(trigger, 'data-calendar-source-reminder', trigger.getAttribute('data-calendar-event-reminder')),
                 repeat: repeat,
                 repeatUntil: attribute(trigger, 'data-calendar-event-repeat-until', '')
             }
@@ -133,6 +135,7 @@
         setValue(form, '.changeCalendarEventStartTime', values.startTime);
         setValue(form, '.changeCalendarEventEndTime', values.endTime);
         setValue(form, '.changeCalendarEventUrl', values.url);
+        setValue(form, '.changeCalendarEventReminder', values.reminder);
         var allDay = form.querySelector('.changeCalendarEventAllDay');
         if (allDay) {
             allDay.checked = values.allDay === true;
@@ -181,6 +184,17 @@
             setValue(form, '.changeCalendarEventRepeatType', state.series.repeat);
             setValue(form, '.changeCalendarEventRepeatUntil', state.series.repeatUntil);
             $('.changeCalendarEventRepeatType').trigger('change');
+        }
+        var reminder = form.querySelector('.changeCalendarEventReminder');
+        var reminderHelp = form.querySelector('.calendar-event-reminder-help');
+        if (reminder) {
+            reminder.disabled = occurrenceOnly;
+            reminder.value = occurrenceOnly ? state.occurrence.reminder : state.series.reminder;
+        }
+        if (reminderHelp) {
+            reminderHelp.textContent = occurrenceOnly
+                ? 'この回ではシリーズのリマインダー設定を使用します。変更する場合は「シリーズ全体」を選択してください。'
+                : '繰り返し予定では各Occurrenceの開始日時を基準に通知します。';
         }
         if (submit) {
             submit.textContent = occurrenceOnly ? (state.cancelled ? 'この予定を変更して復活' : 'この予定を変更') : 'シリーズを変更';

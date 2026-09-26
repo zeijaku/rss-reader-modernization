@@ -27,7 +27,7 @@ check("./calendar_color_api.php" in drag and "./calendar_recurrence_api.php" in 
 check('original_occurrence_start_date' in drag and 'occurrence_revision' in drag, 'occurrence move retains original identity and optimistic revision')
 check("exceptionKind === 'cancelled'" in drag, 'cancelled occurrence cannot be dragged')
 check(".calendar-event-edit-trigger" in drag and 'calendar-task' not in drag, 'drag eligibility is limited to editable Calendar events, not Tasks')
-for key in ('calendar_event_title','calendar_event_start_date','calendar_event_end_date','calendar_event_note','calendar_event_color','calendar_event_all_day','calendar_event_start_time','calendar_event_end_time','calendar_event_url'):
+for key in ('calendar_event_title','calendar_event_start_date','calendar_event_end_date','calendar_event_note','calendar_event_color','calendar_event_all_day','calendar_event_start_time','calendar_event_end_time','calendar_event_url','calendar_event_reminder'):
     check(key in drag, f'move payload preserves {key}')
 check("range.delta === 0" in drag, 'same-date drop performs no update')
 check("csrf_token: csrfToken()" in drag and "X-CSRF-Token" in drag, 'CSRF token is sent and refreshed')

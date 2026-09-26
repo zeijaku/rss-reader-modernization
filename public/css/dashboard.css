@@ -1054,6 +1054,9 @@ select:focus,
 }
 
 .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
     min-width: 0;
 }
 

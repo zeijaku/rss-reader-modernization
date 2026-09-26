@@ -78,6 +78,8 @@
     loadScript(assetUrl('./js/calendar-occurrence.js'));
     loadScript(assetUrl('./js/calendar-recurrence.js'));
     loadScript(assetUrl('./js/calendar-event-details.js'));
+    loadScript(assetUrl('./js/calendar-usability.js'));
+    loadScript(assetUrl('./js/calendar-reminder-target.js'));
     loadScript(assetUrl('./js/calendar-copy.js'));
     loadScript(assetUrl('./js/calendar-drag-drop.js'));
     loadScript(assetUrl('./js/calendar-colors.js'));

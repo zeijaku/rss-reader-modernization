@@ -216,7 +216,10 @@ try {
     if ($repeatSettings === null) {
         calendar_recurrence_error('validation_error', 'Calendar recurrence settings are invalid.', 422);
     }
-
+    $reminder = calendar_event_reminder_validate($_POST['calendar_event_reminder'] ?? 'none');
+    if ($reminder === null) {
+        calendar_recurrence_error('validation_error', 'Calendar reminder setting is invalid.', 422);
+    }
     if ($action === 'calendar.recurrence.create') {
         $eventId = calendar_event_recurrence_time_color_create(
             $userId,
@@ -226,7 +229,8 @@ try {
             $note,
             $color,
             $timeSettings,
-            $repeatSettings
+            $repeatSettings,
+            $reminder
         );
         calendar_recurrence_success([
             'event_id' => $eventId,
@@ -237,6 +241,7 @@ try {
             'url' => $timeSettings['url'],
             'repeat_type' => $repeatSettings['repeat_type'],
             'repeat_until' => $repeatSettings['repeat_until'],
+            'reminder' => $reminder,
         ], 201);
     }
 
@@ -253,7 +258,8 @@ try {
         $note,
         $color,
         $timeSettings,
-        $repeatSettings
+        $repeatSettings,
+        $reminder
     )) {
         calendar_recurrence_error('not_found', 'Calendar event was not found.', 404);
     }
@@ -266,6 +272,7 @@ try {
         'url' => $timeSettings['url'],
         'repeat_type' => $repeatSettings['repeat_type'],
         'repeat_until' => $repeatSettings['repeat_until'],
+        'reminder' => $reminder,
     ]);
 } catch (CalendarOccurrenceConflictException $exception) {
     calendar_recurrence_error('calendar_occurrence_conflict', $exception->getMessage(), 409);

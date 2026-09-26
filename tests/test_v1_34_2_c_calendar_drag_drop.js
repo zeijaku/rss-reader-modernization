@@ -21,12 +21,13 @@ check(api.shiftDate('2027-02-29',1)==='','invalid date rejected');
 let range=api.shiftRange('2026-09-10','2026-09-12','2026-09-11','2026-09-15');
 check(range.start==='2026-09-14'&&range.end==='2026-09-16'&&range.delta===4,'multi-day range preserves duration relative to dragged segment');
 function el(attrs){return {getAttribute:function(k){return Object.prototype.hasOwnProperty.call(attrs,k)?attrs[k]:null;}};}
-const normal=api.sourceState(el({'data-event-id':'41','data-event-title':'会議','data-event-start-date':'2026-09-10','data-event-end-date':'2026-09-10','data-event-note':'memo','data-calendar-event-color':'purple','data-calendar-event-all-day':'0','data-calendar-event-start-time':'09:30','data-calendar-event-end-time':'10:45','data-calendar-event-url':'https://example.com','data-calendar-event-repeat-type':'none'}),'2026-09-10');
+const normal=api.sourceState(el({'data-event-id':'41','data-event-title':'会議','data-event-start-date':'2026-09-10','data-event-end-date':'2026-09-10','data-event-note':'memo','data-calendar-event-color':'purple','data-calendar-event-all-day':'0','data-calendar-event-start-time':'09:30','data-calendar-event-end-time':'10:45','data-calendar-event-url':'https://example.com','data-calendar-event-reminder':'30m','data-calendar-event-repeat-type':'none'}),'2026-09-10');
 let plan=api.buildMovePlan(normal,'2026-09-12');
 check(plan.action==='calendar.color.update'&&plan.range.delta===2,'normal event reuses normal update action');
 check(plan.payload.calendar_event_start_date==='2026-09-12'&&plan.payload.calendar_event_end_date==='2026-09-12','normal event date is shifted');
 check(plan.payload.calendar_event_title==='会議'&&plan.payload.calendar_event_note==='memo'&&plan.payload.calendar_event_color==='purple'&&plan.payload.calendar_event_url==='https://example.com','normal event metadata is preserved');
 check(plan.payload.calendar_event_all_day==='0'&&plan.payload.calendar_event_start_time==='09:30'&&plan.payload.calendar_event_end_time==='10:45','timed event values are preserved');
+check(plan.payload.calendar_event_reminder==='30m','normal event reminder is preserved during drag/drop');
 check(api.buildMovePlan(normal,'2026-09-10')===null,'same-day drop is a no-op');
 const allDay=api.sourceState(el({'data-event-id':'42','data-event-title':'休暇','data-event-start-date':'2026-09-10','data-event-end-date':'2026-09-11','data-calendar-event-all-day':'1','data-calendar-event-start-time':'09:00','data-calendar-event-end-time':'10:00','data-calendar-event-repeat-type':'none'}),'2026-09-10');
 plan=api.buildMovePlan(allDay,'2026-09-09');

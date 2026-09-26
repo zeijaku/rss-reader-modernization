@@ -51,6 +51,9 @@ function calendar_range_normalize_non_recurring_row(array $row): ?array
         'start_time' => $allDay ? null : calendar_event_time_public_clock($row['calendar_event_start_time'] ?? null),
         'end_time' => $allDay ? null : calendar_event_time_public_clock($row['calendar_event_end_time'] ?? null),
         'url' => $urlValue === false || $urlValue === '' ? null : $urlValue,
+        'reminder' => function_exists('calendar_event_reminder_validate')
+            ? (calendar_event_reminder_validate($row['calendar_event_reminder'] ?? 'none') ?? 'none')
+            : 'none',
         'repeat_type' => 'none',
         'repeat_until' => null,
         'updated_at' => (string) ($event['calendar_event_updated_at'] ?? ''),
@@ -69,7 +72,7 @@ function calendar_range_event_state(int $ownerId, string $rangeStart, string $ra
         'SELECT calendar_event_id, calendar_event_date, calendar_event_updated_at, calendar_event_flag, '
         . 'calendar_event_owner, calendar_event_title, calendar_event_start_date, calendar_event_end_date, '
         . 'calendar_event_note, calendar_event_color, calendar_event_all_day, calendar_event_start_time, '
-        . 'calendar_event_end_time, calendar_event_url, calendar_event_repeat_type, calendar_event_repeat_until '
+        . 'calendar_event_end_time, calendar_event_url, calendar_event_repeat_type, calendar_event_repeat_until, calendar_event_reminder '
         . 'FROM ' . db_table_identifier('calendar_event') . ' '
         . 'WHERE calendar_event_owner = :owner AND calendar_event_flag = 0 '
         . 'AND calendar_event_start_date <= :range_end '

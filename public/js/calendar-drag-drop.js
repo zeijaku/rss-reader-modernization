@@ -69,6 +69,11 @@
         return /^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/.test(value) ? value : '';
     }
 
+    function validReminder(value) {
+        value = text(value || 'none');
+        return ['none', 'at_time', '10m', '30m', '1h', '1d'].indexOf(value) !== -1 ? value : 'none';
+    }
+
     function sourceState(entry, anchorDate) {
         if (!entry || !/^\d+$/.test(attr(entry, 'data-event-id', ''))) return null;
         var repeat = attr(entry, 'data-calendar-event-repeat-type', 'none');
@@ -83,7 +88,8 @@
             eventId: attr(entry, 'data-event-id', ''), title: attr(entry, 'data-event-title', ''), note: attr(entry, 'data-event-note', ''),
             start: start, end: end, anchor: anchorDate, color: validColor(attr(entry, 'data-calendar-event-color', 'blue')),
             allDay: attr(entry, 'data-calendar-event-all-day', '1') !== '0', startTime: validTime(attr(entry, 'data-calendar-event-start-time', '')),
-            endTime: validTime(attr(entry, 'data-calendar-event-end-time', '')), url: attr(entry, 'data-calendar-event-url', ''), recurring: recurring,
+            endTime: validTime(attr(entry, 'data-calendar-event-end-time', '')), url: attr(entry, 'data-calendar-event-url', ''),
+            reminder: validReminder(attr(entry, 'data-calendar-event-reminder', 'none')), recurring: recurring,
             originalStart: validIsoDate(attr(entry, 'data-calendar-original-occurrence-start-date', start)), revision: attr(entry, 'data-calendar-occurrence-revision', '')
         };
     }
@@ -96,7 +102,8 @@
             event_id: state.eventId, calendar_event_title: state.title, calendar_event_start_date: range.start,
             calendar_event_end_date: range.end, calendar_event_note: state.note, calendar_event_color: state.color,
             calendar_event_all_day: state.allDay ? '1' : '0', calendar_event_start_time: state.allDay ? '' : state.startTime,
-            calendar_event_end_time: state.allDay ? '' : state.endTime, calendar_event_url: state.url
+            calendar_event_end_time: state.allDay ? '' : state.endTime, calendar_event_url: state.url,
+            calendar_event_reminder: state.recurring ? 'none' : state.reminder
         };
         if (state.recurring) {
             if (!state.originalStart) return null;

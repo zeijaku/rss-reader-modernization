@@ -65,6 +65,7 @@ const normalMap = {
     '.changeCalendarEventStartTime': input('09:30'),
     '.changeCalendarEventEndTime': input('10:45'),
     '.changeCalendarEventUrl': input('https://example.com/meeting'),
+    '.changeCalendarEventReminder': input('30m'),
     '.changeCalendarEventRepeatType': input('weekly'),
     '.changeCalendarEventRepeatUntil': input('2026-12-31'),
     '.calendarOccurrenceScope:checked': null
@@ -76,8 +77,17 @@ check(normal.note === '議事録を準備' && normal.color === 'purple' && norma
     'normal copy preserves note, color and URL');
 check(normal.allDay === false && normal.startTime === '09:30' && normal.endTime === '10:45',
     'normal copy preserves timed-event settings');
+check(normal.reminder === '30m', 'recurring series copy preserves reminder setting');
 check(normal.repeat === 'weekly' && normal.repeatUntil === '2026-12-31',
     'series copy preserves recurrence settings');
+const reminderMap = Object.assign({}, normalMap, {
+    '.changeCalendarEventRepeatType': input('none'),
+    '.changeCalendarEventRepeatUntil': input(''),
+    '.changeCalendarEventReminder': input('30m')
+});
+const reminderCopy = api.snapshotChangeForm(formWith(reminderMap, {}));
+check(reminderCopy.reminder === '30m', 'normal non-recurring copy preserves reminder setting');
+
 
 const occurrenceMap = Object.assign({}, normalMap, {
     '.changeCalendarEventStartDate': input('2026-09-22'),
@@ -87,6 +97,7 @@ const occurrenceMap = Object.assign({}, normalMap, {
 const occurrence = api.snapshotChangeForm(formWith(occurrenceMap, {'data-calendar-occurrence-active': '1'}));
 check(occurrence.occurrenceOnly === true && occurrence.repeat === 'none' && occurrence.repeatUntil === '',
     'occurrence-only copy strips recurrence identity and becomes standalone');
+check(occurrence.reminder === '30m', 'occurrence-only copy preserves the inherited reminder on the new standalone event');
 check(occurrence.start === '2026-09-22' && occurrence.end === '2026-09-22',
     'occurrence-only copy uses the currently displayed occurrence dates');
 
@@ -108,6 +119,7 @@ const registerMap = {
     '.registerCalendarEventStartTime': input(''),
     '.registerCalendarEventEndTime': input(''),
     '.registerCalendarEventUrl': input(''),
+    '.registerCalendarEventReminder': input('none'),
     '.registerCalendarEventRepeatType': input('none'),
     '.registerCalendarEventRepeatUntil': input(''),
     '.calendar-event-recurrence-loading': loading
@@ -125,6 +137,8 @@ check(registerMap['.registerCalendarEventAllDay'].checked === false
       && registerMap['.registerCalendarEventStartTime'].value === '09:30'
       && registerMap['.registerCalendarEventEndTime'].value === '10:45',
     'register form receives timed-event state');
+check(registerMap['.registerCalendarEventReminder'].value === '30m',
+    'recurring register form receives the series reminder state');
 check(registerMap['.registerCalendarEventRepeatType'].value === 'weekly'
       && registerMap['.registerCalendarEventRepeatUntil'].value === '2026-12-31',
     'register form receives recurrence state');
@@ -142,8 +156,9 @@ const occurrenceRegister = formWith(occurrenceRegisterMap, {'data-calendar-recur
 check(api.applySnapshot(occurrenceRegister, occurrence) === true
       && occurrenceRegisterMap['.registerCalendarEventRepeatType'].value === 'none'
       && occurrenceRegisterMap['.registerCalendarEventRepeatUntil'].value === ''
+      && occurrenceRegisterMap['.registerCalendarEventReminder'].value === '30m'
       && occurrenceRegister.attrs['data-calendar-recurrence-submit-ready'] === '1',
-    'occurrence-only copy is standalone and immediately eligible for normal create validation');
+    'occurrence-only copy is standalone, preserves reminder, and is immediately eligible for normal create validation');
 
 console.log('RESULT: PASS ' + passed + ' / FAIL ' + failed + ' / SKIP 0');
 process.exit(failed === 0 ? 0 : 1);

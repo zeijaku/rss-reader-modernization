@@ -100,7 +100,8 @@ $pdo->exec('CREATE TABLE calendar_event (
     calendar_event_end_date TEXT NOT NULL, calendar_event_note TEXT NOT NULL,
     calendar_event_color TEXT NOT NULL DEFAULT "blue", calendar_event_all_day INTEGER NOT NULL DEFAULT 1,
     calendar_event_start_time TEXT NULL, calendar_event_end_time TEXT NULL, calendar_event_url TEXT NULL,
-    calendar_event_repeat_type TEXT NOT NULL DEFAULT "none", calendar_event_repeat_until TEXT NULL
+    calendar_event_repeat_type TEXT NOT NULL DEFAULT "none", calendar_event_repeat_until TEXT NULL,
+    calendar_event_reminder TEXT NOT NULL DEFAULT "none"
 )');
 $pdo->exec('CREATE TABLE calendar_event_exception (
     calendar_event_exception_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,12 +120,12 @@ $pdo->exec('CREATE TABLE calendar_event_exception (
     UNIQUE (calendar_event_exception_owner, calendar_event_exception_event_id, calendar_event_exception_original_start_date)
 )');
 
-$insertEvent = $pdo->prepare('INSERT INTO calendar_event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+$insertEvent = $pdo->prepare('INSERT INTO calendar_event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 $rows = [
-    [1, '2026-08-31', '2026-08-31 00:00:00', 0, 1, '毎週会議', '2026-08-31', '2026-09-01', 'series', 'blue', 1, null, null, null, 'weekly', '2026-12-31'],
-    [2, '2026-01-31', '2026-01-31 00:00:00', 0, 1, '月末', '2026-01-31', '2026-01-31', '', 'red', 1, null, null, null, 'monthly', '2026-12-31'],
-    [3, '2026-08-31', '2026-08-31 00:00:00', 0, 2, '他人', '2026-08-31', '2026-08-31', '', 'green', 1, null, null, null, 'weekly', '2026-12-31'],
-    [4, '2026-09-01', '2026-09-01 00:00:00', 0, 4, '上限', '2026-09-01', '2026-09-01', '', 'yellow', 1, null, null, null, 'daily', '2026-12-31'],
+    [1, '2026-08-31', '2026-08-31 00:00:00', 0, 1, '毎週会議', '2026-08-31', '2026-09-01', 'series', 'blue', 1, null, null, null, 'weekly', '2026-12-31', 'none'],
+    [2, '2026-01-31', '2026-01-31 00:00:00', 0, 1, '月末', '2026-01-31', '2026-01-31', '', 'red', 1, null, null, null, 'monthly', '2026-12-31', 'none'],
+    [3, '2026-08-31', '2026-08-31 00:00:00', 0, 2, '他人', '2026-08-31', '2026-08-31', '', 'green', 1, null, null, null, 'weekly', '2026-12-31', 'none'],
+    [4, '2026-09-01', '2026-09-01 00:00:00', 0, 4, '上限', '2026-09-01', '2026-09-01', '', 'yellow', 1, null, null, null, 'daily', '2026-12-31', 'none'],
 ];
 foreach ($rows as $row) {
     $insertEvent->execute($row);

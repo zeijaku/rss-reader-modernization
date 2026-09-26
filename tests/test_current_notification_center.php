@@ -1,0 +1,21 @@
+<?php
+declare(strict_types=1);
+define('DB_DRIVER','sqlite'); define('DB_SQLITE_PATH',':memory:'); define('DB_TABLE_PREFIX','rss_');
+require dirname(__DIR__).'/app/common/common_conf.php';
+require dirname(__DIR__).'/app/common/common_db.php';
+require dirname(__DIR__).'/app/validation.php';
+require dirname(__DIR__).'/app/notification.php';
+$pdo=conn_db();
+$pdo->exec('CREATE TABLE rss_notification (notification_id INTEGER PRIMARY KEY AUTOINCREMENT, notification_owner INTEGER NOT NULL, notification_type TEXT NOT NULL, notification_source_type TEXT NOT NULL, notification_source_id TEXT NULL, notification_source_key TEXT NOT NULL, notification_title TEXT NOT NULL, notification_body TEXT NOT NULL, notification_target_url TEXT NULL, notification_due_at TEXT NOT NULL, notification_read_at TEXT NULL, notification_hidden_at TEXT NULL, notification_created_at TEXT NOT NULL, notification_updated_at TEXT NOT NULL, UNIQUE(notification_owner, notification_source_type, notification_source_key, notification_type))');
+$now=app_now();
+$a=notification_upsert(1,'info','system','x','test:key','Title','Body',$now,'./?tab=0');
+$b=notification_upsert(1,'info','system','x','test:key','Updated','Body2',$now,'./?tab=0');
+if(!$a['created']||$b['created']||$a['notification_id']!==$b['notification_id']) throw new RuntimeException('dedupe failed');
+$list=notification_list(1);
+if($list['unread_count']!==1||count($list['notifications'])!==1||$list['notifications'][0]['title']!=='Updated') throw new RuntimeException('list failed');
+if(notification_list(2)['unread_count']!==0) throw new RuntimeException('owner isolation failed');
+if(!notification_mark_read(1,$a['notification_id'])||notification_list(1)['unread_count']!==0) throw new RuntimeException('read failed');
+notification_upsert(1,'warning','system',null,'test:second','Second','',$now,null);
+if(notification_mark_all_read(1)!==1) throw new RuntimeException('read all failed');
+if(!notification_hide(1,$a['notification_id'])||count(notification_list(1)['notifications'])!==1) throw new RuntimeException('hide failed');
+echo "notification center backend tests passed\n";

@@ -49,6 +49,7 @@
             startTime: fieldValue(form, '.changeCalendarEventStartTime'),
             endTime: fieldValue(form, '.changeCalendarEventEndTime'),
             url: fieldValue(form, '.changeCalendarEventUrl'),
+            reminder: fieldValue(form, '.changeCalendarEventReminder') || 'none',
             repeat: occurrenceOnly ? 'none' : (fieldValue(form, '.changeCalendarEventRepeatType') || 'none'),
             repeatUntil: occurrenceOnly ? '' : fieldValue(form, '.changeCalendarEventRepeatUntil'),
             occurrenceOnly: occurrenceOnly
@@ -67,6 +68,7 @@
         setValue(registerForm, '.registerCalendarEventStartTime', snapshot.startTime);
         setValue(registerForm, '.registerCalendarEventEndTime', snapshot.endTime);
         setValue(registerForm, '.registerCalendarEventUrl', snapshot.url);
+        setValue(registerForm, '.registerCalendarEventReminder', snapshot.reminder);
         setValue(registerForm, '.registerCalendarEventRepeatType', snapshot.repeat);
         setValue(registerForm, '.registerCalendarEventRepeatUntil', snapshot.repeatUntil);
 

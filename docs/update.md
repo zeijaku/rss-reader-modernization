@@ -1,3 +1,31 @@
+# Version 1.36.0 update
+
+## Version 1.35.4からVersion 1.36.0
+
+V1.36.0はDashboard Notification CenterとCalendar Reminderを追加し、Calendar ModalとNavbarの操作性を改善するReleaseです。既存DatabaseではMigration 030 / 031を番号順に適用します。
+
+1. Application code、`config/local.php`、Database、private runtime dataをBackupする。
+2. `database/migrations/030_v1_36_notification_center.sql` と `031_v1_36_calendar_reminder.sql` の `@table_prefix` を実環境の `DB_TABLE_PREFIX` と同じ値へ合わせる。
+3. 未適用の場合だけ030→031の順で各1回適用する。V1.36 checkpointで適用済みなら再実行しない。
+4. 正式Runtime ZIPとSHA-256を確認し、本番Directory外へ展開する。
+5. `config/local.php`、実DB、生成済み`var/` Data、Secretを維持したままApplication codeを更新する。
+6. BrowserをReloadし、Footerが`RSS Reader Modernization 1.36.0`であることを確認する。
+7. Notification CenterのBell / unread / read / mark-all-read / hide、通常Calendar Reminder、繰り返しOccurrence Reminderを確認する。
+8. Calendarの開始日時変更で終了日時が同じDurationを保って追従すること、PC / SmartphoneのCalendar Modal、sticky Navbarを確認する。
+9. Login / Logout、RSS、Stock、Task、Mail、File Library、Remote Files、SettingsのSmoke TestとConsole errorなしを確認する。
+10. 問題があればSourceとDatabaseを同じBackup時点へ戻す。030 / 031適用後に旧Codeへ戻す場合は、旧Codeが新Table / Columnを参照しないことを確認し、DB rollbackの要否はBackup方針に従う。
+
+```text
+DB Migration                030_v1_36_notification_center.sql
+                            031_v1_36_calendar_reminder.sql
+New table                   notification
+Existing table change       calendar_event_reminder Column追加
+必須設定                    追加なし
+Background delivery         追加なし（in-app通知のみ）
+Browser Cache               APP_ASSET_REVISION=1.36.0
+正式Tag / GitHub Release    v1.36.0（Release workflow全Gate通過後のみ）
+```
+
 # Version 1.33.0 update
 
 ## Version 1.32.0からVersion 1.33.0

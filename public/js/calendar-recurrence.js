@@ -175,6 +175,8 @@
         var repeat = form.querySelector('[class*="CalendarEventRepeatType"]');
         var until = form.querySelector('[class*="CalendarEventRepeatUntil"]');
         var group = form.querySelector('.calendar-event-repeat-until-field');
+        var reminder = form.querySelector('[class*="CalendarEventReminder"]');
+        var reminderHelp = form.querySelector('.calendar-event-reminder-help');
         if (!repeat || !until || !group) {
             return;
         }
@@ -183,6 +185,17 @@
         until.disabled = !recurring;
         if (!recurring) {
             until.value = '';
+        }
+        var occurrenceOnly = form.getAttribute('data-calendar-occurrence-active') === '1';
+        if (reminder) {
+            reminder.disabled = occurrenceOnly;
+        }
+        if (reminderHelp) {
+            reminderHelp.textContent = occurrenceOnly
+                ? 'この回ではシリーズのリマインダー設定を使用します。変更する場合は「シリーズ全体」を選択してください。'
+                : (recurring
+                    ? '繰り返し予定では各Occurrenceの開始日時を基準に通知します。'
+                    : '終日予定は09:00を予定時刻として通知時刻を計算します。');
         }
     }
 
@@ -229,6 +242,7 @@
             calendar_event_start_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventStartTime'),
             calendar_event_end_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventEndTime'),
             calendar_event_url: formValue(form, '.' + prefix + 'CalendarEventUrl'),
+            calendar_event_reminder: formValue(form, '.' + prefix + 'CalendarEventReminder') || 'none',
             calendar_event_repeat_type: validRepeat(formValue(form, '.' + prefix + 'CalendarEventRepeatType')),
             calendar_event_repeat_until: formValue(form, '.' + prefix + 'CalendarEventRepeatUntil')
         };
@@ -414,6 +428,7 @@
             .attr('data-calendar-source-start-time', publicTime(item.source_start_time !== undefined ? item.source_start_time : item.start_time))
             .attr('data-calendar-source-end-time', publicTime(item.source_end_time !== undefined ? item.source_end_time : item.end_time))
             .attr('data-calendar-source-url', String(item.source_url !== undefined && item.source_url !== null ? item.source_url : item.url || ''))
+            .attr('data-calendar-source-reminder', String(item.source_reminder !== undefined ? item.source_reminder : item.reminder || 'none'))
             .attr('data-calendar-event-color', color)
             .attr('data-calendar-event-color-ready', '1')
             .attr('data-calendar-event-meta-ready', '1')
@@ -421,6 +436,7 @@
             .attr('data-calendar-event-start-time', publicTime(item.start_time))
             .attr('data-calendar-event-end-time', publicTime(item.end_time))
             .attr('data-calendar-event-url', String(item.url || ''))
+            .attr('data-calendar-event-reminder', String(item.reminder || item.source_reminder || 'none'))
             .attr('data-calendar-event-repeat-type', validRepeat(item.repeat_type))
             .attr('data-calendar-event-repeat-until', String(item.repeat_until || ''))
             .attr('data-bs-toggle', 'modal')

@@ -106,7 +106,7 @@ function calendar_event_time_month_list(int $ownerId, int $year, int $month): ar
     $range = calendar_month_range($year, $month);
     $stmt = conn_db()->prepare(
         'SELECT calendar_event_id, calendar_event_all_day, calendar_event_start_time, '
-        . 'calendar_event_end_time, calendar_event_url FROM ' . db_table_identifier('calendar_event') . ' '
+        . 'calendar_event_end_time, calendar_event_url, calendar_event_reminder FROM ' . db_table_identifier('calendar_event') . ' '
         . 'WHERE calendar_event_owner = :owner AND calendar_event_flag = 0 '
         . 'AND calendar_event_start_date <= :month_end AND calendar_event_end_date >= :month_start '
         . 'ORDER BY calendar_event_id ASC LIMIT 500'
@@ -134,6 +134,9 @@ function calendar_event_time_month_list(int $ownerId, int $year, int $month): ar
             'start_time' => calendar_event_time_public_clock($row['calendar_event_start_time'] ?? null),
             'end_time' => calendar_event_time_public_clock($row['calendar_event_end_time'] ?? null),
             'url' => $url === false || $url === '' ? null : $url,
+            'reminder' => function_exists('calendar_event_reminder_validate')
+                ? (calendar_event_reminder_validate($row['calendar_event_reminder'] ?? 'none') ?? 'none')
+                : 'none',
         ];
     }
     return $events;
@@ -169,7 +172,8 @@ function calendar_event_time_color_create(
     string $endDate,
     string $note,
     string $color,
-    array $settings
+    array $settings,
+    ?string $reminder = null
 ): int {
     $pdo = conn_db();
     $started = !$pdo->inTransaction();
@@ -179,6 +183,10 @@ function calendar_event_time_color_create(
     try {
         $eventId = calendar_event_color_create($ownerId, $title, $startDate, $endDate, $note, $color);
         calendar_event_time_apply($pdo, $ownerId, $eventId, $settings);
+        if ($reminder !== null) {
+            calendar_event_reminder_apply($pdo, $ownerId, $eventId, $reminder);
+            calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
+        }
         if ($started) {
             $pdo->commit();
         }
@@ -200,7 +208,8 @@ function calendar_event_time_color_update(
     string $endDate,
     string $note,
     string $color,
-    array $settings
+    array $settings,
+    ?string $reminder = null
 ): bool {
     $pdo = conn_db();
     $started = !$pdo->inTransaction();
@@ -215,6 +224,10 @@ function calendar_event_time_color_update(
             return false;
         }
         calendar_event_time_apply($pdo, $ownerId, $eventId, $settings);
+        if ($reminder !== null) {
+            calendar_event_reminder_apply($pdo, $ownerId, $eventId, $reminder);
+            calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
+        }
         if ($started) {
             $pdo->commit();
         }
