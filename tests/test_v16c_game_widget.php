@@ -27,7 +27,7 @@ function v16c_check(bool $condition, string $message): void
     }
 }
 
-v16c_check(mini_game_widget_types() === ['icon_quest', 'lights_out', 'wire_defense', 'block_collapse', 'cursor_field'], 'Game subtype order keeps existing types and adds Cursor Field');
+v16c_check(mini_game_widget_types() === ['icon_quest', 'lights_out', 'wire_defense', 'block_collapse', 'cursor_field', 'game_2048'], 'Game subtype order keeps existing types and adds 2048');
 v16c_check(mini_game_widget_validate_type('lights_out') === 'lights_out', 'Lights Out is accepted by the existing Game validator');
 $config = mini_game_widget_config_from_input(['game_title' => 'Lights Out', 'game_type' => 'lights_out']);
 v16c_check($config === ['schema' => 1, 'title' => 'Lights Out', 'game' => 'lights_out'], 'Lights Out uses the existing widget_config schema');
@@ -43,6 +43,10 @@ v16c_check(mini_game_widget_validate_type('wire-defense') === null, 'unapproved 
 $cursorConfig = mini_game_widget_config_from_input(['game_title' => 'Cursor Field', 'game_type' => 'cursor_field']);
 v16c_check($cursorConfig === ['schema' => 1, 'title' => 'Cursor Field', 'game' => 'cursor_field'], 'Cursor Field uses the existing widget_config schema');
 v16c_check(mini_game_widget_validate_type('cursor-field') === null, 'unapproved Cursor Field spelling is rejected');
+
+$game2048Config = mini_game_widget_config_from_input(['game_title' => '2048', 'game_type' => 'game_2048']);
+v16c_check($game2048Config === ['schema' => 1, 'title' => '2048', 'game' => 'game_2048'], '2048 uses the existing widget_config schema');
+v16c_check(mini_game_widget_validate_type('2048') === null, 'numeric display name is not accepted as the internal Game subtype');
 
 printf("RESULT: %s %d / FAIL %d / SKIP 0\n", $failures === 0 ? 'PASS' : 'FAIL', $checks, $failures);
 exit($failures === 0 ? 0 : 1);
