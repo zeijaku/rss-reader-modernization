@@ -788,6 +788,14 @@ function api_notification_list(int $userId, array $input): array
     try {
         require_once dirname(__DIR__) . '/calendar_range.php';
         calendar_event_reminder_sync_owner($userId);
+    } catch (Throwable $exception) {
+        // Calendar reminder materialization is supplemental. A Calendar range
+        // limit, stale exception row, or Calendar-side migration problem must
+        // not make already-persisted Notification Center items unreadable.
+        error_log('Calendar reminder sync skipped: ' . $exception->getMessage());
+    }
+
+    try {
         return api_success(notification_list($userId, min(100, $limit)));
     } catch (PDOException $exception) {
         error_log('Notification list failed: ' . $exception->getMessage());
