@@ -106,7 +106,7 @@ function calendar_event_time_month_list(int $ownerId, int $year, int $month): ar
     $range = calendar_month_range($year, $month);
     $stmt = conn_db()->prepare(
         'SELECT calendar_event_id, calendar_event_all_day, calendar_event_start_time, '
-        . 'calendar_event_end_time, calendar_event_url FROM ' . db_table_identifier('calendar_event') . ' '
+        . 'calendar_event_end_time, calendar_event_url, calendar_event_reminder FROM ' . db_table_identifier('calendar_event') . ' '
         . 'WHERE calendar_event_owner = :owner AND calendar_event_flag = 0 '
         . 'AND calendar_event_start_date <= :month_end AND calendar_event_end_date >= :month_start '
         . 'ORDER BY calendar_event_id ASC LIMIT 500'
@@ -134,6 +134,7 @@ function calendar_event_time_month_list(int $ownerId, int $year, int $month): ar
             'start_time' => calendar_event_time_public_clock($row['calendar_event_start_time'] ?? null),
             'end_time' => calendar_event_time_public_clock($row['calendar_event_end_time'] ?? null),
             'url' => $url === false || $url === '' ? null : $url,
+            'reminder' => calendar_event_reminder_validate($row['calendar_event_reminder'] ?? 'none') ?? 'none',
         ];
     }
     return $events;
