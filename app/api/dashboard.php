@@ -785,12 +785,16 @@ function api_link_item_delete(int $userId, array $input): array
 function api_notification_list(int $userId, array $input): array
 {
     $limit = app_validate_positive_int($input['limit'] ?? 50) ?? 50;
+    $sync = dashboard_widget_validate_boolean($input['sync_calendar_reminders'] ?? '0');
+    if ($sync === null) return api_validation_error('sync_calendar_reminders must be boolean.');
     try {
-        require_once dirname(__DIR__) . '/calendar_color.php';
-        require_once dirname(__DIR__) . '/calendar_time.php';
-        require_once dirname(__DIR__) . '/calendar_recurrence.php';
-        require_once dirname(__DIR__) . '/calendar_exception.php';
-        calendar_event_reminder_sync_owner($userId);
+        if ($sync) {
+            require_once dirname(__DIR__) . '/calendar_color.php';
+            require_once dirname(__DIR__) . '/calendar_time.php';
+            require_once dirname(__DIR__) . '/calendar_recurrence.php';
+            require_once dirname(__DIR__) . '/calendar_exception.php';
+            calendar_event_reminder_sync_owner($userId);
+        }
         return api_success(notification_list($userId, min(100, $limit)));
     } catch (PDOException $exception) {
         error_log('Notification list failed: ' . $exception->getMessage());
