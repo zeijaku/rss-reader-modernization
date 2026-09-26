@@ -1,3 +1,25 @@
+## 1.37.0 - 2026-09-26
+
+### Game Widget: 2048
+- Add a 4x4 2048 subtype to the existing Game Widget without introducing a new database model or API endpoint.
+- Support Arrow Key / WASD on PC and pointer-swipe controls on Smartphone.
+- Show Score and browser-local Best Score, with New Game and Restart actions.
+- Add a lightweight directional move animation while respecting `prefers-reduced-motion`.
+- Keep gameplay entirely local to the browser with no external network request.
+
+### Game Widget: Reversi
+- Add an 8x8 Reversi subtype with Player as Black and a local CPU as White.
+- Implement legal-move validation, eight-direction flips, pass handling, game-over detection, stone counts, active-turn display, and Restart.
+- Support the same board through PC click and Smartphone tap.
+- Use a lightweight CPU heuristic based on corner / positional value, flipped stones, opponent mobility, and current stone balance instead of deep search.
+- Align the board, discs, legal-move marker, focus state, and responsive layout with the existing flat Bootstrap-derived Game Widget visual language.
+
+### Compatibility and release
+- Reuse the existing Game Widget configuration schema and `dashboard_widget` storage model.
+- Add no database migration, required configuration, external dependency, or network-backed game service.
+- Retain the existing authentication, owner scope, CSRF, validation, Dashboard and Stock integration boundaries.
+- Promote the production-verified V1.37 development checkpoints to the formal `1.37.0` release and standard release workflow.
+
 ## 1.36.0 - 2026-09-26
 
 ### Dashboard Notification Center
