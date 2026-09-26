@@ -51,7 +51,9 @@ function calendar_range_normalize_non_recurring_row(array $row): ?array
         'start_time' => $allDay ? null : calendar_event_time_public_clock($row['calendar_event_start_time'] ?? null),
         'end_time' => $allDay ? null : calendar_event_time_public_clock($row['calendar_event_end_time'] ?? null),
         'url' => $urlValue === false || $urlValue === '' ? null : $urlValue,
-        'reminder' => calendar_event_reminder_validate($row['calendar_event_reminder'] ?? 'none') ?? 'none',
+        'reminder' => function_exists('calendar_event_reminder_validate')
+            ? (calendar_event_reminder_validate($row['calendar_event_reminder'] ?? 'none') ?? 'none')
+            : 'none',
         'repeat_type' => 'none',
         'repeat_until' => null,
         'updated_at' => (string) ($event['calendar_event_updated_at'] ?? ''),
