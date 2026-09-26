@@ -195,6 +195,7 @@ function api_dispatch(string $action, int $userId, array $input): array
         'tabs.update' => api_tabs_update($userId, $input),
         'feed.fetch' => api_feed_fetch_with_health($userId, $input),
         'feed.reader' => api_feed_reader($userId, $input),
+        'feed.reader.full_text' => api_feed_reader_full_text($userId, $input),
         'feed.new.clear' => api_feed_new_clear($userId, $input),
         'feed.keyword.create' => api_feed_keyword_create($userId, $input),
         'feed.keyword.delete' => api_feed_keyword_delete($userId, $input),
