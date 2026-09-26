@@ -120,17 +120,15 @@ function calendar_event_reminder_cancel_pending(PDO $pdo, int $ownerId, int $eve
     }
     $now = app_now();
     $stmt = $pdo->prepare(
-        'UPDATE ' . db_table_identifier('notification') . ' '
-        . 'SET notification_hidden_at = :now, notification_read_at = COALESCE(notification_read_at, :now), '
-        . 'notification_updated_at = :now '
+        'DELETE FROM ' . db_table_identifier('notification') . ' '
         . "WHERE notification_owner = :owner AND notification_source_type = 'calendar' "
         . "AND notification_source_key = :source_key AND notification_type = 'reminder' "
-        . 'AND notification_hidden_at IS NULL AND notification_due_at > :now'
+        . 'AND notification_due_at > :now'
     );
     $stmt->execute([
-        ':now' => $now,
         ':owner' => $ownerId,
         ':source_key' => calendar_event_reminder_source_key($eventId),
+        ':now' => $now,
     ]);
 }
 
