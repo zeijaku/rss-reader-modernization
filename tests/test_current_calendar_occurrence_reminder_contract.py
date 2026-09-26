@@ -33,6 +33,7 @@ def test_occurrence_reminder_ui_contract():
     occurrence = read("public/js/calendar-occurrence.js")
     recurrence = read("public/js/calendar-recurrence.js")
     copy = read("public/js/calendar-copy.js")
+    target = read("public/js/calendar-reminder-target.js")
 
     assert "各Occurrenceの開始日時を基準に通知します。" in details
     assert "シリーズのリマインダー設定を使用します。" in details
@@ -43,6 +44,8 @@ def test_occurrence_reminder_ui_contract():
     assert "data-calendar-event-reminder" in recurrence
     assert "calendar_event_reminder" in recurrence
     assert "occurrenceOnly ? 'none'" in copy
+    assert "calendar_occurrence_start" in target
+    assert "data-calendar-original-occurrence-start-date" in target
 
 def test_no_new_occurrence_schema_required():
     migrations = {path.name for path in (ROOT / "database" / "migrations").glob("*.sql")}
