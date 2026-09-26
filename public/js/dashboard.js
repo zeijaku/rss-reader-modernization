@@ -1027,7 +1027,7 @@
             .prop('hidden', true)
             .prop('disabled', false)
             .removeData('request-pending')
-            .find('i').removeClass('fa-spin fa-spinner').addClass('fa-file-alt');
+            .find('i').removeClass('fa-spin fa-spinner fa-check').addClass('fa-file-alt');
         $('#readerModeFullTextButton').contents().filter(function () {
             return this.nodeType === 3;
         }).last().replaceWith(' 全文を取得');
