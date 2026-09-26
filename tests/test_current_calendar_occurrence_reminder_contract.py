@@ -16,8 +16,9 @@ def test_occurrence_reminder_backend_contract():
     assert "event:' . $eventId . ':occurrence:'" in reminder
     assert "calendar_event_reminder_reconcile_occurrence" in reminder
     assert "calendar_event_reminder_sync_owner" in reminder
-    assert "CALENDAR_EVENT_REMINDER_SYNC_PAST_DAYS" in reminder
+    assert "CALENDAR_EVENT_REMINDER_SYNC_PAST_DAYS = 1" in reminder
     assert "CALENDAR_EVENT_REMINDER_SYNC_FUTURE_DAYS" in reminder
+    assert "calendar_event_reminder_matches_existing" in reminder
     assert "calendar_range_event_state" in reminder
     assert "notification_upsert(" in reminder
     assert "calendar_event_reminder_cancel_pending_occurrence" in reminder
