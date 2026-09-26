@@ -10,7 +10,7 @@ declare(strict_types=1);
 /** @return list<string> */
 function mini_game_widget_types(): array
 {
-    return ['icon_quest', 'lights_out', 'wire_defense', 'block_collapse', 'cursor_field'];
+    return ['icon_quest', 'lights_out', 'wire_defense', 'block_collapse', 'cursor_field', 'game_2048'];
 }
 
 function mini_game_widget_validate_type(mixed $value): ?string
