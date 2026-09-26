@@ -134,7 +134,9 @@ function calendar_event_time_month_list(int $ownerId, int $year, int $month): ar
             'start_time' => calendar_event_time_public_clock($row['calendar_event_start_time'] ?? null),
             'end_time' => calendar_event_time_public_clock($row['calendar_event_end_time'] ?? null),
             'url' => $url === false || $url === '' ? null : $url,
-            'reminder' => calendar_event_reminder_validate($row['calendar_event_reminder'] ?? 'none') ?? 'none',
+            'reminder' => function_exists('calendar_event_reminder_validate')
+                ? (calendar_event_reminder_validate($row['calendar_event_reminder'] ?? 'none') ?? 'none')
+                : 'none',
         ];
     }
     return $events;
