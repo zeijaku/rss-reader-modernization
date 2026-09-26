@@ -127,7 +127,8 @@ $pdo->exec('CREATE TABLE calendar_event (
     calendar_event_end_date TEXT NOT NULL, calendar_event_note TEXT NOT NULL,
     calendar_event_color TEXT NOT NULL DEFAULT "blue", calendar_event_all_day INTEGER NOT NULL DEFAULT 1,
     calendar_event_start_time TEXT NULL, calendar_event_end_time TEXT NULL, calendar_event_url TEXT NULL,
-    calendar_event_repeat_type TEXT NOT NULL DEFAULT "none", calendar_event_repeat_until TEXT NULL
+    calendar_event_repeat_type TEXT NOT NULL DEFAULT "none", calendar_event_repeat_until TEXT NULL,
+    calendar_event_reminder TEXT NOT NULL DEFAULT "none"
 )');
 $pdo->exec('CREATE TABLE calendar_event_exception (
     calendar_event_exception_id INTEGER PRIMARY KEY AUTOINCREMENT,
