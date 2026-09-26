@@ -97,7 +97,7 @@ const occurrenceMap = Object.assign({}, normalMap, {
 const occurrence = api.snapshotChangeForm(formWith(occurrenceMap, {'data-calendar-occurrence-active': '1'}));
 check(occurrence.occurrenceOnly === true && occurrence.repeat === 'none' && occurrence.repeatUntil === '',
     'occurrence-only copy strips recurrence identity and becomes standalone');
-check(occurrence.reminder === 'none', 'occurrence-only copy does not inherit a series reminder');
+check(occurrence.reminder === '30m', 'occurrence-only copy preserves the inherited reminder on the new standalone event');
 check(occurrence.start === '2026-09-22' && occurrence.end === '2026-09-22',
     'occurrence-only copy uses the currently displayed occurrence dates');
 
@@ -156,8 +156,9 @@ const occurrenceRegister = formWith(occurrenceRegisterMap, {'data-calendar-recur
 check(api.applySnapshot(occurrenceRegister, occurrence) === true
       && occurrenceRegisterMap['.registerCalendarEventRepeatType'].value === 'none'
       && occurrenceRegisterMap['.registerCalendarEventRepeatUntil'].value === ''
+      && occurrenceRegisterMap['.registerCalendarEventReminder'].value === '30m'
       && occurrenceRegister.attrs['data-calendar-recurrence-submit-ready'] === '1',
-    'occurrence-only copy is standalone and immediately eligible for normal create validation');
+    'occurrence-only copy is standalone, preserves reminder, and is immediately eligible for normal create validation');
 
 console.log('RESULT: PASS ' + passed + ' / FAIL ' + failed + ' / SKIP 0');
 process.exit(failed === 0 ? 0 : 1);
