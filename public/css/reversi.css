@@ -4,17 +4,20 @@
 .reversi-summary>div{padding:.3rem .35rem;border:1px solid rgba(var(--bs-body-color-rgb,33,37,41),.14);border-radius:.3rem;background:rgba(var(--bs-body-color-rgb,33,37,41),.035);text-align:center}
 .reversi-summary span{display:block;color:var(--bs-secondary-color,#6c757d);font-size:.62rem;line-height:1.2}
 .reversi-summary strong{display:block;margin-top:.05rem;font-size:.86rem;font-variant-numeric:tabular-nums}
-.reversi-board{display:grid;width:min(100%,400px);aspect-ratio:1/1;padding:4px;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));gap:2px;border:2px solid #174a27;border-radius:.35rem;background:#174a27;touch-action:manipulation;user-select:none;-webkit-user-select:none}
-.reversi-cell{position:relative;display:flex;min-width:0;min-height:0;padding:0;align-items:center;justify-content:center;border:0;border-radius:.14rem;background:#2f8f4e;appearance:none;-webkit-appearance:none}
+.reversi-board{display:grid;width:min(100%,400px);aspect-ratio:1/1;padding:6px;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(8,minmax(0,1fr));gap:3px;border:1px solid rgba(var(--bs-body-color-rgb,33,37,41),.2);border-radius:.4rem;background:rgba(var(--bs-body-color-rgb,33,37,41),.09);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.reversi-cell{position:relative;display:flex;min-width:0;min-height:0;padding:0;align-items:center;justify-content:center;border:1px solid rgba(var(--bs-body-color-rgb,33,37,41),.12);border-radius:.24rem;background:rgba(var(--bs-body-color-rgb,33,37,41),.035);appearance:none;-webkit-appearance:none;transition:background-color .12s ease,border-color .12s ease,transform .12s ease}
 .reversi-cell:not(:disabled){cursor:pointer}
-.reversi-cell:focus-visible{outline:3px solid var(--bs-warning,#ffc107);outline-offset:-3px;z-index:1}
-.reversi-cell.reversi-legal::after{content:"";width:18%;aspect-ratio:1/1;border-radius:50%;background:rgba(255,255,255,.62);box-shadow:0 0 0 1px rgba(0,0,0,.12)}
-.reversi-disc{display:block;width:78%;aspect-ratio:1/1;border-radius:50%;box-shadow:0 2px 3px rgba(0,0,0,.28)}
-.reversi-black{background:radial-gradient(circle at 35% 30%,#555 0,#222 35%,#050505 75%)}
-.reversi-white{background:radial-gradient(circle at 35% 30%,#fff 0,#f6f6f6 45%,#d8d8d8 100%);border:1px solid rgba(0,0,0,.18)}
+.reversi-cell:not(:disabled):active{transform:scale(.96)}
+.reversi-cell:focus-visible{outline:3px solid var(--bs-primary,#0d6efd);outline-offset:2px;z-index:1}
+.reversi-cell.reversi-legal{background:rgba(var(--bs-primary-rgb,13,110,253),.055);border-color:rgba(var(--bs-primary-rgb,13,110,253),.22)}
+.reversi-cell.reversi-legal::after{content:"";width:18%;aspect-ratio:1/1;border-radius:50%;background:var(--bs-primary,#0d6efd)}
+.reversi-disc{display:block;width:72%;aspect-ratio:1/1;border-radius:50%}
+.reversi-black{background:#212529;border:1px solid rgba(0,0,0,.3)}
+.reversi-white{background:#f8f9fa;border:1px solid rgba(33,37,41,.28)}
 .reversi-status{width:min(100%,400px);min-height:2rem;margin:.45rem 0 0;font-size:.76rem;line-height:1.35}
 .reversi-controls{width:min(100%,400px);margin-top:.3rem}
 .reversi-controls .btn{width:100%;min-height:44px}
 .reversi-help{width:min(100%,400px);margin:.4rem 0 0;color:var(--bs-secondary-color,#6c757d);font-size:.7rem;line-height:1.35}
-@media(max-width:575.98px){.reversi-summary,.reversi-board,.reversi-status,.reversi-controls,.reversi-help{width:100%}.reversi-board{padding:3px;gap:1px}.reversi-summary{gap:.25rem}.reversi-summary span{font-size:.58rem}.reversi-summary strong{font-size:.78rem}}
-@media(prefers-reduced-motion:reduce){.reversi-disc{transition:none!important;animation:none!important}}
+#main-content[data-dashboard-theme="bootstrap-solar"] .reversi-white,#main-content[data-dashboard-theme="bootstrap-slate"] .reversi-white{border-color:rgba(255,255,255,.35)}
+@media(max-width:575.98px){.reversi-summary,.reversi-board,.reversi-status,.reversi-controls,.reversi-help{width:100%}.reversi-board{padding:4px;gap:2px}.reversi-summary{gap:.25rem}.reversi-summary span{font-size:.58rem}.reversi-summary strong{font-size:.78rem}}
+@media(prefers-reduced-motion:reduce){.reversi-cell,.reversi-disc{transition:none!important;animation:none!important}.reversi-cell:not(:disabled):active{transform:none}}
