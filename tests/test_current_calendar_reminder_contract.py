@@ -22,7 +22,9 @@ def test_calendar_reminder_storage_and_api_contract():
     assert "CALENDAR_EVENT_REMINDER_ALL_DAY_TIME = '09:00:00'" in reminder
     assert "calendar_event_reminder" in color_api
     assert "calendar_event_reminder" in recurrence_api
-    assert "繰り返し予定のリマインダーは次の段階で対応します。" in recurrence_api
+    assert "繰り返し予定のリマインダーは次の段階で対応します。" not in recurrence_api
+    assert "calendar_event_reminder_sync_owner" in reminder
+    assert "occurrence:" in reminder
 
 def test_calendar_reminder_ui_contract():
     details = read("public/js/calendar-event-details.js")
@@ -38,16 +40,18 @@ def test_calendar_reminder_ui_contract():
         assert label in details
     assert "calendar_event_reminder" in details
     assert "calendar_event_reminder" in recurrence
-    assert "reminder.disabled = recurring" in recurrence
+    assert "reminder.disabled = recurring" not in recurrence
+    assert "data-calendar-source-reminder" in recurrence
     assert "data-calendar-event-reminder" in core
     assert "calendar-reminder-target.js" in loader
     assert "calendar_event_id" in target and "calendar_date" in target
     assert "calendar-event-edit-trigger" in target
     assert "60000" in notification
     assert "calendar:occurrenceChanged" in notification
+    assert "sync_calendar_reminders" in notification
     assert "calendar_event_reminder" in drag and "data-calendar-event-reminder" in drag
     assert "changeCalendarEventReminder" in copy and "registerCalendarEventReminder" in copy
 
 def test_calendar_reminder_checkpoint_version():
     version = read("app/version.php")
-    assert "1.36.0-dev.2" in version
+    assert "1.36.0-dev.3" in version
