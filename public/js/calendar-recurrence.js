@@ -175,6 +175,8 @@
         var repeat = form.querySelector('[class*="CalendarEventRepeatType"]');
         var until = form.querySelector('[class*="CalendarEventRepeatUntil"]');
         var group = form.querySelector('.calendar-event-repeat-until-field');
+        var reminder = form.querySelector('[class*="CalendarEventReminder"]');
+        var reminderHelp = form.querySelector('.calendar-event-reminder-help');
         if (!repeat || !until || !group) {
             return;
         }
@@ -183,6 +185,17 @@
         until.disabled = !recurring;
         if (!recurring) {
             until.value = '';
+        }
+        if (reminder) {
+            reminder.disabled = recurring;
+            if (recurring) {
+                reminder.value = 'none';
+            }
+        }
+        if (reminderHelp) {
+            reminderHelp.textContent = recurring
+                ? 'V1.36-Bでは繰り返し予定のリマインダーは設定出来ません。V1.36-Cで対応します。'
+                : '終日予定は09:00を予定時刻として通知時刻を計算します。';
         }
     }
 
@@ -229,6 +242,7 @@
             calendar_event_start_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventStartTime'),
             calendar_event_end_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventEndTime'),
             calendar_event_url: formValue(form, '.' + prefix + 'CalendarEventUrl'),
+            calendar_event_reminder: formValue(form, '.' + prefix + 'CalendarEventReminder') || 'none',
             calendar_event_repeat_type: validRepeat(formValue(form, '.' + prefix + 'CalendarEventRepeatType')),
             calendar_event_repeat_until: formValue(form, '.' + prefix + 'CalendarEventRepeatUntil')
         };
