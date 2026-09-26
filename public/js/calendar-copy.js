@@ -49,9 +49,7 @@
             startTime: fieldValue(form, '.changeCalendarEventStartTime'),
             endTime: fieldValue(form, '.changeCalendarEventEndTime'),
             url: fieldValue(form, '.changeCalendarEventUrl'),
-            reminder: occurrenceOnly || fieldValue(form, '.changeCalendarEventRepeatType') !== 'none'
-                ? 'none'
-                : (fieldValue(form, '.changeCalendarEventReminder') || 'none'),
+            reminder: occurrenceOnly ? 'none' : (fieldValue(form, '.changeCalendarEventReminder') || 'none'),
             repeat: occurrenceOnly ? 'none' : (fieldValue(form, '.changeCalendarEventRepeatType') || 'none'),
             repeatUntil: occurrenceOnly ? '' : fieldValue(form, '.changeCalendarEventRepeatUntil'),
             occurrenceOnly: occurrenceOnly
