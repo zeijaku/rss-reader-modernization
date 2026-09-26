@@ -7,6 +7,7 @@
     var targetDate = '';
     var handled = false;
     var navigating = false;
+    var navigationAttempted = false;
     var targetCard = null;
 
     function readTarget() {
@@ -64,11 +65,20 @@
         if (navigating) {
             return;
         }
+        if (navigationAttempted) {
+            handled = true;
+            clearTargetQuery();
+            return;
+        }
+        navigationAttempted = true;
         navigating = true;
         $card.attr('data-calendar-selected-date', targetDate);
         var $dayButton = $card.find('.calendar-view-mode[data-calendar-view-mode="day"]').first();
         if ($dayButton.length > 0) {
             $dayButton.trigger('click');
+        } else {
+            handled = true;
+            clearTargetQuery();
         }
     }
 
