@@ -220,10 +220,6 @@ try {
     if ($reminder === null) {
         calendar_recurrence_error('validation_error', 'Calendar reminder setting is invalid.', 422);
     }
-    if ($repeatSettings['repeat_type'] !== 'none' && $reminder !== 'none') {
-        calendar_recurrence_error('validation_error', '繰り返し予定のリマインダーは次の段階で対応します。', 422);
-    }
-
     if ($action === 'calendar.recurrence.create') {
         $eventId = calendar_event_recurrence_time_color_create(
             $userId,
