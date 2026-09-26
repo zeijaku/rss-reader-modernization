@@ -204,14 +204,11 @@
         if (!reminder) {
             return;
         }
-        var recurring = repeat && String(repeat.value || 'none') !== 'none';
-        reminder.disabled = Boolean(recurring);
-        if (recurring) {
-            reminder.value = 'none';
-        }
+        var occurrenceOnly = form && form.getAttribute('data-calendar-occurrence-active') === '1';
+        reminder.disabled = occurrenceOnly;
         if (help) {
-            help.textContent = recurring
-                ? 'V1.36-Bでは繰り返し予定のリマインダーは設定出来ません。V1.36-Cで対応します。'
+            help.textContent = occurrenceOnly
+                ? 'この回だけのリマインダー値はシリーズ設定を継承します。'
                 : '終日予定は09:00を予定時刻として通知時刻を計算します。';
         }
     }
