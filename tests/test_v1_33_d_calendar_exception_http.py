@@ -59,8 +59,9 @@ def create_fixture(path: Path) -> None:
     db.executescript('''
         CREATE TABLE ig_dashboard_widget (
             widget_id INTEGER PRIMARY KEY, widget_owner INTEGER NOT NULL,
-            widget_type TEXT NOT NULL, widget_flag INTEGER NOT NULL DEFAULT 0,
-            widget_config TEXT NOT NULL
+            widget_location INTEGER NOT NULL DEFAULT 0,
+            widget_type TEXT NOT NULL, widget_sort_order INTEGER NOT NULL DEFAULT 0,
+            widget_flag INTEGER NOT NULL DEFAULT 0, widget_config TEXT NOT NULL
         );
         CREATE TABLE ig_calendar_event (
             calendar_event_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -102,9 +103,26 @@ def create_fixture(path: Path) -> None:
             task_priority TEXT NOT NULL DEFAULT 'normal', task_completed INTEGER NOT NULL DEFAULT 0,
             task_completed_at TEXT NULL, task_sort_order INTEGER NOT NULL DEFAULT 0
         );
+        CREATE TABLE ig_notification (
+            notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            notification_owner INTEGER NOT NULL,
+            notification_type TEXT NOT NULL,
+            notification_source_type TEXT NOT NULL,
+            notification_source_id TEXT NULL,
+            notification_source_key TEXT NOT NULL,
+            notification_title TEXT NOT NULL,
+            notification_body TEXT NOT NULL DEFAULT '',
+            notification_target_url TEXT NULL,
+            notification_due_at TEXT NOT NULL,
+            notification_read_at TEXT NULL,
+            notification_hidden_at TEXT NULL,
+            notification_created_at TEXT NOT NULL,
+            notification_updated_at TEXT NOT NULL,
+            UNIQUE(notification_owner, notification_source_type, notification_source_key, notification_type)
+        );
     ''')
-    db.execute('INSERT INTO ig_dashboard_widget VALUES (?, ?, ?, ?, ?)',
-               (10, 42, 'calendar', 0, json.dumps({'schema': 1, 'title': 'Calendar', 'show_completed_tasks': False})))
+    db.execute('INSERT INTO ig_dashboard_widget VALUES (?, ?, ?, ?, ?, ?, ?)',
+               (10, 42, 0, 'calendar', 0, 0, json.dumps({'schema': 1, 'title': 'Calendar', 'show_completed_tasks': False})))
     event_sql = '''INSERT INTO ig_calendar_event (
         calendar_event_id, calendar_event_date, calendar_event_updated_at, calendar_event_flag,
         calendar_event_owner, calendar_event_title, calendar_event_start_date, calendar_event_end_date,
