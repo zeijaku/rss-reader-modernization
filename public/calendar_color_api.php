@@ -137,7 +137,7 @@ try {
     }
 
     if ($action === 'calendar.color.create') {
-        $eventId = calendar_event_reminder_time_color_create(
+        $eventId = calendar_event_time_color_create(
             $userId,
             $title,
             $range[0],
@@ -162,7 +162,7 @@ try {
     if ($eventId === null) {
         calendar_color_error('validation_error', 'event_id must be a positive integer.', 422);
     }
-    if (!calendar_event_reminder_time_color_update(
+    if (!calendar_event_time_color_update(
         $userId,
         $eventId,
         $title,
