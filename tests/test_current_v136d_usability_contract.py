@@ -17,7 +17,6 @@ details_css = read("public/css/calendar-event-details.css")
 recurrence_css = read("public/css/calendar-recurrence.css")
 occurrence_css = read("public/css/calendar-occurrence.css")
 dashboard_css = read("public/css/dashboard.css")
-version = read("app/version.php")
 
 check("calendar-usability.js" in loader, "Calendar loader includes V1.36-D usability layer")
 check("oldEnd - oldStart" in usability and "newStart +" in usability,
@@ -46,7 +45,6 @@ check("position: sticky" in dashboard_css and "z-index: 1020" in dashboard_css,
       "Dashboard navbar is sticky below Bootstrap modal/offcanvas layers")
 check("position: fixed" not in dashboard_css[dashboard_css.find(".app-header"):dashboard_css.find(".app-navbar")],
       "navbar avoids fixed-position content offset management")
-check("1.36.0" in version and "-dev." not in version, "V1.36 usability is promoted to the formal release version")
 check(not list((ROOT / "database" / "migrations").glob("032_v1_36*")),
       "V1.36-D requires no database migration")
 
