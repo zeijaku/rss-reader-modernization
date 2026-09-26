@@ -93,6 +93,7 @@ function calendar_event_occurrence_revision(array $sourceOccurrence, ?array $exc
         'start_time' => $sourceOccurrence['start_time'] ?? null,
         'end_time' => $sourceOccurrence['end_time'] ?? null,
         'url' => $sourceOccurrence['url'] ?? null,
+        'reminder' => (string) ($sourceOccurrence['reminder'] ?? 'none'),
         'repeat_type' => (string) ($sourceOccurrence['repeat_type'] ?? ''),
         'repeat_until' => $sourceOccurrence['repeat_until'] ?? null,
         'updated_at' => (string) ($sourceOccurrence['updated_at'] ?? ''),
@@ -169,10 +170,12 @@ function calendar_event_exception_override_item(array $sourceOccurrence, array $
         'source_start_time' => $sourceOccurrence['source_start_time'] ?? $sourceOccurrence['start_time'],
         'source_end_time' => $sourceOccurrence['source_end_time'] ?? $sourceOccurrence['end_time'],
         'source_url' => $sourceOccurrence['source_url'] ?? $sourceOccurrence['url'],
+        'source_reminder' => (string) ($sourceOccurrence['source_reminder'] ?? $sourceOccurrence['reminder'] ?? 'none'),
         'all_day' => $time['all_day'],
         'start_time' => $time['start_time'] === null ? null : substr($time['start_time'], 0, 5),
         'end_time' => $time['end_time'] === null ? null : substr($time['end_time'], 0, 5),
         'url' => $time['url'],
+        'reminder' => (string) ($sourceOccurrence['reminder'] ?? 'none'),
         'repeat_type' => (string) $sourceOccurrence['repeat_type'],
         'repeat_until' => $sourceOccurrence['repeat_until'] ?? null,
         'updated_at' => (string) ($exceptionRow['calendar_event_exception_updated_at'] ?? ''),
@@ -531,6 +534,12 @@ function calendar_event_occurrence_update(
             $state['exception']
         );
         $result = calendar_event_exception_override_item($state['source'], $saved);
+        if (function_exists('calendar_event_reminder_reconcile')) {
+            calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
+        }
+        if (function_exists('calendar_event_reminder_reconcile')) {
+            calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
+        }
         if ($started) {
             $pdo->commit();
         }
@@ -583,6 +592,9 @@ function calendar_event_occurrence_cancel(
                 $state['exception']
             );
             $result = calendar_event_exception_cancelled_item($state['source'], $saved);
+        }
+        if (function_exists('calendar_event_reminder_reconcile')) {
+            calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
         }
         if ($started) {
             $pdo->commit();
@@ -643,6 +655,9 @@ function calendar_event_occurrence_restore(
             throw new RuntimeException('Calendar occurrence exception could not be restored.');
         }
         $result = calendar_event_exception_base_item($state['source'], $restored);
+        if (function_exists('calendar_event_reminder_reconcile')) {
+            calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
+        }
         if ($started) {
             $pdo->commit();
         }
