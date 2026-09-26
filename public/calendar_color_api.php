@@ -131,16 +131,21 @@ try {
     if ($timeSettings === null) {
         calendar_color_error('validation_error', 'Calendar event time or URL is invalid.', 422);
     }
+    $reminder = calendar_event_reminder_validate($_POST['calendar_event_reminder'] ?? 'none');
+    if ($reminder === null) {
+        calendar_color_error('validation_error', 'Calendar reminder setting is invalid.', 422);
+    }
 
     if ($action === 'calendar.color.create') {
-        $eventId = calendar_event_time_color_create(
+        $eventId = calendar_event_reminder_time_color_create(
             $userId,
             $title,
             $range[0],
             $range[1],
             $note,
             $color,
-            $timeSettings
+            $timeSettings,
+            $reminder
         );
         calendar_color_success([
             'event_id' => $eventId,
@@ -149,6 +154,7 @@ try {
             'start_time' => $timeSettings['start_time'] === null ? null : substr($timeSettings['start_time'], 0, 5),
             'end_time' => $timeSettings['end_time'] === null ? null : substr($timeSettings['end_time'], 0, 5),
             'url' => $timeSettings['url'],
+            'reminder' => $reminder,
         ], 201);
     }
 
@@ -156,7 +162,7 @@ try {
     if ($eventId === null) {
         calendar_color_error('validation_error', 'event_id must be a positive integer.', 422);
     }
-    if (!calendar_event_time_color_update(
+    if (!calendar_event_reminder_time_color_update(
         $userId,
         $eventId,
         $title,
@@ -164,7 +170,8 @@ try {
         $range[1],
         $note,
         $color,
-        $timeSettings
+        $timeSettings,
+        $reminder
     )) {
         calendar_color_error('not_found', 'Calendar event was not found.', 404);
     }
@@ -175,6 +182,7 @@ try {
         'start_time' => $timeSettings['start_time'] === null ? null : substr($timeSettings['start_time'], 0, 5),
         'end_time' => $timeSettings['end_time'] === null ? null : substr($timeSettings['end_time'], 0, 5),
         'url' => $timeSettings['url'],
+        'reminder' => $reminder,
     ]);
 } catch (CalendarOccurrenceConflictException $exception) {
     calendar_color_error('calendar_occurrence_conflict', $exception->getMessage(), 409);
