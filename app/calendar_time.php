@@ -170,7 +170,8 @@ function calendar_event_time_color_create(
     string $endDate,
     string $note,
     string $color,
-    array $settings
+    array $settings,
+    ?string $reminder = null
 ): int {
     $pdo = conn_db();
     $started = !$pdo->inTransaction();
@@ -180,6 +181,10 @@ function calendar_event_time_color_create(
     try {
         $eventId = calendar_event_color_create($ownerId, $title, $startDate, $endDate, $note, $color);
         calendar_event_time_apply($pdo, $ownerId, $eventId, $settings);
+        if ($reminder !== null) {
+            calendar_event_reminder_apply($pdo, $ownerId, $eventId, $reminder);
+            calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
+        }
         if ($started) {
             $pdo->commit();
         }
@@ -201,7 +206,8 @@ function calendar_event_time_color_update(
     string $endDate,
     string $note,
     string $color,
-    array $settings
+    array $settings,
+    ?string $reminder = null
 ): bool {
     $pdo = conn_db();
     $started = !$pdo->inTransaction();
@@ -216,6 +222,10 @@ function calendar_event_time_color_update(
             return false;
         }
         calendar_event_time_apply($pdo, $ownerId, $eventId, $settings);
+        if ($reminder !== null) {
+            calendar_event_reminder_apply($pdo, $ownerId, $eventId, $reminder);
+            calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
+        }
         if ($started) {
             $pdo->commit();
         }
