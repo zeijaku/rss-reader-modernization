@@ -30,7 +30,8 @@ function app_fetch_result(
     ?string $etag = null,
     ?string $lastModified = null,
     bool $notModified = false,
-    ?string $retryAfter = null
+    ?string $retryAfter = null,
+    ?string $contentType = null
 ): array {
     return [
         'ok' => $ok,
@@ -41,6 +42,7 @@ function app_fetch_result(
         'last_modified' => $lastModified,
         'not_modified' => $notModified,
         'retry_after' => $retryAfter,
+        'content_type' => $contentType,
         'error_code' => $errorCode,
         'error_message' => $errorMessage,
     ];
@@ -492,6 +494,10 @@ function app_curl_single_hop(array $request): array
 
     $executed = curl_exec($ch);
     $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $contentTypeInfo = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    $contentType = is_string($contentTypeInfo) && trim($contentTypeInfo) !== ''
+        ? trim($contentTypeInfo)
+        : null;
     $errorNo = curl_errno($ch);
     $errorMessage = curl_error($ch);
     curl_close($ch);
@@ -543,6 +549,7 @@ function app_curl_single_hop(array $request): array
         'etag' => $etag,
         'last_modified' => $lastModified,
         'retry_after' => $retryAfter,
+        'content_type' => $contentType,
         'error_code' => '',
         'error_message' => '',
     ];
@@ -649,11 +656,14 @@ function app_safe_http_fetch(
         }
 
         $body = isset($response['body']) && is_string($response['body']) ? $response['body'] : '';
+        $contentType = isset($response['content_type']) && is_string($response['content_type'])
+            ? trim($response['content_type'])
+            : null;
         if ($body === '') {
             return app_fetch_result(false, $requestUrl, $status, '', 'empty_response', 'Feed response was empty.');
         }
 
-        return app_fetch_result(true, $requestUrl, $status, $body, '', '', $etag, $lastModified, false);
+        return app_fetch_result(true, $requestUrl, $status, $body, '', '', $etag, $lastModified, false, null, $contentType);
     }
 
     return app_fetch_result(false, $currentUrl, 0, '', 'too_many_redirects', 'Too many redirects.');
