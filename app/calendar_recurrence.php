@@ -127,7 +127,7 @@ function calendar_event_recurrence_time_color_create(
     string $color,
     array $timeSettings,
     array $repeatSettings,
-    string $reminder = 'none'
+    ?string $reminder = null
 ): int {
     $pdo = conn_db();
     $started = !$pdo->inTransaction();
@@ -145,8 +145,10 @@ function calendar_event_recurrence_time_color_create(
             $timeSettings
         );
         calendar_event_recurrence_apply($pdo, $ownerId, $eventId, $repeatSettings);
-        calendar_event_reminder_apply($pdo, $ownerId, $eventId, $reminder);
-        calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
+        if ($reminder !== null) {
+            calendar_event_reminder_apply($pdo, $ownerId, $eventId, $reminder);
+            calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
+        }
         if ($started) {
             $pdo->commit();
         }
@@ -173,7 +175,7 @@ function calendar_event_recurrence_time_color_update(
     string $color,
     array $timeSettings,
     array $repeatSettings,
-    string $reminder = 'none'
+    ?string $reminder = null
 ): bool {
     $pdo = conn_db();
     $started = !$pdo->inTransaction();
@@ -214,8 +216,10 @@ function calendar_event_recurrence_time_color_update(
             }
             return false;
         }
-        calendar_event_reminder_apply($pdo, $ownerId, $eventId, $reminder);
-        calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
+        if ($reminder !== null) {
+            calendar_event_reminder_apply($pdo, $ownerId, $eventId, $reminder);
+            calendar_event_reminder_reconcile($pdo, $ownerId, $eventId);
+        }
         if ($started) {
             $pdo->commit();
         }
@@ -391,7 +395,9 @@ function calendar_event_recurrence_expand_row(array $row, string $monthStart, st
     $endTime = calendar_event_time_public_clock($row['calendar_event_end_time'] ?? null);
     $urlValue = calendar_event_time_validate_url($row['calendar_event_url'] ?? '');
     $url = $urlValue === false || $urlValue === '' ? null : $urlValue;
-    $reminder = calendar_event_reminder_validate($row['calendar_event_reminder'] ?? 'none') ?? 'none';
+    $reminder = function_exists('calendar_event_reminder_validate')
+        ? (calendar_event_reminder_validate($row['calendar_event_reminder'] ?? 'none') ?? 'none')
+        : 'none';
 
     $occurrences = [];
     foreach ($starts as $occurrenceStart) {
