@@ -61,23 +61,3 @@ jobs:
       - name: Run the local CI-equivalent gate
         run: bash tests/run-ci.sh
 
-      - name: Build V1.38-A production overlay
-        if: ${{ matrix.php == '8.4' }}
-        run: |
-          zip -q v1.38-a-reader-mode-production-overlay.zip \
-            app/api.php \
-            app/api/content.php \
-            app/version.php \
-            app/view/dashboard_modals.php \
-            public/css/dashboard.css \
-            public/index.php \
-            public/js/dashboard.js
-
-      - name: Upload V1.38-A production overlay
-        if: ${{ matrix.php == '8.4' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: v1.38-a-reader-mode-production-overlay
-          path: v1.38-a-reader-mode-production-overlay.zip
-          if-no-files-found: error
-          retention-days: 7
