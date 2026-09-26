@@ -28,3 +28,19 @@
 #main-content .calendar-entry.calendar-event-recurring {
     position: relative;
 }
+
+
+/* V1.36-D: recurrence controls share a row on wider Calendar modals. */
+@media (min-width: 576px) {
+    .calendar-event-modal .calendar-event-recurrence-fields {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: .75rem;
+        margin-bottom: .35rem;
+    }
+
+    .calendar-event-modal .calendar-event-recurrence-help,
+    .calendar-event-modal .calendar-event-recurrence-loading {
+        grid-column: 1 / -1;
+    }
+}
