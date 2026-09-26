@@ -55,3 +55,8 @@ def test_calendar_reminder_ui_contract():
 def test_calendar_reminder_checkpoint_version():
     version = read("app/version.php")
     assert "1.36.0-dev.3" in version
+
+test_calendar_reminder_storage_and_api_contract()
+test_calendar_reminder_ui_contract()
+test_calendar_reminder_checkpoint_version()
+print("calendar reminder contract tests passed")
