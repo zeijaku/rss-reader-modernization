@@ -247,4 +247,10 @@ php -l "$ROOT/app/calendar_exception.php"
 node --check "$ROOT/public/js/calendar-occurrence.js"
 node --check "$ROOT/public/js/calendar-copy.js"
 
+echo '== Current feature contracts: V1.36-D Calendar / navbar usability =='
+python3 "$SCRIPT_DIR/test_current_v136d_usability_contract.py"
+node "$SCRIPT_DIR/test_current_calendar_usability.js"
+node --check "$ROOT/public/js/calendar-usability.js"
+php -l "$ROOT/app/view/dashboard_modals.php"
+
 echo 'PASS: current feature contract suite completed'
