@@ -537,9 +537,6 @@ function calendar_event_occurrence_update(
         if (function_exists('calendar_event_reminder_reconcile_occurrence')) {
             calendar_event_reminder_reconcile_occurrence($pdo, $ownerId, $result);
         }
-        if (function_exists('calendar_event_reminder_cancel_pending_occurrence')) {
-            calendar_event_reminder_cancel_pending_occurrence($pdo, $ownerId, $eventId, $originalStart);
-        }
         if ($started) {
             $pdo->commit();
         }
@@ -592,6 +589,9 @@ function calendar_event_occurrence_cancel(
                 $state['exception']
             );
             $result = calendar_event_exception_cancelled_item($state['source'], $saved);
+        }
+        if (function_exists('calendar_event_reminder_cancel_pending_occurrence')) {
+            calendar_event_reminder_cancel_pending_occurrence($pdo, $ownerId, $eventId, $originalStart);
         }
         if ($started) {
             $pdo->commit();
@@ -652,6 +652,9 @@ function calendar_event_occurrence_restore(
             throw new RuntimeException('Calendar occurrence exception could not be restored.');
         }
         $result = calendar_event_exception_base_item($state['source'], $restored);
+        if (function_exists('calendar_event_reminder_reconcile_occurrence')) {
+            calendar_event_reminder_reconcile_occurrence($pdo, $ownerId, $result);
+        }
         if ($started) {
             $pdo->commit();
         }
