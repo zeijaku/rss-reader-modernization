@@ -186,16 +186,16 @@
         if (!recurring) {
             until.value = '';
         }
+        var occurrenceOnly = form.getAttribute('data-calendar-occurrence-active') === '1';
         if (reminder) {
-            reminder.disabled = recurring;
-            if (recurring) {
-                reminder.value = 'none';
-            }
+            reminder.disabled = occurrenceOnly;
         }
         if (reminderHelp) {
-            reminderHelp.textContent = recurring
-                ? 'V1.36-Bでは繰り返し予定のリマインダーは設定出来ません。V1.36-Cで対応します。'
-                : '終日予定は09:00を予定時刻として通知時刻を計算します。';
+            reminderHelp.textContent = occurrenceOnly
+                ? 'この回ではシリーズのリマインダー設定を使用します。変更する場合は「シリーズ全体」を選択してください。'
+                : (recurring
+                    ? '繰り返し予定では各Occurrenceの開始日時を基準に通知します。'
+                    : '終日予定は09:00を予定時刻として通知時刻を計算します。');
         }
     }
 
@@ -428,6 +428,7 @@
             .attr('data-calendar-source-start-time', publicTime(item.source_start_time !== undefined ? item.source_start_time : item.start_time))
             .attr('data-calendar-source-end-time', publicTime(item.source_end_time !== undefined ? item.source_end_time : item.end_time))
             .attr('data-calendar-source-url', String(item.source_url !== undefined && item.source_url !== null ? item.source_url : item.url || ''))
+            .attr('data-calendar-source-reminder', String(item.source_reminder !== undefined ? item.source_reminder : item.reminder || 'none'))
             .attr('data-calendar-event-color', color)
             .attr('data-calendar-event-color-ready', '1')
             .attr('data-calendar-event-meta-ready', '1')
@@ -435,6 +436,7 @@
             .attr('data-calendar-event-start-time', publicTime(item.start_time))
             .attr('data-calendar-event-end-time', publicTime(item.end_time))
             .attr('data-calendar-event-url', String(item.url || ''))
+            .attr('data-calendar-event-reminder', String(item.reminder || item.source_reminder || 'none'))
             .attr('data-calendar-event-repeat-type', validRepeat(item.repeat_type))
             .attr('data-calendar-event-repeat-until', String(item.repeat_until || ''))
             .attr('data-bs-toggle', 'modal')
