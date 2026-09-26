@@ -171,7 +171,7 @@ function calendar_event_reminder_cancel_pending_occurrences(PDO $pdo, int $owner
         'DELETE FROM ' . db_table_identifier('notification') . ' '
         . "WHERE notification_owner = :owner AND notification_source_type = 'calendar' "
         . "AND notification_source_id = :source_id AND notification_type = 'reminder' "
-        . "AND notification_source_key LIKE :source_pattern ESCAPE '\\\\' AND notification_due_at > :now"
+        . "AND notification_source_key LIKE :source_pattern AND notification_due_at > :now"
     );
     $stmt->execute([
         ':owner' => $ownerId,
