@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 const CALENDAR_EVENT_REMINDER_VALUES = ['none', 'at_time', '10m', '30m', '1h', '1d'];
 const CALENDAR_EVENT_REMINDER_ALL_DAY_TIME = '09:00:00';
-const CALENDAR_EVENT_REMINDER_SYNC_PAST_DAYS = 30;
+const CALENDAR_EVENT_REMINDER_SYNC_PAST_DAYS = 1;
 const CALENDAR_EVENT_REMINDER_SYNC_FUTURE_DAYS = 11;
 
 function calendar_event_reminder_validate(mixed $value): ?string
@@ -110,14 +110,18 @@ function calendar_event_reminder_target_url(
     string $startDate,
     ?string $originalStart = null
 ): string {
-    $stmt = $pdo->prepare(
-        'SELECT widget_location FROM ' . db_table_identifier('dashboard_widget') . ' '
-        . "WHERE widget_owner = :owner AND widget_type = 'calendar' AND widget_flag = 0 "
-        . 'ORDER BY widget_location ASC, widget_sort_order ASC, widget_id ASC LIMIT 1'
-    );
-    $stmt->execute([':owner' => $ownerId]);
-    $location = $stmt->fetchColumn();
-    $tab = is_numeric($location) ? max(0, min(3, (int) $location)) : 0;
+    static $tabCache = [];
+    if (!array_key_exists($ownerId, $tabCache)) {
+        $stmt = $pdo->prepare(
+            'SELECT widget_location FROM ' . db_table_identifier('dashboard_widget') . ' '
+            . "WHERE widget_owner = :owner AND widget_type = 'calendar' AND widget_flag = 0 "
+            . 'ORDER BY widget_location ASC, widget_sort_order ASC, widget_id ASC LIMIT 1'
+        );
+        $stmt->execute([':owner' => $ownerId]);
+        $location = $stmt->fetchColumn();
+        $tabCache[$ownerId] = is_numeric($location) ? max(0, min(3, (int) $location)) : 0;
+    }
+    $tab = $tabCache[$ownerId];
 
     $url = './?tab=' . $tab
         . '&calendar_date=' . rawurlencode($startDate)
@@ -147,7 +151,8 @@ function calendar_event_reminder_body(array $event): string
 function calendar_event_reminder_existing(PDO $pdo, int $ownerId, string $sourceKey): ?array
 {
     $stmt = $pdo->prepare(
-        'SELECT notification_id, notification_due_at, notification_read_at, notification_hidden_at '
+        'SELECT notification_id, notification_source_id, notification_title, notification_body, '
+        . 'notification_target_url, notification_due_at, notification_read_at, notification_hidden_at '
         . 'FROM ' . db_table_identifier('notification') . ' '
         . "WHERE notification_owner = :owner AND notification_source_type = 'calendar' "
         . "AND notification_source_key = :source_key AND notification_type = 'reminder' LIMIT 1"
@@ -155,6 +160,22 @@ function calendar_event_reminder_existing(PDO $pdo, int $ownerId, string $source
     $stmt->execute([':owner' => $ownerId, ':source_key' => $sourceKey]);
     $row = $stmt->fetch();
     return is_array($row) ? $row : null;
+}
+
+function calendar_event_reminder_matches_existing(
+    ?array $existing,
+    string $sourceId,
+    string $title,
+    string $body,
+    string $dueAt,
+    string $targetUrl
+): bool {
+    return $existing !== null
+        && (string) ($existing['notification_source_id'] ?? '') === $sourceId
+        && (string) ($existing['notification_title'] ?? '') === $title
+        && (string) ($existing['notification_body'] ?? '') === $body
+        && (string) ($existing['notification_due_at'] ?? '') === $dueAt
+        && (string) ($existing['notification_target_url'] ?? '') === $targetUrl;
 }
 
 function calendar_event_reminder_cancel_pending(PDO $pdo, int $ownerId, int $eventId): void
@@ -269,16 +290,23 @@ function calendar_event_reminder_reconcile_occurrence(
     if ($effectiveStart === null) {
         throw new UnexpectedValueException('Calendar occurrence reminder date is invalid.');
     }
+    $sourceId = (string) $eventId;
+    $title = '予定: ' . (string) ($occurrence['title'] ?? '');
+    $body = calendar_event_reminder_body($occurrence);
+    $targetUrl = calendar_event_reminder_target_url($pdo, $ownerId, $eventId, $effectiveStart, $originalStart);
+    if (calendar_event_reminder_matches_existing($existing, $sourceId, $title, $body, $dueAt, $targetUrl)) {
+        return;
+    }
     notification_upsert(
         $ownerId,
         'reminder',
         'calendar',
-        (string) $eventId,
+        $sourceId,
         $sourceKey,
-        '予定: ' . (string) ($occurrence['title'] ?? ''),
-        calendar_event_reminder_body($occurrence),
+        $title,
+        $body,
         $dueAt,
-        calendar_event_reminder_target_url($pdo, $ownerId, $eventId, $effectiveStart, $originalStart)
+        $targetUrl
     );
 }
 
@@ -328,21 +356,28 @@ function calendar_event_reminder_reconcile(PDO $pdo, int $ownerId, int $eventId)
         return;
     }
 
+    $sourceId = (string) $eventId;
+    $title = '予定: ' . (string) $event['calendar_event_title'];
+    $body = calendar_event_reminder_body($event);
+    $targetUrl = calendar_event_reminder_target_url(
+        $pdo,
+        $ownerId,
+        $eventId,
+        (string) $event['calendar_event_start_date']
+    );
+    if (calendar_event_reminder_matches_existing($existing, $sourceId, $title, $body, $dueAt, $targetUrl)) {
+        return;
+    }
     notification_upsert(
         $ownerId,
         'reminder',
         'calendar',
-        (string) $eventId,
+        $sourceId,
         $sourceKey,
-        '予定: ' . (string) $event['calendar_event_title'],
-        calendar_event_reminder_body($event),
+        $title,
+        $body,
         $dueAt,
-        calendar_event_reminder_target_url(
-            $pdo,
-            $ownerId,
-            $eventId,
-            (string) $event['calendar_event_start_date']
-        )
+        $targetUrl
     );
 }
 
@@ -395,7 +430,11 @@ function calendar_event_reminder_sync_owner(int $ownerId): void
         throw new LogicException('Calendar range support is not loaded.');
     }
 
-    $today = new DateTimeImmutable('today', new DateTimeZone('Asia/Tokyo'));
+    $todayValue = calendar_validate_date(substr(app_now(), 0, 10));
+    if ($todayValue === null) {
+        throw new UnexpectedValueException('Calendar reminder current date is invalid.');
+    }
+    $today = new DateTimeImmutable($todayValue, new DateTimeZone('Asia/Tokyo'));
     $rangeStart = $today->modify('-' . CALENDAR_EVENT_REMINDER_SYNC_PAST_DAYS . ' days')->format('Y-m-d');
     $rangeEnd = $today->modify('+' . CALENDAR_EVENT_REMINDER_SYNC_FUTURE_DAYS . ' days')->format('Y-m-d');
     $state = calendar_range_event_state($ownerId, $rangeStart, $rangeEnd);
