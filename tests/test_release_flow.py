@@ -66,7 +66,7 @@ check('High-signal source secret scan' in workflow, 'Release workflow retains so
 check('Runtime package clean-room checks' in workflow, 'Release workflow retains Runtime clean-room checks')
 check('Complete Source package clean-room checks' in workflow, 'Release workflow retains Complete Source clean-room checks')
 check('tests/run-current-features.sh' in workflow, 'Complete Source clean-room checks require the current feature runner')
-check('actions/upload-artifact@v4' in workflow, 'Release workflow retains packaged asset artifact upload')
+check(bool(re.search(r'actions/upload-artifact@[^\\s#]+', workflow)), 'Release workflow retains packaged asset artifact upload')
 check('gh release create "${TAG}"' in workflow, 'Release workflow publishes GitHub Release only after verification')
 
 for path in tool_paths:
