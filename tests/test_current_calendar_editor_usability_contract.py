@@ -17,6 +17,8 @@ views = text('public/js/calendar-views.js')
 core = text('public/js/calendar-core.js')
 details = text('public/js/calendar-event-details.js')
 dashboard_css = text('public/css/dashboard.css')
+event_css = text('public/css/calendar-event-details.css')
+modals = text('app/view/dashboard_modals.php')
 page = text('public/remote-editor.php')
 editor_js = text('public/js/remote-editor.js')
 editor_css = text('public/css/remote-editor.css')
@@ -33,6 +35,16 @@ check("shown.bs.modal" in details and '#registerCalendarEvent' in details,
       'title focus waits for the add-event modal to finish opening')
 check('preventScroll: true' in details, 'automatic title focus avoids scroll movement')
 check('userAgent' not in details, 'focus behavior does not depend on User-Agent detection')
+check(modals.count('modal-dialog-scrollable modal-lg calendar-event-modal-dialog') >= 2,
+      'add/change Calendar event modals keep Bootstrap scrollable dialogs')
+check('.calendar-event-modal .modal-content > form' in event_css
+      and 'display: flex' in event_css
+      and 'flex-direction: column' in event_css
+      and 'min-height: 0' in event_css
+      and 'overflow: hidden' in event_css,
+      'Calendar event form preserves the scrollable modal flex boundary')
+check('.calendar-event-modal .modal-body' in event_css and 'overflow-y: auto' in event_css,
+      'expanded Calendar details scroll inside the modal body so footer actions remain reachable')
 
 check('id="remoteEditorSurface"' in page, 'Remote Editor exposes a dedicated editor surface')
 check('id="remoteEditorLineNumbers"' in page and 'aria-hidden="true"' in page,
