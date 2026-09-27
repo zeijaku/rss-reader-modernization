@@ -12,6 +12,7 @@ modal = (ROOT / "app/view/dashboard_modals.php").read_text(encoding="utf-8")
 js = (ROOT / "public/js/dashboard.js").read_text(encoding="utf-8")
 http_fetch = (ROOT / "app/http_fetch.php").read_text(encoding="utf-8")
 config = (ROOT / "app/common/common_conf.php").read_text(encoding="utf-8")
+feed_fetcher = (ROOT / "app/feed/feed_fetcher.php").read_text(encoding="utf-8")
 
 checks = [
     ("'feed.reader.fulltext' => api_feed_reader_full_text" in api,
@@ -36,6 +37,23 @@ checks = [
      "Full Text uses HTML content negotiation"),
     ("'retry_public_ips' => true" in service and "retry_public_ips" in http_fetch,
      "Full Text may retry only across already validated public DNS answers"),
+    ("APP_FEED_USER_AGENT" in config
+     and "APP_READER_USER_AGENT" in config
+     and "APP_HTTP_USER_AGENT" in config,
+     "Feed and Reader user-agent settings retain the legacy HTTP fallback"),
+    ("['user_agent' => (string) APP_FEED_USER_AGENT]" in feed_fetcher,
+     "RSS/Atom fetch uses the dedicated Feed user agent"),
+    ("'user_agent' => (string) APP_READER_USER_AGENT" in service,
+     "Full Text fetch uses the dedicated Reader user agent"),
+    ("$userAgent = $requestOptions['user_agent'] ?? APP_HTTP_USER_AGENT" in http_fetch,
+     "shared safe fetch keeps APP_HTTP_USER_AGENT as compatibility fallback"),
+    ("reader_full_text_normalize_html_utf8" in service
+     and "reader_full_text_charset_from_content_type" in service
+     and "reader_full_text_charset_from_html" in service,
+     "Full Text normalizes declared legacy encodings to UTF-8 before extraction"),
+    ("private const SCHEMA_VERSION = 2;" in service
+     and "app_is_valid_utf8($body)" in service,
+     "Reader cache schema only accepts normalized UTF-8 article bodies"),
     ("feed_health" not in service.lower(),
      "article fetch does not alter Feed Health"),
     ("reader_full_text_content_type_allowed" in service
