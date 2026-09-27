@@ -68,3 +68,24 @@ Runtime builderのPreview / RC modeも `--release` で対象となる最終Versi
 - RC: `X.Y.Z-rcN`
 
 正式Release workflowはFinal release専用であり、Preview / RCを公開するworkflowとしては使用しません。
+
+## Artifact provenance
+
+正式ReleaseではRuntime ZIPとComplete Source ZIPにGitHub Artifact Attestationを生成します。
+SHA-256 sidecarはFile内容の整合性確認、AttestationはそのZIPがどのRepository / Workflow / Commitから生成されたかを検証するために使用します。どちらか一方で置き換えず、両方を確認します。
+
+GitHub CLIが利用できる環境では、Release Assetを取得した後に次のように検証できます。
+
+```bash
+VERSION='X.Y.Z'
+
+gh attestation verify \
+  "rss-reader-modernization-${VERSION}.zip" \
+  --repo zeijaku/rss-reader-modernization
+
+gh attestation verify \
+  "rss-reader-modernization-${VERSION}-complete.zip" \
+  --repo zeijaku/rss-reader-modernization
+```
+
+Release workflow自身も、検証Jobから公開JobへArtifactを引き渡した後、SHA-256とAttestationの両方を再検証してからTag / GitHub Releaseを公開します。
