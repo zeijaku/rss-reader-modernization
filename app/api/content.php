@@ -532,6 +532,35 @@ function api_feed_reader(int $userId, array $input): array
     ]);
 }
 
+/**
+ * Temporary V1.38-C production diagnostic.
+ *
+ * Browser-visible details are deliberately limited to a coarse internal
+ * category and upstream HTTP status. Never expose URL, IP, path or exception
+ * messages here.
+ *
+ * @return array{status:int,body:array<string,mixed>}
+ */
+function api_reader_full_text_diagnostic_error(
+    string $code,
+    string $message,
+    int $status,
+    string $category,
+    int $upstreamStatus
+): array {
+    $safeCategory = preg_match('/\A[a-z0-9_]{1,64}\z/D', $category) === 1
+        ? $category
+        : 'transport_error';
+    $safeUpstreamStatus = max(0, min(599, $upstreamStatus));
+
+    $response = api_error($code, $message, $status);
+    $response['body']['error']['diagnostic'] = [
+        'category' => $safeCategory,
+        'http_status' => $safeUpstreamStatus,
+    ];
+    return $response;
+}
+
 /** @return array{status:int,body:array<string,mixed>} */
 function api_feed_reader_full_text(int $userId, array $input): array
 {
@@ -575,38 +604,48 @@ function api_feed_reader_full_text(int $userId, array $input): array
         ));
 
         if (in_array($internalCode, ['invalid_url', 'port_not_allowed', 'non_public_address', 'invalid_redirect'], true)) {
-            return api_error(
+            return api_reader_full_text_diagnostic_error(
                 'reader_full_text_blocked',
                 '元記事の取得先を安全に確認できませんでした。RSS本文を表示しています。',
-                422
+                422,
+                $internalCode,
+                $httpStatus
             );
         }
         if ($internalCode === 'unsupported_content_type') {
-            return api_error(
+            return api_reader_full_text_diagnostic_error(
                 'reader_full_text_unsupported',
                 '元記事はReader Modeで扱えない形式でした。RSS本文を表示しています。',
-                415
+                415,
+                $internalCode,
+                $httpStatus
             );
         }
         if ($internalCode === 'response_too_large') {
-            return api_error(
+            return api_reader_full_text_diagnostic_error(
                 'reader_full_text_too_large',
                 '元記事が大きすぎるため全文を取得できませんでした。RSS本文を表示しています。',
-                413
+                413,
+                $internalCode,
+                $httpStatus
             );
         }
         if ($internalCode === 'timeout') {
-            return api_error(
+            return api_reader_full_text_diagnostic_error(
                 'reader_full_text_timeout',
                 '元記事の取得がタイムアウトしました。RSS本文を表示しています。',
-                504
+                504,
+                $internalCode,
+                $httpStatus
             );
         }
 
-        return api_error(
+        return api_reader_full_text_diagnostic_error(
             'reader_full_text_unavailable',
             '元記事を取得できませんでした。RSS本文を表示しています。',
-            502
+            502,
+            $internalCode,
+            $httpStatus
         );
     }
 
