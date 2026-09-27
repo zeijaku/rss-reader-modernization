@@ -46,7 +46,7 @@ check('bash tests/run-ci.sh' in ci, 'CI uses the locally reproducible gate')
 check('tests/test_workflow_hygiene.py' in local_ci, 'local CI gate runs workflow hygiene guard')
 
 check('workflow_dispatch:' in release, 'Release workflow keeps manual workflow_dispatch support')
-check('\\n  push:' in release, 'Release workflow supports browser-only release requests through a restricted push trigger')
+check('\n  push:' in release, 'Release workflow supports browser-only release requests through a restricted push trigger')
 check('pull_request:' not in release, 'Release workflow is never triggered directly by pull_request')
 check("- '.github/release-request.txt'" in release, 'Release push trigger is restricted to the browser release request file')
 check('branches:' in release and '- main' in release, 'Release push trigger is restricted to main')
