@@ -587,6 +587,11 @@ function app_safe_http_fetch(
         $accept = null;
     }
     $retryPublicIps = ($requestOptions['retry_public_ips'] ?? false) === true;
+    $maxBytes = $requestOptions['max_bytes'] ?? APP_HTTP_MAX_BYTES;
+    if (!is_int($maxBytes) || $maxBytes <= 0) {
+        $maxBytes = (int) APP_HTTP_MAX_BYTES;
+    }
+    $maxBytes = max(65536, min((int) APP_HTTP_MAX_BYTES, $maxBytes));
     $userAgent = $requestOptions['user_agent'] ?? APP_HTTP_USER_AGENT;
     if (!is_string($userAgent) || $userAgent === '' || strlen($userAgent) > 512
         || preg_match('/[\x00-\x1F\x7F]/', $userAgent) === 1
@@ -631,7 +636,7 @@ function app_safe_http_fetch(
                 'host' => (string) $target['host'],
                 'port' => (int) $target['port'],
                 'ip' => (string) $ip,
-                'max_bytes' => APP_HTTP_MAX_BYTES,
+                'max_bytes' => $maxBytes,
                 'connect_timeout_ms' => APP_HTTP_CONNECT_TIMEOUT_MS,
                 'total_timeout_ms' => APP_HTTP_TIMEOUT_MS,
                 'user_agent' => $userAgent,
