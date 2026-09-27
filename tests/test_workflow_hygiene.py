@@ -51,7 +51,13 @@ check('pull_request:' not in release, 'Release workflow is never triggered direc
 check("- '.github/release-request.txt'" in release, 'Release push trigger is restricted to the browser release request file')
 check('branches:' in release and '- main' in release, 'Release push trigger is restricted to main')
 check('release-main' in release, 'Release runs are serialized on main')
-check('contents: write' in release, 'Release workflow has contents write permission for final tag/Release publication')
+check('permissions:\n  contents: read' in release, 'Release workflow defaults to read-only contents permission')
+verify_section = release.split('\n  publish:', 1)[0]
+publish_section = release.split('\n  publish:', 1)[1] if '\n  publish:' in release else ''
+check('contents: write' not in verify_section, 'Release verification/build path has no contents write permission')
+check('id-token: write' in verify_section and 'attestations: write' in verify_section, 'Release verification job has provenance signing permissions without contents write')
+check(release.count('contents: write') == 1 and 'contents: write' in publish_section, 'Only final publication job receives contents write permission')
+check('attestations: read' in publish_section and 'attestations: write' not in publish_section, 'Publication job can verify but cannot mint attestations')
 
 dependabot_path = ROOT / '.github/dependabot.yml'
 check(dependabot_path.is_file(), 'GitHub Actions Dependabot configuration exists')

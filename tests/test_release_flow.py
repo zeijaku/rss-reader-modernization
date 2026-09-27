@@ -47,6 +47,22 @@ check(workflow.count('bash tests/run-current.sh') == 2, 'Release workflow runs c
 check(workflow.count('bash tests/run-current-features.sh') == 2, 'Release workflow runs durable current feature contracts on PHP 8.1 and 8.4')
 check('group: release-main' in workflow, 'Release workflow serializes final publication runs')
 check('rss-reader-modernization-final-${{ github.run_id }}' in workflow, 'Actions artifact name does not depend on workflow_dispatch-only inputs')
+check('\n  verify:' in workflow and '\n  publish:' in workflow, 'Release workflow separates verification from publication jobs')
+check('needs: verify' in workflow, 'Publication waits for verified release artifacts')
+verify_section = workflow.split('\n  publish:', 1)[0]
+publish_section = workflow.split('\n  publish:', 1)[1] if '\n  publish:' in workflow else ''
+check('contents: write' not in verify_section, 'Verification job cannot write repository contents')
+check(workflow.count('contents: write') == 1 and 'contents: write' in publish_section, 'Only publication job can write repository contents')
+check('id-token: write' in verify_section and 'attestations: write' in verify_section, 'Verification job can mint signed provenance')
+check('attestations: read' in publish_section and 'attestations: write' not in publish_section, 'Publication job verifies provenance without minting it')
+check(workflow.count('actions/attest@') == 2, 'Runtime and Complete Source ZIPs each receive build provenance attestations')
+check('subject-path: dist/${{ env.RUNTIME_STEM }}.zip' in workflow, 'Runtime ZIP is the attested Runtime subject')
+check('subject-path: dist/${{ env.COMPLETE_STEM }}.zip' in workflow, 'Complete Source ZIP is the attested Source subject')
+check('actions/download-artifact@' in publish_section, 'Publication downloads artifacts produced by verification job')
+check(publish_section.count('gh attestation verify ') == 2, 'Publication verifies both release ZIP attestations before release')
+check(publish_section.find('gh attestation verify ') < publish_section.find('gh release create "${TAG}"'), 'Attestation verification occurs before GitHub Release publication')
+check(workflow.count('(cd dist && sha256sum -c "${RUNTIME_STEM}.zip.sha256")') == 2, 'Runtime SHA-256 is checked before handoff and again before publication')
+check(workflow.count('(cd dist && sha256sum -c "${COMPLETE_STEM}.zip.sha256")') == 2, 'Complete Source SHA-256 is checked before handoff and again before publication')
 
 for command in (
     'tools/build_release_package.py',
@@ -78,6 +94,7 @@ build_runtime = text('tools/build_release_package.py')
 verify_runtime = text('tools/verify_release_package.py')
 build_complete = text('tools/build_complete_package.py')
 verify_complete = text('tools/verify_complete_package.py')
+release_package_doc = text('docs/release-package.md')
 
 check("f'intended_release={release}'" in build_runtime, 'Runtime builder writes requested intended_release metadata')
 check("metadata.get('intended_release') == release" in verify_runtime, 'Runtime verifier independently checks requested intended_release')
@@ -85,6 +102,8 @@ check("f'intended_tag=v{release}'" in build_complete, 'Complete builder writes r
 check("metadata.get('intended_tag') == f'v{release}'" in verify_complete, 'Complete verifier independently checks requested intended_tag')
 check("'.github/workflows/release.yml'" in build_complete, 'Complete Source builder requires generic release workflow')
 check("'.github/workflows/release.yml'" in verify_complete, 'Complete Source verifier requires generic release workflow')
+check('GitHub Artifact Attestation' in release_package_doc, 'Release package documentation explains artifact provenance')
+check(release_package_doc.count('gh attestation verify') >= 2, 'Release package documentation shows Runtime and Complete attestation verification')
 
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
