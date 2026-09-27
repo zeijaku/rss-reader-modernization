@@ -2,10 +2,10 @@
 
 ## Current formal target
 
-- Version: `1.36.0`
-- Tag: `v1.36.0`
+- Version: `1.39.0`
+- Tag: `v1.39.0`
 
-V1.36-A〜Dの機能・操作性Checkpointを正式版`1.36.0`へ昇格します。Tag／GitHub ReleaseはPHP 8.1／8.4、Security、Migration、Package、Clean-room Gate完了後にだけ公開します。
+V1.39-A〜DのGitHub Hardening、Dashboard Architecture、PHP Architecture / Security Boundary、Release Supply Chain Hardeningを正式版`1.39.0`へ昇格します。Tag／GitHub ReleaseはPHP 8.1／8.4、Security、Package、SHA-256、Artifact Attestation、Clean-room Gate完了後にだけ公開します。
 
 V1.23-E以降は、VersionごとのRelease workflowや `release/vX.Y.Z-final` branchを標準手順として増やしません。
 
@@ -62,7 +62,7 @@ Run workflowがGitHub UIに表示されない場合や、ローカルGit / GitHu
 
 通常のApplication code pushではRelease workflowは起動しません。
 
-Release workflowは、Regression、secret scan、package build / verify、SHA-256、clean-room確認を完了した後でのみTagとGitHub Releaseを作成します。
+Release workflowは、Regression、secret scan、package build / verify、SHA-256、Artifact Attestation、clean-room確認を完了し、検証Jobから公開Jobへ引き渡したArtifactのSHA-256とAttestationを再検証した後でのみTagとGitHub Releaseを作成します。
 
 ## Browser request safety
 
@@ -72,7 +72,7 @@ Release workflowは、Regression、secret scan、package build / verify、SHA-25
 - `app/version.php` / README / CHANGELOG / RELEASE_NOTESと不一致なら停止
 - `main` SHAが実行中に動いた場合は停止
 - 既存Tagが別Commitなら停止
-- PHP 8.1 / 8.4 Current regression、secret scan、package verify、clean-room確認を通過してから公開
+- PHP 8.1 / 8.4 Current regression、secret scan、package verify、SHA-256、Artifact Attestation、clean-room確認を通過してから公開
 
 このため、ブラウザーだけの操作でも既存のRelease安全条件は維持されます。
 
@@ -105,3 +105,5 @@ Versionを `X.Y.Z` とした場合、正式Assetは次の4つです。
 - `rss-reader-modernization-X.Y.Z-complete.zip.sha256`
 
 Runtime ZIPはProduction配置向け、Complete ZIPはRepository / Tests / current workflowを含むSource保管向けです。
+
+Runtime ZIPとComplete ZIPにはGitHub Artifact Attestationを生成します。Release workflowの公開Jobは、Actions Artifactから再取得したZIPのSHA-256とAttestationを再検証してから公開します。利用者側の検証手順は [`docs/release-package.md`](release-package.md) を参照してください。

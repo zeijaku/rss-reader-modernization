@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.38.0`
-Release tag: `v1.38.0`
+**Stable release:** `RSS Reader Modernization 1.39.0`
+Release tag: `v1.39.0`
+
+Version 1.39.0は、Application機能を増やすのではなく、GitHub／Dashboard／PHP内部構造／Release Supply Chainを整理したMaintenance / Architecture / Security Hardening Releaseです。GitHub Actionsの外部ActionをCommit SHA固定しDependabot監視を追加、Dashboardの共通通信処理を`dashboard-core.js`へ分離、Content APIとReader Full TextをFacade互換のまま責務別Moduleへ分割し、Release Workflowは検証Jobと公開Jobを分離して最小権限化、Runtime／Complete ZIPへGitHub Artifact Attestationを生成・公開前再検証する構成へ強化しました。Notification Center／Calendar Modal／Stock・SettingsのDashboard Core読込漏れも同時に修正しています。DB Migration、新規必須Config、Runtime外部Dependencyの追加はありません。
 
 Version 1.38.0は、RSS本文を読みやすく表示するReader Modeを追加し、必要な記事だけをレンタルサーバー側で安全に全文取得できるようにしたReleaseです。本文抽出・Sanitize・文字コード正規化、RSS取得／Reader取得のUser-Agent分離、Full Text Cache、RSS本文への安全なFallbackに加え、本文内画像は認証済み同一OriginのImage Proxy経由で取得し、Readerを表示しているだけでBrowserが元画像サイトへ直接通信しない構成へ整理しました。記事リンクは従来どおり明示的にClickした場合のみ元記事へ直接移動します。DB Migration、新規必須Config、外部Dependencyの追加はありません。
 
@@ -428,7 +430,7 @@ Secure Baseline、RSS Engine、Frontend Modernization、公開／Release基盤�
 
 ## GitHub repository / Portfolio
 
-公開Repositoryには、GitHub Actions CI、正式Release Workflow、Security reporting、Contribution方針、Bug report templateを収録しています。CIは`main`へのpush／Pull RequestでRegressionを実行します。Release Workflowは`main`上の明示Versionを検証し、TagとGitHub Release、Runtime／Complete Package、SHA-256を作成します。Productionへの自動Deployは行いません。
+公開Repositoryには、GitHub Actions CI、正式Release Workflow、Security reporting、Contribution方針、Bug report templateを収録しています。CIは`main`へのpush／Pull RequestでRegressionを実行します。Release Workflowは`main`上の明示Versionを検証し、Runtime／Complete Package、SHA-256、GitHub Artifact Attestationを生成し、公開前にSHA-256とAttestationを再検証してからTagとGitHub Releaseを作成します。Productionへの自動Deployは行いません。
 
 - CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) / [`docs/ci.md`](docs/ci.md)
 - Release: [`.github/workflows/release.yml`](.github/workflows/release.yml) / [`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)
@@ -437,7 +439,7 @@ Secure Baseline、RSS Engine、Frontend Modernization、公開／Release基盤�
 - GitHub設定: [`docs/github-publication.md`](docs/github-publication.md)
 - Portfolio掲載用メモ: [`docs/portfolio.md`](docs/portfolio.md)
 
-Pull Request／`main`更新後はGitHub hosted runnerのPHP 8.1 / 8.4 Jobを確認し、Greenになるまでmerge／正式Releaseを行いません。正式Releaseは共通WorkflowのVersion・main SHA・既存Tag・Package内容・secret scan・clean-room検証を通過した場合だけ公開します。
+Pull Request／`main`更新後はGitHub hosted runnerのPHP 8.1 / 8.4 Jobを確認し、Greenになるまでmerge／正式Releaseを行いません。正式Releaseは共通WorkflowのVersion・main SHA・既存Tag・Package内容・secret scan・clean-room・SHA-256・Artifact Attestation検証を通過した場合だけ公開します。
 
 ## License and third-party components
 
