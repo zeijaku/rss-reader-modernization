@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.37.0`
-Release tag: `v1.37.0`
+**Stable release:** `RSS Reader Modernization 1.38.0`
+Release tag: `v1.38.0`
+
+Version 1.38.0は、RSS本文を読みやすく表示するReader Modeを追加し、必要な記事だけをレンタルサーバー側で安全に全文取得できるようにしたReleaseです。本文抽出・Sanitize・文字コード正規化、RSS取得／Reader取得のUser-Agent分離、Full Text Cache、RSS本文への安全なFallbackに加え、本文内画像は認証済み同一OriginのImage Proxy経由で取得し、Readerを表示しているだけでBrowserが元画像サイトへ直接通信しない構成へ整理しました。記事リンクは従来どおり明示的にClickした場合のみ元記事へ直接移動します。DB Migration、新規必須Config、外部Dependencyの追加はありません。
 
 Version 1.37.0は、既存Game Widgetへ2048とReversiを追加するGame Enhancement Releaseです。2048は4×4盤面、Arrow Key／WASD、Smartphone Swipe、Score／Best Score、New Game／Restart、軽量な移動Animationに対応します。Reversiは8×8盤面でPlayer（黒）対Local CPU（白）、合法手判定、8方向Flip、Pass／Game Over、石数／Turn表示、PC Click／Smartphone Tap、軽量な位置／Mobility評価CPUに対応し、既存Dashboardへ合わせたFlatなTheme追従表示を採用します。DB Migration、必須Config、外部Dependencyの追加はありません。\n\nVersion 1.36.0は、Dashboard通知センターとCalendarリマインダーを追加し、通常予定と繰り返しOccurrenceの通知をDashboard内で確認できるようにします。予定の開始日時変更時は既存の予定時間を維持して終了日時を追従し、Calendar ModalをPCでは横幅活用・Smartphoneでは1列表示へ整理、Navbarをsticky化します。既存環境では加算型Migration `030_v1_36_notification_center.sql`、`031_v1_36_calendar_reminder.sql`を番号順に適用します。新規Installの`database/schema.sql`には両変更を統合済みです。
 

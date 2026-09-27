@@ -30,7 +30,8 @@ function app_fetch_result(
     ?string $etag = null,
     ?string $lastModified = null,
     bool $notModified = false,
-    ?string $retryAfter = null
+    ?string $retryAfter = null,
+    ?string $contentType = null
 ): array {
     return [
         'ok' => $ok,
@@ -41,6 +42,7 @@ function app_fetch_result(
         'last_modified' => $lastModified,
         'not_modified' => $notModified,
         'retry_after' => $retryAfter,
+        'content_type' => $contentType,
         'error_code' => $errorCode,
         'error_message' => $errorMessage,
     ];
@@ -492,6 +494,10 @@ function app_curl_single_hop(array $request): array
 
     $executed = curl_exec($ch);
     $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $contentTypeInfo = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    $contentType = is_string($contentTypeInfo) && trim($contentTypeInfo) !== ''
+        ? trim($contentTypeInfo)
+        : null;
     $errorNo = curl_errno($ch);
     $errorMessage = curl_error($ch);
     curl_close($ch);
@@ -543,6 +549,7 @@ function app_curl_single_hop(array $request): array
         'etag' => $etag,
         'last_modified' => $lastModified,
         'retry_after' => $retryAfter,
+        'content_type' => $contentType,
         'error_code' => '',
         'error_message' => '',
     ];
@@ -558,7 +565,8 @@ function app_safe_http_fetch(
     string $url,
     ?callable $resolver = null,
     ?callable $transport = null,
-    array $validators = []
+    array $validators = [],
+    array $requestOptions = []
 ): array {
     if ($resolver === null && defined('APP_ENV') && APP_ENV === 'testing'
         && isset($GLOBALS['app_http_fetch_test_resolver']) && is_callable($GLOBALS['app_http_fetch_test_resolver'])) {
@@ -572,6 +580,24 @@ function app_safe_http_fetch(
     $currentUrl = $url;
     $transportFn = $transport ?? 'app_curl_single_hop';
     $maxRedirects = APP_HTTP_MAX_REDIRECTS;
+    $accept = $requestOptions['accept'] ?? null;
+    if (!is_string($accept) || $accept === '' || strlen($accept) > 512
+        || preg_match('/[\x00-\x1F\x7F]/', $accept) === 1
+    ) {
+        $accept = null;
+    }
+    $retryPublicIps = ($requestOptions['retry_public_ips'] ?? false) === true;
+    $maxBytes = $requestOptions['max_bytes'] ?? APP_HTTP_MAX_BYTES;
+    if (!is_int($maxBytes) || $maxBytes <= 0) {
+        $maxBytes = (int) APP_HTTP_MAX_BYTES;
+    }
+    $maxBytes = max(65536, min((int) APP_HTTP_MAX_BYTES, $maxBytes));
+    $userAgent = $requestOptions['user_agent'] ?? APP_HTTP_USER_AGENT;
+    if (!is_string($userAgent) || $userAgent === '' || strlen($userAgent) > 512
+        || preg_match('/[\x00-\x1F\x7F]/', $userAgent) === 1
+    ) {
+        $userAgent = (string) APP_HTTP_USER_AGENT;
+    }
 
     for ($hop = 0; $hop <= $maxRedirects; $hop++) {
         $target = app_validate_fetch_target($currentUrl, $resolver);
@@ -590,21 +616,50 @@ function app_safe_http_fetch(
         $requestHeaders = feed_conditional_request_headers($validators, $requestUrl);
         $sentConditional = $requestHeaders !== [];
 
-        // DNSで確認した公開IPへ固定して送信する。
-        $ip = (string) $target['ips'][0];
-        $response = $transportFn([
-            'url' => $requestUrl,
-            'host' => (string) $target['host'],
-            'port' => (int) $target['port'],
-            'ip' => $ip,
-            'max_bytes' => APP_HTTP_MAX_BYTES,
-            'connect_timeout_ms' => APP_HTTP_CONNECT_TIMEOUT_MS,
-            'total_timeout_ms' => APP_HTTP_TIMEOUT_MS,
-            'user_agent' => APP_HTTP_USER_AGENT,
-            'request_headers' => $requestHeaders,
-        ]);
+        // DNSで検証済みの公開IPへ固定して送信する。Reader Full Text等で
+        // 明示された場合だけ、接続系失敗時に同じ検証済みDNS回答内の次IPを試す。
+        $candidateIps = array_values($target['ips']);
+        if ($retryPublicIps) {
+            usort($candidateIps, static function (string $a, string $b): int {
+                $aV4 = filter_var($a, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false;
+                $bV4 = filter_var($b, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false;
+                return $aV4 === $bV4 ? 0 : ($aV4 ? -1 : 1);
+            });
+        } else {
+            $candidateIps = array_slice($candidateIps, 0, 1);
+        }
 
-        if (($response['ok'] ?? false) !== true) {
+        $response = null;
+        foreach ($candidateIps as $ip) {
+            $request = [
+                'url' => $requestUrl,
+                'host' => (string) $target['host'],
+                'port' => (int) $target['port'],
+                'ip' => (string) $ip,
+                'max_bytes' => $maxBytes,
+                'connect_timeout_ms' => APP_HTTP_CONNECT_TIMEOUT_MS,
+                'total_timeout_ms' => APP_HTTP_TIMEOUT_MS,
+                'user_agent' => $userAgent,
+                'request_headers' => $requestHeaders,
+            ];
+            if ($accept !== null) {
+                $request['accept'] = $accept;
+            }
+            $response = $transportFn($request);
+            if (($response['ok'] ?? false) === true) {
+                break;
+            }
+
+            $errorCode = is_string($response['error_code'] ?? null)
+                ? (string) $response['error_code']
+                : 'transport_error';
+            if (!$retryPublicIps || !in_array($errorCode, ['transport_error', 'timeout', 'tls_error'], true)) {
+                break;
+            }
+        }
+
+        if (!is_array($response) || ($response['ok'] ?? false) !== true) {
+            $response = is_array($response) ? $response : [];
             return app_fetch_result(
                 false,
                 $requestUrl,
@@ -649,11 +704,14 @@ function app_safe_http_fetch(
         }
 
         $body = isset($response['body']) && is_string($response['body']) ? $response['body'] : '';
+        $contentType = isset($response['content_type']) && is_string($response['content_type'])
+            ? trim($response['content_type'])
+            : null;
         if ($body === '') {
             return app_fetch_result(false, $requestUrl, $status, '', 'empty_response', 'Feed response was empty.');
         }
 
-        return app_fetch_result(true, $requestUrl, $status, $body, '', '', $etag, $lastModified, false);
+        return app_fetch_result(true, $requestUrl, $status, $body, '', '', $etag, $lastModified, false, null, $contentType);
     }
 
     return app_fetch_result(false, $currentUrl, 0, '', 'too_many_redirects', 'Too many redirects.');

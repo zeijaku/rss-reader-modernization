@@ -466,6 +466,9 @@ function search_feed_form_fields(string $prefix): string
 
 <!-- 記事Actions: 通常RSS / Search Feed / Stockで共通利用 -->
 <div id="articleActionsMenu" class="article-actions-menu" role="menu" aria-label="記事Actions" hidden>
+    <button type="button" class="article-actions-item article-action-reader" role="menuitem">
+        <i class="fas fa-book-open fa-fw" aria-hidden="true"></i><span>Readerで読む</span>
+    </button>
     <button type="button" class="article-actions-item article-action-stock" role="menuitem">
         <i class="far fa-bookmark fa-fw" aria-hidden="true"></i><span>Stockへ保存</span>
     </button>

@@ -8,6 +8,9 @@ const html=[
   fs.readFileSync(path.join(root,'app/view/dashboard_modals.php'),'utf8')
 ].join('\n');
 const css=fs.readFileSync(path.join(root,'public/css/dashboard.css'),'utf8');
+const memoStart=js.indexOf("function memoFormPayload(prefix)");
+const memoEnd=js.indexOf("function taskWidgetFormPayload(prefix)", memoStart);
+const memoJs=memoStart>=0&&memoEnd>memoStart?js.slice(memoStart,memoEnd):'';
 let checks=0, failures=0;
 function check(cond,msg){checks++;console.log((cond?'PASS':'FAIL')+': '+msg);if(!cond)failures++;}
 check(js.includes("function memoFormPayload(prefix)"),'Memo payload helper exists');
@@ -27,7 +30,7 @@ check(js.includes(".off('click' + eventNamespace, '.memo-edit-trigger')"),'Memo 
 check(js.includes(".off('submit' + eventNamespace, '#changeMemoForm')"),'Memo update handler is namespaced');
 check(js.includes(".off('click' + eventNamespace, '.delete_memo')"),'Memo delete handler is namespaced');
 check((js.match(/\.always\(function \(\)/g)||[]).length>=8,'Memo mutations release pending state through always');
-check(!js.includes('.html('),'Dashboard JS keeps text-only DOM operations');
+check(memoJs!==''&&!memoJs.includes('.html('),'Memo JS keeps text-only DOM operations');
 check(html.includes('id="registerMemoForm"')&&html.includes('id="changeMemoForm"'),'Memo forms are present in the page');
 check(html.includes('maxlength="4000"')&&html.includes('rows="8"'),'Memo textarea has bounded usable dimensions');
 check(html.includes('data-dashboard-widget-type="memo"'),'Memo card exposes its Widget type');

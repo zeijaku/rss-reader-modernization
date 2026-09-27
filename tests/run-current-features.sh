@@ -117,6 +117,44 @@ python3 "$SCRIPT_DIR/test_current_cursor_field_contract.py"
 node "$SCRIPT_DIR/test_current_cursor_field_runtime.js"
 node --check "$ROOT/public/js/cursor-field.js"
 
+echo '== Current feature contracts: V1.38 Reader contract syntax =='
+python3 -m py_compile \
+    "$SCRIPT_DIR/test_v1_38_a_reader_mode_contract.py" \
+    "$SCRIPT_DIR/test_v1_38_b_reader_full_text_contract.py" \
+    "$SCRIPT_DIR/test_v1_38_c_reader_extraction_contract.py" \
+    "$SCRIPT_DIR/test_v1_38_d_reader_image_proxy_contract.py"
+
+echo '== Current feature contracts: V1.38-A Reader Mode =='
+php "$SCRIPT_DIR/test_v1_38_a_reader_mode.php"
+python3 "$SCRIPT_DIR/test_v1_38_a_reader_mode_contract.py"
+node --check "$ROOT/public/js/dashboard.js"
+php -l "$ROOT/app/api/content.php"
+php -l "$ROOT/app/view/dashboard_modals.php"
+
+echo '== Current feature contracts: V1.38-B Reader Full Text =='
+php "$SCRIPT_DIR/test_v1_38_b_reader_full_text.php"
+python3 "$SCRIPT_DIR/test_v1_38_b_reader_full_text_contract.py"
+php -l "$ROOT/app/reader/reader_full_text.php"
+php -l "$ROOT/app/http_fetch.php"
+php -l "$ROOT/app/api.php"
+node --check "$ROOT/public/js/dashboard.js"
+
+echo '== Current feature contracts: V1.38-C Reader Extraction =='
+php "$SCRIPT_DIR/test_v1_38_c_reader_extraction.php"
+python3 "$SCRIPT_DIR/test_v1_38_c_reader_extraction_contract.py"
+php -l "$ROOT/app/reader/reader_full_text.php"
+php -l "$ROOT/app/api/content.php"
+node --check "$ROOT/public/js/dashboard.js"
+
+echo '== Current feature contracts: V1.38-D Reader Image Proxy =='
+php "$SCRIPT_DIR/test_v1_38_d_reader_image_proxy.php"
+python3 "$SCRIPT_DIR/test_v1_38_d_reader_image_proxy_contract.py"
+php -l "$ROOT/app/reader/reader_image_proxy.php"
+php -l "$ROOT/public/reader_image.php"
+php -l "$ROOT/app/reader/reader_full_text.php"
+php -l "$ROOT/app/api/content.php"
+php -l "$ROOT/app/http_fetch.php"
+
 echo '== Current feature contracts: V1.37-A 2048 =='
 python3 "$SCRIPT_DIR/test_current_game_2048_contract.py"
 node "$SCRIPT_DIR/test_current_game_2048_runtime.js"
