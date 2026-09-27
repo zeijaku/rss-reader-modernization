@@ -53,6 +53,27 @@ check('branches:' in release and '- main' in release, 'Release push trigger is r
 check('release-main' in release, 'Release runs are serialized on main')
 check('contents: write' in release, 'Release workflow has contents write permission for final tag/Release publication')
 
+dependabot_path = ROOT / '.github/dependabot.yml'
+check(dependabot_path.is_file(), 'GitHub Actions Dependabot configuration exists')
+if dependabot_path.is_file():
+    dependabot = dependabot_path.read_text(encoding='utf-8')
+    check(
+        bool(re.search(r'package-ecosystem:\\s*["\\']?github-actions["\\']?', dependabot)),
+        'Dependabot tracks the github-actions ecosystem',
+    )
+
+uses_pattern = re.compile(r'^\\s*uses:\\s*([^\\s#]+)', flags=re.MULTILINE)
+for path in workflow_paths:
+    body = path.read_text(encoding='utf-8')
+    for spec in uses_pattern.findall(body):
+        if spec.startswith('./'):
+            continue
+        _action, separator, ref = spec.rpartition('@')
+        check(
+            bool(separator) and bool(re.fullmatch(r'[0-9a-f]{40}', ref)),
+            f'external action is pinned to a full commit SHA: {path.name}: {spec}',
+        )
+
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
 raise SystemExit(1 if failed else 0)
