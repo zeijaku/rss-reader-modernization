@@ -553,7 +553,15 @@ function api_reader_full_text_diagnostic_error(
         : 'transport_error';
     $safeUpstreamStatus = max(0, min(599, $upstreamStatus));
 
-    $response = api_error($code, $message, $status);
+    $diagnosticText = ' 診断: ' . $safeCategory;
+    if ($safeUpstreamStatus >= 100 && $safeUpstreamStatus <= 599) {
+        $diagnosticText .= ' / HTTP ' . (string) $safeUpstreamStatus;
+    }
+
+    // Put the bounded diagnostic in the public message itself so production
+    // diagnosis does not depend on a freshly cached dashboard.js. Keep the
+    // structured field too for newer clients.
+    $response = api_error($code, $message . $diagnosticText, $status);
     $response['body']['error']['diagnostic'] = [
         'category' => $safeCategory,
         'http_status' => $safeUpstreamStatus,
