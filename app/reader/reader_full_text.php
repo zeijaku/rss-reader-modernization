@@ -706,7 +706,16 @@ final class ReaderFullTextService
             }
         }
 
-        $fetch = app_safe_http_fetch($sourceUrl);
+        $fetch = app_safe_http_fetch(
+            $sourceUrl,
+            null,
+            null,
+            [],
+            [
+                'accept' => 'text/html, application/xhtml+xml;q=0.9, */*;q=0.1',
+                'retry_public_ips' => true,
+            ]
+        );
         if (($fetch['ok'] ?? false) !== true) {
             if ($stale !== null) {
                 return $this->cachedSuccess($stale, 'stale', true, (string) ($fetch['error_code'] ?? 'transport_error'));
