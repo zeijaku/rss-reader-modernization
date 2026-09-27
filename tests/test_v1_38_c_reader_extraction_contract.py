@@ -51,8 +51,9 @@ checks = [
      "Reader reports when extracted article body is displayed"),
     ("function api_reader_full_text_diagnostic_error" in api
      and "'category' => $safeCategory" in api
-     and "'http_status' => $safeUpstreamStatus" in api,
-     "Full Text failures expose only coarse diagnostic category and upstream status"),
+     and "'http_status' => $safeUpstreamStatus" in api
+     and "$message . $diagnosticText" in api,
+     "Full Text failures embed only coarse diagnostic category/status in the public message"),
     ("error.diagnostic" in js
      and "診断: " in js
      and "HTTP " in js,
