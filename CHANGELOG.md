@@ -1,3 +1,28 @@
+## 1.38.0 - 2026-09-27
+
+### Reader Mode
+- Add an authenticated Reader modal that presents RSS `content` / `description` in a focused reading layout without changing the normal feed cards.
+- Add on-demand Full Text retrieval that resolves the article URL from the authenticated owner's stored feed item rather than accepting an arbitrary client URL.
+- Keep Full Text failure isolated from Feed Health and fall back to the RSS body when the upstream article cannot be fetched or extracted.
+
+### Full Text extraction and compatibility
+- Reuse the shared hardened HTTP fetch boundary for article retrieval, preserving HTTP(S)-only validation, public-address enforcement, DNS pinning, redirect revalidation, TLS verification, timeout and response-size limits.
+- Add lightweight main-body extraction and allowlist sanitization for paragraphs, headings, lists, quotations, code, links, figures and raster images while dropping scripts, styles, forms, frames, media and other active content.
+- Normalize declared or detected article encodings to UTF-8 before parsing, including common Japanese encodings, and invalidate older raw-byte Reader cache entries.
+- Split Feed and Reader outbound User-Agent settings with `APP_FEED_USER_AGENT` and `APP_READER_USER_AGENT`, retaining `APP_HTTP_USER_AGENT` as the backward-compatible fallback.
+
+### Reader image proxy
+- Rewrite Full Text raster-image sources to authenticated same-origin `reader_image.php` URLs backed by user-bound opaque HMAC tokens; source image URLs remain server-side.
+- Fetch images through the shared safe HTTP transport, allowlist raster MIME types, validate file signatures, reject SVG, enforce bounded response sizes, and cache validated image bytes outside `public/`.
+- Protect private image registry/cache data with user binding, expiry, checksum validation, symlink rejection and atomic writes.
+- Fail closed when proxy registration fails instead of falling back to a browser-direct external image request.
+- Keep article links directly clickable so external navigation occurs only after an explicit user action.
+
+### Compatibility and release
+- Add no database migration, required configuration, credential, or external dependency.
+- Preserve existing authentication, owner scope, CSRF, Feed fetch, Feed Health and Dashboard boundaries.
+- Promote the production-verified V1.38 development checkpoints to the formal `1.38.0` release and standard Release workflow.
+
 ## 1.37.0 - 2026-09-26
 
 ### Game Widget: 2048
