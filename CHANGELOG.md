@@ -1,3 +1,29 @@
+## 1.39.0 - 2026-09-28
+
+### GitHub / repository hardening
+- Pin third-party GitHub Actions used by CI and Release workflows to full commit SHAs and add Dependabot tracking for the `github-actions` ecosystem.
+- Keep CI tokens read-only and preserve the protected `main` branch policy, required PHP 8.1 / 8.4 checks, no force-push, and immutable Release flow.
+
+### Dashboard architecture and compatibility
+- Extract the shared Dashboard request/session/notice helpers from `public/js/dashboard.js` into `public/js/dashboard-core.js` while preserving the existing controller-facing function contracts.
+- Ensure Dashboard, Stock, and Settings entry pages load the shared core before `dashboard.js`, fixing the Stock article-actions menu and preventing the same dependency omission on Settings.
+- Fix Notification Center mutation SQL for native PDO prepares by using unique named placeholders for repeated timestamps.
+- Keep expanded Calendar event details scrollable inside the modal body so the footer actions remain reachable.
+
+### PHP architecture / security-boundary maintenance
+- Keep `app/api/content.php` as a compatibility facade and split Content, Stock, Feed, and Reader actions into responsibility-specific modules without changing public API action names, owner scope, validation, or response contracts.
+- Keep `app/reader/reader_full_text.php` as a compatibility facade and split request validation, charset normalization, extraction/sanitization, cache, and service responsibilities into dedicated modules.
+- Preserve the shared hardened outbound HTTP / SSRF boundary, Reader image proxy, database schema, and existing application security invariants.
+
+### Release supply-chain hardening
+- Split the final Release workflow into a verification/attestation job and a publication job so only the final publication stage receives `contents: write`.
+- Generate GitHub Artifact Attestations for both Runtime and Complete Source ZIPs and verify both the SHA-256 sidecars and provenance again after cross-job artifact transfer before tag / GitHub Release publication.
+- Document consumer-side `gh attestation verify` commands while retaining secret scan, deterministic package verification, clean-room checks, immutable-tag checks, and main-SHA revalidation.
+
+### Compatibility and release
+- No database schema or migration, required application configuration, public API contract, or new Runtime external dependency is introduced by Version 1.39.0.
+- Promote the user-verified V1.39 checkpoints and integrated PHP 8.1 / 8.4 regression gates to the formal `1.39.0` release.
+
 ## 1.38.0 - 2026-09-27
 
 ### Reader Mode
