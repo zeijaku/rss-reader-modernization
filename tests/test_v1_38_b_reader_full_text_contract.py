@@ -22,8 +22,12 @@ checks = [
     ("client-supplied article URL" in content
      and "ReaderFullTextService::fromRuntimeConfiguration()->load($articleUrl)" in content,
      "client URL is not trusted for server-side fetch"),
-    ("app_safe_http_fetch($sourceUrl)" in service,
+    ("app_safe_http_fetch(" in service and "$sourceUrl," in service,
      "Full Text reuses the shared safe outbound HTTP boundary"),
+    ("'accept' => 'text/html, application/xhtml+xml;q=0.9, */*;q=0.1'" in service,
+     "Full Text uses HTML content negotiation"),
+    ("'retry_public_ips' => true" in service and "retry_public_ips" in http_fetch,
+     "Full Text may retry only across already validated public DNS answers"),
     ("feed_health" not in service.lower(),
      "article fetch does not alter Feed Health"),
     ("reader_full_text_content_type_allowed" in service
