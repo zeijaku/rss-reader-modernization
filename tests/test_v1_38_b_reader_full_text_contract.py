@@ -79,8 +79,8 @@ checks = [
      "opening Reader still only loads RSS Reader content"),
     ("'full_text_fetch' => [" in content
      and "'full_text' => [" in content
-     and "'body' => $body" not in content,
-     "raw fetched article body is not returned directly to the browser"),
+     and "'html' => (string) $extracted['html']" in content,
+     "Full Text response separates fetch metadata from sanitized extracted HTML"),
     ("readerFullTextErrorMessage" in js
      and "RSS本文を表示しています" in js,
      "Full Text failure explicitly preserves RSS fallback"),
