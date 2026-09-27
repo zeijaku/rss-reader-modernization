@@ -195,6 +195,12 @@ if (!defined('APP_HTTP_MAX_BYTES')) {
 if (!defined('APP_HTTP_USER_AGENT')) {
     define('APP_HTTP_USER_AGENT', app_env('APP_HTTP_USER_AGENT', 'iGuguru-RSS/1.0 (+Secure-Baseline)'));
 }
+if (!defined('APP_FEED_USER_AGENT')) {
+    define('APP_FEED_USER_AGENT', app_env('APP_FEED_USER_AGENT', (string) APP_HTTP_USER_AGENT));
+}
+if (!defined('APP_READER_USER_AGENT')) {
+    define('APP_READER_USER_AGENT', app_env('APP_READER_USER_AGENT', (string) APP_HTTP_USER_AGENT));
+}
 
 if (!defined('APP_FEED_CACHE_ENABLED')) {
     define('APP_FEED_CACHE_ENABLED', app_env_bool('APP_FEED_CACHE_ENABLED', true));
