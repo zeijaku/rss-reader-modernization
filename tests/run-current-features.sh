@@ -117,6 +117,13 @@ python3 "$SCRIPT_DIR/test_current_cursor_field_contract.py"
 node "$SCRIPT_DIR/test_current_cursor_field_runtime.js"
 node --check "$ROOT/public/js/cursor-field.js"
 
+echo '== Current feature contracts: V1.38 Reader contract syntax =='
+python3 -m py_compile \
+    "$SCRIPT_DIR/test_v1_38_a_reader_mode_contract.py" \
+    "$SCRIPT_DIR/test_v1_38_b_reader_full_text_contract.py" \
+    "$SCRIPT_DIR/test_v1_38_c_reader_extraction_contract.py" \
+    "$SCRIPT_DIR/test_v1_38_d_reader_image_proxy_contract.py"
+
 echo '== Current feature contracts: V1.38-A Reader Mode =='
 php "$SCRIPT_DIR/test_v1_38_a_reader_mode.php"
 python3 "$SCRIPT_DIR/test_v1_38_a_reader_mode_contract.py"
