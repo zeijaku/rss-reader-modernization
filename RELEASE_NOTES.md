@@ -1,88 +1,96 @@
-# RSS Reader Modernization 1.38.0
+# RSS Reader Modernization 1.39.0
 
-V1.38.0 adds Reader Mode for focused RSS reading, safe on-demand Full Text retrieval, sanitized article extraction with Japanese charset normalization, and a same-origin Reader Image Proxy that minimizes automatic browser-direct requests to article image hosts.
+V1.39.0 is a Maintenance / Architecture / Security Hardening release. It keeps the existing application behavior and data model while reducing coupling in Dashboard and PHP internals, tightening GitHub / Release permissions, and adding verifiable build provenance to formal release artifacts.
 
 ## Main changes
 
-### Reader Mode
+### GitHub / repository hardening
 
-- Open an authenticated Reader modal from RSS items without replacing the existing feed-card experience.
-- Prefer RSS `content` and then `description` for the initial Reader body.
-- Keep RSS Reader rendering text-safe and preserve the existing article link for explicit navigation.
+- Pin third-party GitHub Actions used by CI and Release workflows to full commit SHAs.
+- Add Dependabot monitoring for the `github-actions` ecosystem so pinned Actions can be reviewed and updated deliberately.
+- Keep CI read-only and retain protected-`main` controls, required PHP 8.1 / 8.4 checks, force-push prevention, and immutable Release behavior.
 
-### On-demand Full Text
+### Dashboard shared core
 
-- Add a Full Text action that resolves the target article from the authenticated owner's `content_id` and item identity; the client does not submit an arbitrary article URL for fetching.
-- Fetch the article from the rental-server side through the existing hardened HTTP transport.
-- Keep HTTP(S)-only validation, SSRF/private and reserved-address rejection, DNS pinning, redirect revalidation, TLS verification, timeout controls, response-size caps, and bounded stale behavior.
-- Cache Full Text privately and fall back to the RSS body when fetching or extraction cannot safely complete.
-- Full Text failures remain separate from Feed Health.
+- Extract shared CSRF/session synchronization, API request, notice, response, and duplicate-request helpers from `public/js/dashboard.js` into `public/js/dashboard-core.js`.
+- Keep the existing Dashboard controller wrappers and UI behavior instead of introducing a new frontend framework or API contract.
+- Ensure Dashboard, Stock, and Settings entry pages load `dashboard-core.js` before `dashboard.js`.
+- Fix the Stock article-actions three-dot menu regression that occurred when Stock loaded the controller without its new shared core dependency.
+- Add regression coverage that scans every public PHP entry point using `dashboard.js` and requires the shared core to be loaded first.
 
-### Extraction, sanitization and charset handling
+### Compatibility fixes found during manual verification
 
-- Extract the main article region with lightweight DOM-based scoring and a body fallback.
-- Allow a limited reading-oriented HTML subset and remove scripts, styles, frames, forms, embedded media, SVG and other active content.
-- Resolve safe relative links and image sources against the effective article URL.
-- Normalize article bytes to UTF-8 before DOM parsing using BOM, HTTP charset, HTML meta charset and bounded detection fallback, including common Japanese encodings.
-- Split outbound Feed and Reader User-Agent settings into `APP_FEED_USER_AGENT` and `APP_READER_USER_AGENT`; existing `APP_HTTP_USER_AGENT` remains the fallback so existing installations do not require a new setting.
+- Fix Notification Center read / mark-all-read / hide mutations for native MySQL PDO prepares by replacing repeated named placeholders with unique timestamp placeholders.
+- Keep Calendar event modal footer actions reachable when URL / Memo details are expanded by restoring the Bootstrap scrollable-modal flex boundary.
+- User-side verification confirmed the Notification Center close action, expanded Calendar modal controls, and Stock article-actions menu after these corrections.
 
-### Reader Image Proxy
+### PHP architecture / security boundaries
 
-- Rewrite Full Text raster-image sources to authenticated same-origin `reader_image.php?id=...` URLs.
-- Expose only a user-bound opaque HMAC token to the browser; the source image URL remains in private server-side registry data outside `public/`.
-- Fetch images through the same hardened outbound boundary used by the application.
-- Allowlist JPEG, PNG/APNG, GIF, WebP and AVIF responses, validate image signatures, reject SVG, and apply a bounded per-image response limit.
-- Cache validated images privately with checksum validation, expiry, symlink rejection and atomic replacement.
-- If an image cannot be safely registered or fetched, do not fall back to the original remote `src`.
-- Article links remain direct and clickable; external article navigation therefore occurs only after an explicit user action.
+- Keep `app/api/content.php` as the compatibility facade while moving Content, Stock, Feed, and Reader handlers into responsibility-specific modules.
+- Keep `app/reader/reader_full_text.php` as the compatibility facade while separating request validation, charset normalization, extraction/sanitization, cache, and service responsibilities.
+- Preserve existing public function and class names, API action names, response formats, owner scope, validation, Reader behavior, and cache behavior.
+- Keep `app/http_fetch.php`, the Reader image proxy, database schema, and the established SSRF / TLS / redirect / DNS-pinning security boundary unchanged.
+
+### Release supply-chain hardening
+
+- Default the Release workflow to `contents: read`.
+- Split the workflow into a verification/attestation job and a final publication job.
+- Grant `contents: write` only to the publication job; the verification job receives only the additional OIDC / attestation permissions required to mint provenance.
+- Generate GitHub Artifact Attestations for both the Runtime ZIP and Complete Source ZIP.
+- Transfer verified assets between jobs through GitHub Actions artifacts, then re-check both SHA-256 sidecars and both attestations before tag / GitHub Release publication.
+- Retain main-SHA revalidation, immutable-tag checks, secret scan, deterministic package verification, and Runtime / Complete Source clean-room checks.
+- Document `gh attestation verify` so downloaded formal ZIPs can be independently checked against this repository.
 
 ## Database upgrade
 
-No database migration is required for V1.38.0.
+No database migration is required for V1.39.0.
 
-Existing RSS, content, stock, user and Dashboard data remain unchanged.
+Existing RSS, Stock, Calendar, Notification, Reader, Mail, user, and Dashboard data remain unchanged.
 
 ## Configuration
 
-No new setting is required for an existing installation.
+No new required application setting, credential, or Runtime external dependency is introduced.
 
-Optional Reader/Feed User-Agent overrides are available through `APP_FEED_USER_AGENT` and `APP_READER_USER_AGENT`. If they are not set, the existing `APP_HTTP_USER_AGENT` value is used.
-
-Reader Full Text and image cache/proxy settings have safe defaults and use private server-side storage outside the public document root.
+The GitHub Release workflow uses GitHub-provided OIDC / Artifact Attestation capabilities only during release automation; this does not add a Production runtime dependency.
 
 ## Security and compatibility
 
-- Existing authentication, session, owner scope, CSRF, validation, output escaping and Feed Security boundaries remain in place.
-- Full Text does not accept an arbitrary remote article URL from the browser.
-- Reader image requests do not accept a remote image URL from the browser.
-- Image proxy tokens are bound to the authenticated user and source URL.
-- Automatic article-image retrieval is routed through the RSS Reader server; explicit article-link clicks still navigate directly to the external article.
-- No headless browser, JavaScript execution engine, paywall bypass, CAPTCHA bypass, new credential, or external dependency is introduced.
+- Existing authentication, session, owner scope, CSRF, SSRF, XSS, SQL/PDO, validation, path confinement, credential protection, and Reader security boundaries remain in place.
+- The Dashboard core split preserves the existing API endpoint and controller-facing contracts.
+- The PHP responsibility split preserves existing API and Reader facade entry points.
+- The Notification Center SQL correction keeps owner scoping and mutation semantics unchanged.
+- The Release workflow separates build verification from repository write access and verifies provenance before publication.
+- No database schema, migration, public endpoint, or Production deployment mechanism is added or changed.
 
 ## Verification completed
 
-- Production verification completed for Reader Mode and Full Text retrieval.
-- Production verification confirmed the charset normalization fix on an article that previously displayed mojibake.
-- Production verification completed for the same-origin Reader Image Proxy.
-- V1.38-D runtime coverage includes 34 dedicated checks, with 18 additional security/static contract checks.
-- Dedicated tests cover user/token isolation, token tampering, cache hit/stale behavior, MIME rejection, file-signature mismatch, SVG rejection, private-address redirect rejection, response-size failure, checksum tampering, symlink rejection, mapping expiry, Apache endpoint rules and fail-safe behavior.
-- Reader extraction tests cover same-origin image rewriting, source URL removal, article-link preservation and image-removal fail-safe.
-- Current CI runs the complete regression gate on PHP 8.1 and PHP 8.4.
+- Each V1.39 phase passed the repository CI on PHP 8.1 and PHP 8.4 before integration.
+- A was integrated first, followed by B, C, and D; after each merge the updated `main` branch passed PHP 8.1 / 8.4 CI before the next phase was integrated.
+- B was re-tested after merging A into the branch, including the Dashboard shared-core entry-point dependency coverage.
+- C was re-tested on top of A+B, with the overlapping security test explicitly merged so both Dashboard-core and recursive PHP-module coverage remain active.
+- D was re-tested on top of A+B+C.
+- Dedicated V1.39-C architecture/security and facade runtime tests verify the split PHP modules while retaining the pre-existing contracts.
+- Release workflow tests verify least-privilege job permissions, full-SHA Action pinning, SHA-256 revalidation, provenance generation, provenance verification order, and Release documentation.
+- A real GitHub Artifact Attestation smoke test successfully created Sigstore-backed provenance and verified it with `gh attestation verify`.
+- A second cross-job smoke test successfully uploaded an attested artifact, downloaded it in another job, verified its SHA-256, and verified the downloaded subject's attestation.
+- Temporary smoke workflows were removed after verification.
+- Current integrated CI continues to run the complete regression gate on PHP 8.1 and PHP 8.4.
 
 ## Verification limits
 
-- Some sites that depend on client-side JavaScript, unusual markup, authentication, paywalls, CAPTCHA or unsupported response formats may still fall back to RSS content.
-- SVG and non-allowlisted image formats are intentionally not proxied.
-- Clicking an article link intentionally leaves the RSS Reader and creates a direct browser request to that external site.
-- Network visibility depends on the managed-device and network environment; the Reader Image Proxy minimizes automatic direct image requests but is not a general-purpose anonymity or traffic-hiding mechanism.
-- The final PHP 8.1 and PHP 8.4 CI and Release workflow must pass before the immutable tag and release assets are considered complete.
-- The Release workflow does not automatically deploy the formal package to the production environment.
+- The formal `v1.39.0` tag, Release assets, and production Release attestations are not complete until the final Release workflow succeeds on the release-ready `main` commit.
+- The CI environment does not provide MariaDB server tools for the dedicated real-server mutation test, so that existing test remains skipped there; native-PDO placeholder behavior is additionally guarded by static/current-contract coverage and representative user-side verification.
+- GitHub currently emits a Node.js 20 deprecation warning for the pinned `actions/upload-artifact@v4` / `actions/download-artifact@v4` commits while executing them with the platform's newer Node runtime. The tested V1.39-D flows complete successfully; a major Action update is intentionally left as a separate dependency-maintenance change.
+- Release workflow verification covers repository, package, checksum, provenance, and clean-room behavior; it does not automatically deploy the formal package to Production.
+- Production remains a separate deployment step and is not modified by the formalization process.
 
 ## Release assets
 
 The Release workflow publishes:
 
-- `rss-reader-modernization-1.38.0.zip`
-- `rss-reader-modernization-1.38.0.zip.sha256`
-- `rss-reader-modernization-1.38.0-complete.zip`
-- `rss-reader-modernization-1.38.0-complete.zip.sha256`
+- `rss-reader-modernization-1.39.0.zip`
+- `rss-reader-modernization-1.39.0.zip.sha256`
+- `rss-reader-modernization-1.39.0-complete.zip`
+- `rss-reader-modernization-1.39.0-complete.zip.sha256`
+
+Both ZIP files receive GitHub Artifact Attestations. Consumers with GitHub CLI can verify the downloaded ZIPs with `gh attestation verify ... --repo zeijaku/rss-reader-modernization`.
