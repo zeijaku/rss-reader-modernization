@@ -113,6 +113,10 @@ v138b_check(
     ($lastRequest['accept'] ?? '') === 'text/html, application/xhtml+xml;q=0.9, */*;q=0.1',
     'Full Text requests article HTML rather than RSS/XML content negotiation'
 );
+v138b_check(
+    ($lastRequest['user_agent'] ?? '') === (string) APP_READER_USER_AGENT,
+    'Full Text request uses the dedicated Reader user agent'
+);
 
 $second = $service->load('https://article.example/read?id=1');
 v138b_check(($second['ok'] ?? false) === true && ($second['cache_status'] ?? '') === 'hit', 'fresh article is served from cache');
