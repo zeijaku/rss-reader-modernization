@@ -77,8 +77,10 @@ checks = [
      "Full Text request is bound to button click"),
     ("apiRequest('feed.reader', context, 25000)" in js,
      "opening Reader still only loads RSS Reader content"),
-    ("本文抽出は次の段階で反映します" in js,
-     "Stage B does not pretend raw HTML has already been extracted"),
+    ("'full_text_fetch' => [" in content
+     and "'full_text' => [" in content
+     and "'body' => $body" not in content,
+     "raw fetched article body is not returned directly to the browser"),
     ("readerFullTextErrorMessage" in js
      and "RSS本文を表示しています" in js,
      "Full Text failure explicitly preserves RSS fallback"),
