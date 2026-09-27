@@ -6,7 +6,13 @@ ROOT = Path(__file__).resolve().parents[1]
 
 api = (ROOT / "app/api.php").read_text(encoding="utf-8")
 api_v1 = (ROOT / "public/api_v1.php").read_text(encoding="utf-8")
-content = (ROOT / "app/api/content.php").read_text(encoding="utf-8")
+content = "\n".join((ROOT / path).read_text(encoding="utf-8") for path in [
+    "app/api/content.php",
+    "app/api/content/content_actions.php",
+    "app/api/content/stock_actions.php",
+    "app/api/content/feed_actions.php",
+    "app/api/content/reader_actions.php",
+])
 service = (ROOT / "app/reader/reader_full_text.php").read_text(encoding="utf-8")
 modal = (ROOT / "app/view/dashboard_modals.php").read_text(encoding="utf-8")
 js = (ROOT / "public/js/dashboard.js").read_text(encoding="utf-8")
