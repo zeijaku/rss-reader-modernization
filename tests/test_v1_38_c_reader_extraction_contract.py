@@ -4,7 +4,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 reader = (ROOT / "app/reader/reader_full_text.php").read_text(encoding="utf-8")
-api = (ROOT / "app/api/content.php").read_text(encoding="utf-8")
+api = "\n".join((ROOT / path).read_text(encoding="utf-8") for path in [
+    "app/api/content.php",
+    "app/api/content/content_actions.php",
+    "app/api/content/stock_actions.php",
+    "app/api/content/feed_actions.php",
+    "app/api/content/reader_actions.php",
+])
 js = (ROOT / "public/js/dashboard.js").read_text(encoding="utf-8")
 css = (ROOT / "public/css/dashboard.css").read_text(encoding="utf-8")
 
