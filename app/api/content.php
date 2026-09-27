@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/feed/feed_error.php';
 require_once dirname(__DIR__) . '/reader/reader_full_text.php';
+require_once dirname(__DIR__) . '/reader/reader_image_proxy.php';
 
 /**
  * V1.19-B broad module extracted from the v1.18.0 facade.
@@ -676,7 +677,12 @@ function api_feed_reader_full_text(int $userId, array $input): array
     }
 
     try {
-        $extracted = reader_full_text_extract($body, $effectiveUrl);
+        $imageProxy = ReaderImageProxyService::fromRuntimeConfiguration();
+        $extracted = reader_full_text_extract(
+            $body,
+            $effectiveUrl,
+            static fn (string $imageUrl): ?string => $imageProxy->register($userId, $imageUrl)
+        );
     } catch (Throwable $exception) {
         return api_feed_internal_failure('feed.reader.full_text.extract', $userId, $contentId, $exception);
     }
