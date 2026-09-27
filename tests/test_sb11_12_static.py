@@ -10,8 +10,10 @@ stock = (ROOT / 'public' / 'stock.php').read_text(encoding='utf-8')
 settings = (ROOT / 'public' / 'settings.php').read_text(encoding='utf-8')
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
 frontend = index + '\n' + dashboard
-api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8') + ''.join(path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api').glob('*.php')))
-api_content = (ROOT / 'app/api/content.php').read_text(encoding='utf-8')
+api = (ROOT / 'app' / 'api.php').read_text(encoding='utf-8') + ''.join(path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api').rglob('*.php')))
+api_content = (ROOT / 'app/api/content.php').read_text(encoding='utf-8') + ''.join(
+    path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api/content').glob('*.php'))
+)
 api_account = (ROOT / 'app/api/account.php').read_text(encoding='utf-8')
 feed_service = (ROOT / 'app' / 'feed' / 'feed_fetch_service.php').read_text(encoding='utf-8')
 common_func = (ROOT / 'app' / 'common' / 'common_func.php').read_text(encoding='utf-8')

@@ -117,6 +117,21 @@ python3 "$SCRIPT_DIR/test_current_cursor_field_contract.py"
 node "$SCRIPT_DIR/test_current_cursor_field_runtime.js"
 node --check "$ROOT/public/js/cursor-field.js"
 
+echo '== Current feature contracts: V1.39-C PHP architecture / security boundaries =='
+python3 "$SCRIPT_DIR/test_current_v139c_php_architecture_contract.py"
+php "$SCRIPT_DIR/test_current_v139c_facade_runtime.php"
+php -l "$ROOT/app/api/content.php"
+php -l "$ROOT/app/api/content/content_actions.php"
+php -l "$ROOT/app/api/content/stock_actions.php"
+php -l "$ROOT/app/api/content/feed_actions.php"
+php -l "$ROOT/app/api/content/reader_actions.php"
+php -l "$ROOT/app/reader/reader_full_text.php"
+php -l "$ROOT/app/reader/full_text/request.php"
+php -l "$ROOT/app/reader/full_text/charset.php"
+php -l "$ROOT/app/reader/full_text/extraction.php"
+php -l "$ROOT/app/reader/full_text/cache.php"
+php -l "$ROOT/app/reader/full_text/service.php"
+
 echo '== Current feature contracts: V1.38 Reader contract syntax =='
 python3 -m py_compile \
     "$SCRIPT_DIR/test_v1_38_a_reader_mode_contract.py" \
