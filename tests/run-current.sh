@@ -81,6 +81,8 @@ php "$SCRIPT_DIR/test_m1g_fetch_resilience.php"
 python3 "$SCRIPT_DIR/test_m1g_concurrency.py"
 
 echo '== Current regression: Frontend runtime / assets =='
+python3 "$SCRIPT_DIR/test_current_dashboard_core_contract.py"
+node "$SCRIPT_DIR/test_current_dashboard_core_runtime.js"
 node "$SCRIPT_DIR/test_m2a_dashboard_runtime.js"
 node "$SCRIPT_DIR/test_m2b_feed_runtime.js"
 node "$SCRIPT_DIR/test_m2c_accessibility_runtime.js"

@@ -6,6 +6,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
+const coreSource = fs.readFileSync(path.join(root, 'public/js/dashboard-core.js'), 'utf8');
 const handlers = new Map();
 const wrappers = new Map();
 const ajaxCalls = [];
@@ -129,6 +130,7 @@ getWrapper('.registerContentValue').value = 'https://example.com/feed.xml';
 getWrapper('.style_select').value = 'success';
 getWrapper('.content_location').value = '2';
 
+vm.runInThisContext(coreSource, { filename: 'dashboard-core.js' });
 vm.runInThisContext(source, { filename: 'dashboard.js' });
 const firstHandlerCount = handlers.size;
 vm.runInThisContext(source, { filename: 'dashboard-second-load.js' });

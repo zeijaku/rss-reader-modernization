@@ -6,6 +6,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
+const coreSource = fs.readFileSync(path.join(root, 'public/js/dashboard-core.js'), 'utf8');
 const ajaxCalls = [];
 const handlers = new Map();
 let failures = 0;
@@ -281,6 +282,7 @@ const context = {
     Math,
     RegExp
 };
+vm.runInNewContext(coreSource, context, {filename: 'dashboard-core.js'});
 vm.runInNewContext(source, context, {filename: 'dashboard.js'});
 
 check(ajaxCalls.length === 8, 'one Feed request starts for each card');

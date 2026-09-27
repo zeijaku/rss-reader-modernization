@@ -5,6 +5,7 @@ const vm = require('vm');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
+const coreSource = fs.readFileSync(path.join(root, 'public/js/dashboard-core.js'), 'utf8');
 let failures = 0;
 const intervalCalls = [];
 function check(ok, message) { console.log((ok ? 'PASS' : 'FAIL') + ': ' + message); if (!ok) failures++; }
@@ -138,6 +139,7 @@ $.extend=(...args)=>Object.assign(...args); $.fn={};
 $.ajax=(options)=>{const d=new Deferred();ajaxCalls.push({options,deferred:d});return d;};
 
 const context={jQuery:$,window:windowObject,document:documentObject,console,JSON,Number,Object,Array,String,Math,RegExp,Date,Intl,setTimeout:windowObject.setTimeout,clearTimeout:windowObject.clearTimeout,setInterval:windowObject.setInterval,clearInterval:windowObject.clearInterval};
+vm.runInNewContext(coreSource,context,{filename:'dashboard-core.js'});
 vm.runInNewContext(source,context,{filename:'dashboard.js'});
 
 check(intervalCalls.length===1&&intervalCalls[0].ms===1000,'one shared Clock timer is registered');
