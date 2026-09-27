@@ -15,6 +15,7 @@ def check(condition: bool, message: str) -> None:
 
 
 index = text('public/index.php')
+stock = text('public/stock.php')
 core = text('public/js/dashboard-core.js')
 dashboard = text('public/js/dashboard.js')
 runner = text('tests/run-current.sh')
@@ -26,6 +27,12 @@ check(dashboard_tag in index, 'Dashboard controller remains loaded through the v
 check(
     index.find(core_tag) >= 0 and index.find(core_tag) < index.find(dashboard_tag),
     'Dashboard shared core loads before the controller',
+)
+check(core_tag in stock, 'Stock page also loads the Dashboard shared core through the versioned asset helper')
+check(dashboard_tag in stock, 'Stock page keeps the Dashboard controller')
+check(
+    stock.find(core_tag) >= 0 and stock.find(core_tag) < stock.find(dashboard_tag),
+    'Stock page loads the Dashboard shared core before the controller',
 )
 
 check('window.IGuguruDashboardCore = {' in core, 'Dashboard core exposes one explicit namespace')
