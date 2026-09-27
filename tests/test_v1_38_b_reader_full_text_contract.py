@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 
 api = (ROOT / "app/api.php").read_text(encoding="utf-8")
+api_v1 = (ROOT / "public/api_v1.php").read_text(encoding="utf-8")
 content = (ROOT / "app/api/content.php").read_text(encoding="utf-8")
 service = (ROOT / "app/reader/reader_full_text.php").read_text(encoding="utf-8")
 modal = (ROOT / "app/view/dashboard_modals.php").read_text(encoding="utf-8")
@@ -12,8 +14,14 @@ http_fetch = (ROOT / "app/http_fetch.php").read_text(encoding="utf-8")
 config = (ROOT / "app/common/common_conf.php").read_text(encoding="utf-8")
 
 checks = [
-    ("'feed.reader.full_text' => api_feed_reader_full_text" in api,
+    ("'feed.reader.fulltext' => api_feed_reader_full_text" in api,
      "Full Text endpoint is registered"),
+    (re.fullmatch(r"[a-z]+(?:\.[a-z]+)+", "feed.reader.fulltext") is not None
+     and "preg_match('/^[a-z]+(?:\\.[a-z]+)+$/'" in api_v1,
+     "Full Text action conforms to the public API action-name grammar"),
+    ("feed.reader.full_text" not in api and "feed.reader.full_text" not in js,
+     "legacy underscore Full Text action is not used"),
+
     ("function api_feed_reader_full_text" in content,
      "Full Text API action exists"),
     ("$readerResponse = api_feed_reader($userId, $input);" in content
@@ -45,7 +53,7 @@ checks = [
     ('id="readerModeFullTextButton"' in modal
      and "全文を取得" in modal,
      "Reader Modal exposes an explicit Full Text button"),
-    ("apiRequest('feed.reader.full_text', context, 25000)" in js,
+    ("apiRequest('feed.reader.fulltext', context, 25000)" in js,
      "Full Text fetch is initiated by the dedicated on-demand action"),
     ("fetchReaderFullText($(this));" in js,
      "Full Text request is bound to button click"),
