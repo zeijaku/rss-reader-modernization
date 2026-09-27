@@ -94,6 +94,7 @@ build_runtime = text('tools/build_release_package.py')
 verify_runtime = text('tools/verify_release_package.py')
 build_complete = text('tools/build_complete_package.py')
 verify_complete = text('tools/verify_complete_package.py')
+release_package_doc = text('docs/release-package.md')
 
 check("f'intended_release={release}'" in build_runtime, 'Runtime builder writes requested intended_release metadata')
 check("metadata.get('intended_release') == release" in verify_runtime, 'Runtime verifier independently checks requested intended_release')
@@ -101,6 +102,8 @@ check("f'intended_tag=v{release}'" in build_complete, 'Complete builder writes r
 check("metadata.get('intended_tag') == f'v{release}'" in verify_complete, 'Complete verifier independently checks requested intended_tag')
 check("'.github/workflows/release.yml'" in build_complete, 'Complete Source builder requires generic release workflow')
 check("'.github/workflows/release.yml'" in verify_complete, 'Complete Source verifier requires generic release workflow')
+check('GitHub Artifact Attestation' in release_package_doc, 'Release package documentation explains artifact provenance')
+check(release_package_doc.count('gh attestation verify') >= 2, 'Release package documentation shows Runtime and Complete attestation verification')
 
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
