@@ -136,7 +136,11 @@ final class ReaderImageProxyStore
             'source_url' => $url,
             'registered_at' => ($this->clock)(),
         ];
-        $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        try {
+            $json = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        } catch (Throwable) {
+            return null;
+        }
         if (!is_string($json) || strlen($json) > 8192) {
             return null;
         }
@@ -305,7 +309,11 @@ final class ReaderImageProxyStore
             'body_bytes' => strlen($body),
             'body_sha256' => hash('sha256', $body),
         ];
-        $json = json_encode($meta, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        try {
+            $json = json_encode($meta, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        } catch (Throwable) {
+            return false;
+        }
         if (!is_string($json) || strlen($json) > 8192) {
             return false;
         }
