@@ -85,9 +85,11 @@ $cache = new ReaderFullTextCache($tmp, 5, 60, 4096, $clock);
 $service = new ReaderFullTextService($cache, true);
 
 $transportCalls = 0;
+$lastRequest = null;
 $GLOBALS['app_http_fetch_test_resolver'] = static fn (string $host): array => ['93.184.216.34'];
-$GLOBALS['app_http_fetch_test_transport'] = static function (array $request) use (&$transportCalls): array {
+$GLOBALS['app_http_fetch_test_transport'] = static function (array $request) use (&$transportCalls, &$lastRequest): array {
     $transportCalls++;
+    $lastRequest = $request;
     return [
         'ok' => true,
         'status' => 200,
@@ -107,6 +109,10 @@ v138b_check(($first['ok'] ?? false) === true, 'Full Text service accepts safe pu
 v138b_check(($first['cache_status'] ?? '') === 'miss', 'first Full Text request is a cache miss');
 v138b_check(($first['content_type'] ?? '') === 'text/html', 'Full Text normalizes HTML Content-Type');
 v138b_check($transportCalls === 1, 'first Full Text request performs one outbound fetch');
+v138b_check(
+    ($lastRequest['accept'] ?? '') === 'text/html, application/xhtml+xml;q=0.9, */*;q=0.1',
+    'Full Text requests article HTML rather than RSS/XML content negotiation'
+);
 
 $second = $service->load('https://article.example/read?id=1');
 v138b_check(($second['ok'] ?? false) === true && ($second['cache_status'] ?? '') === 'hit', 'fresh article is served from cache');
@@ -219,6 +225,44 @@ $tooLarge = $service->load('https://article.example/large');
 v138b_check(
     ($tooLarge['ok'] ?? true) === false && ($tooLarge['error_code'] ?? '') === 'response_too_large',
     'Full Text preserves the shared response-size failure'
+);
+
+$fallbackCalls = [];
+$GLOBALS['app_http_fetch_test_resolver'] = static fn (string $host): array => [
+    '2001:4860:4860::8888',
+    '93.184.216.34',
+];
+$GLOBALS['app_http_fetch_test_transport'] = static function (array $request) use (&$fallbackCalls): array {
+    $fallbackCalls[] = (string) ($request['ip'] ?? '');
+    if (($request['ip'] ?? '') !== '93.184.216.34') {
+        return [
+            'ok' => false,
+            'status' => 0,
+            'body' => '',
+            'location' => null,
+            'error_code' => 'transport_error',
+            'error_message' => 'network unavailable',
+        ];
+    }
+    return [
+        'ok' => true,
+        'status' => 200,
+        'body' => '<html><body><main>IPv4 fallback article body</main></body></html>',
+        'location' => null,
+        'etag' => null,
+        'last_modified' => null,
+        'retry_after' => null,
+        'content_type' => 'text/html',
+        'error_code' => '',
+        'error_message' => '',
+    ];
+};
+$fallbackService = new ReaderFullTextService(null, false);
+$ipFallback = $fallbackService->load('https://article.example/ip-fallback');
+v138b_check(($ipFallback['ok'] ?? false) === true, 'Full Text succeeds through validated public-IP fallback');
+v138b_check(
+    $fallbackCalls === ['93.184.216.34'],
+    'Full Text prefers validated public IPv4 before IPv6 when resilient mode is enabled'
 );
 
 unset($GLOBALS['app_http_fetch_test_resolver'], $GLOBALS['app_http_fetch_test_transport']);
