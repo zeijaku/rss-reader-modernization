@@ -565,7 +565,8 @@ function app_safe_http_fetch(
     string $url,
     ?callable $resolver = null,
     ?callable $transport = null,
-    array $validators = []
+    array $validators = [],
+    array $requestOptions = []
 ): array {
     if ($resolver === null && defined('APP_ENV') && APP_ENV === 'testing'
         && isset($GLOBALS['app_http_fetch_test_resolver']) && is_callable($GLOBALS['app_http_fetch_test_resolver'])) {
@@ -579,6 +580,13 @@ function app_safe_http_fetch(
     $currentUrl = $url;
     $transportFn = $transport ?? 'app_curl_single_hop';
     $maxRedirects = APP_HTTP_MAX_REDIRECTS;
+    $accept = $requestOptions['accept'] ?? null;
+    if (!is_string($accept) || $accept === '' || strlen($accept) > 512
+        || preg_match('/[\x00-\x1F\x7F]/', $accept) === 1
+    ) {
+        $accept = null;
+    }
+    $retryPublicIps = ($requestOptions['retry_public_ips'] ?? false) === true;
 
     for ($hop = 0; $hop <= $maxRedirects; $hop++) {
         $target = app_validate_fetch_target($currentUrl, $resolver);
@@ -597,21 +605,50 @@ function app_safe_http_fetch(
         $requestHeaders = feed_conditional_request_headers($validators, $requestUrl);
         $sentConditional = $requestHeaders !== [];
 
-        // DNSで確認した公開IPへ固定して送信する。
-        $ip = (string) $target['ips'][0];
-        $response = $transportFn([
-            'url' => $requestUrl,
-            'host' => (string) $target['host'],
-            'port' => (int) $target['port'],
-            'ip' => $ip,
-            'max_bytes' => APP_HTTP_MAX_BYTES,
-            'connect_timeout_ms' => APP_HTTP_CONNECT_TIMEOUT_MS,
-            'total_timeout_ms' => APP_HTTP_TIMEOUT_MS,
-            'user_agent' => APP_HTTP_USER_AGENT,
-            'request_headers' => $requestHeaders,
-        ]);
+        // DNSで検証済みの公開IPへ固定して送信する。Reader Full Text等で
+        // 明示された場合だけ、接続系失敗時に同じ検証済みDNS回答内の次IPを試す。
+        $candidateIps = array_values($target['ips']);
+        if ($retryPublicIps) {
+            usort($candidateIps, static function (string $a, string $b): int {
+                $aV4 = filter_var($a, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false;
+                $bV4 = filter_var($b, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false;
+                return $aV4 === $bV4 ? 0 : ($aV4 ? -1 : 1);
+            });
+        } else {
+            $candidateIps = array_slice($candidateIps, 0, 1);
+        }
 
-        if (($response['ok'] ?? false) !== true) {
+        $response = null;
+        foreach ($candidateIps as $ip) {
+            $request = [
+                'url' => $requestUrl,
+                'host' => (string) $target['host'],
+                'port' => (int) $target['port'],
+                'ip' => (string) $ip,
+                'max_bytes' => APP_HTTP_MAX_BYTES,
+                'connect_timeout_ms' => APP_HTTP_CONNECT_TIMEOUT_MS,
+                'total_timeout_ms' => APP_HTTP_TIMEOUT_MS,
+                'user_agent' => APP_HTTP_USER_AGENT,
+                'request_headers' => $requestHeaders,
+            ];
+            if ($accept !== null) {
+                $request['accept'] = $accept;
+            }
+            $response = $transportFn($request);
+            if (($response['ok'] ?? false) === true) {
+                break;
+            }
+
+            $errorCode = is_string($response['error_code'] ?? null)
+                ? (string) $response['error_code']
+                : 'transport_error';
+            if (!$retryPublicIps || !in_array($errorCode, ['transport_error', 'timeout', 'tls_error'], true)) {
+                break;
+            }
+        }
+
+        if (!is_array($response) || ($response['ok'] ?? false) !== true) {
+            $response = is_array($response) ? $response : [];
             return app_fetch_result(
                 false,
                 $requestUrl,
