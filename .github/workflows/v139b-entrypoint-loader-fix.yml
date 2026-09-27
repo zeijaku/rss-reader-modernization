@@ -1,0 +1,30 @@
+name: V1.39-B Entrypoint Loader Fix Overlay
+
+on:
+  push:
+    branches:
+      - feature/v1.39-b-dashboard-core
+
+permissions:
+  contents: read
+
+jobs:
+  package-overlay:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Prepare overlay
+        run: |
+          set -euo pipefail
+          mkdir -p overlay/public
+          cp public/stock.php overlay/public/stock.php
+          cp public/settings.php overlay/public/settings.php
+      - name: Upload overlay
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: v1.39-b-entrypoint-loader-fix
+          path: overlay/
+          if-no-files-found: error
