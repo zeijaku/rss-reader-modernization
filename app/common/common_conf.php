@@ -252,6 +252,43 @@ if (!defined('APP_READER_FULL_TEXT_CACHE_DIR')) {
     define('APP_READER_FULL_TEXT_CACHE_DIR', dirname(__DIR__, 2) . '/var/cache/reader-full-text');
 }
 
+if (!defined('APP_READER_IMAGE_PROXY_ENABLED')) {
+    define('APP_READER_IMAGE_PROXY_ENABLED', app_env_bool('APP_READER_IMAGE_PROXY_ENABLED', true));
+}
+if (!defined('APP_READER_IMAGE_CACHE_ENABLED')) {
+    define('APP_READER_IMAGE_CACHE_ENABLED', app_env_bool('APP_READER_IMAGE_CACHE_ENABLED', true));
+}
+if (!defined('APP_READER_IMAGE_MAPPING_TTL_SECONDS')) {
+    define(
+        'APP_READER_IMAGE_MAPPING_TTL_SECONDS',
+        max(300, min(604800, (int) app_env('APP_READER_IMAGE_MAPPING_TTL_SECONDS', '604800')))
+    );
+}
+if (!defined('APP_READER_IMAGE_CACHE_TTL_SECONDS')) {
+    define(
+        'APP_READER_IMAGE_CACHE_TTL_SECONDS',
+        max(60, min(86400, (int) app_env('APP_READER_IMAGE_CACHE_TTL_SECONDS', '3600')))
+    );
+}
+if (!defined('APP_READER_IMAGE_STALE_MAX_AGE_SECONDS')) {
+    define(
+        'APP_READER_IMAGE_STALE_MAX_AGE_SECONDS',
+        max(
+            APP_READER_IMAGE_CACHE_TTL_SECONDS,
+            min(604800, (int) app_env('APP_READER_IMAGE_STALE_MAX_AGE_SECONDS', '604800'))
+        )
+    );
+}
+if (!defined('APP_READER_IMAGE_MAX_BYTES')) {
+    define(
+        'APP_READER_IMAGE_MAX_BYTES',
+        max(65536, min(APP_HTTP_MAX_BYTES, (int) app_env('APP_READER_IMAGE_MAX_BYTES', (string) APP_HTTP_MAX_BYTES)))
+    );
+}
+if (!defined('APP_READER_IMAGE_CACHE_DIR')) {
+    define('APP_READER_IMAGE_CACHE_DIR', dirname(__DIR__, 2) . '/var/cache/reader-images');
+}
+
 if (!defined('APP_HOLIDAY_CSV_URL')) {
     define('APP_HOLIDAY_CSV_URL', app_env('APP_HOLIDAY_CSV_URL', 'https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv'));
 }
