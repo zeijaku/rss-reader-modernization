@@ -1108,7 +1108,7 @@
         $button.find('i').removeClass('fa-file-alt').addClass('fa-spinner fa-spin');
         $status.prop('hidden', false).text('元記事を安全に取得しています...');
 
-        apiRequest('feed.reader.full_text', context, 25000)
+        apiRequest('feed.reader.fulltext', context, 25000)
             .done(function (data) {
                 var fetched = data && data.ok === true && data.data && data.data.full_text_fetch;
                 var fullText = data && data.ok === true && data.data && data.data.full_text;
