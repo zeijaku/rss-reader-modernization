@@ -144,6 +144,45 @@ v138c_check(
     'sanitized images use lazy loading and no-referrer'
 );
 
+$mappedImageUrls = [];
+$proxyToken = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+$proxied = reader_full_text_extract(
+    $html,
+    'https://example.test/news/entry/index.html',
+    static function (string $imageUrl) use (&$mappedImageUrls, $proxyToken): string {
+        $mappedImageUrls[] = $imageUrl;
+        return $proxyToken;
+    }
+);
+$proxiedHtml = is_array($proxied) ? (string) ($proxied['html'] ?? '') : '';
+v138c_check(
+    str_contains($proxiedHtml, 'src="reader_image.php?id=' . $proxyToken . '"'),
+    'Reader image is rewritten to same-origin proxy endpoint'
+);
+v138c_check(
+    !str_contains($proxiedHtml, 'https://example.test/news/images/photo.jpg'),
+    'proxied Reader HTML does not expose the original image URL'
+);
+v138c_check(
+    $mappedImageUrls === ['https://example.test/news/images/photo.jpg'],
+    'image proxy mapper receives resolved tracking-free absolute source URL'
+);
+v138c_check(
+    str_contains($proxiedHtml, 'href="https://example.test/next?id=7#section"'),
+    'article links remain direct and clickable while images are proxied'
+);
+
+$proxyFailure = reader_full_text_extract(
+    $html,
+    'https://example.test/news/entry/index.html',
+    static fn (string $imageUrl): ?string => null
+);
+$proxyFailureHtml = is_array($proxyFailure) ? (string) ($proxyFailure['html'] ?? '') : '';
+v138c_check(
+    !str_contains($proxyFailureHtml, '<img'),
+    'proxy registration failure drops images instead of falling back to remote browser fetch'
+);
+
 v138c_check(
     is_array($result) && in_array(($result['strategy'] ?? ''), ['article', 'main', 'role-main', 'semantic'], true),
     'semantic article/main candidate is selected'
