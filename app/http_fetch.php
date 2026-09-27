@@ -587,6 +587,12 @@ function app_safe_http_fetch(
         $accept = null;
     }
     $retryPublicIps = ($requestOptions['retry_public_ips'] ?? false) === true;
+    $userAgent = $requestOptions['user_agent'] ?? APP_HTTP_USER_AGENT;
+    if (!is_string($userAgent) || $userAgent === '' || strlen($userAgent) > 512
+        || preg_match('/[\x00-\x1F\x7F]/', $userAgent) === 1
+    ) {
+        $userAgent = (string) APP_HTTP_USER_AGENT;
+    }
 
     for ($hop = 0; $hop <= $maxRedirects; $hop++) {
         $target = app_validate_fetch_target($currentUrl, $resolver);
@@ -628,7 +634,7 @@ function app_safe_http_fetch(
                 'max_bytes' => APP_HTTP_MAX_BYTES,
                 'connect_timeout_ms' => APP_HTTP_CONNECT_TIMEOUT_MS,
                 'total_timeout_ms' => APP_HTTP_TIMEOUT_MS,
-                'user_agent' => APP_HTTP_USER_AGENT,
+                'user_agent' => $userAgent,
                 'request_headers' => $requestHeaders,
             ];
             if ($accept !== null) {
