@@ -8,8 +8,10 @@ index = dashboard_source(ROOT)
 stock = (ROOT / 'public/stock.php').read_text()
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
 frontend = index + '\n' + dashboard
-api = (ROOT / 'app/api.php').read_text(encoding='utf-8') + ''.join(path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api').glob('*.php')))
-api_content = (ROOT / 'app/api/content.php').read_text(encoding='utf-8')
+api = (ROOT / 'app/api.php').read_text(encoding='utf-8') + ''.join(path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api').rglob('*.php')))
+api_content = (ROOT / 'app/api/content.php').read_text(encoding='utf-8') + ''.join(
+    path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api/content').glob('*.php'))
+)
 validation = (ROOT / 'app/validation.php').read_text()
 http_fetch = (ROOT / 'app/http_fetch.php').read_text()
 common_func = (ROOT / 'app/common/common_func.php').read_text()
