@@ -29,6 +29,40 @@ function v138c_check(bool $condition, string $label): void
 
 v138c_check(class_exists('DOMDocument'), 'DOMDocument is available for Reader extraction');
 
+v138c_check(
+    reader_full_text_charset_from_content_type('text/html; charset=Shift_JIS') === 'SJIS-win',
+    'HTTP Content-Type Shift_JIS is normalized to SJIS-win'
+);
+
+$japaneseUtf8 = '<!doctype html><html><head><title>文字コード確認</title></head><body><main><p>日本語の本文を正しく表示します。</p></main></body></html>';
+$japaneseSjis = function_exists('mb_convert_encoding')
+    ? mb_convert_encoding($japaneseUtf8, 'SJIS-win', 'UTF-8')
+    : (function_exists('iconv') ? iconv('UTF-8', 'CP932//IGNORE', $japaneseUtf8) : false);
+$normalizedSjis = is_string($japaneseSjis)
+    ? reader_full_text_normalize_html_utf8($japaneseSjis, 'text/html; charset=Shift_JIS')
+    : null;
+v138c_check(
+    is_array($normalizedSjis)
+        && ($normalizedSjis['source_charset'] ?? '') === 'SJIS-win'
+        && str_contains((string) ($normalizedSjis['html'] ?? ''), '日本語の本文を正しく表示します。')
+        && app_is_valid_utf8((string) ($normalizedSjis['html'] ?? '')),
+    'Shift_JIS response bytes are converted to valid UTF-8'
+);
+
+$metaUtf8 = '<!doctype html><html><head><meta charset="Shift_JIS"></head><body><main><p>メタ指定から文字コードを判定します。</p></main></body></html>';
+$metaSjis = function_exists('mb_convert_encoding')
+    ? mb_convert_encoding($metaUtf8, 'SJIS-win', 'UTF-8')
+    : (function_exists('iconv') ? iconv('UTF-8', 'CP932//IGNORE', $metaUtf8) : false);
+$normalizedMeta = is_string($metaSjis)
+    ? reader_full_text_normalize_html_utf8($metaSjis, 'text/html')
+    : null;
+v138c_check(
+    is_array($normalizedMeta)
+        && ($normalizedMeta['source_charset'] ?? '') === 'SJIS-win'
+        && str_contains((string) ($normalizedMeta['html'] ?? ''), 'メタ指定から文字コードを判定します。'),
+    'HTML meta charset is used when HTTP charset is absent'
+);
+
 $html = <<<'HTML'
 <!doctype html>
 <html lang="ja">
