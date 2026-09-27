@@ -16,6 +16,7 @@ def check(condition: bool, message: str) -> None:
 
 index = text('public/index.php')
 stock = text('public/stock.php')
+settings = text('public/settings.php')
 core = text('public/js/dashboard-core.js')
 dashboard = text('public/js/dashboard.js')
 runner = text('tests/run-current.sh')
@@ -28,12 +29,26 @@ check(
     index.find(core_tag) >= 0 and index.find(core_tag) < index.find(dashboard_tag),
     'Dashboard shared core loads before the controller',
 )
-check(core_tag in stock, 'Stock page also loads the Dashboard shared core through the versioned asset helper')
-check(dashboard_tag in stock, 'Stock page keeps the Dashboard controller')
-check(
-    stock.find(core_tag) >= 0 and stock.find(core_tag) < stock.find(dashboard_tag),
-    'Stock page loads the Dashboard shared core before the controller',
-)
+for page_name, page in [
+    ('Dashboard', index),
+    ('Stock', stock),
+    ('Settings', settings),
+]:
+    check(core_tag in page, f'{page_name} page loads the Dashboard shared core through the versioned asset helper')
+    check(dashboard_tag in page, f'{page_name} page keeps the Dashboard controller')
+    check(
+        page.find(core_tag) >= 0 and page.find(core_tag) < page.find(dashboard_tag),
+        f'{page_name} page loads the Dashboard shared core before the controller',
+    )
+
+for php_path in sorted((ROOT / 'public').glob('*.php')):
+    page = php_path.read_text(encoding='utf-8')
+    if dashboard_tag not in page:
+        continue
+    check(
+        core_tag in page and page.find(core_tag) < page.find(dashboard_tag),
+        f'every public PHP entrypoint that loads dashboard.js loads dashboard-core.js first: {php_path.name}',
+    )
 
 check('window.IGuguruDashboardCore = {' in core, 'Dashboard core exposes one explicit namespace')
 check('window.IGuguruDashboardCore' in dashboard, 'Dashboard controller consumes the shared core namespace')
