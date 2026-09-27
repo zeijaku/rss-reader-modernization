@@ -14,24 +14,33 @@ on:
       - '.github/release-request.txt'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-main
   cancel-in-progress: false
 
 jobs:
-  release:
-    name: Final release
+  verify:
+    name: Verify and attest release
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    outputs:
+      release_version: ${{ steps.release_context.outputs.release_version }}
+      tag: ${{ steps.release_context.outputs.tag }}
+      runtime_stem: ${{ steps.release_context.outputs.runtime_stem }}
+      complete_stem: ${{ steps.release_context.outputs.complete_stem }}
 
     steps:
       - name: Checkout release-ready main
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
@@ -51,6 +60,7 @@ jobs:
           coverage: none
 
       - name: Resolve release context
+        id: release_context
         shell: bash
         env:
           INPUT_VERSION: ${{ inputs.version }}
@@ -79,6 +89,10 @@ jobs:
           echo "TAG=v${RELEASE_VERSION}" >> "${GITHUB_ENV}"
           echo "RUNTIME_STEM=rss-reader-modernization-${RELEASE_VERSION}" >> "${GITHUB_ENV}"
           echo "COMPLETE_STEM=rss-reader-modernization-${RELEASE_VERSION}-complete" >> "${GITHUB_ENV}"
+          echo "release_version=${RELEASE_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "tag=v${RELEASE_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "runtime_stem=rss-reader-modernization-${RELEASE_VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "complete_stem=rss-reader-modernization-${RELEASE_VERSION}-complete" >> "${GITHUB_OUTPUT}"
 
       - name: Validate release-ready source
         shell: bash
@@ -211,6 +225,15 @@ jobs:
           node --check "${ROOT_DIR}/public/js/calendar.js"
           echo 'PASS: Complete Source package clean-room checks'
 
+      - name: Attest Runtime package provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: dist/${{ env.RUNTIME_STEM }}.zip
+
+      - name: Attest Complete Source package provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: dist/${{ env.COMPLETE_STEM }}.zip
       - name: Upload final release assets
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -222,6 +245,44 @@ jobs:
             dist/${{ env.COMPLETE_STEM }}.zip.sha256
           if-no-files-found: error
           retention-days: 30
+
+  publish:
+    name: Publish immutable release
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      RELEASE_VERSION: ${{ needs.verify.outputs.release_version }}
+      TAG: ${{ needs.verify.outputs.tag }}
+      RUNTIME_STEM: ${{ needs.verify.outputs.runtime_stem }}
+      COMPLETE_STEM: ${{ needs.verify.outputs.complete_stem }}
+
+    steps:
+      - name: Checkout verified release commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Download verified release assets
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: rss-reader-modernization-final-${{ github.run_id }}
+          path: dist
+
+      - name: Verify transferred release assets and provenance
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          (cd dist && sha256sum -c "${RUNTIME_STEM}.zip.sha256")
+          (cd dist && sha256sum -c "${COMPLETE_STEM}.zip.sha256")
+          gh attestation verify "dist/${RUNTIME_STEM}.zip" --repo "${GITHUB_REPOSITORY}"
+          gh attestation verify "dist/${COMPLETE_STEM}.zip" --repo "${GITHUB_REPOSITORY}"
 
       - name: Publish immutable tag and GitHub Release
         shell: bash
