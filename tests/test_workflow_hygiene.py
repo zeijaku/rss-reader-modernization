@@ -25,11 +25,11 @@ check(workflow_names == expected_names, 'active workflows are exactly ci.yml and
 
 version_named = sorted(
     path.name for path in workflow_paths
-    if re.match(r'^v\\d', path.name, flags=re.IGNORECASE)
+    if re.match(r'^v\d', path.name, flags=re.IGNORECASE)
 )
 check(not version_named, 'no version-specific workflow file remains active')
 
-release_branch_literal = re.compile(r'release/v\\d+\\.\\d+\\.\\d+(?:-[A-Za-z0-9._-]+)?')
+release_branch_literal = re.compile(r'release/v\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?')
 for path in workflow_paths:
     body = path.read_text(encoding='utf-8')
     check(
