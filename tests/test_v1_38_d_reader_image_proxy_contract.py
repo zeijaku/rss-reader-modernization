@@ -4,7 +4,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 proxy = (ROOT / "app/reader/reader_image_proxy.php").read_text(encoding="utf-8")
-reader = (ROOT / "app/reader/reader_full_text.php").read_text(encoding="utf-8")
+reader = "\n".join((ROOT / path).read_text(encoding="utf-8") for path in [
+    "app/reader/reader_full_text.php",
+    "app/reader/full_text/request.php",
+    "app/reader/full_text/charset.php",
+    "app/reader/full_text/extraction.php",
+    "app/reader/full_text/cache.php",
+    "app/reader/full_text/service.php",
+])
 content = "\n".join((ROOT / path).read_text(encoding="utf-8") for path in [
     "app/api/content.php",
     "app/api/content/content_actions.php",
