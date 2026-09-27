@@ -1067,9 +1067,23 @@
             return '元記事の取得がタイムアウトしました。RSS本文を表示しています。';
         }
         if (xhr && xhr.responseJSON && xhr.responseJSON.error) {
-            var code = String(xhr.responseJSON.error.code || '');
-            var message = String(xhr.responseJSON.error.message || '');
+            var error = xhr.responseJSON.error;
+            var code = String(error.code || '');
+            var message = String(error.message || '');
             if (/^reader_full_text_[a-z0-9_]+$/.test(code) && message !== '') {
+                var diagnostic = error.diagnostic && typeof error.diagnostic === 'object'
+                    ? error.diagnostic
+                    : null;
+                if (diagnostic) {
+                    var category = String(diagnostic.category || '');
+                    var upstreamStatus = Number(diagnostic.http_status || 0);
+                    if (/^[a-z0-9_]{1,64}$/.test(category)) {
+                        message += ' 診断: ' + category;
+                        if (Number.isInteger(upstreamStatus) && upstreamStatus >= 100 && upstreamStatus <= 599) {
+                            message += ' / HTTP ' + String(upstreamStatus);
+                        }
+                    }
+                }
                 return message;
             }
         }
