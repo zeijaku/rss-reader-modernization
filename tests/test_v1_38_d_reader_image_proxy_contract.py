@@ -9,6 +9,7 @@ content = (ROOT / "app/api/content.php").read_text(encoding="utf-8")
 endpoint = (ROOT / "public/reader_image.php").read_text(encoding="utf-8")
 http_fetch = (ROOT / "app/http_fetch.php").read_text(encoding="utf-8")
 config = (ROOT / "app/common/common_conf.php").read_text(encoding="utf-8")
+public_htaccess = (ROOT / "public/.htaccess").read_text(encoding="utf-8")
 
 checks = [
     (
@@ -29,6 +30,11 @@ checks = [
         and "$_GET['url']" not in endpoint
         and "$_POST" not in endpoint,
         "public image endpoint never accepts a client-supplied source URL",
+    ),
+    (
+        "reader_image\\.php$" in public_htaccess
+        and "Reader image proxy is an explicit authenticated, token-only binary endpoint" in public_htaccess,
+        "Apache public endpoint matrix explicitly permits reader_image.php",
     ),
     (
         "app_session_start();" in endpoint
@@ -83,6 +89,12 @@ checks = [
         and "body_sha256" in proxy
         and "hash_equals($sha256, hash('sha256', $body))" in proxy,
         "private registry/cache rejects symlinks and validates cached image checksum",
+    ),
+    (
+        proxy.count("catch (Throwable)") >= 4
+        and "json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)" in proxy
+        and "json_encode($meta, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)" in proxy,
+        "image registry/cache metadata encoding failures are contained without exposing remote fallback",
     ),
     (
         "function reader_full_text_extract(string $html, string $effectiveUrl, ?callable $imageTokenMapper = null)" in reader
