@@ -431,7 +431,7 @@ function reader_full_text_select_candidate(object $document): ?array
     return $body instanceof DOMElement ? ['node' => $body, 'strategy' => 'body'] : null;
 }
 
-function reader_full_text_sanitize_node(object $node, object $output, string $baseUrl): ?object
+function reader_full_text_sanitize_node(object $node, object $output, string $baseUrl, ?callable $imageTokenMapper = null): ?object
 {
     if (!($output instanceof DOMDocument)) {
         return null;
@@ -467,7 +467,7 @@ function reader_full_text_sanitize_node(object $node, object $output, string $ba
     if (!in_array($tag, $allowed, true)) {
         $fragment = $output->createDocumentFragment();
         foreach ($node->childNodes as $child) {
-            $safeChild = reader_full_text_sanitize_node($child, $output, $baseUrl);
+            $safeChild = reader_full_text_sanitize_node($child, $output, $baseUrl, $imageTokenMapper);
             if ($safeChild !== null) {
                 $fragment->appendChild($safeChild);
             }
@@ -481,7 +481,21 @@ function reader_full_text_sanitize_node(object $node, object $output, string $ba
             return null;
         }
         $safe = $output->createElement('img');
-        $safe->setAttribute('src', $src);
+        if ($imageTokenMapper !== null) {
+            try {
+                $imageToken = $imageTokenMapper($src);
+            } catch (Throwable) {
+                $imageToken = null;
+            }
+            if (!is_string($imageToken) || preg_match('/\A[a-f0-9]{64}\z/D', $imageToken) !== 1) {
+                // Privacy fail-safe: never fall back to the remote image URL
+                // when proxy mapping was requested but could not be created.
+                return null;
+            }
+            $safe->setAttribute('src', 'reader_image.php?id=' . rawurlencode($imageToken));
+        } else {
+            $safe->setAttribute('src', $src);
+        }
         $alt = reader_full_text_normalized_text($node->getAttribute('alt'));
         if ($alt !== '') {
             if (reader_full_text_text_length($alt) > 512) {
@@ -518,7 +532,7 @@ function reader_full_text_sanitize_node(object $node, object $output, string $ba
     }
 
     foreach ($node->childNodes as $child) {
-        $safeChild = reader_full_text_sanitize_node($child, $output, $baseUrl);
+        $safeChild = reader_full_text_sanitize_node($child, $output, $baseUrl, $imageTokenMapper);
         if ($safeChild !== null) {
             $safe->appendChild($safeChild);
         }
@@ -546,7 +560,7 @@ function reader_full_text_inner_html(object $document, object $node): string
  *
  * @return array{html:string,text_length:int,strategy:string}|null
  */
-function reader_full_text_extract(string $html, string $effectiveUrl): ?array
+function reader_full_text_extract(string $html, string $effectiveUrl, ?callable $imageTokenMapper = null): ?array
 {
     $baseUrl = app_validate_feed_url($effectiveUrl);
     if ($baseUrl === null || $html === '' || strlen($html) > APP_HTTP_MAX_BYTES) {
@@ -569,7 +583,7 @@ function reader_full_text_extract(string $html, string $effectiveUrl): ?array
     $output->appendChild($wrapper);
 
     foreach ($selected['node']->childNodes as $child) {
-        $safeChild = reader_full_text_sanitize_node($child, $output, $baseUrl);
+        $safeChild = reader_full_text_sanitize_node($child, $output, $baseUrl, $imageTokenMapper);
         if ($safeChild !== null) {
             $wrapper->appendChild($safeChild);
         }
