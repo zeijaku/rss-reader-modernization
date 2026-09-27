@@ -13,7 +13,14 @@ content = "\n".join((ROOT / path).read_text(encoding="utf-8") for path in [
     "app/api/content/feed_actions.php",
     "app/api/content/reader_actions.php",
 ])
-service = (ROOT / "app/reader/reader_full_text.php").read_text(encoding="utf-8")
+service = "\n".join((ROOT / path).read_text(encoding="utf-8") for path in [
+    "app/reader/reader_full_text.php",
+    "app/reader/full_text/request.php",
+    "app/reader/full_text/charset.php",
+    "app/reader/full_text/extraction.php",
+    "app/reader/full_text/cache.php",
+    "app/reader/full_text/service.php",
+])
 modal = (ROOT / "app/view/dashboard_modals.php").read_text(encoding="utf-8")
 js = (ROOT / "public/js/dashboard.js").read_text(encoding="utf-8")
 http_fetch = (ROOT / "app/http_fetch.php").read_text(encoding="utf-8")
