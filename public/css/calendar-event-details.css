@@ -34,6 +34,22 @@
     padding: .8rem 1rem;
 }
 
+/* Keep Bootstrap's scrollable modal contract when the event form wraps
+ * header/body/footer. Without this flex boundary, expanding Details can grow
+ * the form beyond the clipped modal-content and hide the footer buttons. */
+.calendar-event-modal .modal-content > form {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.calendar-event-modal .modal-body {
+    min-height: 0;
+    overflow-y: auto;
+}
+
 .calendar-event-modal .modal-body > .mb-3,
 .calendar-event-modal .calendar-event-detail-fields .mb-3,
 .calendar-event-modal .calendar-event-recurrence-fields .mb-3 {

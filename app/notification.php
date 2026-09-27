@@ -99,18 +99,18 @@ function notification_list(int $ownerId, int $limit = 50): array
 function notification_mark_read(int $ownerId,int $notificationId): bool
 {
     if($ownerId<=0||$notificationId<=0) throw new InvalidArgumentException('Notification identifier is invalid.');
-    $now=app_now(); $stmt=conn_db()->prepare('UPDATE '.db_table_identifier('notification').' SET notification_read_at=COALESCE(notification_read_at,:now),notification_updated_at=:now WHERE notification_id=:id AND notification_owner=:owner AND notification_hidden_at IS NULL AND notification_due_at<=:now');
-    $stmt->execute([':now'=>$now,':id'=>$notificationId,':owner'=>$ownerId]); return $stmt->rowCount()>0;
+    $now=app_now(); $stmt=conn_db()->prepare('UPDATE '.db_table_identifier('notification').' SET notification_read_at=COALESCE(notification_read_at,:read_at),notification_updated_at=:updated_at WHERE notification_id=:id AND notification_owner=:owner AND notification_hidden_at IS NULL AND notification_due_at<=:due_cutoff');
+    $stmt->execute([':read_at'=>$now,':updated_at'=>$now,':due_cutoff'=>$now,':id'=>$notificationId,':owner'=>$ownerId]); return $stmt->rowCount()>0;
 }
 function notification_mark_all_read(int $ownerId): int
 {
     if($ownerId<=0) throw new InvalidArgumentException('Notification owner is invalid.');
-    $now=app_now(); $stmt=conn_db()->prepare('UPDATE '.db_table_identifier('notification').' SET notification_read_at=:now,notification_updated_at=:now WHERE notification_owner=:owner AND notification_hidden_at IS NULL AND notification_due_at<=:now AND notification_read_at IS NULL');
-    $stmt->execute([':now'=>$now,':owner'=>$ownerId]); return $stmt->rowCount();
+    $now=app_now(); $stmt=conn_db()->prepare('UPDATE '.db_table_identifier('notification').' SET notification_read_at=:read_at,notification_updated_at=:updated_at WHERE notification_owner=:owner AND notification_hidden_at IS NULL AND notification_due_at<=:due_cutoff AND notification_read_at IS NULL');
+    $stmt->execute([':read_at'=>$now,':updated_at'=>$now,':due_cutoff'=>$now,':owner'=>$ownerId]); return $stmt->rowCount();
 }
 function notification_hide(int $ownerId,int $notificationId): bool
 {
     if($ownerId<=0||$notificationId<=0) throw new InvalidArgumentException('Notification identifier is invalid.');
-    $now=app_now(); $stmt=conn_db()->prepare('UPDATE '.db_table_identifier('notification').' SET notification_hidden_at=:now,notification_read_at=COALESCE(notification_read_at,:now),notification_updated_at=:now WHERE notification_id=:id AND notification_owner=:owner AND notification_hidden_at IS NULL');
-    $stmt->execute([':now'=>$now,':id'=>$notificationId,':owner'=>$ownerId]); return $stmt->rowCount()>0;
+    $now=app_now(); $stmt=conn_db()->prepare('UPDATE '.db_table_identifier('notification').' SET notification_hidden_at=:hidden_at,notification_read_at=COALESCE(notification_read_at,:read_at),notification_updated_at=:updated_at WHERE notification_id=:id AND notification_owner=:owner AND notification_hidden_at IS NULL');
+    $stmt->execute([':hidden_at'=>$now,':read_at'=>$now,':updated_at'=>$now,':id'=>$notificationId,':owner'=>$ownerId]); return $stmt->rowCount()>0;
 }

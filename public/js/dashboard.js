@@ -2,139 +2,51 @@
     'use strict';
 
     var eventNamespace = '.iguguruDashboard';
-    var noticeTimer = null;
     var articleActionsTrigger = null;
+    var dashboardCore = window.IGuguruDashboardCore;
 
-    /* Secure Baseline API helper */
+    if (!dashboardCore) {
+        throw new Error('Dashboard core is not available.');
+    }
+
     function appCsrfToken() {
-        return $('meta[name="csrf-token"]').attr('content') || '';
+        return dashboardCore.appCsrfToken();
     }
 
     function initCsrfSessionSync() {
-        var reloadingForAuth = false;
-
-        $(document)
-            .off('ajaxComplete' + eventNamespace)
-            .on('ajaxComplete' + eventNamespace, function (event, xhr, settings) {
-                var url = settings && typeof settings.url === 'string' ? settings.url : '';
-                if (url.indexOf('api_v1.php') === -1 || !xhr || typeof xhr.getResponseHeader !== 'function') {
-                    return;
-                }
-
-                var token = xhr.getResponseHeader('X-CSRF-Token') || '';
-                if (/^[a-f0-9]{64}$/.test(token)) {
-                    $('meta[name="csrf-token"]').attr('content', token);
-                }
-            })
-            .off('ajaxError' + eventNamespace)
-            .on('ajaxError' + eventNamespace, function (event, xhr, settings) {
-                var url = settings && typeof settings.url === 'string' ? settings.url : '';
-                var code = xhr && xhr.responseJSON && xhr.responseJSON.error
-                    ? String(xhr.responseJSON.error.code || '')
-                    : '';
-
-                if (!reloadingForAuth && url.indexOf('api_v1.php') !== -1 && xhr && xhr.status === 401 && code === 'unauthenticated') {
-                    reloadingForAuth = true;
-                    window.location.reload();
-                }
-            });
+        dashboardCore.initCsrfSessionSync(eventNamespace);
     }
 
     function apiErrorMessage(xhr, textStatus) {
-        if (textStatus === 'timeout') {
-            return '通信がタイムアウトしました';
-        }
-        if (xhr && xhr.responseJSON && xhr.responseJSON.error && xhr.responseJSON.error.message) {
-            return xhr.responseJSON.error.message;
-        }
-        return '通信に失敗しました';
+        return dashboardCore.apiErrorMessage(xhr, textStatus);
     }
 
     function showNotice(message, type, autoCloseMs) {
-        var noticeType = type === 'success' ? 'success' : (type === 'info' ? 'info' : 'danger');
-        var $notice = $('#app-notice');
-        if ($notice.length === 0) {
-            return;
-        }
-
-        if (noticeTimer !== null) {
-            window.clearTimeout(noticeTimer);
-            noticeTimer = null;
-        }
-
-        $notice
-            .removeClass('alert-success alert-info alert-danger')
-            .addClass('alert-' + noticeType)
-            .attr('role', noticeType === 'danger' ? 'alert' : 'status')
-            .prop('hidden', false)
-            .text(String(message || '処理を完了出来ませんでした'));
-
-        var closeMs = Number(autoCloseMs);
-        if (!(closeMs > 0)) {
-            closeMs = noticeType === 'success' ? 2500 : (noticeType === 'info' ? 3000 : 6000);
-        }
-        noticeTimer = window.setTimeout(function () {
-            // Shared notice area: only clear the message this timer created.
-            if ($('#app-notice').text() === String(message || '処理を完了出来ませんでした')) {
-                clearNotice();
-            }
-        }, closeMs);
+        dashboardCore.showNotice(message, type, autoCloseMs);
     }
 
     function clearNotice() {
-        if (noticeTimer !== null) {
-            window.clearTimeout(noticeTimer);
-            noticeTimer = null;
-        }
-        $('#app-notice')
-            .prop('hidden', true)
-            .empty();
+        dashboardCore.clearNotice();
     }
 
     function apiResponseOk(data) {
-        if (data && data.ok === true) {
-            return true;
-        }
-        if (data && data.error && data.error.message) {
-            showNotice(data.error.message, 'danger');
-        } else {
-            showNotice('処理を完了出来ませんでした', 'danger');
-        }
-        return false;
+        return dashboardCore.apiResponseOk(data);
     }
 
     function apiRequest(action, data, timeout) {
-        var payload = $.extend({}, data || {}, {
-            'action': action,
-            'csrf_token': appCsrfToken()
-        });
-
-        return $.ajax({
-            url: './api_v1.php',
-            method: 'POST',
-            cache: false,
-            dataType: 'json',
-            timeout: timeout || 4000,
-            data: payload
-        });
+        return dashboardCore.apiRequest(action, data, timeout);
     }
 
-    /* 同じ操作を連続送信しないため、通信中だけボタンを止める */
     function requestStart($button) {
-        if ($button.data('request-pending') === true) {
-            return false;
-        }
-        clearNotice();
-        $button.data('request-pending', true).prop('disabled', true);
-        return true;
+        return dashboardCore.requestStart($button);
     }
 
     function requestEnd($button) {
-        $button.data('request-pending', false).prop('disabled', false);
+        dashboardCore.requestEnd($button);
     }
 
     function requestFail(xhr, textStatus) {
-        showNotice(apiErrorMessage(xhr, textStatus), 'danger');
+        dashboardCore.requestFail(xhr, textStatus);
     }
 
     var feedKeywordState = {
