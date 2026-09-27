@@ -25,11 +25,11 @@ check(workflow_names == expected_names, 'active workflows are exactly ci.yml and
 
 version_named = sorted(
     path.name for path in workflow_paths
-    if re.match(r'^v\d', path.name, flags=re.IGNORECASE)
+    if re.match(r'^v\\d', path.name, flags=re.IGNORECASE)
 )
 check(not version_named, 'no version-specific workflow file remains active')
 
-release_branch_literal = re.compile(r'release/v\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?')
+release_branch_literal = re.compile(r'release/v\\d+\\.\\d+\\.\\d+(?:-[A-Za-z0-9._-]+)?')
 for path in workflow_paths:
     body = path.read_text(encoding='utf-8')
     check(
@@ -46,7 +46,7 @@ check('bash tests/run-ci.sh' in ci, 'CI uses the locally reproducible gate')
 check('tests/test_workflow_hygiene.py' in local_ci, 'local CI gate runs workflow hygiene guard')
 
 check('workflow_dispatch:' in release, 'Release workflow keeps manual workflow_dispatch support')
-check('\n  push:' in release, 'Release workflow supports browser-only release requests through a restricted push trigger')
+check('\\n  push:' in release, 'Release workflow supports browser-only release requests through a restricted push trigger')
 check('pull_request:' not in release, 'Release workflow is never triggered directly by pull_request')
 check("- '.github/release-request.txt'" in release, 'Release push trigger is restricted to the browser release request file')
 check('branches:' in release and '- main' in release, 'Release push trigger is restricted to main')
@@ -57,15 +57,23 @@ dependabot_path = ROOT / '.github/dependabot.yml'
 check(dependabot_path.is_file(), 'GitHub Actions Dependabot configuration exists')
 if dependabot_path.is_file():
     dependabot = dependabot_path.read_text(encoding='utf-8')
-    check(
-        bool(re.search(r'package-ecosystem:\\s*["\\']?github-actions["\\']?', dependabot)),
-        'Dependabot tracks the github-actions ecosystem',
+    ecosystem_declared = any(
+        candidate in dependabot
+        for candidate in (
+            'package-ecosystem: "github-actions"',
+            "package-ecosystem: 'github-actions'",
+            'package-ecosystem: github-actions',
+        )
     )
+    check(ecosystem_declared, 'Dependabot tracks the github-actions ecosystem')
 
-uses_pattern = re.compile(r'^\\s*uses:\\s*([^\\s#]+)', flags=re.MULTILINE)
 for path in workflow_paths:
     body = path.read_text(encoding='utf-8')
-    for spec in uses_pattern.findall(body):
+    for line in body.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith('uses:'):
+            continue
+        spec = stripped[len('uses:'):].strip().split(' #', 1)[0].strip()
         if spec.startswith('./'):
             continue
         _action, separator, ref = spec.rpartition('@')
