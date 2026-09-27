@@ -7,8 +7,9 @@ ROOT = Path(__file__).resolve().parents[1]
 api_endpoint = (ROOT/'public/api_v1.php').read_text()
 api = (ROOT/'app/api.php').read_text(encoding='utf-8') + ''.join(path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api').rglob('*.php')))
 index = dashboard_source(ROOT)
+dashboard_core = (ROOT / 'public' / 'js' / 'dashboard-core.js').read_text(encoding='utf-8')
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
-frontend = index + '\n' + dashboard
+frontend = index + '\n' + dashboard_core + '\n' + dashboard
 db = (ROOT/'app/common/common_db.php').read_text()
 login = (ROOT/'app/common/common_login.php').read_text()
 version = (ROOT/'app/version.php').read_text()
@@ -38,7 +39,7 @@ feed_client = dashboard[dashboard.find('function fetch_content'):dashboard.find(
 check('$window_load' not in index and 'content_value' not in feed_client and "'content_id': content_id" in feed_client, 'DB feed URL is not embedded into dashboard Feed request')
 check("'content_owner':" not in index and "'save_owner':" not in index and 'name="user_id"' not in index, 'browser no longer submits owner/user target fields')
 check('setting_token' not in index, 'fixed Legacy setting token removed')
-check("'csrf_token': appCsrfToken()" in dashboard and "function apiRequest" in dashboard, 'all browser API calls pass CSRF through shared helper')
+check("'csrf_token': appCsrfToken()" in dashboard_core and "function apiRequest" in dashboard_core and "return dashboardCore.apiRequest" in dashboard, 'all browser API calls pass CSRF through shared helper')
 check(login.count('name="csrf_token"') >= 2, 'login and registration forms carry CSRF token')
 check('app_csrf_is_valid($submittedCsrf)' in index and '$authCsrfInvalid' in index, 'login/registration POST validates CSRF before auth/register')
 check('app_csrf_is_valid' in (ROOT/'public/logout.php').read_text(), 'logout remains CSRF protected')

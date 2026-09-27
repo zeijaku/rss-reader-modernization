@@ -5,6 +5,7 @@ const vm = require('vm');
 const path = require('path');
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
+const coreSource = fs.readFileSync(path.join(root, 'public/js/dashboard-core.js'), 'utf8');
 let failures = 0;
 let checks = 0;
 function check(ok, message) {
@@ -142,6 +143,7 @@ $.fn = {};
 $.ajax = () => ({done() { return this; }, fail() { return this; }, always() { return this; }});
 
 const context = {jQuery: $, window: windowObject, document: documentObject, console, Number, String, Object, Array, Math, RegExp, Date, JSON};
+vm.runInNewContext(coreSource, context, {filename: 'dashboard-core.js'});
 vm.runInNewContext(source, context, {filename: 'dashboard.js'});
 const start = handlers.get('touchstart.iguguruDashboard|');
 const move = handlers.get('touchmove.iguguruDashboard|');

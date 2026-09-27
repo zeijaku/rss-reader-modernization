@@ -4,8 +4,9 @@ import re
 from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 index = dashboard_source(ROOT)
+dashboard_core = (ROOT / 'public' / 'js' / 'dashboard-core.js').read_text(encoding='utf-8')
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
-frontend = index + '\n' + dashboard
+frontend = index + '\n' + dashboard_core + '\n' + dashboard
 api_endpoint = (ROOT / 'public/api_v1.php').read_text(encoding='utf-8')
 logout = (ROOT / 'public/logout.php').read_text(encoding='utf-8')
 http_fetch = (ROOT / 'app/http_fetch.php').read_text(encoding='utf-8')
@@ -27,7 +28,7 @@ check(csrf_pos >= 0 and dispatch_pos > csrf_pos, 'API validates CSRF before disp
 check("($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST'" in api_endpoint, 'API rejects non-POST methods')
 check('app_csrf_is_valid($csrfToken)' in logout and "'POST'" in logout, 'logout is POST-only and CSRF protected')
 check("$token === 'login' || $token === 'regist'" in index and 'app_csrf_is_valid($submittedCsrf)' in index, 'login and registration share explicit CSRF validation')
-check("'csrf_token': appCsrfToken()" in dashboard, 'AJAX helper injects CSRF token into every API request')
+check("'csrf_token': appCsrfToken()" in dashboard_core and "function apiRequest" in dashboard_core and "return dashboardCore.apiRequest" in dashboard, 'AJAX helper injects CSRF token into every API request')
 
 for action in ['content.create', 'content.update', 'content.delete', 'stock.create', 'stock.delete', 'settings.update', 'tabs.update', 'feed.fetch', 'feed.new.clear']:
     check(action in frontend or action in api_source, f'expected API action remains represented: {action}')

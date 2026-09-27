@@ -12,6 +12,7 @@ session = (ROOT / "app/session.php").read_text(encoding="utf-8")
 persistent = (ROOT / "app/persistent_login.php").read_text(encoding="utf-8")
 api = (ROOT / "public/api_v1.php").read_text(encoding="utf-8")
 api_core = (ROOT / "app/api.php").read_text(encoding="utf-8") + "".join(path.read_text(encoding="utf-8") for path in sorted((ROOT / "app/api").glob("*.php")))
+dashboard_core = (ROOT / "public/js/dashboard-core.js").read_text(encoding="utf-8")
 dashboard = (ROOT / "public/js/dashboard.js").read_text(encoding="utf-8")
 css = (ROOT / "public/css/dashboard.css").read_text(encoding="utf-8")
 version = (ROOT / "app/version.php").read_text(encoding="utf-8")
@@ -26,8 +27,8 @@ check("$previousCsrfToken = app_csrf_current_token();" in persistent, "Remember 
 check("app_csrf_allow_previous_token($previousCsrfToken);" in persistent, "Remember Me grants only the captured stale token a short overlap")
 check("$previousCsrfToken = app_csrf_current_token();" in api_core and "app_csrf_allow_previous_token($previousCsrfToken);" in api_core, "Account-setting session rotation also gives other open tabs a short CSRF overlap")
 check("header('X-CSRF-Token: ' . $csrfToken);" in api, "Authenticated API responses return the fresh CSRF token in a same-origin response header")
-check("getResponseHeader('X-CSRF-Token')" in dashboard, "Dashboard synchronizes its meta CSRF token from API responses")
-check("xhr.status === 401" in dashboard and "code === 'unauthenticated'" in dashboard and "window.location.reload()" in dashboard, "True session expiry reloads to the normal login flow instead of leaving a raw API error")
+check("getResponseHeader('X-CSRF-Token')" in dashboard_core and "initCsrfSessionSync" in dashboard_core and "dashboardCore.initCsrfSessionSync" in dashboard, "Dashboard synchronizes its meta CSRF token from API responses")
+check("xhr.status === 401" in dashboard_core and "code === 'unauthenticated'" in dashboard_core and "window.location.reload()" in dashboard_core and "dashboardCore.initCsrfSessionSync" in dashboard, "True session expiry reloads to the normal login flow instead of leaving a raw API error")
 
 marker = "/* V1.18 pre-release fix: fit all seven columns inside the mobile card."
 marker_pos = css.find(marker)
