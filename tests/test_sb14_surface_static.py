@@ -4,8 +4,9 @@ import re
 from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 index = dashboard_source(ROOT)
+dashboard_core = (ROOT / 'public' / 'js' / 'dashboard-core.js').read_text(encoding='utf-8')
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
-frontend = index + '\n' + dashboard
+frontend = index + '\n' + dashboard_core + '\n' + dashboard
 api_endpoint = (ROOT / 'public/api_v1.php').read_text(encoding='utf-8')
 logout = (ROOT / 'public/logout.php').read_text(encoding='utf-8')
 http_fetch = (ROOT / 'app/http_fetch.php').read_text(encoding='utf-8')
