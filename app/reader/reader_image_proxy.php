@@ -171,14 +171,16 @@ final class ReaderImageProxyStore
         } catch (Throwable) {
             return null;
         }
+        if (!is_array($payload)) {
+            return null;
+        }
 
         $storedUserId = is_int($payload['user_id'] ?? null) ? (int) $payload['user_id'] : 0;
         $url = reader_image_proxy_source_url($payload['source_url'] ?? null);
         $registeredAt = is_int($payload['registered_at'] ?? null) ? (int) $payload['registered_at'] : 0;
         $now = ($this->clock)();
 
-        if (!is_array($payload)
-            || ($payload['schema'] ?? null) !== self::MAP_SCHEMA_VERSION
+        if (($payload['schema'] ?? null) !== self::MAP_SCHEMA_VERSION
             || $storedUserId !== $userId
             || $url === null
             || $registeredAt <= 0
@@ -232,6 +234,9 @@ final class ReaderImageProxyStore
         } catch (Throwable) {
             return null;
         }
+        if (!is_array($meta)) {
+            return null;
+        }
 
         $contentType = reader_image_proxy_content_type($meta['content_type'] ?? null);
         $fetchedAt = is_int($meta['fetched_at'] ?? null) ? (int) $meta['fetched_at'] : 0;
@@ -239,8 +244,7 @@ final class ReaderImageProxyStore
         $sha256 = is_string($meta['body_sha256'] ?? null) ? (string) $meta['body_sha256'] : '';
         $storedBytes = is_int($meta['body_bytes'] ?? null) ? (int) $meta['body_bytes'] : 0;
 
-        if (!is_array($meta)
-            || ($meta['schema'] ?? null) !== self::CACHE_SCHEMA_VERSION
+        if (($meta['schema'] ?? null) !== self::CACHE_SCHEMA_VERSION
             || ($meta['user_id'] ?? null) !== $userId
             || $storedUrl === null
             || !hash_equals($url, $storedUrl)
