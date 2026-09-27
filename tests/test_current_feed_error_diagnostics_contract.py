@@ -10,7 +10,13 @@ def read(path: str) -> str:
 
 
 errors = read("app/feed/feed_error.php")
-api = read("app/api/content.php")
+api = "\n".join(read(path) for path in [
+    "app/api/content.php",
+    "app/api/content/content_actions.php",
+    "app/api/content/stock_actions.php",
+    "app/api/content/feed_actions.php",
+    "app/api/content/reader_actions.php",
+])
 health = read("app/feed_health.php")
 health_api = read("app/api/feed_health.php")
 dashboard = read("public/js/dashboard.js")
