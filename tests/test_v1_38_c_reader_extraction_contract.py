@@ -33,8 +33,11 @@ checks = [
      and "app_resolve_redirect_url" in reader
      and "app_remove_tracking_parameters" in reader,
      "relative resources are resolved through existing URL safety helpers"),
-    ("$extracted = reader_full_text_extract($body, $effectiveUrl);" in api,
-     "Full Text API extracts only after secure fetch/cache load"),
+    ("reader_full_text_extract(" in api
+     and "$body," in api
+     and "$effectiveUrl," in api
+     and "$imageProxy->register($userId, $imageUrl)" in api,
+     "Full Text API extracts only after secure fetch/cache load and registers images server-side"),
     ("'reader_full_text_extract_failed'" in api
      and "RSS本文を表示しています" in api,
      "extraction failure falls back to RSS body"),
