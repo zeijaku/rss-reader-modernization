@@ -1074,7 +1074,7 @@
                 var diagnostic = error.diagnostic && typeof error.diagnostic === 'object'
                     ? error.diagnostic
                     : null;
-                if (diagnostic) {
+                if (diagnostic && message.indexOf('診断:') === -1) {
                     var category = String(diagnostic.category || '');
                     var upstreamStatus = Number(diagnostic.http_status || 0);
                     if (/^[a-z0-9_]{1,64}$/.test(category)) {
