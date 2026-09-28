@@ -39,22 +39,24 @@ Release Packageの構成とAttestation確認方法は [`release-package.md`](rel
 - [ ] 削除一覧がある場合だけ対象Fileを削除した
 - [ ] `var/session/`が書込み可能
 - [ ] `var/security/login-throttle/`が書込み可能
-- [ ] `var/cache/feed/`が書込み可能
-- [ ] X Timelineを利用する場合は`var/cache/x/`が書込み可能
+- [ ] `var/cache/`が書込み可能（Feed / Reader / Weather / X等のPrivate Cacheを含む）
 - [ ] Log有効時は`var/log/`または指定Pathが書込み可能
 - [ ] 無条件な`777`を設定していない
 
 ## CLI / Current Gate
 
+Production Runtime ZIPでは次を確認します。
+
 - [ ] `php -v`
 - [ ] `php tools/healthcheck.php`
-- [ ] `php tools/db_sb13.php verify`
+- [ ] `php tools/db_current.php verify`
 - [ ] Release固有のDB verify手順がある場合は実行した
-- [ ] `bash tests/run-ci.sh`
-- [ ] `node --check public/js/dashboard.js`
-- [ ] `node --check public/js/calendar.js`
 
-`healthcheck.php`だけではDatabase接続を確認しないため、DB verifyまたは実動作確認も行います。
+Repository cloneまたはComplete Source Packageで `tests/` が存在する場合だけ、追加でCurrent Gateを実行します。
+
+- [ ] `bash tests/run-ci.sh`
+
+`healthcheck.php`だけではDatabase接続を確認しません。Fresh Install / Current SchemaはRead-onlyの `db_current.php verify` で確認します。Legacy DBを古いVersionから更新する場合だけ、Update Guideに従って `db_sb13.php audit/verify` 等の対象Migration確認を行います。
 
 ## Browser
 
@@ -94,7 +96,7 @@ Release Packageの構成とAttestation確認方法は [`release-package.md`](rel
 - [ ] Mailを利用する場合は受信 / Folder / 検索 / 送信 / Reply / Sent / 添付
 - [ ] Gmail OAuth2を利用する場合は再接続を含め認証状態が正常
 - [ ] File LibraryのUpload / Preview / Download / Delete
-- [ ] Remote Filesを利用する場合は接続 / Directory / Upload / Download / Editor / Permission
+- [ ] Remote Filesを利用する場合は接続 / File操作を利用する場合は接続 / Directory / Upload / Download / Editor / Permission
 - [ ] Information / Media / Game Widgetを利用している場合は表示・操作が正常
 - [ ] X Timelineを利用する場合はToken状態と投稿取得が正常
 
