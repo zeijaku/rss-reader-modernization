@@ -15,6 +15,9 @@ assert 'remember_token_second_factor_verified_at' in migration
 assert 'DEFAULT NULL' in migration
 assert 'bool $secondFactorVerified = false' in remember
 assert 'remember_token_mark_second_factor_verified' in remember
+assert 'AND remember_token_expires_at > :expires_after' in remember
+assert "':expires_after' => $verifiedAt" in remember
+assert 'AND remember_token_expires_at > :verified_at' not in remember
 assert 'AUTH_REMEMBER_2FA_TRUST_SECONDS' in persistent
 assert '$twoFactorEnabled && !$secondFactorTrusted' in persistent
 assert 'persistent_login_issue_for_user($completedUserId, true)' in login

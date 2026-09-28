@@ -182,11 +182,12 @@ function remember_token_mark_second_factor_verified(int $userId, string $selecto
         'UPDATE ' . db_table_identifier('remember_token') . ' '
         . 'SET remember_token_second_factor_verified_at = :verified_at '
         . 'WHERE remember_token_user_id = :user_id AND remember_token_selector = :selector '
-        . 'AND remember_token_expires_at > :verified_at'
+        . 'AND remember_token_expires_at > :expires_after'
     );
     $verifiedAt = remember_token_datetime($now ?? time());
     $stmt->execute([
         ':verified_at' => $verifiedAt,
+        ':expires_after' => $verifiedAt,
         ':user_id' => $userId,
         ':selector' => $selector,
     ]);
