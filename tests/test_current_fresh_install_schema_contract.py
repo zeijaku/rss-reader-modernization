@@ -83,6 +83,14 @@ check('database/schema.sql' in quick_start and 'Fresh Installでは追加Migrati
 check('schema.sql` はFresh Install用のCurrent完成形' in UPDATE,
       'update guide distinguishes complete fresh schema from upgrade migrations')
 
+stale_migration_guidance = []
+for migration_path in sorted((ROOT / 'database/migrations').glob('*.sql')):
+    body = migration_path.read_text(encoding='utf-8')
+    if re.search(r'fresh\s*installs?.{0,120}(?:apply|run|execute).{0,120}schema\.sql', body, re.I | re.S):
+        stale_migration_guidance.append(migration_path.name)
+check(not stale_migration_guidance,
+      'upgrade migrations do not instruct fresh installs to run migration SQL after schema.sql')
+
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
 raise SystemExit(1 if failed else 0)
