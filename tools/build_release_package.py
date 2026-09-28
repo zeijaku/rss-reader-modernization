@@ -17,6 +17,7 @@ ROOT_FILES = (
     '.htaccess',
     'README.md',
     'CHANGELOG.md',
+    'CONTRIBUTING.md',
     'LICENSE',
     'THIRD_PARTY_NOTICES.md',
     'RELEASE_NOTES.md',
