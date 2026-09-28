@@ -45,10 +45,18 @@ for path in current_following:
 ci = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
 release = (ROOT / '.github/workflows/release.yml').read_text(encoding='utf-8')
 local_ci = (ROOT / 'tests/run-ci.sh').read_text(encoding='utf-8')
+current_runner = (ROOT / 'tests/run-current.sh').read_text(encoding='utf-8')
+current_features = (ROOT / 'tests/run-current-features.sh').read_text(encoding='utf-8')
 version_runner = re.compile(r'\b(?:bash|sh)\s+tests/run-v\d', flags=re.IGNORECASE)
+historical_runner = re.compile(r'\b(?:bash|sh)\s+(?:tests/)?run\.sh\b', flags=re.IGNORECASE)
 
 for name, body in [('CI', ci), ('Local CI', local_ci), ('Release', release)]:
     check(not version_runner.search(body), f'{name} does not invoke version-specific run-v*.sh gates')
+    check(not historical_runner.search(body), f'{name} does not invoke the historical comprehensive run.sh gate')
+
+for name, body in [('Current regression', current_runner), ('Current feature', current_features)]:
+    check(not version_runner.search(body), f'{name} runner does not stack historical run-v*.sh gates')
+    check(not historical_runner.search(body), f'{name} runner does not invoke historical run.sh')
 
 check('bash tests/run-ci.sh' in ci, 'CI delegates to the locally runnable CI-equivalent gate')
 check('run-current.sh' in local_ci, 'local CI gate runs the current regression suite')
