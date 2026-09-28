@@ -55,6 +55,19 @@ check('run-current.sh' in local_ci, 'local CI gate runs the current regression s
 check('run-current-features.sh' in local_ci, 'local CI gate runs durable current feature contracts')
 check('bash tests/run-current.sh' in release, 'Release runs the current regression suite')
 check('bash tests/run-current-features.sh' in release, 'Release runs durable current feature contracts')
+check('test_current_fresh_install_schema_contract.py' in current_features,
+      'Fresh Install schema contract remains in the Current feature gate')
+check('test_current_fresh_install_schema_mariadb.sh' in current_features,
+      'Fresh Install MariaDB smoke test remains in the Current feature gate')
+
+release_only_historical = [
+    'test_v1_33_i_final_release.py',
+    'test_v121e_final.py',
+    'test_v122e_final.py',
+]
+for test_name in release_only_historical:
+    check(test_name not in current_runner and test_name not in current_features,
+          f'historical release/finalization test stays outside Current gates: {test_name}')
 
 # Historical release/compatibility tests remain in the source tree because
 # they document immutable release contracts and support targeted investigation.
@@ -64,6 +77,7 @@ for rel in [
     'tests/test_v121c_mobile_touch.py',
     'tests/test_v121e_final.py',
     'tests/test_v122e_final.py',
+    'tests/test_v1_33_i_final_release.py',
 ]:
     check((ROOT / rel).is_file(), f'historical test remains preserved: {rel}')
 
