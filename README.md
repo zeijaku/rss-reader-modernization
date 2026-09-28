@@ -9,7 +9,7 @@
 ## Stable Release
 
 **Stable release:** `RSS Reader Modernization 1.39.1`  
-**Release tag:** `v1.39.1`
+Release tag: `v1.39.1`
 
 Version 1.39.1は、Remember Meから復元した未信頼BrowserでTOTP 2FAを完了した際、Native MySQL PDO Prepare環境で信頼日時更新に失敗する問題を修正したCorrection Releaseです。
 
