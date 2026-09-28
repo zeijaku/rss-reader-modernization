@@ -2,472 +2,249 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.39.1`
-Release tag: `v1.39.1`
+10年以上前に作成したPHP製RSS Readerを、既存機能・既存データをできるだけ維持しながら、PHP 8系、現行Browser、安全な運用へ段階的にModernizationしている個人Projectです。
 
-Version 1.39.1は、Remember Meで復元した未信頼BrowserがTOTP 2FAを完了した際、Native MySQL PDO Prepareで同名Placeholderを再利用していたため24時間の信頼日時更新に失敗する問題を修正するCorrection Releaseです。既存の30日Remember Token、通常Sessionの2時間Idle、2FA信頼24時間という設定値は変更せず、未信頼Remember Token→2FA成功→信頼日時更新→次回自動復元までを回帰Testへ追加しました。DB Migration、新規必須Config、UI/API変更はありません。
+全面的な作り直しではなく、RSS閲覧を中心とした既存資産を残しつつ、Security、Dashboard、Productivity、Mail、File管理、Release運用を小さなRelease単位で改善しています。
 
-Version 1.39.0は、Application機能を増やすのではなく、GitHub／Dashboard／PHP内部構造／Release Supply Chainを整理したMaintenance / Architecture / Security Hardening Releaseです。GitHub Actionsの外部ActionをCommit SHA固定しDependabot監視を追加、Dashboardの共通通信処理を`dashboard-core.js`へ分離、Content APIとReader Full TextをFacade互換のまま責務別Moduleへ分割し、Release Workflowは検証Jobと公開Jobを分離して最小権限化、Runtime／Complete ZIPへGitHub Artifact Attestationを生成・公開前再検証する構成へ強化しました。Notification Center／Calendar Modal／Stock・SettingsのDashboard Core読込漏れも同時に修正しています。DB Migration、新規必須Config、Runtime外部Dependencyの追加はありません。
+## Stable Release
 
-Version 1.38.0は、RSS本文を読みやすく表示するReader Modeを追加し、必要な記事だけをレンタルサーバー側で安全に全文取得できるようにしたReleaseです。本文抽出・Sanitize・文字コード正規化、RSS取得／Reader取得のUser-Agent分離、Full Text Cache、RSS本文への安全なFallbackに加え、本文内画像は認証済み同一OriginのImage Proxy経由で取得し、Readerを表示しているだけでBrowserが元画像サイトへ直接通信しない構成へ整理しました。記事リンクは従来どおり明示的にClickした場合のみ元記事へ直接移動します。DB Migration、新規必須Config、外部Dependencyの追加はありません。
+**Stable release:** `RSS Reader Modernization 1.39.1`  
+**Release tag:** `v1.39.1`
 
-Version 1.37.0は、既存Game Widgetへ2048とReversiを追加するGame Enhancement Releaseです。2048は4×4盤面、Arrow Key／WASD、Smartphone Swipe、Score／Best Score、New Game／Restart、軽量な移動Animationに対応します。Reversiは8×8盤面でPlayer（黒）対Local CPU（白）、合法手判定、8方向Flip、Pass／Game Over、石数／Turn表示、PC Click／Smartphone Tap、軽量な位置／Mobility評価CPUに対応し、既存Dashboardへ合わせたFlatなTheme追従表示を採用します。DB Migration、必須Config、外部Dependencyの追加はありません。\n\nVersion 1.36.0は、Dashboard通知センターとCalendarリマインダーを追加し、通常予定と繰り返しOccurrenceの通知をDashboard内で確認できるようにします。予定の開始日時変更時は既存の予定時間を維持して終了日時を追従し、Calendar ModalをPCでは横幅活用・Smartphoneでは1列表示へ整理、Navbarをsticky化します。既存環境では加算型Migration `030_v1_36_notification_center.sql`、`031_v1_36_calendar_reminder.sql`を番号順に適用します。新規Installの`database/schema.sql`には両変更を統合済みです。
+Version 1.39.1は、Remember Meから復元した未信頼BrowserでTOTP 2FAを完了した際、Native MySQL PDO Prepare環境で信頼日時更新に失敗する問題を修正したCorrection Releaseです。
 
-Version 1.35.4は、MailとRSSの失敗を安全で具体的な分類へ整理し、利用者が再接続・再試行・設定確認・管理者確認のどれを行うべきか判断しやすくします。Mailでは暗号鍵、OAuth state、Google通信、IMAP／SMTP、添付、Sent保存などを区別し、RSSではURL／Security拒否、接続失敗、一時障害、HTTP拒否、Feed形式不正、RSS Reader内部障害の6分類をCardとFeed Healthで共通化します。Providerの生Message、Credential、Tokenは表示せず、DB Migration、必須Config、外部Dependencyの追加はありません。
+Application Versionの正本は `app/version.php`、Versionごとの変更履歴は [`CHANGELOG.md`](CHANGELOG.md)、現在の正式Release詳細は [`RELEASE_NOTES.md`](RELEASE_NOTES.md) と [GitHub Releases](https://github.com/zeijaku/rss-reader-modernization/releases) を参照してください。
 
-Version 1.35.3は、READMEの現行機能・Dependency・Release Workflow記述を実装へ揃え、動的に読み込むJavaScript／CSSのAsset Revisionを`app/version.php`から継承する方式へ一元化します。Application機能、DB Migration、必須Config、外部Dependencyの追加はありません。
+## Main Features
 
-Version 1.35.2は、通常予定および繰り返しシリーズの追加・変更・削除後にDashboard全体を再読み込みせず、表示中のCalendar Cardと直近予定だけを更新します。Calendar Widget自体の追加・設定変更・削除は従来どおりページ更新を維持します。DB Migration、必須Config、外部Dependencyの追加はありません。
+### RSS / Reader
 
-Version 1.35.1は、Calendar月表示の前月／次月部分にも日付と予定を薄く表示し、PC系入力環境では予定追加ModalのTitleへ自動focusします。Remote Text Editorには保存本文と分離した行番号を追加します。DB Migration、必須Config、外部Dependencyの追加はありません。
-
-Version 1.35.0はGmail OAuth2、Mail Widgetの応答性と最新メール取得、視覚効果のみのCursor Field、2FA成功後24時間の信頼端末Tokenを追加します。既存のPassword方式Mail AccountとUser dataを維持し、加算型Migration `028_mail_google_oauth.sql`、`029_account_2fa_trust.sql`を番号順に適用します。
-
-Version 1.34.1はV1.34.0のCorrection Releaseです。V1.34開発中および本番で動作確認済みだった受信メール／Sentメールの添付ファイル表示・ダウンロード実装が、正式Release作成時に誤って無効化されたため、安全境界を維持した既存実装を復元します。DB Migration、必須Config／Secretの追加はありません。
-
-Version 1.34.0はMail WidgetへSMTP送信、Plain Text Compose／Reply、Sent保存、送信中表示、複数添付送信を追加したReleaseです。SMTPは465 SSL/TLSまたは587 STARTTLSに限定し、IMAP Credential再利用または暗号化した個別SMTP Credentialに対応します。送信添付は最大5件・1件10 MiB・合計20 MiBです。既存環境ではMigration 026、027を番号順に一度だけ適用します。受信メール／Sentメールの添付ファイル表示・ダウンロードはV1.34対象外で、今後の機能として扱います。
-
-Version 1.33.1はRemote Filesの複数Upload対応を追加したPatch Releaseです。既存の単一ファイルUpload API、認証・Owner scope・CSRF・サイズ／内容Validationを維持し、Remote Files画面で複数ファイルを選択して順番にUploadできます。各ファイルの成功／失敗を集計し、部分失敗時も後続ファイルを継続します。DB Migration、公開API仕様、必須Config／Secretの変更はありません。
-
-Version 1.33.0はCalendar Enhancement Releaseです。予定色5色、予定範囲の共通化、繰り返し予定のOccurrence単位変更／削除、月表示の複数日予定連結、日／週／月表示とCalendar toolbar整理を統合しています。Dashboardの動的JavaScriptは既存依存順に読み込み、CSSは小分けに開始し、静的Asset失敗時だけ1回再試行します。既存V1.32 DBは、Tableがまだ存在しない場合に限り、加算型Migration `025_v1_33_calendar_event_exception.sql`を1回適用します。日程コピーと日程Drag & DropはV1.33へ追加せず、次期以降の改善候補として設計要件を記録しています。
-
-Version 1.32.0はAccount Securityを拡張し、TOTP 2FA、Recovery Code、Step-up Authentication、Session Management、Authentication Security Audit Logを追加したReleaseです。既存環境はMigration `022_v1_32_auth_2fa.sql`、`023_v1_32_auth_session.sql`、`024_v1_32_auth_audit_log.sql`を必要なものだけ番号順に適用し、既に2FAを使用している環境では`APP_TOTP_SECRET_KEY_B64`を変更しないでください。
-
-Version 1.31.0は、V1.29のRemote File ManagerへUnix PermissionのBest-effort表示とpreset chmodを追加したReleaseです。SFTPはPermission変更対応、FTP／明示FTPSはServer依存のSITE CHMOD、HTTPS WebDAVはportableなUnix chmodが無いため非対応として明示します。FTP／FTPS一覧はMLSDを基本にUNIX.modeを利用し、Permissionが無い場合だけUnix LISTで補完します。Fileは600／640／644、Directoryは700／750／755に限定し、認証・CSRF・Owner scope・Base Path confinement・Symlink安全確認・3桁octal Validationを維持します。DB Migration、新規必須Secret／Configはありません。
-
-Version 1.30.0は、V1.29のRemote File Managerへ認証済みOwner専用のRemote Text Editorを追加したReleaseです。UTF-8のTXT／MD／CSV／JSON／XML／HTML／CSS／JS／PHP／INI／CONF／YAMLを最大512 KiBで編集でき、SHA-256による楽観的競合検出、LF／CRLF・UTF-8 BOM維持、WAF誤検知を避けるBase64保存Transport、同一Directory内の一時Fileを使う段階Saveと保存後Hash確認を行います。競合時はLocal内容を保持して上書きを停止し、Remote最新版の再読込まで再Saveを許可しません。Remote Filesの操作／File種別Iconも視認性を改善しました。V1.30のDB Migrationや新規必須Secretはありません。Remote側のchmod/chown、Lock、Atomic replacement保証、Shift_JIS/EUC-JP自動変換、IDE化は対象外です。
-
-Version 1.29.0は、認証済みユーザー向けのRemote File Managerを追加したReleaseです。FTP／明示FTPS／SFTP／HTTPS WebDAVの接続登録・接続確認、Directory移動、Upload／Download、mkdir、Rename／Move、Delete、File Libraryとの相互転送、Image／PDF／TXT／CSV Previewに対応します。CredentialはSodium AEADで暗号化し、Owner scope／CSRF／Base Path confinement／DNS解決後IP検証／DNS pinning／Private Networkの明示CIDR allowlist／SFTP known_hosts／FTPS・WebDAV TLS検証を維持します。既存環境ではMigration `021_v1_29_remote_connection.sql`とRemote Credential Key等のprivate設定が必要です。Remote Text Editor、SCP、SMB/NFS、S3等は今回の対象外です。
-
-Version 1.28.0は、V1.27で追加した認証済みユーザー専用File LibraryをPhase 2として拡張したReleaseです。File Detail、Browser標準機能を使う保護されたPDF Viewer、UTF-8 TXT Preview、CSV Preview、Smartphone向け操作／Modal調整を追加しました。TXTは64 KiB／300行、CSVは512 KiB／50行／30列／1レコード64 KiBに制限し、Owner scope、private storage、Serve時再Validation、`nosniff`、same-origin policy、restrictive CSPを維持します。ZIPは引き続きDownload専用で展開しません。V1.28のDB Migration、新規必須Secret／Configはありません。
-
-Version 1.27.0は、記事URLのTracking Parameter除去を拡張し、認証済みユーザー専用のFile Libraryを追加したReleaseです。アップロードファイルは`public/`外のprivate storageへ保存し、Server側Fileinfo／内容検証、10 MiB上限、ランダム物理名、Owner scopeを維持します。JPEG／PNG／GIF／WebP／PDF／TXT／CSV／ZIP、Drag & Drop指定、Upload中表示、Image Viewer、Download／Deleteに対応し、ZIPは展開・実行しません。既存環境ではMigration `020_v1_27_user_files.sql`を適用します。
-
-Version 1.26.0は、DashboardのInformationカテゴリへInformation Board Widgetを追加したReleaseです。NEWSと現在の記事Titleを固定し、RSSの概要だけを右から左へ流します。前後記事移動、Source／日時／件数、NEXT予告、進捗表示、Reduced Motion、44px Header／Smartphone Touch targetに対応します。RSS本文は既存の安全なFeed取得経路で得たdescription/contentのみを使い、記事Pageの追加FetchやScrapingは行いません。DB Migrationと新規必須Secretはありません。
-
-Version 1.25.0は、Calendar Widgetを実用的な予定管理へ拡張したReleaseです。通常予定へ終日／時刻／関連URLを追加し、毎日／毎週／毎月／毎年の繰り返し、Today操作、14日以内の直近予定、Smartphone表示調整、RSS／Stock記事から既存Calendar登録ModalへのTitle／URL引継ぎに対応しました。直近予定はServer側で最大8件に制限し、Widget上では初期3件＋「もっと見る」で表示します。繰り返し予定はシリーズ全体の編集／削除を基本とし、個別Occurrence例外やReminder、外部Calendar同期は今回の対象外です。既存DBはMigration `018_v1_25_calendar_event_time_url.sql`、`019_v1_25_calendar_recurrence.sql`を番号順に適用します。
-
-Version 1.24.0は、MemoとStockの実用性を強化したReleaseです。Memoは選択したWidget Heightを長文本文で押し広げず内部Scrollし、Dashboard／登録／編集で4000文字上限の現在文字数を表示します。Stockには未処理／処理済み、通常／重要、Archiveの3状態を追加し、個別操作、Server-side Filter、検索／Tag／Sort／Paginationとの併用、現在Pageを対象にした一括状態更新、Smartphone向け操作性を追加しました。Archiveは従来のStock解除とは別状態で、通常一覧ではArchive済みを除外しつつFilterから復元できます。既存DBはMigration `017_v1_24_stock_state.sql`を適用します。
-
-Version 1.23.0は、Application機能を増やさずRepository／Test／GitHub Actions／Release運用を整理したMaintenance Releaseです。一時的なCheckpoint文書を整理し、Current testのVersion固定依存を減らし、Version固有WorkflowをGit履歴へ退避しました。正式Releaseは共通`release.yml`へ統一し、明示Version入力、main SHA再確認、既存Tag上書き拒否、既存GitHub Release非変更、deterministic Runtime／Complete Package、SHA-256、secret scan、clean-room確認を標準化しています。Application機能、DB schema／Migration、公開API、必須Config／Secretの追加変更はありません。
-
-Version 1.22.0は、RSS管理を強化したReleaseです。RSS管理画面とOPML Import / Export、Feed Health、RSS Rulesを追加し、RSS Rulesは通常RSS記事のHighlight／Hide／Stock／Task actionへ統合しました。所有権は既存contentまたはrule ownerから導出し、任意URLへの追加Probeは行わず既存のSSRF-safe Feed fetch経路を維持しています。既存DBはMigration 014〜016を番号順に適用します。
-
-Version 1.21.0は、DrawerをDISPLAY／FEED／PRODUCTIVITY／INFORMATION／MEDIA／GAME／SETTINGS／USER LINKS／ACCOUNTへ整理し、視認性とSmartphone／Touch操作を改善したReleaseです。Bootstrap 5 Offcanvasと既存jQuery補助処理は維持し、DB schema／Migration／config/local.phpの追加変更はありません。
-
-Version 1.20.1は、V1.20.0をBaselineにDrag Handle／Navbar Compact、Memo内部Scrollと手動Refresh、Calendar予定の赤／青／緑とTask Priority色、Block Collapseを追加した更新です。既存DBでは`013_v1_20_1_calendar_event_color.sql`を適用し、`calendar_event_color`を追加します。新規必須Config／Secretはありません。
-
-Version 1.20.0は、V1.20-B〜Eを統合した機能Releaseです。RSS／Search FeedのCard Header Compact、通常RSSタイトルを使う60秒のRSS Typing、Network防衛型のWire Defense、所有RSSを横断して新着記事をまとめる「全RSS新着」を含みます。V1.20-F RC1でCurrent Full Regression、V1.17〜V1.19互換Gate、V1.20専用Game／全RSS新着Test、Security／Syntax／Package検証を実施し、本番環境でのRC確認後にV1.20-Gで正式化しました。DB schema、Migration、SQL、新規必須Secret／Configの追加はありません。
-
-Version 1.19.0は、新機能追加ではなくArchitecture / Security / Maintainabilityを中心に整理したMaintenance Releaseです。大きかったAPIとDashboard Widget処理を責務単位へ分割し、API request size guard、Registration throttle、Public PHP endpoint whitelist、CSP `object-src 'none'`を追加しました。Public Endpoint Matrix、Security Boundary、新機能追加時Checklistも文書化しています。V1.19.0-RC1の本番互換確認後に正式化しており、DB schema、Migration、SQL、新規必須Secretの追加はありません。
-
-Version 1.18.0では、DashboardのInformationカテゴリへConnection Monitor Widgetを追加しました。BrowserからこのRSS Reader自身の軽量Endpointへ同一Originで定期Probeを送り、現在Latency、30秒／60秒／5分履歴、Avg／Max／Jitter、切断／復旧、Downtime、Last Disconnect、Excellent／Good／Fair／Slow／Offlineを表示します。複数WidgetでもPage内のProbeは1本を共有し、Background tabでは停止、復帰時に即時確認します。履歴とBaselineはBrowser memoryだけで保持し、DB／localStorageへ保存しません。外部Internet ProbeやSpeed Testは測定対象・通信量・外部依存が変わるためV1.18の対象外としました。DB schema、Migration、必須configの追加変更はありません。
-Release前の実機確認では、Remember MeによるSession自動復旧後も開いたままのDashboardが旧CSRF Tokenで失敗しないよう短時間Grace＋Response Header同期を追加し、Smartphone Calendarの固定Minimum Widthを解除してCard幅へ収めています。
-
-Version 1.17.2では、Dashboardへ上級者向けのX Timeline Widgetを追加しました。Server側のX API Bearer Tokenを使い、明示した公開Accountの最近の投稿をRead Onlyで表示します。表示件数3／5／10件、Reply／Repostの含有設定、短時間Cacheと期限付きstale fallbackに対応し、Bearer TokenはBrowserへ渡しません。追加ModalではX Developer Platform、Pay Per Use、`APP_X_BEARER_TOKEN`が必要なことを案内し、Tokenの未設定／形式不正／未確認／確認済み／認証失敗を区別して表示します。X本体の「おすすめ / For You」Feedは公式APIで同じものを取得出来ないため対象外とし、将来課題へ分離しています。DB schemaとMigrationの追加変更はありません。
-
-Version 1.17.1では、Version 1.17.0で追加したCamera / Video Widgetと、Mail／Information Widget／各種設定変更の安定性を改善しました。通常API Actionでは認証・CSRF・Action validation後にSession lockを早期解放し、Camera / Video、Mail、Earthquake、Sun / Moon、Air QualityへClient-side watchdogを追加しています。Widget設定保存は対象Card中心の更新へ変更し、他Widgetの設定変更で再生中のYouTubeが停止する問題や、通知が残り続ける問題、hls.js 1.6.16のSRI不一致も修正しました。DB schema、Migration、必須configの追加変更はありません。
-
-Version 1.17.0では、DashboardへCamera / Video Widgetを追加しました。Snapshot、YouTube、Browser標準Video、MJPEG、HLSに対応し、URLから安全に判断出来る場合はAutoでSource Typeを選択します。MediaはServer proxyを経由せずBrowserから配信元へ直接接続し、曖昧なAuto URLはSnapshotへ決め打ちせず手動指定を促します。長期`immutable` Cache環境向けに`APP_ASSET_REVISION`を追加し、正式ReleaseではApplication Versionと同じ`1.17.0`へ確定しました。DB schema、Migration、必須configの追加変更はありません。
-
-Version 1.16.0では、UtilityへCalculator Widgetを追加し、InformationへBlind Spot / Discovery Widgetを追加しました。Blind Spotは国内向け40 Feedを20カテゴリに分け、直前カテゴリ回避と24時間・最大18件の最近記事履歴で同じ内容の連続表示を抑えます。記事概要の展開とStock／URL Copy／X／Taskの既存Article Actionsも再利用します。Dashboard Widget HeaderとDrag Handleの操作領域も共通化しました。DB schema、Migration、必須configの追加変更はありません。
-
-Version 1.15.0では、DrawerのWidget追加をCatalog化し、InformationカテゴリへEarthquake、Sun / Moon、Air Quality / UVを追加しました。Earthquakeは気象庁防災情報XML、Sun / Moonは既存Weatherの地域検索とPHP標準の日照計算、Air Quality / UVはOpen-Meteo Air Quality APIを利用します。Weatherを含むInformation WidgetのLocation・保存・Cache・UI共通処理を整理し、PC／Smartphone、Height 1／2、Solar／Slateを含むTheme表示も調整しました。DB schema、Migration、必須configの追加変更はありません。
-
-Version 1.14.1では、Bootstrap / Bootswatch Themeに合わせて通常RSS／Search Feed、Task、Stock、Calendar、Mail、Links、Weather、Clock、Mini Game等の中立Surface・本文色・補助色をTheme変数へ追従させました。Keyword Highlight、休日、Timer終了、Game状態色など意味を持つ色は従来仕様を維持しています。DB schema、Migration、必須configの変更はありません。
-
-Version 1.14.0では、Frontend dependencyをBootstrap / Bootswatch 5.3.8へ更新し、Bootstrap 4時代のmarkup / Data APIを5系へ移行しました。右DrawerはBootstrap Offcanvasへ置換し、jquery-drawer / iScroll / standalone Popperと旧Bootstrap 4配布Assetを削除しています。PC / Smartphoneと全8 Themeの表示を調整し、Card見出しは`text-bg-*`で背景色に応じた文字色へ自動追従します。DB schema、Migration、必須configの追加変更はありません。
-
-Version 1.13.0では、Dashboard構造整理を中心に、Stock一覧を`/stock`、表示設定・タブ名・RSS Highlight設定を`/settings`へ分離し、Dashboard本体も内部Viewへ分割しました。既存の`/?tab=stock`互換、Account Settings、Stock／Settingsの既存動作は維持しています。Performance再計測では追加最適化を行う根拠となる劣化を確認せず、Security／新規設置DocumentationとHealthcheckを整理しました。新しいDB Migration／config追加はありません。
-
-Version 1.12.1では、V1.12.0後の互換性・回帰修正として、Stock解除のAjax部分更新とStockからTaskへの追加先選択を復元し、履歴Regressionを現行V1.12へ整合しました。DB schema／Migration／configの追加変更はありません。
-
-Version 1.12.0では、RSS HighlightとMail Widget Phase 2を追加しました。RSS Highlightはユーザー登録Keywordを通常RSS／Search Feedで強調表示し、Mail Widgetは未読件数、未読のみ表示、件名／From検索、送信者Filter、IMAP Folder切替に対応します。
-
-約10年前に作成されたPHP製RSSリーダーを、Legacy版を解析資料として凍結したまま段階的に近代化するProjectです。Security / Authentication / Session / CSRF / SSRF / XSS / PDO / Validation / PHP 8 / DB integrity / regression testは `Secure Baseline SB-15 / R3` で確立し、Initial Commitとして公開済みです。
-
-M1: Source / RSS Engine ModernizationはM1-Gまで完了し、**M2: Frontend Modernization** もM2-Gまで完了しました。M2-A〜M2-DでFrontend構造、Feed表示、Accessibility、Responsive、UI / UXを整理し、M2-Eで未使用Frontend配布物を削除、M2-FでjQueryを3.7.1、Font Awesome Freeを6.7.2へ更新しています。M2-GではSecure Baseline、M1、M2を横断する最終回帰、配布物・Asset・Documentationの整合確認を行いました。M2時点ではBootstrap / Bootswatch 4.1.3、Drawer 3.2.2、iScroll 5.2.0-snapshotを維持していましたが、Version 1.14.0でBootstrap / Bootswatch 5.3.8へ移行し、DrawerはBootstrap Offcanvasへ置換、旧Frontend dependencyは配布物から整理しました。Navbar、4タブ、Feed CRUD、Stock、Settings、公開API、DB、M1 RSS Engineの契約は維持しています。
-
-## 現在できること
-
-- Mail WidgetによるPassword／Gmail OAuth2でのIMAP受信・検索・Folder切替、SMTP Plain Text送信・Reply、Sent保存、送受信添付Fileの表示・Download、送信時複数添付
-
-- ユーザー登録 / ログイン / ログアウト
-- Account Settingsからのメールアドレス変更・パスワード変更
-- TOTP 2FA、Recovery Code、Step-up Authentication、Session管理、Authentication Security Audit Log、2FA成功後24時間の信頼端末
-- ユーザーごとのFeed URL登録・変更・論理削除
-- 4タブ（location 0〜3）へのFeed配置
 - RSS 2.0 / RSS 1.0 / Atomの表示
-- 省略された記事タイトルのHover／Keyboard Focus全文表示
-- RSS内の`content`／`description`を記事単位で安全に展開
-- Feedカード単位の個別更新（現在の記事を保持、既存Cache／Retry経路を再利用）
-- Search Feed Widgetによる検索語句ベースの記事表示
-- 全RSS新着 Widgetによる所有RSS横断の新着記事集約（5／10／20／30件）
-- 通常RSS CardのRSS Typing（60秒、IME対応、Browser内Best保存）
-- Game WidgetのWire Defense（Network防衛、Sound OFF、Browser内Best保存）
-- 記事ActionsからStock保存、URL Copy、X投稿画面、Task追加
-- 正常Feed本文の短時間Server-side cache（初期TTL 60秒）
-- 同一Feed URLへの同時Fetch抑制
-- ETag / Last-Modified / HTTP 304による本文再送抑制
-- 一時障害時の段階的BackoffとRetry-After対応
-- 最後の正常確認から24時間以内に限るstale-if-error
-- 記事URLから既知のTracking Parameterを除去
-- 2回目以降に検出した記事のNEW表示と手動解除
-- Dashboard WidgetのタイトルバーDrag & Drop／Keyboard並び替え
-- Clock Widgetの追加・変更・削除、12／24時間、日付・秒表示
-- Memo Widgetの追加・変更・削除、改行を保持した本文表示、長文のWidget内Scroll、4000文字Counter
-- Task Widgetの追加・変更・削除、完了切替、期限、優先度
-- Calendar Widgetの日／週／月表示、通常予定、Task期限連動、終日／時刻／URL、赤／青／緑／黄／紫、毎日／毎週／毎月／毎年の繰り返し、Occurrence単位変更／削除、月表示の複数日連結・前後月日付／予定表示、予定変更後のCard内更新、Today、14日以内の直近予定、RSS／Stock記事からの予定作成
-- Weather Widgetの地域別天気表示
-- Earthquake Widgetの気象庁最新地震情報表示
-- Sun / Moon Widgetの日の出・日の入り・月齢・月相表示
-- Air Quality / UV WidgetのUS AQI、PM2.5、PM10、UV表示
-- Connection Monitor Widgetの同一Origin監視、Latency履歴、Avg／Max／Jitter、切断／復旧、Downtime、品質判定
-- Camera / Video WidgetのSnapshot、YouTube、Video File、MJPEG、HLS表示
-- X Timeline Widgetによる指定した公開X Accountの最近の投稿表示（上級者向け、X Developer Platform／Pay Per Use／Server-side Bearer Tokenが必要）
-- File LibraryへのJPEG／PNG／GIF／WebP／PDF／TXT／CSV／ZIP保存、Image／PDF／TXT／CSV Preview、Download／Delete
-- Remote File ManagerによるFTP／明示FTPS／SFTP／HTTPS WebDAV接続、Directory操作、Upload／Download、File Libraryとの相互転送
-- Remote Text EditorによるUTF-8 Text/Source編集、行番号、SHA-256競合検出、LF／CRLF・BOM維持、WAF-safe保存
-- スマートフォンでの左右スワイプによるタブ切り替え
-- Feed／Calendar読込中のSpinner表示
-- 記事リンクのStock保存と一覧表示
-- Stockの未処理／処理済み、通常／重要、Archive状態、状態Filter、一括状態更新
-- Bootstrapテーマ、Navbarリンク、タブ名のユーザー設定
-- MySQL 8系での新規DB構築
-- configurable table prefix（例: `rss_`）
+- ユーザーごとのFeed URL登録・変更・論理削除
+- 4タブへのFeed配置
+- Feed Card単位の個別更新
+- Search Feedによる登録RSS横断検索
+- 全RSS新着による所有RSS横断の新着記事集約
+- RSS Management / OPML Import・Export
+- Feed Health
+- RSS RulesによるHighlight / Hide / Stock / Task action
+- Keyword Highlight
+- Tracking Parameter除去
+- NEW表示と手動解除
+- ETag / Last-Modified / HTTP 304
+- Server-side Feed Cache、同一URLの重複Fetch抑制
+- Backoff / Retry-After / bounded stale-if-error
+- Reader Modeによる記事本文表示
+- 必要な記事だけを取得するFull Text処理
+- Reader本文画像の認証済みsame-origin Image Proxy
 
-Feed item本文はDBへ永続化せず、登録されたFeed URLから表示時に取得します。
+### Dashboard / Productivity
 
-Version 1.1.0では、記事URLのTracking Parameter除去、Item Identityを使った新着表示、Dashboard Widget配置基盤、タイトルバーからの並び替え、Clock Widget、Memo Widget、Task Widget、Calendar Widgetを追加しています。Feed本体は従来の`content`、Memo本文は`memo`、Task項目は`task`、通常予定は`calendar_event`を正本とし、各Widgetの配置・表示設定は`dashboard_widget`へ保存します。Calendar上のTask期限は`task`を直接参照し、予定Tableへ複製しません。V1.1-I / R2ではスマートフォン幅に限って左右スワイプによるタブ切り替えを追加し、Calendar、入力欄、Button、Link、Modal、Drawer、Widget並び替えHandleでは誤操作を避けるため無効にしています。FeedとCalendarの読込中は文字に加えてSpinnerを表示します。V1.1-I / R3ではスマートフォンのTask期限入力だけを2段配置へ調整しました。V1.1-JではAccount Settingsを追加し、現在のパスワード確認後にメールアドレスまたはパスワードを変更できます。
+- Dashboard Widgetの追加・編集・削除・並び替え・サイズ変更
+- Clock
+- Memo
+- Task
+- Calendarの日／週／月表示
+- Calendarの終日／時刻／URL／5色予定
+- 複数日予定
+- 毎日／毎週／毎月／毎年の繰り返し
+- Occurrence単位の変更／削除
+- 直近予定表示
+- RSS / StockからCalendar予定作成
+- Calendar Reminder
+- Dashboard Notification Center
+- Links
+- Information Board
+- Bootstrap Theme、Navbar Link、Tab名設定
+- PC / Smartphone対応
 
-## Version 1.1 progress
+### Information / Media / Game
 
-| Work unit | 内容 | 状態 |
-|---|---|---|
-| V1.1-A | Baseline・DB・工程分析 | 完了 |
-| V1.1-B | Tracking Parameter除去 | 完了 |
-| V1.1-C | 新着NEW表示・Feed item state | 完了 |
-| V1.1-D | Dashboard Widget配置基盤・既存Feed移行 | 完了 |
-| V1.1-E | タイトルバーのDrag & Drop・並び順保存 | 完了 |
-| V1.1-F | Clock Widget | 完了 |
-| V1.1-G | Memo Widget | 完了 |
-| V1.1-H | Task Widget | 完了 |
-| V1.1-I | Calendar Widget／R2操作性改善／R3 Task期限欄調整 | 完了 |
-| V1.1-J | Account Settings | 完了 |
-| V1.1-K | 統合回帰・Version 1.1.0 Release | 完了 |
+- Weather
+- Earthquake
+- Sun / Moon
+- Air Quality / UV
+- Connection Monitor
+- Camera / Video（Snapshot / YouTube / Video File / MJPEG / HLS）
+- X Timeline（Optional / X Developer Platformが必要）
+- RSS Typing
+- Wire Defense
+- 2048
+- Reversi
 
-V1.1-Cの仕様は[`docs/v1-1-c-implementation.md`](docs/v1-1-c-implementation.md)、V1.1-DのWidget基盤は[`docs/v1-1-d-implementation.md`](docs/v1-1-d-implementation.md)、Migrationは[`docs/v1-1-d-migration.md`](docs/v1-1-d-migration.md)、V1.1-Eの並び替えは[`docs/v1-1-e-implementation.md`](docs/v1-1-e-implementation.md)、V1.1-FのClockは[`docs/v1-1-f-implementation.md`](docs/v1-1-f-implementation.md)、V1.1-GのMemoは[`docs/v1-1-g-implementation.md`](docs/v1-1-g-implementation.md)、Migrationは[`docs/v1-1-g-migration.md`](docs/v1-1-g-migration.md)、V1.1-HのTaskは[`docs/v1-1-h-implementation.md`](docs/v1-1-h-implementation.md)、Migrationは[`docs/v1-1-h-migration.md`](docs/v1-1-h-migration.md)、V1.1-IのCalendarは[`docs/v1-1-i-implementation.md`](docs/v1-1-i-implementation.md)、Migrationは[`docs/v1-1-i-migration.md`](docs/v1-1-i-migration.md)、R2のスワイプ／Spinnerは[`docs/v1-1-i-r2-implementation.md`](docs/v1-1-i-r2-implementation.md)、Account Settingsは[`docs/v1-1-j-implementation.md`](docs/v1-1-j-implementation.md)、Version 1.1.0最終化は[`docs/v1-1-k-implementation.md`](docs/v1-1-k-implementation.md)を参照してください。
+### Stock
 
+- 記事のStock保存
+- 未処理／処理済み
+- 通常／重要
+- Archive
+- Search / Tag / Sort / Pagination
+- Filterと一括状態更新
 
-## Version 1.2 progress
+### File Library / Remote Files
 
-| Stage | 内容 | 状態 |
-|---|---|---|
-| V1.2-A／第1段 | Login・Registration近代化、Honeypot、Logout／Session expiry通知、403／404／500／503共通Error | 完了 |
-| V1.2-B／第2段 | 記事Title表示、全文Tooltip、RSS概要Accordion、Feed Card個別更新 | 完了 |
-| V1.2-C／第3段 | Search Feed、見出し・概要・通知の調整 | 完了 |
-| V1.2-D／第4段 | 共通記事Actions、Stock、URL Copy、X投稿、Task追加、操作領域調整 | 完了 |
-| Version 1.2 Release | 統合回帰、Documentation、Package、Version 1.2.0確定 | 完了 |
+- 認証済みOwner専用File Library
+- JPEG / PNG / GIF / WebP / PDF / TXT / CSV / ZIP
+- Image / PDF / TXT / CSV Preview
+- Upload / Download / Delete
+- FTP / Explicit FTPS / SFTP / HTTPS WebDAV
+- Remote Directory操作
+- Remote Upload / Download
+- File Libraryとの相互転送
+- Remote Text Editor
+- SHA-256競合検出
+- LF / CRLF・UTF-8 BOM維持
+- Unix Permission表示とpreset chmod
+- Remote Files複数Upload
 
-Version 1.2.0では、認証画面を専用UIへ更新し、Honeypot、Logout／Session expiry通知、403／404／500／503の共通Error画面を追加しました。記事表示では、最大2行Title、全文Tooltip、Plain Textの概要Accordion、Feed Card単位の個別更新を追加しています。
+### Mail
 
-Search Feedは既存のDashboard Widget基盤とFeed取得経路を再利用し、通常RSSと共通の記事描画を使用します。記事Actionsは画面内で1つの共通Menuを使い、Stock保存、記事URLのCopy、X投稿画面、記事TitleのみのTask追加へ対応しました。三点リーダー、概要「＋」、新着Bellの操作性を維持しながら、記事Titleの表示領域も調整しています。
+- Password / Gmail OAuth2
+- IMAP受信・Folder切替・検索
+- SMTP Plain Text送信
+- Reply
+- Sent保存
+- 送信時複数添付
+- 受信／Sent添付Fileの表示・Download
+- Mail / RSSの安全なError分類
 
-Version 1.2ではDB Table／Column、Migration、SQL、必須設定、外部Library、Build環境の追加はありません。Version 1.1.0からの更新はCode差し替えとBrowser Cache更新が中心です。詳細は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/v1-2-release-implementation.md`](docs/v1-2-release-implementation.md)、[`docs/test-report-v1-2-release.md`](docs/test-report-v1-2-release.md)を参照してください。
+### Account Security
 
-## Secure Baselineで完了した範囲
+- User registration / Login / Logout
+- Account Settings
+- `password_hash()` / `password_verify()`
+- Session管理
+- Remember Me
+- TOTP 2FA
+- Recovery Code
+- Step-up Authentication
+- Authentication Security Audit Log
+- 2FA成功後24時間のtrusted-browser behavior
 
-| Work unit | 内容 | 状態 |
-|---|---|---|
-| SB-00 | Legacy evidence freeze | 完了 |
-| SB-01 | Public/private boundary・秘密情報分離 | 完了 |
-| SB-02 | PDO / DB access foundation | 完了 |
-| SB-03 | Session foundation | 完了 |
-| SB-04 | Authentication / password | 完了 |
-| SB-05 | API contract / dispatcher | 完了 |
-| SB-06 | Authorization / ownership | 完了 |
-| SB-07 | CSRF | 完了 |
-| SB-08 | Validation | 完了 |
-| SB-09 | SSRF-safe outbound fetch / TLS | 完了 |
-| SB-10 | XSS-safe output | 完了 |
-| SB-11 | Legacy functional bug fixes | 完了 |
-| SB-12 | PHP 8 runtime stabilization / Atom link fix | 完了 |
-| SB-13 | Schema / integrity / table prefix | 完了 |
-| SB-14 | Final security / regression matrix | 完了 |
-| SB-15 | Documentation / Initial Commit gate | 完了 |
-
-詳細は [`docs/modernization.md`](docs/modernization.md) と [`docs/change-map.md`](docs/change-map.md) を参照してください。
-
-
-## M1 progress
-
-M1 completion checkpoint: `RSS Engine M1-G / R1`
-
-| Work unit | 内容 | 状態 |
-|---|---|---|
-| M1-A | Fetcher / Parser責務分離 + Normalized Item | 完了 |
-| M1-B | Feed Source model | 完了 |
-| M1-C | RSS 2.0 / RSS 1.0 / Atom Adapter整理 + Date normalization | 完了 |
-| M1-D | Item identity | 完了 |
-| M1-E | Server-side cache + 重複Fetch抑制 | 完了 |
-| M1-F | ETag / Last-Modified / HTTP 304 | 完了 |
-| M1-G | Fetch state + Retry / stale-if-error | 完了 |
-
-M1-Aの詳細は [`docs/m1-a-implementation.md`](docs/m1-a-implementation.md)、M1-Bは [`docs/m1-b-implementation.md`](docs/m1-b-implementation.md)、M1-Cは [`docs/m1-c-implementation.md`](docs/m1-c-implementation.md)、M1-Dは [`docs/m1-d-implementation.md`](docs/m1-d-implementation.md)、M1-Eは [`docs/m1-e-implementation.md`](docs/m1-e-implementation.md)、M1-Fは [`docs/m1-f-implementation.md`](docs/m1-f-implementation.md)、M1-Gは [`docs/m1-g-implementation.md`](docs/m1-g-implementation.md) を参照してください。
-
-## M2 progress
-
-| Work unit | 内容 | 状態 |
-|---|---|---|
-| M2-A | Frontend基盤整理 | 完了 |
-| M2-B | Feed表示処理整理 | 完了 |
-| M2-C | HTML構造・Accessibility | 完了 |
-| M2-D | Responsive・UI / UX | 完了 |
-| M2-E | 不要Frontend Asset整理 | 完了 |
-| M2-F | Frontend依存関係更新 | 完了 |
-| M2-G | 最終回帰・Documentation | 完了 |
-
-M2-Aの詳細は [`docs/m2-a-implementation.md`](docs/m2-a-implementation.md)、M2-Bは [`docs/m2-b-implementation.md`](docs/m2-b-implementation.md)、M2-Cは [`docs/m2-c-implementation.md`](docs/m2-c-implementation.md)、M2-Dは [`docs/m2-d-implementation.md`](docs/m2-d-implementation.md)、M2-Eは [`docs/m2-e-implementation.md`](docs/m2-e-implementation.md)、M2-Fは [`docs/m2-f-implementation.md`](docs/m2-f-implementation.md)、M2-Gは [`docs/m2-g-implementation.md`](docs/m2-g-implementation.md) を参照してください。M2全体の要約は [`docs/m2-completion-summary.md`](docs/m2-completion-summary.md)、test結果は [`docs/test-report-m2-a.md`](docs/test-report-m2-a.md) から [`docs/test-report-m2-g.md`](docs/test-report-m2-g.md) に記録しています。
-
-## Historical M4 progress
-
-M4はVersion 1.0.0公開時にRelease基盤を整備した完了済みの履歴です。M4-A〜GでRelease Baseline、README／License、設置・Backup・Rollback手順、GitHub Actions、deterministic Package、SHA-256、Tag／GitHub Release手順を確立しました。現在のRelease判断やVersionはこの表ではなく、冒頭のStable release、`app/version.php`、Current Test、GitHub Releaseを確認してください。
-
-| Work unit | 内容 | 状態 |
-|---|---|---|
-| M4-A | Release基準・公開物・残課題の棚卸し | 完了 |
-| M4-B | README・CHANGELOG・License・Third-party notice | 完了 |
-| M4-C | 設置・更新・Backup・復旧手順 | 完了 |
-| M4-D | GitHub公開状態・Repository・Portfolio・最小CI | 完了 |
-| M4-E | 配布ZIP・Release Notes・SHA-256・Tag手順 | 完了 |
-| M4-F | Release Candidate全回帰・実環境確認 | RC作成・自動検証完了 / 実環境Evidence未収録 |
-| M4-G | 最終Quality Gate・Version 1.0.0確定 | 完了 |
-
-詳細は [`docs/m4-f-implementation.md`](docs/m4-f-implementation.md)、[`docs/m4-f-validation.md`](docs/m4-f-validation.md)、[`docs/m4-e-implementation.md`](docs/m4-e-implementation.md)、[`docs/release-package.md`](docs/release-package.md)、[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、[`RELEASE_NOTES.md`](RELEASE_NOTES.md)、[`docs/m4-d-implementation.md`](docs/m4-d-implementation.md)、[`docs/ci.md`](docs/ci.md)、[`docs/github-publication.md`](docs/github-publication.md)、[`docs/portfolio.md`](docs/portfolio.md)、[`docs/installation.md`](docs/installation.md)、[`docs/update.md`](docs/update.md)、[`docs/configuration.md`](docs/configuration.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md)、[`docs/release-gate-v1.0.0.md`](docs/release-gate-v1.0.0.md) を参照してください。
-
-## Release packages
-
-正式ReleaseではGitHub Actionsの共通Release Workflowが、GitHub作業Folder相当のComplete Source ZIPとServer配置用Runtime ZIPを分けて生成し、SHA-256、secret scan、clean-room検証後にTag／GitHub Releaseへ添付します。Productionへは自動Deployしません。
-
-Package範囲は[`docs/release-package.md`](docs/release-package.md)、Tag／GitHub Release手順は[`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)、現在の検証範囲は[`RELEASE_NOTES.md`](RELEASE_NOTES.md)を参照してください。
-
-## Runtime requirements
+## Runtime Requirements
 
 - PHP 8.1+
-- PDO + `pdo_mysql`
+- PDO / `pdo_mysql`
 - cURL
 - SimpleXML
 - mbstring
-- MySQL / MariaDB（新規環境ではMySQL 8系で確認）
-- WebサーバーのDocumentRootを `public/` に設定できる構成
+- MySQL / MariaDB
+- Web ServerのDocumentRootをProject内の `public/` に設定できる構成
 
-`tools/healthcheck.php` はCLI専用です。PHP拡張、設定、Runtime directory、Public Assetを確認しますが、DatabaseへLoginはしません。DB接続とSchemaは `php tools/db_sb13.php verify` または実動作で確認してください。コマンドを利用できない環境では、Hosting control panelとBrowserで確認します。
+新規構築の確認基準はMySQL 8系です。Runtime directory、Extension、Configの詳細は [`docs/installation.md`](docs/installation.md) と [`docs/configuration.md`](docs/configuration.md) を参照してください。
 
-## Installation — new empty database
+## Quick Start
 
-詳細手順: [`docs/installation.md`](docs/installation.md)
+詳細な設置手順の正本は [`docs/installation.md`](docs/installation.md) です。
 
+新規の空Databaseへ設置する場合の概要:
 
-データ保全が不要な新規環境では、Legacy DBをALTERするより新しい空DBを作る方法を推奨します。
+1. GitHub ReleaseのRuntime ZIPとSHA-256を取得し、別Directoryへ展開する。
+2. Web ServerのDocumentRootを `<project>/public` に設定する。
+3. `config/local.php.example` を参考に、Git管理外の `config/local.php` を作成する。
+4. MySQL / MariaDBに空Databaseと専用Userを作成する。
+5. `DB_TABLE_PREFIX` と `database/schema.sql` の `@table_prefix` を一致させる。
+6. `database/schema.sql` と、現行Fresh Installで必要な後続Migrationを番号順に適用する。
+7. `var/` 以下の必要DirectoryへPHP Processの書込み権限を設定する。
+8. Healthcheck / DB verify / Current Testを実行する。
+9. BrowserでRegistration、Login、RSS、主要Widgetを確認する。
 
-1. 配布物を配置する。
-2. WebサーバーのDocumentRootを `public/` にする。
-3. `config/local.php.example` を参考に、公開領域外の `config/local.php` を作成する。
-4. MySQL 8側で空DBを作成する。
-5. `DB_NAME` と `DB_TABLE_PREFIX` を設定する。
-6. `database/schema.sql` 冒頭の `@table_prefix` を同じ接頭辞にする。
-7. phpMyAdminで新DBを選択し `database/schema.sql` を実行する。
-8. [`docs/installation.md`](docs/installation.md)に記載した後続Migrationを番号順に適用する。
-9. アプリから新規ユーザー登録し、ログインして動作確認する。
-10. 必要なら `database/audit/postflight.sql` でSchemaを確認する。
+既存Databaseへ `schema.sql` を再実行しないでください。既存環境のMigration順序はInstallation / Update Documentationを正本とします。
 
-例:
+## Updating
 
-```php
-return [
-    'APP_ENV' => 'production',
-    'APP_DEBUG' => false,
-    'APP_HASH_KEY' => 'replace-with-a-long-random-secret',
-    'DB_DRIVER' => 'mysql',
-    'DB_HOST' => 'db-host',
-    'DB_PORT' => '3306',
-    'DB_NAME' => 'rss_reader',
-    'DB_USER' => 'rss_user',
-    'DB_PASSWORD' => 'replace-with-a-strong-password',
-    'DB_TABLE_PREFIX' => 'rss_',
-];
-```
+更新手順の正本は [`docs/update.md`](docs/update.md) です。
 
-`schema.sql`:
+更新時は次を基本とします。
 
-```sql
-SET @table_prefix = 'rss_';
-```
+1. 現在Version / Commitを記録する。
+2. Application Code、`config/local.php`、Database、必要なRuntime DataをBackupする。
+3. 対象Releaseの [`RELEASE_NOTES.md`](RELEASE_NOTES.md) と [`CHANGELOG.md`](CHANGELOG.md) を確認する。
+4. 未適用Migrationと必須Config変更の有無を確認する。
+5. Runtime ZIPとSHA-256を確認し、本番Directory外へ展開する。
+6. Private Config / Database / Runtime Dataを維持したままCodeを更新する。
+7. Current TestとBrowser Smoke Testを行う。
+8. 問題がある場合は [`docs/rollback.md`](docs/rollback.md) に従う。
 
-Fresh-installの最新Table一覧と後続Migrationは[`docs/installation.md`](docs/installation.md)を正本とします。`schema.sql`にはV1.24のStock状態ColumnとV1.25のCalendar終日／時刻／URL／繰り返しColumnが統合されています。
+Backup / Restoreは [`docs/backup-and-restore.md`](docs/backup-and-restore.md) を参照してください。
 
-SQLファイルはPHP設定を直接参照できないため、**`DB_TABLE_PREFIX` と `@table_prefix` は同じ値にしてください。**
+## Tests / CI
 
-## Existing Legacy DB migration
-
-更新・Backup・Restore・Rollbackは [`docs/update.md`](docs/update.md)、[`docs/backup-and-restore.md`](docs/backup-and-restore.md)、[`docs/rollback.md`](docs/rollback.md) を参照してください。
-
-
-既存DBを保持して移行する場合だけ、次の順序を使用します。
-
-```text
-database/audit/preflight.sql
-→ 結果確認
-→ database/migrations/001_sb13_integrity.sql
-→ database/audit/postflight.sql
-```
-
-Version 1.1のTableを既存DBへ追加する場合は、Backup後に次も順番に適用します。
-
-```text
-database/migrations/002_v1_1_feed_item_state.sql
-→ php tools/db_v11c.php verify
-→ database/migrations/003_v1_1_dashboard_widget.sql
-→ php tools/db_v11d.php verify
-→ database/migrations/004_v1_1_memo.sql
-→ php tools/db_v11g.php verify
-→ database/migrations/005_v1_1_task.sql
-→ php tools/db_v11h.php verify
-→ database/migrations/006_v1_1_calendar_event.sql
-→ php tools/db_v11i.php verify
-```
-
-V1.1-Gでは`memo`Table、V1.1-Hでは`task`Table、V1.1-Iでは`calendar_event`TableのMigrationが必要です。CLIを利用できる場合は、各段階のBackup確認後に`db_v11g.php`、`db_v11h.php`、`db_v11i.php`を順番にapply / verifyします。
-
-Migration前に必ずDB全体をバックアップしてください。Duplicate identityやorphan等を自動削除・統合する設計にはしていません。
-
-新DBから開始する場合、`preflight.sql` と `001_sb13_integrity.sql` は不要です。
-
-## Production configuration
-
-設定の全項目とDefaultは [`docs/configuration.md`](docs/configuration.md)、配置確認は [`docs/deployment-checklist.md`](docs/deployment-checklist.md) を参照してください。
-
-
-実環境では少なくとも次を確認してください。
-
-- `APP_DEBUG=false`
-- `APP_HASH_KEY` は十分に長いランダム値を使用し、運用開始後は安易に変更しない
-- `APP_HASH_KEY` は既存ユーザーのログインIdentity生成に必要なため、紛失しないよう安全にバックアップする
-- `config/local.php` はGit管理外・DocumentRoot外
-- `REGISTRATION_ENABLED` は運用方針に合わせて設定
-- `var/session/`、`var/security/login-throttle/`、`var/cache/feed/` がPHPから書込み可能
-- X Timelineを利用する場合は`APP_X_BEARER_TOKEN`をServer側Secretとして設定し、`var/cache/x/`をPHPから書込み可能にする。利用しない場合は空のままでよい
-- Feed cacheは `APP_FEED_CACHE_ENABLED=true`、`APP_FEED_CONDITIONAL_REQUEST_ENABLED=true`、`APP_FEED_CACHE_TTL_SECONDS=60`、`APP_FEED_CACHE_LOCK_TIMEOUT_MS=9000` が初期値
-- Retryは `APP_FEED_RETRY_ENABLED=true`、最大待機 `3600` 秒、stale-if-errorは有効・最大 `86400` 秒が初期値
-- `var/log/` を利用する場合もDocumentRoot外
-- HTTPSを使用
-
-詳細: [`docs/security.md`](docs/security.md)
-
-V1.19では、Fat fileの大分類分割と公開境界Audit/Hardeningを行い、Architecture・Public Endpoint・Security BoundaryをDocumentationとして固定しました。V1.19.0-RC1の本番互換確認とRelease Gateを経て、Application Versionを1.19.0へ正式化しています。
-
-- Architecture: [`docs/v1-19-architecture.md`](docs/v1-19-architecture.md)
-- Public endpoints: [`docs/v1-19-public-endpoints.md`](docs/v1-19-public-endpoints.md)
-- Security boundary: [`docs/v1-19-security-boundary.md`](docs/v1-19-security-boundary.md)
-- New feature security checklist: [`docs/v1-19-security-checklist.md`](docs/v1-19-security-checklist.md)
-
-## Tests
+通常の変更で使用するCurrent Gate:
 
 ```bash
-bash tests/run.sh
+bash tests/run-ci.sh
 ```
 
-GitHub Actionsでも同じRunnerをPHP 8.1 / 8.4で実行します。CIの範囲と初回確認は [`docs/ci.md`](docs/ci.md) を参照してください。
+GitHub ActionsのCIは `main` push / Pull Requestで同じCurrent GateをPHP 8.1 / 8.4に対して実行します。
 
-SB-14の最終Matrixでは、Authentication、Authorization/IDOR、CSRF、SSRF、XSS、Parser、4タブ、DB integrity、table prefix、repository leak scan、PHP 8 runtimeを横断して検証しています。
+過去Version固有の挙動を調査する場合だけ、Historical testを含む `bash tests/run.sh` または対応する `tests/run-v*.sh` を追加実行します。
 
-Build環境では `pdo_mysql` / cURL / SimpleXML / mbstringが揃わないため、実MySQL/cURL/SimpleXML E2Eはローカルでは完全実行できません。代替としてFake PDO/transport、fixture、static invariantを使用し、M1-AではFetcher境界・Normalized Item・API contract・Security ordering、M1-BではFeedSource/Mapper、owner再検証、異常DB rowのfail-closed、SSRF継承、M1-CではAdapter dispatch、Date normalization、Atom `published` fallback、namespace/link/content/date fixture、XML network禁止、M1-DではGUID / `rdf:about` / Atom `id`抽出、link/fingerprint fallback、Feed URL scope、identity安定性・非公開API契約、M1-EではTTL境界、破損Cache復旧、atomic write、権限・symlink拒否、Cache無効化、5 process同時実行時の単一Fetchを確認し、M1-FではETag / Last-Modified検証、redirect時の非漏えい、HTTP 304本文再利用、schema 1互換、5 process同時revalidationを確認し、M1-GではRetry-After、エラー分類、Fetch state、Backoff境界、stale age境界、Security error非隠蔽、5 process同時障害時の単一Fetchと単一失敗記録を専用testで確認しています。M2-Cではdoctype / lang / landmark / Form / Button / Label / fieldset、Feedのaria-busy / live region、DrawerのEscape / Tab循環 / focus return、ModalとPage Topのfocus移動を確認しています。M2-Dではresponsive class、長いURL、Touch target、明示的な削除、画面内通知、Feed再読込、Feed / Stockの実描画をstatic test、Node runtime、Fake PDO renderで確認しています。M2-Eでは直接参照Asset、Theme、CSS内Font参照、Icon定義、削除対象、License header、HTTP 200を確認し、M2-FではjQuery full build、Bootstrap plugin互換、8テーマ、Font Awesome alias / WebFont、script読込順、旧Asset不存在を専用testで確認しています。M2-GではM2-A〜GのDocumentation、現在Version、Asset allowlist、主要Frontend invariant、Runtime公開面、配布手順を横断して再確認しています。headless browser smokeはharnessを用意していますが、Build環境ではruntime不足のためSKIPします。配置先ではMySQL 8のCRUDと実RSS/Atomを手動確認してください。
+CIとRelease Gateの詳細は [`docs/ci.md`](docs/ci.md) を参照してください。
 
-詳細: [`docs/test-report-sb14.md`](docs/test-report-sb14.md) / [`docs/test-report-sb15.md`](docs/test-report-sb15.md) / [`docs/test-report-m1-a.md`](docs/test-report-m1-a.md) / [`docs/test-report-m1-b.md`](docs/test-report-m1-b.md) / [`docs/test-report-m1-c.md`](docs/test-report-m1-c.md) / [`docs/test-report-m1-d.md`](docs/test-report-m1-d.md) / [`docs/test-report-m1-e.md`](docs/test-report-m1-e.md) / [`docs/test-report-m1-f.md`](docs/test-report-m1-f.md) / [`docs/test-report-m1-g.md`](docs/test-report-m1-g.md) / [`docs/test-report-m2-a.md`](docs/test-report-m2-a.md) / [`docs/test-report-m2-b.md`](docs/test-report-m2-b.md) / [`docs/test-report-m2-c.md`](docs/test-report-m2-c.md) / [`docs/test-report-m2-d.md`](docs/test-report-m2-d.md) / [`docs/test-report-m2-e.md`](docs/test-report-m2-e.md) / [`docs/test-report-m2-f.md`](docs/test-report-m2-f.md) / [`docs/test-report-m2-g.md`](docs/test-report-m2-g.md)
+## Security
 
-## Security model
+主なSecurity Boundary:
 
-主な境界は以下です。
-
-- 認証済みSessionの `user_id` を所有者の唯一の根拠にする
-- APIはPOST + explicit action + CSRF
-- SQLはPDO parameter binding
+- 認証済みSessionの `user_id` をOwner scopeの基準にする
+- Mutation APIはPOST + explicit action + CSRF
+- SQLはPDO parameter binding / native prepare
 - Passwordは `password_hash()` / `password_verify()`
 - Login throttle
-- Feed fetchはHTTP/HTTPSのみ、DNS/IP/redirect/TLS/size/timeoutを検証
-- Feed/DB由来データはvalidate/escapeして描画
-- Stock作成時に記事ページを再Fetchしない
-- Runtime/session/log/secrets/DB dumpを公開物から分離
+- Feed / Reader / Remote接続は用途ごとのOutbound Security Boundaryを維持
+- Feed / DB由来Dataをvalidate / escapeして描画
+- Credential / Token / Session / Runtime Dataを公開領域とRepositoryから分離
+- `config/local.php`、実DB、Backup、Log、Session、Cache、SecretをGitへ含めない
 
-詳細: [`docs/security.md`](docs/security.md)
+Security Designは [`docs/security.md`](docs/security.md)、脆弱性報告方法は [`SECURITY.md`](SECURITY.md) を参照してください。
 
-## Legacy and data policy
+## Documentation
 
-Legacy版は比較・解析対象として保持し、Secure BaselineのRuntimeへ混在させません。旧DB dumpには運用データやcredential情報が含まれていたため、GitHub対象から除外します。
+現在の操作・運用では、READMEへ詳細を重複させず次のDocumentationを正本とします。
 
-既存ユーザーcredentialの互換性は要件から外し、不明なLegacy形式を推測して移行しません。Secure Baselineでは新規 `password_hash()` 形式を基準とします。
+- [Installation](docs/installation.md) — 新規設置、Schema、Fresh Install、Legacy DB移行
+- [Update](docs/update.md) — 更新前後の確認、Version固有Migration履歴
+- [Configuration](docs/configuration.md) — Production Config、Session、HTTP、Mail、X、Remote Files
+- [Deployment Checklist](docs/deployment-checklist.md) — 配置前後の確認
+- [Backup and Restore](docs/backup-and-restore.md) — DB / Config / CodeのBackupと復旧
+- [Rollback](docs/rollback.md) — Code / Config / DBを分けたRollback
+- [Security Design](docs/security.md) — Authentication / CSRF / SSRF / XSS / DB等のSecurity Boundary
+- [CI](docs/ci.md) — Current CIとRelease Workflow
+- [Release Package](docs/release-package.md) — Runtime / Complete Source / SHA-256 / Attestation
+- [Tag and GitHub Release](docs/tag-and-github-release.md) — Formal Release手順
+- [Dependencies](docs/dependencies.md) — Runtime DependencyとLicense
+- [Historical Modernization Roadmap](docs/roadmap.md) — Secure Baseline / M1 / M2 / M4等の開発履歴
+- [CHANGELOG](CHANGELOG.md) — Versionごとの変更履歴
+- [Release Notes](RELEASE_NOTES.md) — 現在の正式Release詳細
+- [Contributing](CONTRIBUTING.md) — 変更時のCurrent Test / PR方針
 
-詳細: [`docs/legacy-analysis.md`](docs/legacy-analysis.md)
+過去Version固有のimplementation document / test reportは、Historical Evidenceとして `docs/` に保持しています。
 
-## Current limitations / deferred modernization
+## Release Packages
 
-現在も次の制約・設計上の選択を維持しています。
+Formal Releaseでは共通 `.github/workflows/release.yml` が次を生成します。
 
-- Server-side cacheは固定TTL + ETag / Last-Modified + 最大24時間のstale-if-error。FrontendはLoading / Empty / Errorを表示するが、Cache / Retryの内部状態は公開しない
-- Feed提供元がValidatorを返さない場合はTTL経過後に通常のHTTP 200取得
-- Feed取得は表示時の同期処理
-- Foreign Key未導入
-- Dashboard固有JS/CSS、Feed描画、semantic HTML、Keyboard / Focus / ARIA、Responsive layout、基本的な表示文言と通知は継続的に整理する
-- FrontendはBootstrap / Bootswatch 5.3.8、jQuery 3.7.1、Font Awesome Free 6.7.2を同梱する。右DrawerはBootstrap Offcanvasを使用し、旧jquery-drawer／iScroll／standalone PopperはRuntimeから削除済み
-- Source abstractionはFetcher / FeedSource / Parser dispatcher / RSS 2.0・RSS 1.0・Atom Adapter / Normalized Item / deterministic Item identity / cache-aware Feed serviceまで導入済み
-- X Timelineは公開Accountの最近の投稿をRead Onlyで表示する範囲に限定。X本体の「おすすめ / For You」Feedの再現と、User Context OAuthを使うHome Timelineは将来課題
+- `rss-reader-modernization-X.Y.Z.zip` — Production Runtime
+- `rss-reader-modernization-X.Y.Z.zip.sha256`
+- `rss-reader-modernization-X.Y.Z-complete.zip` — Complete Source
+- `rss-reader-modernization-X.Y.Z-complete.zip.sha256`
 
-未実装候補を現在機能として扱わず、必要性・安全境界・既存構成との整合を確認してRelease単位で判断します。
+Release WorkflowはCurrent regression、secret scan、Package verify、clean-room check、SHA-256、GitHub Artifact Attestationを検証してからimmutable Tag / GitHub Releaseを公開します。
 
-## Roadmap
+Productionへの自動Deployは行いません。
 
-Secure Baseline、RSS Engine、Frontend Modernization、公開／Release基盤は完了しています。現在は、安定版を基準にBug Fix、既存機能の操作改善、必要性を確認した機能追加を小さなReleaseへ分けて進めます。次期VersionをREADMEへ固定せず、実装時点のIssue、User確認、Current Test、Release情報を正とします。
+詳細は [`docs/release-package.md`](docs/release-package.md) と [`docs/tag-and-github-release.md`](docs/tag-and-github-release.md) を参照してください。
 
-初期Modernization工程の履歴: [`docs/roadmap.md`](docs/roadmap.md)
+## Legacy / Modernization Policy
 
-## GitHub repository / Portfolio
+Legacy版は比較・解析対象として保持し、現在のRuntimeへ混在させません。
 
-公開Repositoryには、GitHub Actions CI、正式Release Workflow、Security reporting、Contribution方針、Bug report templateを収録しています。CIは`main`へのpush／Pull RequestでRegressionを実行します。Release Workflowは`main`上の明示Versionを検証し、Runtime／Complete Package、SHA-256、GitHub Artifact Attestationを生成し、公開前にSHA-256とAttestationを再検証してからTagとGitHub Releaseを作成します。Productionへの自動Deployは行いません。
+既存機能・既存Data・主要URLとの互換性を重視し、大規模な全面Rewriteより小さな変更を優先します。古いCredential形式や不明なDataを推測で自動移行しません。
 
-- CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) / [`docs/ci.md`](docs/ci.md)
-- Release: [`.github/workflows/release.yml`](.github/workflows/release.yml) / [`docs/tag-and-github-release.md`](docs/tag-and-github-release.md)
-- Security report: [`SECURITY.md`](SECURITY.md)
-- Contribution: [`CONTRIBUTING.md`](CONTRIBUTING.md)
-- GitHub設定: [`docs/github-publication.md`](docs/github-publication.md)
-- Portfolio掲載用メモ: [`docs/portfolio.md`](docs/portfolio.md)
+初期Modernizationの設計・変更履歴は [`docs/modernization.md`](docs/modernization.md)、[`docs/change-map.md`](docs/change-map.md)、[`docs/legacy-analysis.md`](docs/legacy-analysis.md) を参照してください。
 
-Pull Request／`main`更新後はGitHub hosted runnerのPHP 8.1 / 8.4 Jobを確認し、Greenになるまでmerge／正式Releaseを行いません。正式Releaseは共通WorkflowのVersion・main SHA・既存Tag・Package内容・secret scan・clean-room・SHA-256・Artifact Attestation検証を通過した場合だけ公開します。
+## License
 
-## License and third-party components
+Project独自CodeとModernizationで追加・変更した部分は [`LICENSE`](LICENSE) のMIT Licenseで公開します。
 
-Project独自codeとModernizationで追加・変更した部分は [`LICENSE`](LICENSE) のMIT Licenseで公開します。同梱するFrontend libraryには各上流Licenseが適用され、ProjectのMIT Licenseで再Licenseしません。
-
-現在の主な同梱VersionはjQuery 3.7.1、Font Awesome Free 6.7.2、Bootstrap / Bootswatch 5.3.8、PHPMailer 7.1.1です。旧jquery-drawer／iScroll／standalone PopperはRuntimeから削除済みです。詳細は [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) と [`docs/dependencies.md`](docs/dependencies.md) を参照してください。
-
-## Repository safety
-
-Gitへ入れないもの:
-
-- `config/local.php`
-- real `.env`
-- production DB dump / backup
-- Legacy `rss.sql`, `rss.zip`
-- logs
-- PHP session files
-- login throttle state
-- migration snapshots
-- runtime Feed cache / lock / fetch state files
-- private keys / API keys
-
-Sanitizedされた `database/` のschema/audit/migration/fake fixtureだけを例外としてVersion管理します。
-
-詳細: [`docs/sensitive-data-manifest.md`](docs/sensitive-data-manifest.md)
-
-## Historical baseline
-
-SB-15のInitial Commit gateとVersion 1.0.0公開準備は完了済みです。当時の判断根拠は [`docs/initial-commit-gate.md`](docs/initial-commit-gate.md) とM4資料へ履歴として残しています。現在の公開可否は共通CI／Release Workflowと最新Release情報を基準にします。
+同梱Frontend / Backend Libraryには各上流Licenseが適用されます。詳細は [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) と [`docs/dependencies.md`](docs/dependencies.md) を参照してください。
