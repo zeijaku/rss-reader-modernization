@@ -84,16 +84,20 @@ git pull --ff-only
 
 ## 6. 更新後のCurrent Gate
 
-RepositoryのCurrent Gateは次です。
+Production Runtime ZIPでは次を確認します。
 
 ```powershell
 php tools/healthcheck.php
-php tools/db_sb13.php verify
-bash tests/run-ci.sh
-node --check public/js/dashboard.js
+php tools/db_current.php verify
 ```
 
-通常更新では `tests/run-ci.sh` をCurrent Gateとします。Historical Version固有の調査が必要な場合だけ、当時の `tests/run.sh` / `tests/run-v*.sh` を追加で参照します。
+Repository cloneまたはComplete Source Packageで `tests/` が存在する場合は、追加でCurrent Gateを実行します。
+
+```powershell
+bash tests/run-ci.sh
+```
+
+`db_current.php verify` はCurrent SchemaのRead-only確認です。Legacy DBを古いVersionから更新する場合のSB-13 audit / migration確認は、対象手順に限って `db_sb13.php` を使用します。Historical Version固有の調査が必要な場合だけ、当時の `tests/run.sh` / `tests/run-v*.sh` を追加で参照します。
 
 GitHub ActionsのCurrent CI / Release verification Runtimeは [CI](ci.md) を正とします。
 
