@@ -5,6 +5,7 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / 'tools'))
 
 import build_release_package  # noqa: E402
