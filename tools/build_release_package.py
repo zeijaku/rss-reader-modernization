@@ -26,6 +26,7 @@ DIRECTORIES = ('app', 'public', 'config', 'database', 'licenses', 'tools', 'var'
 DOC_FILES = (
     'docs/installation.md',
     'docs/update.md',
+    'docs/update-history.md',
     'docs/configuration.md',
     'docs/backup-and-restore.md',
     'docs/rollback.md',
