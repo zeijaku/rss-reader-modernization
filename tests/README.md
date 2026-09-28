@@ -23,6 +23,7 @@ Examples:
 - `test_v119c_registration_throttle.py`: historical filename, Current security behavior
 - `test_v1_33_rc2_asset_loader.js`: historical filename, Current asset-loader behavior
 - `test_current_fresh_install_schema_contract.py`: explicit Current schema contract
+- `test_current_fresh_install_schema_mariadb.sh`: one-SQL Fresh Install smoke against MariaDB; CI / Release requires it on PHP 8.4
 
 ## Historical Tests
 
