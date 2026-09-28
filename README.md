@@ -2,8 +2,10 @@
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
-**Stable release:** `RSS Reader Modernization 1.39.0`
-Release tag: `v1.39.0`
+**Stable release:** `RSS Reader Modernization 1.39.1`
+Release tag: `v1.39.1`
+
+Version 1.39.1は、Remember Meで復元した未信頼BrowserがTOTP 2FAを完了した際、Native MySQL PDO Prepareで同名Placeholderを再利用していたため24時間の信頼日時更新に失敗する問題を修正するCorrection Releaseです。既存の30日Remember Token、通常Sessionの2時間Idle、2FA信頼24時間という設定値は変更せず、未信頼Remember Token→2FA成功→信頼日時更新→次回自動復元までを回帰Testへ追加しました。DB Migration、新規必須Config、UI/API変更はありません。
 
 Version 1.39.0は、Application機能を増やすのではなく、GitHub／Dashboard／PHP内部構造／Release Supply Chainを整理したMaintenance / Architecture / Security Hardening Releaseです。GitHub Actionsの外部ActionをCommit SHA固定しDependabot監視を追加、Dashboardの共通通信処理を`dashboard-core.js`へ分離、Content APIとReader Full TextをFacade互換のまま責務別Moduleへ分割し、Release Workflowは検証Jobと公開Jobを分離して最小権限化、Runtime／Complete ZIPへGitHub Artifact Attestationを生成・公開前再検証する構成へ強化しました。Notification Center／Calendar Modal／Stock・SettingsのDashboard Core読込漏れも同時に修正しています。DB Migration、新規必須Config、Runtime外部Dependencyの追加はありません。
 
