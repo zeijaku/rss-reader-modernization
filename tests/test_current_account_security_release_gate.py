@@ -15,6 +15,7 @@ def text(path: str) -> str:
 version = text('app/version.php')
 schema = text('database/schema.sql')
 install = text('docs/installation.md')
+update_history = text('docs/update-history.md')
 local_example = text('config/local.php.example')
 env_example = text('config/.env.example')
 
@@ -42,13 +43,14 @@ for migration in [
               f'migration remains additive/non-destructive: {migration}')
         check('INFORMATION_SCHEMA.TABLES' in upper, f'migration checks existing table before create: {migration}')
 
-order = [install.find(x) for x in [
+check('update-history.md' in install, 'installation guide delegates existing-database migration history to the historical update guide')
+order = [update_history.find(x) for x in [
     '022_v1_32_auth_2fa.sql',
     '023_v1_32_auth_session.sql',
     '024_v1_32_auth_audit_log.sql',
 ]]
-check(all(i >= 0 for i in order) and order == sorted(order), 'installation guide documents V1.32 migrations in numeric order')
-check('APP_TOTP_SECRET_KEY_B64' in install and '変更しない' in install, 'installation guide warns not to rotate an enrolled TOTP key')
+check(all(i >= 0 for i in order) and order == sorted(order), 'historical update guide documents V1.32 migrations in numeric order')
+check('APP_TOTP_SECRET_KEY_B64' in update_history and '変更しない' in update_history, 'historical update guide warns not to rotate an enrolled TOTP key')
 for cfg, name in [(local_example, 'local.php.example'), (env_example, '.env.example')]:
     check('APP_TOTP_SECRET_KEY_B64' in cfg, f'{name} documents dedicated TOTP encryption key')
     check('AUTH_STEP_UP_TIMEOUT' in cfg, f'{name} documents Step-up timeout')
