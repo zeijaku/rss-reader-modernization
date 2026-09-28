@@ -1,36 +1,42 @@
 # 配置確認Checklist
 
+このChecklistは現在の正式ReleaseをProductionへ配置する際の共通確認用です。Version固有のMigration、Config変更、既知の制限は [`../RELEASE_NOTES.md`](../RELEASE_NOTES.md)、[`../CHANGELOG.md`](../CHANGELOG.md)、[`update.md`](update.md) を先に確認してください。
+
 ## 配置前
 
-- [ ] V1.33ではMigration 025の適用有無と実際のTable prefixを確認した
-- [ ] 正式版`1.33.0`のRuntime ZIPを配置対象として記録した
-- [ ] 対象Version、Commit、ZIP SHA-256を記録した
-- [ ] Release Notes、変更 / 新規 / 削除fileを確認した
-- [ ] DB migrationと必須設定追加の有無を確認した
+- [ ] 対象Version、Commit、Release tagを記録した
+- [ ] Runtime ZIPとSHA-256を配置対象として記録した
+- [ ] Release NotesとCHANGELOGを確認した
+- [ ] DB Migrationと必須Config変更の有無・適用順を確認した
 - [ ] `config/local.php`、`APP_HASH_KEY`、DatabaseをBackupした
+- [ ] Mail / Remote Files等を利用する場合は対応するCredential key / SecretのBackup方針を確認した
 - [ ] Database dumpのSizeとSHA-256を確認した
 - [ ] Rollback先Versionを確保した
 - [ ] Maintenance時間と連絡方法を決めた
-- [ ] 別環境または展開先でPackageを確認した
+- [ ] 別環境または本番Directory外でPackageを確認した
 
 ## Package
 
+- [ ] GitHub Releaseの正式Assetを使用している
+- [ ] Runtime ZIPと`.sha256`の組合せが一致している
 - [ ] Top-level directoryが1つ
 - [ ] ZIP path traversal / absolute path / duplicate entryなし
 - [ ] 入れ子ZIPなし
-- [ ] `config/local.php`、`.env`、実DB、Log、Session、Cacheなし
+- [ ] `config/local.php`、real `.env`、実DB、Log、Session、Cacheなし
 - [ ] `LICENSE`、`THIRD_PARTY_NOTICES.md`、`licenses/`あり
-- [ ] ManifestとSHA-256一致
+- [ ] GitHub CLIを使用できる場合はArtifact Attestationも確認した
+
+Release Packageの構成とAttestation確認方法は [`release-package.md`](release-package.md) を参照してください。
 
 ## 配置
 
 - [ ] **推奨構成**ではDocumentRootを `public/` にしている
-- [ ] Application RootをWeb公開する互換構成の場合、Root `.htaccess` が有効で `app/` / `config/` / `tools/` / `var/` への直接Accessが403になることを確認した
-- [ ] Apacheでは`mod_rewrite` / `mod_headers`が有効。Nginx等では`.htaccess`と同等のPrivate path拒否・Security Header・Public PHP whitelistをServer側へ設定した
-- [ ] `public/`の直接実行PHPはPublic Endpoint Matrixの明示Whitelistだけで、未登録PHPは403になる
+- [ ] Application RootをWeb公開する互換構成の場合、Root `.htaccess` が有効で `app/` / `config/` / `tools/` / `var/` への直接Accessが拒否される
+- [ ] Apacheでは必要なModuleが有効。Nginx等ではPrivate path拒否・Security Header・Public PHP whitelistをServer側へ設定した
+- [ ] `public/`の直接実行PHPはPublic Endpoint Matrixの明示Whitelistだけ
 - [ ] Private runtime data、Secret、DB dump、LogをWeb公開領域へ置いていない
 - [ ] `config/local.php`を上書きしていない
-- [ ] 削除一覧がある場合だけ対象fileを削除した
+- [ ] 削除一覧がある場合だけ対象Fileを削除した
 - [ ] `var/session/`が書込み可能
 - [ ] `var/security/login-throttle/`が書込み可能
 - [ ] `var/cache/feed/`が書込み可能
@@ -38,15 +44,13 @@
 - [ ] Log有効時は`var/log/`または指定Pathが書込み可能
 - [ ] 無条件な`777`を設定していない
 
-## CLI
+## CLI / Current Gate
 
 - [ ] `php -v`
 - [ ] `php tools/healthcheck.php`
 - [ ] `php tools/db_sb13.php verify`
-- [ ] V1.1-Gでは`php tools/db_v11g.php verify`
-- [ ] V1.1-Hでは`php tools/db_v11h.php verify`
-- [ ] V1.1-Iでは`php tools/db_v11i.php verify`
-- [ ] `bash tests/run.sh`
+- [ ] Release固有のDB verify手順がある場合は実行した
+- [ ] `bash tests/run-ci.sh`
 - [ ] `node --check public/js/dashboard.js`
 - [ ] `node --check public/js/calendar.js`
 
@@ -54,42 +58,53 @@
 
 ## Browser
 
-- [ ] V1.33 Calendarの5色と既存3色互換
-- [ ] V1.33 Calendarの日／週／月表示とcompact toolbar
-- [ ] 時刻指定予定が日／週のhour laneへ配置される
-- [ ] 複数日予定が週境界／月境界を含めて連結表示される
-- [ ] 繰り返し予定のOccurrence単位変更／削除／復元とシリーズ全体操作
+### Authentication / Account
+
 - [ ] HTTPS
-- [ ] Response HeaderのCSPに `frame-ancestors 'self'`, `base-uri 'self'`, `form-action 'self'`, `object-src 'none'` が含まれる
-- [ ] Version表示
+- [ ] Version表示が対象Releaseと一致する
 - [ ] Registration方針
 - [ ] Login / Logout / Session
+- [ ] Remember Me
+- [ ] TOTP 2FA / trusted-browser behaviorを利用している場合は正常
+- [ ] Account Settings
+
+### RSS / Reader / Stock
+
 - [ ] 4タブ
 - [ ] Feed追加 / 変更 / 削除 / 再読込
-- [ ] 記事Titleの1～2行表示 / 全文Tooltip / RSS概要開閉
-- [ ] Feed Card個別更新
-- [ ] Search Feed追加 / 変更 / 削除 / 検索 / 個別更新
-- [ ] 新着Bellの個別解除 / Feed単位解除
-- [ ] 記事ActionsのStock / URL Copy / X / Task追加
-- [ ] X Timelineを利用する場合は「上級者向け」案内、Bearer Token状態、公開Accountの投稿取得を確認
-- [ ] Connection MonitorのOnline／Latency／30s・60s・5m／Avg・Max・Jitter／Qualityを確認
-- [ ] Connection MonitorのOffline→Recovery／Downtime／Last Disconnectを確認
-- [ ] 複数Connection MonitorでもProbeがPage全体で約5秒に1回であることを確認
-- [ ] Background tabでProbe停止、復帰時に即時再開することを確認
-- [ ] Clock追加 / 変更 / 削除
-- [ ] Memo追加 / 変更 / 削除 / 改行表示
-- [ ] Task Widget追加 / 変更 / 削除
-- [ ] Task追加 / 変更 / 完了切替 / 期限 / 優先度 / 削除
-- [ ] Calendar追加 / 変更 / 削除 / 月移動
-- [ ] 通常予定の追加 / 変更 / 削除 / 複数日表示
-- [ ] Task期限・優先度・完了状態のCalendar連動
 - [ ] RSS 2.0 / RSS 1.0 / Atom
-- [ ] Stock保存 / 一覧
+- [ ] Feed Card個別更新
+- [ ] Search Feed / 全RSS新着
+- [ ] RSS Management / Feed Health / RSS Rulesを利用している場合は正常
+- [ ] 記事Actions
+- [ ] Reader Mode / Full Textを利用している場合は正常
+- [ ] Stock保存 / 一覧 / Filter / 状態変更
+
+### Productivity
+
+- [ ] Clock / Memo / Task
+- [ ] Calendarの日／週／月表示
+- [ ] 通常予定 / 複数日 / 繰り返し / Occurrence操作
+- [ ] Calendar Reminder
+- [ ] Notification Center
+- [ ] RSS / StockからCalendar予定作成
+
+### Mail / Files / Optional Widgets
+
+- [ ] Mailを利用する場合は受信 / Folder / 検索 / 送信 / Reply / Sent / 添付
+- [ ] Gmail OAuth2を利用する場合は再接続を含め認証状態が正常
+- [ ] File LibraryのUpload / Preview / Download / Delete
+- [ ] Remote Filesを利用する場合は接続 / Directory / Upload / Download / Editor / Permission
+- [ ] Information / Media / Game Widgetを利用している場合は表示・操作が正常
+- [ ] X Timelineを利用する場合はToken状態と投稿取得が正常
+
+### UI / Frontend
+
 - [ ] Settings / Navbar / Tab名
 - [ ] Drawer / Modal / Page Top
 - [ ] Keyboard / Focus / ARIA
-- [ ] 8テーマ
-- [ ] 320 / 375 / 768 / 992 / 1280px
+- [ ] 使用Theme
+- [ ] Smartphone / Tablet / Desktopの主要幅
 - [ ] JavaScript Console errorなし
 - [ ] CSS / JS / WebFont / faviconがHTTP 200
 
@@ -98,16 +113,19 @@
 - [ ] Error logを確認した
 - [ ] Database row countに異常がない
 - [ ] Backupと実施記録を安全な場所へ保存した
-- [ ] GitHub mainまたはRelease Assetと配置物のVersionが一致する
+- [ ] GitHub Release Assetと配置物のVersionが一致する
 - [ ] 問題がある場合のRollback判断者を決めた
 
-## M4-Fへ残す証拠
+## 配置記録
 
+最低限、次を残します。
+
+- 対象Version / Commit / Release tag
+- Runtime ZIP SHA-256
 - 実PHP / MySQL Version
 - 有効Extension
-- healthcheck結果
-- DB verify結果
-- Browser / Responsive結果
-- 実Feed結果
-- Backup / Restore drill結果
+- healthcheck / DB verify / Current Gate結果
+- Browser / Responsive確認結果
+- Backup / Restore確認
+- 実施日時
 - 既知の制限事項

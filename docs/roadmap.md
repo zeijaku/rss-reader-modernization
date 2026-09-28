@@ -1,4 +1,8 @@
-# Roadmap after Secure Baseline
+# Historical Modernization Roadmap
+
+この文書はSecure Baseline以降の開発工程をHistorical Roadmapとして保持するものです。現在の正式Versionや次期Versionを固定する正本ではありません。
+
+Current statusは [`../README.md`](../README.md)、`../app/version.php`、[`../CHANGELOG.md`](../CHANGELOG.md)、[`../RELEASE_NOTES.md`](../RELEASE_NOTES.md) を参照してください。
 
 ## Version 1.33 — Calendar Enhancement
 
@@ -14,11 +18,9 @@
 
 V1.33-H以降は機能Scopeを固定し、日程コピーと日程Drag & Dropは次期以降へ延期しました。設計上の要件は[`v1-33-future-calendar.md`](v1-33-future-calendar.md)へ記録しています。
 
-## Current milestone
+## Current status
 
-`Secure Baseline SB-15 / R3` でSecurity、major Legacy bugs、PHP 8、DB integrity、test、documentationの土台まで完了し、Initial Commitとして公開済みです。
-
-現在の正式版Sourceは`RSS Reader Modernization 1.33.1`です。V1.33.1は既存Remote Files APIとSecurity境界を維持した複数Upload Patch Releaseで、Tag／GitHub Releaseは共通Release workflowの全Gate通過後にだけ公開します。
+このRoadmap内のVersion表記・候補・工程名は、それぞれの開発時点の記録です。現在の正式版をこの文書へ固定せず、RepositoryのCurrent Version / CHANGELOG / Release Notesを正とします。
 
 ## Version 1.1 — Dashboard機能追加
 
@@ -91,7 +93,9 @@ local/manual data
 - [x] M1-F ETag / Last-Modified / HTTP 304
 - [x] M1-G Fetch status / error state + Retry strategy + stale-if-error
 
-### Planned topics
+### Historical planned topics
+
+以下はM1着手時の計画項目です。上のProgressで完了済みの内容も含むため、現在の未実装Roadmapとしては扱いません。
 
 - Fetcher / Parser責務分離
 - normalized item model
@@ -120,7 +124,7 @@ HTML scrapingはサイト構造変更の影響が大きいため、generic parse
 - [x] M2-F Frontend依存関係更新
 - [x] M2-G 最終回帰・Documentation
 
-M2-AではインラインJavaScript / CSSを外部Assetへ分離し、PHP生成JavaScriptをdata属性ベースへ変更しました。M2-BではFeed通信とDOM描画を分け、Loading、0件、取得失敗、不正Response、欠損タイトル、長いUnicodeタイトルを扱います。M2-Cではdoctype / lang / landmark、Form / Button、Keyboard、Focus、ARIAを改善しました。M2-DではMobile 1列、Tablet 2列、Desktop 4列のgrid、長い文字列の折返し、空画面、RSS削除、Feed再読込、画面内通知を改善しました。M2-Eでは画面から参照されないCSS / JavaScript、SCSS / LESS、metadata、SVG spriteを削除しました。M2-FではjQuery 3.3.1を3.7.1、Font Awesome Free 5.3.1を6.7.2へ更新しました。M2-Gでは全工程の回帰、Asset allowlist、Documentation link、配布除外、手動確認Matrixを整理しました。Bootstrap / Bootswatch 4.1.3、Popper 1系、Drawer 3.2.2、iScroll 5.2.0-snapshotは、既存MarkupとThemeの組合せを壊さないため維持しています。
+M2-AではインラインJavaScript / CSSを外部Assetへ分離し、PHP生成JavaScriptをdata属性ベースへ変更しました。M2-BではFeed通信とDOM描画を分け、Loading、0件、取得失敗、不正Response、欠損タイトル、長いUnicodeタイトルを扱います。M2-Cではdoctype / lang / landmark、Form / Button、Keyboard、Focus、ARIAを改善しました。M2-DではMobile 1列、Tablet 2列、Desktop 4列のgrid、長い文字列の折返し、空画面、RSS削除、Feed再読込、画面内通知を改善しました。M2-Eでは画面から参照されないCSS / JavaScript、SCSS / LESS、metadata、SVG spriteを削除しました。M2-FではjQuery 3.3.1を3.7.1、Font Awesome Free 5.3.1を6.7.2へ更新しました。M2-Gでは全工程の回帰、Asset allowlist、Documentation link、配布除外、手動確認Matrixを整理しました。M2当時のDependency判断はHistorical Evidenceとして扱います。Current Runtime dependencyは [`dependencies.md`](dependencies.md) と [`../THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md) を正とします。
 
 Frontend刷新はSecurity behaviorを変えないよう、SB-14以降とM1のregressionを継続します。
 
@@ -138,7 +142,9 @@ Frontend刷新はSecurity behaviorを変えないよう、SB-14以降とM1のreg
 
 M4へ新機能、大規模Refactor、Bootstrap 5移行、npm / Composer等のbuild tool追加は混在させません。
 
-## 06 — GitHub public release
+## Historical 06 — GitHub public release
+
+初回Public Repository整備時の計画記録です。現在のGitHub公開・CI・Release運用は [`github-publication.md`](github-publication.md)、[`ci.md`](ci.md)、[`tag-and-github-release.md`](tag-and-github-release.md) を参照してください。
 
 - repository history整理
 - license方針決定

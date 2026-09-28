@@ -1,4 +1,12 @@
-# Version 1.36.0 update
+# 更新手順 / Update Guide
+
+この文書はCurrent Releaseの共通更新手順と、過去Releaseで必要だったVersion固有Migration / Config変更の履歴を保持します。
+
+現在の更新では、最初に `../app/version.php`、[`../RELEASE_NOTES.md`](../RELEASE_NOTES.md)、[`../CHANGELOG.md`](../CHANGELOG.md) を確認し、対象Releaseに必要な作業だけを適用してください。古いVersion節を現在環境へ一律適用しません。
+
+Current Gateは `bash tests/run-ci.sh` です。Historical Version固有の確認が必要な場合だけ `bash tests/run.sh` / `tests/run-v*.sh` を追加使用します。
+
+## Historical: Version 1.36.0 update
 
 ## Version 1.35.4からVersion 1.36.0
 
@@ -129,7 +137,7 @@ V1.19.0はArchitecture / Security / Documentation中心のMaintenance Releaseで
 7. Camera / Videoを使用する場合はConsoleにhls.js SRI Errorがなく、Asset URLが`?v=1.19.0`になっていることを確認する。
 8. 問題があればV1.18.0 BackupへCodeを戻す。DB MigrationがないためDB rollbackは不要。
 
-# 更新手順
+## 共通更新手順
 
 ## 基本方針
 
@@ -452,9 +460,11 @@ M4-Cの削除fileはありません。
 ```powershell
 php tools/healthcheck.php
 php tools/db_sb13.php verify
-bash tests/run.sh
+bash tests/run-ci.sh
 node --check public/js/dashboard.js
 ```
+
+通常更新では `tests/run-ci.sh` をCurrent Gateとします。`tests/run.sh` はHistorical Version固有の調査が必要な場合だけ追加実行します。
 
 Browserでは次を確認します。
 
