@@ -72,6 +72,8 @@ check(all(f'`{column}`' in SCHEMA for column in mail_columns),
       'fresh mail_account schema includes SMTP, Sent and OAuth2 columns')
 check('`remember_token_second_factor_verified_at` DATETIME NULL DEFAULT NULL' in SCHEMA,
       'fresh remember_token schema includes the trusted-browser 2FA timestamp')
+check("'`calendar_event_reminder` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none'','," in SCHEMA,
+      'fresh calendar schema contains a syntactically complete reminder column fragment')
 
 check('Fresh Installでは `database/schema.sql` だけを1回実行します' in INSTALL,
       'installation guide documents the single-SQL fresh install contract')
