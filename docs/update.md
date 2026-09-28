@@ -35,7 +35,7 @@ Production serverでLocal変更がある場合は、その内容を確認する�
 
 **既存Databaseへ `database/schema.sql` を再実行しません。**
 
-`schema.sql` はFresh Install用です。既存環境では、現在Versionから更新先Versionまでに追加されたMigrationのうち、**未適用のものだけ**を番号順に適用します。
+`schema.sql` はFresh Install用のCurrent完成形で、Fresh Installでは追加Migrationを実行しません。既存環境では、現在Versionから更新先Versionまでに追加されたMigrationのうち、**未適用のものだけ**を番号順に適用します。
 
 判断手順:
 
