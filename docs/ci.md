@@ -39,6 +39,8 @@ bash tests/run-ci.sh
 
 Node.jsはCurrent CI / Release verificationとも24系を標準Runtimeとします。GitHub Action自身の実行Runtimeと、ProjectのJavaScript Test Runtimeは別概念ですが、Current Workflowでは双方をNode 24対応へ揃えています。
 
+Fresh Installの `database/schema.sql` は、通常の静的Contractに加えてPHP 8.4 CI / Release verificationでMariaDB Server Toolsを用意し、空Databaseへ1 SQLで投入するSmoke Testを必須実行します。Local環境でMariaDB Server Toolsが無い場合だけ同TestはSKIPします。
+
 主なMaintenance Guard:
 
 - `tests/test_version_dependency_hygiene.py`
@@ -81,7 +83,7 @@ Release WorkflowはSourceを書き換えたり、自動Commitしたりしませ�
 3. `app/version.php` / README / CHANGELOG / RELEASE_NOTES等のRelease-ready整合
 4. 実行開始時のRemote `main` SHA一致
 5. 既存Tagがある場合は同一Commit
-6. PHP 8.1 / 8.4 Current regression
+6. PHP 8.1 / 8.4 Current regression（PHP 8.4側でFresh Install MariaDB schema smokeを必須実行）
 7. high-signal secret scan
 8. Runtime Package生成・Verify
 9. Complete Source Package生成・Verify
