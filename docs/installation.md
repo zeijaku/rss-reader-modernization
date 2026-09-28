@@ -104,7 +104,7 @@ Prefix:   rss_
 
 ## 6. Schemaと現行Migrationを投入
 
-`database/schema.sql` は、Migration `008_v1_7_widget_height.sql` までのBase schemaに加え、V1.20.1の`calendar_event_color`（Migration 013）、V1.24のStock状態Column（Migration 017）、V1.25のCalendar終日／時刻／URL（Migration 018）と繰り返し（Migration 019）、V1.33のOccurrence例外Table（Migration 025）、V1.36のNotification Center Table（Migration 030）とCalendar Reminder Column（Migration 031）を取り込んでいます。Mail / Links / Stock Tags / RSS Highlightに加え、V1.22のFeed Metadata / Feed Health / RSS Rulesは009〜012、014〜016を番号順に適用し、V1.34のMail SMTP / Sent設定（026〜027）、V1.35のGmail OAuth2と2FA信頼時間（028〜029）を続けて適用します。新規Installでは030 / 031を追加実行しません。
+Current Fresh Installでは、まず `database/schema.sql` を投入し、その後にこの節で列挙する**追加Migrationだけ**を番号順に適用します。`schema.sql` にすでに統合済みの過去Migrationを重ねて実行しません。
 
 まず `database/schema.sql` 冒頭の値を、`DB_TABLE_PREFIX` と同じにします。
 
@@ -150,7 +150,9 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\028
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\029_v1_35_remember_2fa_trust.sql
 ```
 
-phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016、026〜029を同じ順番でImportします。V1.20.1のCalendar色Column（013）、V1.24のStock状態Column（017）、V1.25のCalendar終日／時刻／URL／繰り返しColumn（018 / 019）、V1.27 user file（020）、V1.29 Remote Connection（021）、V1.32 Account Security（022〜024）、V1.33 Calendar Occurrence例外（025）、V1.36 Notification Center / Calendar Reminder（030 / 031）は`schema.sql`へ統合済みのため、新規Installではこれらを追加実行しません.
+phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016、026〜029を同じ順番でImportします。
+
+Current `schema.sql` には、013、017〜025、030〜031で追加されたSchema変更が統合済みです。Fresh Installではこれらを追加実行しません。過去VersionごとのMigration理由や既存DBへの適用順は [Historical Update / Migration History](update-history.md) を参照してください。
 
 Prefixが `rss_` の場合、current fresh installでは最終的に次の27 tableが存在します。
 
@@ -196,25 +198,38 @@ PHP processから次へ書込みできるようにします。
 ```text
 var/session/
 var/security/login-throttle/
-var/cache/feed/
+var/cache/
 var/log/                 Logを使う場合
 var/db-migration/         Legacy migrationを行う場合
 ```
+
+`var/cache/` 配下ではFeed Cacheに加え、Reader Full Text / Reader Image等のCurrent機能が必要なPrivate Cacheを使用します。機能側でSubdirectoryを作成する場合があるため、PHP processが必要範囲を書き込めるようにします。
+
+Remote Filesを使用する場合は、`APP_REMOTE_TEMP_DIR` で指定したPrivate temporary directoryも `public/` 外で書込み可能にしてください。
 
 これらは `public/` 外に置きます。Hostingごとに実行userが異なるため、無条件に `777` へする手順は採用しません。Owner / groupを確認し、必要最小限の書込み権限を設定してください。
 
 ## 8. CLI確認
 
+Production Runtime ZIPで新規設置した場合は、Runtime Packageに含まれるToolで次を確認します。
+
 ```powershell
 php -v
 php tools/healthcheck.php
 php tools/db_sb13.php verify
+```
+
+`tools/healthcheck.php` はPHP拡張、設定、Runtime directory、Public Assetを確認しますが、DatabaseへLoginしません。Database接続とSchemaは `php tools/db_sb13.php verify` またはApplication実動作で確認します。
+
+Repository cloneまたはComplete Source Packageを使用していて `tests/` が存在する場合は、追加でCurrent Gateを実行できます。
+
+```powershell
 bash tests/run-ci.sh
 ```
 
-通常のCurrent Gateは `tests/run-ci.sh` です。Historical Version固有の確認が必要な場合だけ `tests/run.sh` / `tests/run-v*.sh` を追加実行します。
+Production Runtime ZIPには `tests/` を含めないため、Runtime ZIPだけを配置したServerで `tests/run-ci.sh` を必須手順にしません。Package構成は [Release Package](release-package.md) を参照してください。
 
-`tools/healthcheck.php` はPHP拡張、設定、Runtime directory、Public Assetを確認しますが、DatabaseへLoginしません。Database接続とSchemaは `php tools/db_sb13.php verify` またはApplication実動作で確認します。
+Historical Version固有の確認が必要な場合だけ、Complete Source / Git履歴上の `tests/run.sh` / `tests/run-v*.sh` を参照します。
 
 CLIが使えないHostingでは、Control panelでPHP Version / Extensionを確認し、BrowserからRegistration、Login、Feed CRUD、Stock、Settingsを確認します。
 
@@ -229,7 +244,7 @@ CLIが使えないHostingでは、Control panelでPHP Version / Extensionを確�
 - Clock、Memo、Task、Calendarの追加、変更、削除
 - Taskの完了切替、期限、優先度
 - Calendarの月移動、通常予定、Task期限表示
-- Calendarの終日／時刻／関連URL、赤／青／緑、毎日／毎週／毎月／毎年の繰り返し
+- Calendarの終日／時刻／関連URL、赤／青／緑／黄／紫の5色、毎日／毎週／毎月／毎年の繰り返し
 - CalendarのToday、14日以内の直近予定、3件＋もっと見る、月切替時の表示安定性
 - Calendar ReminderとNotification Center
 - RSS / Stock記事の「Calendarへ追加」でTitle／URLが登録Modalへ引き継がれる
