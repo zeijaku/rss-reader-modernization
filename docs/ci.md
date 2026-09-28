@@ -1,15 +1,15 @@
 # GitHub Actions CI
 
-## 目的
+## Purpose
 
-V1.23では、GitHub Actionsを次の2本へ整理します。
+Current GitHub Actionsは、Version固有Workflowを増やさず次の2本を標準とします。
 
 - `.github/workflows/ci.yml`
-  - 現在のApplicationを継続的に検証するCI
+  - 現在のApplication Contractを継続的に検証するCI
 - `.github/workflows/release.yml`
-  - 正式Release時だけ実行する共通Release workflow
+  - 正式Release時だけ実行する共通Release Workflow
 
-V1.14〜V1.22で使用したVersion固有のFocused Check / Release GateはGit履歴・各Release tagから参照し、現在の `.github/workflows/` には戻しません。
+過去Versionで使用したFocused Check / Release GateはGit履歴・各Release tagのHistorical Evidenceとして保持し、現在の `.github/workflows/` へ戻しません。
 
 ## Current CI
 
@@ -17,11 +17,11 @@ Trigger:
 
 - `main` へのpush
 - `main` 向けPull Request
-- GitHub画面からの手動実行
+- `workflow_dispatch`
 
-`pull_request_target` は使用しません。Workflow tokenは `contents: read` に限定し、Repositoryへ書込みません。Secretも参照しません。
+`pull_request_target` は使用しません。Workflow全体のPermissionは `contents: read` に限定し、Repositoryへ書込みません。Application Secretも参照しません。
 
-Runtime:
+Runtime Matrix / Tooling:
 
 - PHP 8.1
 - PHP 8.4
@@ -29,104 +29,140 @@ Runtime:
 - Node.js 20
 - PHP extension: curl、mbstring、pdo_mysql、pdo_sqlite、simplexml
 
-Current CIでは、Repository maintenance上の軽量guardを先に実行します。
+CIは次を実行します。
+
+```bash
+bash tests/run-ci.sh
+```
+
+`tests/run-ci.sh` はCurrent Contract向けの標準Gateです。Current hygiene、Current regression、Current feature regressionをまとめて実行します。
+
+主なMaintenance Guard:
 
 - `tests/test_version_dependency_hygiene.py`
-  - Current-following testへの古いasset revision固定を検出
-  - Version固有runnerがCurrent CI / Releaseへ再混入することを検出
+  - Current-following testへの古いVersion / Asset Revision固定の再混入を検出
 - `tests/test_workflow_hygiene.py`
-  - 現役workflowを `ci.yml` / `release.yml` に限定
-  - Version固有workflow、Version固定release branchの再混入を検出
-  - Releaseのbrowser fallbackが `.github/release-request.txt` のmain pushだけに限定されていることを確認
+  - 現役Workflowを `ci.yml` / `release.yml` に限定
+  - Version固有WorkflowやVersion固定Release Branch運用の再混入を検出
+  - Release Trigger / Permission / Action pinning等のCurrent Contractを確認
 - `tests/test_release_flow.py`
-  - Release workflowのVersion非依存性
-  - tag上書き禁止
-  - 既存GitHub Releaseを変更しない契約
-  - package toolへの明示Version入力
-  - clean-room / secret scan維持
+  - 共通Release WorkflowのVersion非依存性
+  - Tag上書き禁止
+  - 既存GitHub Release非変更
+  - Package Build / Verify / clean-room / Attestation Flowを確認
 
-その後、`tests/run-current.sh` と `tests/run-current-features.sh` を実行します。
+過去Version固有のTestは削除しません。Release当時のimmutable contractを確認するHistorical Testとして残しますが、Current CIの通常Gateには含めません。
 
-過去VersionのFinal Release testは削除しません。Release当時のimmutable contractを確認する資料として残しますが、Current CIからは実行しません。
+## Standard Release Workflow
 
-## Standard Release workflow
-
-`.github/workflows/release.yml` は、次の2経路だけで起動します。
+`.github/workflows/release.yml` は次の2経路で起動します。
 
 1. `workflow_dispatch`
-   - GitHub Actions画面の `Run workflow` またはGitHub CLI / APIから実行
+   - GitHub Actions画面、GitHub CLI、APIから実行
    - `version` を `X.Y.Z` 形式で明示入力
 2. browser-only fallback
-   - `main` 上の `.github/release-request.txt` が変更されたpushだけで起動
-   - ファイル内容を `X.Y.Z` としてRelease Versionに使用
+   - `main` 上の `.github/release-request.txt` が変更されたpush
+   - File内容をRelease Versionとして使用
 
-通常のApplication code pushではRelease workflowは起動しません。
+通常のApplication Code pushだけではRelease Workflowは起動しません。
 
-BrowserだけでReleaseする場合は、release-ready sourceを `main` へ反映しCurrent CIを確認した後、GitHubのCode画面から `.github/release-request.txt` を対象Versionへ変更してcommitします。Branch protectionが有効な場合はPull Request経由でmergeします。
+Release WorkflowはSourceを書き換えたり、自動Commitしたりしません。実行前にSourceをrelease-readyな状態へ整え、`main`へ反映しておく必要があります。
 
-Release workflowはSourceを書き換えたり、自動commitしたりしません。実行前にSourceをrelease-readyな状態へ整え、`main`へ反映しておく必要があります。
+## Verify Job
 
-Workflowは次を確認します。
+最初のJobはRelease内容を検証し、公開前Artifactを生成します。
 
-1. 実行元が `main` であること
-2. 手動入力またはrelease request fileのVersionが `X.Y.Z` であること
-3. 対象Versionと `app/version.php` / README / CHANGELOG / RELEASE_NOTESが一致すること
-4. 実行開始時の `main` SHAとRemote `main` SHAが一致すること
-5. 既存Tagがある場合は同じCommitを指していること
-6. PHP 8.1 / 8.4のCurrent regression
-7. 高signal secret scan
-8. Runtime / Complete Source package生成と独立Verifier
-9. SHA-256
-10. clean-room展開確認
-11. 公開直前にRemote `main` SHAとTagを再確認
-12. immutable tag作成とGitHub Release作成
+主な確認:
 
-既存Tagが別Commitを指す場合は失敗します。force updateは行いません。
+1. 実行元が `main`
+2. Release Versionが正式SemVer `X.Y.Z`
+3. `app/version.php` / README / CHANGELOG / RELEASE_NOTES等のRelease-ready整合
+4. 実行開始時のRemote `main` SHA一致
+5. 既存Tagがある場合は同一Commit
+6. PHP 8.1 / 8.4 Current regression
+7. high-signal secret scan
+8. Runtime Package生成・Verify
+9. Complete Source Package生成・Verify
+10. SHA-256 sidecar確認
+11. Runtime / Complete Sourceのclean-room確認
+12. Runtime / Complete Source ZIPへのGitHub Artifact Attestation生成
+13. 検証済みAssetをGitHub Actions Artifactへ引き渡し
 
-同じCommitを指すTagが既に存在する場合はそのTagを再利用します。GitHub Releaseが既に存在する場合は内容やAssetを変更せず、そのまま残します。
+Verify JobはRepository内容の公開変更を行わず、`contents: read`を基本に、Attestation生成に必要な `id-token: write` / `attestations: write` だけを追加します。
 
-## Browser-only release request
+## Publish Job
+
+Publish JobはVerify Job成功後だけ実行します。
+
+主な処理:
+
+1. Verify Jobが生成したArtifactを取得
+2. SHA-256を再確認
+3. `gh attestation verify` でRuntime / Complete Source ZIPのprovenanceを再確認
+4. 公開直前にRemote `main` SHAを再確認
+5. 既存Tagが別Commitを指していないことを再確認
+6. immutable Tagを作成
+7. GitHub Releaseを作成
+8. Runtime / Complete Source ZIPとSHA-256をRelease Assetとして添付
+
+Repositoryへの `contents: write` はPublish Jobだけに限定します。
+
+既存Tagが別Commitを指す場合は失敗し、force updateしません。同じCommitを指すTagは再利用できます。
+
+同じTagのGitHub Releaseが既に存在する場合は、Release本文やAssetを上書き・差し替えしません。
+
+Productionへの自動Deployは行いません。
+
+## Browser-only Release Request
 
 `.github/release-request.txt` はRelease起動専用です。
 
-- 内容は1行の正式SemVer `X.Y.Z` のみ
-- このファイルの変更だけがReleaseのpush trigger対象
-- Source側のVersionやRelease Notesと一致しない場合は `tools/check_release_ready.py` で停止
-- Tag / Release作成前にCurrent regression、secret scan、package verify、clean-room確認をすべて実施
+- 内容は1行の正式SemVer `X.Y.Z`
+- `main` 上でこのFileが変更されたpushだけがReleaseのpush trigger
+- Source側のVersion / README / CHANGELOG / RELEASE_NOTESと一致しない場合はRelease-ready checkで停止
+- Request Fileの変更だけで無条件公開しない
+- Current regression、secret scan、Package verify、clean-room、SHA-256、Attestationを通過してから公開
 
-そのため、ローカルGitやGitHub CLIがない環境でもGitHubブラウザーだけで正式Releaseを要求できます。
+これにより、Local GitやGitHub CLIがない環境でもGitHub Browserから同じRelease Gateを使用できます。
 
-## Historical workflowの扱い
+## Action Dependency Policy
 
-V1.14〜V1.22で使用したVersion固有workflowは、現在のGitHub Actions運用には参加させません。
+CI / Releaseで使用する外部GitHub Actionは、Current WorkflowでFull Commit SHAへ固定します。
 
-過去workflowを確認する場合は、該当Release tagまたはGit履歴を参照します。新Versionを作るために古いworkflow YAMLをコピーしてVersion文字列だけ置換する運用には戻しません。
+Major / Minor UpdateはApplication変更と混在させず、Dependabot PR等で差分とCIを確認して更新します。
 
-## Branch protection / required checks
+## Historical Workflow
 
-Branch protectionやrequired status checkはGitHub側のRepository設定であり、Source treeとは別管理です。
+過去Version固有WorkflowはCurrent運用には参加させません。
 
-V1.23-D実施時点では `main` はprotected branchではなく、required status checkも設定されていません。
+確認が必要な場合は該当Release tagまたはGit履歴を参照します。新Versionを作るために過去WorkflowをコピーしてVersion文字列だけ置換する運用には戻しません。
 
-将来Branch protectionを有効化した場合は、Current CIの安定したJob名をrequired checkとして使用します。
+## Branch Protection / Required Checks
+
+Branch Protection、Ruleset、required status checkはGitHub Repository側の設定であり、Source Treeとは別管理です。
+
+Source Documentationでは現在の有効・無効状態を固定値として扱いません。GitHub Settingsで現在状態を確認してください。
+
+有効化する場合は、Current CIの安定したJobをrequired checkとして使用し、force pushや意図しないbranch削除を防ぐ方針を推奨します。
 
 ## CIだけでは完了しない確認
 
 - Production相当の実MySQL CRUD
 - 外部の実RSS / Atomへの通信
 - 実HostingのPermission、DocumentRoot、HTTPS
-- 実BrowserでのTheme / Responsive確認
+- 実BrowserでのTheme / Responsive / Optional Service確認
 - Backupから別DBへのRestore drill
 - Production反映後の実環境確認
 
-これらはRelease Candidate / Final release確認として扱います。
+これらはCIと分け、Release / Deploymentの手動確認として扱います。
 
 ## Failure時
 
 1. 最初のFAILを優先する。
-2. 最小の対象Testを先に実行する。
-3. 必要な場合だけCurrent regressionへ範囲を広げる。
-4. `continue-on-error` や無条件SKIPで緑にしない。
-5. Release workflow失敗時はTag / Releaseの有無を確認し、Sourceを修正した場合は新しい `main` SHAから再実行する。
+2. 変更箇所に対応する最小Testを先に確認する。
+3. 必要な場合だけCurrent Gate全体へ範囲を広げる。
+4. `continue-on-error` や無条件SKIPでGreenにしない。
+5. Release Workflow失敗時はTag / Release / Artifactの状態を確認する。
+6. Sourceを修正した場合は、新しい `main` SHAからRelease Gateをやり直す。
 
-V1.23では各段階でFull Regressionを繰り返さず、Full regression / Release gateは最終段階でまとめて確認します。
+Package構成は [`release-package.md`](release-package.md)、Tag / GitHub Release手順は [`tag-and-github-release.md`](tag-and-github-release.md) を参照してください。
