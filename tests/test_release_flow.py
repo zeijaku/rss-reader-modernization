@@ -98,6 +98,8 @@ release_package_doc = text('docs/release-package.md')
 
 check("f'intended_release={release}'" in build_runtime, 'Runtime builder writes requested intended_release metadata')
 check("metadata.get('intended_release') == release" in verify_runtime, 'Runtime verifier independently checks requested intended_release')
+check("'docs/update-history.md'" in build_runtime, 'Runtime builder includes historical update documentation referenced by installation/update guides')
+check("'docs/update-history.md'" in verify_runtime, 'Runtime verifier requires historical update documentation')
 check("f'intended_tag=v{release}'" in build_complete, 'Complete builder writes requested intended_tag metadata')
 check("metadata.get('intended_tag') == f'v{release}'" in verify_complete, 'Complete verifier independently checks requested intended_tag')
 check("'.github/workflows/release.yml'" in build_complete, 'Complete Source builder requires generic release workflow')

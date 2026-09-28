@@ -18,7 +18,7 @@ REQUIRED = {
     'RELEASE_NOTES.md', 'SECURITY.md', 'app/version.php', 'public/index.php',
     'public/api_v1.php', 'config/local.php.example', 'config/.env.example',
     'database/schema.sql', 'tools/healthcheck.php', 'tools/db_sb13.php',
-    'docs/installation.md', 'docs/update.md', 'docs/configuration.md',
+    'docs/installation.md', 'docs/update.md', 'docs/update-history.md', 'docs/configuration.md',
     'docs/backup-and-restore.md', 'docs/rollback.md', 'docs/deployment-checklist.md',
     'docs/release-package.md', 'docs/tag-and-github-release.md',
     'RELEASE_BUILD.txt', 'RELEASE_MANIFEST.sha256',
