@@ -6,6 +6,7 @@
 
 ## 使い方
 
+- `database/migrations/` は既存DatabaseのUpgrade履歴です。Fresh InstallはCurrent `database/schema.sql` 1本を使用する。
 - 古いVersionから段階Upgradeする場合に、経由するReleaseのMigration名と注意点を確認する。
 - すでに適用済みのMigrationを、正式Release化や再配置だけを理由に再実行しない。
 - 既存Databaseへ `schema.sql` を再実行しない。
