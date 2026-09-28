@@ -85,10 +85,10 @@ ss-reader-db-YYYYMMDD-HHMMSS.sql
 検証用 `config/local.php` を作り、同じTable prefixを設定して次を実行します。
 
 ```powershell
-php tools/db_sb13.php verify
+php tools/db_current.php verify
 ```
 
-Row count、4 table、Collation、Index、Duplicate / orphanの結果をBackup時の記録と比較します。
+Currentの27 Table、重要Column / Index、Engine / Collationの結果をBackup時の記録と比較します。Legacy DBのDuplicate / orphan調査が必要な場合だけ、対象Versionの手順に従って `php tools/db_sb13.php audit/verify` を追加実行します。
 
 ## Production復旧
 
@@ -100,7 +100,7 @@ Row count、4 table、Collation、Index、Duplicate / orphanの結果をBackup�
 6. 必要な場合だけDatabaseを空DBへRestoreする。
 7. `APP_HASH_KEY` がBackup時と同じことを確認する。
 8. Runtime directoryを作成して書込み権限を設定する。
-9. `php tools/healthcheck.php` と `php tools/db_sb13.php verify` を実行する。
+9. `php tools/healthcheck.php` と `php tools/db_current.php verify` を実行する。
 10. BrowserでLogin、Feed、Stock、Settingsを確認する。
 
 Database Restore例:
@@ -119,7 +119,7 @@ ss-reader-db-YYYYMMDD-HHMMSS.sql
 ```text
 var/session/
 var/security/login-throttle/
-var/cache/feed/
+var/cache/
 var/log/
 var/db-migration/
 ```
