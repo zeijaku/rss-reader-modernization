@@ -66,7 +66,7 @@ Browser Cache               APP_ASSET_REVISION=1.33.0
 正式Tag / GitHub Release    v1.33.0（Release workflow全Gate通過後のみ）
 ```
 
-詳細な順序は`docs/v1-33-i-final-release.md`を参照してください。日程コピーと日程Drag & DropはV1.33対象外です。
+詳細な順序は [v1-33-i-final-release.md](v1-33-i-final-release.md) を参照してください。日程コピーと日程Drag & DropはV1.33対象外です。
 
 ## Version 1.29.0 update
 
