@@ -96,7 +96,7 @@ Repository cloneまたはComplete Source Packageで `tests/` が存在する場�
 - [ ] Mailを利用する場合は受信 / Folder / 検索 / 送信 / Reply / Sent / 添付
 - [ ] Gmail OAuth2を利用する場合は再接続を含め認証状態が正常
 - [ ] File LibraryのUpload / Preview / Download / Delete
-- [ ] Remote Filesを利用する場合は接続 / File操作を利用する場合は接続 / Directory / Upload / Download / Editor / Permission
+- [ ] Remote Filesを利用する場合は接続 / Directory / Upload / Download / Editor / Permission
 - [ ] Information / Media / Game Widgetを利用している場合は表示・操作が正常
 - [ ] X Timelineを利用する場合はToken状態と投稿取得が正常
 
