@@ -5,9 +5,9 @@ ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 SCRIPT_DIR="$ROOT/tests"
 
 # Durable feature contracts introduced after the original current-regression
-# split. Keep this runner version-neutral: historical run-v*.sh files remain
-# available for targeted investigation, but active CI/Release must not stack
-# them indefinitely.
+# split. The filename may retain the version in which a behavior first shipped,
+# but every test invoked here must protect behavior that is still Current.
+# Historical release/finalization gates stay outside this runner; see tests/README.md.
 
 echo '== Current feature contracts: Fresh install schema =='
 python3 "$SCRIPT_DIR/test_current_fresh_install_schema_contract.py"
@@ -47,11 +47,11 @@ node --check "$ROOT/public/js/rss-rules.js"
 node --check "$ROOT/public/js/rss-rule-display.js"
 node --check "$ROOT/public/js/rss-rules-integration.js"
 
-echo '== Current feature contracts: V1.24 Memo =='
+echo '== Current feature contracts: Memo =='
 python3 "$SCRIPT_DIR/test_v124b_memo_contract.py"
 node --check "$ROOT/public/js/memo-counter.js"
 
-echo '== Current feature contracts: V1.24 Stock state =='
+echo '== Current feature contracts: Stock state =='
 php "$SCRIPT_DIR/test_v124c_stock_state.php"
 python3 "$SCRIPT_DIR/test_v124c_stock_state_static.py"
 php "$SCRIPT_DIR/test_v124d_stock_state_ui.php"
@@ -60,7 +60,7 @@ node "$SCRIPT_DIR/test_v124e_stock_state_ui.js"
 python3 "$SCRIPT_DIR/test_v124e_stock_state_workflow_static.py"
 node --check "$ROOT/public/js/stock-state-ui.js"
 
-echo '== Current feature contracts: V1.25 Calendar expansion =='
+echo '== Current feature contracts: Calendar expansion / recurrence =='
 php "$SCRIPT_DIR/test_v1_25_b_calendar_time_contract.php"
 php "$SCRIPT_DIR/test_v1_25_b_calendar_time_validation.php"
 php "$SCRIPT_DIR/test_v1_25_c_calendar_event_ui_contract.php"
@@ -87,7 +87,6 @@ python3 "$SCRIPT_DIR/test_v1_33_g_calendar_views_contract.py"
 node "$SCRIPT_DIR/test_v1_33_g_calendar_views.js"
 node "$SCRIPT_DIR/test_v1_33_g_calendar_views_dom.js"
 python3 "$SCRIPT_DIR/test_v1_33_g_r1_calendar_toolbar_contract.py"
-python3 "$SCRIPT_DIR/test_v1_33_i_final_release.py"
 php -l "$ROOT/app/calendar_exception.php"
 node --check "$ROOT/public/js/calendar-core.js"
 node --check "$ROOT/public/js/calendar-occurrence.js"
@@ -106,7 +105,7 @@ node "$SCRIPT_DIR/test_current_calendar_event_partial_refresh.js"
 node "$SCRIPT_DIR/test_current_calendar_recurrence_partial_refresh.js"
 python3 "$SCRIPT_DIR/test_current_calendar_event_partial_refresh_contract.py"
 
-echo '== Current feature contracts: V1.34.2 Dashboard interactions =='
+echo '== Current feature contracts: Dashboard interactions =='
 python3 "$SCRIPT_DIR/test_v1_34_2_a_modal_background.py"
 python3 "$SCRIPT_DIR/test_v1_34_2_b_calendar_copy_contract.py"
 node "$SCRIPT_DIR/test_v1_34_2_b_calendar_copy.js"
@@ -121,7 +120,7 @@ python3 "$SCRIPT_DIR/test_current_cursor_field_contract.py"
 node "$SCRIPT_DIR/test_current_cursor_field_runtime.js"
 node --check "$ROOT/public/js/cursor-field.js"
 
-echo '== Current feature contracts: V1.39-C PHP architecture / security boundaries =='
+echo '== Current feature contracts: PHP architecture / security boundaries =='
 python3 "$SCRIPT_DIR/test_current_v139c_php_architecture_contract.py"
 php "$SCRIPT_DIR/test_current_v139c_facade_runtime.php"
 php -l "$ROOT/app/api/content.php"
@@ -136,21 +135,21 @@ php -l "$ROOT/app/reader/full_text/extraction.php"
 php -l "$ROOT/app/reader/full_text/cache.php"
 php -l "$ROOT/app/reader/full_text/service.php"
 
-echo '== Current feature contracts: V1.38 Reader contract syntax =='
+echo '== Current feature contracts: Reader contract syntax =='
 python3 -m py_compile \
     "$SCRIPT_DIR/test_v1_38_a_reader_mode_contract.py" \
     "$SCRIPT_DIR/test_v1_38_b_reader_full_text_contract.py" \
     "$SCRIPT_DIR/test_v1_38_c_reader_extraction_contract.py" \
     "$SCRIPT_DIR/test_v1_38_d_reader_image_proxy_contract.py"
 
-echo '== Current feature contracts: V1.38-A Reader Mode =='
+echo '== Current feature contracts: Reader Mode =='
 php "$SCRIPT_DIR/test_v1_38_a_reader_mode.php"
 python3 "$SCRIPT_DIR/test_v1_38_a_reader_mode_contract.py"
 node --check "$ROOT/public/js/dashboard.js"
 php -l "$ROOT/app/api/content.php"
 php -l "$ROOT/app/view/dashboard_modals.php"
 
-echo '== Current feature contracts: V1.38-B Reader Full Text =='
+echo '== Current feature contracts: Reader Full Text =='
 php "$SCRIPT_DIR/test_v1_38_b_reader_full_text.php"
 python3 "$SCRIPT_DIR/test_v1_38_b_reader_full_text_contract.py"
 php -l "$ROOT/app/reader/reader_full_text.php"
@@ -158,14 +157,14 @@ php -l "$ROOT/app/http_fetch.php"
 php -l "$ROOT/app/api.php"
 node --check "$ROOT/public/js/dashboard.js"
 
-echo '== Current feature contracts: V1.38-C Reader Extraction =='
+echo '== Current feature contracts: Reader Extraction =='
 php "$SCRIPT_DIR/test_v1_38_c_reader_extraction.php"
 python3 "$SCRIPT_DIR/test_v1_38_c_reader_extraction_contract.py"
 php -l "$ROOT/app/reader/reader_full_text.php"
 php -l "$ROOT/app/api/content.php"
 node --check "$ROOT/public/js/dashboard.js"
 
-echo '== Current feature contracts: V1.38-D Reader Image Proxy =='
+echo '== Current feature contracts: Reader Image Proxy =='
 php "$SCRIPT_DIR/test_v1_38_d_reader_image_proxy.php"
 python3 "$SCRIPT_DIR/test_v1_38_d_reader_image_proxy_contract.py"
 php -l "$ROOT/app/reader/reader_image_proxy.php"
@@ -174,35 +173,35 @@ php -l "$ROOT/app/reader/reader_full_text.php"
 php -l "$ROOT/app/api/content.php"
 php -l "$ROOT/app/http_fetch.php"
 
-echo '== Current feature contracts: V1.37-A 2048 =='
+echo '== Current feature contracts: 2048 =='
 python3 "$SCRIPT_DIR/test_current_game_2048_contract.py"
 node "$SCRIPT_DIR/test_current_game_2048_runtime.js"
 node --check "$ROOT/public/js/game-2048.js"
 
-echo '== Current feature contracts: V1.37-B Reversi =='
+echo '== Current feature contracts: Reversi =='
 python3 "$SCRIPT_DIR/test_current_reversi_contract.py"
 node "$SCRIPT_DIR/test_current_reversi_runtime.js"
 node --check "$ROOT/public/js/reversi.js"
 
-echo '== Current feature contracts: V1.26 Information Board backend =='
+echo '== Current feature contracts: Information Board backend =='
 php "$SCRIPT_DIR/test_v1_26_b_info_board_backend.php"
 python3 "$SCRIPT_DIR/test_v1_26_b_info_board_static.py"
 
-echo '== Current feature contracts: V1.26 Information Board UI =='
+echo '== Current feature contracts: Information Board UI =='
 python3 "$SCRIPT_DIR/test_v1_26_c_info_board_ui.py"
 node --check "$ROOT/public/js/info-board.js"
 
-echo '== Current feature contracts: V1.26 Information Board ticker =='
+echo '== Current feature contracts: Information Board ticker =='
 python3 "$SCRIPT_DIR/test_v1_26_d_info_board_ticker.py"
 node "$SCRIPT_DIR/test_v1_26_d_info_board_ticker.js"
 node --check "$ROOT/public/js/info-board-ticker.js"
 
-echo '== Current feature contracts: V1.27 Tracking / secure file storage =='
+echo '== Current feature contracts: Tracking / secure file storage =='
 php "$SCRIPT_DIR/url_normalizer_v127b_test.php"
 php "$SCRIPT_DIR/user_file_v127d_test.php"
 php "$SCRIPT_DIR/file_library_v127e_test.php"
 
-echo '== Current feature contracts: V1.28 File Library Phase 2 =='
+echo '== Current feature contracts: File Library =='
 php "$SCRIPT_DIR/file_preview_current_v128g_test.php"
 php "$SCRIPT_DIR/file_library_current_v128g_test.php"
 node --check "$ROOT/public/js/file-library.js"
@@ -211,7 +210,7 @@ node --check "$ROOT/public/js/file-library-text-preview.js"
 node --check "$ROOT/public/js/file-library-csv-preview.js"
 node --check "$ROOT/public/js/file-library-ui.js"
 
-echo '== Current feature contracts: V1.29 Remote File Manager =='
+echo '== Current feature contracts: Remote File Manager =='
 php "$SCRIPT_DIR/remote_file_v129b_security_test.php"
 python3 "$SCRIPT_DIR/remote_file_v129b_static_test.py"
 php "$SCRIPT_DIR/remote_file_v129c_provider_test.php"
@@ -227,7 +226,7 @@ node "$SCRIPT_DIR/remote_file_v1331_multi_upload_runtime_test.js"
 node --check "$ROOT/public/js/remote-files.js"
 
 
-echo '== Current feature contracts: V1.30 Remote Text Editor =='
+echo '== Current feature contracts: Remote Text Editor =='
 python3 "$SCRIPT_DIR/test_current_remote_editor.py"
 php "$SCRIPT_DIR/remote_editor_v130b_text_test.php"
 php "$SCRIPT_DIR/remote_editor_v130d_save_test.php"
@@ -241,7 +240,7 @@ python3 "$SCRIPT_DIR/test_current_calendar_editor_usability_contract.py"
 node --check "$ROOT/public/js/remote-editor.js"
 node --check "$ROOT/public/js/remote-files.js"
 
-echo '== Current feature contracts: V1.31 Remote Permissions =='
+echo '== Current feature contracts: Remote Permissions =='
 php "$SCRIPT_DIR/test_current_remote_permissions.php"
 python3 "$SCRIPT_DIR/test_current_remote_permissions_static.py"
 node --check "$ROOT/public/js/remote-permissions.js"
@@ -290,13 +289,13 @@ python3 "$SCRIPT_DIR/test_current_account_security_release_gate.py"
 node --check "$ROOT/public/js/account-2fa.js"
 node --check "$ROOT/public/js/totp-qr.js"
 
-echo '== Current feature contracts: V1.36 Notification Center =='
+echo '== Current feature contracts: Notification Center =='
 python3 "$SCRIPT_DIR/test_current_notification_center_contract.py"
 php "$SCRIPT_DIR/test_current_notification_center.php"
 php -l "$ROOT/app/notification.php"
 node --check "$ROOT/public/js/notification-center.js"
 
-echo '== Current feature contracts: V1.36 Calendar Reminder =='
+echo '== Current feature contracts: Calendar Reminder =='
 python3 "$SCRIPT_DIR/test_current_calendar_reminder_contract.py"
 php "$SCRIPT_DIR/test_current_calendar_reminder.php"
 php -l "$ROOT/app/calendar_reminder.php"
@@ -307,14 +306,14 @@ node --check "$ROOT/public/js/calendar-recurrence.js"
 node --check "$ROOT/public/js/calendar-reminder-target.js"
 node --check "$ROOT/public/js/notification-center.js"
 
-echo '== Current feature contracts: V1.36 Calendar Occurrence Reminder =='
+echo '== Current feature contracts: Calendar Occurrence Reminder =='
 python3 "$SCRIPT_DIR/test_current_calendar_occurrence_reminder_contract.py"
 php "$SCRIPT_DIR/test_current_calendar_occurrence_reminder.php"
 php -l "$ROOT/app/calendar_exception.php"
 node --check "$ROOT/public/js/calendar-occurrence.js"
 node --check "$ROOT/public/js/calendar-copy.js"
 
-echo '== Current feature contracts: V1.36-D Calendar / navbar usability =='
+echo '== Current feature contracts: Calendar / navbar usability =='
 python3 "$SCRIPT_DIR/test_current_v136d_usability_contract.py"
 node "$SCRIPT_DIR/test_current_calendar_usability.js"
 node --check "$ROOT/public/js/calendar-usability.js"
