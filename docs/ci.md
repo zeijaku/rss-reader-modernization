@@ -35,7 +35,7 @@ CIは次を実行します。
 bash tests/run-ci.sh
 ```
 
-`tests/run-ci.sh` はCurrent Contract向けの標準Gateです。Current hygiene、Current regression、Current feature regressionをまとめて実行します。
+`tests/run-ci.sh` はCurrent Contract向けの標準Gateです。Current hygiene、Current regression、Current feature regressionをまとめて実行します。TestのCurrent / Historical分類と追加方針は [`tests/README.md`](../tests/README.md) を参照してください。
 
 Node.jsはCurrent CI / Release verificationとも24系を標準Runtimeとします。GitHub Action自身の実行Runtimeと、ProjectのJavaScript Test Runtimeは別概念ですが、Current Workflowでは双方をNode 24対応へ揃えています。
 
@@ -53,7 +53,7 @@ Node.jsはCurrent CI / Release verificationとも24系を標準Runtimeとしま�
   - 既存GitHub Release非変更
   - Package Build / Verify / clean-room / Attestation Flowを確認
 
-過去Version固有のTestは削除しません。Release当時のimmutable contractを確認するHistorical Testとして残しますが、Current CIの通常Gateには含めません。
+過去Version固有のTestは原則削除せず、必要なものはRelease当時のimmutable contractを確認するHistorical Testとして残します。ただし、Version名を含むTestでも現在のSecurity / Runtime / UI / Schema behaviorを直接保護しているものはCurrent Gateに残します。逆に、過去ReleaseのREADME・Release Notes・finalization documentだけを確認するTestはCurrent Gateへ含めません。
 
 ## Standard Release Workflow
 
