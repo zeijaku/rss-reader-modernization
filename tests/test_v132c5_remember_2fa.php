@@ -150,7 +150,14 @@ final class V132c5RememberPDO extends PDO
     public int $nextTokenId = 1;
     private bool $transaction = false;
     public function __construct() {}
-    public function prepare(string $query, array $options = []): PDOStatement|false { return new V132c5RememberStatement($this, $query); }
+    public function prepare(string $query, array $options = []): PDOStatement|false
+    {
+        preg_match_all('/:[A-Za-z_][A-Za-z0-9_]*/', $query, $matches);
+        if (count($matches[0]) !== count(array_unique($matches[0]))) {
+            throw new PDOException('Duplicate named placeholders are rejected by native MySQL prepares.');
+        }
+        return new V132c5RememberStatement($this, $query);
+    }
     public function getAttribute(int $attribute): mixed { return $attribute === PDO::ATTR_DRIVER_NAME ? 'mysql' : null; }
     public function beginTransaction(): bool { $this->transaction = true; return true; }
     public function commit(): bool { $this->transaction = false; return true; }
@@ -217,6 +224,40 @@ $trustedBefore = session_id();
 $check(persistent_login_restore_session(), '2FA-verified Remember Token restores within its trust window');
 $check(app_session_user_id() === 1 && !app_session_has_pending_auth(), 'trusted browser does not ask for 2FA again within 24 hours');
 $check(session_id() !== $trustedBefore, 'trusted Remember restoration still rotates the session identifier');
+
+persistent_login_revoke_current();
+
+// Regression: an older/untrusted Remember Token that completes a fresh 2FA
+// challenge must gain the same bounded trust without relying on emulated prepares.
+$check(persistent_login_issue_for_user(1), 'untrusted Remember Token can be issued for post-challenge trust regression');
+app_session_clear_authentication();
+$check(persistent_login_restore_session(), 'untrusted Remember Token enters restoration processing before fresh 2FA');
+$check(app_session_has_pending_auth() && app_session_pending_source() === 'remember', 'untrusted Remember restoration requires a fresh second factor');
+$postChallengeSelector = app_session_pending_remember_selector();
+$check(is_string($postChallengeSelector), 'pending Remember challenge retains the rotated selector');
+$completedUserId = app_session_complete_pending_auth();
+$check($completedUserId === 1 && app_session_is_authenticated(), 'successful second factor can complete the Remember-origin pending session');
+$check(
+    is_string($postChallengeSelector) && remember_token_mark_second_factor_verified(1, $postChallengeSelector),
+    'successful Remember-origin second factor marks the exact token as trusted under native prepare rules'
+);
+$trustedRow = null;
+foreach ($pdo->tokens as $candidate) {
+    if (($candidate['remember_token_selector'] ?? null) === $postChallengeSelector) {
+        $trustedRow = $candidate;
+        break;
+    }
+}
+$check(
+    is_array($trustedRow) && is_string($trustedRow['remember_token_second_factor_verified_at'] ?? null),
+    'post-challenge Remember Token stores a second-factor verification timestamp'
+);
+app_session_clear_authentication();
+$check(persistent_login_restore_session(), 'post-challenge trusted Remember Token restores on the next session');
+$check(
+    app_session_user_id() === 1 && !app_session_has_pending_auth(),
+    'post-challenge trusted browser does not ask for 2FA again inside the trust window'
+);
 
 persistent_login_revoke_current();
 app_session_logout();
