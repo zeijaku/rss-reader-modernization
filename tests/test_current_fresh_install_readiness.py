@@ -16,6 +16,7 @@ PACKAGE_VERIFY = (ROOT / 'tools/verify_release_package.py').read_text(encoding='
 PUBLIC_HTACCESS = (ROOT / 'public/.htaccess').read_text(encoding='utf-8')
 ROOT_HTACCESS = (ROOT / '.htaccess').read_text(encoding='utf-8')
 WORKFLOW = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
+RELEASE_WORKFLOW = (ROOT / '.github/workflows/release.yml').read_text(encoding='utf-8')
 SMOKE = (ROOT / 'tests/test_current_fresh_install_schema_mariadb.sh').read_text(encoding='utf-8')
 
 checks: list[bool] = []
@@ -73,6 +74,9 @@ check('ErrorDocument 404 /public/error.php' in ROOT_HTACCESS,
 check('mariadb-server' in WORKFLOW
       and 'REQUIRE_MARIADB_SCHEMA_SMOKE' in WORKFLOW,
       'CI provisions MariaDB and requires the fresh schema smoke on one matrix job')
+check('mariadb-server' in RELEASE_WORKFLOW
+      and "REQUIRE_MARIADB_SCHEMA_SMOKE: '1'" in RELEASE_WORKFLOW,
+      'Release verification requires the MariaDB fresh schema smoke')
 check('REQUIRE_MARIADB_SCHEMA_SMOKE' in SMOKE
       and 'MariaDB server tools are required' in SMOKE,
       'fresh schema MariaDB smoke fails instead of skipping when CI marks it required')
