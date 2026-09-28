@@ -58,6 +58,14 @@ jobs:
           python --version
           node --version
 
+      - name: Install MariaDB server tools for fresh schema smoke
+        if: matrix.php == '8.4'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mariadb-server
+
       - name: Run the local CI-equivalent gate
+        env:
+          REQUIRE_MARIADB_SCHEMA_SMOKE: ${{ matrix.php == '8.4' && '1' || '0' }}
         run: bash tests/run-ci.sh
 
