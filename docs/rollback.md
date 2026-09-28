@@ -72,9 +72,10 @@ DB migrationを含むReleaseでは、Release NotesにDown migrationが明示さ�
 
 ```powershell
 php tools/healthcheck.php
-php tools/db_sb13.php verify
-bash tests/run.sh
+php tools/db_current.php verify
 ```
+
+Repository cloneまたはComplete Source Packageで `tests/` が存在する場合は、追加で `bash tests/run-ci.sh` を実行します。Historical Versionまで戻す場合は、そのRollback先VersionのDocumentation / Test Gateを使用します。
 
 Browser:
 
