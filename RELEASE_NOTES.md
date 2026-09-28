@@ -1,96 +1,67 @@
-# RSS Reader Modernization 1.39.0
+# RSS Reader Modernization 1.39.1
 
-V1.39.0 is a Maintenance / Architecture / Security Hardening release. It keeps the existing application behavior and data model while reducing coupling in Dashboard and PHP internals, tightening GitHub / Release permissions, and adding verifiable build provenance to formal release artifacts.
+V1.39.1 is a Correction / Security Bug Fix release for the existing 24-hour trusted-browser behavior after TOTP 2FA. It does not add a new authentication feature or change the configured trust duration.
 
-## Main changes
+## Main change
 
-### GitHub / repository hardening
+### Remember Me / 2FA trusted-browser correction
 
-- Pin third-party GitHub Actions used by CI and Release workflows to full commit SHAs.
-- Add Dependabot monitoring for the `github-actions` ecosystem so pinned Actions can be reviewed and updated deliberately.
-- Keep CI read-only and retain protected-`main` controls, required PHP 8.1 / 8.4 checks, force-push prevention, and immutable Release behavior.
+- Fix the trust-marker update used when an existing untrusted Remember Me token restores a browser and the user then completes TOTP 2FA.
+- Replace the repeated `:verified_at` named placeholder in the token update SQL with a distinct `:expires_after` placeholder for the expiry predicate.
+- Keep `PDO::ATTR_EMULATE_PREPARES => false` and the existing native MySQL prepare policy unchanged.
+- Preserve Remember-token validator rotation and update only the exact token selector that completed the second factor.
 
-### Dashboard shared core
+## Why this patch is needed
 
-- Extract shared CSRF/session synchronization, API request, notice, response, and duplicate-request helpers from `public/js/dashboard.js` into `public/js/dashboard-core.js`.
-- Keep the existing Dashboard controller wrappers and UI behavior instead of introducing a new frontend framework or API contract.
-- Ensure Dashboard, Stock, and Settings entry pages load `dashboard-core.js` before `dashboard.js`.
-- Fix the Stock article-actions three-dot menu regression that occurred when Stock loaded the controller without its new shared core dependency.
-- Add regression coverage that scans every public PHP entry point using `dashboard.js` and requires the shared core to be loaded first.
+Password-origin 2FA login could issue a new Remember Token that was trusted immediately, so that path continued to work. An older untrusted Remember Token used a different path: restore the token, require 2FA, then mark that existing token as trusted.
 
-### Compatibility fixes found during manual verification
-
-- Fix Notification Center read / mark-all-read / hide mutations for native MySQL PDO prepares by replacing repeated named placeholders with unique timestamp placeholders.
-- Keep Calendar event modal footer actions reachable when URL / Memo details are expanded by restoring the Bootstrap scrollable-modal flex boundary.
-- User-side verification confirmed the Notification Center close action, expanded Calendar modal controls, and Stock article-actions menu after these corrections.
-
-### PHP architecture / security boundaries
-
-- Keep `app/api/content.php` as the compatibility facade while moving Content, Stock, Feed, and Reader handlers into responsibility-specific modules.
-- Keep `app/reader/reader_full_text.php` as the compatibility facade while separating request validation, charset normalization, extraction/sanitization, cache, and service responsibilities.
-- Preserve existing public function and class names, API action names, response formats, owner scope, validation, Reader behavior, and cache behavior.
-- Keep `app/http_fetch.php`, the Reader image proxy, database schema, and the established SSRF / TLS / redirect / DNS-pinning security boundary unchanged.
-
-### Release supply-chain hardening
-
-- Default the Release workflow to `contents: read`.
-- Split the workflow into a verification/attestation job and a final publication job.
-- Grant `contents: write` only to the publication job; the verification job receives only the additional OIDC / attestation permissions required to mint provenance.
-- Generate GitHub Artifact Attestations for both the Runtime ZIP and Complete Source ZIP.
-- Transfer verified assets between jobs through GitHub Actions artifacts, then re-check both SHA-256 sidecars and both attestations before tag / GitHub Release publication.
-- Retain main-SHA revalidation, immutable-tag checks, secret scan, deterministic package verification, and Runtime / Complete Source clean-room checks.
-- Document `gh attestation verify` so downloaded formal ZIPs can be independently checked against this repository.
+The trust-update statement reused one named PDO placeholder twice. With native MySQL prepares enabled, that update could fail after the authenticated PHP session had already been established. The browser therefore worked for the current session, but the Remember Token could remain untrusted and request 2FA again after the normal session expired.
 
 ## Database upgrade
 
-No database migration is required for V1.39.0.
+No database migration is required for V1.39.1.
 
-Existing RSS, Stock, Calendar, Notification, Reader, Mail, user, and Dashboard data remain unchanged.
+The existing `remember_token_second_factor_verified_at` column introduced in V1.35 remains unchanged.
 
 ## Configuration
 
-No new required application setting, credential, or Runtime external dependency is introduced.
+No configuration change is required.
 
-The GitHub Release workflow uses GitHub-provided OIDC / Artifact Attestation capabilities only during release automation; this does not add a Production runtime dependency.
+The existing values remain unchanged:
+
+- Remember Me lifetime: 30 days
+- normal session idle timeout: 2 hours
+- normal session absolute timeout: 12 hours
+- trusted-browser 2FA window: 24 hours (`AUTH_REMEMBER_2FA_TRUST_SECONDS=86400`)
 
 ## Security and compatibility
 
-- Existing authentication, session, owner scope, CSRF, SSRF, XSS, SQL/PDO, validation, path confinement, credential protection, and Reader security boundaries remain in place.
-- The Dashboard core split preserves the existing API endpoint and controller-facing contracts.
-- The PHP responsibility split preserves existing API and Reader facade entry points.
-- The Notification Center SQL correction keeps owner scoping and mutation semantics unchanged.
-- The Release workflow separates build verification from repository write access and verifies provenance before publication.
-- No database schema, migration, public endpoint, or Production deployment mechanism is added or changed.
+- Existing password authentication, TOTP verification, Recovery Code, Step-up Authentication, Session Registry, CSRF, owner scope, Remember-token validator rotation, and Authentication Security Audit Log boundaries remain unchanged.
+- The patch does not weaken or extend the 24-hour trust window.
+- No UI/API contract, database schema, credential format, public endpoint, or Runtime external dependency is changed.
+- Explicit logout still revokes the current Remember Token as before.
 
 ## Verification completed
 
-- Each V1.39 phase passed the repository CI on PHP 8.1 and PHP 8.4 before integration.
-- A was integrated first, followed by B, C, and D; after each merge the updated `main` branch passed PHP 8.1 / 8.4 CI before the next phase was integrated.
-- B was re-tested after merging A into the branch, including the Dashboard shared-core entry-point dependency coverage.
-- C was re-tested on top of A+B, with the overlapping security test explicitly merged so both Dashboard-core and recursive PHP-module coverage remain active.
-- D was re-tested on top of A+B+C.
-- Dedicated V1.39-C architecture/security and facade runtime tests verify the split PHP modules while retaining the pre-existing contracts.
-- Release workflow tests verify least-privilege job permissions, full-SHA Action pinning, SHA-256 revalidation, provenance generation, provenance verification order, and Release documentation.
-- A real GitHub Artifact Attestation smoke test successfully created Sigstore-backed provenance and verified it with `gh attestation verify`.
-- A second cross-job smoke test successfully uploaded an attested artifact, downloaded it in another job, verified its SHA-256, and verified the downloaded subject's attestation.
-- Temporary smoke workflows were removed after verification.
-- Current integrated CI continues to run the complete regression gate on PHP 8.1 and PHP 8.4.
+- The focused Remember/2FA runtime test now rejects duplicate named placeholders to model the production native-prepare constraint.
+- Regression coverage verifies: untrusted Remember Token restoration -> pending 2FA -> successful authentication -> trust timestamp update -> next Remember restoration without another 2FA challenge inside the trust window.
+- A current contract test prevents the previous duplicate-placeholder SQL shape from returning.
+- Pull Request #89 passed the repository CI on PHP 8.1 and PHP 8.4.
+- After merging PR #89, the updated `main` commit also passed the repository CI on PHP 8.1 and PHP 8.4.
 
 ## Verification limits
 
-- The formal `v1.39.0` tag, Release assets, and production Release attestations are not complete until the final Release workflow succeeds on the release-ready `main` commit.
-- The CI environment does not provide MariaDB server tools for the dedicated real-server mutation test, so that existing test remains skipped there; native-PDO placeholder behavior is additionally guarded by static/current-contract coverage and representative user-side verification.
-- GitHub currently emits a Node.js 20 deprecation warning for the pinned `actions/upload-artifact@v4` / `actions/download-artifact@v4` commits while executing them with the platform's newer Node runtime. The tested V1.39-D flows complete successfully; a major Action update is intentionally left as a separate dependency-maintenance change.
-- Release workflow verification covers repository, package, checksum, provenance, and clean-room behavior; it does not automatically deploy the formal package to Production.
-- Production remains a separate deployment step and is not modified by the formalization process.
+- Formal package, checksum, clean-room and GitHub Artifact Attestation verification must still pass in the Release workflow before `v1.39.1` is published.
+- Production deployment remains a separate step and is not performed automatically by the Release workflow.
+- Existing browsers whose Remember Token still has no second-factor verification timestamp are not retroactively trusted. After deployment, such a browser must complete 2FA once; the corrected path then records the new 24-hour trust timestamp.
 
 ## Release assets
 
 The Release workflow publishes:
 
-- `rss-reader-modernization-1.39.0.zip`
-- `rss-reader-modernization-1.39.0.zip.sha256`
-- `rss-reader-modernization-1.39.0-complete.zip`
-- `rss-reader-modernization-1.39.0-complete.zip.sha256`
+- `rss-reader-modernization-1.39.1.zip`
+- `rss-reader-modernization-1.39.1.zip.sha256`
+- `rss-reader-modernization-1.39.1-complete.zip`
+- `rss-reader-modernization-1.39.1-complete.zip.sha256`
 
 Both ZIP files receive GitHub Artifact Attestations. Consumers with GitHub CLI can verify the downloaded ZIPs with `gh attestation verify ... --repo zeijaku/rss-reader-modernization`.

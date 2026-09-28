@@ -1,3 +1,16 @@
+## 1.39.1 - 2026-09-28
+
+### Account Security correction
+- Fix the 24-hour trusted-browser update after a successful TOTP challenge that originated from an existing untrusted Remember Me token.
+- Use distinct named placeholders for the verification timestamp and expiry comparison so the update works with the application's native MySQL PDO prepares (`PDO::ATTR_EMULATE_PREPARES => false`).
+- Preserve the existing 30-day Remember Me lifetime, 2-hour normal session idle timeout, 12-hour session absolute timeout, and 24-hour trusted-browser window.
+
+### Regression coverage and compatibility
+- Extend the Remember/2FA runtime test so its fake PDO rejects duplicate named placeholders like native MySQL prepares.
+- Cover the full path from untrusted Remember restoration through pending 2FA completion, trust timestamp persistence, and silent trusted restoration on the next session.
+- Add a current contract guard preventing the duplicate-placeholder SQL shape from being reintroduced.
+- No database migration, required configuration, UI/API contract, credential format, or new Runtime dependency is introduced.
+
 ## 1.39.0 - 2026-09-28
 
 ### GitHub / repository hardening
