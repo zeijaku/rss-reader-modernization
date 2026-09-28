@@ -1,9 +1,9 @@
--- RSS Reader Modernization base new-install schema (through migration 008 / V1.7, plus integrated 013, 017-025 and 030-031 where applicable).
+-- RSS Reader Modernization current fresh-install schema.
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
--- Current fresh installs must also apply migrations 009-012 and 014-016 in numeric order.
--- V1.20.1 Calendar color (013), V1.24 Stock state (017), V1.25 Calendar time/URL/recurrence (018/019), V1.27 user file metadata (020), V1.29 remote connection metadata (021), V1.32 Account Security tables (022-024), V1.33 Calendar occurrence exceptions (025), and V1.36 Notification Center / Calendar reminder (030/031) are integrated here.
--- See docs/installation.md.
+-- Fresh installs use this file only; historical migrations remain upgrade-only for existing databases.
+-- The schema includes all current tables and columns introduced through migrations 001-031.
+-- See docs/installation.md and docs/update-history.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
 -- config/local.php. Allowed characters: ASCII letters, digits, underscore;
@@ -30,6 +30,15 @@ SET @t_auth_totp = CONCAT('`', @table_prefix, 'auth_totp`');
 SET @t_auth_recovery_code = CONCAT('`', @table_prefix, 'auth_recovery_code`');
 SET @t_auth_session = CONCAT('`', @table_prefix, 'auth_session`');
 SET @t_auth_audit_log = CONCAT('`', @table_prefix, 'auth_audit_log`');
+SET @t_mail_account = CONCAT('`', @table_prefix, 'mail_account`');
+SET @t_link_item = CONCAT('`', @table_prefix, 'link_item`');
+SET @t_stock_tag = CONCAT('`', @table_prefix, 'stock_tag`');
+SET @t_stock_tag_map = CONCAT('`', @table_prefix, 'stock_tag_map`');
+SET @t_feed_keyword = CONCAT('`', @table_prefix, 'feed_keyword`');
+SET @t_feed_metadata = CONCAT('`', @table_prefix, 'feed_metadata`');
+SET @t_feed_health = CONCAT('`', @table_prefix, 'feed_health`');
+SET @t_rss_rule = CONCAT('`', @table_prefix, 'rss_rule`');
+SET @t_rss_rule_condition = CONCAT('`', @table_prefix, 'rss_rule_condition`');
 
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_user_info, ' (',
@@ -82,6 +91,7 @@ SET @sql = CONCAT(
   '`remember_token_created_at` DATETIME NOT NULL,',
   '`remember_token_expires_at` DATETIME NOT NULL,',
   '`remember_token_last_used_at` DATETIME NULL DEFAULT NULL,',
+  '`remember_token_second_factor_verified_at` DATETIME NULL DEFAULT NULL,',
   'PRIMARY KEY (`remember_token_id`),',
   'UNIQUE KEY `uq_remember_token_selector` (`remember_token_selector`),',
   'KEY `idx_remember_token_user_expiry` (`remember_token_user_id`, `remember_token_expires_at`),',
@@ -394,6 +404,169 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Bounded Authentication Security Activity log'''
 );
 PREPARE v132_audit_stmt FROM @sql; EXECUTE v132_audit_stmt; DEALLOCATE PREPARE v132_audit_stmt;
+
+-- Current Fresh Install: Mail account final schema (migrations 009, 026-028 integrated).
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_mail_account, ' (',
+  '`mail_account_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`mail_account_owner` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`mail_account_display_name` VARCHAR(128) NOT NULL,',
+  '`mail_account_host` VARCHAR(253) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`mail_account_port` SMALLINT UNSIGNED NOT NULL,',
+  '`mail_account_encryption` VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,',
+  '`mail_account_username` VARCHAR(320) NOT NULL,',
+  '`mail_account_auth_type` VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''password'',',
+  '`mail_account_secret` TEXT CHARACTER SET ascii COLLATE ascii_bin NOT NULL COMMENT ''AEAD encrypted credential envelope'',',
+  '`mail_account_smtp_enabled` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,',
+  '`mail_account_smtp_host` VARCHAR(253) CHARACTER SET ascii COLLATE ascii_bin NULL DEFAULT NULL,',
+  '`mail_account_smtp_port` SMALLINT UNSIGNED NULL DEFAULT NULL,',
+  '`mail_account_smtp_encryption` VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NULL DEFAULT NULL,',
+  '`mail_account_smtp_use_imap_credentials` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1,',
+  '`mail_account_smtp_username` VARCHAR(320) NULL DEFAULT NULL,',
+  '`mail_account_smtp_secret` TEXT CHARACTER SET ascii COLLATE ascii_bin NULL DEFAULT NULL COMMENT ''AEAD encrypted SMTP credential envelope; never plaintext'',',
+  '`mail_account_from_address` VARCHAR(320) NULL DEFAULT NULL,',
+  '`mail_account_from_name` VARCHAR(128) NULL DEFAULT NULL,',
+  '`mail_account_sent_save_mode` VARCHAR(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''auto'',',
+  '`mail_account_enabled` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT ''0:disabled/1:enabled'',',
+  '`mail_account_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:active/1:deleted'',',
+  '`mail_account_created_at` DATETIME NOT NULL,',
+  '`mail_account_updated_at` DATETIME NOT NULL,',
+  'PRIMARY KEY (`mail_account_id`),',
+  'KEY `idx_mail_account_owner_flag_id` (`mail_account_owner`, `mail_account_flag`, `mail_account_id`),',
+  'KEY `idx_mail_account_owner_enabled_flag` (`mail_account_owner`, `mail_account_enabled`, `mail_account_flag`, `mail_account_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Mail account settings'''
+);
+PREPARE current_mail_stmt FROM @sql; EXECUTE current_mail_stmt; DEALLOCATE PREPARE current_mail_stmt;
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_link_item, ' (',
+  '`link_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`link_date` DATETIME NOT NULL,',
+  '`link_updated_at` DATETIME NOT NULL,',
+  '`link_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0,',
+  '`link_owner` INT UNSIGNED NOT NULL,',
+  '`link_widget_id` BIGINT UNSIGNED NOT NULL,',
+  '`link_title` VARCHAR(128) NOT NULL,',
+  '`link_url` VARCHAR(2048) NOT NULL,',
+  '`link_sort_order` INT UNSIGNED NOT NULL DEFAULT 0,',
+  'PRIMARY KEY (`link_id`),',
+  'KEY `idx_link_item_owner_widget_order` (`link_owner`, `link_widget_id`, `link_flag`, `link_sort_order`, `link_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Links Widget items'''
+);
+PREPARE current_link_stmt FROM @sql; EXECUTE current_link_stmt; DEALLOCATE PREPARE current_link_stmt;
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_stock_tag, ' (',
+  '`tag_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`tag_date` DATETIME NOT NULL,',
+  '`tag_updated_at` DATETIME NOT NULL,',
+  '`tag_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0,',
+  '`tag_owner` INT UNSIGNED NOT NULL,',
+  '`tag_name` VARCHAR(40) NOT NULL,',
+  'PRIMARY KEY (`tag_id`),',
+  'UNIQUE KEY `uq_stock_tag_owner_name` (`tag_owner`, `tag_name`),',
+  'KEY `idx_stock_tag_owner_flag_name` (`tag_owner`, `tag_flag`, `tag_name`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Stock tags'''
+);
+PREPARE current_stock_tag_stmt FROM @sql; EXECUTE current_stock_tag_stmt; DEALLOCATE PREPARE current_stock_tag_stmt;
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_stock_tag_map, ' (',
+  '`map_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`map_date` DATETIME NOT NULL,',
+  '`map_owner` INT UNSIGNED NOT NULL,',
+  '`map_stock_id` INT NOT NULL,',
+  '`map_tag_id` BIGINT UNSIGNED NOT NULL,',
+  'PRIMARY KEY (`map_id`),',
+  'UNIQUE KEY `uq_stock_tag_map_owner_stock_tag` (`map_owner`, `map_stock_id`, `map_tag_id`),',
+  'KEY `idx_stock_tag_map_owner_tag_stock` (`map_owner`, `map_tag_id`, `map_stock_id`),',
+  'KEY `idx_stock_tag_map_owner_stock` (`map_owner`, `map_stock_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Stock tag relations'''
+);
+PREPARE current_stock_tag_map_stmt FROM @sql; EXECUTE current_stock_tag_map_stmt; DEALLOCATE PREPARE current_stock_tag_map_stmt;
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_feed_keyword, ' (',
+  '`keyword_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`keyword_date` DATETIME NOT NULL,',
+  '`keyword_updated_at` DATETIME NOT NULL,',
+  '`keyword_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:active/1:inactive'',',
+  '`keyword_owner` INT UNSIGNED NOT NULL,',
+  '`keyword_value` VARCHAR(64) NOT NULL,',
+  'PRIMARY KEY (`keyword_id`),',
+  'UNIQUE KEY `uq_feed_keyword_owner_value` (`keyword_owner`, `keyword_value`),',
+  'KEY `idx_feed_keyword_owner_flag_value` (`keyword_owner`, `keyword_flag`, `keyword_value`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''RSS Highlight keywords'''
+);
+PREPARE current_feed_keyword_stmt FROM @sql; EXECUTE current_feed_keyword_stmt; DEALLOCATE PREPARE current_feed_keyword_stmt;
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_feed_metadata, ' (',
+  '`metadata_content_id` INT UNSIGNED NOT NULL COMMENT ''content.content_id'',',
+  '`feed_title` VARCHAR(255) NOT NULL DEFAULT '''',',
+  '`site_url` VARCHAR(1024) NOT NULL DEFAULT '''',',
+  '`category_path` VARCHAR(512) NOT NULL DEFAULT '''',',
+  '`created_at` DATETIME NOT NULL,',
+  '`updated_at` DATETIME NOT NULL,',
+  'PRIMARY KEY (`metadata_content_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''OPML / Feed metadata'''
+);
+PREPARE current_feed_metadata_stmt FROM @sql; EXECUTE current_feed_metadata_stmt; DEALLOCATE PREPARE current_feed_metadata_stmt;
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_feed_health, ' (',
+  '`health_content_id` INT UNSIGNED NOT NULL COMMENT ''content.content_id'',',
+  '`last_checked_at` DATETIME NULL,',
+  '`last_successful_fetch_at` DATETIME NULL,',
+  '`latest_article_at` DATETIME NULL,',
+  '`last_result` VARCHAR(16) NOT NULL DEFAULT ''unknown'',',
+  '`http_status` SMALLINT UNSIGNED NOT NULL DEFAULT 0,',
+  '`error_code` VARCHAR(64) NOT NULL DEFAULT '''',',
+  '`error_reason` VARCHAR(255) NOT NULL DEFAULT '''',',
+  '`consecutive_failure_count` INT UNSIGNED NOT NULL DEFAULT 0,',
+  '`redirected` TINYINT(1) NOT NULL DEFAULT 0,',
+  '`effective_url` VARCHAR(1024) NOT NULL DEFAULT '''',',
+  '`created_at` DATETIME NOT NULL,',
+  '`updated_at` DATETIME NOT NULL,',
+  'PRIMARY KEY (`health_content_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Feed Health state'''
+);
+PREPARE current_feed_health_stmt FROM @sql; EXECUTE current_feed_health_stmt; DEALLOCATE PREPARE current_feed_health_stmt;
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_rss_rule, ' (',
+  '`rule_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`rule_owner` INT UNSIGNED NOT NULL,',
+  '`rule_name` VARCHAR(100) NOT NULL,',
+  '`rule_enabled` TINYINT(1) NOT NULL DEFAULT 1,',
+  '`scope_content_id` INT UNSIGNED NULL,',
+  '`match_mode` VARCHAR(8) NOT NULL DEFAULT ''all'',',
+  '`rule_action` VARCHAR(32) NOT NULL,',
+  '`rule_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0,',
+  '`created_at` DATETIME NOT NULL,',
+  '`updated_at` DATETIME NOT NULL,',
+  'PRIMARY KEY (`rule_id`),',
+  'KEY `idx_rss_rule_owner_active` (`rule_owner`,`rule_flag`,`rule_id`),',
+  'KEY `idx_rss_rule_scope` (`scope_content_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''RSS Rules foundation'''
+);
+PREPARE current_rss_rule_stmt FROM @sql; EXECUTE current_rss_rule_stmt; DEALLOCATE PREPARE current_rss_rule_stmt;
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_rss_rule_condition, ' (',
+  '`condition_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`condition_rule_id` INT UNSIGNED NOT NULL,',
+  '`condition_order` SMALLINT UNSIGNED NOT NULL DEFAULT 0,',
+  '`condition_field` VARCHAR(16) NOT NULL,',
+  '`condition_operator` VARCHAR(24) NOT NULL,',
+  '`condition_value` VARCHAR(255) NOT NULL,',
+  '`created_at` DATETIME NOT NULL,',
+  '`updated_at` DATETIME NOT NULL,',
+  'PRIMARY KEY (`condition_id`),',
+  'KEY `idx_rss_rule_condition_rule` (`condition_rule_id`,`condition_order`,`condition_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''RSS Rule conditions'''
+);
+PREPARE current_rss_rule_condition_stmt FROM @sql; EXECUTE current_rss_rule_condition_stmt; DEALLOCATE PREPARE current_rss_rule_condition_stmt;
 
 -- Foreign keys are intentionally NOT added in SB-13.
 -- Legacy orphan data and the user deletion policy must be resolved first.
