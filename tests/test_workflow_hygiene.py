@@ -44,6 +44,8 @@ check('contents: read' in ci, 'CI token remains read-only')
 check('pull_request_target' not in ci, 'CI does not use pull_request_target')
 check('bash tests/run-ci.sh' in ci, 'CI uses the locally reproducible gate')
 check('tests/test_workflow_hygiene.py' in local_ci, 'local CI gate runs workflow hygiene guard')
+check("node-version: '24'" in ci, 'CI JavaScript test runtime is Node.js 24')
+check("node-version: '20'" not in ci, 'CI no longer pins the JavaScript test runtime to Node.js 20')
 
 check('workflow_dispatch:' in release, 'Release workflow keeps manual workflow_dispatch support')
 check('\n  push:' in release, 'Release workflow supports browser-only release requests through a restricted push trigger')
@@ -58,6 +60,8 @@ check('contents: write' not in verify_section, 'Release verification/build path 
 check('id-token: write' in verify_section and 'attestations: write' in verify_section, 'Release verification job has provenance signing permissions without contents write')
 check(release.count('contents: write') == 1 and 'contents: write' in publish_section, 'Only final publication job receives contents write permission')
 check('attestations: read' in publish_section and 'attestations: write' not in publish_section, 'Publication job can verify but cannot mint attestations')
+check("node-version: '24'" in verify_section, 'Release verification JavaScript runtime is Node.js 24')
+check("node-version: '20'" not in verify_section, 'Release verification no longer pins Node.js 20')
 
 dependabot_path = ROOT / '.github/dependabot.yml'
 check(dependabot_path.is_file(), 'GitHub Actions Dependabot configuration exists')

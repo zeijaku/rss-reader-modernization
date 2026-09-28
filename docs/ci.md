@@ -26,7 +26,7 @@ Runtime Matrix / Tooling:
 - PHP 8.1
 - PHP 8.4
 - Python 3.12
-- Node.js 20
+- Node.js 24
 - PHP extension: curl、mbstring、pdo_mysql、pdo_sqlite、simplexml
 
 CIは次を実行します。
@@ -36,6 +36,8 @@ bash tests/run-ci.sh
 ```
 
 `tests/run-ci.sh` はCurrent Contract向けの標準Gateです。Current hygiene、Current regression、Current feature regressionをまとめて実行します。
+
+Node.jsはCurrent CI / Release verificationとも24系を標準Runtimeとします。GitHub Action自身の実行Runtimeと、ProjectのJavaScript Test Runtimeは別概念ですが、Current Workflowでは双方をNode 24対応へ揃えています。
 
 主なMaintenance Guard:
 
