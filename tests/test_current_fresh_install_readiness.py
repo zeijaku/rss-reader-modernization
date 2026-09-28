@@ -8,6 +8,11 @@ TOOL = (ROOT / 'tools/db_current.php').read_text(encoding='utf-8')
 INSTALL = (ROOT / 'docs/installation.md').read_text(encoding='utf-8')
 README = (ROOT / 'README.md').read_text(encoding='utf-8')
 DEPLOY = (ROOT / 'docs/deployment-checklist.md').read_text(encoding='utf-8')
+UPDATE = (ROOT / 'docs/update.md').read_text(encoding='utf-8')
+BACKUP = (ROOT / 'docs/backup-and-restore.md').read_text(encoding='utf-8')
+ROLLBACK = (ROOT / 'docs/rollback.md').read_text(encoding='utf-8')
+BUILDER = (ROOT / 'tools/build_release_package.py').read_text(encoding='utf-8')
+PACKAGE_VERIFY = (ROOT / 'tools/verify_release_package.py').read_text(encoding='utf-8')
 PUBLIC_HTACCESS = (ROOT / 'public/.htaccess').read_text(encoding='utf-8')
 ROOT_HTACCESS = (ROOT / '.htaccess').read_text(encoding='utf-8')
 WORKFLOW = (ROOT / '.github/workflows/ci.yml').read_text(encoding='utf-8')
@@ -48,9 +53,16 @@ check(not any(token in TOOL for token in (
     'INSERT INTO ', 'DELETE FROM ', 'TRUNCATE TABLE ',
 )), 'Current DB verifier contains no schema/data mutation operation')
 
-for doc_name, body in [('README', README), ('Installation', INSTALL), ('Deployment checklist', DEPLOY)]:
+for doc_name, body in [
+    ('README', README),
+    ('Installation', INSTALL),
+    ('Update', UPDATE),
+    ('Deployment checklist', DEPLOY),
+    ('Backup / Restore', BACKUP),
+    ('Rollback', ROLLBACK),
+]:
     check('php tools/db_current.php verify' in body,
-          f'{doc_name} uses the Current schema verifier for deployment verification')
+          f'{doc_name} uses the Current schema verifier for current deployment verification')
 
 check('ErrorDocument 404 /error.php' in PUBLIC_HTACCESS
       and 'ErrorDocument 500 /error.php' in PUBLIC_HTACCESS,
@@ -64,6 +76,13 @@ check('mariadb-server' in WORKFLOW
 check('REQUIRE_MARIADB_SCHEMA_SMOKE' in SMOKE
       and 'MariaDB server tools are required' in SMOKE,
       'fresh schema MariaDB smoke fails instead of skipping when CI marks it required')
+
+check("'CONTRIBUTING.md'" in BUILDER,
+      'Runtime package includes README-linked CONTRIBUTING documentation')
+check("'tools/db_current.php'" in PACKAGE_VERIFY,
+      'Runtime package verifier requires the Current schema verifier')
+check('runtime Markdown relative links resolve inside the package' in PACKAGE_VERIFY,
+      'Runtime package verifier rejects broken relative Markdown links')
 
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
