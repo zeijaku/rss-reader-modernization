@@ -14,10 +14,10 @@ FORBIDDEN_SUFFIXES = (
     '.sqlite', '.sqlite3', '.db', '.dump', '.bak', '.backup', '.log', '.pid', '.zip'
 )
 REQUIRED = {
-    '.htaccess', 'README.md', 'CHANGELOG.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
+    '.htaccess', 'README.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
     'RELEASE_NOTES.md', 'SECURITY.md', 'app/version.php', 'public/index.php',
     'public/api_v1.php', 'config/local.php.example', 'config/.env.example',
-    'database/schema.sql', 'tools/healthcheck.php', 'tools/db_sb13.php',
+    'database/schema.sql', 'tools/healthcheck.php', 'tools/db_current.php', 'tools/db_sb13.php',
     'docs/installation.md', 'docs/update.md', 'docs/update-history.md', 'docs/configuration.md',
     'docs/backup-and-restore.md', 'docs/rollback.md', 'docs/deployment-checklist.md',
     'docs/release-package.md', 'docs/tag-and-github-release.md',
