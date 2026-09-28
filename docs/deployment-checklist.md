@@ -39,22 +39,29 @@ Release Packageの構成とAttestation確認方法は [`release-package.md`](rel
 - [ ] 削除一覧がある場合だけ対象Fileを削除した
 - [ ] `var/session/`が書込み可能
 - [ ] `var/security/login-throttle/`が書込み可能
-- [ ] `var/cache/feed/`が書込み可能
+- [ ] `var/cache/`がCurrent機能で必要な範囲を書込み可能
 - [ ] X Timelineを利用する場合は`var/cache/x/`が書込み可能
 - [ ] Log有効時は`var/log/`または指定Pathが書込み可能
 - [ ] 無条件な`777`を設定していない
 
 ## CLI / Current Gate
 
+### Runtime ZIPで確認するもの
+
 - [ ] `php -v`
 - [ ] `php tools/healthcheck.php`
-- [ ] `php tools/db_sb13.php verify`
+- [ ] `php tools/db_current.php verify`
 - [ ] Release固有のDB verify手順がある場合は実行した
+
+`healthcheck.php`だけではDatabase接続を確認しないため、Fresh Install / Current Schemaは `db_current.php verify` または実動作確認も行います。Legacy DBのSB-13 audit / migration確認が必要な場合だけ `db_sb13.php` を使用します。
+
+### Repository clone / Complete Sourceで追加確認するもの
+
 - [ ] `bash tests/run-ci.sh`
 - [ ] `node --check public/js/dashboard.js`
 - [ ] `node --check public/js/calendar.js`
 
-`healthcheck.php`だけではDatabase接続を確認しないため、DB verifyまたは実動作確認も行います。
+Production Runtime ZIPには `tests/` を含めず、Node.jsもRuntime必須Dependencyではありません。そのためCurrent Test / Node syntax checkはComplete Source側の追加Gateとして扱います。
 
 ## Browser
 

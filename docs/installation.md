@@ -183,10 +183,10 @@ Production Runtime ZIPで新規設置した場合は、Runtime Packageに含ま�
 ```powershell
 php -v
 php tools/healthcheck.php
-php tools/db_sb13.php verify
+php tools/db_current.php verify
 ```
 
-`tools/healthcheck.php` はPHP拡張、設定、Runtime directory、Public Assetを確認しますが、DatabaseへLoginしません。Database接続とSchemaは `php tools/db_sb13.php verify` またはApplication実動作で確認します。
+`tools/healthcheck.php` はPHP拡張、設定、Runtime directory、Public Assetを確認しますが、DatabaseへLoginしません。Fresh Install後のDatabase接続とCurrent Schemaは、Read-onlyの `php tools/db_current.php verify` で27 Tableと重要Column / Indexを確認します。`tools/db_sb13.php` はLegacy DBのSB-13 audit / migration確認用であり、Fresh InstallのCurrent Schema verifierではありません。
 
 Repository cloneまたはComplete Source Packageを使用していて `tests/` が存在する場合は、追加でCurrent Gateを実行できます。
 
@@ -221,8 +221,9 @@ CLIが使えないHostingでは、Control panelでPHP Version / Extensionを確�
 - Stock保存と一覧
 - Stockの未処理 / 処理済み、通常 / 重要、Archive状態とFilter / 一括更新
 - File LibraryのUpload／Preview／Download／Delete
-- Remote Filesの接続確認、Directory操作、複数Upload／Download、File Library相互転送、Text Editor、Permission
-- MailのPassword / Gmail OAuth2、受信／本文表示／検索／送信／返信／Sent保存／添付送信／受信添付Download
+- Remote Filesを利用する場合は、接続確認、Directory操作、複数Upload／Download、File Library相互転送、Text Editor、Permission
+- Mailを利用する場合は、Password / Gmail OAuth2、受信／本文表示／検索／送信／返信／Sent保存／添付送信／受信添付Download
+- X TimelineやTOTP 2FA等のOptional機能も、利用する場合だけ対応する設定と動作を確認
 - Settings保存
 - Drawer / Modal / Keyboard / Focus
 - JavaScript Console errorなし

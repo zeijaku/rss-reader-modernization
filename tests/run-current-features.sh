@@ -11,6 +11,8 @@ SCRIPT_DIR="$ROOT/tests"
 
 echo '== Current feature contracts: Fresh install schema =='
 python3 "$SCRIPT_DIR/test_current_fresh_install_schema_contract.py"
+python3 "$SCRIPT_DIR/test_current_db_schema_verifier.py"
+python3 "$SCRIPT_DIR/test_current_runtime_docs_contract.py"
 sh "$SCRIPT_DIR/test_current_fresh_install_schema_mariadb.sh"
 
 echo '== Current feature contracts: Asset revision propagation =='
