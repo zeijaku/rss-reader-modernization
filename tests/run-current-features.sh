@@ -11,7 +11,12 @@ SCRIPT_DIR="$ROOT/tests"
 
 echo '== Current feature contracts: Fresh install schema =='
 python3 "$SCRIPT_DIR/test_current_fresh_install_schema_contract.py"
+python3 "$SCRIPT_DIR/test_current_fresh_install_readiness.py"
+php -l "$ROOT/tools/db_current.php"
 sh "$SCRIPT_DIR/test_current_fresh_install_schema_mariadb.sh"
+
+echo '== Current feature contracts: Runtime documentation links =='
+python3 "$SCRIPT_DIR/test_current_runtime_doc_links.py"
 
 echo '== Current feature contracts: Asset revision propagation =='
 python3 "$SCRIPT_DIR/test_current_asset_revision_contract.py"

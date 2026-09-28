@@ -7,7 +7,7 @@
 | `rss-reader-modernization-X.Y.Z.zip` | Server配置・Production Runtime | 含まない |
 | `rss-reader-modernization-X.Y.Z-complete.zip` | Repository / Testsを含む完全Source | 含む |
 
-各ZIPにはSHA-256 sidecarを付けます。`config/local.php`、実DB、生成済み`var/` Data、秘密情報、Legacy archiveは含めません。
+各ZIPにはSHA-256 sidecarを付けます。`config/local.php`、実DB、生成済み`var/` Data、秘密情報、Legacy archiveは含めません。Production RuntimeのREADME / Documentationから辿る相対LinkはPackage verifyで解決可能か確認します。
 
 ## Versionの渡し方
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import posixpath
 from pathlib import Path, PurePosixPath
 import re
 import sys
@@ -14,12 +15,13 @@ FORBIDDEN_SUFFIXES = (
     '.sqlite', '.sqlite3', '.db', '.dump', '.bak', '.backup', '.log', '.pid', '.zip'
 )
 REQUIRED = {
-    '.htaccess', 'README.md', 'CHANGELOG.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
-    'RELEASE_NOTES.md', 'SECURITY.md', 'app/version.php', 'public/index.php',
+    '.htaccess', 'README.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
+    'RELEASE_NOTES.md', 'SECURITY.md', 'app/version.php', 'public/.htaccess', 'public/index.php',
     'public/api_v1.php', 'config/local.php.example', 'config/.env.example',
-    'database/schema.sql', 'tools/healthcheck.php', 'tools/db_sb13.php',
+    'database/schema.sql', 'tools/healthcheck.php', 'tools/db_current.php', 'tools/db_sb13.php',
     'docs/installation.md', 'docs/update.md', 'docs/update-history.md', 'docs/configuration.md',
     'docs/backup-and-restore.md', 'docs/rollback.md', 'docs/deployment-checklist.md',
+    'docs/ci.md', 'docs/security.md', 'docs/dependencies.md',
     'docs/release-package.md', 'docs/tag-and-github-release.md',
     'RELEASE_BUILD.txt', 'RELEASE_MANIFEST.sha256',
 }
@@ -88,6 +90,45 @@ def main() -> int:
             if rel.startswith('var/m4f-evidence/') and PurePosixPath(rel).name != '.gitkeep'
         ]
         check(not evidence_payload, 'release package excludes private M4-F evidence files')
+
+        broken_markdown_links: list[str] = []
+        markdown_link = re.compile(r'\[[^\]]+\]\(([^)]+)\)')
+        for rel, full in sorted(relative.items()):
+            if not rel.lower().endswith('.md'):
+                continue
+            try:
+                markdown = archive.read(full).decode('utf-8')
+            except UnicodeDecodeError:
+                continue
+            for raw_target in markdown_link.findall(markdown):
+                target = raw_target.strip()
+                if (
+                    not target
+                    or target.startswith('#')
+                    or target.startswith('//')
+                    or re.match(r'^[A-Za-z][A-Za-z0-9+.-]*:', target)
+                ):
+                    continue
+                target_path = target.split('#', 1)[0].split('?', 1)[0]
+                if not target_path:
+                    continue
+                resolved = posixpath.normpath(
+                    posixpath.join(posixpath.dirname(rel), target_path)
+                )
+                if resolved == '..' or resolved.startswith('../'):
+                    broken_markdown_links.append(f'{rel} -> {target}')
+                    continue
+                exists = resolved in relative or any(
+                    name.startswith(resolved.rstrip('/') + '/')
+                    for name in relative
+                )
+                if not exists:
+                    broken_markdown_links.append(f'{rel} -> {target}')
+        check(
+            not broken_markdown_links,
+            'runtime Markdown relative links resolve inside the package'
+            + ('' if not broken_markdown_links else ': ' + ', '.join(broken_markdown_links[:5])),
+        )
 
         build = archive.read(relative['RELEASE_BUILD.txt']).decode('utf-8')
         metadata = dict(line.split('=', 1) for line in build.splitlines() if '=' in line)

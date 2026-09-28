@@ -146,8 +146,15 @@ jobs:
           extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
           coverage: none
 
+      - name: Install MariaDB server tools for fresh schema smoke
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mariadb-server
+
       - name: Run PHP 8.4 release regression
         shell: bash
+        env:
+          REQUIRE_MARIADB_SCHEMA_SMOKE: '1'
         run: |
           set -euo pipefail
           bash tests/run-current.sh

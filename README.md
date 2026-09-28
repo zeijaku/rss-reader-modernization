@@ -146,10 +146,10 @@ Application Versionの正本は `app/version.php`、Versionごとの変更履歴
 5. `DB_TABLE_PREFIX` と `database/schema.sql` の `@table_prefix` を一致させる。
 6. `database/schema.sql` を1回実行してCurrent Schemaを作成する。Fresh Installでは追加Migrationは不要。
 7. `var/` 以下の必要DirectoryへPHP Processの書込み権限を設定する。
-8. Runtime ZIPではHealthcheck / DB verifyを実行する。Complete Sourceでは必要に応じてCurrent Testも実行する。
+8. Runtime ZIPでは `php tools/healthcheck.php` と `php tools/db_current.php verify` を実行する。Complete Sourceでは必要に応じてCurrent Testも実行する。
 9. BrowserでRegistration、Login、RSS、主要Widgetを確認する。
 
-`database/schema.sql` はFresh Install用の完成形です。`database/migrations/` は既存DatabaseのUpgrade用として保持します。既存Databaseへ `schema.sql` を再実行しないでください。
+`database/schema.sql` はFresh Install用の完成形です。`php tools/db_current.php verify` はDatabaseへ書込みを行わず、Currentの27 Tableと重要Column / Indexを確認します。`database/migrations/` は既存DatabaseのUpgrade用として保持します。既存Databaseへ `schema.sql` を再実行しないでください。
 
 ## Updating
 
