@@ -12,9 +12,26 @@ assert (root / 'database/migrations/028_v1_35_mail_google_oauth.sql').is_file()
 assert read('app/mail/vendor/phpmailer/phpmailer/VERSION').strip() == '7.1.1'
 
 installation = read('docs/installation.md')
-assert '026_v1_34_mail_smtp.sql' in installation
-assert '027_v1_34_mail_sent_save_mode.sql' in installation
-assert '028_v1_35_mail_google_oauth.sql' in installation
+history = read('docs/update-history.md')
+schema = read('database/schema.sql')
+assert 'Fresh Installでは `database/schema.sql` だけを1回実行します' in installation
+assert '026_v1_34_mail_smtp.sql' in history
+assert '027_v1_34_mail_sent_save_mode.sql' in history
+assert '028_v1_35_mail_google_oauth.sql' in history
+for column in (
+    'mail_account_auth_type',
+    'mail_account_smtp_enabled',
+    'mail_account_smtp_host',
+    'mail_account_smtp_port',
+    'mail_account_smtp_encryption',
+    'mail_account_smtp_use_imap_credentials',
+    'mail_account_smtp_username',
+    'mail_account_smtp_secret',
+    'mail_account_from_address',
+    'mail_account_from_name',
+    'mail_account_sent_save_mode',
+):
+    assert f'`{column}`' in schema
 
 api = read('public/api_v1.php')
 assert 'mail.message.send' in api
