@@ -1,11 +1,11 @@
 # Versioning
 
-現在の正式Releaseは `1.23.0` です。Active Release Candidateはありません。
+現在の正式Release対象は `1.39.2` です。Active Release Candidateはありません。
 
 ```php
-const APP_VERSION = '1.23.0';
-const APP_VERSION_LABEL = 'RSS Reader Modernization 1.23.0';
-const APP_ASSET_REVISION = '1.23.0';
+const APP_VERSION = '1.39.2';
+const APP_VERSION_LABEL = 'RSS Reader Modernization 1.39.2';
+const APP_ASSET_REVISION = '1.39.2';
 ```
 
 `APP_ASSET_REVISION`はBrowserの長期Cacheを分離するCache keyです。正式ReleaseではApplication Versionと同じ値を使用します。
