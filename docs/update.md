@@ -1,426 +1,27 @@
 # 更新手順 / Update Guide
 
-この文書はCurrent Releaseの共通更新手順と、過去Releaseで必要だったVersion固有Migration / Config変更の履歴を保持します。
+この文書は、**既存環境を現在のReleaseへ更新するための共通手順**をまとめたCurrent Guideです。
 
-現在の更新では、最初に `../app/version.php`、[`../RELEASE_NOTES.md`](../RELEASE_NOTES.md)、[`../CHANGELOG.md`](../CHANGELOG.md) を確認し、対象Releaseに必要な作業だけを適用してください。古いVersion節を現在環境へ一律適用しません。
+Version固有の過去Migration / Config変更は [Historical Update / Migration History](update-history.md) に分離しています。古い手順を現在環境へ一律適用しないでください。
 
-Current Gateは `bash tests/run-ci.sh` です。Historical Version固有の確認が必要な場合だけ `bash tests/run.sh` / `tests/run-v*.sh` を追加使用します。
+現在の更新では、最初に次を確認します。
 
-## Historical: Version 1.36.0 update
+- `../app/version.php` — Current Application / Asset Revision
+- [Release Notes](../RELEASE_NOTES.md) — 現在Releaseで必要な更新事項
+- [CHANGELOG](../CHANGELOG.md) — 経由するReleaseの変更内容
+- [Historical Update / Migration History](update-history.md) — 過去Version固有Migrationの記録
+- [Backup and Restore](backup-and-restore.md) — Backup / Restore
+- [Rollback](rollback.md) — 問題発生時のRollback
 
-## Version 1.35.4からVersion 1.36.0
+## 1. 更新前に確認すること
 
-V1.36.0はDashboard Notification CenterとCalendar Reminderを追加し、Calendar ModalとNavbarの操作性を改善するReleaseです。既存DatabaseではMigration 030 / 031を番号順に適用します。
-
-1. Application code、`config/local.php`、Database、private runtime dataをBackupする。
-2. `database/migrations/030_v1_36_notification_center.sql` と `031_v1_36_calendar_reminder.sql` の `@table_prefix` を実環境の `DB_TABLE_PREFIX` と同じ値へ合わせる。
-3. 未適用の場合だけ030→031の順で各1回適用する。V1.36 checkpointで適用済みなら再実行しない。
-4. 正式Runtime ZIPとSHA-256を確認し、本番Directory外へ展開する。
-5. `config/local.php`、実DB、生成済み`var/` Data、Secretを維持したままApplication codeを更新する。
-6. BrowserをReloadし、Footerが`RSS Reader Modernization 1.36.0`であることを確認する。
-7. Notification CenterのBell / unread / read / mark-all-read / hide、通常Calendar Reminder、繰り返しOccurrence Reminderを確認する。
-8. Calendarの開始日時変更で終了日時が同じDurationを保って追従すること、PC / SmartphoneのCalendar Modal、sticky Navbarを確認する。
-9. Login / Logout、RSS、Stock、Task、Mail、File Library、Remote Files、SettingsのSmoke TestとConsole errorなしを確認する。
-10. 問題があればSourceとDatabaseを同じBackup時点へ戻す。030 / 031適用後に旧Codeへ戻す場合は、旧Codeが新Table / Columnを参照しないことを確認し、DB rollbackの要否はBackup方針に従う。
-
-```text
-DB Migration                030_v1_36_notification_center.sql
-                            031_v1_36_calendar_reminder.sql
-New table                   notification
-Existing table change       calendar_event_reminder Column追加
-必須設定                    追加なし
-Background delivery         追加なし（in-app通知のみ）
-Browser Cache               APP_ASSET_REVISION=1.36.0
-正式Tag / GitHub Release    v1.36.0（Release workflow全Gate通過後のみ）
-```
-
-# Version 1.33.0 update
-
-## Version 1.32.0からVersion 1.33.0
-
-V1.33.0はCalendar Enhancementです。既存予定を保持したままOccurrence単位編集／削除を追加するため、加算型Migration 025が必要です。正式版のVersion表示は`1.33.0`です。
-
-1. Application、`config/local.php`、Database、private runtime dataをBackupする。
-2. 実環境の`DB_TABLE_PREFIX`と`calendar_event_exception` Tableの有無を確認する。
-3. Tableが無い場合だけ`database/migrations/025_v1_33_calendar_event_exception.sql`の`@table_prefix`を合わせて1回適用する。既存DBへ`schema.sql`は実行しない。
-4. ZIPとSHA-256を確認し、本番Directory外へ展開する。
-5. `config/local.php`、実DB、生成済み`var/`Data、Secretを維持したまま、配布物をApplication Rootへ相対Pathで上書きする。
-6. Browserを完全Reloadし、Version、CSS／JavaScriptのHTTP 200とMIME type、Console errorなしを確認する。
-7. 既存予定、5色、複数日連結、日／週／月、Occurrence単位編集／削除／復元、シリーズ全体操作を確認する。
-8. Owner Scope、CSRF、XSS、Login／2FA／Step-up／SessionのSmoke Testを行う。
-9. 問題があれば前Sourceへ戻し、Migration 025適用済みTableは空のまま残してもV1.32は参照しない。DBを戻す場合は事前BackupからApplicationと同じ時点へ戻す。
-
-```text
-DB Migration                025_v1_33_calendar_event_exception.sql
-New table                   calendar_event_exception
-必須設定                    追加なし
-Browser Cache               APP_ASSET_REVISION=1.33.0
-正式Tag / GitHub Release    v1.33.0（Release workflow全Gate通過後のみ）
-```
-
-詳細な順序は`docs/v1-33-i-final-release.md`を参照してください。日程コピーと日程Drag & DropはV1.33対象外です。
-
-# Version 1.29.0 update
-
-## Version 1.28.0からVersion 1.29.0
-
-V1.29.0はRemote File Managerを追加するため、既存DBへMigration 021とprivate設定の追加が必要です。Codeより先にBackupとCredential keyの保管方法を確定してください。
-
-1. Application code、`config/local.php`、Database、File Library storage、必要な`var/`DataをBackupする。
-2. `database/migrations/021_v1_29_remote_connection.sql`の`@table_prefix`を実環境の`DB_TABLE_PREFIX`へ合わせて1回適用する。
-3. `php -r "echo base64_encode(random_bytes(32)), PHP_EOL;"`で専用Keyを生成し、`APP_REMOTE_CREDENTIAL_KEY_B64`へprivate設定する。
-4. `APP_REMOTE_TEMP_DIR`を`public/`外のwritable directoryへ設定する。
-5. 使用するProtocolに必要なPortだけ`APP_REMOTE_ALLOWED_PORTS`へ設定する。SFTP利用時は検証済みknown_hostsも設定する。
-6. Private/LAN接続が必要な場合だけ、`APP_REMOTE_PRIVATE_NETWORK_ENABLED`と最小CIDR allowlistを設定する。
-7. `php tools/remote_file_env_check.php`を実行し、必要なcURL protocol／Extension／Key／Temporary directoryがOKであることを確認する。
-8. Runtime ZIPのSHA-256を確認して別Folderへ展開し、`config/local.php`、実DB、File Library upload、known_hosts/private key等を上書きせずCodeを更新する。
-9. BrowserをReloadし、Footerが`RSS Reader Modernization 1.29.0`であることを確認する。
-10. `/remote-files`でTest Connectionを登録し、Connection Test、Directory操作、Upload／Preview／Download、Rename／Move、File Library相互転送、Deleteを確認する。
-11. 問題があればCodeだけでなく、021適用前のDatabase BackupとCredential設定を含む同じ時点へ戻す。
-
-```text
-DB Migration                021_v1_29_remote_connection.sql
-New table                   remote_connection
-必須設定                    APP_REMOTE_CREDENTIAL_KEY_B64 / APP_REMOTE_TEMP_DIR
-Protocol別設定              allowed ports / SFTP known_hosts / optional private CIDRs
-Browser Cache               APP_ASSET_REVISION=1.29.0
-正式Tag / GitHub Release    v1.29.0
-```
-
-Plain FTPは通信内容を暗号化しません。利用可能ならSFTP／FTPS／HTTPS WebDAVを優先してください。
-
-# Version 1.22.0 update
-
-## Version 1.21.0からVersion 1.22.0
-
-V1.22.0はRSS Management / OPML、Feed Health、RSS Rulesを追加するため、既存DBではMigration 014〜016が必要です。Codeより先にBackupと未適用Migrationを確認します。
-
-1. Application code、`config/local.php`、実DB、必要な`var/`DataをBackupする。
-2. `014_v1_22_opml_feed_metadata.sql`、`015_v1_22_feed_health.sql`、`016_v1_22_rss_rules.sql`の`@table_prefix`を実環境へ合わせる。
-3. 未適用のMigrationだけを014→015→016の番号順で実行する。V1.22 checkpointですでに適用済みのものは再実行しない。
-4. Runtime ZIPのSHA-256を確認し、別Folderへ展開する。
-5. `config/local.php`、実DB、生成済み`var/`Dataを上書きせずCodeをApplication Rootへ相対Pathで配置する。
-6. BrowserをReloadし、Footerが`RSS Reader Modernization 1.22.0`であることを確認する。
-7. Login、通常RSS更新、RSS Management / OPML、Feed Health、RSS Rules、Stock、Task、Settings、Logoutを確認する。
-8. 問題があればCodeとDBを同じBackup時点へ戻す。DB Migrationを伴うためCodeだけをV1.21へ戻すRollbackは行わない。
-
-```text
-DB Migration                014 / 015 / 016
-New tables                  feed_metadata / feed_health / rss_rule / rss_rule_condition
-必須設定                    追加なし
-Browser Cache               APP_ASSET_REVISION=1.22.0
-正式Tag / GitHub Release    v1.22.0
-```
-
-## Version 1.18.0からVersion 1.19.0
-
-## Version 1.20.0から1.20.1
-
-V1.20.1はCalendar予定色のため、既存`calendar_event`TableへColumnを1つ追加します。Codeだけ先に更新すると色APIが503を返すため、Backup後にMigrationを先に適用します。
-
-1. Code / `config/local.php` / Database / 必要な`var/`DataをBackupする。
-2. `database/migrations/013_v1_20_1_calendar_event_color.sql`の`@table_prefix`を実環境と合わせる。
-3. Migrationを実行し、`calendar_event_color`が存在することを確認する。
-4. V1.20.1 Production ZIPを相対Pathで上書きする。
-5. Calendar色、Memo Refresh、Block Collapse、Dashboard操作を確認する。
-
-C段階ですでに013を実行済みの場合は再実行不要です。
-
-V1.19.0はArchitecture / Security / Documentation中心のMaintenance Releaseです。DB Migration、SQL、新規必須Config / Secretはありません。
-
-1. 現在のApplication codeと`config/local.php`をBackupする。
-2. 正式Runtime ZIPのSHA-256を確認し、別Folderへ展開する。
-3. Runtime ZIPのCodeをApplication Rootへ相対Pathで上書きする。
-4. `config/local.php`、実DB、生成済み`var/`Dataは維持する。
-5. BrowserをReloadし、Footerが`RSS Reader Modernization 1.19.0`であることを確認する。
-6. Login / Dashboard / Stock / Settings / Logoutと主要Widgetを確認する。
-7. Camera / Videoを使用する場合はConsoleにhls.js SRI Errorがなく、Asset URLが`?v=1.19.0`になっていることを確認する。
-8. 問題があればV1.18.0 BackupへCodeを戻す。DB MigrationがないためDB rollbackは不要。
-
-## 共通更新手順
-
-## 基本方針
-
-更新は、現在のCode、`config/local.php`、Database、必要なRuntime dataを先にBackupしてから行います。配布ZIPを本番folderへ直接解凍しません。
-
-Releaseごとに次を確認します。
-
-## Version 1.19.0からVersion 1.20.0
-
-V1.20.0はCard Header Compact、RSS Typing、Wire Defense、全RSS新着を統合した正式Releaseです。DB構造変更、Migration、SQL、新規必須Config／Secretはありません。
-
-1. Application code、`config/local.php`、実DB、必要な`var/`DataをBackupする。
-2. Production ZIPのSHA-256を確認し、別Folderへ展開する。
-3. `config/local.php`、実DB、生成済み`var/`Dataを上書きせずCodeをApplication Rootへ相対Pathで配置する。
-4. SQL、Migration、`schema.sql`は実行しない。
-5. BrowserをReloadし、Footerが`RSS Reader Modernization 1.20.0`であることを確認する。
-6. Login／Dashboard／Stock／Settings／Logoutと通常RSS／Search Feedを確認する。
-7. RSS Typing、Wire Defense、全RSS新着を各1回確認する。
-8. SmartphoneまたはDevice modeで40px Header、Drawer、Game、全RSS新着を確認する。
-9. 問題があればV1.19.0 BackupへCodeを戻す。DB MigrationがないためDB rollbackは不要。
-
-```text
-DB schema / Migration       変更なし
-Public API                  widget.allrss.create / update / delete / fetch を追加
-必須設定                    追加なし
-Browser Cache               APP_ASSET_REVISION=1.20.0
-正式Tag / GitHub Release    v1.20.0
-```
-
-
-- 変更file
-- 新規file
-- 削除file
-- DB migrationの有無
-- 必須設定追加の有無
-- Runtime cache削除の要否
-- Release NotesとSHA-256
-
-
-
-## Version 1.17.2からVersion 1.18.0
-
-Version 1.18.0はConnection Monitor追加とFrontend表示の更新で、DB構造変更、Migration、SQL、必須設定追加はありません。
-
-1. Code、`config/local.php`、実DB、`var/`をBackupする。
-2. Runtime ZIPを別Folderへ展開し、SHA-256を確認する。
-3. `config/local.php`、実DB、`var/`の生成Dataを上書きせずCodeを更新する。
-4. SQL、Migration、`schema.sql`は実行しない。
-5. BrowserをReloadする。`APP_ASSET_REVISION=1.18.0-r2`により旧1.18.0候補とはAsset URLが変わるため、通常Reloadで新Assetを取得出来る。Hard ReloadはTroubleshooting時のみでよい。
-6. Add Widget → Information → Connection Monitorを追加し、Online／Latency／History／Qualityを確認する。
-7. DevTools Offline等でOffline→Recovery、Downtimeを確認する。
-8. 複数Connection Monitorでも`connection_probe.php`がPage全体で約5秒に1回であることを確認する。
-
-```text
-DB schema / Migration       変更なし
-Public API                  widget.healthprobe.create / update / delete
-必須設定                    追加なし
-外部API Key                 追加なし
-Browser Cache               Hard Reload推奨
-削除file                    なし
-```
-
-## Version 1.1.0からVersion 1.2.0
-
-Version 1.2.0はCodeとFrontendの更新で、DB構造変更、Migration、SQL、必須設定追加はありません。
-
-1. Code、`config/local.php`、実DB、`var/`をBackupする。
-2. ZIPを別Folderへ展開し、SHA-256と変更Fileを確認する。
-3. `config/local.php`、実DB、`var/`の生成Dataを上書きせずCodeを更新する。
-4. SQL、Migration、`schema.sql`は実行しない。
-5. Browser Cacheを更新する。
-6. Login、通常RSS、Search Feed、概要、個別更新、新着Bell、記事Actionsを確認する。
-
-```text
-DB schema / Migration       変更なし
-Public API                  Search Feed／記事Actionsで既存DispatcherへAction追加済み
-必須設定                    追加なし
-Feed Cache削除              不要
-Browser Cache               Hard Reload推奨
-削除file                    Release Notesの変更一覧を参照
-```
-
-## Version 1.0系からVersion 1.1.0
-
-Version 1.1.0ではFeed item state、Dashboard Widget、Memo、Task、Calendar eventのTableを追加します。CodeとDBを同じMaintenance内で更新してください。
-
-1. Code、`config/local.php`、実DB、`var/`をBackupする。
-2. Migration 002～006の`@table_prefix`を実DBへ合わせる。
-3. preflightを確認し、Migrationを番号順に実行する。
-4. postflightまたは各`tools/db_v11*.php verify`を実行する。
-5. Codeを入れ替え、Browser Cacheを更新する。
-6. Login、Feed、NEW、Widget、Task / Calendar、Account Settingsを確認する。
-
-## V1.1-J / R2適用済み環境からVersion 1.1.0
-
-追加Migrationはありません。Code、Documentation、Version、Test、配布物だけを更新します。`config/local.php`、実DB、Session、Cache、Log、Throttle Dataを上書きしないでください。
-
-## V1.1-I / R3からV1.1-J / R1
-
-V1.1-JはAccount Settingsを追加します。メールアドレスとパスワードは既存`user_info`のColumnを更新するため、DB構造変更はありません。
-
-```text
-DB schema / Migration       変更なし
-Public API                  account.email.update / account.password.update
-必須設定                    追加なし
-Browser Cache               Ctrl + F5を推奨
-削除file                    なし
-```
-
-Overlayを上書きした後、SQLやMigrationは実行しません。現在のパスワードを確認して変更し、成功後はSession IDとCSRF Tokenが自動的に更新されます。現在のメールアドレスはKeyed Identityで保存されているため画面へ表示しません。
-
-確認時は、メールアドレス変更後にLogoutして新しいメールアドレスでLoginし、パスワード変更後に旧パスワードが拒否され新パスワードでLoginできることを確認してください。
-
-## V1.1-I / R1からV1.1-I / R2
-
-V1.1-I / R2はFrontendの操作性改善です。スマートフォン幅での左右スワイプによるタブ切り替えと、Feed／Calendar読込中のSpinnerを追加します。
-
-```text
-DB schema / Migration       変更なし
-Public API                  変更なし
-必須設定                    追加なし
-Cache clear                 Browser Cache更新のみ
-削除file                    なし
-```
-
-V1.1-I / R1適用済みProjectへOverlayを上書きし、Browserで`Ctrl + F5`を実行します。SQL、`db_v11i.php apply`、`schema.sql`の再実行は不要です。
-
-スワイプはスマートフォン幅だけで有効です。Calendar、入力欄、Button、Link、Modal、Drawer、Widget並び替えHandle、画面端から始まる操作では動作しません。
-
-## V1.1-H / R1からV1.1-I / R1
-
-V1.1-IはCalendar Widgetと`calendar_event`Tableを追加します。Task期限は既存の`task`Tableを直接参照します。Codeだけ先に切り替えるとCalendar操作時に`calendar_event`Tableを参照するため、Backup後にMigrationを同じMaintenance内で適用してください。
-
-```text
-DB Table                    calendar_eventを追加
-既存Column                  変更なし
-Public API                  widget.calendar.create / update / delete
-                            calendar.month.list
-                            calendar.event.create / update / delete
-必須設定                    追加なし
-Cache clear                 不要
-削除file                    なし
-```
-
-CLIを利用できる場合:
-
-```powershell
-php tools/db_v11i.php apply --backup-confirmed
-php tools/db_v11i.php verify
-```
-
-phpMyAdminを利用する場合は、RSS Readerの実Databaseを選択し、次の順で実行します。各SQL冒頭の`@table_prefix`を`DB_TABLE_PREFIX`と同じ値へ変更してください。
-
-```text
-database/audit/v1_1_i_preflight.sql
-database/migrations/006_v1_1_calendar_event.sql
-database/audit/v1_1_i_postflight.sql
-```
-
-DB変更に必須なのは`006_v1_1_calendar_event.sql`です。preflightとpostflightは読取専用の確認SQLです。Rollback時はCodeとDBを同じBackup時点へ戻します。
-
-## V1.1-G / R1からV1.1-H / R1
-
-V1.1-HはTask Widgetと`task`Tableを追加します。Codeだけ先に切り替えるとDashboard queryが`task`Tableを参照するため、Backup後にMigrationを同じMaintenance内で適用してください。
-
-```text
-DB Table                    taskを追加
-Column / Index              task Table内に追加
-Public API                  widget.task.create / update / delete
-                            task.item.create / update / toggle / delete
-必須設定                    追加なし
-Cache clear                 不要
-削除file                    なし
-```
-
-CLIを利用できる場合:
-
-```powershell
-php tools/db_v11h.php apply --backup-confirmed
-php tools/db_v11h.php verify
-```
-
-phpMyAdminを利用する場合は、RSS Readerの実Databaseを選択し、`database/migrations/005_v1_1_task.sql`冒頭の`@table_prefix`を`DB_TABLE_PREFIX`と同じ値へ変更してから実行します。その後、`database/audit/v1_1_h_postflight.sql`またはCLI verifyで確認します。
-
-Rollback時はCodeとDBを同じBackup時点へ戻します。V1.1-Hで作成したTaskを保持したままCodeだけV1.1-Gへ戻す運用は行いません。
-
-## V1.1-F / R1からV1.1-G / R1
-
-V1.1-GはMemo Widgetと`memo`Tableを追加します。Codeだけ先に切り替えるとDashboard queryが`memo`Tableを参照するため、Backup後にMigrationを同じMaintenance内で適用してください。
-
-```text
-DB Table                    memoを追加
-Column / Index              memo Table内に追加
-Public API                  widget.memo.create / update / deleteを追加
-必須設定                    追加なし
-Cache clear                 不要
-削除file                    なし
-```
-
-CLIを利用できる場合:
-
-```powershell
-php tools/db_v11g.php apply --backup-confirmed
-php tools/db_v11g.php verify
-```
-
-phpMyAdminを利用する場合は、RSS Readerの実Databaseを選択し、`database/migrations/004_v1_1_memo.sql`冒頭の`@table_prefix`を`DB_TABLE_PREFIX`と同じ値へ変更してから実行します。その後、`database/audit/v1_1_g_postflight.sql`またはCLI verifyで確認します。
-
-Rollback時はCodeとDBを同じBackup時点へ戻します。Migrationは既存Tableを変更しませんが、V1.1-Gで作成したMemoを保持したままCodeだけV1.1-Fへ戻す運用は行いません。
-
-## M4-F / R1からM4-G / R1
-
-M4-GはVersion、Release Notes、Final Package、Tag / GitHub Release手順の確定です。Application RuntimeはRC1から変更していません。
-
-```text
-DB schema / Migration       変更なし
-Public API                  変更なし
-必須設定                    追加なし
-Frontend Runtime Asset      変更なし
-Cache clear                 不要
-削除file                    なし
-```
-
-既存`config/local.php`と実DBはそのまま使用できます。`schema.sql`やMigrationは実行しません。
-
-## M4-D / R1からM4-E / R1
-
-M4-EはRelease package builder、Verifier、Release Notes、Tag / GitHub Release手順、Version marker、Testの追加です。Application Runtimeは変更していません。
-
-```text
-DB schema / Migration       変更なし
-Public API                  変更なし
-必須設定                    追加なし
-Frontend Runtime Asset      変更なし
-Cache clear                 不要
-削除file                    なし
-```
-
-既存 `config/local.php` と実DBはそのまま使用できます。M4-E適用時に `schema.sql` やMigrationを実行しません。
-
-M4-EのPreview Release ZIPはPackaging確認用です。本番更新やGitHub Release公開には使用せず、M4-F / M4-Gで作り直します。
-
-## M4-C / R1からM4-D / R1
-
-M4-DはGitHub公開資料、Security / Contribution文書、Issue template、GitHub Actions CI、Version marker、Testの追加です。
-
-```text
-DB schema / Migration       変更なし
-Public API                  変更なし
-必須設定                    追加なし
-Frontend Runtime Asset      変更なし
-Cache clear                 不要
-削除file                    なし
-```
-
-既存 `config/local.php` と実DBはそのまま使用できます。M4-D適用時に `schema.sql` やMigrationを実行しません。
-
-GitHubへpushした後、ActionsのPHP 8.1 / 8.4 JobとRepository Settingsを確認します。
-
-## M4-B / R1からM4-C / R1
-
-この更新では次の変更はありません。
-
-```text
-DB schema / Migration       変更なし
-Public API                  変更なし
-必須設定項目                追加なし
-Runtime Cache format        変更なし
-削除file                    なし
-```
-
-`config/local.php.example` と `config/.env.example` は、既にRuntimeが対応していた設定を一覧として補完しています。実環境の `config/local.php` へ新しい項目を追加しなくても従来のDefaultで動作します。
-
-M4-Cで `schema.sql`、`001_sb13_integrity.sql` を実行しないでください。Cache clearも不要です。
-
-## 更新前
-
-1. Maintenance時間を決める。
-2. 現在VersionとCommitを記録する。
-3. `git status` が想定どおりか確認する。
-4. Code、Private設定、DatabaseをBackupする。
+1. 現在のApplication VersionとCommitを記録する。
+2. 更新先Releaseの `RELEASE_NOTES.md` と、現在Versionから更新先までの `CHANGELOG.md` を確認する。
+3. DB Migration、必須Config、削除file、Runtime cache更新の有無を確認する。
+4. Code、`config/local.php`、Database、必要なprivate runtime dataをBackupする。
 5. BackupのSizeとSHA-256を確認する。
-6. 可能なら別環境で更新Testを行う。
+6. 配布ZIPを使用する場合はRelease AssetとSHA-256を確認する。
+7. 可能なら別環境で更新Testを行う。
 
 ```powershell
 git status --short
@@ -428,9 +29,37 @@ git log -1 --oneline
 php tools/healthcheck.php
 ```
 
-Backupは [`backup-and-restore.md`](backup-and-restore.md) を参照してください。
+Production serverでLocal変更がある場合は、その内容を確認するまで更新を進めません。
 
-## Gitで更新する場合
+## 2. DB Migrationが必要か判断する
+
+**既存Databaseへ `database/schema.sql` を再実行しません。**
+
+`schema.sql` はFresh Install用です。既存環境では、現在Versionから更新先Versionまでに追加されたMigrationのうち、**未適用のものだけ**を番号順に適用します。
+
+判断手順:
+
+1. 現在Versionを確認する。
+2. 更新先までの `CHANGELOG.md` / `RELEASE_NOTES.md` を確認する。
+3. DB変更があるReleaseだけ [Historical Update / Migration History](update-history.md) でMigration名と順序を確認する。
+4. すでにCheckpoint / RC / Production確認で適用済みのMigrationは、正式Release化だけを理由に再実行しない。
+5. 各Migrationの `SET @table_prefix` を実環境の `DB_TABLE_PREFIX` と一致させる。
+6. 適用前Backupを確保してから実行する。
+
+Fresh Installは [Installation](installation.md) の手順を使用してください。
+
+## 3. Migration適用時の共通ルール
+
+- Migrationは番号順に適用する。
+- 未適用であることを確認してから1回だけ実行する。
+- Migration SQLの対象Table / Columnと実DBの状態が食い違う場合は、推測で再実行しない。
+- `config/local.php`、暗号鍵、OAuth Credential、2FA Secret等のprivate設定をMigrationに合わせて上書きしない。
+- DB変更を伴うReleaseでRollbackする場合は、Codeだけを古いVersionへ戻すのではなく、DB互換性を確認する。
+- Migration適用後は必要なTable / Column / IndexとApplicationのSmoke Testを確認する。
+
+過去Migrationの具体名・対象Version・注意点は [Historical Update / Migration History](update-history.md) に保持します。
+
+## 4. Gitで更新する場合
 
 Production serverで直接編集していないことを先に確認します。
 
@@ -442,20 +71,20 @@ git pull --ff-only
 
 `git pull --ff-only` が失敗した場合は、強制Resetで合わせず、Local変更やBranch差分を確認します。
 
-## ZIPで更新する場合
+## 5. ZIPで更新する場合
 
 1. ZIPのSHA-256を照合する。
-2. 別folderへ展開する。
-3. 禁止file、入れ子ZIP、Top-level directoryを確認する。
-4. `config/local.php` とRuntime dataがZIPに含まれないことを確認する。
-5. 展開内容をProjectへ上書きする。
-6. Releaseに削除一覧がある場合だけ、その一覧を確認して削除する。
+2. 本番Directory外の別folderへ展開する。
+3. Top-level directoryと内容を確認する。
+4. `config/local.php`、実DB、Secret、生成済みprivate runtime dataが上書きされないことを確認する。
+5. Application Rootへ相対PathでCodeを更新する。
+6. Release Notesに削除fileが明示されている場合だけ、その一覧を確認して削除する。
 
-単純な上書きでは旧fileが残る場合があります。削除一覧がないfileを「きれいにするため」に一括削除しないでください。
+単純な上書きでは旧fileが残る場合があります。削除対象と確認できないfileをCleanup目的で一括削除しません。
 
-M4-Cの削除fileはありません。
+## 6. 更新後のCurrent Gate
 
-## 更新後
+RepositoryのCurrent Gateは次です。
 
 ```powershell
 php tools/healthcheck.php
@@ -464,20 +93,37 @@ bash tests/run-ci.sh
 node --check public/js/dashboard.js
 ```
 
-通常更新では `tests/run-ci.sh` をCurrent Gateとします。`tests/run.sh` はHistorical Version固有の調査が必要な場合だけ追加実行します。
+通常更新では `tests/run-ci.sh` をCurrent Gateとします。Historical Version固有の調査が必要な場合だけ、当時の `tests/run.sh` / `tests/run-v*.sh` を追加で参照します。
 
-Browserでは次を確認します。
+GitHub ActionsのCurrent CI / Release verification Runtimeは [CI](ci.md) を正とします。
 
-- Footerが現在CheckpointのVersion label
-- Login / Logout / Session
-- Feed CRUD / Stock / Settings / 4タブ
-- RSS 2.0 / RSS 1.0 / Atom
-- Drawer / Modal / Keyboard / Focus / ARIA
+## 7. Browser Smoke Test
+
+更新内容に応じて必要範囲を確認します。
+
+- Login / Logout / Session / 2FA
+- Dashboard表示、Widget追加・編集・並び替え
+- RSS / Search Feed / Reader Mode
+- Stock
+- Calendar / Notification Center
+- Mail
+- File Library / Remote Files
+- Settings
+- PC / Smartphoneの主要Modal / Drawer
 - JavaScript Console errorなし
+- FooterのApplication Version label
 
-更新後に問題がある場合、Database変更の有無を先に確認してから [`rollback.md`](rollback.md) に従います。
+変更Scope外の機能をすべて手動確認する必要はありませんが、認証・Dashboard・主要Data表示は最低限のSmoke Test対象とします。
 
-## 更新完了記録
+## 8. 問題が発生した場合
+
+1. 最初のFAILまたは最初に確認できた不具合を記録する。
+2. DB Migrationの有無を確認する。
+3. Code / Config / DBのどこまで戻す必要があるかを切り分ける。
+4. [Rollback](rollback.md) に従い、Backupと同じ時点へ戻す。
+5. Migrationを伴う場合は、旧Codeと新DB schemaの互換性を推測しない。
+
+## 9. 更新完了記録
 
 最低限、次を残します。
 
@@ -485,10 +131,18 @@ Browserでは次を確認します。
 更新前Version / Commit
 更新後Version / Commit
 配布ZIP SHA-256
+適用Migration
+Config変更
 Backup fileとSHA-256
 実施日時
 実施者
-Test結果
+Current Gate結果
 Browser確認結果
 問題と対応
 ```
+
+## Historical Version固有手順
+
+過去Releaseで必要だったMigration、Config、Checkpoint固有の手順は [Historical Update / Migration History](update-history.md) に分離しています。
+
+Historical文書は過去環境の調査・段階Upgradeの確認用です。現在の更新では、Current Release Notes / CHANGELOGを先に確認し、必要な範囲だけ参照してください。

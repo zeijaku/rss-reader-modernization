@@ -184,48 +184,11 @@ rss_auth_session
 rss_auth_audit_log
 ```
 
-**既存Databaseへ `schema.sql` を再実行しないでください。** 既存環境はBackupを取得し、未適用Migrationだけを順番に適用します。
+**既存Databaseへ `schema.sql` を再実行しないでください。** 既存環境はBackupを取得し、未適用Migrationだけを番号順に適用します。
 
-V1.23.0からV1.24.0へ更新する既存Databaseでは、Backup取得後に `017_v1_24_stock_state.sql` の `SET @table_prefix` を環境へ合わせて適用します。Migration 017は既存Stockを保持したまま `stock_processed` / `stock_important` / `stock_archived` をDefault 0で追加し、Archive検索用Indexを追加します。`stock_flag` は従来どおりStock解除用で、Archiveとは別状態です。
+既存環境の更新はInstallationではなく [Update Guide](update.md) を使用してください。Version固有Migrationの名前・適用順・過去Release固有の注意点は [Historical Update / Migration History](update-history.md) に集約しています。
 
-V1.26以前からV1.27以降へ更新する既存Databaseでは、Backup取得後に `020_v1_27_user_files.sql` を1回適用してFile Library metadata tableを追加します。V1.28では追加Migrationはありません。
-
-V1.28.0からV1.29.0へ更新する既存Databaseでは、Backup取得後に `021_v1_29_remote_connection.sql` の `SET @table_prefix` を実環境の `DB_TABLE_PREFIX` と同じ値へ合わせて1回適用します。既存table/columnは削除せず、Remote Connection用tableを追加します。Credential暗号鍵はDatabaseには保存しないため、`APP_REMOTE_CREDENTIAL_KEY_B64`をprivate設定として別途準備してください。
-
-V1.31.0からV1.32.0へ更新する既存Databaseでは、Backup取得後に次を**この順番で、未適用のものだけ1回ずつ**適用します。各Migrationの `SET @table_prefix` は実環境の `DB_TABLE_PREFIX` と同じ値へ変更してください。
-
-```text
-022_v1_32_auth_2fa.sql
-→ 023_v1_32_auth_session.sql
-→ 024_v1_32_auth_audit_log.sql
-```
-
-Migration 022は`auth_totp`と`auth_recovery_code`、023は`auth_session`、024は`auth_audit_log`を追加します。いずれも既存tableを削除しない加算型です。対象tableが既に存在する本番環境では、RC/正式版への更新だけを理由に再実行しません。2FAを既に使用している環境では`APP_TOTP_SECRET_KEY_B64`を変更しないでください。
-
-V1.32.0からV1.33.0へ更新する既存Databaseでは、Backup取得後に`025_v1_33_calendar_event_exception.sql`の`SET @table_prefix`を実環境の`DB_TABLE_PREFIX`へ合わせ、対象Tableが無い場合だけ1回適用します。このMigrationはOccurrence例外Tableを追加するだけで、既存`calendar_event`を変更・削除しません。V1.33 checkpointで適用済みの場合はRC／正式版への更新を理由に再実行しません。
-
-V1.33.1からV1.34.0へ更新する既存Databaseでは、Backup取得後に次を**この順番で、未適用のものだけ1回ずつ**適用します。
-
-```text
-026_v1_34_mail_smtp.sql
-→ 027_v1_34_mail_sent_save_mode.sql
-```
-
-Migration 026は既存Mail AccountへSMTP送信設定を追加し、027はSent保存方式を追加します。どちらも既存IMAP設定やCredentialを削除しない加算型です。V1.34の本番確認で026 / 027を適用済みの場合は、正式Releaseへの更新だけを理由に再実行しません。
-
-V1.34.2からV1.35.0へ更新する既存Databaseでは、Backup取得後に`028_v1_35_mail_google_oauth.sql`、続けて`029_v1_35_remember_2fa_trust.sql`を各1回適用します。028は既存Mail Accountを`password`方式のまま保って認証方式Columnを追加し、029は既存Remember Tokenを未信頼のまま保って2FA確認時刻Columnを追加します。既存のPassword、暗号化Credential、Remember Tokenの有効期限は変更しません。
-
-V1.35.4からV1.36.0へ更新する既存Databaseでは、Backup取得後に`030_v1_36_notification_center.sql`、続けて`031_v1_36_calendar_reminder.sql`を各1回適用します。030はOwner単位の`notification` Tableを追加し、031は既存`calendar_event`へ`calendar_event_reminder` ColumnをDefault `none`で追加します。どちらも加算型で既存予定や既存User Dataを削除しません。V1.36 checkpointの本番確認ですでに030 / 031を適用済みの場合は、正式1.36.0化だけを理由に再実行しません。
-
-V1.24.0からV1.25.0へ更新する既存Databaseでは、Backup取得後に次を**この順番で1回ずつ**適用します。
-
-```text
-018_v1_25_calendar_event_time_url.sql
-→ 019_v1_25_calendar_recurrence.sql
-```
-
-Migration 018は既存`calendar_event`へ終日Flag、開始／終了時刻、関連URLを追加します。既存予定はDefaultで終日となり、時刻とURLはNULLのままです。Migration 019は繰り返し種別と任意の繰り返し終了日を追加し、既存予定は`none`のまま維持します。両Migrationとも `SET @table_prefix` を実環境の `DB_TABLE_PREFIX` と同じ値へ合わせてから実行してください。V1.25-F R3までの本番確認ですでに018 / 019を適用済みの場合は、正式V1.25.0化で再実行しません。
-
+Fresh Installでは上記の `schema.sql` と、この節に列挙した追加Migrationだけを適用します。既存DB向けMigration履歴をFresh Installへ重ねて実行しないでください。
 ## 7. Runtime directory
 
 PHP processから次へ書込みできるようにします。

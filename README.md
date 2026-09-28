@@ -203,7 +203,8 @@ Security Designは [`docs/security.md`](docs/security.md)、脆弱性報告方�
 現在の操作・運用では、READMEへ詳細を重複させず次のDocumentationを正本とします。
 
 - [Installation](docs/installation.md) — 新規設置、Schema、Fresh Install、Legacy DB移行
-- [Update](docs/update.md) — 更新前後の確認、Version固有Migration履歴
+- [Update](docs/update.md) — Current更新手順、Migration判断、更新後確認
+- [Historical Update / Migration History](docs/update-history.md) — 過去Version固有Migration / Config / Update履歴
 - [Configuration](docs/configuration.md) — Production Config、Session、HTTP、Mail、X、Remote Files
 - [Deployment Checklist](docs/deployment-checklist.md) — 配置前後の確認
 - [Backup and Restore](docs/backup-and-restore.md) — DB / Config / CodeのBackupと復旧
