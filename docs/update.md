@@ -88,10 +88,12 @@ RepositoryのCurrent Gateは次です。
 
 ```powershell
 php tools/healthcheck.php
-php tools/db_sb13.php verify
+php tools/db_current.php verify
 bash tests/run-ci.sh
 node --check public/js/dashboard.js
 ```
+
+`db_current.php verify` はCurrentに必要なTable / 重要Column / IndexをRead-onlyで確認します。Legacy DBのSB-13 audit / migration確認が必要な場合だけ `db_sb13.php` を追加使用します。
 
 通常更新では `tests/run-ci.sh` をCurrent Gateとします。Historical Version固有の調査が必要な場合だけ、当時の `tests/run.sh` / `tests/run-v*.sh` を追加で参照します。
 
