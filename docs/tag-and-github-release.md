@@ -2,10 +2,10 @@
 
 ## Current formal target
 
-- Version: `1.39.1`
-- Tag: `v1.39.1`
+- Version: `1.39.2`
+- Tag: `v1.39.2`
 
-V1.39.1は、Remember Me由来の2FA成功後に24時間の信頼日時を更新できないNative PDO Prepare互換性問題を修正するCorrection Releaseです。Tag／GitHub ReleaseはPHP 8.1／8.4、Security、Package、SHA-256、Artifact Attestation、Clean-room Gate完了後にだけ公開します。
+V1.39.2は、Fresh Installのschema.sql一本化、Current Schema verifier、Installation / Update / Package / Test運用の整理を正式配布へ反映するMaintenance / Correction Releaseです。Tag／GitHub ReleaseはPHP 8.1／8.4、Security、Package、SHA-256、Artifact Attestation、Clean-room Gate完了後にだけ公開します。
 
 V1.23-E以降は、VersionごとのRelease workflowや `release/vX.Y.Z-final` branchを標準手順として増やしません。
 

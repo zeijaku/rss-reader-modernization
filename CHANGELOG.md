@@ -1,3 +1,29 @@
+## 1.39.2 - 2026-09-29
+
+### Fresh Install and database verification
+- Consolidate the Current Fresh Install path so a new empty MySQL / MariaDB database uses `database/schema.sql` once, without applying historical migrations afterward.
+- Integrate the Current 27-table schema and post-V1.39.1 columns into the Fresh Install definition, and fix the Calendar reminder SQL fragment found during real-database verification.
+- Add read-only `php tools/db_current.php verify` for Current table, high-signal column, index, database-connection and table-prefix checks.
+- Keep `tools/db_sb13.php` for Legacy / SB-13 audit and migration verification rather than treating it as the Current Fresh Install verifier.
+- Existing installations require no new database migration for V1.39.2.
+
+### Installation, package, and documentation maintenance
+- Align the recommended Apache `DocumentRoot=<project>/public` layout with `public/.htaccess` ErrorDocument paths.
+- Simplify README, Installation, Update / Migration, Deployment and related documentation so Fresh Install and existing-database upgrade paths are clearly separated.
+- Keep the full documentation tree in the Runtime package and include the README-linked `CONTRIBUTING.md`.
+- Split Runtime ZIP verification from Complete Source / repository-only test steps so Production Runtime does not require `tests/` or Node.js.
+
+### CI, Actions, and test-suite maintenance
+- Update pinned GitHub Actions and move CI / Release Node.js runtime to Node 24.
+- Clarify Current versus Historical tests, keep Current behavior/security contracts in the standard gate, and keep historical release/finalization evidence outside normal Current CI.
+- Preserve Fresh Install schema, Runtime documentation, package and Current DB verifier contracts in the Current feature gate.
+- Repository branch cleanup removes obsolete merged / temporary branches while retaining `main` and the intentional V1.26 rollback safety branch.
+
+### Verification and compatibility
+- PHP 8.1 and PHP 8.4 Current CI pass after the Fresh Install finalization changes.
+- The consolidated `schema.sql` was additionally verified by a manual one-file import into a real MySQL / MariaDB environment after the Calendar reminder SQL correction.
+- No required application configuration, public API contract, credential format, or new Runtime external dependency is introduced.
+
 ## 1.39.1 - 2026-09-28
 
 ### Account Security correction

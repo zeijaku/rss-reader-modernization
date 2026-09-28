@@ -8,10 +8,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.39.1`  
-Release tag: `v1.39.1`
+**Stable release:** `RSS Reader Modernization 1.39.2`  
+Release tag: `v1.39.2`
 
-Version 1.39.1は、Remember Meから復元した未信頼BrowserでTOTP 2FAを完了した際、Native MySQL PDO Prepare環境で信頼日時更新に失敗する問題を修正したCorrection Releaseです。
+Version 1.39.2は、Fresh Installを`database/schema.sql` 1本へ統合し、Current Schema verifier、導入Documentation、Release package、CI/Test境界を整理したMaintenance / Correction Releaseです。
 
 Application Versionの正本は `app/version.php`、Versionごとの変更履歴は [`CHANGELOG.md`](CHANGELOG.md)、現在の正式Release詳細は [`RELEASE_NOTES.md`](RELEASE_NOTES.md) と [GitHub Releases](https://github.com/zeijaku/rss-reader-modernization/releases) を参照してください。
 
