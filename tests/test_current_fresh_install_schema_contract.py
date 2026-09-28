@@ -77,8 +77,9 @@ check('Fresh Installでは `database/schema.sql` だけを1回実行します' i
       'installation guide documents the single-SQL fresh install contract')
 check('Fresh InstallではMigrationを追加実行しません' in INSTALL,
       'installation guide keeps historical migrations out of fresh installs')
-check('database/schema.sql' in README and '追加Migration' not in README.split('## Updating', 1)[0],
-      'README Quick Start no longer requires post-schema migrations')
+quick_start = README.split('## Updating', 1)[0]
+check('database/schema.sql' in quick_start and 'Fresh Installでは追加Migrationは不要' in quick_start,
+      'README Quick Start documents schema-only fresh installation')
 check('schema.sql` はFresh Install用のCurrent完成形' in UPDATE,
       'update guide distinguishes complete fresh schema from upgrade migrations')
 
