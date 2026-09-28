@@ -144,12 +144,12 @@ Application Versionの正本は `app/version.php`、Versionごとの変更履歴
 3. `config/local.php.example` を参考に、Git管理外の `config/local.php` を作成する。
 4. MySQL / MariaDBに空Databaseと専用Userを作成する。
 5. `DB_TABLE_PREFIX` と `database/schema.sql` の `@table_prefix` を一致させる。
-6. `database/schema.sql` と、現行Fresh Installで必要な後続Migrationを番号順に適用する。
+6. `database/schema.sql` を1回実行してCurrent Schemaを作成する。Fresh Installでは追加Migrationは不要。
 7. `var/` 以下の必要DirectoryへPHP Processの書込み権限を設定する。
-8. Healthcheck / DB verify / Current Testを実行する。
+8. Runtime ZIPではHealthcheck / DB verifyを実行する。Complete Sourceでは必要に応じてCurrent Testも実行する。
 9. BrowserでRegistration、Login、RSS、主要Widgetを確認する。
 
-既存Databaseへ `schema.sql` を再実行しないでください。既存環境のMigration順序はInstallation / Update Documentationを正本とします。
+`database/schema.sql` はFresh Install用の完成形です。`database/migrations/` は既存DatabaseのUpgrade用として保持します。既存Databaseへ `schema.sql` を再実行しないでください。
 
 ## Updating
 
