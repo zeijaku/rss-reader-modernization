@@ -5,7 +5,7 @@
 -- 1. Set @table_prefix to the SAME value as DB_TABLE_PREFIX in config/local.php.
 -- 2. Existing DB upgrades require a verified backup before running this migration.
 -- 3. Run this file only when mail_account does NOT already exist.
--- 4. Fresh installs apply this after database/schema.sql; see docs/installation.md.
+-- 4. Existing-database upgrade only. Fresh installs use database/schema.sql and do not run this migration.
 -- 5. This migration creates a metadata/credential table only. Mail messages are not stored.
 -- 6. The credential column stores authenticated ciphertext, never plaintext.
 
