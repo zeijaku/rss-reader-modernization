@@ -102,9 +102,11 @@ Prefix:   rss_
 'DB_TABLE_PREFIX' => 'rss_',
 ```
 
-## 6. Schemaと現行Migrationを投入
+## 6. Schemaを投入
 
-Current Fresh Installでは、まず `database/schema.sql` を投入し、その後にこの節で列挙する**追加Migrationだけ**を番号順に適用します。`schema.sql` にすでに統合済みの過去Migrationを重ねて実行しません。
+Fresh Installでは `database/schema.sql` だけを1回実行します。
+
+Current `schema.sql` は、過去Migration 001〜031で追加された現在必要なTable / Column / IndexをFresh Install用の完成形として統合しています。Fresh InstallではMigrationを追加実行しません。
 
 まず `database/schema.sql` 冒頭の値を、`DB_TABLE_PREFIX` と同じにします。
 
@@ -118,43 +120,9 @@ MySQL CLI例:
 mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\schema.sql
 ```
 
-その後、現行機能に必要なMigrationを**番号順**に適用します。各SQLの `SET @table_prefix` も `DB_TABLE_PREFIX` と同じ値へ変更してください。
+phpMyAdminを使用する場合も、空Databaseへ `database/schema.sql` を1回Importします。
 
-```text
-009_v1_9_mail_account.sql
-010_v1_10_links.sql
-011_v1_11_stock_tags.sql
-012_v1_12_feed_keywords.sql
-014_v1_22_opml_feed_metadata.sql
-015_v1_22_feed_health.sql
-016_v1_22_rss_rules.sql
-026_v1_34_mail_smtp.sql
-027_v1_34_mail_sent_save_mode.sql
-028_v1_35_mail_google_oauth.sql
-029_v1_35_remember_2fa_trust.sql
-```
-
-CLI例:
-
-```powershell
-mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\009_v1_9_mail_account.sql
-mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\010_v1_10_links.sql
-mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\011_v1_11_stock_tags.sql
-mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\012_v1_12_feed_keywords.sql
-mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\014_v1_22_opml_feed_metadata.sql
-mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\015_v1_22_feed_health.sql
-mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\016_v1_22_rss_rules.sql
-mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\026_v1_34_mail_smtp.sql
-mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\027_v1_34_mail_sent_save_mode.sql
-mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\028_v1_35_mail_google_oauth.sql
-mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\029_v1_35_remember_2fa_trust.sql
-```
-
-phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016、026〜029を同じ順番でImportします。
-
-Current `schema.sql` には、013、017〜025、030〜031で追加されたSchema変更が統合済みです。Fresh Installではこれらを追加実行しません。過去VersionごとのMigration理由や既存DBへの適用順は [Historical Update / Migration History](update-history.md) を参照してください。
-
-Prefixが `rss_` の場合、current fresh installでは最終的に次の27 tableが存在します。
+Prefixが `rss_` の場合、Current Fresh Installでは最終的に次の27 tableが存在します。
 
 ```text
 rss_user_info
@@ -186,11 +154,10 @@ rss_auth_session
 rss_auth_audit_log
 ```
 
-**既存Databaseへ `schema.sql` を再実行しないでください。** 既存環境はBackupを取得し、未適用Migrationだけを番号順に適用します。
+`database/migrations/` は既存Databaseを古いVersionから更新するために保持しています。Fresh Installでこれらを重ねて実行しません。
 
-既存環境の更新はInstallationではなく [Update Guide](update.md) を使用してください。Version固有Migrationの名前・適用順・過去Release固有の注意点は [Historical Update / Migration History](update-history.md) に集約しています。
+**既存Databaseへ `schema.sql` を再実行しないでください。** 既存環境の更新は [Update Guide](update.md) を使用し、Version固有Migrationの名前・適用順・注意点は [Historical Update / Migration History](update-history.md) を参照してください。
 
-Fresh Installでは上記の `schema.sql` と、この節に列挙した追加Migrationだけを適用します。既存DB向けMigration履歴をFresh Installへ重ねて実行しないでください。
 ## 7. Runtime directory
 
 PHP processから次へ書込みできるようにします。
