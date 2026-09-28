@@ -152,7 +152,7 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\migrations\029
 
 phpMyAdminを使用する場合も、空Databaseへ `schema.sql` をImportした後、009〜012、014〜016、026〜029を同じ順番でImportします。V1.20.1のCalendar色Column（013）、V1.24のStock状態Column（017）、V1.25のCalendar終日／時刻／URL／繰り返しColumn（018 / 019）、V1.27 user file（020）、V1.29 Remote Connection（021）、V1.32 Account Security（022〜024）、V1.33 Calendar Occurrence例外（025）、V1.36 Notification Center / Calendar Reminder（030 / 031）は`schema.sql`へ統合済みのため、新規Installではこれらを追加実行しません.
 
-Prefixが `rss_` の場合、V1.36 fresh installでは最終的に次の27 tableが存在します。
+Prefixが `rss_` の場合、current fresh installでは最終的に次の27 tableが存在します。
 
 ```text
 rss_user_info
@@ -246,8 +246,10 @@ var/db-migration/         Legacy migrationを行う場合
 php -v
 php tools/healthcheck.php
 php tools/db_sb13.php verify
-bash tests/run.sh
+bash tests/run-ci.sh
 ```
+
+通常のCurrent Gateは `tests/run-ci.sh` です。Historical Version固有の確認が必要な場合だけ `tests/run.sh` / `tests/run-v*.sh` を追加実行します。
 
 `tools/healthcheck.php` はPHP拡張、設定、Runtime directory、Public Assetを確認しますが、DatabaseへLoginしません。Database接続とSchemaは `php tools/db_sb13.php verify` またはApplication実動作で確認します。
 
@@ -266,14 +268,16 @@ CLIが使えないHostingでは、Control panelでPHP Version / Extensionを確�
 - Calendarの月移動、通常予定、Task期限表示
 - Calendarの終日／時刻／関連URL、赤／青／緑、毎日／毎週／毎月／毎年の繰り返し
 - CalendarのToday、14日以内の直近予定、3件＋もっと見る、月切替時の表示安定性
+- Calendar ReminderとNotification Center
 - RSS / Stock記事の「Calendarへ追加」でTitle／URLが登録Modalへ引き継がれる
 - Calendar Modalを背景／×／閉じる／Escで閉じてもConsoleへ新しいFocus／`aria-hidden`警告が出ない
 - RSS 2.0 / RSS 1.0 / Atom
+- Reader Mode / Full Textを利用する場合は本文表示とImage Proxy経路
 - Stock保存と一覧
 - Stockの未処理 / 処理済み、通常 / 重要、Archive状態とFilter / 一括更新
 - File LibraryのUpload／Preview／Download／Delete
-- Remote Filesの接続確認、Directory操作、Upload／Download、File Library相互転送
-- Mailの受信／本文表示／送信／返信／Sent保存／添付送信／受信添付Download
+- Remote Filesの接続確認、Directory操作、複数Upload／Download、File Library相互転送、Text Editor、Permission
+- MailのPassword / Gmail OAuth2、受信／本文表示／検索／送信／返信／Sent保存／添付送信／受信添付Download
 - Settings保存
 - Drawer / Modal / Keyboard / Focus
 - JavaScript Console errorなし
