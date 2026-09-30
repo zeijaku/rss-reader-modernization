@@ -1,4 +1,4 @@
-V1.40-A開発Checkpoint: `1.40.0-dev.1`。正式Releaseは引き続き`1.39.2`です。V1.40.0の正式化は後続Phaseと本番確認後に行います。
+V1.40-A開発Checkpoint: `1.40.0-dev.2`。正式Releaseは引き続き`1.39.2`です。V1.40.0の正式化は後続Phaseと本番確認後に行います。
 
 # Versioning
 

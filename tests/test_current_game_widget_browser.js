@@ -5,15 +5,49 @@ const root=path.resolve(__dirname,'..');let checks=0;
 function check(condition,name){assert.ok(condition,name);checks++;console.log('PASS: '+name);}
 function card(id,type='maze_chase'){return `<section class="mini-game-card dashboard-widget" data-dashboard-widget-id="${id}" data-dashboard-widget-type="game" data-mini-game-type="${type}" data-dashboard-swipe-ignore="true"><div class="mini-game-card-inner"><div class="mini-game-card-header"><button class="widget-drag-handle">並替</button><span class="mini-game-title">${type}</span><button class="mini-game-edit-trigger">編集</button></div><div class="mini-game-card-body"><p>Loading</p></div></div></section>`;}
 function html(cards){return `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/css/bootstrap-5.3.8.min.css"><link rel="stylesheet" href="/css/mini-game.css"><link rel="stylesheet" href="/css/game-widget.css"><link rel="stylesheet" href="/css/game-2048.css"><link rel="stylesheet" href="/css/reversi.css"></head><body><button id="outside">外側</button><select class="registerGameType" id="registerGameType"><option value="icon_quest">Icon</option><option value="maze_chase">Maze</option><option value="game_2048">2048</option></select><input class="registerGameTitleValue" value="Icon Quest"><div id="main-content" data-dashboard-user-id="7">${cards}</div><div style="height:1800px"></div><script src="/js/jquery-3.7.1.min.js"></script><script src="/js/game-widget.js?v=fixture-revision"></script><script src="/js/mini-game.js"></script><script src="/js/lights-out.js"></script><script src="/js/cursor-field.js"></script><script src="/js/game-2048.js"></script><script src="/js/reversi.js"></script><script src="/js/block-collapse.js"></script></body></html>`;}
+function menuHtml(source){
+ const pageSource=fs.readFileSync(path.join(root,'public',source),'utf8');
+ const modalSource=source==='stock.php'?pageSource:fs.readFileSync(path.join(root,'app/view/dashboard_modals.php'),'utf8');
+ const select=modalSource.match(/<select\b[^>]*\bid="registerGameType"[^>]*>[\s\S]*?<\/select>/);
+ assert.ok(select,'production Game select exists in '+source);
+ const menu=pageSource.match(/<li class="drawer-section-title">[^\n]*<span>Widget追加<\/span><\/li>([\s\S]*?)(?=<li class="drawer-section-title">)/);
+ assert.ok(menu,'production Drawer markup exists in '+source);
+ return html('').replace(/<select\b[^>]*\bid="registerGameType"[^>]*>[\s\S]*?<\/select>/,select[0]).replace('<body>',`<body><button id="openDrawer" data-bs-toggle="offcanvas" data-bs-target="#drawerMenu">Menu</button><nav id="drawerMenu" class="offcanvas offcanvas-end"><ul class="drawer-menu">${menu[0]}</ul></nav><div id="registerGameWidget" class="modal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form id="registerGameWidgetForm">`)
+ .replace('<div id="main-content"','</form></div></div></div><div id="main-content"')
+ .replace('</body>','<script src="/js/bootstrap.bundle-5.3.8.min.js"></script><script src="/js/dashboard-core.js"></script><script src="/js/dashboard.js"></script></body>');
+}
 (async()=>{
 const browser=await chromium.launch({executablePath:process.env.GAME_TEST_CHROME||chromium.executablePath(),headless:true,args:['--no-sandbox']});
 async function setup(viewport,cards,options={}){
  const context=await browser.newContext({viewport,hasTouch:viewport.width<600}); const requests=[],errors=[];let failures=options.failOnce?1:0;
  await context.addInitScript(()=>{window.__frames=0;const raf=window.requestAnimationFrame.bind(window);window.requestAnimationFrame=function(fn){return raf(t=>{window.__frames++;fn(t);});};if(location.search.includes('blocked')){for(const name of ['localStorage','sessionStorage'])Object.defineProperty(window,name,{get(){throw new Error('blocked');}});}});
- await context.route('http://game.test/**',async route=>{let url=new URL(route.request().url());requests.push(url.pathname+url.search);if(url.pathname==='/'){await route.fulfill({contentType:'text/html',body:html(cards)});return;}if(url.pathname==='/js/maze-chase.js'&&failures-- >0){await route.abort();return;}const file=path.join(root,'public',url.pathname);if(fs.existsSync(file))await route.fulfill({body:fs.readFileSync(file),contentType:url.pathname.endsWith('.js')?'text/javascript':'text/css'});else await route.fulfill({status:404,body:''});});
+ await context.route('http://game.test/**',async route=>{let url=new URL(route.request().url());requests.push(url.pathname+url.search);if(url.pathname==='/'){await route.fulfill({contentType:'text/html',body:options.menu?menuHtml(options.menu):html(cards)});return;}if(url.pathname==='/js/maze-chase.js'&&failures-- >0){await route.abort();return;}const file=path.join(root,'public',url.pathname);if(fs.existsSync(file))await route.fulfill({body:fs.readFileSync(file),contentType:url.pathname.endsWith('.js')?'text/javascript':'text/css'});else await route.fulfill({status:404,body:''});});
  const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));await page.goto('http://game.test/'+(options.blocked?'?blocked=1':''));return {page,context,requests,errors};
 }
 let e=await setup({width:1280,height:1000},'');await e.page.waitForTimeout(200);check(!e.requests.some(x=>x.includes('maze-chase.js')),'unconfigured Dashboard never requests Maze module');check(e.errors.length===0,'legacy scripts work without Game cards');await e.context.close();
+for(const source of ['index.php','stock.php'])for(const width of [1280,360]){
+ e=await setup({width,height:1000},'',{menu:source});const p=e.page;
+ // Run the production catalog after DOM ready, as with delayed module loading.
+ await p.addScriptTag({url:'/js/utility-widgets.js'});await p.waitForSelector('#widgetCatalog-game',{state:'attached'});
+ check(await p.locator('#widgetCatalog-game [data-game-preset="maze_chase"]').count()===1,'production Game menu contains exactly one Maze Chase: '+source+' / '+width);
+ await p.locator('#openDrawer').click();await p.waitForSelector('#drawerMenu.show');
+ await p.locator('[data-bs-target="#widgetCatalog-game"]').click();const tile=p.locator('#widgetCatalog-game [data-game-preset="maze_chase"]');await tile.waitFor({state:'visible'});
+ check((await tile.textContent()).trim()==='Maze Chase','Maze menu label is visible');await tile.locator('.drawer-item-label').click();await p.waitForSelector('#registerGameWidget.show');
+ check(await p.inputValue('#registerGameType')==='maze_chase'&&await p.inputValue('.registerGameTitleValue')==='Maze Chase','menu opens real Bootstrap add modal with Maze selected');
+ await p.evaluate(()=>bootstrap.Modal.getInstance(document.getElementById('registerGameWidget')).hide());await p.waitForSelector('#registerGameWidget.show',{state:'hidden'});
+ await p.addScriptTag({url:'/js/utility-widgets.js'});await p.waitForTimeout(100);
+ check(await p.locator('#widgetCatalog-game [data-game-preset="maze_chase"]').count()===1,'catalog initialization does not duplicate Maze');
+ for(const type of ['icon_quest','lights_out','wire_defense','block_collapse','cursor_field','game_2048','reversi']){
+  const legacy=p.locator('#widgetCatalog-game [data-game-preset="'+type+'"]');check(await legacy.count()===1,'existing Game menu entry retained: '+type);
+  const previous=await p.inputValue('#registerGameType');
+  await p.locator('#openDrawer').click();await p.waitForSelector('#drawerMenu.show');await legacy.click();await p.waitForSelector('#registerGameWidget.show');
+  // Stock already lacks the Wire Defense option in 1.39.2; preserve that unrelated behavior.
+  if(source==='stock.php'&&type==='wire_defense')check(await p.inputValue('#registerGameType')===previous,'Stock Wire preset preserves its pre-existing unavailable-option behavior');
+  else check(await p.inputValue('#registerGameType')===type,'existing Game menu still selects its own subtype: '+type);
+  await p.evaluate(()=>bootstrap.Modal.getInstance(document.getElementById('registerGameWidget')).hide());await p.waitForSelector('#registerGameWidget.show',{state:'hidden'});
+ }
+ check(!e.requests.some(x=>x.includes('maze-chase.js')),'opening Game menu does not load Maze engine');check(e.errors.length===0,'production menu has no browser exceptions');await e.context.close();
+}
 for(const viewport of [{width:1280,height:1000},{width:360,height:1000}]){
  e=await setup(viewport,card(1)+card(2));const p=e.page;await p.waitForSelector('[data-game-widget-initialized="1"]');await p.waitForFunction(()=>document.querySelectorAll('[data-game-widget-initialized="1"]').length===2);
  check(e.requests.filter(x=>x.includes('maze-chase.js')).length===1,'multiple widgets share one module request at '+viewport.width);

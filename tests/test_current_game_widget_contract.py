@@ -24,4 +24,6 @@ check("'maze_chase'].indexOf" in text('public/js/mini-game.js'),'legacy Icon Que
 check('data-game-direction' in maze and 'min-height:44px' in text('public/css/game-widget.css'),'touch buttons maintain accessible size')
 check(all(word not in maze for word in ['fetch(', 'XMLHttpRequest', '$.ajax(', 'https://']),'Maze engine has no external or API dependency')
 check('innerHTML' not in common and 'innerHTML' not in maze,'new UI uses text and DOM nodes rather than HTML interpolation')
+check("catalogButton('#registerGameWidget', 'Maze Chase', 'fas fa-route').attr('data-game-preset', 'maze_chase')" in text('public/js/utility-widgets.js'),'production Drawer catalog registers Maze Chase with the existing add-modal target')
+check("closest('[data-game-preset=\"maze_chase\"]')" in common and "select.value = 'maze_chase'" in common,'Maze menu preset selects the existing game configuration')
 print(f'RESULT: PASS {checks} / FAIL 0 / SKIP 0')

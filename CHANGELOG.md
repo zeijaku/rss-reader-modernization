@@ -1,3 +1,9 @@
+## 1.40.0-dev.2 - 2026-09-30
+
+- Register Maze Chase in the existing Game Drawer catalog; opening its tile selects Maze Chase in the add modal.
+- Bump the asset revision to invalidate the earlier checkpoint cache.
+- Cover actual Dashboard/Stock catalog generation and Bootstrap modal transitions at PC and smartphone widths, preserving all seven existing game entries.
+
 ## 1.40.0-dev.1 - 2026-09-30
 
 - V1.40-A: add original Maze Chase using the existing Game Widget config and API.
