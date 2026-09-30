@@ -200,6 +200,7 @@
         if (!$card || $card.length === 0) { return; }
         if (window.RssClockTimer && typeof window.RssClockTimer.init === 'function') { window.RssClockTimer.init(); }
         if (window.RssMiniGame && typeof window.RssMiniGame.init === 'function') { window.RssMiniGame.init(); }
+        if (window.RssWireDefense && typeof window.RssWireDefense.init === 'function') { window.RssWireDefense.init(); }
         if (window.RssLightsOut && typeof window.RssLightsOut.init === 'function') { window.RssLightsOut.init(); }
 
         triggerFirst($card, '.feed-refresh-trigger');

@@ -1,3 +1,9 @@
+## 1.40.0-dev.7 - 2026-10-01
+
+- Preserve each English/Japanese Word Tiles board, rack, bag, pending tiles, Score and Best when changing language through either settings-save path. Widget deletion still removes both language records in the current owner/widget scope.
+- Reinitialize Wire Defense after settings card refresh; cancel animation, remove listeners and disconnect the removal observer when the last Wire card leaves the page. Keep existing gameplay and storage format.
+- Add Current settings-state and lifecycle regressions plus desktop/touch browser tests through real production forms with mocked HTTP responses. No database/API/dictionary changes.
+
 ## 1.40.0-dev.6 - 2026-09-30
 
 - V1.40-C3: add Word Tiles Japanese using 40,000 filtered JMdict readings, NFKC/katakana normalization and hiragana tiles.

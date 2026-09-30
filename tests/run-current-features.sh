@@ -346,3 +346,7 @@ python3 "$ROOT/tools/build_word_tiles_dictionary_ja.py" --check
 node --check "$ROOT/public/js/word-tiles-words-ja.js"
 node --check "$ROOT/public/js/word-tiles-ja.js"
 node "$ROOT/tests/test_current_word_tiles_ja_runtime.js"
+
+# Game settings storage and Wire Defense teardown remain Current.
+node "$ROOT/tests/test_current_game_settings_state.js"
+node "$ROOT/tests/test_current_wire_defense_lifecycle.js"

@@ -1454,8 +1454,10 @@
         $('.changeGameHeight').val(String($trigger.attr('data-widget-height') || '1'));
     }
 
-    function removeGameWidgetBrowserState(widgetId, gameType) {
-        if ((!gameType || gameType === 'maze_chase' || gameType === 'falling_blocks' || gameType === 'word_tiles') && window.RssGameWidget) window.RssGameWidget.removeWidgetState(widgetId);
+    function removeGameWidgetBrowserState(widgetId, gameType, nextGameType) {
+        // Language changes keep both independent Word Tiles snapshots and Best.
+        if (['word_tiles', 'word_tiles_ja'].indexOf(gameType) !== -1 && ['word_tiles', 'word_tiles_ja'].indexOf(nextGameType) !== -1) return;
+        if ((!gameType || gameType === 'maze_chase' || gameType === 'falling_blocks' || gameType === 'word_tiles' || gameType === 'word_tiles_ja') && window.RssGameWidget) window.RssGameWidget.removeWidgetState(widgetId);
         if ((!gameType || gameType === 'icon_quest') && window.RssMiniGame && typeof window.RssMiniGame.removeWidgetState === 'function') {
             window.RssMiniGame.removeWidgetState(widgetId);
         }
@@ -1476,7 +1478,7 @@
             .done(function (data) {
                 if (apiResponseOk(data)) {
                     if (originalGameType !== String(payload.game_type || 'icon_quest')) {
-                        removeGameWidgetBrowserState(payload.widget_id, originalGameType);
+                        removeGameWidgetBrowserState(payload.widget_id, originalGameType, String(payload.game_type || 'icon_quest'));
                     }
                     window.location.reload();
                 }
