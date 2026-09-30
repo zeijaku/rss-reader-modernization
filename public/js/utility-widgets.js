@@ -642,7 +642,8 @@
             catalogCategory('game', 'Game', 'fas fa-gamepad', false, [
                 take('#registerGameWidget', 'Game').attr('data-game-preset', 'icon_quest'),
                 catalogButton('#registerGameWidget', 'Lights Out', 'fas fa-lightbulb').attr('data-game-preset', 'lights_out'),
-                catalogButton('#registerGameWidget', 'Maze Chase', 'fas fa-route').attr('data-game-preset', 'maze_chase')
+                catalogButton('#registerGameWidget', 'Maze Chase', 'fas fa-route').attr('data-game-preset', 'maze_chase'),
+                catalogButton('#registerGameWidget', 'Falling Blocks', 'fas fa-cubes').attr('data-game-preset', 'falling_blocks')
             ])
         ];
 

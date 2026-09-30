@@ -8,7 +8,7 @@
 
 ## Stable Release
 
-**Development checkpoint:** V1.40-A / `1.40.0-dev.2` — Maze Chase and the minimal shared Game lifecycle. Existing game engines and database schema remain compatible. See [V1.40-A verification](docs/v1.40-a-game-widget.md).
+**Development checkpoint:** V1.40-B / `1.40.0-dev.3` — Maze Chase, Falling Blocks and the minimal shared Game lifecycle. Existing game engines and database schema remain compatible. See [V1.40-A verification](docs/v1.40-a-game-widget.md) and [V1.40-B verification](docs/v1.40-b-falling-blocks.md).
 
 **Stable release:** `RSS Reader Modernization 1.39.2`  
 Release tag: `v1.39.2`

@@ -16,3 +16,11 @@
 .game-widget-expanded .mini-game-card-inner{position:fixed;inset:16px;z-index:1080;overflow:auto;max-width:900px;margin:auto;background:var(--bs-body-bg,#fff);box-shadow:0 0 0 100vmax rgba(0,0,0,.55)}
 .game-widget-expanded .mini-game-card-body{height:auto!important;max-height:none!important}
 @media(max-width:575.98px){.game-widget-expanded .mini-game-card-inner{inset:8px}.game-widget-help{font-size:.75rem}}
+
+/* Falling Blocks selectors do not alter other Game layouts. */
+.falling-blocks-board-wrap{width:100%;max-width:220px;margin:auto;text-align:center}
+.falling-blocks-board{display:block;max-width:100%;margin:auto;touch-action:manipulation}
+.falling-blocks-board:focus-visible{outline:3px solid var(--bs-primary,#0d6efd);outline-offset:2px}
+.falling-blocks-info{font-size:.8rem;margin:0 0 .4rem}
+.falling-blocks-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:.5rem}
+.falling-blocks-action{min-width:44px;min-height:44px;touch-action:manipulation}

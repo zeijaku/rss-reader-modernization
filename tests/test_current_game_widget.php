@@ -15,10 +15,25 @@ $config=dashboard_widget_normalize_row($row);check140($config['widget_config_dat
 check140(api_dispatch('widget.game.update',8,$input+['widget_id'=>(string)$id])['status']===404,'foreign update rejected');
 check140(api_dispatch('widget.game.delete',8,['widget_id'=>(string)$id])['status']===404,'foreign delete rejected');
 check140(api_dispatch('widget.game.create',0,$input)['status']===401,'unauthenticated creation rejected');
-foreach (['maze-chase','../maze_chase','constructor','<script>','falling_blocks'] as $bad){$invalid=$input;$invalid['game_type']=$bad;check140(api_dispatch('widget.game.create',7,$invalid)['status']===422,'unapproved subtype rejected: '.$bad);}
+foreach (['maze-chase','../maze_chase','constructor','<script>','word_tiles'] as $bad){$invalid=$input;$invalid['game_type']=$bad;check140(api_dispatch('widget.game.create',7,$invalid)['status']===422,'unapproved subtype rejected: '.$bad);}
 $invalid=$input;$invalid['game_title']=str_repeat('x',33);check140(api_dispatch('widget.game.create',7,$invalid)['status']===422,'oversized title rejected');
 $changed=$input;$changed['widget_id']=(string)$id;$changed['game_title']='独自の見出し';$changed['widget_width']='4';check140(api_dispatch('widget.game.update',7,$changed)['status']===200,'owned settings update accepted');
 check140(api_dispatch('widget.game.delete',7,['widget_id'=>(string)$id])['status']===200,'owned deletion accepted');
 check140((int)$pdo->query('SELECT COUNT(*) FROM v140_dashboard_widget WHERE widget_flag=0')->fetchColumn()===1,'deletion does not affect second widget');
 foreach (['icon_quest','lights_out','wire_defense','block_collapse','cursor_field','game_2048','reversi'] as $old){$input['game_type']=$old;check140(api_dispatch('widget.game.create',7,$input)['status']===201,'legacy subtype remains accepted: '.$old);}
+$fall=$input;$fall['game_type']='falling_blocks';$fall['game_title']='Falling Blocks';
+$f1=api_dispatch('widget.game.create',7,$fall);$f2=api_dispatch('widget.game.create',7,$fall);
+check140($f1['status']===201 && $f2['status']===201,'multiple Falling Blocks Widgets use the existing API');
+$fid=$f1['body']['data']['widget_id'];
+$frow=$pdo->query('SELECT * FROM v140_dashboard_widget WHERE widget_id='.$fid)->fetch();
+check140(dashboard_widget_normalize_row($frow)['widget_config_data']===['schema'=>1,'title'=>'Falling Blocks','game'=>'falling_blocks'],'Falling Blocks config round-trips through real PDO');
+check140($frow['widget_owner']===7 && $frow['widget_reference_id']===null,'Falling owner scope and unique-index compatibility retained');
+check140(api_dispatch('widget.game.update',8,$fall+['widget_id'=>(string)$fid])['status']===404,'foreign Falling update rejected');
+check140(api_dispatch('widget.game.delete',8,['widget_id'=>(string)$fid])['status']===404,'foreign Falling delete rejected');
+check140(api_dispatch('widget.game.create',0,$fall)['status']===401,'unauthenticated Falling create rejected');
+$fall['widget_id']=(string)$fid;$fall['game_title']='独自のBlock';$fall['widget_width']='2';
+check140(api_dispatch('widget.game.update',7,$fall)['status']===200,'owned Falling settings update accepted');
+$fall['game_type']='maze_chase';check140(api_dispatch('widget.game.update',7,$fall)['status']===200,'Falling can switch to Maze through the same API');
+check140(api_dispatch('widget.game.delete',7,['widget_id'=>(string)$fid])['status']===200,'owned Falling deletion accepted');
+check140((int)$pdo->query('SELECT COUNT(*) FROM v140_dashboard_widget WHERE widget_id='.$f2['body']['data']['widget_id'].' AND widget_flag=0')->fetchColumn()===1,'Falling deletion retains the other instance');
 echo 'RESULT: PASS '.$checks." / FAIL 0 / SKIP 0\n";

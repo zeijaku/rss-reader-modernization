@@ -4,8 +4,8 @@
     var source = document.currentScript;
     var revisionMatch = source && /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(source.src || '');
     var revision = revisionMatch ? revisionMatch[1] : '';
-    var catalog = Object.assign(Object.create(null), {maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}});
-    var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase'};
+    var catalog = Object.assign(Object.create(null), {maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}});
+    var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks'};
     var factories = Object.create(null), loads = Object.create(null), records = new Map();
     var expanded = null, previousOverflow = '', observer = null;
     function assetUrl(path) { return revision ? path + '?v=' + encodeURIComponent(revision) : path; }
@@ -172,7 +172,7 @@
     }
     function init() {
         records.forEach(function (record,card) { if (!card.isConnected || card.getAttribute('data-mini-game-type') !== record.game) destroy(card); });
-        document.querySelectorAll('.mini-game-card[data-mini-game-type="maze_chase"]').forEach(initCard);
+        document.querySelectorAll('.mini-game-card[data-mini-game-type]').forEach(initCard);
     }
     function syncTitle(event) {
         var select = event.target;
@@ -185,10 +185,11 @@
     function start() {
         document.addEventListener('change',syncTitle,true);
         document.addEventListener('click',function (event) {
-            var button = event.target.closest && event.target.closest('[data-game-preset="maze_chase"]');
-            if (button) {
+            var button = event.target.closest && event.target.closest('[data-game-preset][data-drawer-modal-target="#registerGameWidget"]');
+            if (button && catalog[button.getAttribute('data-game-preset')]) {
                 var select = document.getElementById('registerGameType'), title = document.querySelector('.registerGameTitleValue');
-                if (select) { select.value = 'maze_chase'; if (title) title.value = titles.maze_chase; select.dispatchEvent(new window.Event('change',{bubbles:true})); }
+                var game = button.getAttribute('data-game-preset');
+                if (select) { select.value = game; if (title) title.value = titles[game]; select.dispatchEvent(new window.Event('change',{bubbles:true})); }
             }
         });
         if (window.jQuery) {

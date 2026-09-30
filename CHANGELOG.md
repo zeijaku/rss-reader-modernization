@@ -1,3 +1,10 @@
+## 1.40.0-dev.3 - 2026-09-30
+
+- V1.40-B: add local Falling Blocks with seven shapes, rotation, soft/hard drop, line scoring and levels.
+- Reuse the Game Widget shell, lazy loading, Restart/Pause, expansion, browser Best storage and owner-scoped APIs.
+- Add keyboard and accessible touch buttons, with deterministic engine and PC/smartphone regression coverage.
+- Preserve Maze Chase, legacy Game engines and database schema; formal V1.40.0 remains pending.
+
 ## 1.40.0-dev.2 - 2026-09-30
 
 - Register Maze Chase in the existing Game Drawer catalog; opening its tile selects Maze Chase in the add modal.
