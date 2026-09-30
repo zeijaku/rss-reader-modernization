@@ -153,7 +153,9 @@ if (is_int($content_location)) {
             echo '</div>';
             echo '<div class="mini-game-card-body">';
 
-            if ($gameType === 'falling_blocks') {
+            if ($gameType === 'word_tiles') {
+                echo '<p class="game-widget-loading text-muted" role="status">Word Tilesを読み込んでいます...</p>';
+            } elseif ($gameType === 'falling_blocks') {
                 echo '<p class="game-widget-loading text-muted" role="status">Falling Blocksを読み込んでいます...</p>';
             } elseif ($gameType === 'maze_chase') {
                 echo '<p class="game-widget-loading text-muted" role="status">Maze Chaseを読み込んでいます...</p>';

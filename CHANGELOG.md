@@ -1,3 +1,10 @@
+## 1.40.0-dev.4 - 2026-09-30
+
+- V1.40-C1: add original solo Word Tiles with a 9×9 board, seven-tile rack, connected horizontal/vertical words and score.
+- Use a small hand-maintained fixed English starter list, without external dictionary/API calls; C2/C3 remain separate.
+- Save and validate board, rack, pool, pending placements and score per browser/user/widget; reuse existing Game APIs and shell.
+- Cover word/crossword rules, saved-state validation, PC/touch and existing games; no database change.
+
 ## 1.40.0-dev.3 - 2026-09-30
 
 - V1.40-B: add local Falling Blocks with seven shapes, rotation, soft/hard drop, line scoring and levels.

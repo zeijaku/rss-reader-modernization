@@ -4,8 +4,8 @@
     var source = document.currentScript;
     var revisionMatch = source && /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(source.src || '');
     var revision = revisionMatch ? revisionMatch[1] : '';
-    var catalog = Object.assign(Object.create(null), {maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}});
-    var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks'};
+    var catalog = Object.assign(Object.create(null), {maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js'}});
+    var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks', word_tiles:'Word Tiles'};
     var factories = Object.create(null), loads = Object.create(null), records = new Map();
     var expanded = null, previousOverflow = '', observer = null;
     function assetUrl(path) { return revision ? path + '?v=' + encodeURIComponent(revision) : path; }
@@ -42,7 +42,7 @@
         Object.keys(catalog).forEach(function (game) {
             var key = storageKey(user, widgetId, game);
             if (!key) return;
-            ['localStorage','sessionStorage'].forEach(function (name) { try { window[name].removeItem(key); } catch (error) {} });
+            ['localStorage','sessionStorage'].forEach(function (name) { try { window[name].removeItem(key); if (game === 'word_tiles') window[name].removeItem(key + '.state'); } catch (error) {} });
         });
     }
     function load(game) {
@@ -115,6 +115,7 @@
         body.append(summary,stage,controls,status,note); record.expandButton = expand;
         var context = {
             stage: stage,
+            stateKey: record.game === 'word_tiles' && record.key ? record.key + '.state' : null,
             on: function (target,type,callback,options) { on(record,target,type,callback,options); },
             update: function (view) {
                 score.textContent = String(view.score); saveBest(record,view.score); best.textContent = String(record.best);

@@ -1411,6 +1411,7 @@
     function gameDefaultTitle(gameType) {
         if (gameType === 'maze_chase') return 'Maze Chase';
         if (gameType === 'falling_blocks') return 'Falling Blocks';
+        if (gameType === 'word_tiles') return 'Word Tiles';
         return gameType === 'lights_out' ? 'Lights Out' : 'Icon Quest';
     }
 
@@ -1454,7 +1455,7 @@
     }
 
     function removeGameWidgetBrowserState(widgetId, gameType) {
-        if ((!gameType || gameType === 'maze_chase' || gameType === 'falling_blocks') && window.RssGameWidget) window.RssGameWidget.removeWidgetState(widgetId);
+        if ((!gameType || gameType === 'maze_chase' || gameType === 'falling_blocks' || gameType === 'word_tiles') && window.RssGameWidget) window.RssGameWidget.removeWidgetState(widgetId);
         if ((!gameType || gameType === 'icon_quest') && window.RssMiniGame && typeof window.RssMiniGame.removeWidgetState === 'function') {
             window.RssMiniGame.removeWidgetState(widgetId);
         }

@@ -24,3 +24,18 @@
 .falling-blocks-info{font-size:.8rem;margin:0 0 .4rem}
 .falling-blocks-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:.5rem}
 .falling-blocks-action{min-width:44px;min-height:44px;touch-action:manipulation}
+
+/* Word Tiles only: a compact independent board and 44px rack/action controls. */
+.word-tiles-wrap{width:100%;max-width:450px;margin:auto}
+.word-tiles-board{width:100%;border:1px solid var(--bs-border-color,#aaa)}
+.word-tiles-row{display:grid;grid-template-columns:repeat(9,minmax(0,1fr))}
+.word-tiles-cell{padding:0;min-width:0;aspect-ratio:1;border:1px solid var(--bs-border-color,#aaa);background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#333);font-weight:600;touch-action:manipulation}
+.word-tiles-cell:focus-visible{outline:3px solid var(--bs-primary,#0d6efd);outline-offset:-3px}
+.word-tiles-cell:disabled{opacity:1}
+.word-tiles-locked{background:var(--bs-secondary-bg,#e9ecef)}
+.word-tiles-pending{background:var(--bs-primary-bg-subtle,#cfe2ff);color:var(--bs-primary-text-emphasis,#084298)}
+.word-tiles-rack,.word-tiles-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:.5rem}
+.word-tiles-tile,.word-tiles-action{min-width:44px;min-height:44px;touch-action:manipulation}
+.word-tiles-tile[aria-pressed=true]{outline:2px solid var(--bs-primary,#0d6efd)}
+.word-tiles-info,.word-tiles-save-note,.word-tiles-dictionary{font-size:.8rem;overflow-wrap:anywhere;margin:.4rem 0}
+.word-tiles-dictionary p{max-height:12rem;overflow:auto}
