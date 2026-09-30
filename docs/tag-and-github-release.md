@@ -2,10 +2,10 @@
 
 ## Current formal target
 
-- Version: `1.39.2`
-- Tag: `v1.39.2`
+- Version: `1.40.0`
+- Tag: `v1.40.0`
 
-V1.39.2は、Fresh Installのschema.sql一本化、Current Schema verifier、Installation / Update / Package / Test運用の整理を正式配布へ反映するMaintenance / Correction Releaseです。Tag／GitHub ReleaseはPHP 8.1／8.4、Security、Package、SHA-256、Artifact Attestation、Clean-room Gate完了後にだけ公開します。
+V1.40.0は、Game Widget共通基盤、Maze Chase、Falling Blocks、Word Tiles（英語・日本語）、言語別状態保持とWire Defense lifecycle修正を正式配布するFeature Releaseです。Tag／GitHub ReleaseはPHP 8.1／8.4、Security、Package、SHA-256、Artifact Attestation、Clean-room Gate完了後にだけ公開します。
 
 V1.23-E以降は、VersionごとのRelease workflowや `release/vX.Y.Z-final` branchを標準手順として増やしません。
 

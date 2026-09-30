@@ -8,12 +8,10 @@
 
 ## Stable Release
 
-**Development checkpoint:** V1.40 Game Widget fixes / `1.40.0-dev.7` — Maze Chase, Falling Blocks, Word Tiles with fixed English (43,127) and Japanese reading (40,000) dictionaries and the minimal shared Game lifecycle. Word Tiles retains both languages through actual settings saves; Wire Defense reinitializes after card refresh and cleans up on removal. Database schema remains compatible. See [Game Widget fixes](docs/v1.40-game-state-lifecycle.md) and [V1.40-C3 checkpoint](docs/v1.40-c3-japanese-dictionary.md) and [V1.40-C2 checkpoint](docs/v1.40-c2-english-dictionary.md) and [V1.40-C1 checkpoint](docs/v1.40-c1-word-tiles.md) and [V1.40-A verification](docs/v1.40-a-game-widget.md) and [V1.40-B verification](docs/v1.40-b-falling-blocks.md).
+**Stable release:** `RSS Reader Modernization 1.40.0`
+Release tag: `v1.40.0`
 
-**Stable release:** `RSS Reader Modernization 1.39.2`  
-Release tag: `v1.39.2`
-
-Version 1.39.2は、Fresh Installを`database/schema.sql` 1本へ統合し、Current Schema verifier、導入Documentation、Release package、CI/Test境界を整理したMaintenance / Correction Releaseです。
+Version 1.40.0は、最小Game Widget共通基盤へMaze Chase、Falling Blocks、Word Tiles（英語・日本語）を追加するFeature Releaseです。英語43,127語・日本語読み40,000語の固定ローカル辞書を使用し、Word Tilesの言語別盤面・Score保持とWire Defenseの設定更新・後片付けを修正しています。既存ゲームの内部ロジックを維持し、DB変更はありません。確認・配布手順は[V1.40.0正式版](docs/v1.40.0-release.md)を参照してください。
 
 Application Versionの正本は `app/version.php`、Versionごとの変更履歴は [`CHANGELOG.md`](CHANGELOG.md)、現在の正式Release詳細は [`RELEASE_NOTES.md`](RELEASE_NOTES.md) と [GitHub Releases](https://github.com/zeijaku/rss-reader-modernization/releases) を参照してください。
 

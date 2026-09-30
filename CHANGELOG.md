@@ -1,3 +1,11 @@
+## 1.40.0 - 2026-10-01
+
+- Add the minimal shared Game Widget lifecycle and individually loaded Maze Chase, Falling Blocks and English/Japanese Word Tiles modules, reusing widget_type=game and existing owner-scoped configuration/API without new tables.
+- Provide keyboard and touch controls, restart/pause/expanded display, Score and widget/user/game-scoped browser Best. Word Tiles also saves board/rack/bag/pending turns and restores independent English/Japanese progress through real settings changes.
+- Ship fixed local English SCOWL (43,127 words) and Japanese JMdict reading (40,000 entries) dictionaries with build filters, normalization, attribution and redistribution licenses; no validation API or upstream giant dictionary in the runtime payload.
+- Reinitialize Wire Defense after settings refresh and clean detached animation, input/global listeners and the last removal observer. Preserve existing game mechanics and the other game engines.
+- Finalize version/assets, release documentation and Current regressions. Existing 1.39.2 installations require no database migration or configuration changes.
+
 ## 1.40.0-dev.7 - 2026-10-01
 
 - Preserve each English/Japanese Word Tiles board, rack, bag, pending tiles, Score and Best when changing language through either settings-save path. Widget deletion still removes both language records in the current owner/widget scope.
