@@ -1,3 +1,56 @@
+## 1.40.0 - 2026-10-01
+
+- Add the minimal shared Game Widget lifecycle and individually loaded Maze Chase, Falling Blocks and English/Japanese Word Tiles modules, reusing widget_type=game and existing owner-scoped configuration/API without new tables.
+- Provide keyboard and touch controls, restart/pause/expanded display, Score and widget/user/game-scoped browser Best. Word Tiles also saves board/rack/bag/pending turns and restores independent English/Japanese progress through real settings changes.
+- Ship fixed local English SCOWL (43,127 words) and Japanese JMdict reading (40,000 entries) dictionaries with build filters, normalization, attribution and redistribution licenses; no validation API or upstream giant dictionary in the runtime payload.
+- Reinitialize Wire Defense after settings refresh and clean detached animation, input/global listeners and the last removal observer. Preserve existing game mechanics and the other game engines.
+- Finalize version/assets, release documentation and Current regressions. Existing 1.39.2 installations require no database migration or configuration changes.
+
+## 1.40.0-dev.7 - 2026-10-01
+
+- Preserve each English/Japanese Word Tiles board, rack, bag, pending tiles, Score and Best when changing language through either settings-save path. Widget deletion still removes both language records in the current owner/widget scope.
+- Reinitialize Wire Defense after settings card refresh; cancel animation, remove listeners and disconnect the removal observer when the last Wire card leaves the page. Keep existing gameplay and storage format.
+- Add Current settings-state and lifecycle regressions plus desktop/touch browser tests through real production forms with mocked HTTP responses. No database/API/dictionary changes.
+
+## 1.40.0-dev.6 - 2026-09-30
+
+- V1.40-C3: add Word Tiles Japanese using 40,000 filtered JMdict readings, NFKC/katakana normalization and hiragana tiles.
+- Reuse original Word rules through a small Japanese adapter; keep English state/rules, separate language Best/state, and lazily share local rules assets.
+- Ship CC BY-SA 4.0 attribution/license, deterministic offline dictionary tooling and PC/touch regression checks. No DB/API changes.
+
+## 1.40.0-dev.5 - 2026-09-30
+
+- V1.40-C2: expand Word Tiles English validation to 43,127 fixed words using filtered, pinned SCOWL 2020.12.07 plus all C1 words.
+- Load the dictionary only for Word Tiles, share it across widgets, preserve C1 saved state, and add bounded dictionary search.
+- Include offline deterministic generation, provenance and full required third-party notices. No DB/API or existing engine changes.
+
+## 1.40.0-dev.4 - 2026-09-30
+
+- V1.40-C1: add original solo Word Tiles with a 9×9 board, seven-tile rack, connected horizontal/vertical words and score.
+- Use a small hand-maintained fixed English starter list, without external dictionary/API calls; C2/C3 remain separate.
+- Save and validate board, rack, pool, pending placements and score per browser/user/widget; reuse existing Game APIs and shell.
+- Cover word/crossword rules, saved-state validation, PC/touch and existing games; no database change.
+
+## 1.40.0-dev.3 - 2026-09-30
+
+- V1.40-B: add local Falling Blocks with seven shapes, rotation, soft/hard drop, line scoring and levels.
+- Reuse the Game Widget shell, lazy loading, Restart/Pause, expansion, browser Best storage and owner-scoped APIs.
+- Add keyboard and accessible touch buttons, with deterministic engine and PC/smartphone regression coverage.
+- Preserve Maze Chase, legacy Game engines and database schema; formal V1.40.0 remains pending.
+
+## 1.40.0-dev.2 - 2026-09-30
+
+- Register Maze Chase in the existing Game Drawer catalog; opening its tile selects Maze Chase in the add modal.
+- Bump the asset revision to invalidate the earlier checkpoint cache.
+- Cover actual Dashboard/Stock catalog generation and Bootstrap modal transitions at PC and smartphone widths, preserving all seven existing game entries.
+
+## 1.40.0-dev.1 - 2026-09-30
+
+- V1.40-A: add original Maze Chase using the existing Game Widget config and API.
+- Add a local lazy module loader, per-widget lifecycle, Restart/Pause, expansion, Best storage and focused keyboard/touch controls.
+- Preserve existing Game engines and storage keys; no database migration or external dependency.
+- Add focused backend, engine and browser coverage; formal V1.40.0 release remains pending later phases.
+
 ## 1.39.2 - 2026-09-29
 
 ### Fresh Install and database verification

@@ -1,3 +1,5 @@
+V1.40-C3開発Checkpoint: `1.40.0-dev.6`。正式Releaseは引き続き`1.39.2`です。V1.40.0の正式化は後続Phaseと本番確認後に行います。
+
 # Versioning
 
 現在の正式Release対象は `1.39.2` です。Active Release Candidateはありません。

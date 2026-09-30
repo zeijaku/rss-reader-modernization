@@ -1,0 +1,22 @@
+'use strict';
+const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('assert/strict');
+const window={RssGameWidget:{register(game,factory){assert.equal(game,'maze_chase');assert.equal(typeof factory,'function');}}};
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../public/js/maze-chase.js'),'utf8'),{window,document:{},Math,Number,Object,Array});
+const a=window.RssMazeChase;let count=0;
+function check(name,fn){fn();count++;console.log('PASS: '+name);}
+check('original maze rectangular and completely reachable',()=>{assert.equal(a.maze.length,a.height);a.maze.forEach(row=>assert.equal(row.length,a.width));const d=a.distanceMap(a.playerStart);a.maze.join('').split('').forEach((cell,i)=>{if(cell!=='#')assert.ok(d[i]>=0);});});
+check('initial player and enemies occupy distinct open cells',()=>{assert.equal(new Set([a.playerStart,...a.enemyStarts]).size,3);a.enemyStarts.forEach(i=>assert.notEqual(a.maze[Math.floor(i/a.width)][i%a.width],'#'));});
+check('instances isolate items and enemy arrays',()=>{let x=a.createState(),y=a.createState();x.items[17]=0;x.enemies[0]=16;assert.equal(y.items[17],1);assert.equal(y.enemies[0],28);});
+check('walls, unknown input and edges are rejected',()=>{assert.equal(a.nextCell(16,'up'),16);assert.equal(a.nextCell(16,'left'),16);assert.equal(a.nextCell(16,'bogus'),16);assert.equal(a.nextCell(14,'right'),14);assert.equal(a.nextCell(16,'right'),17);});
+check('ready, gameover and cleared states do not advance',()=>{for(const status of ['ready','gameover','cleared']){let s=a.createState();s.status=status;s.wanted='right';a.advance(s);assert.equal(s.ticks,0);assert.equal(s.player,16);}});
+check('pellets score exactly once and movement continues',()=>{let s=a.createState();s.status='playing';s.wanted='right';a.advance(s);assert.equal(s.score,10);assert.equal(s.items[17],0);s.wanted='left';a.advance(s);assert.equal(s.score,10);});
+check('queued turns are applied only at a valid corridor',()=>{let s=a.createState();s.status='playing';s.wanted='right';a.advance(s);s.wanted='down';a.advance(s);assert.equal(s.player,18);assert.equal(s.direction,'right');});
+check('Escape Item scores, activates power and counts down',()=>{let s=a.createState();s.status='playing';s.player=31;s.wanted='down';a.advance(s);assert.equal(s.player,46);assert.equal(s.score,50);assert.equal(s.power,36);s.direction=null;s.wanted=null;a.advance(s);assert.equal(s.power,35);});
+check('enemy contact ends the game without power',()=>{let s=a.createState();s.status='playing';s.enemies[0]=17;s.wanted='right';a.advance(s);assert.equal(s.status,'gameover');});
+check('powered contact pushes enemy to its home and awards score',()=>{let s=a.createState();s.status='playing';s.power=8;s.enemies[0]=17;s.wanted='right';a.advance(s);assert.equal(s.status,'playing');assert.equal(s.enemies[0],a.enemyStarts[0]);assert.equal(s.score,110);});
+check('last Item triggers CLEAR',()=>{let s=a.createState();s.status='playing';s.items.fill(0);s.items[17]=1;s.remaining=1;s.wanted='right';a.advance(s);assert.equal(s.status,'cleared');assert.equal(s.remaining,0);});
+check('chasing enemy reduces shortest-path distance on its movement tick',()=>{let s=a.createState();s.status='playing';s.ticks=2;let d=a.distanceMap(s.player),before=d[s.enemies[0]];a.advance(s,()=>0);assert.ok(d[s.enemies[0]]<before);});
+check('powered enemy increases distance when an escape is available',()=>{let s=a.createState();s.status='playing';s.power=20;s.ticks=2;s.player=26;s.enemies[0]=27;let d=a.distanceMap(s.player),before=d[27];a.advance(s,()=>0);assert.ok(d[s.enemies[0]]>before);});
+check('Arrow and WASD controls exclude unrelated keys',()=>{for(const key of ['ArrowUp','ArrowLeft','ArrowDown','ArrowRight','w','A','S','D'])assert.ok(a.keyDirection(key));for(const key of ['Tab','Escape','Enter','x'])assert.equal(a.keyDirection(key),null);});
+check('long deterministic simulations remain within valid bounds',()=>{for(let run=0;run<20;run++){let s=a.createState();s.status='playing';for(let tick=0;tick<1000&&s.status==='playing';tick++){s.wanted=['up','left','down','right'][(tick+run)%4];a.advance(s,()=>.5);assert.ok(s.player>=0&&s.player<a.width*a.height);assert.ok(s.remaining>=0);assert.ok(s.score>=0);s.enemies.forEach(i=>assert.notEqual(a.maze[Math.floor(i/a.width)][i%a.width],'#'));}}});
+console.log('RESULT: PASS '+count+' / FAIL 0 / SKIP 0');

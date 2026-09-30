@@ -1,0 +1,41 @@
+/* Bootstrap-derived shell; no global Dashboard layout changes. */
+.game-widget-body{min-width:0;overflow:visible}
+.game-widget-summary{display:flex;justify-content:center;gap:1.2rem;flex-wrap:wrap;margin-bottom:.6rem;font-size:.9rem}
+.game-widget-stage{min-width:0}
+.maze-chase-board-wrap{width:100%;max-width:540px;margin:0 auto;text-align:center}
+.maze-chase-board{display:block;max-width:100%;margin:0 auto;border-radius:.25rem;touch-action:manipulation}
+.maze-chase-board:focus-visible{outline:3px solid var(--bs-primary,#0d6efd);outline-offset:2px}
+.game-widget-controls{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem;margin:.6rem 0}
+.game-widget-controls button,.game-widget-direction{min-width:44px;min-height:44px;touch-action:manipulation}
+.game-widget-dpad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(2,44px);gap:4px;justify-content:center;margin-top:.6rem}
+.game-widget-direction[data-game-direction=up]{grid-column:2}
+.game-widget-direction[data-game-direction=left]{grid-column:1;grid-row:2}
+.game-widget-direction[data-game-direction=down]{grid-column:2;grid-row:2}
+.game-widget-direction[data-game-direction=right]{grid-column:3;grid-row:2}
+.game-widget-status,.game-widget-storage-note,.game-widget-help{font-size:.8rem;margin:.5rem 0;overflow-wrap:anywhere}
+.game-widget-expanded .mini-game-card-inner{position:fixed;inset:16px;z-index:1080;overflow:auto;max-width:900px;margin:auto;background:var(--bs-body-bg,#fff);box-shadow:0 0 0 100vmax rgba(0,0,0,.55)}
+.game-widget-expanded .mini-game-card-body{height:auto!important;max-height:none!important}
+@media(max-width:575.98px){.game-widget-expanded .mini-game-card-inner{inset:8px}.game-widget-help{font-size:.75rem}}
+
+/* Falling Blocks selectors do not alter other Game layouts. */
+.falling-blocks-board-wrap{width:100%;max-width:220px;margin:auto;text-align:center}
+.falling-blocks-board{display:block;max-width:100%;margin:auto;touch-action:manipulation}
+.falling-blocks-board:focus-visible{outline:3px solid var(--bs-primary,#0d6efd);outline-offset:2px}
+.falling-blocks-info{font-size:.8rem;margin:0 0 .4rem}
+.falling-blocks-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:.5rem}
+.falling-blocks-action{min-width:44px;min-height:44px;touch-action:manipulation}
+
+/* Word Tiles only: a compact independent board and 44px rack/action controls. */
+.word-tiles-wrap{width:100%;max-width:450px;margin:auto}
+.word-tiles-board{width:100%;border:1px solid var(--bs-border-color,#aaa)}
+.word-tiles-row{display:grid;grid-template-columns:repeat(9,minmax(0,1fr))}
+.word-tiles-cell{padding:0;min-width:0;aspect-ratio:1;border:1px solid var(--bs-border-color,#aaa);background:var(--bs-body-bg,#fff);color:var(--bs-body-color,#333);font-weight:600;touch-action:manipulation}
+.word-tiles-cell:focus-visible{outline:3px solid var(--bs-primary,#0d6efd);outline-offset:-3px}
+.word-tiles-cell:disabled{opacity:1}
+.word-tiles-locked{background:var(--bs-secondary-bg,#e9ecef)}
+.word-tiles-pending{background:var(--bs-primary-bg-subtle,#cfe2ff);color:var(--bs-primary-text-emphasis,#084298)}
+.word-tiles-rack,.word-tiles-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-top:.5rem}
+.word-tiles-tile,.word-tiles-action{min-width:44px;min-height:44px;touch-action:manipulation}
+.word-tiles-tile[aria-pressed=true]{outline:2px solid var(--bs-primary,#0d6efd)}
+.word-tiles-info,.word-tiles-save-note,.word-tiles-dictionary{font-size:.8rem;overflow-wrap:anywhere;margin:.4rem 0}
+.word-tiles-dictionary p{max-height:12rem;overflow:auto}

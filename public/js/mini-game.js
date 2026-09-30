@@ -540,7 +540,7 @@
         moveCard(card, direction, true);
     }
     function initCard(card) {
-        if (!card || ['lights_out', 'wire_defense', 'block_collapse', 'cursor_field', 'game_2048', 'reversi'].indexOf(card.getAttribute('data-mini-game-type')) !== -1 || card.getAttribute('data-mini-game-initialized') === '1') return;
+        if (!card || ['lights_out', 'wire_defense', 'block_collapse', 'cursor_field', 'game_2048', 'reversi', 'maze_chase', 'falling_blocks', 'word_tiles', 'word_tiles_ja'].indexOf(card.getAttribute('data-mini-game-type')) !== -1 || card.getAttribute('data-mini-game-initialized') === '1') return;
         card.setAttribute('data-mini-game-initialized', '1');
         var widgetId = card.getAttribute('data-dashboard-widget-id'), loadedResult = loadStateResult(cardUserId(), widgetId), loaded = loadedResult.state;
         var restored = loaded.moves > 0 || loaded.status !== 'playing' || loaded.levelId !== LEVELS[0].id;
@@ -1131,6 +1131,8 @@
     var memoryStorage = Object.create(null);
     var storageMode = 'memory';
     var storage = null;
+    var activeCards = [];
+    var removalObserver = null;
 
     function positiveId(value) {
         var text = String(value || '');
@@ -2073,12 +2075,51 @@
         if (status) status.textContent = '迎撃Missileを発射しました。再装填には1秒かかります。';
     }
 
+    function destroyCard(card) {
+        stopLoop(card);
+        var cleanups = card.__rssWireDefenseCleanups || [];
+        for (var i = 0; i < cleanups.length; i++) cleanups[i]();
+        document.removeEventListener('visibilitychange', card.__rssWireDefenseVisibility);
+        window.removeEventListener('pagehide', card.__rssWireDefensePageHide);
+        delete card.__rssWireDefenseCleanups;
+        delete card.__rssWireDefenseVisibility;
+        delete card.__rssWireDefensePageHide;
+        delete card.__rssWireDefenseState;
+        card.removeAttribute('data-wire-defense-initialized');
+    }
+
+    function cleanupRemovedCards() {
+        activeCards = activeCards.filter(function (card) {
+            if (card.isConnected && card.getAttribute('data-mini-game-type') === 'wire_defense') return true;
+            destroyCard(card);
+            return false;
+        });
+        if (activeCards.length === 0 && removalObserver) {
+            removalObserver.disconnect();
+            removalObserver = null;
+        }
+    }
+
+    function observeRemoval() {
+        if (removalObserver || typeof window.MutationObserver !== 'function' || !document.body || activeCards.length === 0) return;
+        removalObserver = new window.MutationObserver(cleanupRemovedCards);
+        removalObserver.observe(document.body, {childList: true, subtree: true, attributes: true, attributeFilter: ['data-mini-game-type']});
+    }
+
+    function bindCardEvent(card, target, type, handler, options) {
+        if (!target) return;
+        target.addEventListener(type, handler, options);
+        card.__rssWireDefenseCleanups.push(function () { target.removeEventListener(type, handler, options); });
+    }
+
     function initCard(card) {
         if (!card || card.getAttribute('data-wire-defense-initialized') === '1') return;
         card.setAttribute('data-wire-defense-initialized', '1');
         var runtime = createRuntime();
         runtime.record = loadRecord(dashboardUserId(), card.getAttribute('data-dashboard-widget-id'));
         card.__rssWireDefenseState = runtime;
+        card.__rssWireDefenseCleanups = [];
+        activeCards.push(card);
         buildBody(card);
         render(card, 'Startを押すとNetwork Defenseを開始します。');
 
@@ -2086,10 +2127,10 @@
         var start = card.querySelector('.wire-defense-start');
         var pause = card.querySelector('.wire-defense-pause');
         var stop = card.querySelector('.wire-defense-stop');
-        if (canvas) canvas.addEventListener('pointerdown', function (event) { handlePointer(card, event); }, {passive: false});
-        if (start) start.addEventListener('click', function () { startGame(card); });
-        if (pause) pause.addEventListener('click', function () { togglePause(card); });
-        if (stop) stop.addEventListener('click', function () { stopGame(card); });
+        bindCardEvent(card, canvas, 'pointerdown', function (event) { handlePointer(card, event); }, {passive: false});
+        bindCardEvent(card, start, 'click', function () { startGame(card); });
+        bindCardEvent(card, pause, 'click', function () { togglePause(card); });
+        bindCardEvent(card, stop, 'click', function () { stopGame(card); });
 
         card.__rssWireDefenseVisibility = function () {
             if (document.hidden) {
@@ -2144,11 +2185,13 @@
     }
 
     function init() {
+        cleanupRemovedCards();
         selectStorage();
         document.addEventListener('change', syncDefaultTitleBeforeDashboard, true);
         var cards = document.querySelectorAll('[data-dashboard-widget-type="game"][data-mini-game-type="wire_defense"]');
         for (var i = 0; i < cards.length; i++) initCard(cards[i]);
         bindAjaxCleanup();
+        observeRemoval();
     }
 
     window.RssWireDefense = {

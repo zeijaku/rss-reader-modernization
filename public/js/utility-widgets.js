@@ -641,7 +641,11 @@
             ]),
             catalogCategory('game', 'Game', 'fas fa-gamepad', false, [
                 take('#registerGameWidget', 'Game').attr('data-game-preset', 'icon_quest'),
-                catalogButton('#registerGameWidget', 'Lights Out', 'fas fa-lightbulb').attr('data-game-preset', 'lights_out')
+                catalogButton('#registerGameWidget', 'Lights Out', 'fas fa-lightbulb').attr('data-game-preset', 'lights_out'),
+                catalogButton('#registerGameWidget', 'Maze Chase', 'fas fa-route').attr('data-game-preset', 'maze_chase'),
+                catalogButton('#registerGameWidget', 'Falling Blocks', 'fas fa-cubes').attr('data-game-preset', 'falling_blocks'),
+                catalogButton('#registerGameWidget', 'Word Tiles', 'fas fa-font').attr('data-game-preset', 'word_tiles'),
+                catalogButton('#registerGameWidget', 'Word Tiles 日本語', 'fas fa-language').attr('data-game-preset', 'word_tiles_ja')
             ])
         ];
 

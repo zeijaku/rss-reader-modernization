@@ -1,98 +1,50 @@
-# RSS Reader Modernization 1.39.2
+# RSS Reader Modernization 1.40.0
 
-V1.39.2 is a Maintenance / Correction release focused on making a clean Fresh Install reproducible from the Runtime ZIP, while simplifying repository maintenance and preserving existing application behavior.
+V1.40.0 is a Game Widget feature release that preserves the existing Dashboard and game engines while adding individually loaded games and local word dictionaries.
 
 ## Main changes
 
-### Fresh Install: one SQL file
+- Reuse the existing `widget_type=game` / `widget_config.game` model, owner-scoped APIs, size/style settings and multiple placement. No new table, framework or runtime dependency.
+- Add **Maze Chase**: original maze, pellets, simple enemy behavior, collisions, Score, Game Over, restart/pause, focused keyboard movement and touch buttons.
+- Add **Falling Blocks**: seven block shapes, movement/rotation, soft/hard drop, line clearing, Score/Level, restart/pause and keyboard/touch controls.
+- Add **Word Tiles** for English and Japanese: board/rack, horizontal/vertical words, fixed local validation, solo scoring, restart and browser saved progress. English/Japanese are separate Game options; switching between them preserves each board, rack, bag, pending turn, Score and Best.
+- Shared controls provide restart/pause/expanded view/Score/Best and lifecycle boundaries. The new game modules and dictionaries load only when configured. Game keys are consumed only within the focused board, and animation stops when suspended.
+- Fix **Wire Defense** settings refresh to recreate its playable Canvas. Clean removed/replaced/type-changed runtime animation, card/global listeners and the removal observer. Best remains stored; settings refresh returns to the ready/Start screen as with the prior full-page reload behavior.
+- Retain Icon Quest, Lights Out, Wire Defense, Block Collapse, Cursor Field, 2048 and Reversi/Othello without rewriting their game mechanics.
 
-- A new empty MySQL / MariaDB database now uses `database/schema.sql` once as the Current Fresh Install schema.
-- Historical `database/migrations/` files remain available only for upgrading existing databases; Fresh Install does not apply them after `schema.sql`.
-- The consolidated schema contains the Current 27 tables and the later Calendar, Notification, Mail, Remember Me / 2FA, Remote Files, Account Security, Feed Health and RSS Rules structures.
-- Fix the `calendar_event_reminder` fragment in the consolidated Calendar table definition. The issue was found during the final real-database import test.
-- After the correction, the complete `schema.sql` was manually imported as one file into a real MySQL / MariaDB environment successfully.
+## Dictionaries and licenses
 
-## Current database verifier
+- English: 43,127 filtered words from SCOWL 2020.12.07, with the upstream license/notice in `licenses/word-tiles-scowl-Copyright.txt`.
+- Japanese: 40,000 filtered JMdict readings, normalized to hiragana and deduplicated. The derived wordlist is **CC BY-SA 4.0**, with EDRDG attribution and legal/redistribution notices included in `licenses/` and a public dictionary notice linked in the game.
+- Dictionary source/filter metadata and deterministic build checks remain in Complete Source. The giant upstream JMdict archive is not part of Runtime or Complete packages. Word validation never calls an AI or external dictionary API.
+- Application/game code remains under its existing MIT license; dictionary terms apply to the respective derived data.
 
-Add the Runtime-safe read-only command:
+## Upgrade and compatibility
 
-```bash
-php tools/db_current.php verify
-```
+Existing 1.39.2 installations and V1.40 development checkpoints require **no database migration and no new required configuration**. Do not run Fresh Install `database/schema.sql` over an existing database. Back up application files, config, database and private runtime data before updating.
 
-It verifies:
+For a tested complete dev.7 installation, the finalization diff only updates the release marker (plus documentation). To update directly from 1.39.2, use the full verified Runtime package or the cumulative application diff. Preserve `config/local.php`, private data and the existing database.
 
-- configured MySQL connection
-- configured table prefix
-- all 27 Current tables
-- selected high-signal Current columns
-- selected important Current indexes
-
-A successful check ends with:
-
-```text
-CURRENT SCHEMA: PASS
-```
-
-`tools/db_sb13.php` remains the Legacy / SB-13 audit and migration helper. It is no longer presented as the complete Current Fresh Install schema verifier.
-
-## Installation and deployment documentation
-
-- Simplify README and the Installation / Update / Migration documentation so Fresh Install and existing-database upgrades are clearly separated.
-- Document the short Fresh Install path: extract Runtime ZIP, create private config, create empty database, run `schema.sql` once, verify runtime / Current schema, then register the first user.
-- Treat Mail, Remote Files, X Timeline and TOTP 2FA as optional post-install verification when those features are used.
-- Separate Production Runtime ZIP checks from Repository / Complete Source checks; Runtime deployments do not require `tests/` or Node.js.
-- Align `public/.htaccess` ErrorDocument paths with the recommended `DocumentRoot=<project>/public` deployment.
-- Keep the complete documentation tree in the Runtime ZIP and include the README-linked `CONTRIBUTING.md`.
-
-## Repository / CI maintenance
-
-- Update pinned GitHub Actions dependencies and use Node.js 24 in CI / Release workflows.
-- Keep `tests/run-ci.sh` as the Current gate while clarifying Current, Historical and focused-investigation test roles.
-- Keep durable behavior/security regressions in Current CI even when filenames retain an older version prefix.
-- Keep historical release/finalization evidence outside normal Current CI.
-- Preserve dedicated Fresh Install schema, Current DB verifier, Runtime documentation and package contracts.
-- Clean obsolete merged / temporary branches while intentionally retaining the V1.26 rollback safety branch.
-
-## Database upgrade
-
-No new migration is required for an existing V1.39.1 database.
-
-Existing installations must **not** run `database/schema.sql` over the current database. Continue to follow `docs/update.md` and apply only release-specific migrations when a future release requires them.
-
-## Configuration
-
-No new required application configuration is introduced.
-
-The recommended deployment still keeps:
-
-- `config/local.php` outside `public/`
-- private runtime data under `var/`
-- `public/` as the Web Server DocumentRoot
-- the configured `DB_TABLE_PREFIX` equal to the prefix used when creating database tables
+Score and Word progress are browser-local and scoped to user/widget/game; there is no cross-device synchronization, ranking or server score history. Widget deletion removes its Word language records; changing to an unrelated game keeps the previous reset policy. Already erased progress cannot be reconstructed.
 
 ## Verification completed
 
-- PR #100 Fresh Install finalization CI passed on PHP 8.1 and PHP 8.4.
-- Current Fresh Install static contract confirms exactly 27 required tables and the integrated post-migration identifiers.
-- Current DB verifier contract confirms read-only table / column / index verification.
-- Runtime documentation / package contracts confirm the recommended public DocumentRoot and Runtime-linked files.
-- The real MySQL / MariaDB one-file `schema.sql` import was manually repeated after the Calendar reminder correction and completed successfully.
-- Release workflow will independently repeat Current regression, package build / verification, secret scan, clean-room checks, SHA-256 verification and Artifact Attestation before publication.
+- Current regression includes owner/config/security/API validation, new game logic, English/Japanese normalization and inventory conservation, scoped storage and Wire teardown.
+- Dedicated desktop/touch-emulation browser suites passed 786 checks on dev.7: production-form settings/Wire 218, shared/legacy Game 227, English Word 151 and Japanese Word 190; formal Version retains these game/runtime bytes.
+- Final source readiness, PHP/asset contracts, local Current gate and the standard PHP 8.1/8.4 CI are checked before main integration. The Release workflow reruns both PHP gates and verifies secret exclusion, Runtime/Complete manifests, SHA-256, clean-room extraction and provenance before publication.
 
 ## Verification limits
 
-- The GitHub-hosted Current schema MariaDB smoke test skips when MariaDB server tools are unavailable on the runner; the final one-file database import was therefore additionally verified manually on a real database environment.
-- Formal Runtime / Complete ZIP, checksum, clean-room and Artifact Attestation verification must still pass in the Release workflow before `v1.39.2` is published.
-- Production deployment remains a separate step and is not performed automatically by the Release workflow.
+- Browser tests use Chrome Headless Shell at desktop width 1280 and touch emulation width 360, with production scripts/forms and mocked same-origin HTTP responses. Physical iPhone/Safari and real production behavior remain deployment checks; no production database or credentials are touched by tests.
+- Three existing local generic browser smoke checks skip when standard Chromium/Python Playwright is unavailable. All dedicated game browser suites run without skips. CI/Release use the repository's standard gate.
+- Word Tiles is an initial solo word game with fixed dictionaries, no premium-square system and no multiplayer rules. Japanese matches normalized readings present in the filtered list, not every dictionary word.
+- Stock is the saved-article view and does not display Game Widgets. Additions originating there target Dashboard tab 1; its pre-existing unavailable Wire Defense menu option remains outside this release's fixes. Use Dashboard to add Wire Defense.
 
 ## Release assets
 
-The Release workflow publishes:
+- `rss-reader-modernization-1.40.0.zip` — Production Runtime
+- `rss-reader-modernization-1.40.0.zip.sha256`
+- `rss-reader-modernization-1.40.0-complete.zip` — Complete Source / tests / build tools
+- `rss-reader-modernization-1.40.0-complete.zip.sha256`
 
-- `rss-reader-modernization-1.39.2.zip`
-- `rss-reader-modernization-1.39.2.zip.sha256`
-- `rss-reader-modernization-1.39.2-complete.zip`
-- `rss-reader-modernization-1.39.2-complete.zip.sha256`
-
-Both ZIP files receive GitHub Artifact Attestations. Consumers with GitHub CLI can verify the downloaded ZIPs with `gh attestation verify ... --repo zeijaku/rss-reader-modernization`.
+Tag: `v1.40.0`. Tag/Release and assets are published only by the verified common Release workflow; existing release tags are never moved.

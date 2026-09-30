@@ -322,3 +322,31 @@ node --check "$ROOT/public/js/calendar-usability.js"
 php -l "$ROOT/app/view/dashboard_modals.php"
 
 echo 'PASS: current feature contract suite completed'
+
+# Shared new Game Widget / Maze Chase current behavior
+php "$SCRIPT_DIR/test_current_game_widget.php"
+python3 "$SCRIPT_DIR/test_current_game_widget_contract.py"
+node "$SCRIPT_DIR/test_current_maze_chase_runtime.js"
+node --check "$ROOT/public/js/game-widget.js"
+node --check "$ROOT/public/js/maze-chase.js"
+
+# Falling Blocks uses the same current Game Widget contract.
+node "$SCRIPT_DIR/test_current_falling_blocks_runtime.js"
+node --check "$ROOT/public/js/falling-blocks.js"
+
+# Word Tiles C1: turn-based rules and bounded local state.
+node "$SCRIPT_DIR/test_current_word_tiles_runtime.js"
+node --check "$ROOT/public/js/word-tiles.js"
+
+python3 "$ROOT/tools/build_word_tiles_dictionary.py" --check
+node --check "$ROOT/public/js/word-tiles-words-en.js"
+
+# Japanese reading dictionary and isolated locale state.
+python3 "$ROOT/tools/build_word_tiles_dictionary_ja.py" --check
+node --check "$ROOT/public/js/word-tiles-words-ja.js"
+node --check "$ROOT/public/js/word-tiles-ja.js"
+node "$ROOT/tests/test_current_word_tiles_ja_runtime.js"
+
+# Game settings storage and Wire Defense teardown remain Current.
+node "$ROOT/tests/test_current_game_settings_state.js"
+node "$ROOT/tests/test_current_wire_defense_lifecycle.js"
