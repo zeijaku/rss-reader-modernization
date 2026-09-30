@@ -1,3 +1,9 @@
+## 1.40.0-dev.6 - 2026-09-30
+
+- V1.40-C3: add Word Tiles Japanese using 40,000 filtered JMdict readings, NFKC/katakana normalization and hiragana tiles.
+- Reuse original Word rules through a small Japanese adapter; keep English state/rules, separate language Best/state, and lazily share local rules assets.
+- Ship CC BY-SA 4.0 attribution/license, deterministic offline dictionary tooling and PC/touch regression checks. No DB/API changes.
+
 ## 1.40.0-dev.5 - 2026-09-30
 
 - V1.40-C2: expand Word Tiles English validation to 43,127 fixed words using filtered, pinned SCOWL 2020.12.07 plus all C1 words.

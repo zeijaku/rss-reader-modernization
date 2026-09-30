@@ -8,7 +8,7 @@
 
 ## Stable Release
 
-**Development checkpoint:** V1.40-C2 / `1.40.0-dev.5` — Maze Chase, Falling Blocks, Word Tiles with a fixed 43,127-word English dictionary and the minimal shared Game lifecycle. Existing game engines and database schema remain compatible. See [V1.40-C2 checkpoint](docs/v1.40-c2-english-dictionary.md) and [V1.40-C1 checkpoint](docs/v1.40-c1-word-tiles.md) and [V1.40-A verification](docs/v1.40-a-game-widget.md) and [V1.40-B verification](docs/v1.40-b-falling-blocks.md).
+**Development checkpoint:** V1.40-C3 / `1.40.0-dev.6` — Maze Chase, Falling Blocks, Word Tiles with fixed English (43,127) and Japanese reading (40,000) dictionaries and the minimal shared Game lifecycle. Existing game engines and database schema remain compatible. See [V1.40-C3 checkpoint](docs/v1.40-c3-japanese-dictionary.md) and [V1.40-C2 checkpoint](docs/v1.40-c2-english-dictionary.md) and [V1.40-C1 checkpoint](docs/v1.40-c1-word-tiles.md) and [V1.40-A verification](docs/v1.40-a-game-widget.md) and [V1.40-B verification](docs/v1.40-b-falling-blocks.md).
 
 **Stable release:** `RSS Reader Modernization 1.39.2`  
 Release tag: `v1.39.2`

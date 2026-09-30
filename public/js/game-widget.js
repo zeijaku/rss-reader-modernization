@@ -4,8 +4,8 @@
     var source = document.currentScript;
     var revisionMatch = source && /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(source.src || '');
     var revision = revisionMatch ? revisionMatch[1] : '';
-    var catalog = Object.assign(Object.create(null), {maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js', dictionary: './js/word-tiles-words-en.js'}});
-    var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks', word_tiles:'Word Tiles'};
+    var catalog = Object.assign(Object.create(null), {maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js', dictionary: './js/word-tiles-words-en.js'}, word_tiles_ja: {title: 'Word Tiles 日本語', script: './js/word-tiles-ja.js', dictionary: './js/word-tiles-words-ja.js', core: './js/word-tiles.js'}});
+    var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks', word_tiles:'Word Tiles', word_tiles_ja:'Word Tiles 日本語'};
     var factories = Object.create(null), loads = Object.create(null), records = new Map();
     var expanded = null, previousOverflow = '', observer = null;
     function assetUrl(path) { return revision ? path + '?v=' + encodeURIComponent(revision) : path; }
@@ -42,43 +42,30 @@
         Object.keys(catalog).forEach(function (game) {
             var key = storageKey(user, widgetId, game);
             if (!key) return;
-            ['localStorage','sessionStorage'].forEach(function (name) { try { window[name].removeItem(key); if (game === 'word_tiles') window[name].removeItem(key + '.state'); } catch (error) {} });
+            ['localStorage','sessionStorage'].forEach(function (name) { try { window[name].removeItem(key); if (game === 'word_tiles' || game === 'word_tiles_ja') window[name].removeItem(key + '.state'); } catch (error) {} });
         });
     }
-    var dictionaryLoad = null;
-    function loadDictionary() {
-        if (window.RssWordTilesEnglish && window.RssWordTilesEnglish.revision === 2) return Promise.resolve();
-        if (dictionaryLoad) return dictionaryLoad;
-        dictionaryLoad = new Promise(function (resolve, reject) {
-            var script = node('script'); script.src = assetUrl(catalog.word_tiles.dictionary);
-            script.onload = function () {
-                script.onload = script.onerror = null;
-                if (window.RssWordTilesEnglish && window.RssWordTilesEnglish.revision === 2) resolve();
-                else { script.remove(); reject(new Error('English dictionary unavailable')); }
-            };
-            script.onerror = function () { script.onload = script.onerror = null; script.remove(); reject(new Error('English dictionary could not load')); };
+    var assetLoads = Object.create(null);
+    function loadAsset(path) {
+        if (assetLoads[path]) return assetLoads[path];
+        assetLoads[path] = new Promise(function (resolve,reject) {
+            var script=node('script');script.src=assetUrl(path);
+            script.onload=function(){script.onload=script.onerror=null;resolve();};
+            script.onerror=function(){script.onload=script.onerror=null;script.remove();reject(new Error('Game asset could not load'));};
             document.head.appendChild(script);
-        }).catch(function (error) { dictionaryLoad = null; throw error; });
-        return dictionaryLoad;
+        }).catch(function(error){delete assetLoads[path];throw error;});
+        return assetLoads[path];
     }
     function load(game) {
-        if (factories[game]) return Promise.resolve(factories[game]);
         if (loads[game]) return loads[game];
-        var prerequisite = catalog[game].dictionary ? loadDictionary() : Promise.resolve();
-        loads[game] = prerequisite.then(function () { return new Promise(function (resolve, reject) {
-            var script = node('script');
-            script.src = assetUrl(catalog[game].script);
-            script.onload = function () {
-                script.onload = script.onerror = null;
-                if (factories[game]) resolve(factories[game]);
-                else { delete loads[game]; reject(new Error('Game module did not register')); }
-            };
-            script.onerror = function () {
-                script.onload = script.onerror = null;
-                script.remove(); delete loads[game]; reject(new Error('Game module could not load'));
-            };
-            document.head.appendChild(script);
-        }); }).catch(function (error) { delete loads[game]; throw error; });
+        var item=catalog[game], prerequisites=item.dictionary?loadAsset(item.dictionary):Promise.resolve();
+        loads[game]=prerequisites.then(function(){
+            if(item.dictionary){var data=game==='word_tiles_ja'?window.RssWordTilesJapaneseData:window.RssWordTilesEnglish;
+                if(!data||data.revision!==(game==='word_tiles_ja'?1:2)){delete assetLoads[item.dictionary];throw new Error('Word dictionary unavailable');}}
+            return item.core?loadAsset(item.core):Promise.resolve();
+        }).then(function(){return factories[game]?Promise.resolve():loadAsset(item.script);}).then(function(){
+            if(!factories[game]){delete assetLoads[item.script];throw new Error('Game module did not register');}return factories[game];
+        }).catch(function(error){delete loads[game];throw error;});
         return loads[game];
     }
     function on(record, target, type, callback, options) {
@@ -132,7 +119,7 @@
         body.append(summary,stage,controls,status,note); record.expandButton = expand;
         var context = {
             stage: stage,
-            stateKey: record.game === 'word_tiles' && record.key ? record.key + '.state' : null,
+            stateKey: (record.game === 'word_tiles' || record.game === 'word_tiles_ja') && record.key ? record.key + '.state' : null,
             on: function (target,type,callback,options) { on(record,target,type,callback,options); },
             update: function (view) {
                 score.textContent = String(view.score); saveBest(record,view.score); best.textContent = String(record.best);

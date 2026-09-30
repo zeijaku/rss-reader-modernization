@@ -340,3 +340,9 @@ node --check "$ROOT/public/js/word-tiles.js"
 
 python3 "$ROOT/tools/build_word_tiles_dictionary.py" --check
 node --check "$ROOT/public/js/word-tiles-words-en.js"
+
+# Japanese reading dictionary and isolated locale state.
+python3 "$ROOT/tools/build_word_tiles_dictionary_ja.py" --check
+node --check "$ROOT/public/js/word-tiles-words-ja.js"
+node --check "$ROOT/public/js/word-tiles-ja.js"
+node "$ROOT/tests/test_current_word_tiles_ja_runtime.js"

@@ -20,7 +20,7 @@ check('localStorage' in common and 'sessionStorage' in common and "storage:'memo
 check('destroy' in common and 'removeEventListener' in common and 'intersection.disconnect()' in common,'common lifecycle removes listeners and observers')
 check('cancelAnimationFrame' in maze and 'resizeObserver.disconnect()' in maze,'module lifecycle stops animation and resize observer')
 check('event.preventDefault(); event.stopPropagation()' in maze and "context.on(canvas,'keydown'" in maze,'game keys are captured only inside the focused board')
-check("'maze_chase', 'falling_blocks', 'word_tiles'].indexOf" in text('public/js/mini-game.js'),'legacy Icon Quest leaves Maze cards untouched')
+check("'maze_chase', 'falling_blocks', 'word_tiles', 'word_tiles_ja'].indexOf" in text('public/js/mini-game.js'),'legacy Icon Quest leaves Maze cards untouched')
 check('data-game-direction' in maze and 'min-height:44px' in text('public/css/game-widget.css'),'touch buttons maintain accessible size')
 check(all(word not in maze for word in ['fetch(', 'XMLHttpRequest', '$.ajax(', 'https://']),'Maze engine has no external or API dependency')
 check('innerHTML' not in common and 'innerHTML' not in maze,'new UI uses text and DOM nodes rather than HTML interpolation')
@@ -42,4 +42,13 @@ check('parseState' in word and 'raw.length>16384' in word and 'SCHEMA' in word a
 check('innerHTML' not in word and all(x not in word for x in ['fetch(', 'XMLHttpRequest', 'https://','requestAnimationFrame']),'Word uses safe DOM, fixed local dictionary and no animation loop')
 for page in ['public/index.php','public/stock.php']:
  check("app_asset_url('js/word-tiles.js')" not in text(page),'Word engine is not eagerly loaded in '+page)
+check("'word_tiles_ja'" in mini and "script: './js/word-tiles-ja.js'" in common,'Japanese subtype uses existing owner-scoped configuration')
+check("word_tiles_ja:'Word Tiles 日本語'" in common and 'word_tiles_ja' in text('public/js/utility-widgets.js'),'Japanese Game menu has fixed title and subtype')
+check("record.game === 'word_tiles_ja'" in common and "game === 'word_tiles_ja'" in common,'Japanese state and cleanup use independent scoped keys')
+check('loadAsset' in common and 'item.core' in common and 'assetUrl(path)' in common,'dictionary and shared rules have cached local revisioned dependencies')
+check('language' in word and 'validLetter' in word and 'normalize' in word,'Japanese save language and canonical tile characters are checked')
+check('word-tiles-dictionary-ja-notice.txt' in word and 'JMdict（EDRDG）' in word,'Japanese dictionary display attributes source and license')
+check('CC BY-SA 4.0' in text('licenses/word-tiles-jmdict-NOTICE.txt') and 'CC BY-SA 4.0' in text('public/js/word-tiles-words-ja.js'),'derived data attribution and share-alike notice shipped')
+for page in ['public/index.php','public/stock.php']:
+ check("app_asset_url('js/word-tiles-ja.js')" not in text(page) and "app_asset_url('js/word-tiles-words-ja.js')" not in text(page),'Japanese assets are not eagerly loaded in '+page)
 print(f'RESULT: PASS {checks} / FAIL 0 / SKIP 0')

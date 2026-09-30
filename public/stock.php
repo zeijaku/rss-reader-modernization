@@ -366,7 +366,7 @@ if (is_int($content_location)) {
             echo '</div>';
             echo '<div class="mini-game-card-body">';
 
-            if ($gameType === 'word_tiles') {
+            if ($gameType === 'word_tiles' || $gameType === 'word_tiles_ja') {
                 echo '<p class="game-widget-loading text-muted" role="status">Word Tilesを読み込んでいます...</p>';
             } elseif ($gameType === 'falling_blocks') {
                 echo '<p class="game-widget-loading text-muted" role="status">Falling Blocksを読み込んでいます...</p>';
@@ -1335,7 +1335,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
         <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Gameを追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <div class="mb-3"><label class="form-label" for="registerGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerGameTitleValue" id="registerGameTitleValue" maxlength="32" value="Icon Quest" required></div>
-            <div class="mb-3"><label class="form-label" for="registerGameType"><small class="text-dark">Game</small></label><select class="form-select registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option></select></div>
+            <div class="mb-3"><label class="form-label" for="registerGameType"><small class="text-dark">Game</small></label><select class="form-select registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option></select></div>
             <input type="hidden" class="registerGameLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
             <div class="row g-2">
                 <div class="mb-3 col-md-4"><label class="form-label" for="registerGameWidth"><small class="text-dark">横幅</small></label><select class="form-select registerGameWidth" id="registerGameWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
@@ -1358,7 +1358,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
         <div class="modal-body">
             <input type="hidden" class="changeGameWidgetId">
             <div class="mb-3"><label class="form-label" for="changeGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeGameTitleValue" id="changeGameTitleValue" maxlength="32" required></div>
-            <div class="mb-3"><label class="form-label" for="changeGameType"><small class="text-dark">Game</small></label><select class="form-select changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option></select></div>
+            <div class="mb-3"><label class="form-label" for="changeGameType"><small class="text-dark">Game</small></label><select class="form-select changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option></select></div>
             <div class="row g-2">
                 <div class="mb-3 col-md-4"><label class="form-label" for="changeGameWidth"><small class="text-dark">横幅</small></label><select class="form-select changeGameWidth" id="changeGameWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
                 <div class="mb-3 col-md-4"><label class="form-label" for="changeGameHeight"><small class="text-dark">縦幅</small></label><select class="form-select changeGameHeight" id="changeGameHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
