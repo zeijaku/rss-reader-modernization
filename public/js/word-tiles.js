@@ -1,26 +1,9 @@
-/* Word Tiles C1: original 9x9 solo board; hand-maintained starter list.
- * No third-party dictionary dataset is imported. C2 will expand this list. */
+/* Word Tiles: original 9x9 solo board; separately loaded fixed English dictionary. */
 (function(window,document){
     'use strict';
     var SIZE=9, CENTER=40, SCHEMA=1, WORDLIST=1;
-    var WORDS=('AN AS AT BE BY DO GO HE IF IN IS IT ME MY NO OF ON OR SO TO UP US WE '+
-        'ACE ACT ADD AGE AGO AID AIM AIR ALL AND ANT ANY APE ARC ARE ARM ART ASH ASK ATE '+
-        'BAD BAG BAN BAR BAT BAY BED BEE BEG BET BID BIG BIN BIT BOW BOX BOY BUD BUG BUS BUT BUY '+
-        'CAB CAN CAP CAR CAT COW CRY CUP CUT DAY DEN DID DIE DIG DOG DOT DRY DUE DUG EAR EAT EGG END ERA EYE '+
-        'FAN FAR FAT FED FEE FEW FIG FIN FIT FIX FLY FOG FOR FOX FUN FUR GAP GAS GET GOD GOT GUM GUN GUY '+
-        'HAD HAM HAS HAT HAY HEN HER HID HIM HIP HIS HIT HOG HOT HOW HUG HUT ICE ILL INK ITS JAM JAR JAW JET JOB JOY '+
-        'KEY KID KIT LAB LAP LAW LAY LED LEG LET LID LIE LIP LOG LOT LOW MAD MAN MAP MAT MAY MET MIX MOB MUD MUG '+
-        'NAP NET NEW NOD NOR NOT NOW NUT OAK OAR ODD OFF OIL OLD ONE OUR OUT OWL OWN PAN PAT PAW PAY PEA PEN PET PIE PIG PIN PIT POT PUT '+
-        'RAG RAM RAN RAP RAT RAW RAY RED RID RIP ROB ROD ROT ROW RUB RUG RUN SAD SAT SAW SAY SEA SEE SET SEW SHE SHY SIP SIT SIX SKI SKY SON SOW SPA SPY SUE SUM SUN '+
-        'TAB TAG TAN TAP TAR TAX TEA TEN THE TIE TIP TOE TON TOO TOP TOW TOY TRY TUB TWO USE VAN VET VIA VOW WAR WAS WAX WAY WEB WET WHO WHY WIN WIT WON YES YET YOU ZOO '+
-        'ABLE ALSO AREA ARMY AWAY BABY BACK BALL BAND BANK BARK BASE BATH BEAR BEAT BEEN BELL BELT BEST BIRD BLUE BOAT BODY BONE BOOK BORN BOTH BOWL '+
-        'CAKE CALL CALM CAMP CARD CARE CART CASE CAVE CHAT CITY CLAY CLUB COAL COAT CODE COLD COME COOK COOL COPY COST CRAB CREW CROP CROW '+
-        'DARK DATA DATE DAWN DAYS DEAR DEEP DEER DESK DICE DIET DIRT DISH DOES DOOR DOWN DRAW DROP DRUM DUCK DUST DUTY EACH EARN EAST EASY EDGE ELSE EVEN EVER EXIT FACE FACT FAIR FALL FARM FAST FEAR FEED FEEL FEET FELL FELT FILE FILL FIND FINE FIRE FISH FIVE FLAT FLOW FOOD FOOT FORM FOUR FREE FROM FROG FULL GAME GATE GAVE GIFT GIRL GIVE GLAD GOAL GOAT GOLD GOLF GONE GOOD GRAB GRAY GREW GROW '+
-        'HAIR HALF HALL HAND HARD HARE HARM HATE HAVE HEAD HEAR HEAT HELD HELP HERE HERO HIDE HIGH HILL HOLD HOLE HOME HOPE HORN HOUR HUGE IDEA INTO IRON ITEM JOIN JUMP JUST KEEP KEPT KIND KING KITE KNEE KNEW KNOW '+
-        'LACK LAKE LAMB LAMP LAND LANE LAST LATE LEAD LEAF LEFT LEND LENS LESS LIFE LIFT LIKE LINE LINK LION LIST LIVE LOAD LOAN LOCK LONG LOOK LORD LOSE LOSS LOST LOVE LUCK MADE MAIL MAIN MAKE MANY MARK MASK MATH MEAL MEAN MEAT MEET MILE MILK MILL MIND MINE MISS MODE MOON MORE MOST MOVE MUCH MUST NAME NEAR NEAT NECK NEED NEST NEWS NEXT NICE NINE NODE NONE NOSE NOTE '+
-        'ONCE ONLY OPEN OVER PAGE PAID PAIN PAIR PARK PART PASS PAST PATH PEAR PICK PINK PLAN PLAY PLUS POEM POET POOL PORT POST PULL PURE PUSH RACE RAIN RANK RATE READ REAL RICE RICH RIDE RING RISE ROAD ROCK ROLE ROOF ROOM ROOT ROPE ROSE RULE SAFE SAID SAIL SALE SALT SAME SAND SAVE SEAT SEED SEEK SEEM SEEN SELF SELL SEND SENT SHIP SHOE SHOP SHOW SIDE SIGN SING SITE SIZE SKIN SLOW SNOW SOAP SOFT SOIL SOLD SOME SONG SOON SORT SOUL STAR STAY STEM STEP STOP SUCH SUIT '+
-        'TAIL TAKE TALE TALK TALL TANK TAPE TASK TEAM TELL TEND TENT TERM TEST TEXT THAN THAT THEM THEN THEY THIN THIS TIDE TIED TILE TIME TINY TOLD TONE TOOK TOOL TOUR TOWN TREE TRIP TRUE TUBE TURN TWIN TYPE UNIT UPON USED USER VAST VERY VIEW VOTE WAIT WAKE WALK WALL WANT WARM WASH WAVE WAYS WEAK WEAR WEEK WELL WENT WERE WEST WHAT WHEN WHOM WIDE WIFE WILD WILL WIND WINE WING WIRE WISE WISH WITH WOLF WOOD WORD WORE WORK WORM WORN YEAR YOUR ZERO '+
-        'APPLE BEACH BERRY BREAD BRICK BRING CHAIR CHASE CHEST CLEAN CLEAR CLOUD COAST COLOR DANCE DREAM DRINK EARTH EIGHT ENJOY EVERY FIELD FIRST FLOOR FLOWER FOCUS FRESH FRUIT GLASS GRASS GREEN GROUP HAPPY HEART HORSE HOUSE LARGE LEARN LEAST LIGHT LUNCH MOUSE MUSIC NIGHT NORTH OCEAN OFTEN ORDER PAPER PARTY PEACE PIANO PLACE PLANT PLATE POINT POWER PRICE QUICK QUIET RADIO REACH READY RIGHT RIVER ROUND SCORE SEVEN SHAPE SHARE SHEEP SHEET SHELF SHINE SHIRT SHORT SLEEP SMALL SMILE SOLAR SOUND SOUTH SPACE SPEAK SPOON SPORT STAND START STATE STEAM STONE STORE STORY SUGAR SWEET TABLE TEACH THANK THEIR THERE THESE THING THINK THREE TILES TODAY TOUCH TRACK TRAIN TRUST UNDER UNTIL VALUE VIDEO VISIT VOICE WATER WHEEL WHERE WHITE WHOLE WOMAN WORLD WRITE YOUNG').split(/\s+/);
+    if(!window.RssWordTilesEnglish||window.RssWordTilesEnglish.revision!==2)throw new Error('English dictionary unavailable');
+    var WORDS=window.RssWordTilesEnglish.words;
     var DICTIONARY=new Set(WORDS), LETTERS={A:6,B:1,C:3,D:3,E:10,F:1,G:2,H:2,I:6,J:1,K:1,L:3,M:2,N:5,O:6,P:2,Q:1,R:5,S:5,T:6,U:3,V:1,W:1,X:1,Y:1,Z:1};
     var BAG=Object.keys(LETTERS).reduce(function(out,key){return out.concat(new Array(LETTERS[key]).fill(key));},[]);
     function shuffle(array,random){for(var i=array.length-1;i>0;i--){var value=Number((random||Math.random)()),j=Math.floor((Number.isFinite(value)?Math.max(0,Math.min(.999999,value)):0)*(i+1));var old=array[i];array[i]=array[j];array[j]=old;}return array;}
@@ -48,7 +31,7 @@
         var words=[],seen=new Set();pending.forEach(function(p){[false,true].forEach(function(v){var cells=path(board,p.index,v),key=cells.join(',');if(cells.length>1&&!seen.has(key)){seen.add(key);words.push({word:cells.map(function(i){return board[i];}).join(''),cells:cells});}});});
         if(!words.length)return fail('2文字以上の単語を作ってください。');
         var invalid=words.filter(function(w){return !DICTIONARY.has(w.word);});
-        if(invalid.length)return fail('C1辞書に未登録: '+invalid.map(function(w){return w.word;}).join(' / '));
+        if(invalid.length)return fail('英語辞書に未登録: '+invalid.map(function(w){return w.word;}).join(' / '));
         return{ok:true,board:board,words:words,points:words.reduce(function(n,w){return n+w.word.length;},0)};
     }
     function submit(state){var result=validateMove(state);if(!result.ok)return result;state.board=result.board;state.pending.forEach(function(p){state.rack[p.rackIndex]=state.pool.length?state.pool.pop():'';});state.pending=[];state.score+=result.points;state.turns++;if(state.board.every(Boolean)||(!state.pool.length&&state.rack.every(function(l){return !l;})))state.status='gameover';return result;}
@@ -76,7 +59,11 @@
         for(var i=0;i<7;i++){var tile=node('button','btn btn-outline-secondary word-tiles-tile');tile.type='button';tile.setAttribute('data-word-rack',String(i));rack.appendChild(tile);tiles.push(tile);}
         [['submit','確定'],['clear','配置取消'],['exchange','手札交換'],['finish','Finish']].forEach(function(entry){var button=node('button','btn btn-sm btn-outline-secondary word-tiles-action',entry[1]);button.type='button';button.setAttribute('data-word-action',entry[0]);controls.appendChild(button);buttons.push(button);});
         var help=node('p','game-widget-help text-muted','手札→盤面の順に選び、確定します。初手は中央。次から既存Tileにつなげます。各文字1点、交差でできた単語も加点。未確定Tileを押すと戻せます。Bonusなし。Finishで終了。');
-        var dictionary=node('details','word-tiles-dictionary'),summary=node('summary','', 'C1固定英語辞書（'+DICTIONARY.size+'語）');dictionary.append(summary,node('p','',Array.from(DICTIONARY).sort().join(' · ')));wrap.append(info,board,rack,controls,note,help,dictionary);
+        var dictionary=node('details','word-tiles-dictionary'),summary=node('summary','', '固定英語辞書（'+DICTIONARY.size+'語）');
+        var search=node('input','form-control word-tiles-search'),results=node('p','word-tiles-search-results','英字2〜9文字を入力。完全一致の判定と先頭一致の候補を最大50語表示します。');
+        search.type='search';search.maxLength=9;search.placeholder='例: CAT / ZEBRA';search.setAttribute('aria-label','英語辞書を検索');results.setAttribute('role','status');
+        dictionary.append(summary,search,results);wrap.append(info,board,rack,controls,note,help,dictionary);
+        context.on(search,'input',function(){var query=search.value.trim().toUpperCase();if(!/^[A-Z]{2,9}$/.test(query)){results.textContent='英字2〜9文字を入力してください。';return;}var matches=[];for(var i=0;i<WORDS.length&&matches.length<50;i++){if(WORDS[i].indexOf(query)===0)matches.push(WORDS[i]);}results.textContent=(DICTIONARY.has(query)?query+'：登録あり。':query+'：未登録。')+' 先頭一致（最大50語）: '+(matches.join(' · ')||'なし');});
         function enabled(){return !destroyed&&active(state)&&!userPaused&&!suspended;}
         function render(){
             var paused=userPaused||suspended,play=enabled();

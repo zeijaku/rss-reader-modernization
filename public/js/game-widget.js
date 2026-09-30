@@ -4,7 +4,7 @@
     var source = document.currentScript;
     var revisionMatch = source && /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(source.src || '');
     var revision = revisionMatch ? revisionMatch[1] : '';
-    var catalog = Object.assign(Object.create(null), {maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js'}});
+    var catalog = Object.assign(Object.create(null), {maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js', dictionary: './js/word-tiles-words-en.js'}});
     var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks', word_tiles:'Word Tiles'};
     var factories = Object.create(null), loads = Object.create(null), records = new Map();
     var expanded = null, previousOverflow = '', observer = null;
@@ -45,10 +45,27 @@
             ['localStorage','sessionStorage'].forEach(function (name) { try { window[name].removeItem(key); if (game === 'word_tiles') window[name].removeItem(key + '.state'); } catch (error) {} });
         });
     }
+    var dictionaryLoad = null;
+    function loadDictionary() {
+        if (window.RssWordTilesEnglish && window.RssWordTilesEnglish.revision === 2) return Promise.resolve();
+        if (dictionaryLoad) return dictionaryLoad;
+        dictionaryLoad = new Promise(function (resolve, reject) {
+            var script = node('script'); script.src = assetUrl(catalog.word_tiles.dictionary);
+            script.onload = function () {
+                script.onload = script.onerror = null;
+                if (window.RssWordTilesEnglish && window.RssWordTilesEnglish.revision === 2) resolve();
+                else { script.remove(); reject(new Error('English dictionary unavailable')); }
+            };
+            script.onerror = function () { script.onload = script.onerror = null; script.remove(); reject(new Error('English dictionary could not load')); };
+            document.head.appendChild(script);
+        }).catch(function (error) { dictionaryLoad = null; throw error; });
+        return dictionaryLoad;
+    }
     function load(game) {
         if (factories[game]) return Promise.resolve(factories[game]);
         if (loads[game]) return loads[game];
-        loads[game] = new Promise(function (resolve, reject) {
+        var prerequisite = catalog[game].dictionary ? loadDictionary() : Promise.resolve();
+        loads[game] = prerequisite.then(function () { return new Promise(function (resolve, reject) {
             var script = node('script');
             script.src = assetUrl(catalog[game].script);
             script.onload = function () {
@@ -61,7 +78,7 @@
                 script.remove(); delete loads[game]; reject(new Error('Game module could not load'));
             };
             document.head.appendChild(script);
-        });
+        }); }).catch(function (error) { delete loads[game]; throw error; });
         return loads[game];
     }
     function on(record, target, type, callback, options) {
@@ -135,7 +152,7 @@
             if (expanded !== record) return;
             if (event.key === 'Escape') { event.preventDefault(); setExpanded(record,false); expand.focus(); }
             if (event.key === 'Tab') {
-                var buttons = Array.from(record.inner.querySelectorAll('button:not(:disabled),[tabindex="0"]')).filter(function (el) { return el.getClientRects().length; });
+                var buttons = Array.from(record.inner.querySelectorAll('button:not(:disabled),input:not(:disabled),[tabindex="0"]')).filter(function (el) { return el.getClientRects().length; });
                 var first = buttons[0], last = buttons[buttons.length-1];
                 if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
                 else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }

@@ -337,3 +337,6 @@ node --check "$ROOT/public/js/falling-blocks.js"
 # Word Tiles C1: turn-based rules and bounded local state.
 node "$SCRIPT_DIR/test_current_word_tiles_runtime.js"
 node --check "$ROOT/public/js/word-tiles.js"
+
+python3 "$ROOT/tools/build_word_tiles_dictionary.py" --check
+node --check "$ROOT/public/js/word-tiles-words-en.js"

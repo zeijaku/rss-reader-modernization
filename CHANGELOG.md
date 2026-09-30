@@ -1,3 +1,9 @@
+## 1.40.0-dev.5 - 2026-09-30
+
+- V1.40-C2: expand Word Tiles English validation to 43,127 fixed words using filtered, pinned SCOWL 2020.12.07 plus all C1 words.
+- Load the dictionary only for Word Tiles, share it across widgets, preserve C1 saved state, and add bounded dictionary search.
+- Include offline deterministic generation, provenance and full required third-party notices. No DB/API or existing engine changes.
+
 ## 1.40.0-dev.4 - 2026-09-30
 
 - V1.40-C1: add original solo Word Tiles with a 9×9 board, seven-tile rack, connected horizontal/vertical words and score.

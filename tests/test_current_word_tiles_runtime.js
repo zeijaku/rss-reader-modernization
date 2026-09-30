@@ -1,6 +1,7 @@
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm'),assert=require('assert/strict');
 const window={RssGameWidget:{register(game,factory){assert.equal(game,'word_tiles');assert.equal(typeof factory,'function');}}};
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../public/js/word-tiles-words-en.js'),'utf8'),{window,Object});
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../public/js/word-tiles.js'),'utf8'),{window,document:{},Math,Number,Object,Array,Set,JSON});
 const a=window.RssWordTiles;let count=0;
 function check(name,fn){fn();count++;console.log('PASS: '+name);}
@@ -8,6 +9,9 @@ function state(){let s=a.createState(()=>.5);s.status='playing';return s;}
 function cat(s){a.place(s,39,0);a.place(s,40,1);a.place(s,41,2);return a.submit(s);}
 function inventory(s){return s.board.concat(s.rack,s.pool).filter(Boolean).sort().join('');}
 check('starter dictionary is unique, uppercase and contains only 2-9 letter words',()=>{assert.equal(new Set(a.words).size,a.words.length);a.words.forEach(w=>assert.match(w,/^[A-Z]{2,9}$/));for(const word of ['CAT','CAR','AT','ART','TREE','WORD','TILES'])assert.ok(a.words.includes(word));});
+check('expanded dictionary preserves every C1 word and includes new common words',()=>{const starter=fs.readFileSync(path.join(__dirname,'fixtures/word-tiles/starter-en.txt'),'utf8').trim().split(/\s+/);starter.forEach(w=>assert.ok(a.words.includes(w)));assert.equal(a.words.length,43127);for(const w of ['ZEBRA','QUARTZ','ELEPHANT','COMPUTER','BANANA'])assert.ok(a.words.includes(w));for(const w of ['CTA','CA','ABCDEFGHI','<SCRIPT>'])assert.ok(!a.words.includes(w));});
+check('C1 saved schema restores board, pending tiles and inventory unchanged',()=>{let s=state();cat(s);a.place(s,49,3);const raw=JSON.stringify(s);assert.equal(s.wordlist,1);assert.equal(JSON.stringify(a.parseState(raw)),raw);});
+check('new dictionary word is accepted and scored with the same rules',()=>{let s=state();s.rack=['Z','E','B','R','A','S','O'];[38,39,40,41,42].forEach((i,r)=>a.place(s,i,r));assert.ok(a.submit(s).ok);assert.equal(s.score,5);});
 check('independent 9x9 boards, seven-letter racks and conserved bag',()=>{let x=state(),y=state();assert.equal(x.board.length,81);assert.equal(x.rack.join(''),'CATRESO');assert.equal(inventory(x),[...a.bag].sort().join(''));x.board[1]='Z';x.rack[0]='B';x.pool.length=0;assert.equal(y.board[1],'');assert.equal(y.rack[0],'C');assert.ok(y.pool.length);});
 check('ready and finished states reject placement, exchange and submit',()=>{for(const status of ['ready','gameover']){let s=state();s.status=status;const before=JSON.stringify(s);assert.equal(a.place(s,40,0),false);assert.equal(a.exchange(s),false);assert.equal(a.submit(s).ok,false);assert.equal(JSON.stringify(s),before);}});
 check('invalid cell/rack coordinates and duplicate inventory use are rejected',()=>{let s=state();for(const i of [-1,81,NaN,1.2,'40'])assert.equal(a.place(s,i,0),false);for(const r of [-1,7,null,1.5])assert.equal(a.place(s,40,r),false);assert.ok(a.place(s,40,0));assert.equal(a.place(s,41,0),false);assert.equal(a.place(s,40,1),false);});
