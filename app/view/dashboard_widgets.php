@@ -153,7 +153,9 @@ if (is_int($content_location)) {
             echo '</div>';
             echo '<div class="mini-game-card-body">';
 
-            if ($gameType === 'lights_out') {
+            if ($gameType === 'maze_chase') {
+                echo '<p class="game-widget-loading text-muted" role="status">Maze Chaseを読み込んでいます...</p>';
+            } elseif ($gameType === 'lights_out') {
                 echo '<div class="lights-out-summary" aria-label="Lights Out状況"><span>Moves</span><strong class="lights-out-moves">0</strong></div>';
                 echo '<div class="mini-game-board lights-out-board" id="' . app_html($gameBoardId) . '" role="grid" aria-label="Lights Out 5×5盤面">';
                 for ($gameCellIndex = 0; $gameCellIndex < 25; $gameCellIndex++) {

@@ -1409,6 +1409,7 @@
     }
 
     function gameDefaultTitle(gameType) {
+        if (gameType === 'maze_chase') return 'Maze Chase';
         return gameType === 'lights_out' ? 'Lights Out' : 'Icon Quest';
     }
 
@@ -1452,6 +1453,7 @@
     }
 
     function removeGameWidgetBrowserState(widgetId, gameType) {
+        if ((!gameType || gameType === 'maze_chase') && window.RssGameWidget) window.RssGameWidget.removeWidgetState(widgetId);
         if ((!gameType || gameType === 'icon_quest') && window.RssMiniGame && typeof window.RssMiniGame.removeWidgetState === 'function') {
             window.RssMiniGame.removeWidgetState(widgetId);
         }

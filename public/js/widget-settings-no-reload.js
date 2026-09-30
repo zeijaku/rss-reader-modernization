@@ -282,6 +282,7 @@
         var oldType = String(spec.originalGameType || 'icon_quest');
         var nextType = String(spec.data.game_type || 'icon_quest');
         if (oldType === nextType) { return; }
+        if (oldType === 'maze_chase' && window.RssGameWidget) { window.RssGameWidget.removeWidgetState(spec.id); }
         if (oldType === 'icon_quest' && window.RssMiniGame && typeof window.RssMiniGame.removeWidgetState === 'function') {
             window.RssMiniGame.removeWidgetState(spec.id);
         }

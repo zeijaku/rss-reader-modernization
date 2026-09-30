@@ -8,6 +8,8 @@
 
 ## Stable Release
 
+**Development checkpoint:** V1.40-A / `1.40.0-dev.1` — Maze Chase and the minimal shared Game lifecycle. Existing game engines and database schema remain compatible. See [V1.40-A verification](docs/v1.40-a-game-widget.md).
+
 **Stable release:** `RSS Reader Modernization 1.39.2`  
 Release tag: `v1.39.2`
 

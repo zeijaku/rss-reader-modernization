@@ -322,3 +322,10 @@ node --check "$ROOT/public/js/calendar-usability.js"
 php -l "$ROOT/app/view/dashboard_modals.php"
 
 echo 'PASS: current feature contract suite completed'
+
+# Shared new Game Widget / Maze Chase current behavior
+php "$SCRIPT_DIR/test_current_game_widget.php"
+python3 "$SCRIPT_DIR/test_current_game_widget_contract.py"
+node "$SCRIPT_DIR/test_current_maze_chase_runtime.js"
+node --check "$ROOT/public/js/game-widget.js"
+node --check "$ROOT/public/js/maze-chase.js"

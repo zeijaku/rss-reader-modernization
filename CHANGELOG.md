@@ -1,3 +1,10 @@
+## 1.40.0-dev.1 - 2026-09-30
+
+- V1.40-A: add original Maze Chase using the existing Game Widget config and API.
+- Add a local lazy module loader, per-widget lifecycle, Restart/Pause, expansion, Best storage and focused keyboard/touch controls.
+- Preserve existing Game engines and storage keys; no database migration or external dependency.
+- Add focused backend, engine and browser coverage; formal V1.40.0 release remains pending later phases.
+
 ## 1.39.2 - 2026-09-29
 
 ### Fresh Install and database verification
