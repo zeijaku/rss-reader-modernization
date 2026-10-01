@@ -1,3 +1,8 @@
+## 1.41.0-dev.5 - 2026-10-01
+
+- Add fixed rock placement restrictions to stages 4–6 and ice slow resistance for fast enemies. Preserve old saved towers on newly blocked cells until sold; Restart applies full restrictions.
+- Add brief hit highlights and impact rings with reduced-motion support. Retain attack cadence, save schema and existing stars; no database migration.
+
 ## 1.41.0-dev.4 - 2026-10-01
 
 - Increase TD enemy HP by 15% for all enemy types, stages and waves while preserving movement, spawn timing and economy.

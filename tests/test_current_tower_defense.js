@@ -28,4 +28,24 @@ for(const [type,baseHp] of [['normal',65],['fast',46],['tank',175],['armored',10
   assert(Math.abs(enemy.progress-td.enemyTypes[type].speed/30)<1e-9);
  }
 }
-console.log('PASS: six distinct paths, build rules, upgrade/sale economy, deterministic replay, checkpoint validation, enemy roster, clear stars and 15% harder enemies');
+// Obstacles must be off the route and reject new placements on later maps.
+for(let stage=0;stage<6;stage++){
+ const map=td.maps[stage];assert.equal(map.blocked.size,stage<3?0:stage===5?12:6);
+ for(const key of map.blocked){const [x,y]=key.split(',').map(Number);assert(!map.road.has(key));assert(!td.buildable(stage,x,y));assert(!td.place(td.create(stage),x,y,'bow'));}
+}
+// A dev.4 tower at a newly blocked cell remains usable; selling cannot reopen it.
+let legacy=td.checkpoint(td.create(5));legacy.towers=[{x:3,y:1,type:'bow',level:1,spent:60}];legacy.gold=160;
+let preserved=td.restore(legacy);assert(preserved);assert.deepEqual(td.checkpoint(preserved),legacy);assert(td.upgrade(preserved,3,1));assert(td.sell(preserved,3,1));assert(!td.place(preserved,3,1,'bow'));
+// Slow resistance affects travel, not HP, reward or attack cadence.
+for(const [type,multiplier] of [['normal',.55],['fast',.85]]){
+ const state=td.create(0);td.begin(state);state.spawn=[];state.enemies=[{id:1,type,hp:100,maxHp:100,progress:0,slow:1}];td.step(state,.1);
+ assert(Math.abs(state.enemies[0].progress-td.enemyTypes[type].speed*multiplier*.1)<1e-9);
+}
+// Hit cues record exact damage positions, expire, and never enter checkpoints.
+for(const type of ['bow','magic','cannon','ice']){
+ const state=td.create(0);assert(td.place(state,1,1,type));td.begin(state);state.spawn=[];state.enemies=[{id:1,type:'tank',hp:1000,maxHp:1000,progress:1,slow:0}];
+ td.step(state,1/30);assert.equal(state.shots.length,1);assert.equal(state.shots[0].hits.length,1);assert(state.enemies[0].hitFlash>0);assert(state.enemies[0].hp<1000);
+ for(let i=0;i<8;i++)td.step(state,1/30);assert.equal(state.shots.length,0);assert.equal(state.enemies[0].hitFlash,0);
+ state.phase='prepare';assert(!('shots' in td.checkpoint(state)));assert.equal(td.types[type].period,{bow:.75,magic:1.1,cannon:1.6,ice:.9}[type]);
+}
+console.log('PASS: six distinct paths, build rules, upgrade/sale economy, deterministic replay, checkpoint validation, enemy roster, clear stars and 15% harder enemies, blocked terrain, legacy saves, slow resistance and expiring hit cues');

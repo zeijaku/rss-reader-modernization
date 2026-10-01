@@ -1,4 +1,4 @@
-# RSS Reader Modernization 1.41.0-dev.4
+# RSS Reader Modernization 1.41.0-dev.5
 
 ## Development preview
 
@@ -11,6 +11,13 @@ This is a playable development checkpoint based on formal V1.40.1. It is not a f
 - Game: Tower Defense adds six fixed-path fantasy stages, four tower types, five enemy types, three tower levels and eight waves per stage. Build on non-road cells, prepare without a time limit and start each wave explicitly. Selling during preparation returns 75% of invested cost. Tap a cell, choose a tower and confirm placement. Pause, 2× speed and existing expanded view are available.
 - TD: preparation checkpoints and each stage's best 1–3 star result are saved under the existing user/widget scoped browser key. Closing mid-wave restores the preparation before that wave. No cross-device synchronization or permanent stat upgrades. Switching stages replaces the current preparation; best stars remain.
 - TD: neutral grid, flat line icons and geometric enemies follow Wire Defense / Icon Quest. Original bundled CC0 tiles remain in older installations but are no longer requested by TD. No external asset requests or new dependencies.
+
+## Changes from dev.4
+
+- Add fixed rock cells on stages 4–6 (6 / 6 / 12 cells); keep the route and the first three maps unchanged. New towers cannot be placed on rocks. Legacy saved towers on those cells remain selectable, upgradeable and sellable; selling does not permit rebuilding there. Restart to play with the full new placement restrictions.
+- Fast enemies retain 85% speed under ice, compared with 55% for other enemies. Tower attack intervals remain unchanged.
+- Add 0.22-second colored impact rings/crosses and a brief enemy hit highlight. Reduced motion uses static impact marks without expanding rings or enemy flashes. Hit effects do not enter saved preparations.
+- From dev.4, overwrite the supplied `app` / `public` files. No SQL or additional file deletion is required. Existing stars remain.
 
 ## Changes from dev.3
 
@@ -33,11 +40,11 @@ This is a playable development checkpoint based on formal V1.40.1. It is not a f
 
 Back up application and database, then apply `database/migrations/032_v1_41_calendar_deadline.sql` with `@table_prefix` matching `DB_TABLE_PREFIX` before using this code. It adds default-off `calendar_event_deadline_highlight` and nullable `calendar_event_exception_deadline_highlight` columns. The migration is additive and idempotent. Fresh installs use only the updated `database/schema.sql`. No new required configuration, background jobs or external integration.
 
-Keep local configuration and private runtime data. Application Version / Asset Revision: `1.41.0-dev.4`. TD progress stays in the browser; clearing site storage removes it. A browser which refuses persistent storage falls back to session storage, then memory, and shows the limitation.
+Keep local configuration and private runtime data. Application Version / Asset Revision: `1.41.0-dev.5`. TD progress stays in the browser; clearing site storage removes it. A browser which refuses persistent storage falls back to session storage, then memory, and shows the limitation.
 
 ## Verification
 
-Local CI-equivalent checks pass, including the new deadline/TD contracts. The unchanged dev.3 UI passed focused browser fixtures on PC and 360px widths: Calendar 26 checks, TD 56 checks, existing Game settings/state 218 checks. The dedicated MariaDB gate passes five migration/fresh-schema checks. Default local CI retains unavailable-tool skips; those are not counted as passes. Browser fixtures use isolated APIs; physical phone use and gameplay balance await user playtesting.
+Local CI-equivalent checks pass, including the new deadline/TD contracts. Focused browser fixtures pass on PC and 360px widths: Calendar 26 checks, TD 66 checks, existing Game settings/state 218 checks. The dedicated MariaDB gate passes five migration/fresh-schema checks. Default local CI retains unavailable-tool skips; those are not counted as passes. Browser fixtures use isolated APIs; physical phone use and gameplay balance await user playtesting.
 
 ## Playtest focus
 

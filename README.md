@@ -1,6 +1,6 @@
 # RSS Reader Modernization
 
-現在の開発版: **1.41.0-dev.4**（V1.40.1を基にしたカレンダー期日強調・Tower Defenseの試遊版）。既存DBにはMigration 032が必要です。詳細は [Release Notes](RELEASE_NOTES.md) を参照してください。
+現在の開発版: **1.41.0-dev.5**（V1.40.1を基にしたカレンダー期日強調・Tower Defenseの試遊版）。既存DBにはMigration 032が必要です。詳細は [Release Notes](RELEASE_NOTES.md) を参照してください。
 
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
