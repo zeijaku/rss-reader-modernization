@@ -3528,16 +3528,21 @@
         var $topButton = $('#page-top');
         $topButton.hide();
 
+        function updatePageTop() {
+            var isNarrow = window.matchMedia && window.matchMedia('(max-width: 767.98px)').matches;
+            if ($(window).scrollTop() > (isNarrow ? 300 : 100)) {
+                $topButton.fadeIn();
+            } else {
+                $topButton.fadeOut();
+            }
+        }
+
         $(window)
             .off('scroll' + eventNamespace)
             .on('scroll' + eventNamespace, function () {
                 hideFeedTitleTooltip();
                 closeArticleActionsMenu(false);
-                if ($(this).scrollTop() > 100) {
-                    $topButton.fadeIn();
-                } else {
-                    $topButton.fadeOut();
-                }
+                updatePageTop();
             })
             .off('resize' + eventNamespace)
             .on('resize' + eventNamespace, function () {
@@ -3546,6 +3551,7 @@
                 $('[data-feed-content-id]').each(function () {
                     refreshFeedTitleOverflow($(this));
                 });
+                updatePageTop();
             });
 
         $topButton

@@ -1,6 +1,6 @@
-# Development checkpoint: 1.40.1-dev.4
+# Development checkpoint: 1.40.1-dev.5
 
-Widget header presentation checkpoint, retaining dev1–dev3 improvements. See [scope, installation and checks](docs/v1.40.1-dev4-widget-headers.md). This is not the formal V1.40.1 release; the stable V1.40.0 release notes follow below.
+Five scoped readability/usability fixes, retaining dev1–dev4 and the Navbar bell correction. See [scope, installation and checks](docs/v1.40.1-dev5-ui-readability.md). This is not the formal V1.40.1 release; the stable V1.40.0 release notes follow below.
 
 # RSS Reader Modernization 1.40.0
 

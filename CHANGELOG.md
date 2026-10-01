@@ -1,3 +1,11 @@
+## 1.40.1-dev.5 - 2026-10-01
+
+- Pair Memo body foreground/background with the selected Theme without changing Memo data, forms or save handlers.
+- Make Notification Center helper/empty/error text and its close icon follow the Theme; retain a separate error accent and all existing notification behavior.
+- Keep Navbar keyboard focus inside existing controls so its outline is visible within the clipped desktop header.
+- Compact Page Top to a 48px arrow-only target on narrow screens with safe-area margins and a 300px scroll threshold. Preserve desktop presentation, main-content focus and reduced-motion behavior; recalculate visibility on resize.
+- Retain dev1–dev4, including the Navbar bell fix. No database, API, authentication, game-engine or dependency changes.
+
 ## 1.40.1-dev.4 - 2026-10-01
 
 - Refine existing Widget headers through scoped Dashboard CSS only, retaining their 44px height, drag handles, existing markup and event handlers.

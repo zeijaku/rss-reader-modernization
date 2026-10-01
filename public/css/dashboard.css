@@ -3150,3 +3150,31 @@ legend.text-dark {
 @media (pointer: coarse), (max-width: 575.98px) {
     #main-content .dashboard-widget { --widget-header-action-size: 44px; }
 }
+
+/* Readability: keep Memo foreground/background paired and Navbar focus inside controls. */
+#main-content .memo-card .memo-card-body {
+    background-color: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+}
+.app-navbar :is(a, button):focus-visible {
+    outline: 2px solid var(--bs-navbar-hover-color, currentColor);
+    outline-offset: -4px;
+}
+@media (max-width: 767.98px) {
+    #page-top {
+        right: calc(12px + env(safe-area-inset-right, 0px));
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+    #page-top a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        min-height: 48px;
+        padding: 0;
+        font-size: 0;
+    }
+    #page-top a > i { font-size: 24px; }
+    #page-top a > br { display: none; }
+}

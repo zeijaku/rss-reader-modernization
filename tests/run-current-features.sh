@@ -29,6 +29,7 @@ python3 "$SCRIPT_DIR/test_v119c_api_request_limit.py"
 echo '== Current feature contracts: Widget header presentation =='
 python3 "$SCRIPT_DIR/test_current_widget_headers_contract.py"
 node --check "$SCRIPT_DIR/test_current_widget_headers_browser.js"
+node --check "$SCRIPT_DIR/test_current_ui_readability_browser.js"
 php -l "$SCRIPT_DIR/fixtures/widget_header_page.php"
 
 echo '== Current feature contracts: Settings page tabs =='
