@@ -1,4 +1,4 @@
-# RSS Reader Modernization 1.41.0-dev.2
+# RSS Reader Modernization 1.41.0-dev.3
 
 ## Development preview
 
@@ -10,7 +10,12 @@ This is a playable development checkpoint based on formal V1.40.1. It is not a f
 - Calendar: day/week/month period label moves into the card header, keeping navigation, view controls and add on one row on PC and narrow cards. Long period labels retain a full hover title.
 - Game: Tower Defense adds six fixed-path fantasy stages, four tower types, five enemy types, three tower levels and eight waves per stage. Build on non-road cells, prepare without a time limit and start each wave explicitly. Selling during preparation returns 75% of invested cost. Tap a cell, choose a tower and confirm placement. Pause, 2× speed and existing expanded view are available.
 - TD: preparation checkpoints and each stage's best 1–3 star result are saved under the existing user/widget scoped browser key. Closing mid-wave restores the preparation before that wave. No cross-device synchronization or permanent stat upgrades. Switching stages replaces the current preparation; best stars remain.
-- TD: original CC0 Kenney Tiny Dungeon / Tiny Town tiles are bundled; no external asset requests or new dependencies.
+- TD: neutral grid, flat line icons and geometric enemies follow Wire Defense / Icon Quest. Original bundled CC0 tiles remain in older installations but are no longer requested by TD. No external asset requests or new dependencies.
+
+## Changes from dev.2
+
+- Replace TD pixel terrain and sprites with a Theme-aware neutral grid, four tower line icons and five distinct enemy shapes. Fantasy unit types, maps, game rules and browser checkpoints are retained.
+- From dev.2, overwrite the supplied `app` / `public` files. No additional SQL is required. Calendar code is unchanged.
 
 ## Changes from dev.1
 
@@ -22,11 +27,11 @@ This is a playable development checkpoint based on formal V1.40.1. It is not a f
 
 Back up application and database, then apply `database/migrations/032_v1_41_calendar_deadline.sql` with `@table_prefix` matching `DB_TABLE_PREFIX` before using this code. It adds default-off `calendar_event_deadline_highlight` and nullable `calendar_event_exception_deadline_highlight` columns. The migration is additive and idempotent. Fresh installs use only the updated `database/schema.sql`. No new required configuration, background jobs or external integration.
 
-Keep local configuration and private runtime data. Application Version / Asset Revision: `1.41.0-dev.2`. TD progress stays in the browser; clearing site storage removes it. A browser which refuses persistent storage falls back to session storage, then memory, and shows the limitation.
+Keep local configuration and private runtime data. Application Version / Asset Revision: `1.41.0-dev.3`. TD progress stays in the browser; clearing site storage removes it. A browser which refuses persistent storage falls back to session storage, then memory, and shows the limitation.
 
 ## Verification
 
-Local CI-equivalent checks pass, including the new deadline/TD contracts. Focused browser fixtures pass on PC and 360px widths: Calendar 26 checks, TD 46 checks, existing Game settings/state 218 checks. The dedicated MariaDB gate passes five migration/fresh-schema checks. Default local CI retains unavailable-tool skips; those are not counted as passes. Browser fixtures use isolated APIs; physical phone use and gameplay balance await user playtesting.
+Local CI-equivalent checks pass, including the new deadline/TD contracts. Focused browser fixtures pass on PC and 360px widths: Calendar 26 checks, TD 56 checks, existing Game settings/state 218 checks. The dedicated MariaDB gate passes five migration/fresh-schema checks. Default local CI retains unavailable-tool skips; those are not counted as passes. Browser fixtures use isolated APIs; physical phone use and gameplay balance await user playtesting.
 
 ## Playtest focus
 

@@ -1,9 +1,7 @@
 /* Tap-first TD UI. Storage is independent of simulation and scoped by Game Widget. */
 (function (window,document) {
     'use strict';
-    var core=window.RssTowerDefenseCore,script=document.currentScript;
-    var base=script?new URL('../assets/td/',script.src).href:'./assets/td/';
-    var revision=script?new URL(script.src).searchParams.get('v'):null;
+    var core=window.RssTowerDefenseCore;
     function element(tag,cls,text){var el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;}
     function mount(context) {
         var state=core.create(0),bests=[0,0,0,0,0,0],selected=null,chosen=null,paused=false,suspended=false,destroyed=false,speed=1,frame=0,last=0,accumulator=0,storage='memory',notice='';
@@ -31,19 +29,43 @@
         var confirm=element('button','btn btn-sm btn-success td-confirm','配置を確定');confirm.type='button';
         var upgrade=element('button','btn btn-sm btn-outline-primary td-upgrade','強化'),sell=element('button','btn btn-sm btn-outline-danger td-sell','売却'),actions=element('div','td-actions'),next=element('button','btn btn-sm btn-primary td-next','次のWave'),speedButton=element('button','btn btn-sm btn-outline-secondary td-speed','速度 1×');
         [upgrade,sell,next,speedButton].forEach(function(b){b.type='button';});actions.append(confirm,upgrade,sell,next,speedButton);panel.append(selection,shop,actions);
-        var guide=element('details','td-guide'),guideTitle=element('summary','','遊び方・保存');guide.append(guideTitle,element('p','','道以外のマスを選び、塔を選択して配置します。配置・強化・売却は準備中のみ。売却は投資額の75%が戻ります。次のWaveを押すと敵が進み、塔が自動攻撃します。赤い枠が拠点です。'),element('p','','8Waveを守りきるとクリア。拠点HP16以上で★★★、8以上で★★、それ以下で★。恒久的な能力強化はありません。ステージは何度でも同じ条件で再挑戦できます。'),element('p','','準備中の配置とWave開始直前をこのブラウザーに保存します。戦闘途中で閉じると、そのWave直前から再開します。PCとスマホの保存は別です。'),element('p','','素材: Kenney Tiny Dungeon / Tiny Town (CC0)。音はありません。'));
+        var guide=element('details','td-guide'),guideTitle=element('summary','','遊び方・保存');guide.append(guideTitle,element('p','','道以外のマスを選び、塔を選択して配置します。配置・強化・売却は準備中のみ。売却は投資額の75%が戻ります。次のWaveを押すと敵が進み、塔が自動攻撃します。道の終点にある六角形の城が拠点です。塔の下の点は強化レベルです。'),element('p','','8Waveを守りきるとクリア。拠点HP16以上で★★★、8以上で★★、それ以下で★。恒久的な能力強化はありません。ステージは何度でも同じ条件で再挑戦できます。'),element('p','','準備中の配置とWave開始直前をこのブラウザーに保存します。戦闘途中で閉じると、そのWave直前から再開します。PCとスマホの保存は別です。'),element('p','','敵: 四角＝歩兵、三角＝速足、大きな四角＝巨人、六角＝重装、星入り八角＝ボス。音はありません。'));
         root.append(top,hint,summary,board,panel,guide);context.stage.append(root);
-        var ctx=canvas.getContext('2d'),images={};ctx.imageSmoothingEnabled=false;
-        ['ground','path','base'].concat(Object.keys(core.types),Object.keys(core.enemyTypes)).forEach(function(name){var img=new window.Image();images[name]=img;img.onload=function(){if(!destroyed)draw();};img.src=base+name+'.png'+(revision?'?v='+encodeURIComponent(revision):'');});
+        var ctx=canvas.getContext('2d');
         function save(){if(state.phase==='fight')return;checkpoint=core.checkpoint(state);if(state.phase==='won')bests[state.stage]=Math.max(bests[state.stage],core.stars(state));var value=JSON.stringify({schema:1,checkpoint:checkpoint,bests:bests});storage='memory';if(context.stateKey){['localStorage','sessionStorage'].some(function(name){try{window[name].setItem(context.stateKey,value);storage=name;return true;}catch(error){return false;}});}}
-        function tile(name,x,y,size){var img=images[name];if(img&&img.complete&&img.naturalWidth)ctx.drawImage(img,x,y,size,size);else{ctx.fillStyle=name==='path'?'#ae8159':'#54735a';ctx.fillRect(x,y,size,size);}}
-        function draw(){if(destroyed)return;var unit=canvas.width/core.WIDTH,map=core.maps[state.stage];ctx.clearRect(0,0,canvas.width,canvas.height);for(var y=0;y<core.HEIGHT;y++)for(var x=0;x<core.WIDTH;x++){tile(map.road.has(x+','+y)?'path':'ground',x*unit,y*unit,unit);ctx.strokeStyle='rgba(30,48,37,.2)';ctx.strokeRect(x*unit+.5,y*unit+.5,unit,unit);}
-            var end=map.path[map.path.length-1];tile('base',end[0]*unit,end[1]*unit,unit);ctx.strokeStyle='#f76666';ctx.lineWidth=4;ctx.strokeRect(end[0]*unit+3,end[1]*unit+3,unit-6,unit-6);
-            var first=map.path[0];ctx.fillStyle='#243b33';ctx.font='bold 14px sans-serif';ctx.fillText('入口',first[0]*unit+5,first[1]*unit+16);
-            state.towers.forEach(function(t){tile(t.type,t.x*unit,t.y*unit,unit);ctx.fillStyle='#152c24';ctx.fillRect(t.x*unit+3,t.y*unit+unit-19,unit-6,16);ctx.fillStyle=core.types[t.type].color;ctx.font='bold 13px sans-serif';ctx.fillText(core.types[t.type].symbol+' '+t.level,t.x*unit+10,t.y*unit+unit-6);});
-            if(selected){var t=core.towerAt(state,selected.x,selected.y);if(t){ctx.beginPath();ctx.arc((t.x+.5)*unit,(t.y+.5)*unit,core.stats(t).range*unit,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.12)';ctx.fill();ctx.strokeStyle='#fff8';ctx.lineWidth=1;ctx.stroke();}ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.strokeRect(selected.x*unit+2,selected.y*unit+2,unit-4,unit-4);}
-            state.enemies.forEach(function(e){var p=core.position(state,e),size=e.type==='boss'?unit:unit*.72;tile(e.type,(p.x+.5)*unit-size/2,(p.y+.5)*unit-size/2,size);ctx.fillStyle='#282830';ctx.fillRect(p.x*unit+8,p.y*unit+2,unit-16,5);ctx.fillStyle=e.slow>0?'#75d9ff':'#f16f6f';ctx.fillRect(p.x*unit+8,p.y*unit+2,(unit-16)*Math.max(0,e.hp/e.maxHp),5);});
-            state.shots.forEach(function(s){ctx.strokeStyle=core.types[s.type].color;ctx.lineWidth=s.type==='cannon'?5:3;ctx.beginPath();ctx.moveTo((s.x+.5)*unit,(s.y+.5)*unit);ctx.lineTo((s.tx+.5)*unit,(s.ty+.5)*unit);ctx.stroke();});
+        // Flat line icons and a neutral grid follow Wire Defense / Icon Quest.
+        function polygon(x,y,r,sides,rotation){ctx.beginPath();for(var i=0;i<sides;i++){var a=rotation+i*Math.PI*2/sides,px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;if(i)ctx.lineTo(px,py);else ctx.moveTo(px,py);}ctx.closePath();}
+        function towerIcon(type,x,y,color){
+            ctx.save();ctx.translate(x,y);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';
+            if(type==='bow'){ctx.beginPath();ctx.arc(-10,0,17,-1.05,1.05);ctx.stroke();ctx.beginPath();ctx.moveTo(-1,-15);ctx.lineTo(-1,15);ctx.moveTo(-10,0);ctx.lineTo(15,0);ctx.moveTo(9,-5);ctx.lineTo(15,0);ctx.lineTo(9,5);ctx.stroke();}
+            else if(type==='magic'){ctx.beginPath();ctx.moveTo(-12,13);ctx.lineTo(7,-6);ctx.stroke();polygon(9,-9,8,4,0);ctx.stroke();ctx.beginPath();ctx.moveTo(-7,-13);ctx.lineTo(-7,-5);ctx.moveTo(-11,-9);ctx.lineTo(-3,-9);ctx.stroke();}
+            else if(type==='cannon'){ctx.beginPath();ctx.arc(-2,3,11,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(4,-7);ctx.lineTo(8,-13);ctx.lineTo(14,-13);ctx.moveTo(16,-17);ctx.lineTo(16,-9);ctx.stroke();}
+            else{for(var i=0;i<6;i++){ctx.save();ctx.rotate(i*Math.PI/3);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-16);ctx.moveTo(-4,-11);ctx.lineTo(0,-7);ctx.lineTo(4,-11);ctx.stroke();ctx.restore();}}
+            ctx.restore();
+        }
+        function draw(){
+            if(destroyed)return;
+            var unit=canvas.width/core.WIDTH,map=core.maps[state.stage],style=window.getComputedStyle(root),ink=style.color;
+            var colors={bow:style.getPropertyValue('--td-bow').trim(),magic:style.getPropertyValue('--td-magic').trim(),cannon:style.getPropertyValue('--td-cannon').trim(),ice:style.getPropertyValue('--td-ice').trim()},danger=style.getPropertyValue('--td-enemy').trim();
+            ctx.clearRect(0,0,canvas.width,canvas.height);ctx.lineWidth=1;
+            for(var y=0;y<core.HEIGHT;y++)for(var x=0;x<core.WIDTH;x++){
+                ctx.fillStyle=map.road.has(x+','+y)?'rgba(108,117,125,.15)':'rgba(108,117,125,.025)';ctx.fillRect(x*unit,y*unit,unit,unit);
+                ctx.strokeStyle='rgba(108,117,125,.20)';ctx.strokeRect(x*unit+.5,y*unit+.5,unit-1,unit-1);
+            }
+            // Route line keeps turns and entry readable without textured terrain.
+            ctx.beginPath();map.path.forEach(function(p,i){if(i)ctx.lineTo((p[0]+.5)*unit,(p[1]+.5)*unit);else ctx.moveTo((p[0]+.5)*unit,(p[1]+.5)*unit);});ctx.strokeStyle='rgba(108,117,125,.42)';ctx.lineWidth=2;ctx.setLineDash([5,6]);ctx.stroke();ctx.setLineDash([]);
+            var end=map.path[map.path.length-1],ex=(end[0]+.5)*unit,ey=(end[1]+.5)*unit,baseColor=state.health>=16?style.getPropertyValue('--td-base').trim():state.health>=8?'#fd7e14':danger;
+            polygon(ex,ey,23,6,-Math.PI/2);ctx.fillStyle='rgba(25,135,84,.10)';ctx.fill();ctx.strokeStyle=baseColor;ctx.lineWidth=2;ctx.stroke();
+            ctx.beginPath();ctx.moveTo(ex-10,ey+7);ctx.lineTo(ex-10,ey-8);ctx.lineTo(ex-5,ey-8);ctx.lineTo(ex-5,ey-3);ctx.lineTo(ex+5,ey-3);ctx.lineTo(ex+5,ey-8);ctx.lineTo(ex+10,ey-8);ctx.lineTo(ex+10,ey+7);ctx.closePath();ctx.stroke();
+            var first=map.path[0];ctx.fillStyle=ink;ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText('IN',(first[0]+.5)*unit,first[1]*unit+14);
+            if(selected){var selectedTower=core.towerAt(state,selected.x,selected.y);if(selectedTower){ctx.beginPath();ctx.arc((selected.x+.5)*unit,(selected.y+.5)*unit,core.stats(selectedTower).range*unit,0,Math.PI*2);ctx.fillStyle='rgba(13,110,253,.06)';ctx.fill();ctx.strokeStyle='rgba(13,110,253,.45)';ctx.lineWidth=1;ctx.stroke();}ctx.strokeStyle=ink;ctx.lineWidth=2;ctx.strokeRect(selected.x*unit+3,selected.y*unit+3,unit-6,unit-6);}
+            state.towers.forEach(function(t){var tx=(t.x+.5)*unit,ty=(t.y+.5)*unit,color=colors[t.type];ctx.fillStyle=color;ctx.globalAlpha=.10;ctx.fillRect(t.x*unit+6,t.y*unit+5,unit-12,unit-10);ctx.globalAlpha=1;ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.strokeRect(t.x*unit+6,t.y*unit+5,unit-12,unit-10);towerIcon(t.type,tx,ty-3,color);for(var i=0;i<t.level;i++){ctx.beginPath();ctx.arc(tx+(i-(t.level-1)/2)*8,ty+21,2,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();}});
+            state.enemies.forEach(function(e){var p=core.position(state,e),px=(p.x+.5)*unit,py=(p.y+.5)*unit,r=e.type==='boss'?20:e.type==='tank'?17:13;ctx.strokeStyle=e.slow>0?colors.ice:danger;ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=e.type==='armored'?3:2;
+                polygon(px,py,r,e.type==='fast'?3:e.type==='armored'?6:e.type==='boss'?8:4,-Math.PI/2);ctx.globalAlpha=.12;ctx.fill();ctx.globalAlpha=1;ctx.stroke();
+                ctx.fillStyle=ink;ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText(e.type==='fast'?'»':e.type==='tank'?'＋':e.type==='armored'?'◆':e.type==='boss'?'★':'•',px,py+4);
+                ctx.fillStyle='rgba(108,117,125,.25)';ctx.fillRect(px-18,py-r-8,36,4);ctx.fillStyle=e.slow>0?colors.ice:danger;ctx.fillRect(px-18,py-r-8,36*Math.max(0,e.hp/e.maxHp),4);
+            });
+            state.shots.forEach(function(s){ctx.strokeStyle=colors[s.type];ctx.lineWidth=s.type==='cannon'?3:1.8;ctx.beginPath();ctx.moveTo((s.x+.5)*unit,(s.y+.5)*unit);ctx.lineTo((s.tx+.5)*unit,(s.ty+.5)*unit);ctx.stroke();if(s.type==='cannon'){ctx.beginPath();ctx.arc((s.tx+.5)*unit,(s.ty+.5)*unit,unit*.3,0,Math.PI*2);ctx.stroke();}});
         }
         function storageNote(){return storage==='localStorage'?'配置と各ステージの星をこのブラウザーに保存します。戦闘途中はWave直前から再開します。':storage==='sessionStorage'?'永続保存が使えないため、このTabを閉じるまで保存します。':'保存が使えないため、この画面内でのみ配置を保持します。';}
         function render(){hint.textContent=core.maps[state.stage].hint+' / Best '+(bests[state.stage]?'★'.repeat(bests[state.stage]):'未クリア');updateSummary();
@@ -63,7 +85,7 @@
         context.on(speedButton,'click',function(){speed=speed===1?2:1;speedButton.textContent='速度 '+speed+'×';});
         context.on(stageSelect,'change',function(){var target=Number(stageSelect.value);if((state.towers.length||state.wave)&&state.phase==='prepare'&&!window.confirm('現在の配置を終了して別のステージを始めますか？')){stageSelect.value=String(state.stage);return;}stop();state=core.create(target);selected=null;paused=false;notice='';save();render();});
         if(!loaded)save();render();
-        return {restart:function(){if((state.towers.length||state.wave)&&!window.confirm('このステージを最初からやり直しますか？'))return;stop();state=core.create(state.stage);selected=null;paused=false;notice='';save();render();},togglePause:function(){if(state.phase!=='fight')return;paused=!paused;stop();render();schedule();},setSuspended:function(value){suspended=!!value;stop();schedule();},resize:draw,destroy:function(){destroyed=true;stop();Object.keys(images).forEach(function(k){images[k].onload=null;});}};
+        return {restart:function(){if((state.towers.length||state.wave)&&!window.confirm('このステージを最初からやり直しますか？'))return;stop();state=core.create(state.stage);selected=null;paused=false;notice='';save();render();},togglePause:function(){if(state.phase!=='fight')return;paused=!paused;stop();render();schedule();},setSuspended:function(value){suspended=!!value;stop();schedule();},resize:draw,destroy:function(){destroyed=true;stop();}};
     }
     window.RssGameWidget.register('tower_defense',mount);
 })(window,document);

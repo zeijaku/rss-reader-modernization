@@ -10,6 +10,7 @@ let checks=0;function check(ok,name){assert(ok,name);checks++;console.log('PASS:
 try{for(const width of [1280,360]){
  const context=await browser.newContext({viewport:{width,height:1000},hasTouch:width<600}),requests=[],errors=[];
  await context.route('http://td.test/**',async route=>{let u=new URL(route.request().url());requests.push(u.pathname+u.search);if(u.pathname==='/')return route.fulfill({contentType:'text/html',body:html});const file=path.join(root,'public',u.pathname);return fs.existsSync(file)?route.fulfill({body:fs.readFileSync(file),contentType:u.pathname.endsWith('.js')?'text/javascript':u.pathname.endsWith('.png')?'image/png':'text/css'}):route.fulfill({status:404,body:''});});
+ await context.route('**/*',route=>new URL(route.request().url()).hostname==='td.test'?route.fallback():route.abort());
  await context.addInitScript(()=>{window.__rafTotal=0;const raf=requestAnimationFrame.bind(window);window.requestAnimationFrame=fn=>raf(t=>{window.__rafTotal++;fn(t);});});
  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto('http://td.test/');await page.waitForFunction(()=>document.querySelectorAll('.td-widget').length===2,{},{timeout:5000}).catch(async e=>{console.error('DIAGNOSTIC',errors,requests,await page.locator('#main-content').first().innerHTML());throw e;});
  const first=page.locator('.mini-game-card').nth(0),second=page.locator('.mini-game-card').nth(1);
@@ -35,6 +36,16 @@ try{for(const width of [1280,360]){
  check(await first.locator('.td-confirm').evaluate(n=>n.getBoundingClientRect().height>=44),'TD action buttons keep existing 44px target');
  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no page overflow at '+width);
  await page.screenshot({path:'/tmp/rss-td-'+width+'.png'});
+ for(const theme of ['bootstrap-flatly','bootstrap-solar','bootstrap-slate','bootstrap']){
+  const themeStyle=await page.addStyleTag({content:fs.readFileSync(path.join(root,'public/css/'+theme+'-5.3.8.min.css'),'utf8').replace(/@import[^;]*;/g,'')});
+  await page.evaluate(theme=>{document.querySelector('#main-content').dataset.dashboardTheme=theme;},theme);
+  // Resize through the existing expanded-view control redraws the canvas.
+  await first.locator('.game-widget-expand').click();await first.locator('.game-widget-expand').click();
+  check(await first.locator('.td-board').evaluate(n=>getComputedStyle(n).backgroundColor===getComputedStyle(n.closest('.td-widget')).getPropertyValue('--bs-body-bg').trim() || getComputedStyle(n).backgroundColor===getComputedStyle(document.body).backgroundColor),'neutral TD surface follows '+theme+' at '+width);
+  await page.screenshot({path:'/tmp/rss-td-'+theme+'-'+width+'.png'});
+  await themeStyle.evaluate(n=>n.remove());
+ }
+ check(!requests.some(u=>u.startsWith('/assets/td/')),'line renderer needs no bitmap assets');
  await first.press('Escape');check(await first.locator('.game-widget-expand').getAttribute('aria-expanded')==='false','Escape closes expanded view');
  const baseKey=key.slice(0,-6);await page.evaluate(()=>RssGameWidget.removeWidgetState(1));check(await page.evaluate(k=>localStorage.getItem(k)===null,key),'widget deletion removes its checkpoint');
  check(await page.evaluate(()=>!!localStorage.getItem(RssGameWidget.storageKey(7,2,'tower_defense')+'.state')),'deletion preserves other widget');

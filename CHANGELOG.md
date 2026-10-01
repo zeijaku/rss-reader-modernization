@@ -1,3 +1,8 @@
+## 1.41.0-dev.3 - 2026-10-01
+
+- Match TD visuals to Wire Defense / Icon Quest with a neutral Theme-aware grid, tower line icons and distinct geometric enemy types.
+- Preserve fantasy unit types, rules, preparation checkpoints and dev.2 Calendar layout. No new database migration or bitmap request.
+
 ## 1.41.0-dev.2 - 2026-10-01
 
 - Center Calendar period labels across the whole header, including narrow cards.
