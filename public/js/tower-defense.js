@@ -12,6 +12,16 @@
         var root=element('div','td-widget'),top=element('div','td-top'),stageSelect=element('select','form-select form-select-sm td-stage-select');stageSelect.setAttribute('aria-label','ステージ');
         core.maps.forEach(function(map,i){var option=element('option','', (i+1)+'. '+map.name);option.value=String(i);stageSelect.append(option);});stageSelect.value=String(state.stage);
         var hint=element('p','td-hint'),summary=element('p','td-summary'),board=element('div','td-board'),canvas=element('canvas','td-canvas'),cells=element('div','td-cells');
+        var statValues={},statGroups={};
+        [['wave','Wave'],['health','拠点HP'],['gold','資金'],['remaining','残り']].forEach(function(pair){
+            var group=element('span','td-stat'),label=element('span','td-stat-label',pair[1]+' '),value=element('strong','td-stat-value');
+            value.setAttribute('data-td-stat',pair[0]);group.append(label,value);summary.append(group);statValues[pair[0]]=value;statGroups[pair[0]]=group;
+        });
+        summary.setAttribute('aria-label','ステージの状況');
+        function updateSummary(){
+            statValues.wave.textContent=state.wave+'/8';statValues.health.textContent=state.health+'/20';statValues.gold.textContent=state.gold+'G';
+            statGroups.remaining.hidden=state.phase!=='fight';statValues.remaining.textContent=(state.spawn.length+state.enemies.length)+'体';
+        }
         canvas.width=768;canvas.height=512;canvas.setAttribute('aria-hidden','true');
         cells.setAttribute('role','group');cells.setAttribute('aria-label','配置盤面。道以外のマスを選択します');
         var cellButtons=[];
@@ -36,14 +46,14 @@
             state.shots.forEach(function(s){ctx.strokeStyle=core.types[s.type].color;ctx.lineWidth=s.type==='cannon'?5:3;ctx.beginPath();ctx.moveTo((s.x+.5)*unit,(s.y+.5)*unit);ctx.lineTo((s.tx+.5)*unit,(s.ty+.5)*unit);ctx.stroke();});
         }
         function storageNote(){return storage==='localStorage'?'配置と各ステージの星をこのブラウザーに保存します。戦闘途中はWave直前から再開します。':storage==='sessionStorage'?'永続保存が使えないため、このTabを閉じるまで保存します。':'保存が使えないため、この画面内でのみ配置を保持します。';}
-        function render(){hint.textContent=core.maps[state.stage].hint+' / Best '+(bests[state.stage]?'★'.repeat(bests[state.stage]):'未クリア');summary.textContent='Wave '+state.wave+'/8　拠点 '+state.health+'/20　資金 '+state.gold+'G'+(state.phase==='fight'?'　残り '+(state.spawn.length+state.enemies.length)+'体':'');
+        function render(){hint.textContent=core.maps[state.stage].hint+' / Best '+(bests[state.stage]?'★'.repeat(bests[state.stage]):'未クリア');updateSummary();
             cellButtons.forEach(function(b){var x=Number(b.dataset.x),y=Number(b.dataset.y),t=core.towerAt(state,x,y),road=!core.buildable(state.stage,x,y);b.disabled=road;b.setAttribute('aria-label',(x+1)+'列 '+(y+1)+'行 '+(road?'道':t?core.types[t.type].name+' レベル'+t.level:'配置可能'));b.setAttribute('aria-pressed',selected&&selected.x===x&&selected.y===y?'true':'false');});
             var t=selected&&core.towerAt(state,selected.x,selected.y),preparing=state.phase==='prepare';selection.textContent=!selected?'道以外のマスを選択してください':t?core.types[t.type].name+' Lv.'+t.level+' / 射程 '+core.stats(t).range.toFixed(1):'選択: '+(selected.x+1)+'列 '+(selected.y+1)+'行';
             shopButtons.forEach(function(b){b.disabled=!preparing||!selected||!!t||state.gold<core.types[b.dataset.tower].cost;b.classList.toggle('active',b.dataset.tower===chosen);b.setAttribute('aria-pressed',b.dataset.tower===chosen?'true':'false');});confirm.disabled=!preparing||!selected||!!t||!chosen||state.gold<core.types[chosen].cost;confirm.textContent=chosen?core.types[chosen].name+'を配置':'配置を確定';upgrade.disabled=!preparing||!t||t.level>=3||state.gold<core.upgradeCost(t);upgrade.textContent=t&&t.level<3?'強化 '+core.upgradeCost(t)+'G':'強化';sell.disabled=!preparing||!t;sell.textContent=t?'売却 '+Math.floor(t.spent*.75)+'G':'売却';next.disabled=!preparing;next.textContent='Wave '+(state.wave+1)+'開始';stageSelect.disabled=state.phase==='fight';
             var message=state.phase==='prepare'?'準備中。配置を調整し、Wave開始を押してください。':state.phase==='won'?'クリア！ '+ '★'.repeat(core.stars(state))+' 配置を変えて再挑戦できます。':state.phase==='lost'?'拠点が陥落しました。Restartで配置を改良して再挑戦しましょう。':paused?'一時停止中。Resumeで再開します。':'戦闘中。塔が自動で攻撃します。';
             context.update({score:state.score,started:true,playing:state.phase==='fight',paused:paused,status:state.phase,message:notice||message,storageNote:storageNote()});draw();
         }
-        function animate(time){frame=0;if(destroyed||suspended||paused||state.phase!=='fight')return;if(!last)last=time;accumulator+=Math.min((time-last)/1000,.1)*speed;last=time;var oldPhase=state.phase,oldGold=state.gold;while(accumulator>=1/30&&state.phase==='fight'){core.step(state,1/30);accumulator-=1/30;}draw();if(state.phase!==oldPhase){last=0;save();render();}else{summary.textContent='Wave '+state.wave+'/8　拠点 '+state.health+'/20　資金 '+state.gold+'G　残り '+(state.spawn.length+state.enemies.length)+'体';if(oldGold!==state.gold)context.update({score:state.score,started:true,playing:true,paused:false,status:'fight',message:'戦闘中。塔が自動で攻撃します。',storageNote:storageNote()});schedule();}}
+        function animate(time){frame=0;if(destroyed||suspended||paused||state.phase!=='fight')return;if(!last)last=time;accumulator+=Math.min((time-last)/1000,.1)*speed;last=time;var oldPhase=state.phase,oldGold=state.gold;while(accumulator>=1/30&&state.phase==='fight'){core.step(state,1/30);accumulator-=1/30;}draw();if(state.phase!==oldPhase){last=0;save();render();}else{updateSummary();if(oldGold!==state.gold)context.update({score:state.score,started:true,playing:true,paused:false,status:'fight',message:'戦闘中。塔が自動で攻撃します。',storageNote:storageNote()});schedule();}}
         function schedule(){if(!frame&&!paused&&!suspended&&state.phase==='fight')frame=window.requestAnimationFrame(animate);}
         function stop(){if(frame)window.cancelAnimationFrame(frame);frame=0;last=0;accumulator=0;}
         context.on(confirm,'click',function(){if(selected&&chosen&&core.place(state,selected.x,selected.y,chosen)){save();render();}});

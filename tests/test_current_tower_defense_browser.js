@@ -17,7 +17,7 @@ try{for(const width of [1280,360]){
  check(requests.includes('/js/tower-defense-core.js?v=td-test'),'core inherits parent revision');
  check(await first.locator('.td-cell').count()===96,'actual PHP card mounts tap grid');
  await first.locator('.td-cell[data-x="8"][data-y="3"]').click();await first.locator('[data-tower="bow"]').click();
- check(await first.locator('.td-summary').textContent()==='Wave 0/8　拠点 20/20　資金 220G','choosing tower does not place before confirmation');
+ check(await first.locator('[data-td-stat=gold]').textContent()==='220G' && await first.locator('[data-td-stat=wave]').textContent()==='0/8','choosing tower does not place before confirmation');
  await first.locator('.td-confirm').click();check((await first.locator('.td-summary').textContent()).includes('160G'),'confirm deducts tower cost');
  check((await second.locator('.td-summary').textContent()).includes('220G'),'other widget remains independent');
  await first.locator('.td-upgrade').click();check((await first.locator('.td-selection').textContent()).includes('Lv.2'),'tap upgrade');
@@ -31,6 +31,8 @@ try{for(const width of [1280,360]){
  check(await first.getAttribute('data-game-widget-status')==='prepare','mid-wave reload returns to preparation');
  await first.locator('.td-cell[data-x="8"][data-y="3"]').click();check((await first.locator('.td-selection').textContent()).includes('Lv.2'),'reload restores upgraded placement');
  await first.locator('.game-widget-expand').click();check(await first.locator('.mini-game-card-inner').getAttribute('aria-modal')==='true','uses existing expansion dialog');
+ check(await first.locator('.td-board').evaluate(n=>n.getBoundingClientRect().width<=541),'expanded board matches bounded existing Game sizing');
+ check(await first.locator('.td-confirm').evaluate(n=>n.getBoundingClientRect().height>=44),'TD action buttons keep existing 44px target');
  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no page overflow at '+width);
  await page.screenshot({path:'/tmp/rss-td-'+width+'.png'});
  await first.press('Escape');check(await first.locator('.game-widget-expand').getAttribute('aria-expanded')==='false','Escape closes expanded view');

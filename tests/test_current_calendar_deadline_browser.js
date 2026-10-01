@@ -15,6 +15,10 @@ let checks=0;function check(ok,name){assert(ok,name);checks++;console.log('PASS:
  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto('http://cal.test/');await page.waitForSelector('[data-calendar-range-ready="1"]');
  check(await page.locator('.calendar-card-header .calendar-month-label').textContent()==='2026年10月','period in actual PHP header at '+width);
  check(await page.locator('.calendar-toolbar .calendar-month-label').count()===0,'period removed from toolbar');
+ const centered=await page.locator('.calendar-card-header').evaluate(header=>{const a=header.getBoundingClientRect(),b=header.querySelector('.calendar-month-label').getBoundingClientRect();return Math.abs((a.left+a.width/2)-(b.left+b.width/2))<1;});
+ check(centered,'period aligned to the whole header midpoint at '+width);
+ check(await page.locator('.calendar-card-header').evaluate(header=>{const label=header.querySelector('.calendar-month-label').getBoundingClientRect(),drag=header.querySelector('.widget-drag-handle').getBoundingClientRect(),edit=header.querySelector('.calendar-widget-edit-trigger').getBoundingClientRect();return drag.right<=label.left&&label.right<=edit.left;}),'period does not overlap drag/edit buttons');
+
  const positions=await page.locator('.calendar-toolbar button').evaluateAll(ns=>ns.map(n=>Math.round(n.getBoundingClientRect().top)));check(new Set(positions).size===1,'all navigation/view/add buttons occupy one row');
  const urgent=page.locator('[data-event-id="1"]').first(),ordinary=page.locator('[data-event-id="2"]').first();await page.waitForFunction(()=>document.querySelector('[data-event-id="1"]').dataset.calendarDeadlineLevel==='urgent');
  check(await ordinary.getAttribute('data-calendar-deadline-level')==='','ordinary future event not emphasized');

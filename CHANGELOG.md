@@ -1,3 +1,9 @@
+## 1.41.0-dev.2 - 2026-10-01
+
+- Center Calendar period labels across the whole header, including narrow cards.
+- Align TD board width, summary values and touch controls with existing Game UI.
+- Preserve game rules and saved preparation; no additional database migration from dev.1.
+
 ## 1.41.0-dev.1 - 2026-10-01
 
 - Add opt-in Calendar visual deadline emphasis and move the period label into the header for a single-row toolbar.
