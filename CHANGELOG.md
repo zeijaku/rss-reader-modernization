@@ -1,3 +1,8 @@
+## 1.41.0-dev.4 - 2026-10-01
+
+- Increase TD enemy HP by 15% for all enemy types, stages and waves while preserving movement, spawn timing and economy.
+- Preserve existing preparation saves and best stars; no database migration or UI changes.
+
 ## 1.41.0-dev.3 - 2026-10-01
 
 - Match TD visuals to Wire Defense / Icon Quest with a neutral Theme-aware grid, tower line icons and distinct geometric enemy types.

@@ -19,4 +19,13 @@ let s=td.create(0),cp=td.checkpoint(s);assert.equal(td.restore({...cp,stage:100}
 const all=new Set();for(let stage=0;stage<6;stage++){s=td.create(stage);for(let wave=0;wave<8;wave++){s.wave=wave;s.phase='prepare';td.begin(s);s.spawn.forEach(t=>all.add(t));}}
 assert.equal(all.size,5);
 for(const [hp,stars] of [[20,3],[16,3],[15,2],[8,2],[7,1]])assert.equal(td.stars({...td.create(0),phase:'won',health:hp}),stars);
-console.log('PASS: six distinct paths, build rules, upgrade/sale economy, deterministic replay, checkpoint validation, enemy roster and clear stars');
+// Balance change must apply to every enemy and preserve movement/economy.
+for(const [type,baseHp] of [['normal',65],['fast',46],['tank',175],['armored',100],['boss',650]]){
+ for(const [stage,wave] of [[0,1],[3,4],[5,8]]){
+  const state=td.create(stage);state.wave=wave-1;assert(td.begin(state));state.spawn=[type];td.step(state,1/30);
+  const enemy=state.enemies[0];assert(Math.abs(enemy.maxHp-baseHp*(1+(wave-1)*.14)*td.maps[stage].factor*1.15)<1e-9);
+  assert.equal(enemy.hp,enemy.maxHp);assert.equal(state.gold,220);
+  assert(Math.abs(enemy.progress-td.enemyTypes[type].speed/30)<1e-9);
+ }
+}
+console.log('PASS: six distinct paths, build rules, upgrade/sale economy, deterministic replay, checkpoint validation, enemy roster, clear stars and 15% harder enemies');

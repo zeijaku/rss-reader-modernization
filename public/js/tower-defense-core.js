@@ -1,7 +1,7 @@
 /* Deterministic TD simulation and versioned preparation checkpoints; no DOM or storage. */
 (function (root) {
     'use strict';
-    var WIDTH=12, HEIGHT=8, WAVES=8;
+    var WIDTH=12, HEIGHT=8, WAVES=8, ENEMY_HEALTH_SCALE=1.15;
     var maps = [
         {name:'草原の入口',hint:'長い折り返しで射程を活かす',points:[[0,2],[9,2],[9,5],[2,5],[2,7]],factor:1},
         {name:'曲がりくねる森',hint:'曲がり角に範囲攻撃を',points:[[0,1],[3,1],[3,4],[8,4],[8,1],[11,1]],factor:1.08},
@@ -33,7 +33,7 @@
     function stats(t){var b=types[t.type];return {range:b.range+(t.level-1)*.25,damage:b.damage*(1+(t.level-1)*.65),period:b.period};}
     function stars(s){return s.phase==='won'?(s.health>=16?3:s.health>=8?2:1):0;}
     function step(s,dt){if(s.phase!=='fight'||!(dt>0&&dt<=.1))return;
-        s.clock-=dt;if(s.spawn.length&&s.clock<=0){var type=s.spawn.shift(),b=enemyTypes[type],hp=b.hp*(1+(s.wave-1)*.14)*maps[s.stage].factor;s.enemies.push({id:s.nextId++,type:type,hp:hp,maxHp:hp,progress:0,slow:0});s.clock+=s.stage===4?.95:1.4;}
+        s.clock-=dt;if(s.spawn.length&&s.clock<=0){var type=s.spawn.shift(),b=enemyTypes[type],hp=b.hp*(1+(s.wave-1)*.14)*maps[s.stage].factor*ENEMY_HEALTH_SCALE;s.enemies.push({id:s.nextId++,type:type,hp:hp,maxHp:hp,progress:0,slow:0});s.clock+=s.stage===4?.95:1.4;}
         s.shots=s.shots.filter(function(v){v.ttl-=dt;return v.ttl>0;});
         s.enemies.forEach(function(e){e.slow=Math.max(0,e.slow-dt);e.progress+=enemyTypes[e.type].speed*(e.slow>0?.55:1)*dt;});
         s.towers.forEach(function(t){t.cooldown=Math.max(0,t.cooldown-dt);if(t.cooldown>0)return;var b=stats(t),targets=s.enemies.filter(function(e){var p=position(s,e);return e.hp>0&&Math.hypot(t.x-p.x,t.y-p.y)<=b.range;}).sort(function(a,b){return b.progress-a.progress||a.id-b.id;});if(!targets.length)return;

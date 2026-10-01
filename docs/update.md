@@ -31,9 +31,9 @@ php tools/healthcheck.php
 
 Production serverでLocal変更がある場合は、その内容を確認するまで更新を進めません。
 
-## V1.41.0-dev.3 開発版の更新
+## V1.41.0-dev.4 開発版の更新
 
-dev.1 / dev.2適用済みの環境では、差分ZIPの `app` / `public` を上書きします。追加SQLは不要です。TDの既存保存データは引き続き利用できます。
+dev.1 / dev.2 / dev.3適用済みの環境では、差分ZIPの `app` / `public` を上書きします。追加SQLは不要です。TDの既存保存データは引き続き利用できます。dev.4では敵HPを15%増やし、次に開始するWaveから新しい難易度を適用します。過去の星は保持します。
 
 V1.40.1からの試用には `database/migrations/032_v1_41_calendar_deadline.sql` が必要です。`@table_prefix` を実環境に合わせて適用します。期日強調は既存予定でOFF、繰り返し予定の個別設定は親から継承します。TDの保存はブラウザー内で、端末間同期はありません。詳しい試用項目は [Release Notes](../RELEASE_NOTES.md) を参照してください。
 
