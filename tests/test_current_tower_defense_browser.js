@@ -1,0 +1,42 @@
+'use strict';
+const fs=require('fs'),path=require('path'),assert=require('node:assert/strict'),{execFileSync}=require('node:child_process');
+const {chromium}=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES?process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright':'playwright');
+const root=path.resolve(__dirname,'..');
+const rows=[1,2].map(id=>({widget_id:id,widget_owner:7,widget_location:0,widget_type:'game',widget_flag:0,widget_sort_order:id,widget_style:'primary',widget_width:1,widget_height:1,widget_config:JSON.stringify({schema:1,title:'Tower Defense',game:'tower_defense'}),widget_reference_id:null}));
+const markup=execFileSync('php',[path.join(__dirname,'fixtures/widget_header_page.php'),JSON.stringify(rows)],{encoding:'utf8'});
+const html='<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="/css/bootstrap-5.3.8.min.css"><link rel="stylesheet" href="/css/game-widget.css"><link rel="stylesheet" href="/css/dashboard.css"></head><body>'+markup+'<script src="/js/game-widget.js?v=td-test"></script><script src="/js/mini-game.js"></script></body></html>';
+let checks=0;function check(ok,name){assert(ok,name);checks++;console.log('PASS: '+name);}
+(async()=>{const browser=await chromium.launch({executablePath:process.env.GAME_TEST_CHROME||chromium.executablePath(),headless:true,args:['--no-sandbox']});
+try{for(const width of [1280,360]){
+ const context=await browser.newContext({viewport:{width,height:1000},hasTouch:width<600}),requests=[],errors=[];
+ await context.route('http://td.test/**',async route=>{let u=new URL(route.request().url());requests.push(u.pathname+u.search);if(u.pathname==='/')return route.fulfill({contentType:'text/html',body:html});const file=path.join(root,'public',u.pathname);return fs.existsSync(file)?route.fulfill({body:fs.readFileSync(file),contentType:u.pathname.endsWith('.js')?'text/javascript':u.pathname.endsWith('.png')?'image/png':'text/css'}):route.fulfill({status:404,body:''});});
+ await context.addInitScript(()=>{window.__rafTotal=0;const raf=requestAnimationFrame.bind(window);window.requestAnimationFrame=fn=>raf(t=>{window.__rafTotal++;fn(t);});});
+ const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto('http://td.test/');await page.waitForFunction(()=>document.querySelectorAll('.td-widget').length===2,{},{timeout:5000}).catch(async e=>{console.error('DIAGNOSTIC',errors,requests,await page.locator('#main-content').first().innerHTML());throw e;});
+ const first=page.locator('.mini-game-card').nth(0),second=page.locator('.mini-game-card').nth(1);
+ check(requests.filter(u=>u.startsWith('/js/tower-defense.js')).length===1,'one UI module for two widgets at '+width);
+ check(requests.includes('/js/tower-defense-core.js?v=td-test'),'core inherits parent revision');
+ check(await first.locator('.td-cell').count()===96,'actual PHP card mounts tap grid');
+ await first.locator('.td-cell[data-x="8"][data-y="3"]').click();await first.locator('[data-tower="bow"]').click();
+ check(await first.locator('.td-summary').textContent()==='Wave 0/8　拠点 20/20　資金 220G','choosing tower does not place before confirmation');
+ await first.locator('.td-confirm').click();check((await first.locator('.td-summary').textContent()).includes('160G'),'confirm deducts tower cost');
+ check((await second.locator('.td-summary').textContent()).includes('220G'),'other widget remains independent');
+ await first.locator('.td-upgrade').click();check((await first.locator('.td-selection').textContent()).includes('Lv.2'),'tap upgrade');
+ const key=await page.evaluate(()=>RssGameWidget.storageKey(7,1,'tower_defense')+'.state');const before=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)),key);
+ check(before.checkpoint.towers[0].level===2,'preparation checkpoint stored');
+ await first.locator('.td-next').click();await page.waitForTimeout(400);check(await first.getAttribute('data-game-widget-status')==='fight','explicit wave starts fight');
+ check(await first.locator('.td-upgrade').isDisabled()&&await first.locator('.td-sell').isDisabled(),'fight prevents economy changes');
+ await first.locator('.game-widget-pause').click();check(await first.locator('.game-widget-pause').getAttribute('aria-pressed')==='true','manual pause');
+ const during=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)),key);check(JSON.stringify(during.checkpoint)===JSON.stringify(before.checkpoint),'wave leaves preceding preparation checkpoint');
+ await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.td-widget').length===2);
+ check(await first.getAttribute('data-game-widget-status')==='prepare','mid-wave reload returns to preparation');
+ await first.locator('.td-cell[data-x="8"][data-y="3"]').click();check((await first.locator('.td-selection').textContent()).includes('Lv.2'),'reload restores upgraded placement');
+ await first.locator('.game-widget-expand').click();check(await first.locator('.mini-game-card-inner').getAttribute('aria-modal')==='true','uses existing expansion dialog');
+ check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no page overflow at '+width);
+ await page.screenshot({path:'/tmp/rss-td-'+width+'.png'});
+ await first.press('Escape');check(await first.locator('.game-widget-expand').getAttribute('aria-expanded')==='false','Escape closes expanded view');
+ const baseKey=key.slice(0,-6);await page.evaluate(()=>RssGameWidget.removeWidgetState(1));check(await page.evaluate(k=>localStorage.getItem(k)===null,key),'widget deletion removes its checkpoint');
+ check(await page.evaluate(()=>!!localStorage.getItem(RssGameWidget.storageKey(7,2,'tower_defense')+'.state')),'deletion preserves other widget');
+ await first.locator('.td-next').click();await page.waitForTimeout(200);await first.evaluate(n=>n.remove());await page.waitForTimeout(100);const stopped=await page.evaluate(()=>window.__rafTotal);await page.waitForTimeout(200);check(await page.evaluate(()=>window.__rafTotal)===stopped,'removing fighting widget stops animation loop');
+ check(errors.length===0,'no browser exceptions: '+errors.join(','));await context.close();
+}
+}finally{await browser.close();}console.log('RESULT: PASS '+checks+' / FAIL 0 / SKIP 0');})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -39,3 +39,20 @@
 .word-tiles-tile[aria-pressed=true]{outline:2px solid var(--bs-primary,#0d6efd)}
 .word-tiles-info,.word-tiles-save-note,.word-tiles-dictionary{font-size:.8rem;overflow-wrap:anywhere;margin:.4rem 0}
 .word-tiles-dictionary p{max-height:12rem;overflow:auto}
+
+/* Tower Defense: the 12x8 tap grid scales uniformly in cards and expanded view. */
+.td-widget { width:100%; max-width:900px; margin:auto; color:var(--bs-body-color); }
+.td-top { display:flex; gap:8px; }
+.td-stage-select { width:100%; min-height:36px; }
+.td-hint, .td-summary, .td-selection { margin:6px 0; font-size:.8rem; }
+.td-board { position:relative; width:100%; aspect-ratio:3/2; background:#37563f; overflow:hidden; border:2px solid #253f30; border-radius:4px; }
+.td-canvas { display:block; width:100%; height:100%; image-rendering:pixelated; }
+.td-cells { position:absolute; inset:0; display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); grid-template-rows:repeat(8,minmax(0,1fr)); }
+.td-cell { min-width:0; padding:0; background:transparent; border:0; touch-action:manipulation; }
+.td-cell:disabled { opacity:1; }
+.td-cell:focus-visible { outline:3px solid #fff; outline-offset:-3px; }
+.td-shop, .td-actions { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; }
+.td-widget .btn { min-height:36px; }
+.td-guide { margin-top:8px; font-size:.78rem; }
+.td-guide p { margin:6px 0; }
+@media(max-width:575.98px) { .td-shop .btn { flex:1 1 calc(50% - 6px); } .td-widget .btn { min-height:40px; } }
