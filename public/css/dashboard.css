@@ -3071,3 +3071,82 @@ legend.text-dark {
 @media (max-width: 575.98px) {
     #settingsPageTabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Widget headers: presentation only; existing action and drag handlers stay intact. */
+#main-content .dashboard-widget { --widget-header-action-size: 36px; }
+#main-content .dashboard-widget :is(.feed-card-header-inner, .clock-card-header, .memo-card-header, .task-card-header, .calendar-card-header, .links-card-header, .weather-card-header, .mini-game-card-header, .mail-card-header, .information-widget-header, .earthquake-card-header, .sun-moon-card-header, .air-quality-card-header, .blind-spot-card-header, .calculator-card-header, .camera-video-card-header, .x-widget-header) {
+    box-sizing: border-box;
+    display: flex !important;
+    align-items: center;
+    min-width: 0;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    padding: 0 !important;
+    gap: 0 !important;
+}
+#main-content .dashboard-widget .feed-card-header { padding: 0 !important; }
+#main-content .dashboard-widget :is(.feed-card-header-inner, .clock-card-header, .memo-card-header, .task-card-header, .calendar-card-header, .links-card-header, .weather-card-header, .mini-game-card-header, .mail-card-header, .information-widget-header, .earthquake-card-header, .sun-moon-card-header, .air-quality-card-header, .blind-spot-card-header, .calculator-card-header, .camera-video-card-header, .x-widget-header) > .widget-title-text {
+    flex: 1 1 0 !important;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 0 6px;
+    font-size: .8125rem !important;
+    font-weight: 500 !important;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#main-content .dashboard-widget :is(.feed-card-header-inner, .clock-card-header, .memo-card-header, .task-card-header, .calendar-card-header, .links-card-header, .weather-card-header, .mini-game-card-header, .mail-card-header, .information-widget-header, .earthquake-card-header, .sun-moon-card-header, .air-quality-card-header, .blind-spot-card-header, .calculator-card-header, .camera-video-card-header, .x-widget-header) > :is(.feed-card-actions, .content-actions, .mail-card-actions, .blind-spot-card-actions) {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    height: 44px;
+    margin: 0;
+    gap: 0;
+}
+#main-content .dashboard-widget :is(.feed-card-header-inner, .clock-card-header, .memo-card-header, .task-card-header, .calendar-card-header, .links-card-header, .weather-card-header, .mini-game-card-header, .mail-card-header, .information-widget-header, .earthquake-card-header, .sun-moon-card-header, .air-quality-card-header, .blind-spot-card-header, .calculator-card-header, .camera-video-card-header, .x-widget-header) > button:not(.widget-drag-handle),
+#main-content .dashboard-widget :is(.feed-card-header-inner, .clock-card-header, .memo-card-header, .task-card-header, .calendar-card-header, .links-card-header, .weather-card-header, .mini-game-card-header, .mail-card-header, .information-widget-header, .earthquake-card-header, .sun-moon-card-header, .air-quality-card-header, .blind-spot-card-header, .calculator-card-header, .camera-video-card-header, .x-widget-header) > :is(.feed-card-actions, .content-actions, .mail-card-actions, .blind-spot-card-actions) > button {
+    box-sizing: border-box;
+    display: inline-flex;
+    flex: 0 0 var(--widget-header-action-size) !important;
+    align-items: center;
+    justify-content: center;
+    width: var(--widget-header-action-size) !important;
+    min-width: var(--widget-header-action-size) !important;
+    max-width: var(--widget-header-action-size) !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    margin: 0;
+    padding: 0 !important;
+    border: 0;
+    border-inline-start: 1px solid rgba(127, 127, 127, .35);
+    border-radius: 0;
+    background: transparent;
+    color: inherit !important;
+    font-size: .875rem;
+    line-height: 1;
+    text-decoration: none !important;
+    touch-action: manipulation;
+}
+#main-content .dashboard-widget :is(.feed-card-header-inner, .clock-card-header, .memo-card-header, .task-card-header, .calendar-card-header, .links-card-header, .weather-card-header, .mini-game-card-header, .mail-card-header, .information-widget-header, .earthquake-card-header, .sun-moon-card-header, .air-quality-card-header, .blind-spot-card-header, .calculator-card-header, .camera-video-card-header, .x-widget-header) > button:not(.widget-drag-handle):hover,
+#main-content .dashboard-widget :is(.feed-card-header-inner, .clock-card-header, .memo-card-header, .task-card-header, .calendar-card-header, .links-card-header, .weather-card-header, .mini-game-card-header, .mail-card-header, .information-widget-header, .earthquake-card-header, .sun-moon-card-header, .air-quality-card-header, .blind-spot-card-header, .calculator-card-header, .camera-video-card-header, .x-widget-header) > :is(.feed-card-actions, .content-actions, .mail-card-actions, .blind-spot-card-actions) > button:hover { background-color: rgba(127, 127, 127, .14); }
+#main-content .dashboard-widget :is(.feed-card-header-inner, .clock-card-header, .memo-card-header, .task-card-header, .calendar-card-header, .links-card-header, .weather-card-header, .mini-game-card-header, .mail-card-header, .information-widget-header, .earthquake-card-header, .sun-moon-card-header, .air-quality-card-header, .blind-spot-card-header, .calculator-card-header, .camera-video-card-header, .x-widget-header) > button:not(.widget-drag-handle):focus-visible,
+#main-content .dashboard-widget :is(.feed-card-header-inner, .clock-card-header, .memo-card-header, .task-card-header, .calendar-card-header, .links-card-header, .weather-card-header, .mini-game-card-header, .mail-card-header, .information-widget-header, .earthquake-card-header, .sun-moon-card-header, .air-quality-card-header, .blind-spot-card-header, .calculator-card-header, .camera-video-card-header, .x-widget-header) > :is(.feed-card-actions, .content-actions, .mail-card-actions, .blind-spot-card-actions) > button:focus-visible {
+    outline: 2px solid currentColor !important;
+    outline-offset: -5px;
+    border-radius: 4px !important;
+}
+#main-content .dashboard-widget .mail-card-header > .mail-unread-count {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 4rem;
+    margin: 0 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+@media (pointer: coarse), (max-width: 575.98px) {
+    #main-content .dashboard-widget { --widget-header-action-size: 44px; }
+}

@@ -1,3 +1,10 @@
+## 1.40.1-dev.4 - 2026-10-01
+
+- Refine existing Widget headers through scoped Dashboard CSS only, retaining their 44px height, drag handles, existing markup and event handlers.
+- Align titles with bounded single-line ellipsis and a consistent size/weight. Group and separate existing action controls with 36px desktop widths and 44px widths for touch/narrow screens.
+- Keep action icons in the existing header color, visible keyboard focus inside the header, and a bounded Mail unread badge. Preserve header-specific controls and unrelated body/modal/game controls.
+- Preserve dev1 Drawer, dev2 Account tabs and dev3 Settings tabs. No DB, API, authentication, JavaScript logic or Widget engine changes.
+
 ## 1.40.1-dev.3 - 2026-10-01
 
 - Split the Settings page into Display, Dashboard tabs, User links and RSS Highlight tabs, retaining all fields, output escaping and existing save handlers / API contracts.

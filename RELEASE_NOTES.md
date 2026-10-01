@@ -1,6 +1,6 @@
-# Development checkpoint: 1.40.1-dev.3
+# Development checkpoint: 1.40.1-dev.4
 
-Settings page tabs / unified Drawer Settings entry checkpoint, retaining dev1 Drawer and dev2 Account improvements. See [scope, installation and checks](docs/v1.40.1-dev3-settings-tabs.md). This is not the formal V1.40.1 release; the stable V1.40.0 release notes follow below.
+Widget header presentation checkpoint, retaining dev1–dev3 improvements. See [scope, installation and checks](docs/v1.40.1-dev4-widget-headers.md). This is not the formal V1.40.1 release; the stable V1.40.0 release notes follow below.
 
 # RSS Reader Modernization 1.40.0
 
