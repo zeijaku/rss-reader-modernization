@@ -1,3 +1,9 @@
+## 1.41.0 - 2026-10-01
+
+- Release production-confirmed dev.1–dev.7: opt-in Calendar deadline emphasis, centered period, single-row toolbar and quiet manual/three-minute refresh; tactical Tower Defense with six stages, browser preparation saves, line-icon visuals, blocked terrain, fast-enemy slow resistance and hit feedback.
+- Retain tested dev.7 runtime behavior. Remove unused TD bitmap assets and their license directory.
+- Existing V1.40.1 databases require migration 032; applied development databases need no additional SQL.
+
 ## 1.41.0-dev.7 - 2026-10-01
 
 - Add a Calendar refresh button and three-minute visible-page polling. Compare existing API range content and replace only changed boards without clearing the display during checks.

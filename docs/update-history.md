@@ -1,5 +1,10 @@
 # Historical Update / Migration History
 
+## V1.41.0 Calendar期日強調
+
+既存V1.40.1環境には `database/migrations/032_v1_41_calendar_deadline.sql` を実際の `DB_TABLE_PREFIX` に合わせて適用します。通常予定にdefault OFF、繰り返し例外にnullable継承の期日強調列を追加します。dev.1〜dev.7で適用済みなら再適用不要です。Fresh Installは更新済みschema.sqlだけを使います。
+
+
 この文書は、過去Releaseで必要だったVersion固有のUpdate / Migration / Config手順をHistorical Evidenceとして保持します。
 
 現在の更新作業は [Update Guide](update.md) を使用し、最初に `../app/version.php`、[Release Notes](../RELEASE_NOTES.md)、[CHANGELOG](../CHANGELOG.md) を確認してください。

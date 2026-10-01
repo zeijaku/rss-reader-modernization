@@ -1,68 +1,32 @@
-# RSS Reader Modernization 1.41.0-dev.7
+# RSS Reader Modernization 1.41.0
 
-## Development preview
+V1.41.0 finalizes the user-confirmed dev.1–dev.7 Calendar and Tower Defense features. Finalization changes Version/docs and removes unused bitmap assets; tested dev.7 runtime behavior is retained.
 
-正式Releaseではありません。
+## Calendar
 
-This is a playable development checkpoint based on formal V1.40.1. It is not a formal release. Balance, visuals and mobile play will be refined after user playtesting.
+- Optional **期日を強調する**, independent of notification reminders. Two calendar days before the final date: border emphasis. From the previous day through the deadline: a gentle 5.4-second pulse when displayed, then a static border. Only the top/right/bottom edges are emphasized, preserving the event-color stripe. Reduced motion disables animation.
+- All-day deadlines end at the end of the final day; timed deadlines use end time, or start time without an end time. Calculations use Asia/Tokyo. Recurrence/occurrence edits, copies and date moves retain the setting. No completed/overdue state or additional email delivery.
+- Center the period in the card header and keep navigation/view/add/refresh controls in one row on PC and narrow cards.
+- Add target-card manual refresh and three-minute polling only while the page is visible, plus throttled return-to-page checks. Compare existing API range data and replace only changed boards; retain period/view and current content on quiet-refresh failure. Avoid overlapping requests, editing/dragging replacement and obsolete navigation results.
 
-- Calendar: optional **期日を強調する**, independent of notification reminders. Two days before the final date: border; from the previous day through the deadline: gentle border pulse for 5.4 seconds when displayed, then a static border. Existing event colors remain readable; reduced-motion disables animation. All-day deadlines end at the end of the final day; timed events use the end time, or the start time if no end time exists. Calculations use Asia/Tokyo. No completed/overdue state or additional notification delivery is introduced.
-- Calendar: day/week/month period label moves into the card header, keeping navigation, view controls and add on one row on PC and narrow cards. Long period labels retain a full hover title.
-- Game: Tower Defense adds six fixed-path fantasy stages, four tower types, five enemy types, three tower levels and eight waves per stage. Build on non-road cells, prepare without a time limit and start each wave explicitly. Selling during preparation returns 75% of invested cost. Tap a cell, choose a tower and confirm placement. Pause, 2× speed and existing expanded view are available.
-- TD: preparation checkpoints and each stage's best 1–3 star result are saved under the existing user/widget scoped browser key. Closing mid-wave restores the preparation before that wave. No cross-device synchronization or permanent stat upgrades. Switching stages replaces the current preparation; best stars remain.
-- TD: neutral grid, flat line icons and geometric enemies follow Wire Defense / Icon Quest. Original bundled CC0 tiles remain in older installations but are no longer requested by TD. No external asset requests or new dependencies.
+## Tower Defense
 
-## Changes from dev.6
+- Six fixed-path fantasy stages, four towers, five enemy types, three tower levels and eight waves per stage. Tap non-road/non-rock cells and confirm placement. Prepare without a time limit; explicitly start waves. Preparation-only sale returns 75% of invested cost. Existing expanded view, pause and 2× speed are available.
+- Flat line icons/geometric enemies follow Wire Defense / Icon Quest, with Theme-aware colors and reduced-motion hit feedback. No external graphics, new runtime dependencies or sound.
+- Enemy HP includes the confirmed 15% increase. Stages 4–6 include 6 / 6 / 12 fixed rocks. Fast enemies retain 85% speed under ice; others retain 55%. Attack cadence is unchanged. Difficulty adjustment is paused at the user-confirmed checkpoint.
+- User/widget-scoped browser saves retain preparation checkpoints and best 1–3 stars. Closing mid-wave resumes the preceding preparation. No cross-device TD synchronization or permanent stat upgrades. Legacy towers on new rocks remain usable until sold; Restart applies full placement restrictions. Clearing browser storage removes progress; session/memory fallback is disclosed in the UI.
 
-- Add a target-card refresh button and visible-page polling every three minutes, plus throttled checks when returning to the page. Reuse the authenticated range API without database changes.
-- Compare stable range content before rendering. Unchanged responses preserve the board DOM; changed responses replace only that card’s board while retaining the selected period/view. Quiet refresh failures keep the current display.
-- Avoid overlapping requests and refresh during modal editing or event/widget dragging; discard obsolete responses after navigation/removal and retry responses deferred by editing when the modal closes.
-- From dev.6, overwrite the supplied `app` / `public` files. No SQL or additional file deletion is required. TD is unchanged.
+## Upgrade and compatibility
 
-## Changes from dev.5
+From V1.40.1, back up code/config/database and apply `database/migrations/032_v1_41_calendar_deadline.sql` with `@table_prefix` matching `DB_TABLE_PREFIX` before updating runtime files. The additive, idempotent migration introduces default-off event deadline flags and nullable occurrence overrides. Fresh installs use the updated `database/schema.sql` only; never execute it over an existing database.
 
-- Move Calendar deadline emphasis to the top/right/bottom edges, preserving the left event-color stripe for all five colors and Themes. Pulse only those three edges; retain timing, reduced motion, focus outlines and existing layout.
-- From dev.5, overwrite the supplied `app` / `public` files. No SQL or additional file deletion is required. TD code and balance are unchanged.
+From a fully applied dev.7 installation, only `app/version.php` changes at runtime. No additional SQL. Remove unused `public/assets/td/` and `licenses/kenney-td/` if still present; these are absent from formal packages. Preserve local configuration/private runtime data. Application Version / Asset Revision: `1.41.0`. See [installation and verification](docs/v1.41.0-release.md).
 
-## Changes from dev.4
+## Verification limits
 
-- Add fixed rock cells on stages 4–6 (6 / 6 / 12 cells); keep the route and the first three maps unchanged. New towers cannot be placed on rocks. Legacy saved towers on those cells remain selectable, upgradeable and sellable; selling does not permit rebuilding there. Restart to play with the full new placement restrictions.
-- Fast enemies retain 85% speed under ice, compared with 55% for other enemies. Tower attack intervals remain unchanged.
-- Add 0.22-second colored impact rings/crosses and a brief enemy hit highlight. Reduced motion uses static impact marks without expanding rings or enemy flashes. Hit effects do not enter saved preparations.
-- From dev.4, overwrite the supplied `app` / `public` files. No SQL or additional file deletion is required. Existing stars remain.
+The user confirmed dev.7 production behavior. Local CI-equivalent checks and focused isolated browser fixtures passed: Calendar deadline/header 42, Calendar refresh 34, TD 66, existing Game settings/state 218. Dedicated MariaDB migration/fresh-schema checks passed five checks during development. Unavailable optional local tools remain explicit skips, not passes. APIs in browser fixtures are isolated; physical phone behavior and gameplay balance rely on user playtesting.
 
-## Changes from dev.3
-
-- Increase HP of every TD enemy, including bosses, by 15% across all stages and waves. Preserve speed, spawn timing, armor, rewards and tower economy.
-- Existing preparation saves and best stars remain usable. The new balance applies when a wave begins; closing mid-wave still resumes its saved preparation. Previous stars are retained without re-scoring.
-- From dev.3, overwrite the supplied `app` / `public` files. No additional SQL or file deletion is required.
-
-## Changes from dev.2
-
-- Replace TD pixel terrain and sprites with a Theme-aware neutral grid, four tower line icons and five distinct enemy shapes. Fantasy unit types, maps, game rules and browser checkpoints are retained.
-- From dev.2, overwrite the supplied `app` / `public` files. No additional SQL is required. Calendar code is unchanged.
-
-## Changes from dev.1
-
-- Center the calendar period within the entire card header on desktop and narrow cards.
-- Align TD with existing Game UI: a centered 540px board, separate Wave/HP/gold values and 44px controls. Game rules and saved preparation remain compatible.
-- From dev.1, overwrite the supplied `app` / `public` files. No additional SQL is required.
-
-## Upgrade from V1.40.1
-
-Back up application and database, then apply `database/migrations/032_v1_41_calendar_deadline.sql` with `@table_prefix` matching `DB_TABLE_PREFIX` before using this code. It adds default-off `calendar_event_deadline_highlight` and nullable `calendar_event_exception_deadline_highlight` columns. The migration is additive and idempotent. Fresh installs use only the updated `database/schema.sql`. No new required configuration, background jobs or external integration.
-
-Keep local configuration and private runtime data. Application Version / Asset Revision: `1.41.0-dev.7`. TD progress stays in the browser; clearing site storage removes it. A browser which refuses persistent storage falls back to session storage, then memory, and shows the limitation.
-
-## Verification
-
-Local CI-equivalent checks pass, including the new deadline/TD contracts. Focused browser fixtures pass on PC and 360px widths: Calendar 42 checks, TD 66 checks, Calendar refresh 34 checks, existing Game settings/state 218 checks. The dedicated MariaDB gate passes five migration/fresh-schema checks. Default local CI retains unavailable-tool skips; those are not counted as passes. Browser fixtures use isolated APIs; physical phone use and gameplay balance await user playtesting.
-
-## Playtest focus
-
-Try the calendar's opt-in checkbox with all-day, timed, multi-day and recurring events, including an occurrence-only edit, copying and moving dates. Try all six TD stages on PC; on a phone use expanded view and landscape if useful. Report unclear controls, repetitive strategies, stages that feel too easy/hard, and whether typical play approaches 5–10 minutes. Actual duration depends on preparation and speed; the target needs user playtesting.
-
-Previous formal release notes follow for historical context.
+Publication uses the existing PHP 8.1 / 8.4 CI and Release Workflow for Runtime/Complete packages, SHA-256, secret scan, clean-room and provenance attestations before immutable Tag/Release publication. Production deployment remains a separate user action.
 
 ---
 
