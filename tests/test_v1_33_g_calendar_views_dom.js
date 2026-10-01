@@ -27,6 +27,7 @@ const handlers = {};
 
 class FakeQuery {
     constructor(kind, items) {
+        this[0] = {isConnected: true};
         this.kind = kind || 'generic';
         this.items = items || [];
         this.attrs = {};

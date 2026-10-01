@@ -1,3 +1,8 @@
+## 1.41.0-dev.7 - 2026-10-01
+
+- Add a Calendar refresh button and three-minute visible-page polling. Compare existing API range content and replace only changed boards without clearing the display during checks.
+- Preserve period/view, retain content on failure, defer replacement during editing/dragging, and reject obsolete navigation responses. No database migration or TD changes.
+
 ## 1.41.0-dev.6 - 2026-10-01
 
 - Preserve Calendar event-color stripes by limiting deadline emphasis and pulse to the top/right/bottom edges. Retain timing, focus outlines, reduced motion and layout.
