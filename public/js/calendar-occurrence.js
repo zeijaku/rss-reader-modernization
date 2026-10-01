@@ -95,6 +95,7 @@
                 startTime: attribute(trigger, 'data-calendar-event-start-time', ''),
                 endTime: attribute(trigger, 'data-calendar-event-end-time', ''),
                 url: attribute(trigger, 'data-calendar-event-url', ''),
+                deadlineHighlight: attribute(trigger, 'data-calendar-event-deadline-highlight', '0'),
                 reminder: attribute(trigger, 'data-calendar-event-reminder', 'none')
             },
             series: {
@@ -107,6 +108,7 @@
                 startTime: attribute(trigger, 'data-calendar-source-start-time', trigger.getAttribute('data-calendar-event-start-time')),
                 endTime: attribute(trigger, 'data-calendar-source-end-time', trigger.getAttribute('data-calendar-event-end-time')),
                 url: attribute(trigger, 'data-calendar-source-url', trigger.getAttribute('data-calendar-event-url')),
+                deadlineHighlight: attribute(trigger, 'data-calendar-source-deadline-highlight', '0'),
                 reminder: attribute(trigger, 'data-calendar-source-reminder', trigger.getAttribute('data-calendar-event-reminder')),
                 repeat: repeat,
                 repeatUntil: attribute(trigger, 'data-calendar-event-repeat-until', '')
@@ -136,6 +138,8 @@
         setValue(form, '.changeCalendarEventEndTime', values.endTime);
         setValue(form, '.changeCalendarEventUrl', values.url);
         setValue(form, '.changeCalendarEventReminder', values.reminder);
+        var deadline = form.querySelector('.changeCalendarEventDeadlineHighlight');
+        if (deadline) deadline.checked = values.deadlineHighlight === '1';
         var allDay = form.querySelector('.changeCalendarEventAllDay');
         if (allDay) {
             allDay.checked = values.allDay === true;
@@ -251,6 +255,7 @@
             calendar_event_all_day: allDayValue ? '1' : '0',
             calendar_event_start_time: allDayValue ? '' : field('.changeCalendarEventStartTime'),
             calendar_event_end_time: allDayValue ? '' : field('.changeCalendarEventEndTime'),
+            calendar_event_deadline_highlight: form.querySelector('.changeCalendarEventDeadlineHighlight') && form.querySelector('.changeCalendarEventDeadlineHighlight').checked ? '1' : '0',
             calendar_event_url: field('.changeCalendarEventUrl')
         };
     }

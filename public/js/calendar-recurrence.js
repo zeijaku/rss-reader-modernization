@@ -242,6 +242,7 @@
             calendar_event_start_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventStartTime'),
             calendar_event_end_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventEndTime'),
             calendar_event_url: formValue(form, '.' + prefix + 'CalendarEventUrl'),
+            calendar_event_deadline_highlight: form.querySelector('.' + prefix + 'CalendarEventDeadlineHighlight') && form.querySelector('.' + prefix + 'CalendarEventDeadlineHighlight').checked ? '1' : '0',
             calendar_event_reminder: formValue(form, '.' + prefix + 'CalendarEventReminder') || 'none',
             calendar_event_repeat_type: validRepeat(formValue(form, '.' + prefix + 'CalendarEventRepeatType')),
             calendar_event_repeat_until: formValue(form, '.' + prefix + 'CalendarEventRepeatUntil')
@@ -436,6 +437,8 @@
             .attr('data-calendar-event-start-time', publicTime(item.start_time))
             .attr('data-calendar-event-end-time', publicTime(item.end_time))
             .attr('data-calendar-event-url', String(item.url || ''))
+            .attr('data-calendar-event-deadline-highlight', item.deadline_highlight ? '1' : '0')
+            .attr('data-calendar-source-deadline-highlight', (item.source_deadline_highlight !== undefined ? item.source_deadline_highlight : item.deadline_highlight) ? '1' : '0')
             .attr('data-calendar-event-reminder', String(item.reminder || item.source_reminder || 'none'))
             .attr('data-calendar-event-repeat-type', validRepeat(item.repeat_type))
             .attr('data-calendar-event-repeat-until', String(item.repeat_until || ''))

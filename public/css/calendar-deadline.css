@@ -1,0 +1,13 @@
+#main-content .calendar-card-header { display:grid; grid-template-columns:auto minmax(0,1fr) minmax(0,2fr) auto; gap:4px; align-items:center; }
+#main-content .calendar-card-header .calendar-widget-title { width:auto; margin:0; }
+#main-content .calendar-card-header .calendar-month-label { grid-area:auto; width:auto; min-width:0; text-align:center; font-size:.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0; color:inherit; }
+#main-content .calendar-toolbar { gap:4px; }
+#main-content .calendar-toolbar .calendar-view-switch { min-width:0; width:100%; margin:0; }
+#main-content .calendar-toolbar .btn { min-width:30px; min-height:34px; padding:4px 7px; }
+#main-content [data-calendar-deadline-level="soon"], #main-content [data-calendar-deadline-level="urgent"] { outline:2px solid #e49317; outline-offset:-2px; }
+#main-content [data-calendar-deadline-level="urgent"] { outline-color:#dc3545; }
+#main-content .calendar-deadline-pulse { animation:calendar-deadline-pulse 1.8s ease-in-out 3; }
+@keyframes calendar-deadline-pulse { 50% { outline-color:#f0b660; box-shadow:inset 0 0 0 2px #f0b660; } }
+@media (prefers-reduced-motion:reduce) { #main-content .calendar-deadline-pulse { animation:none; } }
+/* Shared header rules use !important to normalize cards; retain height/actions. */
+#main-content .dashboard-widget .calendar-card-header { display:grid !important; grid-template-columns:auto minmax(0,1fr) minmax(0,2fr) auto; }

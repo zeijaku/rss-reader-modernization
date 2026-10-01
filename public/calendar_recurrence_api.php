@@ -175,7 +175,8 @@ try {
         $_POST['calendar_event_end_time'] ?? '',
         $_POST['calendar_event_url'] ?? '',
         $range[0],
-        $range[1]
+        $range[1],
+        $_POST['calendar_event_deadline_highlight'] ?? null
     );
     if ($timeSettings === null) {
         calendar_recurrence_error('validation_error', 'Calendar event time or URL is invalid.', 422);
@@ -241,6 +242,7 @@ try {
             'url' => $timeSettings['url'],
             'repeat_type' => $repeatSettings['repeat_type'],
             'repeat_until' => $repeatSettings['repeat_until'],
+            'deadline_highlight' => $timeSettings['deadline_highlight'] ?? false,
             'reminder' => $reminder,
         ], 201);
     }
@@ -272,6 +274,7 @@ try {
         'url' => $timeSettings['url'],
         'repeat_type' => $repeatSettings['repeat_type'],
         'repeat_until' => $repeatSettings['repeat_until'],
+        'deadline_highlight' => $timeSettings['deadline_highlight'] ?? false,
         'reminder' => $reminder,
     ]);
 } catch (CalendarOccurrenceConflictException $exception) {

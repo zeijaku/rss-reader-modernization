@@ -399,13 +399,13 @@ if (is_int($content_location)) {
                         <div class="text-bg-' . app_html($widgetStyle) . ' calendar-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines" aria-hidden="true"></i></button>
                             <small class="calendar-widget-title widget-title-text" id="' . app_html($calendarTitleId) . '" title="' . app_html($calendarTitle) . '">' . app_html($calendarTitle) . '</small>
+                            <strong class="calendar-month-label" aria-live="polite">----</strong>
                             <button type="button" class="btn btn-link calendar-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" data-bs-toggle="modal" data-bs-target="#changeCalendarWidget" aria-label="このCalendar Widgetを編集"><i class="fas fa-edit" aria-hidden="true"></i></button>
                         </div>
                         <div class="calendar-card-body">
                             <div class="calendar-toolbar">
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-prev-month" aria-label="前の月"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-today">今月</button>
-                                <strong class="calendar-month-label" aria-live="polite">----</strong>
                                 <div class="btn-group btn-group-sm calendar-view-switch" role="group" aria-label="Calendar表示">
                                     <button type="button" class="btn btn-outline-secondary calendar-view-mode" data-calendar-view-mode="day" aria-pressed="false">日</button>
                                     <button type="button" class="btn btn-outline-secondary calendar-view-mode" data-calendar-view-mode="week" aria-pressed="false">週</button>

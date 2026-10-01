@@ -432,6 +432,8 @@ function calendar_event_recurrence_expand_row(array $row, string $monthStart, st
             'source_end_time' => $allDay ? null : $endTime,
             'source_url' => $url,
             'source_reminder' => $reminder,
+            'source_deadline_highlight' => (bool) ($row['calendar_event_deadline_highlight'] ?? false),
+            'deadline_highlight' => (bool) ($row['calendar_event_deadline_highlight'] ?? false),
             'all_day' => $allDay,
             'start_time' => $allDay ? null : $startTime,
             'end_time' => $allDay ? null : $endTime,
@@ -456,7 +458,7 @@ function calendar_event_recurrence_month_list(int $ownerId, int $year, int $mont
         'SELECT calendar_event_id, calendar_event_date, calendar_event_updated_at, calendar_event_flag, '
         . 'calendar_event_owner, calendar_event_title, calendar_event_start_date, calendar_event_end_date, '
         . 'calendar_event_note, calendar_event_color, calendar_event_all_day, calendar_event_start_time, '
-        . 'calendar_event_end_time, calendar_event_url, calendar_event_repeat_type, calendar_event_repeat_until, calendar_event_reminder '
+        . 'calendar_event_end_time, calendar_event_url, calendar_event_repeat_type, calendar_event_repeat_until, calendar_event_reminder, calendar_event_deadline_highlight '
         . 'FROM ' . db_table_identifier('calendar_event') . ' '
         . 'WHERE calendar_event_owner = :owner AND calendar_event_flag = 0 '
         . "AND calendar_event_repeat_type <> 'none' AND calendar_event_start_date <= :month_end "

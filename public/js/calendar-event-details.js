@@ -175,6 +175,18 @@
         reminderHelp.textContent = '終日予定は09:00を予定時刻として通知時刻を計算します。';
         reminderGroup.appendChild(reminderHelp);
         wrapper.appendChild(reminderGroup);
+        var deadlineGroup = document.createElement('div');
+        deadlineGroup.className = 'form-check mb-3';
+        var deadline = document.createElement('input');
+        deadline.type = 'checkbox'; deadline.className = 'form-check-input ' + prefix + 'CalendarEventDeadlineHighlight';
+        deadline.id = prefix + 'CalendarEventDeadlineHighlight';
+        deadlineGroup.appendChild(deadline);
+        var deadlineLabel = document.createElement('label');
+        deadlineLabel.htmlFor = deadline.id; deadlineLabel.className = 'form-check-label'; deadlineLabel.textContent = '期日を強調する';
+        deadlineGroup.appendChild(deadlineLabel);
+        var help = document.createElement('div'); help.className = 'form-text';
+        help.textContent = '2日前は枠、前日から期日までは表示時に穏やかに明滅。終日は最終日の終わり、時間指定は終了時刻（未指定は開始時刻）が期日です。';
+        deadlineGroup.appendChild(help); wrapper.appendChild(deadlineGroup);
 
         var loading = document.createElement('div');
         loading.className = 'small text-muted calendar-event-detail-loading';
@@ -273,6 +285,7 @@
         $('.registerCalendarEventEndTime').val('');
         $('.registerCalendarEventUrl').val('');
         $('.registerCalendarEventReminder').val('none');
+        $('.registerCalendarEventDeadlineHighlight').prop('checked', false);
         syncTimeState(form);
         syncReminderAvailability(form);
         setMetaLoading(form, false);
@@ -293,6 +306,7 @@
             calendar_event_start_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventStartTime'),
             calendar_event_end_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventEndTime'),
             calendar_event_url: formValue(form, '.' + prefix + 'CalendarEventUrl'),
+            calendar_event_deadline_highlight: form.querySelector('.' + prefix + 'CalendarEventDeadlineHighlight') && form.querySelector('.' + prefix + 'CalendarEventDeadlineHighlight').checked ? '1' : '0',
             calendar_event_reminder: formValue(form, '.' + prefix + 'CalendarEventReminder') || 'none'
         };
     }
@@ -373,6 +387,7 @@
             start_time: publicTime(item && item.start_time),
             end_time: publicTime(item && item.end_time),
             url: url,
+            deadlineHighlight: !!(item && item.deadline_highlight),
             reminder: item && typeof item.reminder === 'string' ? item.reminder : 'none'
         };
     }
@@ -403,6 +418,7 @@
             .attr('data-calendar-event-start-time', meta.start_time)
             .attr('data-calendar-event-end-time', meta.end_time)
             .attr('data-calendar-event-url', meta.url)
+            .attr('data-calendar-event-deadline-highlight', meta.deadlineHighlight ? '1' : '0')
             .attr('data-calendar-event-reminder', meta.reminder);
 
         $entry.find('.calendar-event-time-label').remove();
@@ -469,6 +485,7 @@
         $('.changeCalendarEventStartTime').val(String(trigger.getAttribute('data-calendar-event-start-time') || ''));
         $('.changeCalendarEventEndTime').val(String(trigger.getAttribute('data-calendar-event-end-time') || ''));
         $('.changeCalendarEventUrl').val(String(trigger.getAttribute('data-calendar-event-url') || ''));
+        $('.changeCalendarEventDeadlineHighlight').prop('checked', trigger.getAttribute('data-calendar-event-deadline-highlight') === '1');
         $('.changeCalendarEventReminder').val(String(trigger.getAttribute('data-calendar-event-reminder') || 'none'));
         syncTimeState(form);
         syncReminderAvailability(form);

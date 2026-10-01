@@ -476,6 +476,8 @@
             .attr('data-calendar-event-start-time', publicTime(item.start_time))
             .attr('data-calendar-event-end-time', publicTime(item.end_time))
             .attr('data-calendar-event-url', String(item.url || ''))
+            .attr('data-calendar-event-deadline-highlight', item.deadline_highlight ? '1' : '0')
+            .attr('data-calendar-source-deadline-highlight', (item.source_deadline_highlight !== undefined ? item.source_deadline_highlight : item.deadline_highlight) ? '1' : '0')
             .attr('data-calendar-event-reminder', String(item.reminder || 'none'))
             .attr('data-calendar-event-repeat-type', repeat)
             .attr('data-calendar-event-repeat-until', String(item.repeat_until || ''))

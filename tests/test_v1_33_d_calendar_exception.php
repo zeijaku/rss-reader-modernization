@@ -101,7 +101,8 @@ $pdo->exec('CREATE TABLE calendar_event (
     calendar_event_color TEXT NOT NULL DEFAULT "blue", calendar_event_all_day INTEGER NOT NULL DEFAULT 1,
     calendar_event_start_time TEXT NULL, calendar_event_end_time TEXT NULL, calendar_event_url TEXT NULL,
     calendar_event_repeat_type TEXT NOT NULL DEFAULT "none", calendar_event_repeat_until TEXT NULL,
-    calendar_event_reminder TEXT NOT NULL DEFAULT "none"
+    calendar_event_reminder TEXT NOT NULL DEFAULT "none",
+    calendar_event_deadline_highlight INTEGER NOT NULL DEFAULT 0
 )');
 $pdo->exec('CREATE TABLE calendar_event_exception (
     calendar_event_exception_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -116,11 +117,12 @@ $pdo->exec('CREATE TABLE calendar_event_exception (
     calendar_event_exception_color TEXT NULL, calendar_event_exception_all_day INTEGER NULL,
     calendar_event_exception_start_time TEXT NULL, calendar_event_exception_end_time TEXT NULL,
     calendar_event_exception_url TEXT NULL, calendar_event_exception_created_at TEXT NOT NULL,
+    calendar_event_exception_deadline_highlight INTEGER DEFAULT NULL,
     calendar_event_exception_updated_at TEXT NOT NULL,
     UNIQUE (calendar_event_exception_owner, calendar_event_exception_event_id, calendar_event_exception_original_start_date)
 )');
 
-$insertEvent = $pdo->prepare('INSERT INTO calendar_event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+$insertEvent = $pdo->prepare('INSERT INTO calendar_event (calendar_event_id, calendar_event_date, calendar_event_updated_at, calendar_event_flag, calendar_event_owner, calendar_event_title, calendar_event_start_date, calendar_event_end_date, calendar_event_note, calendar_event_color, calendar_event_all_day, calendar_event_start_time, calendar_event_end_time, calendar_event_url, calendar_event_repeat_type, calendar_event_repeat_until, calendar_event_reminder) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 $rows = [
     [1, '2026-08-31', '2026-08-31 00:00:00', 0, 1, '毎週会議', '2026-08-31', '2026-09-01', 'series', 'blue', 1, null, null, null, 'weekly', '2026-12-31', 'none'],
     [2, '2026-01-31', '2026-01-31 00:00:00', 0, 1, '月末', '2026-01-31', '2026-01-31', '', 'red', 1, null, null, null, 'monthly', '2026-12-31', 'none'],
