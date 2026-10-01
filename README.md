@@ -8,10 +8,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.40.0`
-Release tag: `v1.40.0`
+**Stable release:** `RSS Reader Modernization 1.40.1`
+Release tag: `v1.40.1`
 
-**Development checkpoint:** `1.40.1-dev.5` — dev1〜dev4と通知ベルの修正を維持し、Memo・通知センターの見やすさ、Navbarフォーカス、スマホのページ先頭ボタンを改善。正式版は引き続き1.40.0です。[dev5の範囲・確認手順](docs/v1.40.1-dev5-ui-readability.md)を参照してください。
+Version 1.40.1は、dev1〜dev5で本番確認済みのDrawer整理、Account / Settingsタブ、Widgetヘッダー、通知ベルとThemeの見やすさ、スマホのページ先頭ボタンを正式配布するUI改善Releaseです。DB変更はありません。[正式版の更新・確認手順](docs/v1.40.1-release.md)を参照してください。
 
 Version 1.40.0は、最小Game Widget共通基盤へMaze Chase、Falling Blocks、Word Tiles（英語・日本語）を追加するFeature Releaseです。英語43,127語・日本語読み40,000語の固定ローカル辞書を使用し、Word Tilesの言語別盤面・Score保持とWire Defenseの設定更新・後片付けを修正しています。既存ゲームの内部ロジックを維持し、DB変更はありません。確認・配布手順は[V1.40.0正式版](docs/v1.40.0-release.md)を参照してください。
 

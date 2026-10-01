@@ -1,3 +1,9 @@
+## 1.40.1 - 2026-10-01
+
+- Release production-confirmed dev1–dev5: grouped Drawer navigation, Account and Settings tabs, consistent Widget headers, Theme-aware notification bell/Memo/notification controls and a compact mobile Page Top button.
+- Preserve existing forms, URLs/deep links, Dashboard controls and Game behavior. No database migration, new required configuration or runtime dependency.
+- Finalize Application Version / Asset Revision as 1.40.1, retaining tested dev5 runtime code and existing release verification/package workflow.
+
 ## 1.40.1-dev.5 - 2026-10-01
 
 - Pair Memo body foreground/background with the selected Theme without changing Memo data, forms or save handlers.
