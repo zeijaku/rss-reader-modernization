@@ -31,6 +31,10 @@ php tools/healthcheck.php
 
 Production serverでLocal変更がある場合は、その内容を確認するまで更新を進めません。
 
+## V1.41.0-dev.1 開発版の更新
+
+V1.40.1からの試用には `database/migrations/032_v1_41_calendar_deadline.sql` が必要です。`@table_prefix` を実環境に合わせて適用します。期日強調は既存予定でOFF、繰り返し予定の個別設定は親から継承します。TDの保存はブラウザー内で、端末間同期はありません。詳しい試用項目は [Release Notes](../RELEASE_NOTES.md) を参照してください。
+
 ## 2. DB Migrationが必要か判断する
 
 **既存Databaseへ `database/schema.sql` を再実行しません。**

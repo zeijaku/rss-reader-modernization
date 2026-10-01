@@ -1,5 +1,7 @@
 # RSS Reader Modernization
 
+現在の開発版: **1.41.0-dev.1**（V1.40.1を基にしたカレンダー期日強調・Tower Defenseの試遊版）。既存DBにはMigration 032が必要です。詳細は [Release Notes](RELEASE_NOTES.md) を参照してください。
+
 [![CI](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml/badge.svg)](https://github.com/zeijaku/rss-reader-modernization/actions/workflows/ci.yml)
 
 10年以上前に作成したPHP製RSS Readerを、既存機能・既存データをできるだけ維持しながら、PHP 8系、現行Browser、安全な運用へ段階的にModernizationしている個人Projectです。

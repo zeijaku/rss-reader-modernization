@@ -1,3 +1,10 @@
+## 1.41.0-dev.1 - 2026-10-01
+
+- Add opt-in Calendar visual deadline emphasis and move the period label into the header for a single-row toolbar.
+- Preserve deadline settings across recurrence/occurrence edits, copies and date moves; add migration 032 and fresh-schema columns without changing notification reminders.
+- Add independent tactical Tower Defense: six fixed maps, four towers, five enemy types, eight waves, preparation checkpoints and per-stage stars. Bundle Kenney CC0 pixel assets.
+- Development preview for user playtesting; no formal release or production deployment.
+
 ## 1.40.1 - 2026-10-01
 
 - Release production-confirmed dev1–dev5: grouped Drawer navigation, Account and Settings tabs, consistent Widget headers, Theme-aware notification bell/Memo/notification controls and a compact mobile Page Top button.

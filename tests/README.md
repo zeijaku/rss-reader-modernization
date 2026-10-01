@@ -51,3 +51,16 @@ When investigating an old release or migration, run the smallest relevant histor
 - Keep security and behavior regressions in Current gates even if their filename has an old version prefix.
 - Keep the Fresh Install schema contract in the Current feature gate.
 - Prefer adding a focused Current contract over copying an entire historical release gate.
+
+## Calendar deadlines / Tower Defense development preview
+
+`run-current-features.sh` includes deadline date boundaries, strict opt-in/owner/recurrence persistence, TD deterministic combat/economy/checkpoint validation, and the MariaDB migration/fresh-schema gate (explicit SKIP when server tools are absent). The MariaDB gate accepts `MARIADB_TEST_BASE` for an extracted server toolchain.
+
+Focused isolated-browser checks use actual PHP cards/forms and production local assets:
+
+```sh
+node tests/test_current_calendar_deadline_browser.js
+node tests/test_current_tower_defense_browser.js
+```
+
+They require Playwright and Chromium, as with existing Game browser checks; `GAME_TEST_CHROME` selects an installed browser. Coverage includes one-row calendar navigation, opt-in editing/copy/reset, reduced motion, TD confirmation, economy controls, user/widget scoped checkpoints, reload before a wave, expansion, deletion cleanup and PC/360px widths. These fixtures isolate APIs and do not establish production deployment or physical phone behavior.
