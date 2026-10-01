@@ -1,3 +1,8 @@
+## 1.41.0-dev.6 - 2026-10-01
+
+- Preserve Calendar event-color stripes by limiting deadline emphasis and pulse to the top/right/bottom edges. Retain timing, focus outlines, reduced motion and layout.
+- Keep TD balance and gameplay unchanged. No database migration.
+
 ## 1.41.0-dev.5 - 2026-10-01
 
 - Add fixed rock placement restrictions to stages 4–6 and ice slow resistance for fast enemies. Preserve old saved towers on newly blocked cells until sold; Restart applies full restrictions.

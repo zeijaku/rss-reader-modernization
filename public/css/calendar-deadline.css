@@ -2,10 +2,11 @@
 #main-content .calendar-toolbar { gap:4px; }
 #main-content .calendar-toolbar .calendar-view-switch { min-width:0; width:100%; margin:0; }
 #main-content .calendar-toolbar .btn { min-width:30px; min-height:34px; padding:4px 7px; }
-#main-content [data-calendar-deadline-level="soon"], #main-content [data-calendar-deadline-level="urgent"] { outline:2px solid #e49317; outline-offset:-2px; }
-#main-content [data-calendar-deadline-level="urgent"] { outline-color:#dc3545; }
+/* Keep the left event-color stripe visible; deadline cues use the other edges. */
+#main-content [data-calendar-deadline-level="soon"], #main-content [data-calendar-deadline-level="urgent"] { --calendar-deadline-accent:#e49317; box-shadow:inset 0 2px 0 var(--calendar-deadline-accent),inset -2px 0 0 var(--calendar-deadline-accent),inset 0 -2px 0 var(--calendar-deadline-accent); }
+#main-content [data-calendar-deadline-level="urgent"] { --calendar-deadline-accent:#dc3545; }
 #main-content .calendar-deadline-pulse { animation:calendar-deadline-pulse 1.8s ease-in-out 3; }
-@keyframes calendar-deadline-pulse { 50% { outline-color:#f0b660; box-shadow:inset 0 0 0 2px #f0b660; } }
+@keyframes calendar-deadline-pulse { 50% { box-shadow:inset 0 2px 0 #f0b660,inset -2px 0 0 #f0b660,inset 0 -2px 0 #f0b660; } }
 @media (prefers-reduced-motion:reduce) { #main-content .calendar-deadline-pulse { animation:none; } }
 /* Shared header rules use !important to normalize cards; retain height/actions. */
 #main-content .dashboard-widget .calendar-card-header { display:grid !important; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr); }
