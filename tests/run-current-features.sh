@@ -29,6 +29,7 @@ python3 "$SCRIPT_DIR/test_v119c_api_request_limit.py"
 echo '== Current feature contracts: Drawer / mobile navigation =='
 python3 "$SCRIPT_DIR/test_current_drawer_contract.py"
 node --check "$ROOT/public/js/drawer-categories.js"
+node --check "$ROOT/tests/test_current_drawer_browser.js"
 
 echo '== Current feature contracts: Feed Health =='
 python3 "$SCRIPT_DIR/test_v122b_feed_health.py"

@@ -11,6 +11,8 @@
 **Stable release:** `RSS Reader Modernization 1.40.0`
 Release tag: `v1.40.0`
 
+**Development checkpoint:** `1.40.1-dev.1` — Drawer分類・開閉矢印・PC/Smartphone表示を整理。正式版は引き続き1.40.0です。変更範囲・確認手順は[V1.40.1-dev1](docs/v1.40.1-dev1-drawer.md)を参照してください。
+
 Version 1.40.0は、最小Game Widget共通基盤へMaze Chase、Falling Blocks、Word Tiles（英語・日本語）を追加するFeature Releaseです。英語43,127語・日本語読み40,000語の固定ローカル辞書を使用し、Word Tilesの言語別盤面・Score保持とWire Defenseの設定更新・後片付けを修正しています。既存ゲームの内部ロジックを維持し、DB変更はありません。確認・配布手順は[V1.40.0正式版](docs/v1.40.0-release.md)を参照してください。
 
 Application Versionの正本は `app/version.php`、Versionごとの変更履歴は [`CHANGELOG.md`](CHANGELOG.md)、現在の正式Release詳細は [`RELEASE_NOTES.md`](RELEASE_NOTES.md) と [GitHub Releases](https://github.com/zeijaku/rss-reader-modernization/releases) を参照してください。

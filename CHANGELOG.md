@@ -1,3 +1,11 @@
+## 1.40.1-dev.1 - 2026-10-01
+
+- Group the existing Widget catalog under Widget追加, retaining Feed, Information, Utility, Media and Game entries and all existing modal targets / game presets.
+- Separate File Library / Remote Files navigation from Dashboard display links; keep RSS管理 and all three settings entry URLs in 管理・設定 until the settings-screen phase.
+- Start Widget categories collapsed and use a scoped responsive Drawer layout with inset, fixed-width category arrows, 44px touch targets and readable tile wrapping.
+- Inherit the new catalog stylesheet revision from the PHP-versioned Drawer organizer. Preserve existing Bootstrap Offcanvas, modal handoff, logout POST / CSRF, current-page state and mobile user links.
+- Account/settings tab layouts and Widget headers remain scheduled for dev2/dev3/dev4. No DB, API or game-engine changes.
+
 ## 1.40.0 - 2026-10-01
 
 - Add the minimal shared Game Widget lifecycle and individually loaded Maze Chase, Falling Blocks and English/Japanese Word Tiles modules, reusing widget_type=game and existing owner-scoped configuration/API without new tables.

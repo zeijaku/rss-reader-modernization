@@ -32,8 +32,24 @@ check(
     'Settings loads the same Drawer organizer through the application asset helper',
 )
 
-for label in ['DISPLAY', 'FEED', 'PRODUCTIVITY', 'INFORMATION', 'MEDIA', 'GAME', 'SETTINGS', 'USER LINKS', 'ACCOUNT']:
+for label in ['表示', 'Widget追加', 'ファイル', '管理・設定', 'ユーザーリンク', 'アカウント']:
     check("label: '" + label + "'" in drawer, f'current Drawer keeps section: {label}')
+
+for label in ['Feed', 'Information', 'Utility', 'Media', 'Game']:
+    check("label: '" + label + "'" in drawer, f'Widget catalog keeps category: {label}')
+
+check("./css/drawer-catalog.css" in drawer and 'assetRevision' in drawer,
+      'catalog stylesheet inherits the PHP-versioned organizer asset revision')
+check("'files': ['./file-library', './remote-files']" in drawer,
+      'File Library / Remote Files retain their original URLs in the Files section')
+check(all("'" + href + "'" in drawer for href in ['./rss-management', './settings#tabs', './settings#display', './settings#highlight']),
+      'all management / settings entry URLs remain available in dev1')
+
+css = text('public/css/drawer-catalog.css')
+check('flex: 0 0 18px' in css and 'padding: 8px 12px' in css,
+      'category arrows have a reserved width and inset padding')
+check('.modal-' not in css and '.dashboard-widget' not in css,
+      'catalog layout does not style modals or Dashboard cards')
 
 check(
     "children('.drawer-logout-form')" in drawer,

@@ -1,3 +1,7 @@
+# Development checkpoint: 1.40.1-dev.1
+
+Drawer organization and category-arrow layout checkpoint. See [scope, installation and checks](docs/v1.40.1-dev1-drawer.md). This is not the formal V1.40.1 release; the stable V1.40.0 release notes follow below.
+
 # RSS Reader Modernization 1.40.0
 
 V1.40.0 is a Game Widget feature release that preserves the existing Dashboard and game engines while adding individually loaded games and local word dictionaries.
