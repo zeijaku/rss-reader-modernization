@@ -105,10 +105,18 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
         <div class="col-12 col-xl-10">
             <h1 class="h4 mt-3 mb-3"><i class="fas fa-cogs fa-fw" aria-hidden="true"></i>Settings</h1>
 
-            <section class="card mb-3" id="display" aria-labelledby="displaySettingsTitle">
+            <div class="nav nav-tabs settings-page-tabs mb-3" id="settingsPageTabs" role="tablist" aria-label="設定の分類">
+                <button class="nav-link active" id="settingsDisplayTab" type="button" data-bs-toggle="tab" data-bs-target="#display" role="tab" aria-controls="display" aria-selected="true">表示設定</button>
+                <button class="nav-link" id="settingsTabsTab" type="button" data-bs-toggle="tab" data-bs-target="#tabs" role="tab" aria-controls="tabs" aria-selected="false" tabindex="-1">タブ設定</button>
+                <button class="nav-link" id="settingsLinksTab" type="button" data-bs-toggle="tab" data-bs-target="#links" role="tab" aria-controls="links" aria-selected="false" tabindex="-1">ユーザーリンク</button>
+                <button class="nav-link" id="settingsHighlightTab" type="button" data-bs-toggle="tab" data-bs-target="#highlight" role="tab" aria-controls="highlight" aria-selected="false" tabindex="-1">RSS Highlight</button>
+            </div>
+            <div class="tab-content" id="settingsPageContent">
+            <!-- Display and User Links keep one save boundary; other forms stay outside. -->
+            <form id="settingsForm" class="tab-content" method="post" action="./">
+            <section class="card mb-3 tab-pane active" id="display" role="tabpanel" aria-labelledby="settingsDisplayTab" tabindex="0">
                 <div class="card-header"><strong id="displaySettingsTitle">表示設定</strong></div>
                 <div class="card-body">
-                    <form id="settingsForm" method="post" action="./">
                         <div class="mb-3">
                             <label class="form-label" for="conf_style"><small class="text-dark">全体デザイン指定</small></label>
                             <div class="input-group mb-2 me-sm-2">
@@ -147,6 +155,13 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                             <small id="conf_navDesignHelp" class="form-text text-muted">Navbarのデザインを指定します</small>
                         </div>
 
+                        <div class="text-end mt-3"><button type="submit" class="btn btn-primary submit_setting">表示・リンク設定を保存</button></div>
+                </div>
+            </section>
+
+            <section class="card mb-3 tab-pane" id="links" role="tabpanel" aria-labelledby="settingsLinksTab" tabindex="0">
+                <div class="card-header"><strong id="linkSettingsTitle">ユーザーリンク</strong></div>
+                <div class="card-body">
                         <?php for ($navIndex = 1; $navIndex <= 4; $navIndex++): ?>
                             <?php
                             $linkKey = 'conf_style_navlink' . $navIndex;
@@ -179,12 +194,11 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                             </fieldset>
                             <?php if ($navIndex < 4): ?><hr><?php endif; ?>
                         <?php endfor; ?>
-                        <div class="text-end mt-3"><button type="submit" class="btn btn-primary submit_setting">変更する</button></div>
-                    </form>
+                    <div class="text-end mt-3"><button type="submit" class="btn btn-primary submit_setting">表示・リンク設定を保存</button></div>
                 </div>
             </section>
-
-            <section class="card mb-3" id="tabs" aria-labelledby="tabSettingsTitle">
+            </form>
+            <section class="card mb-3 tab-pane" id="tabs" role="tabpanel" aria-labelledby="settingsTabsTab" tabindex="0">
                 <div class="card-header"><strong id="tabSettingsTitle">タブ表示変更</strong></div>
                 <div class="card-body">
                     <form id="tabsForm" method="post" action="./">
@@ -201,7 +215,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                 </div>
             </section>
 
-            <section class="card mb-3" id="highlight" aria-labelledby="rssHighlightSettingsTitle">
+            <section class="card mb-3 tab-pane" id="highlight" role="tabpanel" aria-labelledby="settingsHighlightTab" tabindex="0">
                 <div class="card-header"><strong id="rssHighlightSettingsTitle"><i class="fas fa-highlighter" aria-hidden="true"></i> RSS Highlight</strong></div>
                 <div class="card-body">
                     <p class="small text-muted mb-3">RSS記事タイトルで強調したいKeywordを登録します。RSS WidgetとSearch Feedの両方で利用します。</p>
@@ -235,6 +249,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                     </div>
                 </div>
             </section>
+            </div>
         </div>
     </div>
 </main>
@@ -340,6 +355,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/totp-qr.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/account-2fa.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/settings-tabs.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/drawer-categories.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 </body>
 </html>

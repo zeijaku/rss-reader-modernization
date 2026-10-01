@@ -26,6 +26,11 @@ echo '== Current feature contracts: Security hardening =='
 python3 "$SCRIPT_DIR/test_v119c_registration_throttle.py"
 python3 "$SCRIPT_DIR/test_v119c_api_request_limit.py"
 
+echo '== Current feature contracts: Settings page tabs =='
+node --check "$ROOT/public/js/settings-tabs.js"
+node --check "$SCRIPT_DIR/test_current_settings_tabs_browser.js"
+python3 "$SCRIPT_DIR/test_current_settings_tabs_contract.py"
+
 echo '== Current feature contracts: Account settings tabs =='
 php "$SCRIPT_DIR/test_current_account_tabs.php"
 node --check "$SCRIPT_DIR/test_current_account_tabs_browser.js"

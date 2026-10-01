@@ -42,8 +42,12 @@ check("./css/drawer-catalog.css" in drawer and 'assetRevision' in drawer,
       'catalog stylesheet inherits the PHP-versioned organizer asset revision')
 check("'files': ['./file-library', './remote-files']" in drawer,
       'File Library / Remote Files retain their original URLs in the Files section')
-check(all("'" + href + "'" in drawer for href in ['./rss-management', './settings#tabs', './settings#display', './settings#highlight']),
-      'all management / settings entry URLs remain available in dev1')
+check("'settings': ['./rss-management', './settings']" in drawer and 'ensureSettingsItem($menu)' in drawer,
+      'Drawer exposes RSS management and one unified Settings entry')
+check("not('.drawer-mobile-links')" in drawer,
+      'Settings consolidation preserves configured user links')
+check(all('id="' + pane + '"' in settings for pane in ['display', 'tabs', 'links', 'highlight']),
+      'Settings keeps legacy deep links and the new User Links pane')
 
 css = text('public/css/drawer-catalog.css')
 check('flex: 0 0 18px' in css and 'padding: 8px 12px' in css,

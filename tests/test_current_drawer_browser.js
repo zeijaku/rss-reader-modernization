@@ -5,7 +5,7 @@ const {chromium}=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES?process.
 const root=path.resolve(__dirname,'..');let checks=0;
 function check(ok,name){assert.ok(ok,name);checks++;console.log('PASS: '+name);}
 function nav(source){
- const php=`function app_html($v){return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}function app_csrf_token(){return 'fixture-csrf';}$ui=[];for($i=1;$i<=4;$i++){$ui['conf_style_tabname'.$i]='タブ'.$i;$ui['conf_style_navlink'.$i]='';$ui['conf_style_navlink_icon'.$i]='link';$ui['conf_style_navlink_view'.$i]='';}$ui['conf_style_navlink1']='https://example.invalid/';$ui['conf_style_navlink_view1']='利用者リンク';$tabParam=basename($argv[1])==='stock.php'?'stock':0;$src=file_get_contents($argv[1]);$start=strpos($src,'<nav class="offcanvas offcanvas-end drawer-nav"');$end=strpos($src,'</nav>',$start)+6;eval('?>'.substr($src,$start,$end-$start));`;
+ const php=`function app_html($v){return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}function app_csrf_token(){return 'fixture-csrf';}$ui=[];for($i=1;$i<=4;$i++){$ui['conf_style_tabname'.$i]='タブ'.$i;$ui['conf_style_navlink'.$i]='';$ui['conf_style_navlink_icon'.$i]='link';$ui['conf_style_navlink_view'.$i]='';}$ui['conf_style_navlink1']='https://example.invalid/';$ui['conf_style_navlink_view1']='利用者リンク';$ui['conf_style_navlink2']='./settings#tabs';$ui['conf_style_navlink_view2']='設定への利用者リンク';$tabParam=basename($argv[1])==='stock.php'?'stock':0;$src=file_get_contents($argv[1]);$start=strpos($src,'<nav class="offcanvas offcanvas-end drawer-nav"');$end=strpos($src,'</nav>',$start)+6;eval('?>'.substr($src,$start,$end-$start));`;
  return execFileSync(process.env.PHP_BINARY||'php',['-r',php,path.join(root,'public',source)],{encoding:'utf8'});
 }
 const modules=['game-widget','mini-game','lights-out','cursor-field','game-2048','reversi','dashboard-core','dashboard','utility-widgets','clock-timer','connection-monitor','all-rss-recent','info-board','mail-widget','camera-video','x-widget','block-collapse'];
@@ -29,11 +29,13 @@ function snapshot(){const d=document.getElementById('drawerMenu');return {action
  await page.addScriptTag({url:'/js/drawer-categories.js?v=fixture-revision'});await page.waitForSelector('[data-drawer-categories]',{state:'attached'});await page.waitForFunction(()=>Array.from(document.styleSheets).some(s=>s.href&&s.href.includes('drawer-catalog.css')));
  const after=await page.evaluate(snapshot),tag=source+'/'+width;
  check(JSON.stringify(before.actions)===JSON.stringify(after.actions),'all original actions / presets / disabled states retained: '+tag);
- check(before.links.every(x=>after.links.some(y=>JSON.stringify(x)===JSON.stringify(y))),'original URLs / current-page / external-link protection retained: '+tag);
+ check(before.links.filter(x=>!['./settings#tabs','./settings#display','./settings#highlight'].includes(x[0])).every(x=>after.links.some(y=>JSON.stringify(x)===JSON.stringify(y))),'original URLs / current-page / external-link protection retained: '+tag);
  check(before.form===after.form&&await page.evaluate(()=>window.__logout===document.querySelector('.drawer-logout-form')),'logout POST / CSRF / node identity preserved: '+tag);
  check(await page.evaluate(()=>{if(!window.__probe)return true;window.__probe.dispatchEvent(new Event('drawer-fixture-probe'));return window.__probeCalls===1;}),'existing action listeners retained: '+tag);
  check(await page.locator('[data-drawer-section="other"]').count()===0,'known items avoid Other: '+tag);
  check(requests.includes('/css/drawer-catalog.css?v=fixture-revision'),'catalog CSS inherits asset revision: '+tag);
+ check(await page.locator('#drawerMenu li:not(.drawer-mobile-links) > a[href="./settings"]').count()===1&&await page.locator('#drawerMenu li:not(.drawer-mobile-links) > a[href^="./settings#"]').count()===0,'one unified Settings entry: '+tag);
+ check(before.links.filter(x=>x[0]==='./settings#tabs').length<=1||await page.locator('#drawerMenu .drawer-mobile-links a[href="./settings#tabs"]').count()===1,'configured legacy Settings user link retained: '+tag);
  const groups=await page.locator('[data-drawer-section]').evaluateAll(ns=>ns.map(n=>n.dataset.drawerSection));
  check(groups.join(',')===(dashboard?'display,widgets,files,settings,user-links,account':source==='settings.php'?'display,files,settings,user-links,account':'display,files,settings,account'),'section order / empty groups match page capabilities: '+tag);
  await page.locator('#openDrawer').click();await page.waitForSelector('#drawerMenu.show');

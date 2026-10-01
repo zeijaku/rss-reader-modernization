@@ -3053,3 +3053,21 @@ legend.text-dark {
 #accountSettings .tab-pane {
     overflow-wrap: anywhere;
 }
+
+/* Settings page only: four categories fit on small screens without clipping. */
+#settingsPageTabs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+#settingsPageTabs .nav-link {
+    min-width: 0;
+    min-height: 44px;
+    padding: .5rem .375rem;
+    overflow-wrap: anywhere;
+}
+#settingsPageContent .tab-pane {
+    overflow-wrap: anywhere;
+}
+@media (max-width: 575.98px) {
+    #settingsPageTabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

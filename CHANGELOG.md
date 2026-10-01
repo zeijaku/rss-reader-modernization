@@ -1,3 +1,11 @@
+## 1.40.1-dev.3 - 2026-10-01
+
+- Split the Settings page into Display, Dashboard tabs, User links and RSS Highlight tabs, retaining all fields, output escaping and existing save handlers / API contracts.
+- Keep Display and User links in the original single settings form; disclose combined save scope on both save buttons. Keep independent Dashboard-tab and keyword forms.
+- Add a Settings-only Bootstrap tab controller with legacy #display / #tabs / #highlight deep links, #links, URL history / Back / Forward and safe scoped hash lookup.
+- Consolidate the three application Drawer settings entries into one Settings link on all existing Drawer surfaces. Keep RSS management separate and preserve configured user links, including links to legacy Settings anchors.
+- Scope responsive four-column / mobile two-column tabs to Settings. Preserve dev1 Drawer and dev2 Account tabs; no DB, API, authentication or Widget/game changes.
+
 ## 1.40.1-dev.2 - 2026-10-01
 
 - Split Dashboard and settings-page Account Settings into Basic, Security and Authentication log tabs. Open Basic first, retaining email/password forms and their original contracts.

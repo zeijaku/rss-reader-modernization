@@ -41,7 +41,7 @@
     var hrefGroups = {
         'display': ['./?tab=0', './?tab=1', './?tab=2', './?tab=3', './stock'],
         'files': ['./file-library', './remote-files'],
-        'settings': ['./rss-management', './settings#tabs', './settings#display', './settings#highlight']
+        'settings': ['./rss-management', './settings']
     };
 
     function injectCatalogStyles() {
@@ -88,6 +88,31 @@
         return $menu.children('li').filter(function () {
             return $(this).children('a.drawer-item[href="' + href + '"]').length > 0;
         }).first();
+    }
+
+    function ensureSettingsItem($menu) {
+        // Consolidate only the application entries; preserve configured user links.
+        var $items = $menu.children('li').not('.drawer-mobile-links').filter(function () {
+            var href = $(this).children('a.drawer-item').attr('href');
+            return ['./settings', './settings#tabs', './settings#display', './settings#highlight'].indexOf(href) >= 0;
+        });
+        var $item = $items.first();
+        var $link;
+        if ($item.length === 0) {
+            $item = $('<li>').appendTo($menu);
+            $link = $('<a>').addClass('text-muted drawer-item').appendTo($item);
+            $('<span>').addClass('drawer-item-icon').append($('<i>').addClass('fas fa-cogs fa-fw').attr('aria-hidden', 'true')).appendTo($link);
+            $('<span>').addClass('drawer-item-label').appendTo($link);
+        } else {
+            $link = $item.children('a.drawer-item');
+            $items.slice(1).remove();
+        }
+        $link.attr('href', './settings');
+        $link.find('.drawer-item-icon i').attr('class', 'fas fa-cogs fa-fw');
+        $link.find('.drawer-item-label').text('設定');
+        if (/^(settings|settings\.php)$/.test(window.location.pathname.replace(/\/+$/, '').split('/').pop())) {
+            $link.attr('aria-current', 'page');
+        }
     }
 
     function ensureRssManagementItem($menu) {
@@ -248,6 +273,7 @@
             return;
         }
 
+        ensureSettingsItem($menu);
         ensureRssManagementItem($menu);
         ensureFileLibraryItem($menu);
         ensureRemoteFilesItem($menu);
@@ -284,7 +310,7 @@
             });
         }
 
-        $menu.attr('data-drawer-categories', 'v1.40.1-dev1');
+        $menu.attr('data-drawer-categories', 'v1.40.1-dev3');
     }
 
     function removeUserVisiblePhaseMarkers() {
