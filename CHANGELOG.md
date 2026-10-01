@@ -1,3 +1,47 @@
+## 1.40.1 - 2026-10-01
+
+- Release production-confirmed dev1–dev5: grouped Drawer navigation, Account and Settings tabs, consistent Widget headers, Theme-aware notification bell/Memo/notification controls and a compact mobile Page Top button.
+- Preserve existing forms, URLs/deep links, Dashboard controls and Game behavior. No database migration, new required configuration or runtime dependency.
+- Finalize Application Version / Asset Revision as 1.40.1, retaining tested dev5 runtime code and existing release verification/package workflow.
+
+## 1.40.1-dev.5 - 2026-10-01
+
+- Pair Memo body foreground/background with the selected Theme without changing Memo data, forms or save handlers.
+- Make Notification Center helper/empty/error text and its close icon follow the Theme; retain a separate error accent and all existing notification behavior.
+- Keep Navbar keyboard focus inside existing controls so its outline is visible within the clipped desktop header.
+- Compact Page Top to a 48px arrow-only target on narrow screens with safe-area margins and a 300px scroll threshold. Preserve desktop presentation, main-content focus and reduced-motion behavior; recalculate visibility on resize.
+- Retain dev1–dev4, including the Navbar bell fix. No database, API, authentication, game-engine or dependency changes.
+
+## 1.40.1-dev.4 - 2026-10-01
+
+- Refine existing Widget headers through scoped Dashboard CSS only, retaining their 44px height, drag handles, existing markup and event handlers.
+- Align titles with bounded single-line ellipsis and a consistent size/weight. Group and separate existing action controls with 36px desktop widths and 44px widths for touch/narrow screens.
+- Keep action icons in the existing header color, visible keyboard focus inside the header, and a bounded Mail unread badge. Preserve header-specific controls and unrelated body/modal/game controls.
+- Preserve dev1 Drawer, dev2 Account tabs and dev3 Settings tabs. No DB, API, authentication, JavaScript logic or Widget engine changes.
+
+## 1.40.1-dev.3 - 2026-10-01
+
+- Split the Settings page into Display, Dashboard tabs, User links and RSS Highlight tabs, retaining all fields, output escaping and existing save handlers / API contracts.
+- Keep Display and User links in the original single settings form; disclose combined save scope on both save buttons. Keep independent Dashboard-tab and keyword forms.
+- Add a Settings-only Bootstrap tab controller with legacy #display / #tabs / #highlight deep links, #links, URL history / Back / Forward and safe scoped hash lookup.
+- Consolidate the three application Drawer settings entries into one Settings link on all existing Drawer surfaces. Keep RSS management separate and preserve configured user links, including links to legacy Settings anchors.
+- Scope responsive four-column / mobile two-column tabs to Settings. Preserve dev1 Drawer and dev2 Account tabs; no DB, API, authentication or Widget/game changes.
+
+## 1.40.1-dev.2 - 2026-10-01
+
+- Split Dashboard and settings-page Account Settings into Basic, Security and Authentication log tabs. Open Basic first, retaining email/password forms and their original contracts.
+- Keep 2FA / Recovery Code / Step-up / session controls inside their original security container. Render the existing escaped audit view separately; preserve the shared renderer's default combined output.
+- Keep tabs and close controls visible with scrollable modal content, scoped responsive tab styling, Bootstrap keyboard navigation and Basic-tab reset when reopening.
+- Preserve Stock's existing basic account modal, authentication/API/CSRF/owner scope, database and all unrelated settings / Widget behavior.
+
+## 1.40.1-dev.1 - 2026-10-01
+
+- Group the existing Widget catalog under Widget追加, retaining Feed, Information, Utility, Media and Game entries and all existing modal targets / game presets.
+- Separate File Library / Remote Files navigation from Dashboard display links; keep RSS管理 and all three settings entry URLs in 管理・設定 until the settings-screen phase.
+- Start Widget categories collapsed and use a scoped responsive Drawer layout with inset, fixed-width category arrows, 44px touch targets and readable tile wrapping.
+- Inherit the new catalog stylesheet revision from the PHP-versioned Drawer organizer. Preserve existing Bootstrap Offcanvas, modal handoff, logout POST / CSRF, current-page state and mobile user links.
+- Account/settings tab layouts and Widget headers remain scheduled for dev2/dev3/dev4. No DB, API or game-engine changes.
+
 ## 1.40.0 - 2026-10-01
 
 - Add the minimal shared Game Widget lifecycle and individually loaded Maze Chase, Falling Blocks and English/Japanese Word Tiles modules, reusing widget_type=game and existing owner-scoped configuration/API without new tables.

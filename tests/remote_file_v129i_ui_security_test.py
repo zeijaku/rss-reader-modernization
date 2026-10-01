@@ -31,8 +31,8 @@ check('RewriteRule ^remote-files/?$ remote-files.php [L,QSA]' in ht,
       'Remote Files has canonical extensionless route')
 check("ensureRemoteFilesItem" in drawer and ".attr('href', './remote-files')" in drawer,
       'shared Drawer organizer injects Remote Files without editing every page')
-check("'display': ['./?tab=0', './?tab=1', './?tab=2', './?tab=3', './stock', './file-library', './remote-files']" in drawer,
-      'Remote Files is grouped with display/file-management navigation')
+check("'files': ['./file-library', './remote-files']" in drawer,
+      'Remote Files retains its navigation URL beside File Library in the Files section')
 check('app_session_user_id()' in page and "header('Location: ./', true, 302)" in page,
       'Remote Files page requires authenticated session')
 check('<meta name="csrf-token"' in page and "str_starts_with($action, 'remote.')" in api,

@@ -1,45 +1,58 @@
 (function ($, document, window) {
     'use strict';
 
+    var sourceScript = document.currentScript;
+    var revisionMatch = sourceScript && typeof sourceScript.src === 'string'
+        ? /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(sourceScript.src)
+        : null;
+    var assetRevision = revisionMatch ? revisionMatch[1] : '';
+
     var sectionOrder = [
         'display',
-        'feed',
-        'productivity',
-        'information',
-        'media',
-        'game',
+        'widgets',
+        'files',
         'settings',
         'user-links',
         'account'
     ];
 
     var sectionMeta = {
-        'display': {label: 'DISPLAY', icon: 'far fa-copy'},
-        'feed': {label: 'FEED', icon: 'fas fa-rss'},
-        'productivity': {label: 'PRODUCTIVITY', icon: 'fas fa-tasks'},
-        'information': {label: 'INFORMATION', icon: 'fas fa-info-circle'},
-        'media': {label: 'MEDIA', icon: 'fas fa-video'},
-        'game': {label: 'GAME', icon: 'fas fa-chess-knight'},
-        'settings': {label: 'SETTINGS', icon: 'fas fa-sliders-h'},
-        'user-links': {label: 'USER LINKS', icon: 'fas fa-link', mobileOnly: true},
-        'account': {label: 'ACCOUNT', icon: 'fas fa-user'},
-        'other': {label: 'OTHER', icon: 'fas fa-ellipsis-h'}
+        'display': {label: '表示', icon: 'far fa-copy'},
+        'widgets': {label: 'Widget追加', icon: 'fas fa-th-large'},
+        'files': {label: 'ファイル', icon: 'fas fa-folder-open'},
+        'settings': {label: '管理・設定', icon: 'fas fa-sliders-h'},
+        'user-links': {label: 'ユーザーリンク', icon: 'fas fa-link', mobileOnly: true},
+        'account': {label: 'アカウント', icon: 'fas fa-user'},
+        'other': {label: 'その他', icon: 'fas fa-ellipsis-h'}
     };
 
     var modalGroups = {
-        'feed': ['#registerContent', '#registerSearchFeed'],
-        'productivity': ['#registerTaskWidget', '#registerCalendarWidget', '#registerMemo', '#registerClock', '#registerMailWidget'],
-        'information': ['#registerLinksWidget', '#registerWeatherWidget'],
-        'media': ['#registerCameraVideo'],
-        'game': ['#registerGameWidget'],
         'account': ['#accountSettings']
     };
 
+    var widgetCategories = [
+        {id: 'rss', label: 'Feed', icon: 'fas fa-rss', targets: ['#registerContent', '#registerSearchFeed', '#registerMailWidget']},
+        {id: 'information', label: 'Information', icon: 'fas fa-info-circle', targets: ['#registerWeatherWidget']},
+        {id: 'utility', label: 'Utility', icon: 'fas fa-th-large', targets: ['#registerTaskWidget', '#registerCalendarWidget', '#registerLinksWidget', '#registerClock', '#registerMemo']},
+        {id: 'media', label: 'Media', icon: 'fas fa-video', targets: ['#registerCameraVideo']},
+        {id: 'game', label: 'Game', icon: 'fas fa-gamepad', targets: ['#registerGameWidget']}
+    ];
+
     var hrefGroups = {
-        'display': ['./?tab=0', './?tab=1', './?tab=2', './?tab=3', './stock', './file-library', './remote-files'],
-        'feed': ['./rss-management'],
-        'settings': ['./settings#tabs', './settings#display', './settings#highlight']
+        'display': ['./?tab=0', './?tab=1', './?tab=2', './?tab=3', './stock'],
+        'files': ['./file-library', './remote-files'],
+        'settings': ['./rss-management', './settings']
     };
+
+    function injectCatalogStyles() {
+        var link;
+        if (document.querySelector('link[data-drawer-catalog-style]')) { return; }
+        link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = './css/drawer-catalog.css' + (assetRevision === '' ? '' : '?v=' + encodeURIComponent(assetRevision));
+        link.setAttribute('data-drawer-catalog-style', 'true');
+        document.head.appendChild(link);
+    }
 
     function injectVisualStyles() {
         var link;
@@ -75,6 +88,31 @@
         return $menu.children('li').filter(function () {
             return $(this).children('a.drawer-item[href="' + href + '"]').length > 0;
         }).first();
+    }
+
+    function ensureSettingsItem($menu) {
+        // Consolidate only the application entries; preserve configured user links.
+        var $items = $menu.children('li').not('.drawer-mobile-links').filter(function () {
+            var href = $(this).children('a.drawer-item').attr('href');
+            return ['./settings', './settings#tabs', './settings#display', './settings#highlight'].indexOf(href) >= 0;
+        });
+        var $item = $items.first();
+        var $link;
+        if ($item.length === 0) {
+            $item = $('<li>').appendTo($menu);
+            $link = $('<a>').addClass('text-muted drawer-item').appendTo($item);
+            $('<span>').addClass('drawer-item-icon').append($('<i>').addClass('fas fa-cogs fa-fw').attr('aria-hidden', 'true')).appendTo($link);
+            $('<span>').addClass('drawer-item-label').appendTo($link);
+        } else {
+            $link = $item.children('a.drawer-item');
+            $items.slice(1).remove();
+        }
+        $link.attr('href', './settings');
+        $link.find('.drawer-item-icon i').attr('class', 'fas fa-cogs fa-fw');
+        $link.find('.drawer-item-label').text('設定');
+        if (/^(settings|settings\.php)$/.test(window.location.pathname.replace(/\/+$/, '').split('/').pop())) {
+            $link.attr('aria-current', 'page');
+        }
     }
 
     function ensureRssManagementItem($menu) {
@@ -147,8 +185,49 @@
         }
     }
 
-    function collectGroup($menu, key) {
+    function collectWidgetCategories($menu) {
         var items = [];
+        widgetCategories.forEach(function (category) {
+            var $item = $menu.children('li[data-widget-catalog-category="' + category.id + '"]').first();
+            var $grid;
+            var $toggle;
+            var $collapse;
+            category.targets.forEach(function (target) {
+                var $direct = itemByModalTarget($menu, target);
+                var $button;
+                if ($direct.length === 0) { return; }
+                if ($item.length === 0) {
+                    $item = $('<li>').addClass('widget-catalog-category').attr('data-widget-catalog-category', category.id);
+                    $toggle = $('<button>').attr({type: 'button', 'data-bs-toggle': 'collapse', 'data-bs-target': '#widgetCatalog-' + category.id, 'aria-controls': 'widgetCatalog-' + category.id, 'aria-expanded': 'false'})
+                        .addClass('btn btn-link text-muted widget-catalog-toggle w-100 d-flex align-items-center gap-2');
+                    $('<span>').addClass('drawer-item-icon').append($('<i>').addClass(category.icon + ' fa-fw').attr('aria-hidden', 'true')).appendTo($toggle);
+                    $('<span>').addClass('drawer-item-label flex-grow-1').text(category.label).appendTo($toggle);
+                    $('<i>').addClass('fas fa-chevron-right widget-catalog-chevron').attr('aria-hidden', 'true').appendTo($toggle);
+                    $collapse = $('<div>').attr('id', 'widgetCatalog-' + category.id).addClass('collapse');
+                    $grid = $('<div>').addClass('widget-catalog-grid').appendTo($collapse);
+                    $item.append($toggle, $collapse);
+                }
+                $grid = $item.find('.widget-catalog-grid').first();
+                // Preserve modal targets, preset data, listeners and disabled state.
+                $button = $direct.children('.drawer-menu-action').detach().addClass('widget-catalog-tile w-100');
+                $grid.append($button);
+                $direct.remove();
+            });
+            if ($item.length === 0) { return; }
+            $item.children('.widget-catalog-toggle').find('.drawer-item-label').first().text(category.label);
+            // Initialize a compact catalog once; later runs preserve open categories.
+            if ($item.attr('data-drawer-catalog-ready') !== '1') {
+                $item.children('.widget-catalog-toggle').attr('aria-expanded', 'false');
+                $item.children('.collapse').removeClass('show');
+                $item.attr('data-drawer-catalog-ready', '1');
+            }
+            appendUnique(items, $item);
+        });
+        return items;
+    }
+
+    function collectGroup($menu, key) {
+        var items = key === 'widgets' ? collectWidgetCategories($menu) : [];
         (hrefGroups[key] || []).forEach(function (href) {
             appendUnique(items, itemByHref($menu, href));
         });
@@ -194,6 +273,7 @@
             return;
         }
 
+        ensureSettingsItem($menu);
         ensureRssManagementItem($menu);
         ensureFileLibraryItem($menu);
         ensureRemoteFilesItem($menu);
@@ -230,7 +310,7 @@
             });
         }
 
-        $menu.attr('data-drawer-categories', 'v1.29-i');
+        $menu.attr('data-drawer-categories', 'v1.40.1-dev3');
     }
 
     function removeUserVisiblePhaseMarkers() {
@@ -248,6 +328,7 @@
         removeUserVisiblePhaseMarkers();
         injectVisualStyles();
         injectMobileStyles();
+        injectCatalogStyles();
         // Mail / Camera add their Drawer entries from their own ready handlers.
         // Run one task later so those existing modules remain untouched.
         window.setTimeout(organizeDrawer, 0);

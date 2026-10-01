@@ -823,6 +823,18 @@
             var $button = $(this);
             revokeOtherAccountSessions($button.closest('[data-account-totp-status]'), $button);
         })
+        .off('show.bs.modal.iguguruAccountTabs', '#accountSettings')
+        .on('show.bs.modal.iguguruAccountTabs', '#accountSettings', function () {
+            var basicTab = this.querySelector('#accountBasicTab');
+            if (basicTab && window.bootstrap && window.bootstrap.Tab) {
+                window.bootstrap.Tab.getOrCreateInstance(basicTab).show();
+            }
+            $(this).find('.modal-body').scrollTop(0);
+        })
+        .off('shown.bs.tab.iguguruAccountTabs', '#accountSettings [data-bs-toggle="tab"]')
+        .on('shown.bs.tab.iguguruAccountTabs', '#accountSettings [data-bs-toggle="tab"]', function () {
+            $('#accountSettings .modal-body').scrollTop(0);
+        })
         .off('hidden.bs.modal.iguguruAccountTotp', '#accountSettings')
         .on('hidden.bs.modal.iguguruAccountTotp', '#accountSettings', function () {
             $(this).find('[data-account-totp-status]').each(function () {

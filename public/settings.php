@@ -105,10 +105,18 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
         <div class="col-12 col-xl-10">
             <h1 class="h4 mt-3 mb-3"><i class="fas fa-cogs fa-fw" aria-hidden="true"></i>Settings</h1>
 
-            <section class="card mb-3" id="display" aria-labelledby="displaySettingsTitle">
+            <div class="nav nav-tabs settings-page-tabs mb-3" id="settingsPageTabs" role="tablist" aria-label="設定の分類">
+                <button class="nav-link active" id="settingsDisplayTab" type="button" data-bs-toggle="tab" data-bs-target="#display" role="tab" aria-controls="display" aria-selected="true">表示設定</button>
+                <button class="nav-link" id="settingsTabsTab" type="button" data-bs-toggle="tab" data-bs-target="#tabs" role="tab" aria-controls="tabs" aria-selected="false" tabindex="-1">タブ設定</button>
+                <button class="nav-link" id="settingsLinksTab" type="button" data-bs-toggle="tab" data-bs-target="#links" role="tab" aria-controls="links" aria-selected="false" tabindex="-1">ユーザーリンク</button>
+                <button class="nav-link" id="settingsHighlightTab" type="button" data-bs-toggle="tab" data-bs-target="#highlight" role="tab" aria-controls="highlight" aria-selected="false" tabindex="-1">RSS Highlight</button>
+            </div>
+            <div class="tab-content" id="settingsPageContent">
+            <!-- Display and User Links keep one save boundary; other forms stay outside. -->
+            <form id="settingsForm" class="tab-content" method="post" action="./">
+            <section class="card mb-3 tab-pane active" id="display" role="tabpanel" aria-labelledby="settingsDisplayTab" tabindex="0">
                 <div class="card-header"><strong id="displaySettingsTitle">表示設定</strong></div>
                 <div class="card-body">
-                    <form id="settingsForm" method="post" action="./">
                         <div class="mb-3">
                             <label class="form-label" for="conf_style"><small class="text-dark">全体デザイン指定</small></label>
                             <div class="input-group mb-2 me-sm-2">
@@ -147,6 +155,13 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                             <small id="conf_navDesignHelp" class="form-text text-muted">Navbarのデザインを指定します</small>
                         </div>
 
+                        <div class="text-end mt-3"><button type="submit" class="btn btn-primary submit_setting">表示・リンク設定を保存</button></div>
+                </div>
+            </section>
+
+            <section class="card mb-3 tab-pane" id="links" role="tabpanel" aria-labelledby="settingsLinksTab" tabindex="0">
+                <div class="card-header"><strong id="linkSettingsTitle">ユーザーリンク</strong></div>
+                <div class="card-body">
                         <?php for ($navIndex = 1; $navIndex <= 4; $navIndex++): ?>
                             <?php
                             $linkKey = 'conf_style_navlink' . $navIndex;
@@ -179,12 +194,11 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                             </fieldset>
                             <?php if ($navIndex < 4): ?><hr><?php endif; ?>
                         <?php endfor; ?>
-                        <div class="text-end mt-3"><button type="submit" class="btn btn-primary submit_setting">変更する</button></div>
-                    </form>
+                    <div class="text-end mt-3"><button type="submit" class="btn btn-primary submit_setting">表示・リンク設定を保存</button></div>
                 </div>
             </section>
-
-            <section class="card mb-3" id="tabs" aria-labelledby="tabSettingsTitle">
+            </form>
+            <section class="card mb-3 tab-pane" id="tabs" role="tabpanel" aria-labelledby="settingsTabsTab" tabindex="0">
                 <div class="card-header"><strong id="tabSettingsTitle">タブ表示変更</strong></div>
                 <div class="card-body">
                     <form id="tabsForm" method="post" action="./">
@@ -201,7 +215,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                 </div>
             </section>
 
-            <section class="card mb-3" id="highlight" aria-labelledby="rssHighlightSettingsTitle">
+            <section class="card mb-3 tab-pane" id="highlight" role="tabpanel" aria-labelledby="settingsHighlightTab" tabindex="0">
                 <div class="card-header"><strong id="rssHighlightSettingsTitle"><i class="fas fa-highlighter" aria-hidden="true"></i> RSS Highlight</strong></div>
                 <div class="card-body">
                     <p class="small text-muted mb-3">RSS記事タイトルで強調したいKeywordを登録します。RSS WidgetとSearch Feedの両方で利用します。</p>
@@ -235,6 +249,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                     </div>
                 </div>
             </section>
+            </div>
         </div>
     </div>
 </main>
@@ -287,15 +302,19 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
 
 <!-- Account SettingsはV1.13-Cの分離対象外。既存の独立機能として維持する。 -->
 <div class="modal fade" id="accountSettings" tabindex="-1" role="dialog" aria-labelledby="accountSettingsTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
         <div class="modal-content">
             <div class="modal-header" style="color: #fff; background-color: #555;">
                 <h5 class="modal-title" id="accountSettingsTitle"><i class="fas fa-user-cog" aria-hidden="true"></i> アカウント設定</h5>
                 <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
             </div>
-            <div class="modal-body">
-                <?php account_security_render($accountSecurityState, 'accountSecurityTitle'); ?>
-                <hr>
+            <div class="nav nav-tabs account-settings-tabs px-3 pt-2" role="tablist" aria-label="アカウント設定の分類">
+                <button class="nav-link active" id="accountBasicTab" data-bs-toggle="tab" data-bs-target="#accountBasicPane" type="button" role="tab" aria-controls="accountBasicPane" aria-selected="true">基本設定</button>
+                <button class="nav-link" id="accountSecurityTab" data-bs-toggle="tab" data-bs-target="#accountSecurityPane" type="button" role="tab" aria-controls="accountSecurityPane" aria-selected="false" tabindex="-1">セキュリティ</button>
+                <button class="nav-link" id="accountActivityTab" data-bs-toggle="tab" data-bs-target="#accountActivityPane" type="button" role="tab" aria-controls="accountActivityPane" aria-selected="false" tabindex="-1">認証ログ</button>
+            </div>
+            <div class="modal-body tab-content">
+                <div class="tab-pane active" id="accountBasicPane" role="tabpanel" aria-labelledby="accountBasicTab" tabindex="0">
                 <section aria-labelledby="accountEmailTitle">
                     <h6 id="accountEmailTitle">メールアドレス変更</h6>
                     <p class="small text-muted">現在のメールアドレスは画面には表示していません。変更後は新しいメールアドレスでLoginしてください。</p>
@@ -316,6 +335,13 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                         <div class="text-end"><button type="submit" class="btn btn-primary">パスワードを変更</button></div>
                     </form>
                 </section>
+                </div>
+                <div class="tab-pane" id="accountSecurityPane" role="tabpanel" aria-labelledby="accountSecurityTab" tabindex="0">
+                    <?php account_security_render($accountSecurityState, 'accountSecurityTitle', false); ?>
+                </div>
+                <div class="tab-pane" id="accountActivityPane" role="tabpanel" aria-labelledby="accountActivityTab" tabindex="0">
+                    <?php account_security_activity_render($accountSecurityState); ?>
+                </div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button></div>
         </div>
@@ -329,6 +355,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/totp-qr.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/account-2fa.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/settings-tabs.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/drawer-categories.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 </body>
 </html>

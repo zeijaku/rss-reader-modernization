@@ -1,0 +1,109 @@
+/* Scoped Drawer layout. Existing Offcanvas / modal behavior stays in Bootstrap. */
+#drawerMenu.drawer-nav {
+    --bs-offcanvas-width: min(20rem, 90vw);
+}
+
+#drawerMenu > .drawer-menu {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#drawerMenu .widget-catalog-category {
+    margin: 4px 8px 8px;
+    min-width: 0;
+}
+
+#drawerMenu .widget-catalog-toggle {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 12px;
+    gap: 8px !important;
+    border: 1px solid #e0e5ea;
+    border-radius: 6px;
+    background: #eef2f6;
+    color: #495057 !important;
+    text-decoration: none;
+    line-height: 1.35;
+    touch-action: manipulation;
+}
+
+#drawerMenu .widget-catalog-toggle:hover {
+    background: #e9eef5;
+}
+
+#drawerMenu .widget-catalog-toggle:focus-visible,
+#drawerMenu .widget-catalog-tile:focus-visible {
+    outline: 2px solid #0d6efd;
+    outline-offset: -2px;
+}
+
+#drawerMenu .widget-catalog-toggle .drawer-item-icon,
+#drawerMenu .widget-catalog-tile .drawer-item-icon {
+    flex: 0 0 28px;
+    margin-right: 0;
+}
+
+#drawerMenu .widget-catalog-toggle .drawer-item-label {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#drawerMenu .widget-catalog-chevron {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    transition: transform .18s ease;
+}
+
+#drawerMenu .widget-catalog-toggle[aria-expanded="true"] .widget-catalog-chevron {
+    transform: rotate(90deg);
+}
+
+#drawerMenu .widget-catalog-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 6px;
+    padding: 6px 0;
+}
+
+#drawerMenu .widget-catalog-tile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    margin: 0 !important;
+    padding: 8px 6px;
+    text-align: left;
+    text-decoration: none;
+    white-space: normal;
+    line-height: 1.35;
+    touch-action: manipulation;
+}
+
+#drawerMenu .widget-catalog-tile .drawer-item-label {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 359.98px) {
+    #drawerMenu .widget-catalog-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #drawerMenu .widget-catalog-chevron {
+        transition: none;
+    }
+}
