@@ -1,3 +1,10 @@
+## 1.40.1-dev.2 - 2026-10-01
+
+- Split Dashboard and settings-page Account Settings into Basic, Security and Authentication log tabs. Open Basic first, retaining email/password forms and their original contracts.
+- Keep 2FA / Recovery Code / Step-up / session controls inside their original security container. Render the existing escaped audit view separately; preserve the shared renderer's default combined output.
+- Keep tabs and close controls visible with scrollable modal content, scoped responsive tab styling, Bootstrap keyboard navigation and Basic-tab reset when reopening.
+- Preserve Stock's existing basic account modal, authentication/API/CSRF/owner scope, database and all unrelated settings / Widget behavior.
+
 ## 1.40.1-dev.1 - 2026-10-01
 
 - Group the existing Widget catalog under Widget追加, retaining Feed, Information, Utility, Media and Game entries and all existing modal targets / game presets.

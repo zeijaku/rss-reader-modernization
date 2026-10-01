@@ -130,7 +130,7 @@ function account_security_audit_method_label(?string $method): string
 }
 
 /** @param array<string,mixed> $state */
-function account_security_render(array $state, string $titleId = 'accountSecurityTitle'): void
+function account_security_render(array $state, string $titleId = 'accountSecurityTitle', bool $includeActivity = true): void
 {
     $totpAvailable = ($state['totp_available'] ?? false) === true;
     $totpState = (string) ($state['totp_state'] ?? 'unavailable');
@@ -146,8 +146,6 @@ function account_security_render(array $state, string $titleId = 'accountSecurit
     $sessionsAvailable = ($state['sessions_available'] ?? false) === true;
     $sessions = isset($state['sessions']) && is_array($state['sessions']) ? $state['sessions'] : [];
     $sessionCount = count($sessions);
-    $auditAvailable = ($state['audit_available'] ?? false) === true;
-    $auditEvents = isset($state['audit_events']) && is_array($state['audit_events']) ? $state['audit_events'] : [];
     $otherSessionCount = 0;
     foreach ($sessions as $session) {
         if (is_array($session) && ($session['is_current'] ?? false) !== true) {
@@ -384,6 +382,17 @@ function account_security_render(array $state, string $titleId = 'accountSecurit
             <?php endif; ?>
         </div>
 
+        <?php if ($includeActivity) { account_security_activity_render($state); } ?>
+    </section>
+    <?php
+}
+
+/** @param array<string,mixed> $state */
+function account_security_activity_render(array $state): void
+{
+    $auditAvailable = ($state['audit_available'] ?? false) === true;
+    $auditEvents = isset($state['audit_events']) && is_array($state['audit_events']) ? $state['audit_events'] : [];
+    ?>
         <div class="mt-3" data-account-security-activity>
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                 <strong>Security Activity</strong>
@@ -423,6 +432,5 @@ function account_security_render(array $state, string $titleId = 'accountSecurit
                 <p class="small text-muted mt-2 mb-0">Password、認証コード、Recovery Code、Secret、Session ID、IP Address全文はSecurity Activityへ保存しません。</p>
             </div>
         </div>
-    </section>
     <?php
 }

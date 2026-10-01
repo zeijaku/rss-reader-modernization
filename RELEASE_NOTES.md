@@ -1,6 +1,6 @@
-# Development checkpoint: 1.40.1-dev.1
+# Development checkpoint: 1.40.1-dev.2
 
-Drawer organization and category-arrow layout checkpoint. See [scope, installation and checks](docs/v1.40.1-dev1-drawer.md). This is not the formal V1.40.1 release; the stable V1.40.0 release notes follow below.
+Account Settings tabs checkpoint, retaining dev1 Drawer improvements. See [scope, installation and checks](docs/v1.40.1-dev2-account-tabs.md). This is not the formal V1.40.1 release; the stable V1.40.0 release notes follow below.
 
 # RSS Reader Modernization 1.40.0
 

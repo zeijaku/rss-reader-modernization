@@ -11,7 +11,7 @@
 **Stable release:** `RSS Reader Modernization 1.40.0`
 Release tag: `v1.40.0`
 
-**Development checkpoint:** `1.40.1-dev.1` — Drawer分類・開閉矢印・PC/Smartphone表示を整理。正式版は引き続き1.40.0です。変更範囲・確認手順は[V1.40.1-dev1](docs/v1.40.1-dev1-drawer.md)を参照してください。
+**Development checkpoint:** `1.40.1-dev.2` — dev1のDrawer整理を維持し、Dashboard / 設定画面のアカウント設定を基本設定・セキュリティ・認証ログへ分割。正式版は引き続き1.40.0です。[dev2の範囲・確認手順](docs/v1.40.1-dev2-account-tabs.md)を参照してください。
 
 Version 1.40.0は、最小Game Widget共通基盤へMaze Chase、Falling Blocks、Word Tiles（英語・日本語）を追加するFeature Releaseです。英語43,127語・日本語読み40,000語の固定ローカル辞書を使用し、Word Tilesの言語別盤面・Score保持とWire Defenseの設定更新・後片付けを修正しています。既存ゲームの内部ロジックを維持し、DB変更はありません。確認・配布手順は[V1.40.0正式版](docs/v1.40.0-release.md)を参照してください。
 
