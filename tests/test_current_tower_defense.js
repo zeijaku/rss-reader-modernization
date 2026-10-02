@@ -22,6 +22,7 @@ for(let stage=0;stage<6;stage++){
   assert.deepEqual(m.paths[0][m.paths[0].length-1],m.paths[1][m.paths[1].length-1]);
   const a=new Set(m.paths[0].map(p=>p.join(','))),common=m.paths[1].filter(p=>a.has(p.join(',')));
   assert(common.length<=4,'wide routes merge only near the base');
+  const end=m.paths[0][m.paths[0].length-1];assert([...m.blocked].some(key=>{const [x,y]=key.split(',').map(Number);return Math.abs(x-end[0])+Math.abs(y-end[1])<=4;}),'late blocked terrain prevents an easy shared choke');
   for(const difficulty of td.difficultyOrder)for(let wave=1;wave<=8;wave++){
    const plan=td.waveList(stage,wave,difficulty);
    assert(plan.some(v=>v.route===0)&&plan.some(v=>v.route===1),'both entries used');
