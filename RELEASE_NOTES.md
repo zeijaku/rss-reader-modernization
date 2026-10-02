@@ -26,7 +26,7 @@ From a fully applied dev.7 installation, only `app/version.php` changes at runti
 
 The user confirmed dev.7 production behavior. Local CI-equivalent checks and focused isolated browser fixtures passed: Calendar deadline/header 42, Calendar refresh 34, TD 66, existing Game settings/state 218. Dedicated MariaDB migration/fresh-schema checks passed five checks during development. Unavailable optional local tools remain explicit skips, not passes. APIs in browser fixtures are isolated; physical phone behavior and gameplay balance rely on user playtesting.
 
-Publication uses the existing PHP 8.1 / 8.4 CI and Release Workflow for Runtime/Complete packages, SHA-256, secret scan, clean-room and provenance attestations before immutable Tag/Release publication. Production deployment remains a separate user action.
+Publication uses the existing PHP 8.1 / PHP 8.4 CI and Release Workflow for Runtime/Complete packages, SHA-256, secret scan, clean-room and provenance attestations before immutable Tag/Release publication. Production deployment remains a separate user action.
 
 ---
 
