@@ -1,3 +1,9 @@
+## 1.41.1-dev.1 - 2026-10-02
+
+- Repeat opt-in Calendar urgent deadline pulses every one active minute after the initial 1.8-second × 3 pulse, while retaining the static red top/right/bottom emphasis between pulses.
+- Keep one client-side pulse scheduler across DOM/card replacement, pause its cadence while the tab is hidden, and disable pulse scheduling under prefers-reduced-motion. No one-minute API polling is added.
+- Preserve the existing two-day border-only state, deadline calculations, event-color left stripe, manual refresh and visible-page three-minute Calendar refresh. No DB/API/TD changes.
+
 ## 1.41.0 - 2026-10-01
 
 - Release production-confirmed dev.1–dev.7: opt-in Calendar deadline emphasis, centered period, single-row toolbar and quiet manual/three-minute refresh; tactical Tower Defense with six stages, browser preparation saves, line-icon visuals, blocked terrain, fast-enemy slow resistance and hit feedback.
