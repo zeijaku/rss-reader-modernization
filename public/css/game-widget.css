@@ -40,19 +40,23 @@
 .word-tiles-info,.word-tiles-save-note,.word-tiles-dictionary{font-size:.8rem;overflow-wrap:anywhere;margin:.4rem 0}
 .word-tiles-dictionary p{max-height:12rem;overflow:auto}
 
-/* Tower Defense: the 12x8 tap grid scales uniformly in cards and expanded view. */
+/* Tower Defense: standard 12x8 boards stay responsive; 24x8 boards keep ~45px cells and scroll only inside the board viewport. */
 .td-widget { --td-bow:#b77916; --td-magic:#8854c0; --td-cannon:#d35438; --td-ice:#16849a; --td-enemy:#c23e4b; --td-base:#198754; width:100%; max-width:540px; margin:auto; color:var(--bs-body-color); }
-.td-top { display:flex; justify-content:center; gap:8px; }
-.td-stage-select { width:min(100%,360px); min-height:36px; }
+.td-widget[data-td-wide="1"] { max-width:1080px; }
+.td-top { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
+.td-stage-select,.td-difficulty-select { flex:1 1 220px; width:min(100%,320px); min-height:36px; }
 .td-hint, .td-selection { margin:.4rem 0; font-size:.8rem; text-align:center; }
 .td-summary { display:flex; justify-content:center; flex-wrap:wrap; gap:4px 12px; margin:.5rem 0; font-size:.75rem; }
 .td-stat-label { color:var(--bs-secondary-color,#6c757d); }
 .td-stat-value { color:var(--bs-body-color,#212529); font-variant-numeric:tabular-nums; }
 .td-summary .td-stat[hidden] { display:none; }
+.td-board-scroll { width:100%; max-width:100%; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; scrollbar-gutter:stable; border-radius:.25rem; }
+.td-board-scroll:focus-visible { outline:3px solid var(--bs-primary,#0d6efd); outline-offset:2px; }
 .td-board { position:relative; width:100%; aspect-ratio:3/2; background:var(--bs-body-bg,#fff); overflow:hidden; border:1px solid rgba(var(--bs-body-color-rgb,33,37,41),.16); border-radius:.25rem; }
+.td-board-wide { flex:none; max-width:none; aspect-ratio:auto; }
 .td-canvas { display:block; width:100%; height:100%; }
-.td-cells { position:absolute; inset:0; display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); grid-template-rows:repeat(8,minmax(0,1fr)); }
-.td-cell { min-width:0; padding:0; background:transparent; border:0; touch-action:manipulation; }
+.td-cells { position:absolute; inset:0; display:grid; grid-template-columns:repeat(var(--td-columns,12),minmax(0,1fr)); grid-template-rows:repeat(var(--td-rows,8),minmax(0,1fr)); }
+.td-cell { min-width:0; min-height:0; padding:0; background:transparent; border:0; touch-action:manipulation; }
 .td-cell:disabled { opacity:1; }
 .td-cell:focus-visible { outline:3px solid #fff; outline-offset:-3px; }
 .td-shop, .td-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; margin:.5rem 0; }
@@ -61,8 +65,9 @@
 .td-guide { margin-top:.5rem; font-size:.8rem; }
 .td-guide > summary { text-align:center; }
 .td-guide p { margin:6px 0; }
-@media(max-width:575.98px) { .td-shop .btn { flex:1 1 calc(50% - 6px); } .td-summary { gap:3px 9px; } }
+@media(max-width:575.98px) { .td-shop .btn { flex:1 1 calc(50% - 6px); } .td-summary { gap:3px 9px; } .td-stage-select,.td-difficulty-select { flex-basis:100%; } }
 
-.mini-game-card[data-mini-game-type="tower_defense"] :is(.game-widget-status,.game-widget-storage-note) { max-width:540px; margin:.5rem auto; text-align:center; }
+.mini-game-card[data-mini-game-type="tower_defense"] :is(.game-widget-status,.game-widget-storage-note) { max-width:1080px; margin:.5rem auto; text-align:center; }
+.mini-game-card[data-mini-game-type="tower_defense"].game-widget-expanded .mini-game-card-inner { max-width:1180px; }
 
 #main-content:is([data-dashboard-theme="bootstrap-solar"],[data-dashboard-theme="bootstrap-slate"]) .td-widget { --td-bow:#f5c06b; --td-magic:#c697fc; --td-cannon:#f38264; --td-ice:#8fe6f1; --td-enemy:#ea868f; --td-base:#75b798; }
