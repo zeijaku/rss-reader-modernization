@@ -1,3 +1,9 @@
+## 1.42.0-dev.2 - 2026-10-03
+
+- Keep the 1080×360 Tower Defense wide board fixed at about 45px per tile, but constrain the wide TD shell to the actual Game card width so two-column desktop cards use the board's own horizontal scroller instead of clipping the center of an oversized child.
+- Preserve full-board display when the card is wide enough, including the user's three-column layout, and retain smartphone board-only scrolling. No map, route, tower, difficulty, save schema, DB or Calendar behavior changes.
+- Add browser regression coverage requiring a two-column desktop card to have real horizontal overflow and a movable scrollLeft, closing the gap in dev.1 where the test only allowed clientWidth === scrollWidth.
+
 ## 1.42.0-dev.1 - 2026-10-02
 
 - Keep Tower Defense stages 1–3 on the existing 12×8 single-route layouts and expand stages 4–6 to fixed 24×8 wide layouts with two separated entrances/routes, short final merges and central blocked terrain. Wide boards retain ~45px cells and use board-only horizontal scrolling on narrow cards/phones.
