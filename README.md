@@ -12,7 +12,7 @@
 **Stable release:** `RSS Reader Modernization 1.41.0`
 Release tag: `v1.41.0`
 
-**Development checkpoint:** `1.41.1-dev.1` — Calendar期日強調を、初回表示後も1分間隔で短く再明滅させるCorrectionです。非表示タブでは周期を休止し、reduced-motionでは枠強調だけを維持します。正式版は引き続き1.41.0です。[適用・確認手順](docs/v1.41.1-dev1-calendar-deadline-pulse.md)を参照してください。
+**Development checkpoint:** `1.42.0-dev.1` — `1.41.1-dev.1` Calendar修正を親に、Tower Defenseの後半3面を24×8・2入口2経路へ拡張し、Easy / Normal / Hard / Nightmare、ステージ×難易度の保存・旧schema 1移行を追加します。正式版は引き続き1.41.0です。[適用・確認手順](docs/v1.42.0-dev1-td-wide-difficulty.md)を参照してください。
 
 Version 1.41.0は、本番確認済みのCalendar期日強調・中央年月・手動／自動更新とTower Defenseを正式配布します。V1.40.1の既存DBにはMigration 032が必要です（適用済みdev.7からは追加SQLなし）。[正式版の更新・確認手順](docs/v1.41.0-release.md)を参照してください。
 
