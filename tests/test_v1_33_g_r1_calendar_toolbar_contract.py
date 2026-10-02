@@ -38,22 +38,23 @@ for markup, name in ((dashboard, 'Dashboard'), (stock, 'Stock')):
           f'{name} keeps the view switch inside the Calendar toolbar')
     check(toolbar_markup.index('calendar-prev-month')
           < toolbar_markup.index('calendar-today')
-          < toolbar_markup.index('calendar-month-label')
           < toolbar_markup.index('calendar-view-switch')
           < toolbar_markup.index('calendar-next-month')
           < toolbar_markup.index('calendar-event-add-trigger'),
-          f'{name} toolbar keeps navigation, period, view and add controls in visual order')
+          f'{name} toolbar keeps navigation, view and add controls in visual order')
     check(toolbar_markup.count('data-calendar-view-mode="day"') == 1
           and toolbar_markup.count('data-calendar-view-mode="week"') == 1
           and toolbar_markup.count('data-calendar-view-mode="month"') == 1,
           f'{name} retains one accessible day/week/month control group')
 
-check('grid-template-areas: "prev today label switch next add";' in css
-      and 'grid-template-columns: auto auto minmax(8rem, 1fr) minmax(9rem, 15rem) auto auto;' in css,
-      'wide Calendar toolbar uses one six-part row')
-check(css.count('"prev today label next add"') >= 2
-      and css.count('"switch switch switch switch switch"') >= 2,
-      'compact card and Smartphone toolbar use the intended two-row layout')
+check('grid-template-areas: "prev today switch next add";' in css
+      and 'grid-template-columns: auto auto minmax(0, 1fr) auto auto;' in css,
+      'wide Calendar toolbar uses one five-part row')
+check(css.count('"prev today switch next add"') >= 3 and '"switch switch switch switch switch"' not in css,
+      'wide, compact and Smartphone toolbars keep one row')
+check(dashboard.index('calendar-month-label') < dashboard.index('<div class="calendar-toolbar">')
+      and stock.index('calendar-month-label') < stock.index('<div class="calendar-toolbar">'),
+      'period label appears in the Calendar card header in both views')
 check('grid-area: switch;' in css and 'width: min(100%, 15rem);' in css,
       'view switch stays centered and bounded in compact layouts')
 check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1),

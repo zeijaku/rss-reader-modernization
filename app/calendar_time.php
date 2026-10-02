@@ -63,7 +63,8 @@ function calendar_event_time_settings(
     mixed $endTimeValue,
     mixed $urlValue,
     string $startDate,
-    string $endDate
+    string $endDate,
+    mixed $deadlineHighlight = null
 ): ?array {
     $range = calendar_validate_event_range($startDate, $endDate);
     $allDay = calendar_event_time_validate_all_day($allDayValue);
@@ -83,7 +84,11 @@ function calendar_event_time_settings(
         return null;
     }
 
+    if ($deadlineHighlight !== null && calendar_event_time_validate_all_day($deadlineHighlight) === null) {
+        return null;
+    }
     return [
+        'deadline_highlight' => $deadlineHighlight === null ? null : calendar_event_time_validate_all_day($deadlineHighlight),
         'all_day' => $allDay,
         'start_time' => $startTime === '' ? null : $startTime,
         'end_time' => $endTime === '' ? null : $endTime,
@@ -106,7 +111,7 @@ function calendar_event_time_month_list(int $ownerId, int $year, int $month): ar
     $range = calendar_month_range($year, $month);
     $stmt = conn_db()->prepare(
         'SELECT calendar_event_id, calendar_event_all_day, calendar_event_start_time, '
-        . 'calendar_event_end_time, calendar_event_url, calendar_event_reminder FROM ' . db_table_identifier('calendar_event') . ' '
+        . 'calendar_event_end_time, calendar_event_url, calendar_event_reminder, calendar_event_deadline_highlight FROM ' . db_table_identifier('calendar_event') . ' '
         . 'WHERE calendar_event_owner = :owner AND calendar_event_flag = 0 '
         . 'AND calendar_event_start_date <= :month_end AND calendar_event_end_date >= :month_start '
         . 'ORDER BY calendar_event_id ASC LIMIT 500'
@@ -130,6 +135,7 @@ function calendar_event_time_month_list(int $ownerId, int $year, int $month): ar
         $url = calendar_event_time_validate_url($row['calendar_event_url'] ?? '');
         $events[] = [
             'event_id' => $eventId,
+            'deadline_highlight' => (bool) ($row['calendar_event_deadline_highlight'] ?? false),
             'all_day' => $allDay ?? true,
             'start_time' => calendar_event_time_public_clock($row['calendar_event_start_time'] ?? null),
             'end_time' => calendar_event_time_public_clock($row['calendar_event_end_time'] ?? null),
@@ -162,6 +168,12 @@ function calendar_event_time_apply(PDO $pdo, int $ownerId, int $eventId, array $
         ':event_id' => $eventId,
         ':owner' => $ownerId,
     ]);
+    if (($settings['deadline_highlight'] ?? null) !== null) {
+        $stmt = $pdo->prepare('UPDATE ' . db_table_identifier('calendar_event')
+            . ' SET calendar_event_deadline_highlight = :highlight '
+            . 'WHERE calendar_event_id = :event_id AND calendar_event_owner = :owner AND calendar_event_flag = 0');
+        $stmt->execute([':highlight' => $settings['deadline_highlight'] ? 1 : 0, ':event_id' => $eventId, ':owner' => $ownerId]);
+    }
 }
 
 /** @param array{all_day:bool,start_time:?string,end_time:?string,url:?string} $settings */

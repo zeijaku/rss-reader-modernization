@@ -1,8 +1,8 @@
 /* V1.33-G: day/week/month switching, day timeline and card-width-aware week list. */
 #main-content .calendar-toolbar {
     display: grid;
-    grid-template-areas: "prev today label switch next add";
-    grid-template-columns: auto auto minmax(8rem, 1fr) minmax(9rem, 15rem) auto auto;
+    grid-template-areas: "prev today switch next add";
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
     align-items: center;
 }
 
@@ -49,8 +49,7 @@
 #main-content .calendar-view-compact .calendar-toolbar {
     min-width: 0;
     grid-template-areas:
-        "prev today label next add"
-        "switch switch switch switch switch";
+        "prev today switch next add";
     grid-template-columns: auto auto minmax(0, 1fr) auto auto;
 }
 
@@ -62,7 +61,7 @@
 
 #main-content .calendar-view-compact .calendar-view-switch {
     width: min(100%, 15rem);
-    margin-top: 2px;
+    margin-top: 0;
 }
 
 #main-content .calendar-view-holiday {
@@ -335,8 +334,7 @@
 @media (max-width: 575.98px) {
     #main-content .calendar-toolbar {
         grid-template-areas:
-            "prev today label next add"
-            "switch switch switch switch switch";
+            "prev today switch next add";
         grid-template-columns: auto auto minmax(0, 1fr) auto auto;
     }
 
@@ -349,7 +347,7 @@
     #main-content .calendar-view-switch {
         width: min(100%, 15rem);
         max-width: 15rem;
-        margin-top: 2px;
+        margin-top: 0;
     }
 
     #main-content .calendar-day-detail-heading {

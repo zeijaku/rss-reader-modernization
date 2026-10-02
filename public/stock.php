@@ -366,7 +366,9 @@ if (is_int($content_location)) {
             echo '</div>';
             echo '<div class="mini-game-card-body">';
 
-            if ($gameType === 'word_tiles' || $gameType === 'word_tiles_ja') {
+            if ($gameType === 'tower_defense') {
+                echo '<p class="game-widget-loading text-muted" role="status">Tower Defenseを読み込んでいます...</p>';
+            } elseif ($gameType === 'word_tiles' || $gameType === 'word_tiles_ja') {
                 echo '<p class="game-widget-loading text-muted" role="status">Word Tilesを読み込んでいます...</p>';
             } elseif ($gameType === 'falling_blocks') {
                 echo '<p class="game-widget-loading text-muted" role="status">Falling Blocksを読み込んでいます...</p>';
@@ -612,19 +614,20 @@ if (is_int($content_location)) {
                         <div class="text-bg-' . app_html($widgetStyle) . ' calendar-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines" aria-hidden="true"></i></button>
                             <small class="calendar-widget-title widget-title-text" id="' . app_html($calendarTitleId) . '" title="' . app_html($calendarTitle) . '">' . app_html($calendarTitle) . '</small>
+                            <strong class="calendar-month-label" aria-live="polite">----</strong>
                             <button type="button" class="btn btn-link calendar-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" data-bs-toggle="modal" data-bs-target="#changeCalendarWidget" aria-label="このCalendar Widgetを編集"><i class="fas fa-edit" aria-hidden="true"></i></button>
                         </div>
                         <div class="calendar-card-body">
                             <div class="calendar-toolbar">
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-prev-month" aria-label="前の月"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-today">今月</button>
-                                <strong class="calendar-month-label" aria-live="polite">----</strong>
                                 <div class="btn-group btn-group-sm calendar-view-switch" role="group" aria-label="Calendar表示">
                                     <button type="button" class="btn btn-outline-secondary calendar-view-mode" data-calendar-view-mode="day" aria-pressed="false">日</button>
                                     <button type="button" class="btn btn-outline-secondary calendar-view-mode" data-calendar-view-mode="week" aria-pressed="false">週</button>
                                     <button type="button" class="btn btn-outline-secondary calendar-view-mode active" data-calendar-view-mode="month" aria-pressed="true">月</button>
                                 </div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-next-month" aria-label="次の月"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary calendar-refresh" title="カレンダーを更新"><i class="fas fa-sync-alt" aria-hidden="true"></i><span class="visually-hidden">カレンダーを更新</span></button>
                                 <button type="button" class="btn btn-sm btn-primary calendar-event-add-trigger" data-bs-toggle="modal" data-bs-target="#registerCalendarEvent"><i class="fas fa-plus" aria-hidden="true"></i><span class="visually-hidden">予定を追加</span></button>
                             </div>
                             <div class="calendar-weekdays" aria-hidden="true"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
@@ -1335,7 +1338,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
         <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Gameを追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <div class="mb-3"><label class="form-label" for="registerGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerGameTitleValue" id="registerGameTitleValue" maxlength="32" value="Icon Quest" required></div>
-            <div class="mb-3"><label class="form-label" for="registerGameType"><small class="text-dark">Game</small></label><select class="form-select registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option></select></div>
+            <div class="mb-3"><label class="form-label" for="registerGameType"><small class="text-dark">Game</small></label><select class="form-select registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option><option value="tower_defense">Tower Defense（配置・戦術）</option></select></div>
             <input type="hidden" class="registerGameLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
             <div class="row g-2">
                 <div class="mb-3 col-md-4"><label class="form-label" for="registerGameWidth"><small class="text-dark">横幅</small></label><select class="form-select registerGameWidth" id="registerGameWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
@@ -1358,7 +1361,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
         <div class="modal-body">
             <input type="hidden" class="changeGameWidgetId">
             <div class="mb-3"><label class="form-label" for="changeGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeGameTitleValue" id="changeGameTitleValue" maxlength="32" required></div>
-            <div class="mb-3"><label class="form-label" for="changeGameType"><small class="text-dark">Game</small></label><select class="form-select changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option></select></div>
+            <div class="mb-3"><label class="form-label" for="changeGameType"><small class="text-dark">Game</small></label><select class="form-select changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option><option value="tower_defense">Tower Defense（配置・戦術）</option></select></div>
             <div class="row g-2">
                 <div class="mb-3 col-md-4"><label class="form-label" for="changeGameWidth"><small class="text-dark">横幅</small></label><select class="form-select changeGameWidth" id="changeGameWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
                 <div class="mb-3 col-md-4"><label class="form-label" for="changeGameHeight"><small class="text-dark">縦幅</small></label><select class="form-select changeGameHeight" id="changeGameHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>

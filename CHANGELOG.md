@@ -1,3 +1,47 @@
+## 1.41.0 - 2026-10-01
+
+- Release production-confirmed dev.1–dev.7: opt-in Calendar deadline emphasis, centered period, single-row toolbar and quiet manual/three-minute refresh; tactical Tower Defense with six stages, browser preparation saves, line-icon visuals, blocked terrain, fast-enemy slow resistance and hit feedback.
+- Retain tested dev.7 runtime behavior. Remove unused TD bitmap assets and their license directory.
+- Existing V1.40.1 databases require migration 032; applied development databases need no additional SQL.
+
+## 1.41.0-dev.7 - 2026-10-01
+
+- Add a Calendar refresh button and three-minute visible-page polling. Compare existing API range content and replace only changed boards without clearing the display during checks.
+- Preserve period/view, retain content on failure, defer replacement during editing/dragging, and reject obsolete navigation responses. No database migration or TD changes.
+
+## 1.41.0-dev.6 - 2026-10-01
+
+- Preserve Calendar event-color stripes by limiting deadline emphasis and pulse to the top/right/bottom edges. Retain timing, focus outlines, reduced motion and layout.
+- Keep TD balance and gameplay unchanged. No database migration.
+
+## 1.41.0-dev.5 - 2026-10-01
+
+- Add fixed rock placement restrictions to stages 4–6 and ice slow resistance for fast enemies. Preserve old saved towers on newly blocked cells until sold; Restart applies full restrictions.
+- Add brief hit highlights and impact rings with reduced-motion support. Retain attack cadence, save schema and existing stars; no database migration.
+
+## 1.41.0-dev.4 - 2026-10-01
+
+- Increase TD enemy HP by 15% for all enemy types, stages and waves while preserving movement, spawn timing and economy.
+- Preserve existing preparation saves and best stars; no database migration or UI changes.
+
+## 1.41.0-dev.3 - 2026-10-01
+
+- Match TD visuals to Wire Defense / Icon Quest with a neutral Theme-aware grid, tower line icons and distinct geometric enemy types.
+- Preserve fantasy unit types, rules, preparation checkpoints and dev.2 Calendar layout. No new database migration or bitmap request.
+
+## 1.41.0-dev.2 - 2026-10-01
+
+- Center Calendar period labels across the whole header, including narrow cards.
+- Align TD board width, summary values and touch controls with existing Game UI.
+- Preserve game rules and saved preparation; no additional database migration from dev.1.
+
+## 1.41.0-dev.1 - 2026-10-01
+
+- Add opt-in Calendar visual deadline emphasis and move the period label into the header for a single-row toolbar.
+- Preserve deadline settings across recurrence/occurrence edits, copies and date moves; add migration 032 and fresh-schema columns without changing notification reminders.
+- Add independent tactical Tower Defense: six fixed maps, four towers, five enemy types, eight waves, preparation checkpoints and per-stage stars. Bundle Kenney CC0 pixel assets.
+- Development preview for user playtesting; no formal release or production deployment.
+
 ## 1.40.1 - 2026-10-01
 
 - Release production-confirmed dev1–dev5: grouped Drawer navigation, Account and Settings tabs, consistent Widget headers, Theme-aware notification bell/Memo/notification controls and a compact mobile Page Top button.

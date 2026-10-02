@@ -1,0 +1,51 @@
+'use strict';
+const fs=require('fs'),path=require('path'),assert=require('node:assert/strict'),{execFileSync}=require('node:child_process');
+const {chromium}=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES?process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES+'/playwright':'playwright');
+const root=path.resolve(__dirname,'..'),rows=[{widget_id:1,widget_owner:7,widget_location:0,widget_type:'calendar',widget_reference_id:null,widget_flag:0,widget_sort_order:0,widget_style:'primary',widget_width:1,widget_height:1,widget_config:JSON.stringify({schema:1,title:'Calendar',show_completed_tasks:false})}];
+const markup=execFileSync('php',[path.join(__dirname,'fixtures/widget_header_page.php'),JSON.stringify(rows)],{encoding:'utf8'});
+const styles=['bootstrap-5.3.8.min','dashboard','calendar-colors','calendar-event-details','calendar-recurrence','calendar-month-layout','calendar-views','calendar-polish','calendar-polish-r3','calendar-deadline'];
+const scripts=['jquery-3.7.1.min','bootstrap.bundle-5.3.8.min','calendar-month-layout','calendar-views','calendar-core','calendar-occurrence','calendar-recurrence','calendar-event-details','calendar-copy','calendar-deadline'];
+const html='<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="csrf-token" content="'+'a'.repeat(64)+'">'+styles.map(s=>'<link rel="stylesheet" href="/css/'+s+'.css">').join('')+'</head><body>'+markup+scripts.map(s=>'<script src="/js/'+s+'.js"></script>').join('')+'</body></html>';
+const events=[{kind:'event',event_id:1,title:'振り込み',deadline_highlight:true},{kind:'event',event_id:2,title:'散歩',deadline_highlight:false}].map(e=>({...e,occurrence_key:'event:'+e.event_id+':2026-10-10',original_occurrence_start_date:'2026-10-10',occurrence_start_date:'2026-10-10',occurrence_end_date:'2026-10-10',source_start_date:'2026-10-10',source_end_date:'2026-10-10',note:'',color:'blue',all_day:true,start_time:null,end_time:null,url:null,reminder:'none',repeat_type:'none',repeat_until:null}));
+// Include every event color, especially red, to catch category-stripe masking.
+for(const [i,color] of ['red','green','yellow','purple'].entries())events.push({...events[0],event_id:i+3,occurrence_key:'event:'+(i+3)+':2026-10-10',title:color+'の期日',color});
+events.push({...events[0],event_id:7,occurrence_key:'event:7:2026-10-11',occurrence_start_date:'2026-10-11',occurrence_end_date:'2026-10-11',source_start_date:'2026-10-11',source_end_date:'2026-10-11',original_occurrence_start_date:'2026-10-11',title:'2日前の赤い予定',color:'red'});
+let checks=0;function check(ok,name){assert(ok,name);checks++;console.log('PASS: '+name);}
+(async()=>{const browser=await chromium.launch({executablePath:process.env.GAME_TEST_CHROME||chromium.executablePath(),headless:true,args:['--no-sandbox']});try{for(const width of [1280,360]){
+ const context=await browser.newContext({viewport:{width,height:1000},timezoneId:'Asia/Tokyo'}),errors=[];
+ await context.addInitScript(()=>{const D=Date,t=D.parse('2026-10-09T12:00:00+09:00');window.Date=class extends D{constructor(...args){super(...(args.length?args:[t]));}static now(){return t;}};});
+ await context.route('http://cal.test/**',async route=>{const u=new URL(route.request().url());if(u.pathname==='/')return route.fulfill({contentType:'text/html',body:html});if(u.pathname.endsWith('.php')){const p=new URLSearchParams(route.request().postData()||'');return route.fulfill({contentType:'application/json',body:JSON.stringify({ok:true,data:{events:events,tasks:[],holidays:{},cancelled_occurrences:[],range_start:p.get('calendar_range_start')||'2026-10-01',range_end:p.get('calendar_range_end')||'2026-10-31'}})});}const file=path.join(root,'public',u.pathname);return fs.existsSync(file)?route.fulfill({body:fs.readFileSync(file),contentType:u.pathname.endsWith('.js')?'text/javascript':'text/css'}):route.fulfill({status:404,body:''});});
+ const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto('http://cal.test/');await page.waitForSelector('[data-calendar-range-ready="1"]');
+ check(await page.locator('.calendar-card-header .calendar-month-label').textContent()==='2026年10月','period in actual PHP header at '+width);
+ check(await page.locator('.calendar-toolbar .calendar-month-label').count()===0,'period removed from toolbar');
+ const centered=await page.locator('.calendar-card-header').evaluate(header=>{const a=header.getBoundingClientRect(),b=header.querySelector('.calendar-month-label').getBoundingClientRect();return Math.abs((a.left+a.width/2)-(b.left+b.width/2))<1;});
+ check(centered,'period aligned to the whole header midpoint at '+width);
+ check(await page.locator('.calendar-card-header').evaluate(header=>{const label=header.querySelector('.calendar-month-label').getBoundingClientRect(),drag=header.querySelector('.widget-drag-handle').getBoundingClientRect(),edit=header.querySelector('.calendar-widget-edit-trigger').getBoundingClientRect();return drag.right<=label.left&&label.right<=edit.left;}),'period does not overlap drag/edit buttons');
+
+ const positions=await page.locator('.calendar-toolbar button').evaluateAll(ns=>ns.map(n=>Math.round(n.getBoundingClientRect().top)));check(new Set(positions).size===1,'all navigation/view/add buttons occupy one row');
+ const urgent=page.locator('[data-event-id="1"]').first(),ordinary=page.locator('[data-event-id="2"]').first();await page.waitForFunction(()=>document.querySelector('[data-event-id="1"]').dataset.calendarDeadlineLevel==='urgent');
+ check(await ordinary.getAttribute('data-calendar-deadline-level')==='','ordinary future event not emphasized');
+ check(await urgent.evaluate(n=>n.classList.contains('calendar-event-color-blue')),'deadline preserves event color class');
+ for(const theme of ['bootstrap','bootstrap-flatly','bootstrap-solar','bootstrap-slate']){
+  const style=await page.addStyleTag({content:fs.readFileSync(path.join(root,'public/css/'+theme+'-5.3.8.min.css'),'utf8').replace(/@import[^;]*;/g,'')});
+  await page.evaluate(theme=>{document.querySelector('#main-content').dataset.dashboardTheme=theme;},theme);
+  await page.emulateMedia({reducedMotion:'reduce'});
+  check(await page.locator('[data-calendar-deadline-level="urgent"]').evaluateAll(ns=>ns.every(n=>{const s=getComputedStyle(n);return s.outlineStyle==='none'&&parseFloat(s.borderLeftWidth)>=3&&s.boxShadow.includes('-2px 0px')&&!/(?<!-)2px 0px 0px 0px/.test(s.boxShadow);})),'all five colors retain left stripe with three-edge deadline cue in '+theme+' at '+width);
+  check(await page.locator('[data-event-id="7"]').first().getAttribute('data-calendar-deadline-level')==='soon','two-day border cue remains separate at '+width+' '+theme);
+  await page.screenshot({path:'/tmp/rss-calendar-colors-'+theme+'-'+width+'.png'});
+  await style.evaluate(n=>n.remove());
+ }
+ await page.evaluate(()=>{document.querySelector('#main-content').dataset.dashboardTheme='bootstrap';});
+ await page.emulateMedia({reducedMotion:'no-preference'});
+ await urgent.click();await page.waitForSelector('#changeCalendarEvent.show');check(await page.locator('.changeCalendarEventDeadlineHighlight').isChecked(),'editing restores opt-in checkbox');
+ await page.waitForFunction(()=>bootstrap.Modal.getInstance(document.querySelector('#changeCalendarEvent'))._isTransitioning===false);
+ await page.locator('.copy_calendar_event').click();await page.waitForSelector('#registerCalendarEvent.show');check(await page.locator('.registerCalendarEventDeadlineHighlight').isChecked(),'copy carries opt-in checkbox');
+ await page.waitForFunction(()=>bootstrap.Modal.getInstance(document.querySelector('#registerCalendarEvent'))._isTransitioning===false); await page.evaluate(()=>bootstrap.Modal.getInstance(document.querySelector('#registerCalendarEvent')).hide());await page.waitForSelector('#registerCalendarEvent.show',{state:'hidden'});
+ await page.locator('.calendar-event-add-trigger').click();await page.waitForSelector('#registerCalendarEvent.show');check(!await page.locator('.registerCalendarEventDeadlineHighlight').isChecked(),'new ordinary event resets opt-in');
+ await page.waitForFunction(()=>bootstrap.Modal.getInstance(document.querySelector('#registerCalendarEvent'))._isTransitioning===false); await page.evaluate(()=>bootstrap.Modal.getInstance(document.querySelector('#registerCalendarEvent')).hide());await page.waitForSelector('#registerCalendarEvent.show',{state:'hidden'});
+ await page.waitForFunction(()=>bootstrap.Modal.getInstance(document.querySelector('#registerCalendarEvent'))._isTransitioning===false);
+ await page.waitForSelector('.modal-backdrop',{state:'hidden'});
+ await page.screenshot({path:'/tmp/rss-calendar-'+width+'.png'});
+ await page.emulateMedia({reducedMotion:'reduce'});check(await urgent.evaluate(n=>getComputedStyle(n).animationName)==='none','reduced motion disables pulse');
+ check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'no page overflow at '+width);check(errors.length===0,'no calendar browser exceptions: '+errors.join(','));await context.close();
+}}finally{await browser.close();}console.log('RESULT: PASS '+checks+' / FAIL 0 / SKIP 0');})().catch(e=>{console.error(e);process.exitCode=1;});

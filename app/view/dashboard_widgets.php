@@ -153,7 +153,9 @@ if (is_int($content_location)) {
             echo '</div>';
             echo '<div class="mini-game-card-body">';
 
-            if ($gameType === 'word_tiles' || $gameType === 'word_tiles_ja') {
+            if ($gameType === 'tower_defense') {
+                echo '<p class="game-widget-loading text-muted" role="status">Tower Defenseを読み込んでいます...</p>';
+            } elseif ($gameType === 'word_tiles' || $gameType === 'word_tiles_ja') {
                 echo '<p class="game-widget-loading text-muted" role="status">Word Tilesを読み込んでいます...</p>';
             } elseif ($gameType === 'falling_blocks') {
                 echo '<p class="game-widget-loading text-muted" role="status">Falling Blocksを読み込んでいます...</p>';
@@ -399,19 +401,20 @@ if (is_int($content_location)) {
                         <div class="text-bg-' . app_html($widgetStyle) . ' calendar-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines" aria-hidden="true"></i></button>
                             <small class="calendar-widget-title widget-title-text" id="' . app_html($calendarTitleId) . '" title="' . app_html($calendarTitle) . '">' . app_html($calendarTitle) . '</small>
+                            <strong class="calendar-month-label" aria-live="polite">----</strong>
                             <button type="button" class="btn btn-link calendar-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" data-bs-toggle="modal" data-bs-target="#changeCalendarWidget" aria-label="このCalendar Widgetを編集"><i class="fas fa-edit" aria-hidden="true"></i></button>
                         </div>
                         <div class="calendar-card-body">
                             <div class="calendar-toolbar">
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-prev-month" aria-label="前の月"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-today">今月</button>
-                                <strong class="calendar-month-label" aria-live="polite">----</strong>
                                 <div class="btn-group btn-group-sm calendar-view-switch" role="group" aria-label="Calendar表示">
                                     <button type="button" class="btn btn-outline-secondary calendar-view-mode" data-calendar-view-mode="day" aria-pressed="false">日</button>
                                     <button type="button" class="btn btn-outline-secondary calendar-view-mode" data-calendar-view-mode="week" aria-pressed="false">週</button>
                                     <button type="button" class="btn btn-outline-secondary calendar-view-mode active" data-calendar-view-mode="month" aria-pressed="true">月</button>
                                 </div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-next-month" aria-label="次の月"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary calendar-refresh" title="カレンダーを更新"><i class="fas fa-sync-alt" aria-hidden="true"></i><span class="visually-hidden">カレンダーを更新</span></button>
                                 <button type="button" class="btn btn-sm btn-primary calendar-event-add-trigger" data-bs-toggle="modal" data-bs-target="#registerCalendarEvent"><i class="fas fa-plus" aria-hidden="true"></i><span class="visually-hidden">予定を追加</span></button>
                             </div>
                             <div class="calendar-weekdays" aria-hidden="true"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>

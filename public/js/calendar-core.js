@@ -6,6 +6,8 @@
     var holidayRefreshRequested = false;
     var noticeTimer = null;
     var calendarResizeObserver = null;
+    var refreshTimer = null;
+    var dragging = false;
 
     function appCsrfToken() {
         return $('meta[name="csrf-token"]').attr('content') || '';
@@ -476,6 +478,8 @@
             .attr('data-calendar-event-start-time', publicTime(item.start_time))
             .attr('data-calendar-event-end-time', publicTime(item.end_time))
             .attr('data-calendar-event-url', String(item.url || ''))
+            .attr('data-calendar-event-deadline-highlight', item.deadline_highlight ? '1' : '0')
+            .attr('data-calendar-source-deadline-highlight', (item.source_deadline_highlight !== undefined ? item.source_deadline_highlight : item.deadline_highlight) ? '1' : '0')
             .attr('data-calendar-event-reminder', String(item.reminder || 'none'))
             .attr('data-calendar-event-repeat-type', repeat)
             .attr('data-calendar-event-repeat-until', String(item.repeat_until || ''))
@@ -870,7 +874,42 @@
             });
     }
 
-    function loadCalendarView($card, modeValue, anchorValue, skipHolidayRefresh) {
+    function calendarBusy() {
+        return dragging || $('.modal.show, .modal.showing, .calendar-event-dragging, .calendar-drag-drop-target, .widget-dragging').length > 0;
+    }
+
+    function rangeSignature(data) {
+        function stable(value) {
+            if (Array.isArray(value)) return value.map(stable);
+            if (value && typeof value === 'object') {
+                var result = {};
+                Object.keys(value).sort().forEach(function (key) { result[key] = stable(value[key]); });
+                return result;
+            }
+            return value;
+        }
+        return JSON.stringify(stable({events:data.events || [], tasks:data.tasks || [], holidays:data.holidays || {}, cancelled:data.cancelled_occurrences || [], start:data.range_start, end:data.range_end}));
+    }
+
+    function refreshCalendarsQuietly(manualCard) {
+        if (document.hidden || calendarBusy()) return;
+        var $cards = manualCard || $('[data-dashboard-widget-type="calendar"]:visible');
+        $cards.each(function () {
+            var $card = $(this);
+            if ($card.data('calendar-range-request') || $card.attr('data-calendar-range-ready') !== '1') return;
+            if (!manualCard && !$card.data('calendar-refresh-deferred') && Date.now() - Number($card.data('calendar-last-check') || 0) < 10000) return;
+            $card.removeData('calendar-refresh-deferred');
+            loadCalendarView($card, calendarViewMode($card), calendarSelectedDate($card), true, manualCard ? 'manual' : 'auto');
+        });
+    }
+
+    function scheduleRefresh() {
+        window.clearTimeout(refreshTimer);
+        refreshTimer = null;
+        if (!document.hidden) refreshTimer = window.setTimeout(function () { refreshCalendarsQuietly(); scheduleRefresh(); }, 180000);
+    }
+
+    function loadCalendarView($card, modeValue, anchorValue, skipHolidayRefresh, refreshKind) {
         var widgetId = String($card.attr('data-dashboard-widget-id') || '');
         var views = calendarViewModule();
         var mode = views ? views.validMode(modeValue) : 'month';
@@ -893,6 +932,8 @@
         if (!/^\d+$/.test(widgetId) || !period || period.start < '2000-01-01' || period.end > '2100-12-31') {
             return;
         }
+        var quiet = !!refreshKind;
+        if (quiet && (calendarBusy() || $card.data('calendar-range-request'))) return;
         var $days = $card.find('.calendar-days');
         var requestSequence = Number($card.data('calendar-range-request-sequence') || 0) + 1;
         var previousRequest = $card.data('calendar-range-request');
@@ -904,9 +945,15 @@
             .attr('data-calendar-range-ready', '0')
             .attr('data-calendar-view', period.mode)
             .attr('data-calendar-selected-date', period.anchor);
-        $days.attr('aria-busy', 'true').empty();
-        var $loading = $('<div>').addClass('calendar-loading').attr('role', 'status').appendTo($days);
-        appendLoadingText($loading, 'Calendarを読み込んでいます');
+        if (quiet) {
+            $card.attr('data-calendar-range-ready', '1');
+            $card.find('.calendar-refresh').prop('disabled', true).attr('aria-busy', 'true');
+        } else {
+            $days.attr('aria-busy', 'true').empty();
+            var $loading = $('<div>').addClass('calendar-loading').attr('role', 'status').appendTo($days);
+            appendLoadingText($loading, 'Calendarを読み込んでいます');
+        }
+        $card.data('calendar-last-check', Date.now());
         var activeRequest = rangeRequest({
             widget_id: widgetId,
             calendar_range_start: period.start,
@@ -915,11 +962,17 @@
         $card.data('calendar-range-request', activeRequest);
         activeRequest
             .done(function (response) {
-                if (Number($card.data('calendar-range-request-sequence') || 0) !== requestSequence) {
+                if (!$card[0].isConnected || Number($card.data('calendar-range-request-sequence') || 0) !== requestSequence) {
                     return;
                 }
+                if (quiet && calendarBusy()) { $card.data('calendar-refresh-deferred', true); return; }
                 var data = apiResponseData(response);
                 if (data !== null) {
+                    var signature = rangeSignature(data);
+                    if (quiet && signature === $card.data('calendar-range-signature')) {
+                        if (refreshKind === 'manual') showNotice('カレンダーは最新です', 'info', 2500);
+                        return;
+                    }
                     var anchorDate = utcDateFromIso(period.anchor);
                     renderCalendar($card, $.extend({}, data, {
                         view_mode: period.mode,
@@ -929,10 +982,13 @@
                         month_start: period.start,
                         month_end: period.end
                     }));
+                    $card.data('calendar-range-signature', signature);
+                    if (quiet && refreshKind === 'manual') showNotice('カレンダーを更新しました', 'success', 2500);
                     if (skipHolidayRefresh !== true && data.holiday_refresh_due === true) {
                         requestHolidayRefresh();
                     }
                 } else {
+                    if (quiet) { if (refreshKind === 'manual') showNotice('カレンダーを更新できませんでした。現在の表示を保持します', 'danger'); return; }
                     $days.attr('aria-busy', 'false').empty().append($('<div>').addClass('calendar-error').attr('role', 'alert').text('Calendarを読み込めませんでした'));
                 }
             })
@@ -940,11 +996,13 @@
                 if (textStatus === 'abort' || Number($card.data('calendar-range-request-sequence') || 0) !== requestSequence) {
                     return;
                 }
+                if (quiet) { if (refreshKind === 'manual') showNotice('カレンダーを更新できませんでした。現在の表示を保持します', 'danger'); return; }
                 $days.attr('aria-busy', 'false').empty().append($('<div>').addClass('calendar-error').attr('role', 'alert').text(apiErrorMessage(xhr, textStatus)));
             })
             .always(function () {
                 if (Number($card.data('calendar-range-request-sequence') || 0) === requestSequence) {
                     $card.removeData('calendar-range-request');
+                    $card.find('.calendar-refresh').prop('disabled', false).removeAttr('aria-busy');
                 }
             });
     }
@@ -1046,6 +1104,8 @@
             .on('click' + eventNamespace, '.calendar-next-month', function () {
                 moveCalendarMonth($(this).closest('[data-dashboard-widget-type="calendar"]'), 1);
             })
+            .off('click' + eventNamespace, '.calendar-refresh')
+            .on('click' + eventNamespace, '.calendar-refresh', function () { refreshCalendarsQuietly($(this).closest('[data-dashboard-widget-type="calendar"]')); })
             .off('click' + eventNamespace, '.calendar-today')
             .on('click' + eventNamespace, '.calendar-today', function () {
                 var $card = $(this).closest('[data-dashboard-widget-type="calendar"]');
@@ -1068,6 +1128,12 @@
     function init() {
         bindEvents();
         initCalendars();
+        $(document).off('visibilitychange' + eventNamespace).on('visibilitychange' + eventNamespace, function () { if (!document.hidden) refreshCalendarsQuietly(); scheduleRefresh(); });
+        $(window).off('focus' + eventNamespace).on('focus' + eventNamespace, function () { refreshCalendarsQuietly(); });
+        $(document).off('dragstart' + eventNamespace + ' dragend' + eventNamespace + ' drop' + eventNamespace).on('dragstart' + eventNamespace, function () { dragging = true; }).on('dragend' + eventNamespace + ' drop' + eventNamespace, function () { dragging = false; if ($('[data-dashboard-widget-type="calendar"]').filter(function () { return $(this).data('calendar-refresh-deferred'); }).length) refreshCalendarsQuietly(); });
+        $(document).off('hidden.bs.modal' + eventNamespace).on('hidden.bs.modal' + eventNamespace, function () { if ($('[data-dashboard-widget-type="calendar"]').filter(function () { return $(this).data('calendar-refresh-deferred'); }).length) refreshCalendarsQuietly(); });
+        $(window).off('pagehide' + eventNamespace + ' pageshow' + eventNamespace).on('pagehide' + eventNamespace, function () { window.clearTimeout(refreshTimer); }).on('pageshow' + eventNamespace, scheduleRefresh);
+        scheduleRefresh();
     }
 
     $(init);

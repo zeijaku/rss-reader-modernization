@@ -4,8 +4,8 @@
     var source = document.currentScript;
     var revisionMatch = source && /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(source.src || '');
     var revision = revisionMatch ? revisionMatch[1] : '';
-    var catalog = Object.assign(Object.create(null), {maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js', dictionary: './js/word-tiles-words-en.js'}, word_tiles_ja: {title: 'Word Tiles 日本語', script: './js/word-tiles-ja.js', dictionary: './js/word-tiles-words-ja.js', core: './js/word-tiles.js'}});
-    var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks', word_tiles:'Word Tiles', word_tiles_ja:'Word Tiles 日本語'};
+    var catalog = Object.assign(Object.create(null), {tower_defense: {title:'Tower Defense',script:'./js/tower-defense.js',core:'./js/tower-defense-core.js'}, maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js', dictionary: './js/word-tiles-words-en.js'}, word_tiles_ja: {title: 'Word Tiles 日本語', script: './js/word-tiles-ja.js', dictionary: './js/word-tiles-words-ja.js', core: './js/word-tiles.js'}});
+    var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks', word_tiles:'Word Tiles', word_tiles_ja:'Word Tiles 日本語', tower_defense:'Tower Defense'};
     var factories = Object.create(null), loads = Object.create(null), records = new Map();
     var expanded = null, previousOverflow = '', observer = null;
     function assetUrl(path) { return revision ? path + '?v=' + encodeURIComponent(revision) : path; }
@@ -42,7 +42,7 @@
         Object.keys(catalog).forEach(function (game) {
             var key = storageKey(user, widgetId, game);
             if (!key) return;
-            ['localStorage','sessionStorage'].forEach(function (name) { try { window[name].removeItem(key); if (game === 'word_tiles' || game === 'word_tiles_ja') window[name].removeItem(key + '.state'); } catch (error) {} });
+            ['localStorage','sessionStorage'].forEach(function (name) { try { window[name].removeItem(key); if (game === 'word_tiles' || game === 'word_tiles_ja' || game === 'tower_defense') window[name].removeItem(key + '.state'); } catch (error) {} });
         });
     }
     var assetLoads = Object.create(null);
@@ -119,7 +119,7 @@
         body.append(summary,stage,controls,status,note); record.expandButton = expand;
         var context = {
             stage: stage,
-            stateKey: (record.game === 'word_tiles' || record.game === 'word_tiles_ja') && record.key ? record.key + '.state' : null,
+            stateKey: (record.game === 'word_tiles' || record.game === 'word_tiles_ja' || record.game === 'tower_defense') && record.key ? record.key + '.state' : null,
             on: function (target,type,callback,options) { on(record,target,type,callback,options); },
             update: function (view) {
                 score.textContent = String(view.score); saveBest(record,view.score); best.textContent = String(record.best);
@@ -128,6 +128,7 @@
                 pause.disabled = !view.playing; pause.textContent = view.paused ? 'Resume' : 'Pause';
                 pause.setAttribute('aria-pressed',view.paused ? 'true' : 'false');
                 note.textContent = record.storage === 'memory' ? '保存できないため、この画面内だけでBestを保持します。SoundはOFFです。' : record.storage === 'sessionStorage' ? 'BestはこのTabを閉じるまで保持します。SoundはOFFです。' : 'Bestをこの端末に保存します。SoundはOFFです。';
+                if (typeof view.storageNote === 'string') note.textContent = view.storageNote;
                 record.card.setAttribute('data-game-widget-status',view.status);
             }
         };

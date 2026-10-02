@@ -36,6 +36,7 @@ function calendar_range_normalize_non_recurring_row(array $row): ?array
     $eventId = (int) $event['calendar_event_id'];
     $originalStart = (string) $event['calendar_event_start_date'];
     return [
+        'deadline_highlight' => (bool) ($row['calendar_event_deadline_highlight'] ?? false),
         'kind' => 'event',
         'event_id' => $eventId,
         'occurrence_key' => calendar_event_occurrence_key($eventId, $originalStart),
@@ -72,7 +73,7 @@ function calendar_range_event_state(int $ownerId, string $rangeStart, string $ra
         'SELECT calendar_event_id, calendar_event_date, calendar_event_updated_at, calendar_event_flag, '
         . 'calendar_event_owner, calendar_event_title, calendar_event_start_date, calendar_event_end_date, '
         . 'calendar_event_note, calendar_event_color, calendar_event_all_day, calendar_event_start_time, '
-        . 'calendar_event_end_time, calendar_event_url, calendar_event_repeat_type, calendar_event_repeat_until, calendar_event_reminder '
+        . 'calendar_event_end_time, calendar_event_url, calendar_event_repeat_type, calendar_event_repeat_until, calendar_event_reminder, calendar_event_deadline_highlight '
         . 'FROM ' . db_table_identifier('calendar_event') . ' '
         . 'WHERE calendar_event_owner = :owner AND calendar_event_flag = 0 '
         . 'AND calendar_event_start_date <= :range_end '

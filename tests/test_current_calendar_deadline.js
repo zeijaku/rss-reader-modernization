@@ -1,0 +1,16 @@
+'use strict';
+const assert=require('node:assert/strict'),{level}=require('../public/js/calendar-deadline.js');
+const event={highlight:true,endDate:'2026-10-10',allDay:true},at=s=>Date.parse(s+'+09:00');
+assert.equal(level(event,at('2026-10-07T23:59:59')),'');
+assert.equal(level(event,at('2026-10-08T00:00:00')),'soon');
+assert.equal(level(event,at('2026-10-09T00:00:00')),'urgent');
+assert.equal(level(event,at('2026-10-10T23:59:59')),'urgent');
+assert.equal(level(event,at('2026-10-11T00:00:00')),'');
+assert.equal(level({...event,highlight:false},at('2026-10-09T12:00:00')),'');
+assert.equal(level({...event,cancelled:true},at('2026-10-09T12:00:00')),'');
+const timed={...event,allDay:false,startTime:'09:00',endTime:'15:00'};
+assert.equal(level(timed,at('2026-10-10T14:59:59')),'urgent');
+assert.equal(level(timed,at('2026-10-10T15:00:01')),'');
+assert.equal(level({...timed,endTime:''},at('2026-10-10T09:00:01')),'');
+assert.equal(level({...event,endDate:'2027-01-01'},at('2026-12-30T00:00:00')),'soon');
+console.log('PASS: opt-in, cancellation, Japan midnight, year boundary, inclusive all-day and timed deadline boundaries');

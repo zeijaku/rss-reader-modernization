@@ -366,3 +366,12 @@ node "$ROOT/tests/test_current_word_tiles_ja_runtime.js"
 # Game settings storage and Wire Defense teardown remain Current.
 node "$ROOT/tests/test_current_game_settings_state.js"
 node "$ROOT/tests/test_current_wire_defense_lifecycle.js"
+
+# Calendar visual deadline and tactical TD: current opt-in/state contracts.
+node "$ROOT/tests/test_current_calendar_deadline.js"
+php "$ROOT/tests/test_current_calendar_deadline.php"
+node "$ROOT/tests/test_current_tower_defense.js"
+node --check "$ROOT/public/js/tower-defense.js"
+sh "$ROOT/tests/test_current_calendar_deadline_mariadb.sh"
+node --check "$ROOT/tests/test_current_tower_defense_browser.js"
+node --check "$ROOT/tests/test_current_calendar_deadline_browser.js"

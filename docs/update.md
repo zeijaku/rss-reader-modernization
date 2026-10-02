@@ -31,6 +31,12 @@ php tools/healthcheck.php
 
 Production serverでLocal変更がある場合は、その内容を確認するまで更新を進めません。
 
+## V1.41.0 正式版の更新
+
+dev.7適用済みなら正式化差分の `app/version.php` だけを上書きします。追加SQLは不要です。旧TD素材の `public/assets/td/` と `licenses/kenney-td/` は削除できます（正式配布から除外済み）。TDの既存保存・星を維持します。詳しい適用手順は [V1.41.0 Release](v1.41.0-release.md) を参照してください。
+
+V1.40.1からの更新には `database/migrations/032_v1_41_calendar_deadline.sql` が必要です。`@table_prefix` を実環境に合わせて適用します。期日強調は既存予定でOFF、繰り返し予定の個別設定は親から継承します。TDの保存はブラウザー内で、端末間同期はありません。詳しい更新内容は [Release Notes](../RELEASE_NOTES.md) を参照してください。
+
 ## 2. DB Migrationが必要か判断する
 
 **既存Databaseへ `database/schema.sql` を再実行しません。**

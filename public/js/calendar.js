@@ -59,6 +59,7 @@
     loadStyle(assetUrl('./css/calendar-views.css'), 'data-calendar-views-style');
     loadStyle(assetUrl('./css/calendar-polish.css'), 'data-calendar-polish-style');
     loadStyle(assetUrl('./css/calendar-polish-r3.css'), 'data-calendar-polish-r3-style');
+    loadStyle(assetUrl('./css/calendar-deadline.css'), 'data-calendar-deadline-style');
     loadStyle(assetUrl('./css/block-collapse.css'), 'data-block-collapse-style');
     loadStyle(assetUrl('./css/stock-state-ui.css'), 'data-stock-state-ui-style');
     startStyleQueue();
@@ -86,6 +87,7 @@
     loadScript(assetUrl('./js/calendar-source-actions.js'));
     loadScript(assetUrl('./js/calendar-polish.js'));
     loadScript(assetUrl('./js/calendar-polish-r3.js'));
+    loadScript(assetUrl('./js/calendar-deadline.js'));
     loadScript(assetUrl('./js/block-collapse.js'));
     loadScript(assetUrl('./js/mail-widget-watchdog.js'));
     loadScript(assetUrl('./js/camera-video-watchdog.js'));
