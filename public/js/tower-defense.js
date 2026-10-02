@@ -5,30 +5,40 @@
     function element(tag,cls,text){var el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;}
     function mount(context) {
         var state=core.create(0,'normal'),bests=core.emptyBests(),selected=null,chosen=null,paused=false,suspended=false,destroyed=false,speed=1,frame=0,last=0,accumulator=0,storage='memory',notice='',legacyBackup=null;
-        var checkpoint=core.checkpoint(state),loaded=false;
+        var checkpoint=core.checkpoint(state),loaded=false,stateKeyV2=context.stateKey?context.stateKey+'.v2':null;
         if(context.stateKey){
             ['localStorage','sessionStorage'].some(function(name){
                 try{
+                    var currentRaw=stateKeyV2?window[name].getItem(stateKeyV2):null;
+                    if(currentRaw){
+                        if(currentRaw.length>40000)throw new Error('Oversized checkpoint');
+                        var currentData=JSON.parse(currentRaw),currentState=core.restore(currentData.checkpoint);
+                        if(currentData.schema!==2||!currentState||!core.validBests(currentData.bests))throw new Error('Invalid checkpoint');
+                        state=currentState;bests=currentData.bests.map(function(row){return row.slice();});
+                        if(currentData.legacyV1&&typeof currentData.legacyV1==='object')legacyBackup=currentData.legacyV1;
+                        checkpoint=core.checkpoint(state);storage=name;loaded=true;return true;
+                    }
                     var raw=window[name].getItem(context.stateKey);
                     if(!raw)return false;
-                    if(raw.length>40000)throw new Error('Oversized checkpoint');
+                    if(raw.length>40000)throw new Error('Oversized legacy checkpoint');
                     var data=JSON.parse(raw),restored=null;
-                    if(data.schema===2){
-                        restored=core.restore(data.checkpoint);
-                        if(!restored||!core.validBests(data.bests))throw new Error('Invalid checkpoint');
-                        state=restored;bests=data.bests.map(function(row){return row.slice();});
-                        if(data.legacyV1&&typeof data.legacyV1==='object')legacyBackup=data.legacyV1;
-                    }else if(data.schema===1){
+                    if(data.schema===1){
                         var migrated=core.migrateLegacy(data.checkpoint),legacyBests=core.migrateLegacyBests(data.bests);
                         if(!migrated||!legacyBests)throw new Error('Invalid legacy checkpoint');
                         state=migrated.state;bests=legacyBests;legacyBackup=data;
-                        notice='旧TD保存をNormalへ移行しました。'+(migrated.moved?'新しい広域地形と重なった塔 '+migrated.moved+'基は最寄りの配置可能マスへ移動しています。':'旧配置と★は保持されています。');
+                        notice='旧TD保存をNormalへ移行しました。旧保存はそのまま残しています。'+(migrated.moved?' 新しい広域地形と重なった塔 '+migrated.moved+'基は最寄りの配置可能マスへ移動しています。':' 旧配置と★は保持されています。');
+                    }else if(data.schema===2){
+                        restored=core.restore(data.checkpoint);
+                        if(!restored||!core.validBests(data.bests))throw new Error('Invalid development checkpoint');
+                        state=restored;bests=data.bests.map(function(row){return row.slice();});
+                        if(data.legacyV1&&typeof data.legacyV1==='object')legacyBackup=data.legacyV1;
+                        notice='開発中のTD保存を新しい保存領域へ移行しました。';
                     }else{
                         throw new Error('Unsupported checkpoint schema');
                     }
                     checkpoint=core.checkpoint(state);storage=name;loaded=true;return true;
                 }catch(error){
-                    notice='保存内容を読み込めなかったため、新しい配置から開始します。';return false;
+                    notice='保存内容を読み込めなかったため、新しい配置から開始します。既存の保存領域は変更していません。';return false;
                 }
             });
         }
@@ -77,7 +87,7 @@
             element('p','','道と岩以外のマスを選び、塔を選択して配置します。配置・強化・売却は準備中のみ。売却は投資額の75%が戻ります。次のWaveを押すと敵が進み、塔が自動攻撃します。'),
             element('p','','ステージ1〜3は12×8の通常盤面、4〜6は24×8の広域盤面です。広域盤面は2つの入口から全難易度で敵が来ます。狭いカードやスマホでは盤面だけ横スクロールできます。'),
             element('p','','Easy / Normal / Hard / Nightmareは開始前に選択します。地形と経路は同じで、資金・拠点HP・敵編成・強さ・速度・出現間隔が変わります。8Waveを守りきるとクリアし、★はステージ×難易度ごとに保存します。'),
-            element('p','','準備中の配置とWave開始直前をこのブラウザーに保存します。戦闘途中で閉じると、そのWave直前から再開します。旧V1.41.0保存はNormalとして移行し、旧★を保持します。広域地形と衝突する旧塔だけ最寄りの配置可能マスへ移動し、旧保存内容も新しい保存内に残します。PCとスマホの保存は別です。'),
+            element('p','','準備中の配置とWave開始直前をこのブラウザーに保存します。戦闘途中で閉じると、そのWave直前から再開します。旧V1.41.0保存はNormalとして移行し、旧★を保持します。広域地形と衝突する旧塔だけ最寄りの配置可能マスへ移動します。旧保存keyは上書きせず残し、新しい進行は別のschema 2 keyへ保存します。PCとスマホの保存は別です。'),
             element('p','','敵: 四角＝歩兵、三角＝速足、大きな四角＝巨人、六角＝重装、星入り八角＝ボス。速足は氷による減速が弱く、X印の岩には新しい塔を置けません。音はありません。')
         );
         root.append(top,hint,summary,boardScroll,panel,guide);context.stage.append(root);
@@ -95,9 +105,9 @@
             var payload={schema:2,checkpoint:checkpoint,bests:bests};
             if(legacyBackup)payload.legacyV1=legacyBackup;
             var value=JSON.stringify(payload);storage='memory';
-            if(context.stateKey){
+            if(stateKeyV2){
                 ['localStorage','sessionStorage'].some(function(name){
-                    try{window[name].setItem(context.stateKey,value);storage=name;return true;}catch(error){return false;}
+                    try{window[name].setItem(stateKeyV2,value);storage=name;return true;}catch(error){return false;}
                 });
             }
         }
@@ -189,7 +199,7 @@
 
         function storageNote(){
             var base=storage==='localStorage'?'配置とステージ×難易度の★をこのブラウザーに保存します。戦闘途中はWave直前から再開します。':storage==='sessionStorage'?'永続保存が使えないため、このTabを閉じるまで保存します。':'保存が使えないため、この画面内でのみ配置を保持します。';
-            return legacyBackup?base+' 旧V1.41.0保存のバックアップも保持中です。':base;
+            return legacyBackup?base+' 旧V1.41.0保存keyもロールバック用にそのまま保持しています。':base;
         }
         function render(){
             var map=core.maps[state.stage];
