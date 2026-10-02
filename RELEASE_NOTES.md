@@ -1,3 +1,9 @@
+# Development checkpoint: 1.41.1-dev.1
+
+Calendar deadline repeat-pulse correction. Urgent opt-in events pulse on display and then once per active minute, while the existing red three-edge cue remains between pulses. Hidden-tab time is excluded from the cadence, card replacement keeps the current cycle, and reduced-motion uses the static cue only. This adds no one-minute API request and does not change deadline calculation, recurrence/exception behavior, the three-minute Calendar refresh, DB schema or Tower Defense.
+
+See [scope, installation and checks](docs/v1.41.1-dev1-calendar-deadline-pulse.md). This is not the formal V1.41.1 release; stable V1.41.0 release notes follow below.
+
 # RSS Reader Modernization 1.41.0
 
 V1.41.0 finalizes the user-confirmed dev.1–dev.7 Calendar and Tower Defense features. Finalization changes Version/docs and removes unused bitmap assets; tested dev.7 runtime behavior is retained.
