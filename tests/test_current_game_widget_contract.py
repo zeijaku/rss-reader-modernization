@@ -37,7 +37,8 @@ check('cancelAnimationFrame' in fall and 'resizeObserver.disconnect()' in fall,'
 word=text('public/js/word-tiles.js')
 check("'word_tiles'" in mini and "script: './js/word-tiles.js'" in common,'Word Tiles uses the existing subtype validator and local lazy catalog')
 check("catalogButton('#registerGameWidget', 'Word Tiles'" in text('public/js/utility-widgets.js'),'production Drawer registers Word Tiles')
-check("record.game === 'word_tiles'" in common and "key + '.state'" in common,'Word state key and cleanup are scoped to that subtype')\ncheck("game === 'tower_defense'" in common and "key + '.state.v2'" in common,'Tower Defense cleanup covers legacy and schema-2 browser state')
+check("record.game === 'word_tiles'" in common and "key + '.state'" in common,'Word state key and cleanup are scoped to that subtype')
+check("game === 'tower_defense'" in common and "key + '.state.v2'" in common,'Tower Defense cleanup covers legacy and schema-2 browser state')
 check('parseState' in word and 'raw.length>16384' in word and 'SCHEMA' in word and 'WORDLIST' in word,'saved Word state is bounded and schema/dictionary checked')
 check('innerHTML' not in word and all(x not in word for x in ['fetch(', 'XMLHttpRequest', 'https://','requestAnimationFrame']),'Word uses safe DOM, fixed local dictionary and no animation loop')
 for page in ['public/index.php','public/stock.php']:
