@@ -1,5 +1,5 @@
 'use strict';
-const assert=require('node:assert/strict'),{level}=require('../public/js/calendar-deadline.js');
+const assert=require('node:assert/strict'),{level,pulseDue}=require('../public/js/calendar-deadline.js');
 const event={highlight:true,endDate:'2026-10-10',allDay:true},at=s=>Date.parse(s+'+09:00');
 assert.equal(level(event,at('2026-10-07T23:59:59')),'');
 assert.equal(level(event,at('2026-10-08T00:00:00')),'soon');
@@ -13,4 +13,7 @@ assert.equal(level(timed,at('2026-10-10T14:59:59')),'urgent');
 assert.equal(level(timed,at('2026-10-10T15:00:01')),'');
 assert.equal(level({...timed,endTime:''},at('2026-10-10T09:00:01')),'');
 assert.equal(level({...event,endDate:'2027-01-01'},at('2026-12-30T00:00:00')),'soon');
-console.log('PASS: opt-in, cancellation, Japan midnight, year boundary, inclusive all-day and timed deadline boundaries');
+assert.equal(pulseDue(undefined,1000),true);
+assert.equal(pulseDue(1000,60999),false);
+assert.equal(pulseDue(1000,61000),true);
+console.log('PASS: opt-in, cancellation, Japan midnight, year boundary, deadline boundaries and one-minute pulse cadence');
