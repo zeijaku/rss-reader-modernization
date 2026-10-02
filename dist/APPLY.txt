@@ -1,0 +1,14 @@
+RSS Reader Modernization 1.42.0-dev.2
+Tower Defense two-column wide-board scroll hotfix
+
+Base: V1.42.0-dev.1 already applied
+TD source HEAD: 0be6b0da807505dbcb6823857b41a8a127ed4ba0
+
+Overwrite:
+  app/version.php
+  public/css/game-widget.css
+
+No DB migration / config change / file deletion.
+Reload after overwrite and confirm version 1.42.0-dev.2.
+Check: 2-column TD wide map scrolls horizontally inside the board; 3-column layout still shows the full map when enough width is available.
+Production formal release remains separate.
