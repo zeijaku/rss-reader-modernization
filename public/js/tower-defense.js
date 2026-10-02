@@ -211,7 +211,7 @@
             upgrade.disabled=!preparing||!t||t.level>=3||state.gold<core.upgradeCost(t);upgrade.textContent=t&&t.level<3?'強化 '+core.upgradeCost(t)+'G':'強化';
             sell.disabled=!preparing||!t;sell.textContent=t?'売却 '+Math.floor(t.spent*.75)+'G':'売却';
             next.disabled=!preparing;next.textContent=preparing?'Wave '+(state.wave+1)+'開始':'次のWave';
-            stageSelect.disabled=state.phase==='fight';difficultySelect.disabled=state.phase==='fight';
+            var setupLocked=state.phase==='fight'||(state.phase==='prepare'&&state.wave>0);stageSelect.disabled=setupLocked;difficultySelect.disabled=setupLocked;
             stageSelect.value=String(state.stage);difficultySelect.value=state.difficulty;
             var message=state.phase==='prepare'?'準備中。配置を調整し、Wave開始を押してください。':state.phase==='won'?'クリア！ '+ '★'.repeat(core.stars(state))+' 配置を変えて再挑戦できます。':state.phase==='lost'?'拠点が陥落しました。Restartで配置を改良して再挑戦しましょう。':paused?'一時停止中。Resumeで再開します。':'戦闘中。塔が自動で攻撃します。';
             context.update({score:state.score,started:true,playing:state.phase==='fight',paused:paused,status:state.phase,message:notice||message,storageNote:storageNote()});draw();
