@@ -26,9 +26,13 @@
     function pulseKey(button) {
         var occurrence = button.getAttribute('data-calendar-occurrence-key') || '';
         var eventId = button.getAttribute('data-event-id') || '';
-        if (occurrence !== '') return eventId + '|' + occurrence;
-        return [eventId, button.getAttribute('data-calendar-occurrence-end-date') || button.getAttribute('data-event-end-date') || '',
-            button.getAttribute('data-calendar-event-end-time') || '', button.getAttribute('data-calendar-event-start-time') || ''].join('|');
+        var card = typeof button.closest === 'function' ? button.closest('[data-dashboard-widget-type="calendar"]') : null;
+        var day = typeof button.closest === 'function' ? button.closest('[data-calendar-date]') : null;
+        var widgetId = card ? (card.getAttribute('data-dashboard-widget-id') || '') : '';
+        var displayDate = day ? (day.getAttribute('data-calendar-date') || '') : '';
+        if (occurrence !== '') return [widgetId, eventId, occurrence, displayDate].join('|');
+        return [widgetId, eventId, button.getAttribute('data-calendar-occurrence-end-date') || button.getAttribute('data-event-end-date') || '',
+            button.getAttribute('data-calendar-event-end-time') || '', button.getAttribute('data-calendar-event-start-time') || '', displayDate].join('|');
     }
     function visible(button) {
         var rect = button.getBoundingClientRect();
