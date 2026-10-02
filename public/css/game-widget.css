@@ -42,7 +42,9 @@
 
 /* Tower Defense: standard 12x8 boards stay responsive; 24x8 boards keep ~45px cells and scroll only inside the board viewport. */
 .td-widget { --td-bow:#b77916; --td-magic:#8854c0; --td-cannon:#d35438; --td-ice:#16849a; --td-enemy:#c23e4b; --td-base:#198754; width:100%; max-width:540px; margin:auto; color:var(--bs-body-color); }
-.td-widget[data-td-wide="1"] { max-width:1080px; }
+.td-widget[data-td-wide="1"] { width:100%; max-width:100%; min-width:0; }
+.mini-game-card[data-mini-game-type="tower_defense"] .game-widget-stage { width:100%; max-width:100%; min-width:0; }
+.td-widget[data-td-wide="1"] .td-board-scroll { width:100%; max-width:1080px; min-width:0; margin-inline:auto; }
 .td-top { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
 .td-stage-select,.td-difficulty-select { flex:1 1 220px; width:min(100%,320px); min-height:36px; }
 .td-hint, .td-selection { margin:.4rem 0; font-size:.8rem; text-align:center; }
