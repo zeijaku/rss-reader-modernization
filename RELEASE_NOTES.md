@@ -1,3 +1,9 @@
+# Development checkpoint: 1.42.0-dev.2
+
+Tower Defense wide-board card-width correction on top of dev.1. The fixed 24×8 / 1080×360 map and all gameplay/save behavior are unchanged. The wide TD shell is now constrained to the actual Game card width, so a two-column desktop card exposes the board's own horizontal scroller rather than clipping an oversized centered board. Cards wide enough to contain 1080px still show the full map, and smartphones continue to use board-only horizontal scrolling.
+
+No database migration, server API, Calendar logic, map/route, balance or save-schema change. Apply `app/version.php` and `public/css/game-widget.css` over dev.1, then confirm two-column horizontal scrolling and the existing three-column full-map view. See [dev.2 checks](docs/v1.42.0-dev2-td-wide-scroll.md).
+
 # Development checkpoint: 1.42.0-dev.1
 
 Tower Defense wide-map / difficulty development preview, based on the pending 1.41.1-dev.1 Calendar deadline correction.
