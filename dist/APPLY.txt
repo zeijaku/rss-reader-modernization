@@ -1,0 +1,23 @@
+RSS Reader Modernization 1.42.0-dev.1
+Tower Defense wide-map / difficulty checkpoint
+
+Base:
+  V1.41.1-dev.1 Calendar checkpoint
+  Branch: fix/v1.41.1-calendar-deadline-pulse
+TD source:
+  feature/v1.42.0-td-wide-difficulty
+  HEAD: a06fc5128606d2c783a11be9ba1006c8d7f64cd9
+
+Overwrite these files:
+  app/version.php
+  public/js/game-widget.js
+  public/js/tower-defense-core.js
+  public/js/tower-defense.js
+  public/css/game-widget.css
+
+No DB migration.
+No config change.
+No file deletion.
+
+Apply after the V1.41.1-dev.1 Calendar checkpoint. Then reload the browser and verify the footer/version is 1.42.0-dev.1.
+Production deployment and formal release are NOT part of this checkpoint.
