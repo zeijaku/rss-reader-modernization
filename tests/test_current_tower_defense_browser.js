@@ -36,7 +36,7 @@ try{for(const width of [1280,360]){
 
  await second.locator('.td-difficulty-select').selectOption('nightmare');
  check(await second.locator('[data-td-stat=health]').textContent()==='12/12'&&await second.locator('[data-td-stat=gold]').textContent()==='165G','Nightmare changes starting resources at '+width);
- const key2=await page.evaluate(()=>RssGameWidget.storageKey(7,2,'tower_defense')+'.state');
+ const key2=await page.evaluate(()=>RssGameWidget.storageKey(7,2,'tower_defense')+'.state.v2');
  let saved2=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)),key2);
  check(saved2.schema===2&&saved2.checkpoint.stage===5&&saved2.checkpoint.difficulty==='nightmare','stage and difficulty persist in schema 2');
  await second.locator('.td-board-scroll').evaluate(n=>{n.scrollLeft=240;});
@@ -48,7 +48,7 @@ try{for(const width of [1280,360]){
  await first.locator('.td-cell[data-x="8"][data-y="3"]').click();await first.locator('[data-tower="bow"]').click();await first.locator('.td-confirm').click();
  check((await first.locator('.td-summary').textContent()).includes('160G'),'confirmed placement keeps current tower economy');
  await first.locator('.td-upgrade').click();check((await first.locator('.td-selection').textContent()).includes('Lv.2'),'upgrade remains available in preparation');
- const key1=await page.evaluate(()=>RssGameWidget.storageKey(7,1,'tower_defense')+'.state'),beforeFight=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)),key1);
+ const key1=await page.evaluate(()=>RssGameWidget.storageKey(7,1,'tower_defense')+'.state.v2'),beforeFight=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)),key1);
  check(beforeFight.schema===2&&beforeFight.checkpoint.towers[0].level===2,'preparation checkpoint stored in schema 2');
  await first.locator('.td-next').click();await page.waitForTimeout(200);check(await first.getAttribute('data-game-widget-status')==='fight','explicit Wave start still begins fight');
  check(await first.locator('.td-upgrade').isDisabled()&&await first.locator('.td-sell').isDisabled()&&await first.locator('.td-difficulty-select').isDisabled(),'fight freezes economy and difficulty');
@@ -58,13 +58,14 @@ try{for(const width of [1280,360]){
  check(await second.locator('.td-stage-select').inputValue()==='5'&&await second.locator('.td-difficulty-select').inputValue()==='nightmare','reload restores stage and difficulty');
 
  const legacyKey=await page.evaluate(()=>RssGameWidget.storageKey(7,1,'tower_defense')+'.state');
- await page.evaluate(k=>localStorage.setItem(k,JSON.stringify({schema:1,checkpoint:{stage:5,wave:0,phase:'prepare',health:20,gold:160,score:0,towers:[{x:3,y:1,type:'bow',level:1,spent:60}]},bests:[0,0,0,0,0,3]})),legacyKey);
+ await page.evaluate(k=>{localStorage.removeItem(k+'.v2');localStorage.setItem(k,JSON.stringify({schema:1,checkpoint:{stage:5,wave:0,phase:'prepare',health:20,gold:160,score:0,towers:[{x:3,y:1,type:'bow',level:1,spent:60}]},bests:[0,0,0,0,0,3]}));},legacyKey);
  await page.reload();await page.waitForFunction(()=>document.querySelectorAll('.td-widget').length===2);cards=page.locator('.mini-game-card');first=cards.nth(0);
  check(await first.locator('.td-stage-select').inputValue()==='5'&&await first.locator('.td-difficulty-select').inputValue()==='normal','schema 1 checkpoint migrates to stage six Normal');
  check((await first.locator('.game-widget-status').textContent()).includes('旧TD保存'),'migration is disclosed to the player');
  check((await first.locator('.td-hint').textContent()).includes('★★★'),'legacy stage star record is retained under Normal');
- const migrated=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)),legacyKey);
+ const migrated=await page.evaluate(k=>JSON.parse(localStorage.getItem(k+'.v2')),legacyKey),legacyStillThere=await page.evaluate(k=>JSON.parse(localStorage.getItem(k)),legacyKey);
  check(migrated.schema===2&&migrated.legacyV1&&migrated.bests[5][1]===3,'schema 2 keeps legacy backup and Normal stars');
+ check(legacyStillThere.schema===1&&legacyStillThere.bests[5]===3,'migration leaves the original V1.41.0 key untouched for rollback');
  check(!(migrated.checkpoint.towers[0].x===3&&migrated.checkpoint.towers[0].y===1),'legacy tower colliding with new road is relocated');
 
  await first.locator('.game-widget-expand').click();
@@ -74,6 +75,7 @@ try{for(const width of [1280,360]){
  await page.screenshot({path:'/tmp/rss-td-wide-'+width+'.png'});
  check(!requests.some(u=>u.startsWith('/assets/td/')),'line renderer still needs no bitmap assets');
  await first.press('Escape');check(await first.locator('.game-widget-expand').getAttribute('aria-expanded')==='false','Escape closes expanded view');
+ await page.evaluate(()=>RssGameWidget.removeWidgetState(1));check(await page.evaluate(k=>localStorage.getItem(k)===null&&localStorage.getItem(k+'.v2')===null,legacyKey),'explicit widget deletion cleans legacy and schema-2 TD state');
  check(errors.length===0,'no browser exceptions: '+errors.join(','));
  await context.close();
 }
