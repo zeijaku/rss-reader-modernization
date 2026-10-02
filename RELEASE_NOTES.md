@@ -6,7 +6,7 @@ Stages 1–3 retain their V1.41.0 12×8 single-route layouts. Stages 4–6 becom
 
 Easy / Normal / Hard / Nightmare use the same stage geometry. Difficulty changes starting gold/base HP, enemy count/composition/HP/speed/reward and spawn interval. All wide-stage Waves use both entrances, while Waves 4 and 8 send Bosses from both routes. Final balance remains intentionally provisional for production playtesting.
 
-Browser save schema becomes 2. Checkpoints retain stage and difficulty, and clear stars are stored per stage × difficulty. Schema-1 stars move to Normal. A valid old checkpoint is migrated; only old towers that collide with a new wide-stage road move to the nearest buildable cell, and the original schema-1 payload remains embedded as a backup. No existing browser save is silently deleted.
+Browser save schema becomes 2. Checkpoints retain stage and difficulty, and clear stars are stored per stage × difficulty. Schema-1 stars move to Normal. A valid old checkpoint is migrated; only old towers that collide with a new wide-stage road move to the nearest buildable cell. The original V1.41.0 `.state` key is left untouched for rollback, new progress is written to `.state.v2`, and the schema-1 payload is also embedded as `legacyV1`. No existing browser save is silently deleted.
 
 No database migration, server API, authentication, cross-device synchronization or external asset is added. Production deployment and formal V1.42.0 publication remain separate after user playtesting. See [scope, migration, installation and checks](docs/v1.42.0-dev1-td-wide-difficulty.md).
 
