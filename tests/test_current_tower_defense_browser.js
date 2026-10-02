@@ -31,6 +31,11 @@ try{for(const width of [1280,360]){
  check(geometry.w===1080&&geometry.h===360,'wide map preserves about 45px per tile at '+width);
  const scroll=await second.locator('.td-board-scroll').evaluate(n=>({client:n.clientWidth,scroll:n.scrollWidth}));
  check(scroll.scroll===1080&&scroll.client<=scroll.scroll,'wide board is contained by its own scroller at '+width);
+ if(width===1280){
+   check(scroll.scroll>scroll.client,'two-column desktop card keeps horizontal board scrolling');
+   await second.locator('.td-board-scroll').evaluate(n=>{n.scrollLeft=240;});
+   check(await second.locator('.td-board-scroll').evaluate(n=>n.scrollLeft>0),'two-column desktop board can actually scroll');
+ }
  if(width===360)check(scroll.scroll>scroll.client,'smartphone wide map scrolls horizontally');
  check(await page.evaluate(()=>RssTowerDefenseCore.maps[5].paths.length===2&&RssTowerDefenseCore.maps[5].paths[0][0].join(',')!==RssTowerDefenseCore.maps[5].paths[1][0].join(',')),'wide stage has two independent entrances');
 
