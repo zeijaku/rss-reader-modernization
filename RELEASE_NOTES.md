@@ -1,3 +1,15 @@
+# Development checkpoint: 1.42.0-dev.1
+
+Tower Defense wide-map / difficulty development preview, based on the pending 1.41.1-dev.1 Calendar deadline correction.
+
+Stages 1–3 retain their V1.41.0 12×8 single-route layouts. Stages 4–6 become fixed 24×8 maps with two separated entrances/routes and short final merges. The logical board is about 1080×360px so cells remain close to the current size; one-column cards and phones scroll the board itself horizontally instead of shrinking tiles or widening the whole page.
+
+Easy / Normal / Hard / Nightmare use the same stage geometry. Difficulty changes starting gold/base HP, enemy count/composition/HP/speed/reward and spawn interval. All wide-stage Waves use both entrances, while Waves 4 and 8 send Bosses from both routes. Final balance remains intentionally provisional for production playtesting.
+
+Browser save schema becomes 2. Checkpoints retain stage and difficulty, and clear stars are stored per stage × difficulty. Schema-1 stars move to Normal. A valid old checkpoint is migrated; only old towers that collide with a new wide-stage road move to the nearest buildable cell, and the original schema-1 payload remains embedded as a backup. No existing browser save is silently deleted.
+
+No database migration, server API, authentication, cross-device synchronization or external asset is added. Production deployment and formal V1.42.0 publication remain separate after user playtesting. See [scope, migration, installation and checks](docs/v1.42.0-dev1-td-wide-difficulty.md).
+
 # Development checkpoint: 1.41.1-dev.1
 
 Calendar deadline repeat-pulse correction. Urgent opt-in events pulse on display and then once per active minute, while the existing red three-edge cue remains between pulses. Hidden-tab time is excluded from the cadence, card replacement keeps the current cycle, and reduced-motion uses the static cue only. This adds no one-minute API request and does not change deadline calculation, recurrence/exception behavior, the three-minute Calendar refresh, DB schema or Tower Defense.
