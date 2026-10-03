@@ -1,4 +1,4 @@
-/* V1.35: Cursor Field is a passive, pointer-driven Canvas toy. */
+/* V1.43.0-dev.1: Cursor Field free-body physics surface. */
 .cursor-field-panel {
     display: flex;
     flex: 1 1 auto;
@@ -27,6 +27,7 @@
     height: 100%;
     min-height: 170px;
     cursor: crosshair;
+    contain: layout paint;
     touch-action: pan-y;
     user-select: none;
     -webkit-user-select: none;
