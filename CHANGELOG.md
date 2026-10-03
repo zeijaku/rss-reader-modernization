@@ -1,3 +1,11 @@
+## 1.43.0 - 2026-10-03
+
+- Release the redesigned Cursor Field as a free-body Canvas physics toy. Three initial circle/square bodies drift independently, reflect from the Widget's inner walls, and collide with each other without rotation.
+- Treat mouse/pen input as a moving circular collider so users can redirect bodies directly; pointer motion transfers bounded momentum. Clicking empty space adds a stationary circle/square body, occupied clicks add nothing, and total bodies remain capped at 24.
+- Preserve existing Cursor Field lifecycle behavior: body state survives Widget resize by proportional remapping, off-screen/hidden animation pauses, reduced-motion starts without autonomous movement, and there is still no score, persistence, network, DB or API behavior.
+- Ship the user-confirmed dev.2 tuning: autonomous and pointer-driven motion are reduced by about 30%, with a muted blue-gray / sage / dusty-violet / taupe palette.
+- No other Game, Calendar, DB, API, auth or shared Widget runtime behavior is changed.
+
 ## 1.43.0-dev.2 - 2026-10-03
 
 - Keep the dev.1 Cursor Field mechanics unchanged while reducing autonomous motion and pointer-driven acceleration by about 30%, including initial speed range, maximum body speed, pointer speed cap and pointer momentum transfer.
