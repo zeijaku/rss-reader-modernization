@@ -1013,6 +1013,16 @@
     background: rgb(23, 162, 184);
 }
 
+#page-top .page-top-label {
+    display: block;
+    line-height: 1.15;
+}
+
+#page-top .page-top-label > span {
+    display: block;
+    white-space: nowrap;
+}
+
 table tr:hover {
     opacity: 0.7;
 }
@@ -3227,5 +3237,5 @@ legend.text-dark {
         font-size: 0;
     }
     #page-top a > i { font-size: 24px; }
-    #page-top a > br { display: none; }
+    #page-top .page-top-label { display: none; }
 }
