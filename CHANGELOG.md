@@ -1,3 +1,10 @@
+## 1.43.1-dev.2 - 2026-10-03
+
+- Re-audit all Dashboard Widget card/header implementations, including CSS injected after page load by Information/Calculator/Blind Spot modules and separately loaded Mail/X/Game styles.
+- Define one authoritative Dashboard card chrome contract across Feed, Search Feed, Clock, Memo, Task, Calendar, Links, Weather, Game, Mail, Information/Connection Monitor, Blind Spot, Calculator, Camera Video and X: 1px border, 4px outer radius, clipped overflow, and a non-shrinking 44px visible header.
+- Keep the dev.1 Feed table row/cell 44px fix and desktop Page Top spacing change. Widget bodies and feature behavior are unchanged.
+- Extend focused contracts/browser fixtures to assert the actual outer-frame radius/clipping/border and 44px header geometry across all rendered Widget families.
+
 ## 1.43.1-dev.1 - 2026-10-03
 
 - Align Feed / Search Feed header table rows and cells to the existing 44px Dashboard Widget header contract so colored headers match div-based Widgets such as Game and utility cards.
