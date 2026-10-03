@@ -336,6 +336,12 @@
     width: 32px;
 }
 
+.feed-table thead tr {
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+}
+
 .feed-table thead .feed-card-header {
     box-sizing: border-box;
     height: 44px;
@@ -1000,10 +1006,11 @@
 }
 
 #page-top a {
+    box-sizing: border-box;
     display: block;
-    width: 64px;
+    width: 72px;
     min-height: 56px;
-    padding: 5px 0;
+    padding: 5px 6px;
     color: #fff;
     text-align: center;
     text-decoration: none;
