@@ -1,0 +1,17 @@
+RSS Reader Modernization 1.43.0-dev.2
+Cursor Field speed / palette tuning checkpoint
+
+Base: V1.42.0 or V1.43.0-dev.1
+Source HEAD: 4994775cbb854e5f9e27ba71c21645d664116cdf
+
+Overwrite:
+  app/version.php
+  public/js/cursor-field.js
+  public/css/cursor-field.css
+
+Changes from dev.1:
+  approximately 30% slower body/pointer-driven motion
+  muted blue-gray / sage / dusty violet / taupe body palette
+
+No DB migration / config change / file deletion.
+No other Game / Calendar runtime file is included.
