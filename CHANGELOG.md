@@ -1,3 +1,24 @@
+## 1.43.0 - 2026-10-03
+
+- Release the redesigned Cursor Field as a free-body Canvas physics toy. Three initial circle/square bodies drift independently, reflect from the Widget's inner walls, and collide with each other without rotation.
+- Treat mouse/pen input as a moving circular collider so users can redirect bodies directly; pointer motion transfers bounded momentum. Clicking empty space adds a stationary circle/square body, occupied clicks add nothing, and total bodies remain capped at 24.
+- Preserve existing Cursor Field lifecycle behavior: body state survives Widget resize by proportional remapping, off-screen/hidden animation pauses, reduced-motion starts without autonomous movement, and there is still no score, persistence, network, DB or API behavior.
+- Ship the user-confirmed dev.2 tuning: autonomous and pointer-driven motion are reduced by about 30%, with a muted blue-gray / sage / dusty-violet / taupe palette.
+- No other Game, Calendar, DB, API, auth or shared Widget runtime behavior is changed.
+
+## 1.43.0-dev.2 - 2026-10-03
+
+- Keep the dev.1 Cursor Field mechanics unchanged while reducing autonomous motion and pointer-driven acceleration by about 30%, including initial speed range, maximum body speed, pointer speed cap and pointer momentum transfer.
+- Replace the brighter blue/cyan/purple/green body palette with muted blue-gray, sage, dusty violet and taupe tones for a calmer visual treatment. Shape size, collision rules, wall behavior, click spawning, resize preservation and body limit are unchanged.
+- Cursor Field remains the only runtime feature changed from V1.42.0; no other Game, Calendar, DB, API, auth or shared Widget behavior is modified.
+
+## 1.43.0-dev.1 - 2026-10-03
+
+- Rebuild only Cursor Field as a free-body Canvas physics toy. Replace the 14×9 anchored square grid with three initial circle/square bodies that drift independently and reflect from the Widget's inner walls.
+- Add elastic body-to-body collisions without rotation, treat the mouse pointer as a moving circular collider that can redirect/accelerate bodies, and add stationary circle/square bodies by clicking empty space. Occupied clicks do nothing and total bodies are bounded at 24.
+- Preserve body state across Cursor Field resize by scaling positions instead of rebuilding the field. Continue to pause animation off-screen/hidden, respect reduced-motion by suppressing autonomous initial velocity, and retain no score, persistence, network, DB or API behavior.
+- Add focused physics and browser regressions for wall/body/pointer collisions, click spawning, resize preservation, narrow/desktop layout and page overflow. No other Game, Calendar or shared Widget behavior is changed.
+
 ## 1.42.0 - 2026-10-03
 
 - Release the production-confirmed Calendar deadline repeat pulse: urgent opt-in deadlines keep their static three-edge emphasis and repeat the existing pulse once per active minute without adding one-minute API polling; hidden-tab time pauses the cadence and reduced-motion keeps the static cue only.
