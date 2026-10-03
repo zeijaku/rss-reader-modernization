@@ -1,0 +1,17 @@
+RSS Reader Modernization 1.43.0-dev.1
+Cursor Field free-body physics development checkpoint
+
+Base: V1.42.0
+Source HEAD: 49c2dbe0e96968b795b7f60a49522c744836d0aa
+
+Overwrite:
+  app/version.php
+  public/js/cursor-field.js
+  public/css/cursor-field.css
+
+No DB migration / config change / file deletion.
+No other Game / Calendar runtime file is included.
+
+After overwrite, reload and confirm version 1.43.0-dev.1.
+Playtest Cursor Field: drifting circle/square bodies, wall/body collisions, mouse collision, empty-click stationary spawn, resize preservation.
+Formal release / production publication remains separate.
