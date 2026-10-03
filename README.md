@@ -9,10 +9,11 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.43.0`
-Release tag: `v1.43.0`
+**Stable release:** `RSS Reader Modernization 1.43.1`
+Release tag: `v1.43.1`
 
-**Development checkpoint:** `1.43.1-dev.3` — Dashboard Card共通規格に加え、Feed / Search Feedのheaderをtableの`thead/th`から外し、他Widgetと同じdiv型44px headerへ構造統一します。これによりtable layout由来の約40px表示差を根本解消します。Desktop Page Top調整とMail等の外枠統一も含みます。
+Version 1.43.1は、Dashboard Widgetの外枠・header表示を共通規格へ整理し、Feed / Search Feedのheaderをtable外の通常divへ構造統一します。Desktopの「ページ上部」は「ページ / 上部」の意図した2行表示へ調整します。機能ロジック、DB、API、取得処理には変更ありません。[正式版の更新・確認手順](docs/v1.43.1-release.md)を参照してください。
+
 
 Version 1.43.0は、Cursor Fieldを固定Grid型から少数の○/□が自由に漂う物理フィールドへ刷新します。内壁・物体同士・Mouse/Pen Cursorで反射し、空白Clickで静止物体を追加できます。dev.2では速度を約30%抑え、落ち着いた配色へ調整済みです。DB/API/保存/他Game/Calendarは変更しません。[正式版の更新・確認手順](docs/v1.43.0-release.md)を参照してください。
 
