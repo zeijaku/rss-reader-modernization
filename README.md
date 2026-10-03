@@ -12,6 +12,8 @@
 **Stable release:** `RSS Reader Modernization 1.43.0`
 Release tag: `v1.43.0`
 
+**Development checkpoint:** `1.43.1-dev.1` — DashboardのFeed系headerをtable row/cellごと44pxへ統一し、Desktopの「ページ上部」ボタンを72px幅＋左右6px paddingへ調整します。Smartphoneの48×48 arrow-only表示は維持します。他機能の挙動は変更しません。
+
 Version 1.43.0は、Cursor Fieldを固定Grid型から少数の○/□が自由に漂う物理フィールドへ刷新します。内壁・物体同士・Mouse/Pen Cursorで反射し、空白Clickで静止物体を追加できます。dev.2では速度を約30%抑え、落ち着いた配色へ調整済みです。DB/API/保存/他Game/Calendarは変更しません。[正式版の更新・確認手順](docs/v1.43.0-release.md)を参照してください。
 
 Version 1.42.0は、Calendarの期日強調を表示時だけ1分間隔で再明滅させる修正と、Tower Defenseの後半3面を24×8・2入口2経路へ拡張する更新を正式配布します。Easy / Normal / Hard / Nightmare、Stage×Difficulty保存、旧V1.41保存の安全な移行、2列Card内Scrollと広幅/拡大時の全体表示を含みます。DB変更はありません。[正式版の更新・確認手順](docs/v1.42.0-release.md)を参照してください。
