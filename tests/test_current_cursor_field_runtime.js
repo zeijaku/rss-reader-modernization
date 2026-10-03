@@ -72,7 +72,18 @@ const state = {
     height: 180,
     pointer: {active:true,x:150,y:90,vx:1,vy:1,time:1},
     frameId:null,
-    visible:true
+    visible:true,
+    context: {
+        clearRect:()=>{},
+        beginPath:()=>{},
+        arc:()=>{},
+        rect:()=>{},
+        fill:()=>{},
+        stroke:()=>{},
+        set fillStyle(value){},
+        set strokeStyle(value){},
+        set lineWidth(value){}
+    }
 };
 check(physics.addBodyAt(state, {x:150,y:90}), 'empty click creates a body');
 check(state.bodies.length === 1 && state.bodies[0].vx === 0 && state.bodies[0].vy === 0, 'clicked body starts stationary');
