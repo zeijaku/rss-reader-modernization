@@ -1,0 +1,17 @@
+RSS Reader Modernization 1.43.1-dev.1
+Dashboard header / Page Top UI polish
+
+Base: V1.43.0
+Source HEAD: 0e7291a01f69ec9213d4a04982ace7b41dd60d52
+
+Overwrite:
+  app/version.php
+  public/css/dashboard.css
+
+Changes:
+  Feed/Search Feed table headers fixed to the 44px Widget header contract.
+  Desktop Page Top widened to 72px with 6px horizontal padding.
+  Mobile 48x48 arrow-only Page Top unchanged.
+
+No DB migration / config change / file deletion.
+No Game / Calendar / RSS retrieval / Remote Files / Mail runtime logic change.
