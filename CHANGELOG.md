@@ -1,3 +1,10 @@
+## 1.42.0 - 2026-10-03
+
+- Release the production-confirmed Calendar deadline repeat pulse: urgent opt-in deadlines keep their static three-edge emphasis and repeat the existing pulse once per active minute without adding one-minute API polling; hidden-tab time pauses the cadence and reduced-motion keeps the static cue only.
+- Release the Tower Defense strategy expansion: stages 1–3 retain 12×8 single routes, while stages 4–6 use fixed 24×8 dual-entry/dual-route maps with short final merges and blocked terrain. Easy / Normal / Hard / Nightmare keep identical maps while changing economy, base HP, enemy composition/count/HP/speed/reward and spawn timing.
+- Promote browser save schema 2 with Stage×Difficulty checkpoints and 6×4 star records. Valid V1.41 schema-1 progress migrates to Normal while the original `.state` key remains untouched for rollback; only old towers colliding with new roads are relocated deterministically.
+- Finalize wide-board presentation: narrow/two-column cards and phones scroll only the 1080×360 board, while sufficiently wide three-column cards and expanded desktop view show the full board. No DB migration, server API, auth, cross-device sync or external asset changes.
+
 ## 1.42.0-dev.2 - 2026-10-03
 
 - Keep the 1080×360 Tower Defense wide board fixed at about 45px per tile, but constrain the wide TD shell to the actual Game card width so two-column desktop cards use the board's own horizontal scroller instead of clipping the center of an oversized child.
