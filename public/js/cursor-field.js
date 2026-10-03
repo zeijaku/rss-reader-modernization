@@ -5,15 +5,15 @@
     var INITIAL_BODIES = 3;
     var MAX_BODIES = 24;
     var BODY_SIZE = 28;
-    var MIN_SPEED = 0.65;
-    var MAX_INITIAL_SPEED = 1.45;
-    var MAX_SPEED = 12;
+    var MIN_SPEED = 0.46;
+    var MAX_INITIAL_SPEED = 1.02;
+    var MAX_SPEED = 8.4;
     var WALL_RESTITUTION = 0.96;
     var BODY_RESTITUTION = 0.96;
     var POINTER_RESTITUTION = 1.02;
     var POINTER_RADIUS = 15;
-    var POINTER_TRANSFER = 0.62;
-    var POINTER_SPEED_LIMIT = 16;
+    var POINTER_TRANSFER = 0.43;
+    var POINTER_SPEED_LIMIT = 11.2;
     var DRAG = 0.9995;
     var states = [];
     var observer = null;
@@ -292,11 +292,11 @@
 
     function bodyColor(shade) {
         return [
-            'rgba(13, 110, 253, .80)',
-            'rgba(13, 202, 240, .78)',
-            'rgba(111, 66, 193, .76)',
-            'rgba(32, 201, 151, .78)'
-        ][shade] || 'rgba(13, 110, 253, .80)';
+            'rgba(88, 112, 126, .86)',
+            'rgba(110, 126, 118, .84)',
+            'rgba(121, 111, 132, .84)',
+            'rgba(132, 120, 103, .84)'
+        ][shade] || 'rgba(88, 112, 126, .86)';
     }
 
     function draw(state) {
