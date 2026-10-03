@@ -373,7 +373,7 @@
                 distanceMixed = 1;
             }
             var mixed = {nx: dxMixed / distanceMixed, ny: dyMixed / distanceMixed, overlap: radius - Math.sqrt(distanceSquared)};
-            if (circle === b) {
+            if (circle === a) {
                 mixed.nx = -mixed.nx;
                 mixed.ny = -mixed.ny;
             }
@@ -574,6 +574,10 @@
         }
         state.bodies.push(body);
         state.nextShape = shape === 'circle' ? 'square' : 'circle';
+        state.pointer.active = false;
+        state.pointer.vx = 0;
+        state.pointer.vy = 0;
+        state.pointer.time = 0;
         draw(state);
         startFrame(state);
         return true;
