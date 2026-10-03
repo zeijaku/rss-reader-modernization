@@ -8,6 +8,7 @@ for header in ['feed-card-header-inner','clock-card-header','memo-card-header','
     check('.'+header in s,'known Widget header family scoped: '+header)
 check(s.count('#main-content .dashboard-widget')>=8,'all refinement selectors stay within Dashboard Widgets')
 check('max-height: 44px !important' in s,'existing fixed header height retained')
+check('.feed-table thead tr {' in (ROOT/'public/css/dashboard.css').read_text() and 'max-height: 44px;' in (ROOT/'public/css/dashboard.css').read_text().split('.feed-table thead tr {',1)[1].split('}',1)[0],'Feed table row itself is fixed to the 44px header contract')
 check('--widget-header-action-size: 36px' in s and '--widget-header-action-size: 44px' in s,'desktop and touch action targets explicitly sized')
 check('(pointer: coarse)' in s and '(max-width: 575.98px)' in s,'touch and narrow viewports retain 44px buttons')
 check('> button:not(.widget-drag-handle)' in s and '> :is(.feed-card-actions, .content-actions, .mail-card-actions, .blind-spot-card-actions) > button' in s,'actions scoped to direct controls and action groups')
