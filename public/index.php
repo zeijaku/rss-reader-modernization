@@ -495,8 +495,8 @@ function search_feed_form_fields(string $prefix): string
 <!-- Top Page -->
 <p id="page-top">
     <a href="#main-content" aria-label="ページ先頭へ移動">
-        <i class="fas fa-arrow-circle-up fa-2x" aria-hidden="true"></i><br>
-        ページ上部
+        <i class="fas fa-arrow-circle-up fa-2x" aria-hidden="true"></i>
+        <span class="page-top-label" aria-hidden="true"><span>ページ</span><span>上部</span></span>
     </a>
 </p>
 
