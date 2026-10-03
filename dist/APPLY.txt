@@ -1,0 +1,20 @@
+RSS Reader Modernization 1.43.1-dev.3
+Feed header structural normalization
+
+Base: V1.43.0 / V1.43.1-dev.1 / V1.43.1-dev.2
+Source HEAD: 01a95712f93a94218f90fe21536ab68beae15916
+
+Overwrite:
+  app/version.php
+  public/css/dashboard.css
+  app/view/dashboard_widgets.php
+
+Changes:
+  Feed / Search Feed header moved outside table layout.
+  Dashboard card outer frame remains normalized to 1px border / 4px radius.
+  All visible Widget headers use the common 44px div-header contract.
+  Desktop Page Top remains 72px wide with 6px horizontal padding.
+  Mobile Page Top remains 48x48 arrow-only.
+
+No DB migration / config change / file deletion.
+No RSS retrieval, Reader, Game, Calendar, Mail transport, Remote Files, API or auth logic change.
