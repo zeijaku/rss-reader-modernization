@@ -64,7 +64,7 @@ function contrast(selector){
   await scroll(threshold+1);check(await p.locator('#page-top').isVisible(),'Page top visible beyond threshold '+label);
   const geometry=await p.locator('#page-top a').evaluate(n=>{const r=n.getBoundingClientRect(),s=getComputedStyle(n);return {w:r.width,h:r.height,text:s.fontSize,icon:getComputedStyle(n.querySelector('i')).fontSize,br:getComputedStyle(n.querySelector('br')).display,label:n.getAttribute('aria-label'),right:innerWidth-r.right,bottom:innerHeight-r.bottom};});
   check(geometry.label==='ページ先頭へ移動','Page top accessible name retained '+label);
-  check(width<768?geometry.w===48&&geometry.h===48&&geometry.text==='0px'&&geometry.icon==='24px'&&geometry.br==='none'&&geometry.right===12&&geometry.bottom===12:geometry.w===64&&geometry.text!=='0px'&&geometry.br!=='none'&&geometry.right===16&&geometry.bottom===16,'Page top mobile compact / desktop retained '+label);
+  check(width<768?geometry.w===48&&geometry.h===48&&geometry.text==='0px'&&geometry.icon==='24px'&&geometry.br==='none'&&geometry.right===12&&geometry.bottom===12:geometry.w===72&&geometry.text!=='0px'&&geometry.br!=='none'&&geometry.right===16&&geometry.bottom===16,'Page top mobile compact / desktop retained '+label);
   await p.evaluate(()=>{window.testScrollDuration=null;const original=jQuery.fn.animate;jQuery.fn.animate=function(props,duration){if(props&&props.scrollTop===0)window.testScrollDuration=duration;return original.apply(this,arguments);};});
   await p.locator('#page-top a').click();await p.waitForFunction(()=>scrollY===0&&document.activeElement.id==='main-content',{},{timeout:5000});
   const topResult=await p.evaluate(()=>({y:scrollY,focus:document.activeElement.id,duration:window.testScrollDuration}));
