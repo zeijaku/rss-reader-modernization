@@ -1,3 +1,10 @@
+## 1.43.1-dev.3 - 2026-10-03
+
+- Remove the remaining table-layout exception from Feed and Search Feed headers. Move their colored title/action bar out of `table > thead > tr > th` and render it as a normal div directly under `.feed-card-inner`, matching the structural model used by the other Dashboard Widgets.
+- Remove the old Feed `thead/tr/th` height workaround and keep the common 44px div-header contract as the single source of truth.
+- Preserve existing Feed table bodies, refresh/edit selectors, All RSS Recent specialization, article rendering and search behavior.
+- Extend contract/browser coverage to require that Feed headers are div elements outside the table and still render at 44px.
+
 ## 1.43.1-dev.2 - 2026-10-03
 
 - Re-audit all Dashboard Widget card/header implementations, including CSS injected after page load by Information/Calculator/Blind Spot modules and separately loaded Mail/X/Game styles.
