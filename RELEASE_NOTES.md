@@ -1,42 +1,35 @@
-# RSS Reader Modernization 1.42.0
+# RSS Reader Modernization 1.43.0
 
-V1.42.0正式版は、V1.41.0本番確認後に行ったCalendar期日強調の再明滅修正と、Tower Defenseの戦略性拡張をまとめたFeature Releaseです。Application Version / Asset Revision は `1.42.0`。V1.41.0からのDB Migration、config変更、認証/API変更はありません。
+V1.43.0正式版は、Cursor Fieldだけを対象にしたFeature Releaseです。Application Version / Asset Revision は `1.43.0`。V1.42.0からDB Migration、config変更、認証/API変更、他Game / Calendar変更はありません。
 
-## Calendar
+## Cursor Field
 
-- 「期日を強調する」が有効な予定は、従来の期日判定と赤い上・右・下の強調を維持します。
-- 前日〜期日の緊急状態では表示時のパルスに加え、ページが表示されている間だけ1分ごとに同じパルスを再実行します。
-- 1分間隔はClient側Schedulerのみで、1分ごとのCalendar API通信は追加しません。既存の表示中3分間隔更新・手動更新はそのままです。
-- 非表示Tabの時間は再明滅Cadenceから除外し、`prefers-reduced-motion` ではAnimationを行わず静的強調だけを残します。
+- 従来の14×9固定Gridへ戻る多数の□を廃止し、初期3個の○/□がWidget内を自由に漂う方式へ変更しました。
+- ○/□はWidget内壁で反射し、物体同士でも衝突・反射します。□は回転せず向き固定です。
+- Mouse / Pen Cursorを小さな円形Colliderとして扱い、接触時に反射します。Cursorを速く動かすと、その速度の一部をBodyへ伝えます。
+- 空いている場所をClickすると、その位置へ○/□を交互に1個追加します。追加直後は速度0で、他BodyまたはCursorとの衝突から動き始めます。
+- 物体上Clickでは追加しません。最大24個です。
+- Widget ResizeではBodyを再生成せず、現在位置と速度を新しいCanvas寸法へ比例変換します。
+- dev.2で通常移動とCursor由来の速度を約30%抑え、青灰・セージ・くすみ紫・トープ系の落ち着いた配色へ調整しました。
 
-## Tower Defense
+## Lifecycle / compatibility
 
-- Stage 1〜3は従来の12×8・単一路線を維持し、Stage 4〜6を24×8・2入口2経路の広域Mapへ拡張しました。後半StageはEasyを含む全Difficulty・全Waveで両入口を使い、Wave 4 / 8は両RouteからBossが進入します。
-- Map / Route / RockはStage固定です。DifficultyやCard幅、拡大/縮小、Resizeで経路や配置は変化しません。
-- Easy / Normal / Hard / Nightmareを追加しました。難易度は開始前に選択し、開始資金・Base HP・敵数/構成/HP/速度/Reward/Spawn間隔を変えます。Map形状は共通です。
-- Browser save schemaを2へ更新し、Stage・Difficulty・準備CheckpointとStage×Difficultyの★を保存します。V1.41の旧★はNormalへ移行し、有効な旧CheckpointもNormalとして復元します。
-- 旧V1.41 `.state` keyは上書きせず保持し、新しい進行は `.state.v2` へ保存します。新しいRoadと衝突する旧Towerだけを最寄りの配置可能Cellへ決定的に移動します。
-- 広域盤面は約1080×360pxを維持します。2列Card・狭いCard・Smartphoneでは盤面内だけを横Scrollし、十分な幅の3列CardとDesktop拡大表示では全体を表示します。
-
-## Upgrade and compatibility
-
-V1.41.0からは追加SQLなしで更新できます。Application、`config/local.php`、Database、private runtime dataをバックアップしたうえで正式Runtime ZIPを展開してください。既存設定とDBを維持し、既存DBへ `database/schema.sql` を実行しません。
-
-旧TD Browser保存は自動移行対象ですが、元のschema-1 keyを保持するためCode rollback時にはV1.41系が旧Saveを再読込できます。Widget自体を明示的に削除した場合のみ旧/new両TD stateを削除します。
-
-正式Assetは共通Release WorkflowでRuntime / Complete Source ZIP、SHA-256、secret scan、clean-room checks、GitHub Artifact Attestationを検証して公開します。ProductionへのCode反映はGitHub Release公開とは別工程です。
+- requestAnimationFrameを使用し、WidgetがViewport外またはPage hidden時はAnimationを停止します。
+- `prefers-reduced-motion: reduce` では初期自律速度を0にし、User操作でのみ動き始めます。
+- Score / Clear / Game Over / browser save / network通信は追加していません。Reload時は初期状態へ戻ります。
+- V1.42.0から追加SQLなしで更新できます。既存設定・DB・private runtime dataを維持してください。
 
 ## Verification limits
 
 - GitHub ActionsのCurrent gateをPHP 8.1 / PHP 8.4で実行します。
-- Calendar再明滅はDesktop/360px fixtureで1分Cadence、DOM置換継続、hidden/resume、reduced-motion、不要なAPI requestが増えないことを検証しています。
-- TDはCore/Browser gateで6 Stage、4 Difficulty、後半2 Route、Save schema 2、旧Save移行、2列内部Scroll、3列全体表示、拡大時全体表示、Page overflowなしを検証します。
-- 実際のStage 4〜6の操作感・難易度・2列/3列表示はProduction相当環境でユーザー確認済みです。物理端末固有のBrowser挙動や将来のBalance調整余地は自動検証の対象外です。
+- Cursor Field純粋物理テストでwall / body-body / mixed-shape / pointer / spawn挙動を検証します。
+- Browser fixtureはDesktop / 360pxで初期Body、空白Click追加、物体上Click、Pointer干渉、Resize維持、Page overflowを確認できるよう追加しています。Current CIでは既存方針に合わせ構文確認を行い、Playwright実行環境がある場合にFocused testとして実行します。
+- 実際の速度感・配色・基本操作はユーザー確認済みです。
 
 ## Release
 
-Tag: `v1.42.0`
+Tag: `v1.43.0`
 
-Runtime package: `rss-reader-modernization-1.42.0.zip`
+Runtime package: `rss-reader-modernization-1.43.0.zip`
 
-Complete Source package: `rss-reader-modernization-1.42.0-complete.zip`
+Complete Source package: `rss-reader-modernization-1.43.0-complete.zip`
