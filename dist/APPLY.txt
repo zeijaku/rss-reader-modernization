@@ -1,0 +1,19 @@
+RSS Reader Modernization 1.43.1-dev.2
+Dashboard card chrome normalization
+
+Base: V1.43.0 or V1.43.1-dev.1
+Source HEAD: 5e2ee58462dc899bda0863b9928db592cb42322e
+
+Overwrite:
+  app/version.php
+  public/css/dashboard.css
+
+Includes:
+  Feed/Search Feed table headers locked to visible 44px.
+  All Dashboard card outer frames normalized to 1px border / 4px radius / clipped overflow.
+  All Dashboard div-based headers normalized to non-shrinking visible 44px.
+  Desktop Page Top 72px wide with 6px horizontal padding.
+  Mobile Page Top remains 48x48 arrow-only.
+
+No DB migration / config change / file deletion.
+No Widget body or feature logic changes.
