@@ -12,7 +12,7 @@
 **Stable release:** `RSS Reader Modernization 1.43.0`
 Release tag: `v1.43.0`
 
-**Development checkpoint:** `1.43.1-dev.1` — DashboardのFeed系headerをtable row/cellごと44pxへ統一し、Desktopの「ページ上部」ボタンを72px幅＋左右6px paddingへ調整します。Smartphoneの48×48 arrow-only表示は維持します。他機能の挙動は変更しません。
+**Development checkpoint:** `1.43.1-dev.2` — dev.1のFeed header / Page Top調整に加え、DashboardのCard外枠とheaderを全Widget共通規格へ統一します。外枠は1px border / 4px角丸 / overflow hidden、headerは実表示44px固定です。Mail / Information / Blind Spot / Calculator / X / Camera / Game / Feed等の個別CSS差を共通CSSで吸収し、他機能の挙動は変更しません。
 
 Version 1.43.0は、Cursor Fieldを固定Grid型から少数の○/□が自由に漂う物理フィールドへ刷新します。内壁・物体同士・Mouse/Pen Cursorで反射し、空白Clickで静止物体を追加できます。dev.2では速度を約30%抑え、落ち着いた配色へ調整済みです。DB/API/保存/他Game/Calendarは変更しません。[正式版の更新・確認手順](docs/v1.43.0-release.md)を参照してください。
 
