@@ -3154,6 +3154,69 @@ legend.text-dark {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* V1.43.1-dev.2: one canonical Dashboard card chrome.
+ * Some Widget modules inject legacy CSS after dashboard.css; keep this scoped
+ * rule authoritative so every Dashboard card shares the same outer frame and
+ * visible 44px header without changing Widget body behavior. */
+#main-content .dashboard-widget > :is(
+    .feed-card-inner,
+    .clock-card-inner,
+    .memo-card-inner,
+    .task-card-inner,
+    .calendar-card-inner,
+    .links-card-inner,
+    .weather-card-inner,
+    .mini-game-card-inner,
+    .mail-card-inner,
+    .information-widget-inner,
+    .blind-spot-card-inner,
+    .calculator-card-inner,
+    .camera-video-card-inner,
+    .x-widget-inner
+) {
+    box-sizing: border-box;
+    border: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.125)) !important;
+    border-radius: 4px !important;
+    overflow: hidden !important;
+    background-clip: padding-box;
+}
+
+#main-content .dashboard-widget :is(
+    .feed-card-header-inner,
+    .clock-card-header,
+    .memo-card-header,
+    .task-card-header,
+    .calendar-card-header,
+    .links-card-header,
+    .weather-card-header,
+    .mini-game-card-header,
+    .mail-card-header,
+    .information-widget-header,
+    .earthquake-card-header,
+    .sun-moon-card-header,
+    .air-quality-card-header,
+    .blind-spot-card-header,
+    .calculator-card-header,
+    .camera-video-card-header,
+    .x-widget-header
+) {
+    box-sizing: border-box;
+    flex: 0 0 44px;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+}
+
+#main-content .dashboard-widget .feed-table thead,
+#main-content .dashboard-widget .feed-table thead tr,
+#main-content .dashboard-widget .feed-table thead .feed-card-header {
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+}
 @media (pointer: coarse), (max-width: 575.98px) {
     #main-content .dashboard-widget { --widget-header-action-size: 44px; }
 }
