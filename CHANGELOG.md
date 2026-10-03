@@ -1,3 +1,9 @@
+## 1.43.0-dev.2 - 2026-10-03
+
+- Keep the dev.1 Cursor Field mechanics unchanged while reducing autonomous motion and pointer-driven acceleration by about 30%, including initial speed range, maximum body speed, pointer speed cap and pointer momentum transfer.
+- Replace the brighter blue/cyan/purple/green body palette with muted blue-gray, sage, dusty violet and taupe tones for a calmer visual treatment. Shape size, collision rules, wall behavior, click spawning, resize preservation and body limit are unchanged.
+- Cursor Field remains the only runtime feature changed from V1.42.0; no other Game, Calendar, DB, API, auth or shared Widget behavior is modified.
+
 ## 1.43.0-dev.1 - 2026-10-03
 
 - Rebuild only Cursor Field as a free-body Canvas physics toy. Replace the 14×9 anchored square grid with three initial circle/square bodies that drift independently and reflect from the Widget's inner walls.
