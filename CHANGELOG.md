@@ -1,3 +1,31 @@
+## 1.43.1 - 2026-10-04
+
+- Normalize Dashboard Widget chrome across the supported card families: 1px outer border, 4px radius, clipped overflow, and a non-shrinking 44px visible header.
+- Move Feed and Search Feed colored headers out of `table > thead > tr > th` into normal div headers directly under `.feed-card-inner`, removing the table-layout exception that could render Feed headers shorter than other Widgets.
+- Preserve existing Feed/Search selectors and behavior, including refresh/edit actions, All RSS Recent specialization, article rows, Stock and Summary handling.
+- Refine the desktop Page Top control so its Japanese label is explicitly split into `ページ` / `上部`, while retaining the existing button size/font and the mobile 48×48 arrow-only presentation.
+- No DB migration, config, API, auth, RSS retrieval, Reader, Mail transport, Remote Files, Game or Calendar behavior changes.
+
+## 1.43.1-dev.3 - 2026-10-03
+
+- Remove the remaining table-layout exception from Feed and Search Feed headers. Move their colored title/action bar out of `table > thead > tr > th` and render it as a normal div directly under `.feed-card-inner`, matching the structural model used by the other Dashboard Widgets.
+- Remove the old Feed `thead/tr/th` height workaround and keep the common 44px div-header contract as the single source of truth.
+- Preserve existing Feed table bodies, refresh/edit selectors, All RSS Recent specialization, article rendering and search behavior.
+- Extend contract/browser coverage to require that Feed headers are div elements outside the table and still render at 44px.
+
+## 1.43.1-dev.2 - 2026-10-03
+
+- Re-audit all Dashboard Widget card/header implementations, including CSS injected after page load by Information/Calculator/Blind Spot modules and separately loaded Mail/X/Game styles.
+- Define one authoritative Dashboard card chrome contract across Feed, Search Feed, Clock, Memo, Task, Calendar, Links, Weather, Game, Mail, Information/Connection Monitor, Blind Spot, Calculator, Camera Video and X: 1px border, 4px outer radius, clipped overflow, and a non-shrinking 44px visible header.
+- Keep the dev.1 Feed table row/cell 44px fix and desktop Page Top spacing change. Widget bodies and feature behavior are unchanged.
+- Extend focused contracts/browser fixtures to assert the actual outer-frame radius/clipping/border and 44px header geometry across all rendered Widget families.
+
+## 1.43.1-dev.1 - 2026-10-03
+
+- Align Feed / Search Feed header table rows and cells to the existing 44px Dashboard Widget header contract so colored headers match div-based Widgets such as Game and utility cards.
+- Refine the desktop Page Top control from 64px to 72px width with 6px horizontal padding so the `ページ上部` label has visual breathing room. Keep the narrow/mobile 48×48 arrow-only control unchanged.
+- No Game, Calendar, RSS retrieval, Remote Files, DB, API, auth or content behavior changes.
+
 ## 1.43.0 - 2026-10-03
 
 - Release the redesigned Cursor Field as a free-body Canvas physics toy. Three initial circle/square bodies drift independently, reflect from the Widget's inner walls, and collide with each other without rotation.

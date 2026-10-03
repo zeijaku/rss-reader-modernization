@@ -1,35 +1,37 @@
-# RSS Reader Modernization 1.43.0
+# RSS Reader Modernization 1.43.1
 
-V1.43.0正式版は、Cursor Fieldだけを対象にしたFeature Releaseです。Application Version / Asset Revision は `1.43.0`。V1.42.0からDB Migration、config変更、認証/API変更、他Game / Calendar変更はありません。
+V1.43.1はDashboard表示の統一を目的としたUI maintenance releaseです。Application Version / Asset Revision は `1.43.1`。V1.43.0からDB Migration、config変更、API/Auth変更はありません。
 
-## Cursor Field
+## Dashboard Widget chrome
 
-- 従来の14×9固定Gridへ戻る多数の□を廃止し、初期3個の○/□がWidget内を自由に漂う方式へ変更しました。
-- ○/□はWidget内壁で反射し、物体同士でも衝突・反射します。□は回転せず向き固定です。
-- Mouse / Pen Cursorを小さな円形Colliderとして扱い、接触時に反射します。Cursorを速く動かすと、その速度の一部をBodyへ伝えます。
-- 空いている場所をClickすると、その位置へ○/□を交互に1個追加します。追加直後は速度0で、他BodyまたはCursorとの衝突から動き始めます。
-- 物体上Clickでは追加しません。最大24個です。
-- Widget ResizeではBodyを再生成せず、現在位置と速度を新しいCanvas寸法へ比例変換します。
-- dev.2で通常移動とCursor由来の速度を約30%抑え、青灰・セージ・くすみ紫・トープ系の落ち着いた配色へ調整しました。
+- 対応Widgetの外枠を1px border / 4px角丸 / overflow hiddenへ統一します。
+- div型headerは実表示44pxを維持し、flex shrinkで短くならないよう固定します。
+- Mail / Information / Blind Spot / Calculator / X / Camera / Game / Feed等、異なる実装元のCard外枠差をDashboard共通規格で吸収します。
 
-## Lifecycle / compatibility
+## Feed / Search Feed header
 
-- requestAnimationFrameを使用し、WidgetがViewport外またはPage hidden時はAnimationを停止します。
-- `prefers-reduced-motion: reduce` では初期自律速度を0にし、User操作でのみ動き始めます。
-- Score / Clear / Game Over / browser save / network通信は追加していません。Reload時は初期状態へ戻ります。
-- V1.42.0から追加SQLなしで更新できます。既存設定・DB・private runtime dataを維持してください。
+- Feed系だけ残っていた`table > thead > tr > th` header構造を廃止します。
+- 色付きheaderを`.feed-card-inner`直下の通常divへ移し、他Widgetと同じ44px headerモデルに統一します。
+- `.content-title`、編集/更新Button、Search Feedの`.content-header`等の既存selectorは維持します。
+- Feed tableのcolgroup / tbody / article row、All RSS Recent、Stock、Summary等の既存処理は変更しません。
 
-## Verification limits
+## Page Top
 
-- GitHub ActionsのCurrent gateをPHP 8.1 / PHP 8.4で実行します。
-- Cursor Field純粋物理テストでwall / body-body / mixed-shape / pointer / spawn挙動を検証します。
-- Browser fixtureはDesktop / 360pxで初期Body、空白Click追加、物体上Click、Pointer干渉、Resize維持、Page overflowを確認できるよう追加しています。Current CIでは既存方針に合わせ構文確認を行い、Playwright実行環境がある場合にFocused testとして実行します。
-- 実際の速度感・配色・基本操作はユーザー確認済みです。
+- Desktopの表示幅・文字サイズは維持したまま、ラベルを意図的に`ページ` / `上部`の2行へ分割します。
+- Smartphone / narrow viewportは従来どおり48×48pxの矢印のみです。
+- `aria-label="ページ先頭へ移動"`を維持します。
+
+## Verification / compatibility
+
+- PHP 8.1 / PHP 8.4 Current regressionを通過させます。
+- Widget header contractでは共通outer frame / 44px headerとFeed headerがtable外divであることを固定します。
+- Browser fixtureでは各Widget familyの外枠、header実測、Feed header構造、Page Top表示契約を確認できるよう更新しています。
+- V1.43.0から追加SQLなしで更新できます。
 
 ## Release
 
-Tag: `v1.43.0`
+Tag: `v1.43.1`
 
-Runtime package: `rss-reader-modernization-1.43.0.zip`
+Runtime package: `rss-reader-modernization-1.43.1.zip`
 
-Complete Source package: `rss-reader-modernization-1.43.0-complete.zip`
+Complete Source package: `rss-reader-modernization-1.43.1-complete.zip`

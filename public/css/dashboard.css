@@ -336,26 +336,20 @@
     width: 32px;
 }
 
-.feed-table thead .feed-card-header {
-    box-sizing: border-box;
-    height: 44px;
-    min-height: 44px;
-    max-height: 44px;
-    padding: 0 4px 0 8px;
-    border-top: 0;
-    border-bottom: 0;
-    line-height: 1;
-    overflow: hidden;
-    vertical-align: middle;
-    white-space: nowrap;
-}
-
+.feed-card-header,
 .feed-card-header-inner {
+    box-sizing: border-box;
     display: flex;
     width: 100%;
     height: 44px;
+    min-height: 44px;
+    max-height: 44px;
     min-width: 0;
     align-items: center;
+    padding: 0 4px 0 8px;
+    line-height: 1;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .content-title {
@@ -1000,10 +994,11 @@
 }
 
 #page-top a {
+    box-sizing: border-box;
     display: block;
-    width: 64px;
+    width: 72px;
     min-height: 56px;
-    padding: 5px 0;
+    padding: 5px 6px;
     color: #fff;
     text-align: center;
     text-decoration: none;
@@ -1016,6 +1011,16 @@
 #page-top a:focus {
     text-decoration: none;
     background: rgb(23, 162, 184);
+}
+
+#page-top .page-top-label {
+    display: block;
+    line-height: 1.15;
+}
+
+#page-top .page-top-label > span {
+    display: block;
+    white-space: nowrap;
 }
 
 table tr:hover {
@@ -3147,6 +3152,62 @@ legend.text-dark {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* V1.43.1-dev.2: one canonical Dashboard card chrome.
+ * Some Widget modules inject legacy CSS after dashboard.css; keep this scoped
+ * rule authoritative so every Dashboard card shares the same outer frame and
+ * visible 44px header without changing Widget body behavior. */
+#main-content .dashboard-widget > :is(
+    .feed-card-inner,
+    .clock-card-inner,
+    .memo-card-inner,
+    .task-card-inner,
+    .calendar-card-inner,
+    .links-card-inner,
+    .weather-card-inner,
+    .mini-game-card-inner,
+    .mail-card-inner,
+    .information-widget-inner,
+    .blind-spot-card-inner,
+    .calculator-card-inner,
+    .camera-video-card-inner,
+    .x-widget-inner
+) {
+    box-sizing: border-box;
+    border: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, 0.125)) !important;
+    border-radius: 4px !important;
+    overflow: hidden !important;
+    background-clip: padding-box;
+}
+
+#main-content .dashboard-widget :is(
+    .feed-card-header-inner,
+    .clock-card-header,
+    .memo-card-header,
+    .task-card-header,
+    .calendar-card-header,
+    .links-card-header,
+    .weather-card-header,
+    .mini-game-card-header,
+    .mail-card-header,
+    .information-widget-header,
+    .earthquake-card-header,
+    .sun-moon-card-header,
+    .air-quality-card-header,
+    .blind-spot-card-header,
+    .calculator-card-header,
+    .camera-video-card-header,
+    .x-widget-header
+) {
+    box-sizing: border-box;
+    flex: 0 0 44px;
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+}
+
 @media (pointer: coarse), (max-width: 575.98px) {
     #main-content .dashboard-widget { --widget-header-action-size: 44px; }
 }
@@ -3176,5 +3237,5 @@ legend.text-dark {
         font-size: 0;
     }
     #page-top a > i { font-size: 24px; }
-    #page-top a > br { display: none; }
+    #page-top .page-top-label { display: none; }
 }
