@@ -6,6 +6,10 @@ def check(ok,label):
     checks.append(bool(ok));print(('PASS' if ok else 'FAIL')+': '+label)
 for header in ['feed-card-header-inner','clock-card-header','memo-card-header','task-card-header','calendar-card-header','links-card-header','weather-card-header','mini-game-card-header','mail-card-header','information-widget-header','blind-spot-card-header','calculator-card-header','camera-video-card-header','x-widget-header']:
     check('.'+header in s,'known Widget header family scoped: '+header)
+for inner in ['feed-card-inner','clock-card-inner','memo-card-inner','task-card-inner','calendar-card-inner','links-card-inner','weather-card-inner','mini-game-card-inner','mail-card-inner','information-widget-inner','blind-spot-card-inner','calculator-card-inner','camera-video-card-inner','x-widget-inner']:
+    check('.'+inner in s,'known Widget outer frame family scoped: '+inner)
+check('border-radius: 4px !important' in s and 'overflow: hidden !important' in s,'canonical Widget outer frame radius and clipping are enforced')
+check('flex: 0 0 44px' in s,'div-based Widget headers cannot flex-shrink below the 44px contract')
 check(s.count('#main-content .dashboard-widget')>=8,'all refinement selectors stay within Dashboard Widgets')
 check('max-height: 44px !important' in s,'existing fixed header height retained')
 check('.feed-table thead tr {' in (ROOT/'public/css/dashboard.css').read_text() and 'max-height: 44px;' in (ROOT/'public/css/dashboard.css').read_text().split('.feed-table thead tr {',1)[1].split('}',1)[0],'Feed table row itself is fixed to the 44px header contract')
