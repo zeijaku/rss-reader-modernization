@@ -9,8 +9,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.41.0`
-Release tag: `v1.41.0`
+**Stable release:** `RSS Reader Modernization 1.42.0`
+Release tag: `v1.42.0`
+
+Version 1.42.0は、Calendarの期日強調を表示時だけ1分間隔で再明滅させる修正と、Tower Defenseの後半3面を24×8・2入口2経路へ拡張する更新を正式配布します。Easy / Normal / Hard / Nightmare、Stage×Difficulty保存、旧V1.41保存の安全な移行、2列Card内Scrollと広幅/拡大時の全体表示を含みます。DB変更はありません。[正式版の更新・確認手順](docs/v1.42.0-release.md)を参照してください。
 
 Version 1.41.0は、本番確認済みのCalendar期日強調・中央年月・手動／自動更新とTower Defenseを正式配布します。V1.40.1の既存DBにはMigration 032が必要です（適用済みdev.7からは追加SQLなし）。[正式版の更新・確認手順](docs/v1.41.0-release.md)を参照してください。
 

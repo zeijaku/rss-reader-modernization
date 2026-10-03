@@ -1,3 +1,29 @@
+## 1.42.0 - 2026-10-03
+
+- Release the production-confirmed Calendar deadline repeat pulse: urgent opt-in deadlines keep their static three-edge emphasis and repeat the existing pulse once per active minute without adding one-minute API polling; hidden-tab time pauses the cadence and reduced-motion keeps the static cue only.
+- Release the Tower Defense strategy expansion: stages 1–3 retain 12×8 single routes, while stages 4–6 use fixed 24×8 dual-entry/dual-route maps with short final merges and blocked terrain. Easy / Normal / Hard / Nightmare keep identical maps while changing economy, base HP, enemy composition/count/HP/speed/reward and spawn timing.
+- Promote browser save schema 2 with Stage×Difficulty checkpoints and 6×4 star records. Valid V1.41 schema-1 progress migrates to Normal while the original `.state` key remains untouched for rollback; only old towers colliding with new roads are relocated deterministically.
+- Finalize wide-board presentation: narrow/two-column cards and phones scroll only the 1080×360 board, while sufficiently wide three-column cards and expanded desktop view show the full board. No DB migration, server API, auth, cross-device sync or external asset changes.
+
+## 1.42.0-dev.2 - 2026-10-03
+
+- Keep the 1080×360 Tower Defense wide board fixed at about 45px per tile, but constrain the wide TD shell to the actual Game card width so two-column desktop cards use the board's own horizontal scroller instead of clipping the center of an oversized child.
+- Preserve full-board display when the card is wide enough, including the user's three-column layout, and retain smartphone board-only scrolling. No map, route, tower, difficulty, save schema, DB or Calendar behavior changes.
+- Add browser regression coverage requiring a two-column desktop card to have real horizontal overflow and a movable scrollLeft, closing the gap in dev.1 where the test only allowed clientWidth === scrollWidth.
+
+## 1.42.0-dev.1 - 2026-10-02
+
+- Keep Tower Defense stages 1–3 on the existing 12×8 single-route layouts and expand stages 4–6 to fixed 24×8 wide layouts with two separated entrances/routes, short final merges and central blocked terrain. Wide boards retain ~45px cells and use board-only horizontal scrolling on narrow cards/phones.
+- Add Easy / Normal / Hard / Nightmare selection before play. Maps never change by difficulty; starting gold/base HP, enemy counts/composition/HP/speed/reward and spawn gaps do. Every wide-stage Wave uses both routes; Waves 4/8 send Bosses from both entrances.
+- Upgrade browser save schema from 1 to 2 with difficulty in checkpoints and 6×4 stage/difficulty star records. Existing V1.41.0 stars migrate to Normal. Keep the original `.state` key untouched and save new progress under `.state.v2`; also retain the schema-1 payload inside `legacyV1`. Wide-map road collisions relocate only the conflicting old towers to the nearest buildable cell.
+- Preserve preparation-first play, tower placement/upgrade/sale, hit feedback, browser-local storage, no cross-device sync, no DB/API/auth changes. This TD branch is based on the pending 1.41.1-dev.1 Calendar correction to avoid Version/Asset Revision conflicts.
+
+## 1.41.1-dev.1 - 2026-10-02
+
+- Repeat opt-in Calendar urgent deadline pulses every one active minute after the initial 1.8-second × 3 pulse, while retaining the static red top/right/bottom emphasis between pulses.
+- Keep one client-side pulse scheduler across DOM/card replacement, pause its cadence while the tab is hidden, and disable pulse scheduling under prefers-reduced-motion. No one-minute API polling is added.
+- Preserve the existing two-day border-only state, deadline calculations, event-color left stripe, manual refresh and visible-page three-minute Calendar refresh. No DB/API/TD changes.
+
 ## 1.41.0 - 2026-10-01
 
 - Release production-confirmed dev.1–dev.7: opt-in Calendar deadline emphasis, centered period, single-row toolbar and quiet manual/three-minute refresh; tactical Tower Defense with six stages, browser preparation saves, line-icon visuals, blocked terrain, fast-enemy slow resistance and hit feedback.

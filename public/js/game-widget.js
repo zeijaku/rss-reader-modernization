@@ -42,7 +42,7 @@
         Object.keys(catalog).forEach(function (game) {
             var key = storageKey(user, widgetId, game);
             if (!key) return;
-            ['localStorage','sessionStorage'].forEach(function (name) { try { window[name].removeItem(key); if (game === 'word_tiles' || game === 'word_tiles_ja' || game === 'tower_defense') window[name].removeItem(key + '.state'); } catch (error) {} });
+            ['localStorage','sessionStorage'].forEach(function (name) { try { window[name].removeItem(key); if (game === 'word_tiles' || game === 'word_tiles_ja' || game === 'tower_defense') window[name].removeItem(key + '.state'); if (game === 'tower_defense') window[name].removeItem(key + '.state.v2'); } catch (error) {} });
         });
     }
     var assetLoads = Object.create(null);

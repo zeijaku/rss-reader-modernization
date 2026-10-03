@@ -60,7 +60,8 @@ Focused isolated-browser checks use actual PHP cards/forms and production local 
 
 ```sh
 node tests/test_current_calendar_deadline_browser.js
+node tests/test_current_calendar_deadline_repeat_browser.js
 node tests/test_current_tower_defense_browser.js
 ```
 
-They require Playwright and Chromium, as with existing Game browser checks; `GAME_TEST_CHROME` selects an installed browser. Coverage includes one-row calendar navigation, opt-in editing/copy/reset, reduced motion, TD confirmation, economy controls, user/widget scoped checkpoints, reload before a wave, expansion, deletion cleanup and PC/360px widths. These fixtures isolate APIs and do not establish production deployment or physical phone behavior.
+They require Playwright and Chromium, as with existing Game browser checks; `GAME_TEST_CHROME` selects an installed browser. Coverage includes one-row calendar navigation, opt-in editing/copy/reset, repeated one-minute deadline pulses without extra API requests, timer/card replacement/hidden-tab lifecycle and reduced motion. TD coverage includes 12×8 standard / 24×8 wide stages, dual-route Waves on all difficulties, non-destructive `.state`→`.state.v2` migration, stage+difficulty persistence, board-only horizontal scrolling, preparation/economy controls, reload before a Wave, expansion and PC/360px widths. These fixtures isolate APIs and do not establish production deployment or physical phone behavior.
