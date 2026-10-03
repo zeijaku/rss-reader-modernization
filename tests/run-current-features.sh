@@ -137,6 +137,8 @@ echo '== Current feature contracts: Cursor Field =='
 python3 "$SCRIPT_DIR/test_current_cursor_field_contract.py"
 node "$SCRIPT_DIR/test_current_cursor_field_runtime.js"
 node --check "$ROOT/public/js/cursor-field.js"
+node --check "$SCRIPT_DIR/test_current_cursor_field_browser.js"
+node "$SCRIPT_DIR/test_current_cursor_field_browser.js"
 
 echo '== Current feature contracts: PHP architecture / security boundaries =='
 python3 "$SCRIPT_DIR/test_current_v139c_php_architecture_contract.py"
