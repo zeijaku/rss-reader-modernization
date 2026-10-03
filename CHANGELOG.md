@@ -1,3 +1,9 @@
+## 1.43.1-dev.1 - 2026-10-03
+
+- Align Feed / Search Feed header table rows and cells to the existing 44px Dashboard Widget header contract so colored headers match div-based Widgets such as Game and utility cards.
+- Refine the desktop Page Top control from 64px to 72px width with 6px horizontal padding so the `ページ上部` label has visual breathing room. Keep the narrow/mobile 48×48 arrow-only control unchanged.
+- No Game, Calendar, RSS retrieval, Remote Files, DB, API, auth or content behavior changes.
+
 ## 1.43.0 - 2026-10-03
 
 - Release the redesigned Cursor Field as a free-body Canvas physics toy. Three initial circle/square bodies drift independently, reflect from the Widget's inner walls, and collide with each other without rotation.
