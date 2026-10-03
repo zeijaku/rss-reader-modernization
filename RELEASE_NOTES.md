@@ -21,7 +21,7 @@ V1.43.1はDashboard表示の統一を目的としたUI maintenance releaseです
 - Smartphone / narrow viewportは従来どおり48×48pxの矢印のみです。
 - `aria-label="ページ先頭へ移動"`を維持します。
 
-## Verification / compatibility
+## Verification limits
 
 - PHP 8.1 / PHP 8.4 Current regressionを通過させます。
 - Widget header contractでは共通outer frame / 44px headerとFeed headerがtable外divであることを固定します。
