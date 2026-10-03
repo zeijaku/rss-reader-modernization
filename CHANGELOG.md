@@ -1,3 +1,10 @@
+## 1.43.0-dev.1 - 2026-10-03
+
+- Rebuild only Cursor Field as a free-body Canvas physics toy. Replace the 14×9 anchored square grid with three initial circle/square bodies that drift independently and reflect from the Widget's inner walls.
+- Add elastic body-to-body collisions without rotation, treat the mouse pointer as a moving circular collider that can redirect/accelerate bodies, and add stationary circle/square bodies by clicking empty space. Occupied clicks do nothing and total bodies are bounded at 24.
+- Preserve body state across Cursor Field resize by scaling positions instead of rebuilding the field. Continue to pause animation off-screen/hidden, respect reduced-motion by suppressing autonomous initial velocity, and retain no score, persistence, network, DB or API behavior.
+- Add focused physics and browser regressions for wall/body/pointer collisions, click spawning, resize preservation, narrow/desktop layout and page overflow. No other Game, Calendar or shared Widget behavior is changed.
+
 ## 1.42.0 - 2026-10-03
 
 - Release the production-confirmed Calendar deadline repeat pulse: urgent opt-in deadlines keep their static three-edge emphasis and repeat the existing pulse once per active minute without adding one-minute API polling; hidden-tab time pauses the cadence and reduced-motion keeps the static cue only.
