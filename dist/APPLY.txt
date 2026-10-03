@@ -1,0 +1,20 @@
+RSS Reader Modernization 1.43.1-dev.4
+Page Top label polish only
+
+Base: V1.43.1-dev.3
+Source HEAD: 876a1073169e9ba113b9a7970cb0f6e7478d5697
+
+Overwrite:
+  app/version.php
+  public/index.php
+  public/css/dashboard.css
+
+Change:
+  Desktop Page Top label is explicitly split into:
+    ページ
+    上部
+  Button width/font size are unchanged.
+  Mobile remains arrow-only.
+
+No Dashboard Widget header/body change in dev.4.
+No DB migration / config change / file deletion.
