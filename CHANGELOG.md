@@ -1,3 +1,11 @@
+## 1.43.1 - 2026-10-04
+
+- Normalize Dashboard Widget chrome across the supported card families: 1px outer border, 4px radius, clipped overflow, and a non-shrinking 44px visible header.
+- Move Feed and Search Feed colored headers out of `table > thead > tr > th` into normal div headers directly under `.feed-card-inner`, removing the table-layout exception that could render Feed headers shorter than other Widgets.
+- Preserve existing Feed/Search selectors and behavior, including refresh/edit actions, All RSS Recent specialization, article rows, Stock and Summary handling.
+- Refine the desktop Page Top control so its Japanese label is explicitly split into `ページ` / `上部`, while retaining the existing button size/font and the mobile 48×48 arrow-only presentation.
+- No DB migration, config, API, auth, RSS retrieval, Reader, Mail transport, Remote Files, Game or Calendar behavior changes.
+
 ## 1.43.1-dev.3 - 2026-10-03
 
 - Remove the remaining table-layout exception from Feed and Search Feed headers. Move their colored title/action bar out of `table > thead > tr > th` and render it as a normal div directly under `.feed-card-inner`, matching the structural model used by the other Dashboard Widgets.
