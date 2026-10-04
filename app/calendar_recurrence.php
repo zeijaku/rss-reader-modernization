@@ -127,7 +127,8 @@ function calendar_event_recurrence_time_color_create(
     string $color,
     array $timeSettings,
     array $repeatSettings,
-    ?string $reminder = null
+    ?string $reminder = null,
+    mixed $sourceId = null
 ): int {
     $pdo = conn_db();
     $started = !$pdo->inTransaction();
@@ -142,7 +143,9 @@ function calendar_event_recurrence_time_color_create(
             $endDate,
             $note,
             $color,
-            $timeSettings
+            $timeSettings,
+            null,
+            $sourceId
         );
         calendar_event_recurrence_apply($pdo, $ownerId, $eventId, $repeatSettings);
         if ($reminder !== null) {
@@ -175,7 +178,8 @@ function calendar_event_recurrence_time_color_update(
     string $color,
     array $timeSettings,
     array $repeatSettings,
-    ?string $reminder = null
+    ?string $reminder = null,
+    mixed $sourceId = null
 ): bool {
     $pdo = conn_db();
     $started = !$pdo->inTransaction();
@@ -209,7 +213,9 @@ function calendar_event_recurrence_time_color_update(
             $endDate,
             $note,
             $color,
-            $timeSettings
+            $timeSettings,
+            null,
+            $sourceId
         )) {
             if ($started) {
                 $pdo->rollBack();
