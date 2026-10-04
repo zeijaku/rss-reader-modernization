@@ -1,0 +1,208 @@
+name: V1.44 Shared Host Verify and Package
+
+on:
+  push:
+    branches:
+      - artifact/v1.44-ab-shared-host-fix-package
+
+permissions:
+  contents: read
+
+jobs:
+  verify-mysql8:
+    name: Restricted MySQL 8 migration test
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MySQL client
+        run: |
+          if ! command -v mysql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y mysql-client
+          fi
+
+      - name: Prepare restricted shared-host style database
+        shell: bash
+        run: |
+          set -euo pipefail
+          mysql -h127.0.0.1 -uroot -proot <<'SQL'
+          CREATE DATABASE rss_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+          CREATE USER 'shared'@'%' IDENTIFIED BY 'sharedpass';
+          GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX ON rss_test.* TO 'shared'@'%';
+          FLUSH PRIVILEGES;
+          USE rss_test;
+
+          -- Simulate the user's partial first attempt: source table exists,
+          -- while event source/index and location columns do not yet exist.
+          CREATE TABLE rss_calendar_source (
+            calendar_source_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            calendar_source_date DATETIME NOT NULL,
+            calendar_source_updated_at DATETIME NOT NULL,
+            calendar_source_flag TINYINT UNSIGNED NOT NULL DEFAULT 0,
+            calendar_source_owner INT UNSIGNED NOT NULL,
+            calendar_source_name VARCHAR(40) NOT NULL,
+            calendar_source_color VARCHAR(16) NOT NULL DEFAULT 'blue',
+            calendar_source_default TINYINT UNSIGNED NOT NULL DEFAULT 0,
+            calendar_source_sort_order INT UNSIGNED NOT NULL DEFAULT 0,
+            PRIMARY KEY (calendar_source_id),
+            KEY idx_calendar_source_owner (calendar_source_owner, calendar_source_flag, calendar_source_default, calendar_source_sort_order, calendar_source_id)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+          CREATE TABLE rss_calendar_event (
+            calendar_event_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            calendar_event_date DATETIME NOT NULL,
+            calendar_event_updated_at DATETIME NOT NULL,
+            calendar_event_flag TINYINT UNSIGNED NOT NULL DEFAULT 0,
+            calendar_event_owner INT UNSIGNED NOT NULL,
+            calendar_event_title VARCHAR(256) NOT NULL,
+            calendar_event_start_date DATE NOT NULL,
+            calendar_event_end_date DATE NOT NULL,
+            calendar_event_url VARCHAR(2048) NULL DEFAULT NULL,
+            calendar_event_note TEXT NOT NULL,
+            PRIMARY KEY (calendar_event_id),
+            KEY idx_calendar_event_owner_range (calendar_event_owner, calendar_event_flag, calendar_event_start_date, calendar_event_end_date, calendar_event_id)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+          CREATE TABLE rss_calendar_event_exception (
+            calendar_event_exception_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            calendar_event_exception_url VARCHAR(2048) NULL DEFAULT NULL,
+            PRIMARY KEY (calendar_event_exception_id)
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+          INSERT INTO rss_calendar_event (
+            calendar_event_date, calendar_event_updated_at, calendar_event_flag,
+            calendar_event_owner, calendar_event_title, calendar_event_start_date,
+            calendar_event_end_date, calendar_event_url, calendar_event_note
+          ) VALUES (
+            NOW(), NOW(), 0, 42, 'existing', '2026-10-05', '2026-10-05', NULL, ''
+          );
+          INSERT INTO rss_calendar_event_exception (calendar_event_exception_url) VALUES (NULL);
+          SQL
+
+      - name: Apply corrected migrations twice as restricted user
+        shell: bash
+        run: |
+          set -euo pipefail
+          sed "s/SET @table_prefix = 'ig_';/SET @table_prefix = 'rss_';/"             database/migrations/033_v1_44_calendar_source.sql > /tmp/033.sql
+          sed "s/SET @table_prefix = 'ig_';/SET @table_prefix = 'rss_';/"             database/migrations/034_v1_44_calendar_location.sql > /tmp/034.sql
+
+          for pass in 1 2; do
+            mysql -h127.0.0.1 -ushared -psharedpass rss_test < /tmp/033.sql
+            mysql -h127.0.0.1 -ushared -psharedpass rss_test < /tmp/034.sql
+          done
+
+      - name: Verify partial-state recovery and re-run safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          q() { mysql -N -B -h127.0.0.1 -ushared -psharedpass rss_test -e "$1"; }
+
+          test "$(q "SHOW COLUMNS FROM rss_calendar_event LIKE 'calendar_event_source_id';" | wc -l)" -eq 1
+          test "$(q "SHOW INDEX FROM rss_calendar_event WHERE Key_name='idx_calendar_event_source';" | wc -l)" -eq 4
+          test "$(q "SHOW COLUMNS FROM rss_calendar_event LIKE 'calendar_event_location';" | wc -l)" -eq 1
+          test "$(q "SHOW COLUMNS FROM rss_calendar_event_exception LIKE 'calendar_event_exception_location';" | wc -l)" -eq 1
+          test "$(q "SELECT COUNT(*) FROM rss_calendar_source WHERE calendar_source_owner=42 AND calendar_source_flag=0 AND calendar_source_default=1;")" = "1"
+          test "$(q "SELECT COUNT(*) FROM rss_calendar_event WHERE calendar_event_owner=42 AND calendar_event_source_id IS NOT NULL;")" = "1"
+          test "$(q "SELECT COUNT(*) FROM rss_calendar_source WHERE calendar_source_owner=0 AND calendar_source_flag=255;")" = "3"
+          test "$(q "SELECT COUNT(*) FROM rss_calendar_event WHERE calendar_event_location IS NULL;")" = "1"
+          test "$(q "SELECT COUNT(*) FROM rss_calendar_event_exception WHERE calendar_event_exception_location IS NULL;")" = "1"
+
+          echo "PASS: restricted MySQL 8 partial-state recovery"
+          echo "PASS: corrected 033/034 re-run safely"
+          echo "PASS: existing event and NULL location data preserved"
+
+  package:
+    name: Build corrected A+B review ZIP
+    runs-on: ubuntu-latest
+    needs: verify-mysql8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build corrected V1.44 A+B diff package
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --depth=1
+          PKG="rss-reader-v1.44.0-dev.2-calendar-ab-shared-host-fix"
+          mkdir -p "$PKG"
+          git diff --name-only origin/main...HEAD             | grep -E '^(app/|public/|database/migrations/|database/schema\.sql$)'             | while IFS= read -r f; do
+                [ -f "$f" ] || continue
+                mkdir -p "$PKG/$(dirname "$f")"
+                cp "$f" "$PKG/$f"
+              done
+
+          SOURCE_HEAD="e324cfe7c549fa7ad5fdfe9bd7e84288388ef249"
+          cat > "$PKG/APPLY.txt" <<EOF
+          RSS Reader Modernization V1.44-A + V1.44-B corrected review package
+          Target application version: 1.44.0-dev.2
+          Source development HEAD: $SOURCE_HEAD
+
+          IMPORTANT FOR THE CURRENT LOLIPOP DATABASE
+          - The observed table prefix is rss_.
+          - Before executing each migration, change:
+              SET @table_prefix = 'ig_';
+            to:
+              SET @table_prefix = 'rss_';
+          - The previous failed 033 attempt created rss_calendar_source only.
+            Do NOT delete it. The corrected 033 is designed to continue from that state.
+          - The corrected 033/034 do not read server metadata schemas.
+          - Re-running the corrected migrations after success is safe; hidden owner=0 / flag=255
+            Calendar-source rows record completed DDL and are not shown as active user Calendars.
+
+          APPLY ORDER
+          1. Back up the current application and database.
+          2. Overwrite the included app/ and public/ files, preserving paths.
+          3. Edit database/migrations/033_v1_44_calendar_source.sql prefix to rss_ and execute it.
+          4. Edit database/migrations/034_v1_44_calendar_location.sql prefix to rss_ and execute it.
+          5. Do not run the migrations in reverse order.
+          6. No Google API key, OAuth, Maps API, Calendar API, ICS or CalDAV setup is required.
+          7. app/version.php uses APP_ASSET_REVISION=1.44.0-dev.2.
+          8. This is a review/development package. It is not a formal release.
+
+          V1.44-A
+          - Multiple owner-scoped local Calendars
+          - Existing events migrate to the owner's default Calendar
+          - Multi-select Calendar visibility filter
+          - Calendar create/rename/color/delete management
+          - Event Calendar selection/change
+          - Existing recurrence, Copy, Drag & Drop, Reminder, Deadline, Task and partial-refresh behavior retained
+
+          V1.44-B
+          - Optional event location
+          - Location preserved for recurrence/occurrence/Copy/Drag & Drop
+          - Google Maps search link using encoded location text
+          - Blank location hides the Maps action
+          EOF
+
+          python3 - <<'PY'
+          import shutil
+          shutil.make_archive(
+              "rss-reader-v1.44.0-dev.2-calendar-ab-shared-host-fix",
+              "zip",
+              ".",
+              "rss-reader-v1.44.0-dev.2-calendar-ab-shared-host-fix",
+          )
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-v1.44.0-dev.2-calendar-ab-shared-host-fix
+          path: rss-reader-v1.44.0-dev.2-calendar-ab-shared-host-fix.zip
+          if-no-files-found: error
+          retention-days: 7
