@@ -63,6 +63,15 @@ require(range_php, "$cancelledSourceState", "Cancelled recurring occurrences mus
 widgets = read("app/view/dashboard_widgets.php")
 require(widgets, "calendar-source-filter-toggle", "Calendar Widget needs a source filter control.")
 require(widgets, "calendar-source-filter-menu", "Calendar Widget needs a source filter menu.")
+if "calendar-source-bar" in widgets:
+    raise AssertionError("Calendar source filter must stay in the primary Calendar toolbar on normal-width layouts.")
+
+views_css = read("public/css/calendar-views.css")
+require(views_css, '"prev today switch filter next refresh add"', "Desktop Calendar toolbar must keep source filter on the first row.")
+require(views_css, '"filter filter filter filter filter filter"', "Narrow Calendar toolbar may move the source filter to a second row.")
+
+sources_css = read("public/css/calendar-sources.css")
+require(sources_css, "background: #60a5fa;", "Blue Calendar source marker must use the softer V1.44 review color.")
 
 modals = read("app/view/dashboard_modals.php")
 for needle in [
