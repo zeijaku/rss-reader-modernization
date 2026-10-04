@@ -36,7 +36,24 @@ SET @sql = IF(
   @v144a_has_event_source = 0,
   CONCAT(
     'ALTER TABLE ', @t_calendar_event,
-    ' ADD COLUMN `calendar_event_source_id` BIGINT UNSIGNED NULL DEFAULT NULL AFTER `calendar_event_owner`,',
+    ' ADD COLUMN `calendar_event_source_id` BIGINT UNSIGNED NULL DEFAULT NULL AFTER `calendar_event_owner`'
+  ),
+  'SELECT 1'
+);
+PREPARE v144a_stmt FROM @sql;
+EXECUTE v144a_stmt;
+DEALLOCATE PREPARE v144a_stmt;
+
+SELECT COUNT(*) INTO @v144a_has_event_source_index
+FROM information_schema.STATISTICS
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME = CONCAT(@table_prefix, 'calendar_event')
+  AND INDEX_NAME = 'idx_calendar_event_source';
+
+SET @sql = IF(
+  @v144a_has_event_source_index = 0,
+  CONCAT(
+    'ALTER TABLE ', @t_calendar_event,
     ' ADD KEY `idx_calendar_event_source` (`calendar_event_owner`, `calendar_event_source_id`, `calendar_event_flag`, `calendar_event_start_date`)'
   ),
   'SELECT 1'
