@@ -87,6 +87,7 @@
         return {
             eventId: attr(entry, 'data-event-id', ''), title: attr(entry, 'data-event-title', ''), note: attr(entry, 'data-event-note', ''),
             start: start, end: end, anchor: anchorDate, color: validColor(attr(entry, 'data-calendar-event-color', 'blue')),
+            sourceId: attr(entry, 'data-calendar-source-id', '0'),
             allDay: attr(entry, 'data-calendar-event-all-day', '1') !== '0', startTime: validTime(attr(entry, 'data-calendar-event-start-time', '')),
             endTime: validTime(attr(entry, 'data-calendar-event-end-time', '')), url: attr(entry, 'data-calendar-event-url', ''),
             deadlineHighlight: attr(entry, 'data-calendar-event-deadline-highlight', '0'),
@@ -104,6 +105,7 @@
             calendar_event_end_date: range.end, calendar_event_note: state.note, calendar_event_color: state.color,
             calendar_event_all_day: state.allDay ? '1' : '0', calendar_event_start_time: state.allDay ? '' : state.startTime,
             calendar_event_end_time: state.allDay ? '' : state.endTime, calendar_event_url: state.url,
+            calendar_source_id: state.sourceId,
             calendar_event_deadline_highlight: state.deadlineHighlight,
             calendar_event_reminder: state.recurring ? 'none' : state.reminder
         };
