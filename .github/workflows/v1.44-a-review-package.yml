@@ -1,0 +1,96 @@
+name: Build V1.44-A review package
+
+on:
+  push:
+    branches:
+      - artifact/v1.44-a-review-package
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build review package
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG="$RUNNER_TEMP/v1.44-a-review"
+          mkdir -p "$PKG"
+          files=(
+            app/version.php
+            app/bootstrap.php
+            app/calendar_source.php
+            app/calendar_range.php
+            app/calendar_recurrence.php
+            app/calendar_time.php
+            app/common/common_conf.php
+            app/view/dashboard_modals.php
+            app/view/dashboard_widgets.php
+            database/migrations/033_v1_44_calendar_source.sql
+            database/schema.sql
+            docs/v1.44-a-multiple-calendars.md
+            public/.htaccess
+            public/calendar_color_api.php
+            public/calendar_recurrence_api.php
+            public/calendar_source_api.php
+            public/css/calendar-sources.css
+            public/js/calendar-copy.js
+            public/js/calendar-core.js
+            public/js/calendar-drag-drop.js
+            public/js/calendar-event-details.js
+            public/js/calendar-recurrence.js
+            public/js/calendar-sources.js
+            public/js/calendar.js
+          )
+          for file in "${files[@]}"; do
+            mkdir -p "$PKG/$(dirname "$file")"
+            cp "$file" "$PKG/$file"
+          done
+          cat > "$PKG/APPLY.txt" <<'EOF'
+          RSS Reader Modernization V1.44-A review package
+          Build: 1.44.0-dev.1
+
+          PURPOSE
+          - Multiple local Calendar / Source foundation only.
+          - Google Calendar / OAuth, ICS, Location / Google Maps are NOT included.
+          - This is a development review package, not a formal release.
+
+          IMPORTANT BEFORE APPLYING
+          1. Back up application files and the database.
+          2. Existing installations MUST NOT run database/schema.sql.
+             database/schema.sql is included only as the Current fresh-install schema.
+          3. Existing installations must apply database/migrations/033_v1_44_calendar_source.sql.
+          4. Before executing Migration 033, set @table_prefix to the same value as DB_TABLE_PREFIX.
+          5. Migration 033 preserves existing events by assigning them to the automatic 既定Calendar.
+          6. After replacing files and applying Migration 033, reload the browser.
+             APP_ASSET_REVISION is 1.44.0-dev.1.
+
+          MANUAL REVIEW FOCUS
+          - Existing events remain visible under 既定Calendar.
+          - Create/rename/recolor/delete local Calendars.
+          - Add/edit an event and choose its Calendar.
+          - Toggle visible Calendars in month/week/day views.
+          - Copy and drag/drop preserve Calendar membership.
+          - Recurring series inherit Calendar membership; an individual occurrence cannot move Calendars.
+          - Deleting a non-default Calendar moves its active events to 既定Calendar.
+          - 既定Calendar cannot be deleted.
+          - Smartphone-width source filter and Calendar manager remain usable.
+
+          DO NOT
+          - Treat this checkpoint as a formal release before manual verification.
+          - Run database/schema.sql over an existing installation.
+          EOF
+          # Remove YAML heredoc indentation from APPLY.txt.
+          sed -i 's/^          //' "$PKG/APPLY.txt"
+
+      - name: Upload review package
+        uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-modernization-1.44.0-dev.1-v1.44-a-review-diff
+          path: ${{ runner.temp }}/v1.44-a-review
+          if-no-files-found: error
+          retention-days: 14
