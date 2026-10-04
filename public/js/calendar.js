@@ -51,6 +51,7 @@
     loadStyle(assetUrl('./css/memo-refresh.css'), 'data-memo-refresh-style');
     loadStyle(assetUrl('./css/dashboard-card-wheel.css'), 'data-dashboard-card-wheel-style');
     loadStyle(assetUrl('./css/calendar-colors.css'), 'data-calendar-colors-style');
+    loadStyle(assetUrl('./css/calendar-sources.css'), 'data-calendar-sources-style');
     loadStyle(assetUrl('./css/calendar-event-details.css'), 'data-calendar-event-details-style');
     loadStyle(assetUrl('./css/calendar-recurrence.css'), 'data-calendar-recurrence-style');
     loadStyle(assetUrl('./css/calendar-occurrence.css'), 'data-calendar-occurrence-style');
@@ -79,6 +80,7 @@
     loadScript(assetUrl('./js/calendar-occurrence.js'));
     loadScript(assetUrl('./js/calendar-recurrence.js'));
     loadScript(assetUrl('./js/calendar-event-details.js'));
+    loadScript(assetUrl('./js/calendar-sources.js'));
     loadScript(assetUrl('./js/calendar-usability.js'));
     loadScript(assetUrl('./js/calendar-reminder-target.js'));
     loadScript(assetUrl('./js/calendar-copy.js'));
