@@ -41,6 +41,7 @@ upgrade_migrations = [
     '028_v1_35_mail_google_oauth.sql',
     '029_v1_35_remember_2fa_trust.sql',
     '033_v1_44_calendar_source.sql',
+    '034_v1_44_calendar_location.sql',
 ]
 
 for migration in upgrade_migrations:
