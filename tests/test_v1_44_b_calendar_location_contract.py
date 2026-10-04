@@ -27,6 +27,13 @@ for column in ('calendar_event_location', 'calendar_event_exception_location'):
     check(column in files['migration'] and column in files['schema'],
           f'{column} is present in upgrade migration and fresh schema')
 
+check('information_schema' not in files['migration'].lower(),
+      'upgrade migration avoids information_schema for restricted shared-hosting accounts')
+check('@t_schema_migration' in files['migration']
+      and '034:v1.44-b:event-location' in files['migration']
+      and '034:v1.44-b:exception-location' in files['migration'],
+      'upgrade migration tracks parent and occurrence DDL with app-owned markers')
+
 check("$_POST['calendar_event_location'] ?? ''" in files['color_api']
       and "$_POST['calendar_event_location'] ?? ''" in files['recurrence_api'],
       'normal and recurring event APIs accept optional location')
