@@ -22,7 +22,9 @@ SET @sql = CONCAT(
   'KEY `idx_calendar_source_owner` (`calendar_source_owner`, `calendar_source_flag`, `calendar_source_default`, `calendar_source_sort_order`, `calendar_source_id`)',
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Calendar source'''
 );
-PREPARE v144a_stmt FROM @sql; EXECUTE v144a_stmt; DEALLOCATE PREPARE v144a_stmt;
+PREPARE v144a_stmt FROM @sql;
+EXECUTE v144a_stmt;
+DEALLOCATE PREPARE v144a_stmt;
 
 SELECT COUNT(*) INTO @v144a_has_event_source
 FROM information_schema.COLUMNS
@@ -39,7 +41,9 @@ SET @sql = IF(
   ),
   'SELECT 1'
 );
-PREPARE v144a_stmt FROM @sql; EXECUTE v144a_stmt; DEALLOCATE PREPARE v144a_stmt;
+PREPARE v144a_stmt FROM @sql;
+EXECUTE v144a_stmt;
+DEALLOCATE PREPARE v144a_stmt;
 
 -- Create one default Calendar for every owner that already has Calendar events.
 SET @sql = CONCAT(
@@ -54,7 +58,9 @@ SET @sql = CONCAT(
   'WHERE s.`calendar_source_id` IS NULL ',
   'GROUP BY e.`calendar_event_owner`'
 );
-PREPARE v144a_stmt FROM @sql; EXECUTE v144a_stmt; DEALLOCATE PREPARE v144a_stmt;
+PREPARE v144a_stmt FROM @sql;
+EXECUTE v144a_stmt;
+DEALLOCATE PREPARE v144a_stmt;
 
 -- Preserve all existing events by assigning them to the owner's default Calendar.
 SET @sql = CONCAT(
@@ -65,4 +71,6 @@ SET @sql = CONCAT(
   'SET e.`calendar_event_source_id` = s.`calendar_source_id` ',
   'WHERE e.`calendar_event_source_id` IS NULL'
 );
-PREPARE v144a_stmt FROM @sql; EXECUTE v144a_stmt; DEALLOCATE PREPARE v144a_stmt;
+PREPARE v144a_stmt FROM @sql;
+EXECUTE v144a_stmt;
+DEALLOCATE PREPARE v144a_stmt;
