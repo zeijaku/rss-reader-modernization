@@ -1,0 +1,123 @@
+name: V1.44-A verified package
+
+on:
+  push:
+    branches:
+      - artifact/v1.44-a-dev1-verified-package
+
+permissions:
+  contents: read
+
+jobs:
+  mariadb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install MariaDB
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server
+      - name: Validate upgrade migration
+        run: sh tests/test_v1_44_a_calendar_source_mariadb.sh
+      - name: Validate fresh schema with MariaDB client
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo systemctl start mariadb
+          sudo mariadb -e "DROP DATABASE IF EXISTS rss_v144a_fresh; CREATE DATABASE rss_v144a_fresh CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+          sed "s/SET @table_prefix = 'rss_';/SET @table_prefix = 'qa_';/" database/schema.sql > /tmp/v144a-schema.sql
+          sudo mariadb rss_v144a_fresh < /tmp/v144a-schema.sql
+          test "$(sudo mariadb rss_v144a_fresh -Nse "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE 'qa\\_%';")" = "28"
+          test "$(sudo mariadb rss_v144a_fresh -Nse "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'qa_calendar_source' AND COLUMN_NAME IN ('calendar_source_owner','calendar_source_name','calendar_source_color','calendar_source_default');")" = "4"
+          test "$(sudo mariadb rss_v144a_fresh -Nse "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'qa_calendar_event' AND COLUMN_NAME = 'calendar_event_source_id';")" = "1"
+          echo "PASS: fresh schema creates 28 tables and V1.44-A Calendar source structures"
+
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="v1.44-a-dev1-overlay"
+          mkdir -p "$OUT"
+          files=(
+            "app/bootstrap.php"
+            "app/calendar_range.php"
+            "app/calendar_recurrence.php"
+            "app/calendar_source.php"
+            "app/calendar_time.php"
+            "app/common/common_conf.php"
+            "app/version.php"
+            "app/view/dashboard_modals.php"
+            "app/view/dashboard_widgets.php"
+            "database/migrations/033_v1_44_calendar_source.sql"
+            "database/schema.sql"
+            "docs/v1.44-a-multiple-calendars.md"
+            "public/.htaccess"
+            "public/calendar_color_api.php"
+            "public/calendar_recurrence_api.php"
+            "public/calendar_source_api.php"
+            "public/css/calendar-sources.css"
+            "public/js/calendar-copy.js"
+            "public/js/calendar-core.js"
+            "public/js/calendar-drag-drop.js"
+            "public/js/calendar-event-details.js"
+            "public/js/calendar-recurrence.js"
+            "public/js/calendar-sources.js"
+            "public/js/calendar.js"
+            "tools/db_current.php"
+          )
+          for file in "${files[@]}"; do
+            mkdir -p "$OUT/$(dirname "$file")"
+            cp "$file" "$OUT/$file"
+          done
+          cat > "$OUT/APPLY.txt" <<'EOF'
+          RSS Reader Modernization V1.44-A (1.44.0-dev.1) verification overlay
+
+          IMPORTANT:
+          - Development checkpoint for manual verification. Not a formal release.
+          - Back up the application and database first.
+          - Existing DB requires Migration 033.
+          - Do NOT execute database/schema.sql against an existing database.
+
+          Apply to an existing installation:
+          1. Back up application files and database.
+          2. Edit database/migrations/033_v1_44_calendar_source.sql so @table_prefix matches DB_TABLE_PREFIX.
+          3. Apply Migration 033.
+          4. Overlay the runtime files from this ZIP at the application root.
+          5. Hard reload the browser.
+          6. Confirm version is RSS Reader Modernization 1.44.0-dev.1.
+
+          Migration 033:
+          - Adds calendar_source.
+          - Adds calendar_event.calendar_event_source_id + index.
+          - Assigns every existing active Calendar event to its owner's automatic "既定Calendar".
+          - Is designed to be safely re-run.
+          - Does not delete existing Calendar events.
+
+          V1.44-A:
+          - Multiple internal Calendars / Sources.
+          - Per-Widget Calendar visibility filter.
+          - Calendar create/rename/color/delete management.
+          - Calendar selection on event add/edit.
+          - Calendar membership preserved by series edit, copy and drag & drop.
+          - Individual recurring occurrence inherits its series Calendar.
+          - Google Calendar/OAuth/ICS and Location/Maps are not included.
+          EOF
+      - name: Upload overlay
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: rss-reader-modernization-1.44.0-dev.1-v1.44-a-overlay
+          path: v1.44-a-dev1-overlay/
+          if-no-files-found: error
+          retention-days: 7
