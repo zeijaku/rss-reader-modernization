@@ -65,6 +65,7 @@ for needle in [
     "changeCalendarEventSource",
     "calendarSourceManager",
     "calendarSourceCreateForm",
+    "個別OccurrenceではCalendarを変更出来ません",
 ]:
     require(modals, needle, "Calendar source forms are incomplete.")
 
@@ -106,7 +107,6 @@ for needle in [
     "calendar.source.create",
     "calendar.source.update",
     "calendar.source.delete",
-    "個別OccurrenceではCalendarを変更出来ません",
 ]:
     require(sources_js, needle, "Calendar source UI contract is incomplete.")
 
