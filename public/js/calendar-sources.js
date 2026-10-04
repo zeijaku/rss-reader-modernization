@@ -172,12 +172,35 @@
         });
     }
 
-    function applyFilter($card, sources) {
-        var visible = visibleSourceIds($card, sources);
-        $card.find('.calendar-event-entry').each(function () {
-            var sourceId = String(this.getAttribute('data-calendar-source-id') || '0');
-            this.hidden = visible.indexOf(sourceId) === -1;
+    function filterRangeData(data, hidden) {
+        var range = data && typeof data === 'object' ? data : {};
+        var sources = normalizeSources(range.sources || []);
+        if (!sources.length) {
+            return range;
+        }
+        var blocked = Array.isArray(hidden) ? hidden.map(String) : [];
+        var visible = sources.filter(function (source) {
+            return blocked.indexOf(source.source_id) === -1;
+        }).map(function (source) {
+            return source.source_id;
         });
+        function visibleEvent(item) {
+            var sourceId = String(item && item.calendar_source_id !== undefined ? item.calendar_source_id : '0');
+            return visible.indexOf(sourceId) !== -1;
+        }
+        return $.extend({}, range, {
+            events: (Array.isArray(range.events) ? range.events : []).filter(visibleEvent),
+            cancelled_occurrences: (Array.isArray(range.cancelled_occurrences) ? range.cancelled_occurrences : []).filter(visibleEvent),
+            tasks: Array.isArray(range.tasks) ? range.tasks : []
+        });
+    }
+
+    function filterCardData($card, data) {
+        return filterRangeData(data, hiddenIds($card));
+    }
+
+    function updateFilterPresentation($card, sources) {
+        var visible = visibleSourceIds($card, sources);
         $card.find('.calendar-source-filter-label').text(filterLabel(sources, visible));
         decorateEntries($card);
     }
@@ -212,7 +235,7 @@
             .append(document.createTextNode('Calendar管理'))
             .appendTo($menu);
 
-        applyFilter($card, sources);
+        updateFilterPresentation($card, sources);
     }
 
     function populateSelect(select, sources, selectedId) {
@@ -352,7 +375,8 @@
                 }
             });
             saveHiddenIds($card, hidden);
-            applyFilter($card, sources);
+            updateFilterPresentation($card, sources);
+            $card.trigger('calendar:sourceFilterChanged');
         })
         .on('click.iguguruCalendarSources', '.calendar-event-add-trigger, .calendar-day-add-trigger', function () {
             var $card = $(this).closest('[data-dashboard-widget-type="calendar"]');
@@ -437,6 +461,8 @@
                 return source.source_id;
             });
         },
-        filterLabel: filterLabel
+        filterLabel: filterLabel,
+        filterRangeData: filterRangeData,
+        filterCardData: filterCardData
     });
 }(window.jQuery, window, document));
