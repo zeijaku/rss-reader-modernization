@@ -24,7 +24,11 @@ jobs:
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server
 
       - name: Validate V1.44-A migration
-        run: sh tests/test_v1_44_a_calendar_source_mariadb.sh
+        run: |
+          sed -i 's/| run_bootstrap >\/dev\/null/| run_bootstrap/' tests/test_v1_44_a_calendar_source_mariadb.sh
+          sh -x tests/test_v1_44_a_calendar_source_mariadb.sh
 
       - name: Validate fresh-install schema
-        run: sh tests/test_current_fresh_install_schema_mariadb.sh
+        run: |
+          sed -i 's/| run_bootstrap >\/dev\/null/| run_bootstrap/' tests/test_current_fresh_install_schema_mariadb.sh
+          sh -x tests/test_current_fresh_install_schema_mariadb.sh
