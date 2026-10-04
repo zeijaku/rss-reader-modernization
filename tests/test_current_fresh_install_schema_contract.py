@@ -16,7 +16,7 @@ def check(condition: bool, message: str) -> None:
 
 expected_tables = {
     'user_info', 'user_conf', 'content', 'content_stock', 'feed_item_state',
-    'memo', 'task', 'calendar_event', 'calendar_event_exception',
+    'memo', 'task', 'calendar_source', 'calendar_event', 'calendar_event_exception',
     'dashboard_widget', 'notification', 'remember_token', 'user_file',
     'remote_connection', 'auth_totp', 'auth_recovery_code', 'auth_session',
     'auth_audit_log', 'mail_account', 'link_item', 'stock_tag',
@@ -40,6 +40,7 @@ upgrade_migrations = [
     '027_v1_34_mail_sent_save_mode.sql',
     '028_v1_35_mail_google_oauth.sql',
     '029_v1_35_remember_2fa_trust.sql',
+    '033_v1_44_calendar_source.sql',
 ]
 
 for migration in upgrade_migrations:
@@ -74,6 +75,11 @@ check('`remember_token_second_factor_verified_at` DATETIME NULL DEFAULT NULL' in
       'fresh remember_token schema includes the trusted-browser 2FA timestamp')
 check("'`calendar_event_reminder` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none'','," in SCHEMA,
       'fresh calendar schema contains a syntactically complete reminder column fragment')
+
+check("'\`calendar_event_source_id\` BIGINT UNSIGNED NULL DEFAULT NULL" in SCHEMA,
+      'fresh calendar schema contains Calendar source membership')
+check("'\`calendar_source_name\` VARCHAR(40) NOT NULL" in SCHEMA,
+      'fresh schema contains Calendar source definitions')
 
 check('Fresh Installでは `database/schema.sql` だけを1回実行します' in INSTALL,
       'installation guide documents the single-SQL fresh install contract')
