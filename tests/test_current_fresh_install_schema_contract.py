@@ -25,8 +25,8 @@ expected_tables = {
 }
 declared = set(re.findall(r"SET @t_([a-z0-9_]+) =", SCHEMA))
 created = set(re.findall(r"CREATE TABLE ', @t_([a-z0-9_]+)", SCHEMA))
-check(declared == expected_tables, 'fresh schema declares exactly the 27 current tables')
-check(created == expected_tables, 'fresh schema creates exactly the 27 current tables')
+check(declared == expected_tables, 'fresh schema declares exactly the 28 current tables')
+check(created == expected_tables, 'fresh schema creates exactly the 28 current tables')
 
 upgrade_migrations = [
     '009_v1_9_mail_account.sql',
