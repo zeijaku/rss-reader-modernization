@@ -15,6 +15,7 @@ require(migration, "CREATE TABLE IF NOT EXISTS", "Migration must create the Cale
 require(migration, "calendar_event_source_id", "Migration must add event source ownership.")
 require(migration, "既定Calendar", "Migration must preserve existing events through a default Calendar.")
 require(migration, "IS NULL", "Migration must only backfill unassigned events.")
+require(migration, "@v144a_has_event_source_index", "Migration must recover a missing event source index independently.")
 
 bootstrap = read("app/bootstrap.php")
 require(bootstrap, "calendar_source.php", "Calendar source model must be loaded by bootstrap.")
@@ -113,5 +114,9 @@ for needle in [
     "calendar.source.delete",
 ]:
     require(sources_js, needle, "Calendar source UI contract is incomplete.")
+
+http_test = read("tests/test_v1_44_a_calendar_source_http.py")
+for needle in ["method_not_allowed", "unauthenticated", "csrf_invalid", "request_too_large", "another owner Calendar"]:
+    require(http_test, needle, "Calendar source HTTP boundary coverage is incomplete.")
 
 print("V1.44-A Calendar source contract: OK")
