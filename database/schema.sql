@@ -2,7 +2,7 @@
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
 -- Fresh installs use this file only; historical migrations remain upgrade-only for existing databases.
--- The schema includes all current tables and columns introduced through migrations 001-033.
+-- The schema includes all current tables and columns introduced through migrations 001-034.
 -- See docs/installation.md and docs/update-history.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
@@ -203,6 +203,7 @@ SET @sql = CONCAT(
   '`calendar_event_start_time` TIME NULL DEFAULT NULL,',
   '`calendar_event_end_time` TIME NULL DEFAULT NULL,',
   '`calendar_event_url` VARCHAR(2048) NULL DEFAULT NULL,',
+  '`calendar_event_location` VARCHAR(255) NULL DEFAULT NULL,',
   '`calendar_event_repeat_type` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none'',',
   '`calendar_event_repeat_until` DATE NULL DEFAULT NULL,',
   '`calendar_event_deadline_highlight` TINYINT UNSIGNED NOT NULL DEFAULT 0,',
@@ -234,6 +235,7 @@ SET @sql = CONCAT(
   '`calendar_event_exception_end_time` TIME NULL DEFAULT NULL,',
   '`calendar_event_exception_deadline_highlight` TINYINT UNSIGNED NULL DEFAULT NULL,',
   '`calendar_event_exception_url` VARCHAR(2048) NULL DEFAULT NULL,',
+  '`calendar_event_exception_location` VARCHAR(255) NULL DEFAULT NULL,',
   '`calendar_event_exception_created_at` DATETIME NOT NULL,',
   '`calendar_event_exception_updated_at` DATETIME NOT NULL,',
   'PRIMARY KEY (`calendar_event_exception_id`),',

@@ -56,7 +56,26 @@ function calendar_event_time_validate_url(mixed $value): string|false
     return $url === null ? false : $url;
 }
 
-/** @return array{all_day:bool,start_time:?string,end_time:?string,url:?string}|null */
+/** Empty locations are stored as NULL. Location is plain text and never fetched server-side. */
+function calendar_event_location_validate(mixed $value): ?string
+{
+    if ($value === null || $value === '') {
+        return '';
+    }
+    if (!is_string($value)) {
+        return null;
+    }
+    $value = trim($value);
+    if ($value === '') {
+        return '';
+    }
+    if (str_contains($value, "\r") || str_contains($value, "\n")) {
+        return null;
+    }
+    return app_validate_text($value, 255, false);
+}
+
+/** @return array{all_day:bool,start_time:?string,end_time:?string,url:?string,location:?string}|null */
 function calendar_event_time_settings(
     mixed $allDayValue,
     mixed $startTimeValue,
@@ -64,14 +83,16 @@ function calendar_event_time_settings(
     mixed $urlValue,
     string $startDate,
     string $endDate,
-    mixed $deadlineHighlight = null
+    mixed $deadlineHighlight = null,
+    mixed $locationValue = ''
 ): ?array {
     $range = calendar_validate_event_range($startDate, $endDate);
     $allDay = calendar_event_time_validate_all_day($allDayValue);
     $startTime = calendar_event_time_validate_clock($startTimeValue);
     $endTime = calendar_event_time_validate_clock($endTimeValue);
     $url = calendar_event_time_validate_url($urlValue);
-    if ($range === null || $allDay === null || $startTime === null || $endTime === null || $url === false) {
+    $location = calendar_event_location_validate($locationValue);
+    if ($range === null || $allDay === null || $startTime === null || $endTime === null || $url === false || $location === null) {
         return null;
     }
 
@@ -93,6 +114,7 @@ function calendar_event_time_settings(
         'start_time' => $startTime === '' ? null : $startTime,
         'end_time' => $endTime === '' ? null : $endTime,
         'url' => $url === '' ? null : $url,
+        'location' => $location === '' ? null : $location,
     ];
 }
 
@@ -102,7 +124,7 @@ function calendar_event_time_public_clock(mixed $value): ?string
     return $time === null || $time === '' ? null : substr($time, 0, 5);
 }
 
-/** @return list<array{event_id:int,all_day:bool,start_time:?string,end_time:?string,url:?string}> */
+/** @return list<array{event_id:int,all_day:bool,start_time:?string,end_time:?string,url:?string,location:?string}> */
 function calendar_event_time_month_list(int $ownerId, int $year, int $month): array
 {
     if ($ownerId <= 0 || calendar_validate_year($year) === null || calendar_validate_month($month) === null) {
@@ -111,7 +133,7 @@ function calendar_event_time_month_list(int $ownerId, int $year, int $month): ar
     $range = calendar_month_range($year, $month);
     $stmt = conn_db()->prepare(
         'SELECT calendar_event_id, calendar_event_all_day, calendar_event_start_time, '
-        . 'calendar_event_end_time, calendar_event_url, calendar_event_reminder, calendar_event_deadline_highlight FROM ' . db_table_identifier('calendar_event') . ' '
+        . 'calendar_event_end_time, calendar_event_url, calendar_event_location, calendar_event_reminder, calendar_event_deadline_highlight FROM ' . db_table_identifier('calendar_event') . ' '
         . 'WHERE calendar_event_owner = :owner AND calendar_event_flag = 0 '
         . 'AND calendar_event_start_date <= :month_end AND calendar_event_end_date >= :month_start '
         . 'ORDER BY calendar_event_id ASC LIMIT 500'
@@ -140,6 +162,7 @@ function calendar_event_time_month_list(int $ownerId, int $year, int $month): ar
             'start_time' => calendar_event_time_public_clock($row['calendar_event_start_time'] ?? null),
             'end_time' => calendar_event_time_public_clock($row['calendar_event_end_time'] ?? null),
             'url' => $url === false || $url === '' ? null : $url,
+            'location' => calendar_event_location_validate($row['calendar_event_location'] ?? '') ?: null,
             'reminder' => function_exists('calendar_event_reminder_validate')
                 ? (calendar_event_reminder_validate($row['calendar_event_reminder'] ?? 'none') ?? 'none')
                 : 'none',
@@ -148,7 +171,7 @@ function calendar_event_time_month_list(int $ownerId, int $year, int $month): ar
     return $events;
 }
 
-/** @param array{all_day:bool,start_time:?string,end_time:?string,url:?string} $settings */
+/** @param array{all_day:bool,start_time:?string,end_time:?string,url:?string,location:?string} $settings */
 function calendar_event_time_apply(PDO $pdo, int $ownerId, int $eventId, array $settings): void
 {
     if ($ownerId <= 0 || $eventId <= 0) {
@@ -157,7 +180,7 @@ function calendar_event_time_apply(PDO $pdo, int $ownerId, int $eventId, array $
     $stmt = $pdo->prepare(
         'UPDATE ' . db_table_identifier('calendar_event') . ' SET '
         . 'calendar_event_all_day = :all_day, calendar_event_start_time = :start_time, '
-        . 'calendar_event_end_time = :end_time, calendar_event_url = :url '
+        . 'calendar_event_end_time = :end_time, calendar_event_url = :url, calendar_event_location = :location '
         . 'WHERE calendar_event_id = :event_id AND calendar_event_owner = :owner AND calendar_event_flag = 0'
     );
     $stmt->execute([
@@ -165,6 +188,7 @@ function calendar_event_time_apply(PDO $pdo, int $ownerId, int $eventId, array $
         ':start_time' => $settings['start_time'],
         ':end_time' => $settings['end_time'],
         ':url' => $settings['url'],
+        ':location' => $settings['location'] ?? null,
         ':event_id' => $eventId,
         ':owner' => $ownerId,
     ]);
@@ -176,7 +200,7 @@ function calendar_event_time_apply(PDO $pdo, int $ownerId, int $eventId, array $
     }
 }
 
-/** @param array{all_day:bool,start_time:?string,end_time:?string,url:?string} $settings */
+/** @param array{all_day:bool,start_time:?string,end_time:?string,url:?string,location:?string} $settings */
 function calendar_event_time_color_create(
     int $ownerId,
     string $title,
@@ -215,7 +239,7 @@ function calendar_event_time_color_create(
     }
 }
 
-/** @param array{all_day:bool,start_time:?string,end_time:?string,url:?string} $settings */
+/** @param array{all_day:bool,start_time:?string,end_time:?string,url:?string,location:?string} $settings */
 function calendar_event_time_color_update(
     int $ownerId,
     int $eventId,

@@ -61,11 +61,13 @@ function current_schema_required_columns(): array
             'calendar_event_repeat_until',
             'calendar_event_reminder',
             'calendar_event_deadline_highlight',
+            'calendar_event_location',
         ],
         'calendar_event_exception' => [
             'calendar_event_exception_kind',
             'calendar_event_exception_revision',
             'calendar_event_exception_deadline_highlight',
+            'calendar_event_exception_location',
         ],
         'notification' => [
             'notification_source_key',
