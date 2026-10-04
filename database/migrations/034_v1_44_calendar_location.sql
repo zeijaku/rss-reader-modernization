@@ -1,6 +1,6 @@
 -- V1.44-B Calendar event location + Google Maps search link support.
 -- Existing DB migration for MySQL / MariaDB.
--- Shared-host compatible: does not read information_schema.
+-- Shared-host compatible: does not read server metadata schemas.
 -- Run after 033_v1_44_calendar_source.sql and set the prefix to DB_TABLE_PREFIX.
 --
 -- Hidden owner=0 / flag=255 Calendar-source rows are used as DDL completion
