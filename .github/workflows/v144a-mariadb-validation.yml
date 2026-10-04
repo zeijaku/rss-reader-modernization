@@ -1,0 +1,30 @@
+name: V1.44-A MariaDB validation
+
+on:
+  push:
+    branches:
+      - artifact/v1.44-a-dev1-package
+
+permissions:
+  contents: read
+
+jobs:
+  mariadb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install MariaDB server tools
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server
+
+      - name: Validate V1.44-A migration
+        run: sh tests/test_v1_44_a_calendar_source_mariadb.sh
+
+      - name: Validate fresh-install schema
+        run: sh tests/test_current_fresh_install_schema_mariadb.sh
