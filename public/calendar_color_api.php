@@ -146,7 +146,8 @@ try {
             $note,
             $color,
             $timeSettings,
-            $reminder
+            $reminder,
+            $_POST['calendar_source_id'] ?? null
         );
         calendar_color_success([
             'event_id' => $eventId,
@@ -173,7 +174,8 @@ try {
         $note,
         $color,
         $timeSettings,
-        $reminder
+        $reminder,
+        $_POST['calendar_source_id'] ?? null
     )) {
         calendar_color_error('not_found', 'Calendar event was not found.', 404);
     }
