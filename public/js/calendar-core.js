@@ -834,22 +834,26 @@
     }
 
     function renderCalendar($card, data) {
-        var mode = String(data.view_mode || 'month');
-        updateCalendarChrome($card, data);
+        var sourceModule = window.iGuguruCalendarSources;
+        var displayData = sourceModule && typeof sourceModule.filterCardData === 'function'
+            ? sourceModule.filterCardData($card, data)
+            : data;
+        var mode = String(displayData.view_mode || 'month');
+        updateCalendarChrome($card, displayData);
         if (mode === 'day' && calendarViewModule()) {
-            renderDayCalendar($card, data);
+            renderDayCalendar($card, displayData);
         } else if (mode === 'week' && calendarViewModule()) {
-            renderWeekCalendar($card, data);
+            renderWeekCalendar($card, displayData);
         } else {
-            renderMonthCalendar($card, data);
+            renderMonthCalendar($card, displayData);
         }
         $card
-            .data('calendar-range-events', Array.isArray(data.events) ? data.events : [])
+            .data('calendar-range-events', Array.isArray(displayData.events) ? displayData.events : [])
             .data('calendar-range-data', data)
             .attr('data-calendar-range-ready', '1')
             .attr('data-calendar-recurrence-ready', '1')
             .attr('data-calendar-event-meta-ready', '1');
-        $card.trigger('calendar:rangeLoaded', [data]);
+        $card.trigger('calendar:rangeLoaded', [data, displayData]);
     }
 
     function refreshVisibleCalendars() {
@@ -1113,6 +1117,14 @@
             .on('click' + eventNamespace, '.calendar-today', function () {
                 var $card = $(this).closest('[data-dashboard-widget-type="calendar"]');
                 loadCalendarView($card, calendarViewMode($card), localIsoDate(new Date()));
+            })
+            .off('calendar:sourceFilterChanged' + eventNamespace, '[data-dashboard-widget-type="calendar"]')
+            .on('calendar:sourceFilterChanged' + eventNamespace, '[data-dashboard-widget-type="calendar"]', function () {
+                var $card = $(this);
+                var data = $card.data('calendar-range-data');
+                if (data && typeof data === 'object') {
+                    renderCalendar($card, data);
+                }
             })
             .off('click' + eventNamespace, '.calendar-view-mode')
             .on('click' + eventNamespace, '.calendar-view-mode', function () {
