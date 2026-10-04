@@ -1,0 +1,96 @@
+name: V1.44-A dev package
+
+on:
+  push:
+    branches:
+      - artifact/v1.44-a-dev1-package
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build verification overlay
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="v1.44-a-dev1-overlay"
+          mkdir -p "$OUT"
+          files=(
+            "app/bootstrap.php"
+            "app/calendar_range.php"
+            "app/calendar_recurrence.php"
+            "app/calendar_source.php"
+            "app/calendar_time.php"
+            "app/common/common_conf.php"
+            "app/version.php"
+            "app/view/dashboard_modals.php"
+            "app/view/dashboard_widgets.php"
+            "database/migrations/033_v1_44_calendar_source.sql"
+            "database/schema.sql"
+            "docs/v1.44-a-multiple-calendars.md"
+            "public/.htaccess"
+            "public/calendar_color_api.php"
+            "public/calendar_recurrence_api.php"
+            "public/calendar_source_api.php"
+            "public/css/calendar-sources.css"
+            "public/js/calendar-copy.js"
+            "public/js/calendar-core.js"
+            "public/js/calendar-drag-drop.js"
+            "public/js/calendar-event-details.js"
+            "public/js/calendar-recurrence.js"
+            "public/js/calendar-sources.js"
+            "public/js/calendar.js"
+            "tools/db_current.php"
+          )
+          for file in "${files[@]}"; do
+            mkdir -p "$OUT/$(dirname "$file")"
+            cp "$file" "$OUT/$file"
+          done
+          cat > "$OUT/APPLY.txt" <<'EOF'
+          RSS Reader Modernization V1.44-A (1.44.0-dev.1) verification overlay
+          
+          IMPORTANT:
+          - This is a development checkpoint for manual verification, not a formal release.
+          - Back up the application and database before applying it.
+          - V1.44-A requires additive Migration 033 for an existing database.
+          - Do NOT execute database/schema.sql against an existing database.
+          
+          Existing database:
+          1. Back up the application and database.
+          2. Edit database/migrations/033_v1_44_calendar_source.sql so @table_prefix matches DB_TABLE_PREFIX.
+          3. Apply Migration 033 once.
+          4. Overlay the included runtime files at the application root.
+          5. Hard reload the browser.
+          6. Confirm footer/version shows RSS Reader Modernization 1.44.0-dev.1.
+          
+          Migration behavior:
+          - Adds calendar_source.
+          - Adds calendar_event.calendar_event_source_id and its index.
+          - Existing Calendar events are assigned to the owner's automatic "既定Calendar".
+          - No existing event row is deleted.
+          
+          V1.44-A scope:
+          - Multiple internal Calendars / Sources.
+          - Per-Calendar display filtering.
+          - Calendar management and event membership selection.
+          - Source preservation for series edit, copy and drag & drop.
+          - Individual recurring occurrence cannot move to another Calendar; the series can.
+          - Google Calendar / OAuth / ICS / Location / Google Maps are NOT included.
+          EOF
+
+      - name: Upload verification overlay
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: rss-reader-modernization-1.44.0-dev.1-v1.44-a-overlay
+          path: v1.44-a-dev1-overlay/
+          if-no-files-found: error
+          retention-days: 7
