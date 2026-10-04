@@ -70,6 +70,7 @@ require_once __DIR__ . '/feed_keyword.php';
 require_once __DIR__ . '/mini_game.php';
 require_once __DIR__ . '/search_feed.php';
 require_once __DIR__ . '/calendar.php';
+require_once __DIR__ . '/calendar_source.php';
 require_once __DIR__ . '/notification.php';
 require_once __DIR__ . '/calendar_reminder.php';
 require_once __DIR__ . '/url_normalizer.php';
