@@ -62,10 +62,18 @@ def create_fixture(path: Path) -> None:
             widget_type TEXT NOT NULL, widget_flag INTEGER NOT NULL DEFAULT 0,
             widget_config TEXT NOT NULL
         );
+        CREATE TABLE ig_calendar_source (
+            calendar_source_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            calendar_source_date TEXT NOT NULL, calendar_source_updated_at TEXT NOT NULL,
+            calendar_source_flag INTEGER NOT NULL DEFAULT 0, calendar_source_owner INTEGER NOT NULL,
+            calendar_source_name TEXT NOT NULL, calendar_source_color TEXT NOT NULL DEFAULT 'blue',
+            calendar_source_default INTEGER NOT NULL DEFAULT 0, calendar_source_sort_order INTEGER NOT NULL DEFAULT 0
+        );
         CREATE TABLE ig_calendar_event (
             calendar_event_id INTEGER PRIMARY KEY AUTOINCREMENT,
             calendar_event_date TEXT NOT NULL, calendar_event_updated_at TEXT NOT NULL,
             calendar_event_flag INTEGER NOT NULL DEFAULT 0, calendar_event_owner INTEGER NOT NULL,
+            calendar_event_source_id INTEGER NULL,
             calendar_event_title TEXT NOT NULL, calendar_event_start_date TEXT NOT NULL,
             calendar_event_end_date TEXT NOT NULL, calendar_event_note TEXT NOT NULL,
             calendar_event_color TEXT NOT NULL DEFAULT 'blue', calendar_event_all_day INTEGER NOT NULL DEFAULT 1,
@@ -110,18 +118,28 @@ def create_fixture(path: Path) -> None:
     db.execute('INSERT INTO ig_dashboard_widget VALUES (?, ?, ?, ?, ?)',
                (20, 99, 'calendar', 0, json.dumps({'schema': 1, 'title': 'Other', 'show_completed_tasks': False})))
     db.execute('INSERT INTO ig_dashboard_widget VALUES (?, ?, ?, ?, ?)', (30, 42, 'task', 0, '{}'))
+    db.execute('''INSERT INTO ig_calendar_source (
+        calendar_source_id, calendar_source_date, calendar_source_updated_at, calendar_source_flag,
+        calendar_source_owner, calendar_source_name, calendar_source_color, calendar_source_default, calendar_source_sort_order
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+               (100, '2026-09-01', '2026-09-01', 0, 42, '既定Calendar', 'blue', 1, 0))
+    db.execute('''INSERT INTO ig_calendar_source (
+        calendar_source_id, calendar_source_date, calendar_source_updated_at, calendar_source_flag,
+        calendar_source_owner, calendar_source_name, calendar_source_color, calendar_source_default, calendar_source_sort_order
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+               (200, '2026-09-01', '2026-09-01', 0, 99, 'Other Calendar', 'red', 1, 0))
     event_sql = '''INSERT INTO ig_calendar_event (
         calendar_event_id, calendar_event_date, calendar_event_updated_at, calendar_event_flag,
-        calendar_event_owner, calendar_event_title, calendar_event_start_date, calendar_event_end_date,
+        calendar_event_owner, calendar_event_source_id, calendar_event_title, calendar_event_start_date, calendar_event_end_date,
         calendar_event_note, calendar_event_color, calendar_event_all_day, calendar_event_start_time,
         calendar_event_end_time, calendar_event_url, calendar_event_repeat_type, calendar_event_repeat_until
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'''
     rows = [
-        (1, '2026-09-01', '2026-09-01', 0, 42, '<b>会議</b>', '2026-09-10', '2026-09-10',
+        (1, '2026-09-01', '2026-09-01', 0, 42, 100, '<b>会議</b>', '2026-09-10', '2026-09-10',
          '<script>alert(1)</script>', 'purple', 0, '09:00:00', '10:00:00', 'https://example.com', 'none', None),
-        (2, '2026-08-31', '2026-08-31', 0, 42, '毎週', '2026-08-31', '2026-09-01',
+        (2, '2026-08-31', '2026-08-31', 0, 42, 100, '毎週', '2026-08-31', '2026-09-01',
          '', 'yellow', 1, None, None, None, 'weekly', '2026-09-21'),
-        (3, '2026-09-01', '2026-09-01', 0, 99, '他人', '2026-09-12', '2026-09-12',
+        (3, '2026-09-01', '2026-09-01', 0, 99, 200, '他人', '2026-09-12', '2026-09-12',
          '', 'red', 1, None, None, None, 'none', None),
     ]
     db.executemany(event_sql, rows)
@@ -215,6 +233,8 @@ try:
     check('event:1:2026-09-10' in keys and 'event:2:2026-09-07' in keys, 'normal and recurring events share one HTTP response')
     check(all(item.get('event_id') != 3 for item in events), 'client owner field cannot expose another owner')
     check(any(item.get('color') == 'purple' for item in events), 'five-color value survives HTTP range response')
+    check(data.get('sources', [{}])[0].get('name') == '既定Calendar', 'HTTP response includes owned Calendar source definitions')
+    check(all(item.get('calendar_source_id') == 100 for item in events), 'HTTP events carry owner-scoped Calendar source membership')
     meeting = next(item for item in events if item.get('event_id') == 1)
     check(meeting.get('title') == '<b>会議</b>' and meeting.get('note') == '<script>alert(1)</script>', 'HTML-like title and note remain JSON data')
     check('<script>' not in raw and '\\u003Cscript\\u003E' in raw, 'JSON encoding hex-escapes markup delimiters')
