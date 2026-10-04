@@ -92,6 +92,7 @@ def create_fixture(path: Path) -> None:
             calendar_event_exception_start_time TEXT NULL,
             calendar_event_exception_end_time TEXT NULL,
             calendar_event_exception_url TEXT NULL,
+            calendar_event_exception_location TEXT NULL,
     calendar_event_exception_deadline_highlight INTEGER DEFAULT NULL,
             calendar_event_exception_created_at TEXT NOT NULL,
             calendar_event_exception_updated_at TEXT NOT NULL,
