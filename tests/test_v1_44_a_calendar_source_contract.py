@@ -15,8 +15,9 @@ require(migration, "CREATE TABLE IF NOT EXISTS", "Migration must create the Cale
 require(migration, "calendar_event_source_id", "Migration must add event source ownership.")
 require(migration, "既定Calendar", "Migration must preserve existing events through a default Calendar.")
 require(migration, "IS NULL", "Migration must only backfill unassigned events.")
-require(migration, "@t_schema_migration", "Migration must use an app-owned migration marker table.")
-require(migration, "033:v1.44-a:event-source-column-index", "Migration must persist the V1.44-A DDL marker.")
+require(migration, "__migration_033_event_source__", "Migration must persist a hidden V1.44-A DDL marker.")
+require(migration, "calendar_source_flag", "Migration marker must use the Calendar source flag boundary.")
+require(migration, "255", "Migration marker must stay outside active Calendar-source rows.")
 if "information_schema" in migration.lower():
     raise AssertionError("V1.44-A migration must not read information_schema on restricted shared-hosting accounts.")
 
