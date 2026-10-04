@@ -76,11 +76,11 @@
     loadScript(assetUrl('./js/information-widget-watchdog.js'));
     loadScript(assetUrl('./js/calendar-month-layout.js'));
     loadScript(assetUrl('./js/calendar-views.js'));
+    loadScript(assetUrl('./js/calendar-sources.js'));
     loadScript(assetUrl('./js/calendar-core.js'));
     loadScript(assetUrl('./js/calendar-occurrence.js'));
     loadScript(assetUrl('./js/calendar-recurrence.js'));
     loadScript(assetUrl('./js/calendar-event-details.js'));
-    loadScript(assetUrl('./js/calendar-sources.js'));
     loadScript(assetUrl('./js/calendar-usability.js'));
     loadScript(assetUrl('./js/calendar-reminder-target.js'));
     loadScript(assetUrl('./js/calendar-copy.js'));
