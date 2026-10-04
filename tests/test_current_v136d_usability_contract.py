@@ -25,8 +25,8 @@ check("endDate.min = values.startDate" in usability,
       "end date gets a client-side minimum equal to start date")
 check("endTime.min = values.startTime" in usability,
       "same-day end time gets a client-side minimum equal to start time")
-check("calendar-event-more" in usability and "詳細（URL・メモ）" in usability,
-      "URL and memo remain available in a compact details section")
+check("calendar-event-more" in usability and "詳細（場所・URL・メモ）" in usability,
+      "Location, URL and memo remain available in a compact details section")
 check("hasContent" in usability and "details.open = true" in usability,
       "existing detail content automatically expands details")
 check("modal-dialog-scrollable modal-lg calendar-event-modal-dialog" in modals,
