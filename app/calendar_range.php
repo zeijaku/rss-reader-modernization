@@ -242,11 +242,15 @@ function calendar_range_data(int $ownerId, int $widgetId, string $rangeStart, st
         }
     }
     $eventState = calendar_range_event_state($ownerId, $range['start'], $range['end']);
+    $sourceState = function_exists('calendar_source_attach_to_events')
+        ? calendar_source_attach_to_events($ownerId, $eventState['events'])
+        : ['events' => $eventState['events'], 'sources' => []];
     return [
         'range_start' => $range['start'],
         'range_end' => $range['end'],
         'range_days' => $range['days'],
-        'events' => $eventState['events'],
+        'events' => $sourceState['events'],
+        'sources' => $sourceState['sources'],
         'cancelled_occurrences' => $eventState['cancelled_occurrences'],
         'tasks' => calendar_range_task_list(
             $ownerId,
