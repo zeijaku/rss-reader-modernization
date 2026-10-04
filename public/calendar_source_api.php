@@ -129,7 +129,7 @@ try {
     calendar_source_success(['sources' => calendar_source_list($userId)]);
 } catch (LengthException|InvalidArgumentException $exception) {
     calendar_source_error('validation_error', $exception->getMessage(), 422);
-} catch (RuntimeException|PDOException $exception) {
+} catch (RuntimeException $exception) {
     error_log('Calendar source API failed: ' . $exception->getMessage());
     calendar_source_error('calendar_source_unavailable', 'Calendar source migration is required.', 503);
 } catch (Throwable $exception) {
