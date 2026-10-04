@@ -36,6 +36,9 @@ for needle in [
 ]:
     require(source_model, needle, "Calendar source backend contract is incomplete.")
 
+public_htaccess = read("public/.htaccess")
+require(public_htaccess, "calendar_source_api\\.php$", "Calendar source API must be allowed by the public PHP endpoint matrix.")
+
 source_api = read("public/calendar_source_api.php")
 for action in [
     "calendar.source.list",
@@ -68,6 +71,8 @@ for needle in [
 loader = read("public/js/calendar.js")
 require(loader, "calendar-sources.css", "Calendar source stylesheet must be loaded.")
 require(loader, "calendar-sources.js", "Calendar source script must be loaded.")
+if loader.index("calendar-sources.js") > loader.index("calendar-core.js"):
+    raise AssertionError("Calendar source helper must load before Calendar core so saved filters apply before first layout.")
 
 core = read("public/js/calendar-core.js")
 for needle in [
@@ -75,6 +80,8 @@ for needle in [
     "data-calendar-source-name",
     "data-calendar-source-label-color",
     "sources:data.sources || []",
+    "filterCardData",
+    "calendar:sourceFilterChanged",
 ]:
     require(core, needle, "Calendar core must expose source metadata and include it in refresh signatures.")
 
@@ -94,6 +101,8 @@ sources_js = read("public/js/calendar-sources.js")
 for needle in [
     "rss-calendar-source-hidden:",
     "calendar-source-filter-check",
+    "filterRangeData",
+    "calendar:sourceFilterChanged",
     "calendar.source.create",
     "calendar.source.update",
     "calendar.source.delete",
