@@ -69,43 +69,72 @@ function calendar_source_ensure_default(PDO $pdo, int $ownerId): array
         throw new InvalidArgumentException('Calendar source is unavailable.');
     }
 
-    $stmt = $pdo->prepare(
-        'SELECT calendar_source_id, calendar_source_name, calendar_source_color, calendar_source_default '
-        . 'FROM ' . db_table_identifier('calendar_source') . ' '
-        . 'WHERE calendar_source_owner = :owner AND calendar_source_flag = 0 AND calendar_source_default = 1 '
-        . 'ORDER BY calendar_source_id ASC LIMIT 1'
-    );
-    $stmt->execute([':owner' => $ownerId]);
-    $row = $stmt->fetch();
-    if (is_array($row)) {
-        $source = calendar_source_normalize_row($row);
-        if ($source !== null) {
-            return $source;
-        }
+    // Serialize first-time default creation per owner on MySQL/MariaDB.
+    // Multiple Calendar Widgets can issue range requests concurrently on first load.
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
     }
+    try {
+        if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+            $lock = $pdo->prepare(
+                'SELECT user_id FROM ' . db_table_identifier('user_info') . ' WHERE user_id = :owner FOR UPDATE'
+            );
+            $lock->execute([':owner' => $ownerId]);
+            if ($lock->fetchColumn() === false) {
+                throw new InvalidArgumentException('Calendar source owner is invalid.');
+            }
+        }
 
-    $now = app_now();
-    $insert = $pdo->prepare(
-        'INSERT INTO ' . db_table_identifier('calendar_source') . ' '
-        . '(calendar_source_date, calendar_source_updated_at, calendar_source_flag, calendar_source_owner, '
-        . 'calendar_source_name, calendar_source_color, calendar_source_default, calendar_source_sort_order) '
-        . 'VALUES (:created_at, :updated_at, 0, :owner, :name, :color, 1, 0)'
-    );
-    $insert->execute([
-        ':created_at' => $now,
-        ':updated_at' => $now,
-        ':owner' => $ownerId,
-        ':name' => CALENDAR_SOURCE_DEFAULT_NAME,
-        ':color' => 'blue',
-    ]);
+        $stmt = $pdo->prepare(
+            'SELECT calendar_source_id, calendar_source_name, calendar_source_color, calendar_source_default '
+            . 'FROM ' . db_table_identifier('calendar_source') . ' '
+            . 'WHERE calendar_source_owner = :owner AND calendar_source_flag = 0 AND calendar_source_default = 1 '
+            . 'ORDER BY calendar_source_id ASC LIMIT 1'
+        );
+        $stmt->execute([':owner' => $ownerId]);
+        $row = $stmt->fetch();
+        if (is_array($row)) {
+            $source = calendar_source_normalize_row($row);
+            if ($source !== null) {
+                if ($started) {
+                    $pdo->commit();
+                }
+                return $source;
+            }
+        }
 
-    return [
-        'source_id' => (int) $pdo->lastInsertId(),
-        'name' => CALENDAR_SOURCE_DEFAULT_NAME,
-        'color' => 'blue',
-        'is_default' => true,
-        'source_type' => 'local',
-    ];
+        $now = app_now();
+        $insert = $pdo->prepare(
+            'INSERT INTO ' . db_table_identifier('calendar_source') . ' '
+            . '(calendar_source_date, calendar_source_updated_at, calendar_source_flag, calendar_source_owner, '
+            . 'calendar_source_name, calendar_source_color, calendar_source_default, calendar_source_sort_order) '
+            . 'VALUES (:created_at, :updated_at, 0, :owner, :name, :color, 1, 0)'
+        );
+        $insert->execute([
+            ':created_at' => $now,
+            ':updated_at' => $now,
+            ':owner' => $ownerId,
+            ':name' => CALENDAR_SOURCE_DEFAULT_NAME,
+            ':color' => 'blue',
+        ]);
+        $source = [
+            'source_id' => (int) $pdo->lastInsertId(),
+            'name' => CALENDAR_SOURCE_DEFAULT_NAME,
+            'color' => 'blue',
+            'is_default' => true,
+            'source_type' => 'local',
+        ];
+        if ($started) {
+            $pdo->commit();
+        }
+        return $source;
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
 }
 
 /** @return list<array{source_id:int,name:string,color:string,is_default:bool,source_type:string}> */
