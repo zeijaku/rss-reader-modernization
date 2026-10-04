@@ -471,6 +471,9 @@
             .attr('data-calendar-source-end-time', publicTime(item.source_end_time !== undefined ? item.source_end_time : item.end_time))
             .attr('data-calendar-source-url', String(item.source_url !== undefined && item.source_url !== null ? item.source_url : item.url || ''))
             .attr('data-calendar-source-reminder', String(item.source_reminder !== undefined ? item.source_reminder : item.reminder || 'none'))
+            .attr('data-calendar-source-id', String(item.calendar_source_id !== undefined ? item.calendar_source_id : '0'))
+            .attr('data-calendar-source-name', String(item.calendar_source_name || '既定Calendar'))
+            .attr('data-calendar-source-label-color', validEventColor(item.calendar_source_color || 'blue'))
             .attr('data-calendar-event-color', color)
             .attr('data-calendar-event-color-ready', '1')
             .attr('data-calendar-event-meta-ready', '1')
@@ -888,7 +891,7 @@
             }
             return value;
         }
-        return JSON.stringify(stable({events:data.events || [], tasks:data.tasks || [], holidays:data.holidays || {}, cancelled:data.cancelled_occurrences || [], start:data.range_start, end:data.range_end}));
+        return JSON.stringify(stable({events:data.events || [], sources:data.sources || [], tasks:data.tasks || [], holidays:data.holidays || {}, cancelled:data.cancelled_occurrences || [], start:data.range_start, end:data.range_end}));
     }
 
     function refreshCalendarsQuietly(manualCard) {
