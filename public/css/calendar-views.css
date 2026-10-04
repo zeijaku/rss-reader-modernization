@@ -1,8 +1,8 @@
 /* V1.33-G: day/week/month switching, day timeline and card-width-aware week list. */
 #main-content .calendar-toolbar {
     display: grid;
-    grid-template-areas: "prev today switch next add";
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "prev today switch filter next refresh add";
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto auto auto;
     align-items: center;
 }
 
@@ -20,6 +20,10 @@
 
 #main-content .calendar-next-month {
     grid-area: next;
+}
+
+#main-content .calendar-refresh {
+    grid-area: refresh;
 }
 
 #main-content .calendar-event-add-trigger {
@@ -49,8 +53,9 @@
 #main-content .calendar-view-compact .calendar-toolbar {
     min-width: 0;
     grid-template-areas:
-        "prev today switch next add";
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+        "prev today switch next refresh add"
+        "filter filter filter filter filter filter";
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
 }
 
 #main-content .calendar-view-compact .calendar-month-label {
@@ -334,8 +339,9 @@
 @media (max-width: 575.98px) {
     #main-content .calendar-toolbar {
         grid-template-areas:
-            "prev today switch next add";
-        grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+            "prev today switch next refresh add"
+            "filter filter filter filter filter filter";
+        grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
     }
 
     #main-content .calendar-month-label {
