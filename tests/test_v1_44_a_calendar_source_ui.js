@@ -82,4 +82,33 @@ const three = api.normalizeSources([
 ]);
 assert(api.filterLabel(three, ['1', '3']) === '2/3', 'Partial multi-source selection should display a count.');
 
+assert(typeof api.filterRangeData === 'function', 'Calendar source helper must expose pre-layout range filtering.');
+const range = {
+    sources,
+    events: [
+        {event_id: 10, calendar_source_id: 1, title: '仕事'},
+        {event_id: 11, calendar_source_id: 2, title: '私用'}
+    ],
+    cancelled_occurrences: [
+        {event_id: 12, calendar_source_id: 2, title: '取消'}
+    ],
+    tasks: [
+        {task_id: 20, title: 'Task'}
+    ],
+    holidays: {'2026-10-04': 'test'}
+};
+const workOnly = api.filterRangeData(range, ['2']);
+assert(workOnly.events.length === 1 && workOnly.events[0].event_id === 10,
+    'Hidden Calendar events must be removed before Calendar layout.');
+assert(workOnly.cancelled_occurrences.length === 0,
+    'Hidden Calendar cancelled occurrences must be removed before Calendar layout.');
+assert(workOnly.tasks.length === 1 && workOnly.tasks[0].task_id === 20,
+    'Calendar source filtering must not hide Task items.');
+assert(range.events.length === 2 && range.cancelled_occurrences.length === 1,
+    'Calendar source filtering must not mutate the raw range response.');
+const noneVisible = api.filterRangeData(range, ['1', '2']);
+assert(noneVisible.events.length === 0 && noneVisible.cancelled_occurrences.length === 0,
+    'Hiding all Calendars must leave no event lanes to consume layout space.');
+assert(noneVisible.tasks.length === 1, 'Task items must remain visible when all Calendars are hidden.');
+
 console.log('V1.44-A Calendar source UI helpers: OK');
