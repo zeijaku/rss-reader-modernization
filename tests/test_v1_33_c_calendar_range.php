@@ -127,6 +127,7 @@ $pdo->exec('CREATE TABLE calendar_event (
     calendar_event_end_date TEXT NOT NULL, calendar_event_note TEXT NOT NULL,
     calendar_event_color TEXT NOT NULL DEFAULT "blue", calendar_event_all_day INTEGER NOT NULL DEFAULT 1,
     calendar_event_start_time TEXT NULL, calendar_event_end_time TEXT NULL, calendar_event_url TEXT NULL,
+    calendar_event_location TEXT NULL,
     calendar_event_repeat_type TEXT NOT NULL DEFAULT "none", calendar_event_repeat_until TEXT NULL,
     calendar_event_reminder TEXT NOT NULL DEFAULT "none",
     calendar_event_deadline_highlight INTEGER NOT NULL DEFAULT 0
@@ -148,6 +149,7 @@ $pdo->exec('CREATE TABLE calendar_event_exception (
     calendar_event_exception_start_time TEXT NULL,
     calendar_event_exception_end_time TEXT NULL,
     calendar_event_exception_url TEXT NULL,
+    calendar_event_exception_location TEXT NULL,
     calendar_event_exception_deadline_highlight INTEGER DEFAULT NULL,
     calendar_event_exception_created_at TEXT NOT NULL,
     calendar_event_exception_updated_at TEXT NOT NULL,
