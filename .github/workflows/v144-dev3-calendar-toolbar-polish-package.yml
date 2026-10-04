@@ -1,0 +1,67 @@
+name: V1.44 Dev3 Calendar Toolbar Polish Package
+
+on:
+  push:
+    branches:
+      - artifact/v1.44-dev3-calendar-toolbar-polish
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build incremental review ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG="rss-reader-v1.44.0-dev.3-calendar-toolbar-polish"
+          mkdir -p "$PKG/app/view" "$PKG/public/css"
+
+          cp app/version.php "$PKG/app/version.php"
+          cp app/view/dashboard_widgets.php "$PKG/app/view/dashboard_widgets.php"
+          cp public/css/calendar-views.css "$PKG/public/css/calendar-views.css"
+          cp public/css/calendar-sources.css "$PKG/public/css/calendar-sources.css"
+
+          cat > "$PKG/APPLY.txt" <<'EOF'
+          RSS Reader Modernization V1.44 Calendar toolbar polish
+          Target checkpoint: 1.44.0-dev.3
+          Source development HEAD: bb9af618bdebc18f09dbb0c2acb7209f1af1d94c
+
+          PREREQUISITE
+          - Apply this incremental ZIP over the previously tested V1.44-A+B dev.2 package.
+          - The V1.44-A/B database migrations are already handled by the previous package.
+
+          APPLY
+          1. Back up the current application files.
+          2. Overwrite the four included files, preserving their paths.
+          3. No database migration is required for this UI-only update.
+          4. Reload the Dashboard. APP_ASSET_REVISION is 1.44.0-dev.3, so changed CSS receives a new cache key.
+          5. This is a review/development checkpoint, not a formal release.
+
+          CHANGES
+          - On normal-width Calendar widgets, the Calendar source filter (e.g. "すべて") stays on the primary toolbar.
+          - Toolbar order on normal width: previous / today / view switch / Calendar filter / next / refresh / add.
+          - On compact-width and Smartphone layouts, only the Calendar filter moves to a second row.
+          - The blue Calendar source dot is softened from Bootstrap primary blue to #60a5fa.
+          EOF
+
+          python3 - <<'PY'
+          import shutil
+          shutil.make_archive(
+              "rss-reader-v1.44.0-dev.3-calendar-toolbar-polish",
+              "zip",
+              ".",
+              "rss-reader-v1.44.0-dev.3-calendar-toolbar-polish",
+          )
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-v1.44.0-dev.3-calendar-toolbar-polish
+          path: rss-reader-v1.44.0-dev.3-calendar-toolbar-polish.zip
+          if-no-files-found: error
+          retention-days: 7
