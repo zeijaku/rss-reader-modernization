@@ -1,6 +1,6 @@
 -- V1.44-A Multiple Calendar / Source foundation
 -- Existing DB migration for MySQL / MariaDB.
--- Shared-host compatible: does not read information_schema.
+-- Shared-host compatible: does not read server metadata schemas.
 -- Set the prefix to the same value as DB_TABLE_PREFIX before execution.
 --
 -- A hidden owner=0 / flag=255 Calendar-source row is used as the DDL completion
@@ -31,7 +31,7 @@ PREPARE v144a_stmt FROM @sql;
 EXECUTE v144a_stmt;
 DEALLOCATE PREPARE v144a_stmt;
 
--- A restricted shared-host account may not read information_schema, so use a
+-- A restricted shared-host account may not read server metadata schemas, so use a
 -- hidden source row written only after the requested DDL has been verified.
 SET @sql = CONCAT(
   'SELECT COUNT(*) INTO @v144a_event_source_alter_done FROM ', @t_calendar_source,
