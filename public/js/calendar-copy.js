@@ -44,6 +44,7 @@
             start: fieldValue(form, '.changeCalendarEventStartDate'),
             end: fieldValue(form, '.changeCalendarEventEndDate'),
             note: fieldValue(form, '.changeCalendarEventNote'),
+            sourceId: fieldValue(form, '.changeCalendarEventSource'),
             color: fieldValue(form, '.changeCalendarEventColor') || 'blue',
             allDay: !allDay || allDay.checked === true,
             startTime: fieldValue(form, '.changeCalendarEventStartTime'),
@@ -65,6 +66,7 @@
         setValue(registerForm, '.registerCalendarEventStartDate', snapshot.start);
         setValue(registerForm, '.registerCalendarEventEndDate', snapshot.end);
         setValue(registerForm, '.registerCalendarEventNote', snapshot.note);
+        setValue(registerForm, '.registerCalendarEventSource', snapshot.sourceId);
         setValue(registerForm, '.registerCalendarEventColor', snapshot.color);
         setValue(registerForm, '.registerCalendarEventStartTime', snapshot.startTime);
         setValue(registerForm, '.registerCalendarEventEndTime', snapshot.endTime);
