@@ -28,7 +28,7 @@ check("endTime.min = values.startTime" in usability,
 check("calendar-event-more" in usability and "詳細（URL・メモ）" in usability,
       "URL and memo remain available in a compact details section")
 check("hasContent" in usability and "details.open = true" in usability,
-      "existing URL or memo automatically expands details")
+      "existing detail content automatically expands details")
 check("modal-dialog-scrollable modal-lg calendar-event-modal-dialog" in modals,
       "Calendar event dialogs are wide and internally scrollable")
 check(modals.count('rows="2"') >= 2, "Calendar memo fields use a compact initial height")
