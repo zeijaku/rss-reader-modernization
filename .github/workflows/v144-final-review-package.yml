@@ -1,0 +1,68 @@
+name: V1.44 Final Review Package
+on:
+  push:
+    branches:
+      - artifact/v1.44-ab-final-review-package
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build V1.44 A+B diff package
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --depth=1
+          PKG="rss-reader-v1.44.0-dev.2-calendar-ab-diff"
+          mkdir -p "$PKG"
+          git diff --name-only origin/main...HEAD             | grep -E '^(app/|public/|database/migrations/|database/schema\.sql$)'             | while IFS= read -r f; do
+                [ -f "$f" ] || continue
+                mkdir -p "$PKG/$(dirname "$f")"
+                cp "$f" "$PKG/$f"
+              done
+          cat > "$PKG/APPLY.txt" <<'EOF'
+          RSS Reader Modernization V1.44-A + V1.44-B review package
+          Target application version: 1.44.0-dev.2
+          Source HEAD: cf4927644c32d44c098fa2eada773b338659e36c
+
+          1. Back up the current application and database.
+          2. Overwrite the included app/ and public/ files, preserving paths.
+          3. Apply database/migrations/033_v1_44_calendar_source.sql.
+          4. Apply database/migrations/034_v1_44_calendar_location.sql.
+          5. Do not run migrations in reverse order.
+          6. No Google API key, OAuth, Maps API, Calendar API, ICS or CalDAV setup is required.
+          7. app/version.php uses APP_ASSET_REVISION=1.44.0-dev.2. A normal reload should pick up changed assets; purge intermediary cache if one is in use.
+          8. This is a review/development package. It is not a formal release.
+
+          V1.44-A:
+          - Multiple owner-scoped local Calendars
+          - Existing events migrate to the owner's default Calendar
+          - Multi-select Calendar visibility filter
+          - Calendar create/rename/color/delete management
+          - Event Calendar selection/change
+          - Existing recurrence, copy, drag/drop, reminder, deadline, Task and partial-refresh behavior retained
+
+          V1.44-B:
+          - Optional event location
+          - Location preserved for recurrence/occurrence/copy/drag-drop
+          - Google Maps search link using encoded location text
+          - Blank location hides the Maps action
+          EOF
+          python3 - <<'PY'
+          import shutil
+          shutil.make_archive("rss-reader-v1.44.0-dev.2-calendar-ab-diff", "zip", ".", "rss-reader-v1.44.0-dev.2-calendar-ab-diff")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-v1.44.0-dev.2-calendar-ab-diff
+          path: rss-reader-v1.44.0-dev.2-calendar-ab-diff.zip
+          if-no-files-found: error
+          retention-days: 7
