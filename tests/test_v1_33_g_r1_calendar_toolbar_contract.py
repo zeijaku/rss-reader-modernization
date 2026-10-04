@@ -47,11 +47,12 @@ for markup, name in ((dashboard, 'Dashboard'), (stock, 'Stock')):
           and toolbar_markup.count('data-calendar-view-mode="month"') == 1,
           f'{name} retains one accessible day/week/month control group')
 
-check('grid-template-areas: "prev today switch next add";' in css
-      and 'grid-template-columns: auto auto minmax(0, 1fr) auto auto;' in css,
-      'wide Calendar toolbar uses one five-part row')
-check(css.count('"prev today switch next add"') >= 3 and '"switch switch switch switch switch"' not in css,
-      'wide, compact and Smartphone toolbars keep one row')
+check('grid-template-areas: "prev today switch filter next refresh add";' in css
+      and 'grid-template-columns: auto auto minmax(0, 1fr) auto auto auto auto;' in css,
+      'wide Calendar toolbar keeps the Calendar filter with the primary controls')
+check(css.count('"prev today switch next refresh add"') >= 2
+      and css.count('"filter filter filter filter filter filter"') >= 2,
+      'compact and Smartphone toolbars move only the Calendar filter to a second row')
 check(dashboard.index('calendar-month-label') < dashboard.index('<div class="calendar-toolbar">')
       and stock.index('calendar-month-label') < stock.index('<div class="calendar-toolbar">'),
       'period label appears in the Calendar card header in both views')
