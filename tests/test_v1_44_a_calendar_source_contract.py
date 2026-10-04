@@ -15,7 +15,10 @@ require(migration, "CREATE TABLE IF NOT EXISTS", "Migration must create the Cale
 require(migration, "calendar_event_source_id", "Migration must add event source ownership.")
 require(migration, "既定Calendar", "Migration must preserve existing events through a default Calendar.")
 require(migration, "IS NULL", "Migration must only backfill unassigned events.")
-require(migration, "@v144a_has_event_source_index", "Migration must recover a missing event source index independently.")
+require(migration, "@t_schema_migration", "Migration must use an app-owned migration marker table.")
+require(migration, "033:v1.44-a:event-source-column-index", "Migration must persist the V1.44-A DDL marker.")
+if "information_schema" in migration.lower():
+    raise AssertionError("V1.44-A migration must not read information_schema on restricted shared-hosting accounts.")
 
 bootstrap = read("app/bootstrap.php")
 require(bootstrap, "calendar_source.php", "Calendar source model must be loaded by bootstrap.")
