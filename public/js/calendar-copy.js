@@ -50,6 +50,7 @@
             startTime: fieldValue(form, '.changeCalendarEventStartTime'),
             endTime: fieldValue(form, '.changeCalendarEventEndTime'),
             url: fieldValue(form, '.changeCalendarEventUrl'),
+            location: fieldValue(form, '.changeCalendarEventLocation'),
             deadlineHighlight: !!(form.querySelector('.changeCalendarEventDeadlineHighlight') && form.querySelector('.changeCalendarEventDeadlineHighlight').checked),
             reminder: fieldValue(form, '.changeCalendarEventReminder') || 'none',
             repeat: occurrenceOnly ? 'none' : (fieldValue(form, '.changeCalendarEventRepeatType') || 'none'),
@@ -71,6 +72,7 @@
         setValue(registerForm, '.registerCalendarEventStartTime', snapshot.startTime);
         setValue(registerForm, '.registerCalendarEventEndTime', snapshot.endTime);
         setValue(registerForm, '.registerCalendarEventUrl', snapshot.url);
+        setValue(registerForm, '.registerCalendarEventLocation', snapshot.location);
         setValue(registerForm, '.registerCalendarEventReminder', snapshot.reminder);
         var deadline = registerForm.querySelector('.registerCalendarEventDeadlineHighlight');
         if (deadline) deadline.checked = snapshot.deadlineHighlight;

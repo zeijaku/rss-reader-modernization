@@ -90,6 +90,7 @@
             sourceId: attr(entry, 'data-calendar-source-id', '0'),
             allDay: attr(entry, 'data-calendar-event-all-day', '1') !== '0', startTime: validTime(attr(entry, 'data-calendar-event-start-time', '')),
             endTime: validTime(attr(entry, 'data-calendar-event-end-time', '')), url: attr(entry, 'data-calendar-event-url', ''),
+            location: attr(entry, 'data-calendar-event-location', ''),
             deadlineHighlight: attr(entry, 'data-calendar-event-deadline-highlight', '0'),
             reminder: validReminder(attr(entry, 'data-calendar-event-reminder', 'none')), recurring: recurring,
             originalStart: validIsoDate(attr(entry, 'data-calendar-original-occurrence-start-date', start)), revision: attr(entry, 'data-calendar-occurrence-revision', '')
@@ -105,7 +106,7 @@
             calendar_event_end_date: range.end, calendar_event_note: state.note, calendar_event_color: state.color,
             calendar_event_all_day: state.allDay ? '1' : '0', calendar_event_start_time: state.allDay ? '' : state.startTime,
             calendar_event_end_time: state.allDay ? '' : state.endTime, calendar_event_url: state.url,
-            calendar_source_id: state.sourceId,
+            calendar_event_location: state.location, calendar_source_id: state.sourceId,
             calendar_event_deadline_highlight: state.deadlineHighlight,
             calendar_event_reminder: state.recurring ? 'none' : state.reminder
         };

@@ -161,10 +161,11 @@
             return;
         }
         var body = form.querySelector('.modal-body');
+        var locationGroup = form.querySelector('.calendar-event-location-field');
         var urlGroup = form.querySelector('.calendar-event-url-field');
         var note = form.querySelector('[class*="CalendarEventNote"]');
         var noteGroup = note && typeof note.closest === 'function' ? note.closest('.mb-3') : null;
-        if (!body || !urlGroup || !noteGroup) {
+        if (!body || !locationGroup || !urlGroup || !noteGroup) {
             return;
         }
 
@@ -172,11 +173,12 @@
         details.className = 'calendar-event-more';
         var summary = document.createElement('summary');
         summary.className = 'calendar-event-more-summary';
-        summary.textContent = '詳細（URL・メモ）';
+        summary.textContent = '詳細（場所・URL・メモ）';
         var content = document.createElement('div');
         content.className = 'calendar-event-more-body';
         details.appendChild(summary);
         details.appendChild(content);
+        content.appendChild(locationGroup);
         content.appendChild(urlGroup);
         content.appendChild(noteGroup);
         if (note) {
@@ -191,9 +193,11 @@
         if (!details) {
             return;
         }
+        var location = field(form, 'Location');
         var url = field(form, 'Url');
         var note = field(form, 'Note');
-        var hasContent = (url && String(url.value || '').trim() !== '')
+        var hasContent = (location && String(location.value || '').trim() !== '')
+            || (url && String(url.value || '').trim() !== '')
             || (note && String(note.value || '').trim() !== '');
         if (hasContent) {
             details.open = true;

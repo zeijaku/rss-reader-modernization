@@ -243,6 +243,7 @@
             calendar_event_start_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventStartTime'),
             calendar_event_end_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventEndTime'),
             calendar_event_url: formValue(form, '.' + prefix + 'CalendarEventUrl'),
+            calendar_event_location: formValue(form, '.' + prefix + 'CalendarEventLocation'),
             calendar_event_deadline_highlight: form.querySelector('.' + prefix + 'CalendarEventDeadlineHighlight') && form.querySelector('.' + prefix + 'CalendarEventDeadlineHighlight').checked ? '1' : '0',
             calendar_event_reminder: formValue(form, '.' + prefix + 'CalendarEventReminder') || 'none',
             calendar_event_repeat_type: validRepeat(formValue(form, '.' + prefix + 'CalendarEventRepeatType')),
@@ -430,6 +431,7 @@
             .attr('data-calendar-source-start-time', publicTime(item.source_start_time !== undefined ? item.source_start_time : item.start_time))
             .attr('data-calendar-source-end-time', publicTime(item.source_end_time !== undefined ? item.source_end_time : item.end_time))
             .attr('data-calendar-source-url', String(item.source_url !== undefined && item.source_url !== null ? item.source_url : item.url || ''))
+            .attr('data-calendar-source-location', String(item.source_location !== undefined && item.source_location !== null ? item.source_location : item.location || ''))
             .attr('data-calendar-source-reminder', String(item.source_reminder !== undefined ? item.source_reminder : item.reminder || 'none'))
             .attr('data-calendar-event-color', color)
             .attr('data-calendar-event-color-ready', '1')
@@ -438,6 +440,7 @@
             .attr('data-calendar-event-start-time', publicTime(item.start_time))
             .attr('data-calendar-event-end-time', publicTime(item.end_time))
             .attr('data-calendar-event-url', String(item.url || ''))
+            .attr('data-calendar-event-location', String(item.location || ''))
             .attr('data-calendar-event-deadline-highlight', item.deadline_highlight ? '1' : '0')
             .attr('data-calendar-source-deadline-highlight', (item.source_deadline_highlight !== undefined ? item.source_deadline_highlight : item.deadline_highlight) ? '1' : '0')
             .attr('data-calendar-event-reminder', String(item.reminder || item.source_reminder || 'none'))
