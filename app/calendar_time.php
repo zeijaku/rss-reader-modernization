@@ -241,7 +241,9 @@ function calendar_event_time_color_update(
             return false;
         }
         calendar_event_time_apply($pdo, $ownerId, $eventId, $settings);
-        if (function_exists('calendar_source_assign_event')) {
+        // A missing source field means an older client is updating this event.
+        // Preserve its current Calendar instead of silently moving it to the default.
+        if (function_exists('calendar_source_assign_event') && $sourceId !== null && $sourceId !== '') {
             calendar_source_assign_event($pdo, $ownerId, $eventId, $sourceId);
         }
         if ($reminder !== null) {
