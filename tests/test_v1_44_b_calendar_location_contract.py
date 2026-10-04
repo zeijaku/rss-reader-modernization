@@ -29,10 +29,11 @@ for column in ('calendar_event_location', 'calendar_event_exception_location'):
 
 check('information_schema' not in files['migration'].lower(),
       'upgrade migration avoids information_schema for restricted shared-hosting accounts')
-check('@t_schema_migration' in files['migration']
-      and '034:v1.44-b:event-location' in files['migration']
-      and '034:v1.44-b:exception-location' in files['migration'],
-      'upgrade migration tracks parent and occurrence DDL with app-owned markers')
+check('__migration_034_event_location__' in files['migration']
+      and '__migration_034_exception_location__' in files['migration']
+      and 'calendar_source_flag' in files['migration']
+      and '255' in files['migration'],
+      'upgrade migration tracks parent and occurrence DDL with hidden Calendar-source markers')
 
 check("$_POST['calendar_event_location'] ?? ''" in files['color_api']
       and "$_POST['calendar_event_location'] ?? ''" in files['recurrence_api'],
