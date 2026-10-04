@@ -231,7 +231,8 @@ try {
             $color,
             $timeSettings,
             $repeatSettings,
-            $reminder
+            $reminder,
+            $_POST['calendar_source_id'] ?? null
         );
         calendar_recurrence_success([
             'event_id' => $eventId,
@@ -261,7 +262,8 @@ try {
         $color,
         $timeSettings,
         $repeatSettings,
-        $reminder
+        $reminder,
+        $_POST['calendar_source_id'] ?? null
     )) {
         calendar_recurrence_error('not_found', 'Calendar event was not found.', 404);
     }
