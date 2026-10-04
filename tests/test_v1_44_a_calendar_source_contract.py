@@ -19,6 +19,9 @@ require(migration, "IS NULL", "Migration must only backfill unassigned events.")
 bootstrap = read("app/bootstrap.php")
 require(bootstrap, "calendar_source.php", "Calendar source model must be loaded by bootstrap.")
 
+common_conf = read("app/common/common_conf.php")
+require(common_conf, "'calendar_source'", "Calendar source table must be present in the DB identifier allowlist.")
+
 source_model = read("app/calendar_source.php")
 for needle in [
     "CALENDAR_SOURCE_MAX_ACTIVE = 20",
