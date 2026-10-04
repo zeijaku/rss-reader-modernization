@@ -411,11 +411,6 @@ if (is_int($content_location)) {
                                     <button type="button" class="btn btn-outline-secondary calendar-view-mode" data-calendar-view-mode="week" aria-pressed="false">週</button>
                                     <button type="button" class="btn btn-outline-secondary calendar-view-mode active" data-calendar-view-mode="month" aria-pressed="true">月</button>
                                 </div>
-                                <button type="button" class="btn btn-sm btn-outline-secondary calendar-next-month" aria-label="次の月"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary calendar-refresh" title="カレンダーを更新"><i class="fas fa-sync-alt" aria-hidden="true"></i><span class="visually-hidden">カレンダーを更新</span></button>
-                                <button type="button" class="btn btn-sm btn-primary calendar-event-add-trigger" data-bs-toggle="modal" data-bs-target="#registerCalendarEvent"><i class="fas fa-plus" aria-hidden="true"></i><span class="visually-hidden">予定を追加</span></button>
-                            </div>
-                            <div class="calendar-source-bar">
                                 <div class="dropdown calendar-source-filter">
                                     <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle calendar-source-filter-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-label="表示するCalendarを選択">
                                         <i class="fas fa-layer-group" aria-hidden="true"></i>
@@ -425,6 +420,9 @@ if (is_int($content_location)) {
                                         <span class="small text-muted">Calendarを読み込んでいます</span>
                                     </div>
                                 </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary calendar-next-month" aria-label="次の月"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary calendar-refresh" title="カレンダーを更新"><i class="fas fa-sync-alt" aria-hidden="true"></i><span class="visually-hidden">カレンダーを更新</span></button>
+                                <button type="button" class="btn btn-sm btn-primary calendar-event-add-trigger" data-bs-toggle="modal" data-bs-target="#registerCalendarEvent"><i class="fas fa-plus" aria-hidden="true"></i><span class="visually-hidden">予定を追加</span></button>
                             </div>
                             <div class="calendar-weekdays" aria-hidden="true"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
                             <div class="calendar-days" role="grid" aria-label="月間Calendar" aria-busy="true"><div class="calendar-loading" role="status"><span class="loading-inline"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i><span>Calendarを読み込んでいます</span></span></div></div>
