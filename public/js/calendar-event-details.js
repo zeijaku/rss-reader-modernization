@@ -301,6 +301,7 @@
             calendar_event_start_date: formValue(form, '.' + prefix + 'CalendarEventStartDate'),
             calendar_event_end_date: formValue(form, '.' + prefix + 'CalendarEventEndDate'),
             calendar_event_note: formValue(form, '.' + prefix + 'CalendarEventNote'),
+            calendar_source_id: formValue(form, '.' + prefix + 'CalendarEventSource'),
             calendar_event_color: validColor(formValue(form, '.' + prefix + 'CalendarEventColor')),
             calendar_event_all_day: isAllDay ? '1' : '0',
             calendar_event_start_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventStartTime'),
