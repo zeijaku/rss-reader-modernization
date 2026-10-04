@@ -76,9 +76,9 @@ check('`remember_token_second_factor_verified_at` DATETIME NULL DEFAULT NULL' in
 check("'`calendar_event_reminder` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none'','," in SCHEMA,
       'fresh calendar schema contains a syntactically complete reminder column fragment')
 
-check("'\`calendar_event_source_id\` BIGINT UNSIGNED NULL DEFAULT NULL" in SCHEMA,
+check("'`calendar_event_source_id` BIGINT UNSIGNED NULL DEFAULT NULL" in SCHEMA,
       'fresh calendar schema contains Calendar source membership')
-check("'\`calendar_source_name\` VARCHAR(40) NOT NULL" in SCHEMA,
+check("'`calendar_source_name` VARCHAR(40) NOT NULL" in SCHEMA,
       'fresh schema contains Calendar source definitions')
 
 check('Fresh Installでは `database/schema.sql` だけを1回実行します' in INSTALL,
