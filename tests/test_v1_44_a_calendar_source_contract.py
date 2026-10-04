@@ -90,6 +90,10 @@ for path in ["public/js/calendar-event-details.js", "public/js/calendar-recurren
     text = read(path)
     require(text, "calendar_source_id:", f"{path} must submit the selected Calendar source.")
 
+calendar_time = read("app/calendar_time.php")
+require(calendar_time, "$sourceId !== null && $sourceId !== ''",
+        "Legacy event updates that omit Calendar source must preserve existing membership.")
+
 drag = read("public/js/calendar-drag-drop.js")
 require(drag, "sourceId:", "Drag and drop must snapshot the Calendar source.")
 require(drag, "calendar_source_id: state.sourceId", "Drag and drop must preserve the Calendar source.")
