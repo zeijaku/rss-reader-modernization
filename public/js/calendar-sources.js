@@ -158,14 +158,13 @@
             var entry = this;
             var color = String(entry.getAttribute('data-calendar-source-label-color') || 'blue');
             var name = String(entry.getAttribute('data-calendar-source-name') || '');
-            var dot = entry.querySelector('.calendar-source-dot');
-            if (!dot) {
-                dot = document.createElement('span');
-                dot.className = 'calendar-source-dot';
-                dot.setAttribute('aria-hidden', 'true');
-                entry.insertBefore(dot, entry.firstChild);
+            var icon = entry.querySelector('.calendar-source-icon');
+            if (!icon) {
+                icon = document.createElement('i');
+                icon.setAttribute('aria-hidden', 'true');
+                entry.insertBefore(icon, entry.firstChild);
             }
-            dot.className = 'calendar-source-dot calendar-source-dot-' + color;
+            icon.className = 'fas fa-layer-group calendar-source-icon calendar-source-icon-' + color;
             if (name) {
                 entry.setAttribute('data-calendar-source-display-name', name);
             }
@@ -222,7 +221,7 @@
                 .attr('data-calendar-source-id', source.source_id)
                 .prop('checked', hidden.indexOf(source.source_id) === -1)
                 .appendTo($row);
-            $('<span>').addClass('calendar-source-dot calendar-source-dot-' + source.color).attr('aria-hidden', 'true').appendTo($row);
+            $('<i>').addClass('fas fa-layer-group calendar-source-icon calendar-source-icon-' + source.color).attr('aria-hidden', 'true').appendTo($row);
             $('<span>').addClass('calendar-source-filter-name').text(source.name).appendTo($row);
             $menu.append($row);
         });
@@ -316,7 +315,7 @@
             var $actions = $('<div>').addClass('calendar-source-manager-actions');
             $('<button>').attr('type','button').addClass('btn btn-sm btn-outline-primary calendar-source-update').text('変更').appendTo($actions);
             $('<button>').attr('type','button').addClass('btn btn-sm btn-outline-danger calendar-source-delete').prop('disabled', source.is_default).text('削除').appendTo($actions);
-            var $label = $('<span>').addClass('calendar-source-dot calendar-source-dot-' + source.color).attr('aria-hidden','true');
+            var $label = $('<i>').addClass('fas fa-layer-group calendar-source-icon calendar-source-icon-' + source.color).attr('aria-hidden','true');
             var $nameWrap = $('<div>').addClass('calendar-source-manager-name-wrap').append($label, $name);
             $row.append($nameWrap, $color, $actions);
             if (source.is_default) {
