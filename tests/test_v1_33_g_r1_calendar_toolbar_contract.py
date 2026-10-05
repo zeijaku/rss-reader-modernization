@@ -30,11 +30,12 @@ def check(condition: bool, message: str) -> None:
 
 
 for markup, name in ((dashboard, 'Dashboard'), (stock, 'Stock')):
-    toolbar_start = markup.index('<div class="calendar-toolbar">')
+    toolbar_start = markup.index('class="calendar-toolbar')
+    toolbar_start = markup.rfind('<div ', 0, toolbar_start + 1)
     weekdays_start = markup.index('<div class="calendar-weekdays"', toolbar_start)
     toolbar_markup = markup[toolbar_start:weekdays_start]
 
-    check(toolbar_markup.count('class="calendar-toolbar"') == 1
+    check(toolbar_markup.count('class="calendar-toolbar') == 1
           and toolbar_markup.count('class="btn-group btn-group-sm calendar-view-switch"') == 1,
           f'{name} keeps the view switch inside the Calendar toolbar')
     check(toolbar_markup.index('calendar-prev-month')
@@ -57,8 +58,8 @@ check('#main-content .calendar-toolbar-stack .calendar-toolbar-with-sources {' i
       'only truly narrow cards and Smartphone layouts move the grouped actions to a second row')
 check('grid-template-areas' not in deadline_css,
       'later-loaded Deadline CSS does not override the Calendar toolbar grid')
-check(dashboard.index('calendar-month-label') < dashboard.index('<div class="calendar-toolbar">')
-      and stock.index('calendar-month-label') < stock.index('<div class="calendar-toolbar">'),
+check(dashboard.index('calendar-month-label') < dashboard.index('class="calendar-toolbar')
+      and stock.index('calendar-month-label') < stock.index('class="calendar-toolbar'),
       'period label appears in the Calendar card header in both views')
 check('grid-area: switch;' in css and 'width: min(100%, 15rem);' in css,
       'view switch stays centered and bounded in compact layouts')
