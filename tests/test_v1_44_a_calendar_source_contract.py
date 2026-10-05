@@ -68,7 +68,12 @@ if "calendar-source-bar" in widgets:
 
 views_css = read("public/css/calendar-views.css")
 require(views_css, '"prev today switch filter next refresh add"', "Desktop Calendar toolbar must keep source filter on the first row.")
-require(views_css, '"filter filter filter filter filter filter"', "Narrow Calendar toolbar may move the source filter to a second row.")
+require(views_css, ".calendar-toolbar-stack .calendar-toolbar", "Only the dedicated toolbar stack class may move the source filter to a second row.")
+require(views_css, '"filter filter filter filter filter filter"', "Truly narrow Calendar toolbars may move the source filter to a second row.")
+
+core_js = read("public/js/calendar-core.js")
+require(core_js, "width > 0 && width < 720", "Week-view compact behavior must retain its 720px card-width threshold.")
+require(core_js, "width > 0 && width < 560", "Toolbar stacking must use the narrower dedicated threshold.")
 
 sources_css = read("public/css/calendar-sources.css")
 require(sources_css, "background: #60a5fa;", "Blue Calendar source marker must use the softer V1.44 review color.")
