@@ -1,0 +1,57 @@
+name: V1.44 Dev5 Toolbar Actions Package
+
+on:
+  push:
+    branches:
+      - artifact/v1.44-dev5-toolbar-actions-group
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build incremental review ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG="rss-reader-v1.44.0-dev.5-calendar-toolbar-actions"
+          mkdir -p "$PKG/app/view" "$PKG/public/css" "$PKG/public/js"
+          cp app/version.php "$PKG/app/version.php"
+          cp app/view/dashboard_widgets.php "$PKG/app/view/dashboard_widgets.php"
+          cp public/css/calendar-views.css "$PKG/public/css/calendar-views.css"
+          cp public/css/calendar-sources.css "$PKG/public/css/calendar-sources.css"
+          cp public/js/calendar-core.js "$PKG/public/js/calendar-core.js"
+          cat > "$PKG/APPLY.txt" <<'EOF'
+          RSS Reader Modernization V1.44 Calendar toolbar actions fix
+          Target checkpoint: 1.44.0-dev.5
+          Source development HEAD: a8858caf47466643cbd13bed893c7764186f54cc
+
+          APPLY
+          1. Apply over the current V1.44 dev.4 state.
+          2. Overwrite the included files, preserving paths.
+          3. No database migration is required.
+          4. Reload Dashboard. APP_ASSET_REVISION is 1.44.0-dev.5.
+
+          FIX
+          - The Calendar source filter is no longer an independent Grid area.
+          - Source filter + next + refresh + add are grouped in one right-side toolbar cell.
+          - This prevents the source filter from occupying a separate row on normal PC width.
+          - Truly narrow cards and Smartphone layouts may still stack the grouped actions.
+          EOF
+          python3 - <<'PY'
+          import shutil
+          shutil.make_archive(
+              "rss-reader-v1.44.0-dev.5-calendar-toolbar-actions",
+              "zip",
+              ".",
+              "rss-reader-v1.44.0-dev.5-calendar-toolbar-actions",
+          )
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-v1.44.0-dev.5-calendar-toolbar-actions
+          path: rss-reader-v1.44.0-dev.5-calendar-toolbar-actions.zip
+          retention-days: 7
