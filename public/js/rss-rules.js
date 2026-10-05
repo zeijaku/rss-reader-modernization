@@ -42,7 +42,7 @@
             tabindex: '0'
         });
         $pane.append(
-            $('<div>').addClass('alert alert-info small').text('V1.22-CではRuleの作成・編集・有効/無効・削除までを行います。Highlight / Hide / Auto Stockの実行は次段階で有効化します。')
+            $('<div>').addClass('alert alert-info small').text('Ruleの作成・編集・有効/無効・削除ができます。Highlightは記事を強調、Hideは一致記事を非表示、Auto Stockは一致記事を重複を避けてStockへ追加します。')
         );
         var $row = $('<div>').addClass('row g-3 mb-3');
         var $formCard = $('<div>').addClass('col-12 col-lg-5').append(
