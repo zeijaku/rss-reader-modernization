@@ -6,6 +6,20 @@
     align-items: center;
 }
 
+#main-content .calendar-toolbar-with-sources {
+    grid-template-areas: "prev today switch actions";
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+}
+
+#main-content .calendar-toolbar-actions {
+    display: flex;
+    grid-area: actions;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    white-space: nowrap;
+}
+
 #main-content .calendar-prev-month {
     grid-area: prev;
 }
@@ -50,12 +64,12 @@
     color: #fff;
 }
 
-#main-content .calendar-toolbar-stack .calendar-toolbar {
+#main-content .calendar-toolbar-stack .calendar-toolbar-with-sources {
     min-width: 0;
     grid-template-areas:
-        "prev today switch next refresh add"
-        "filter filter filter filter filter filter";
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
+        "prev today switch"
+        "actions actions actions";
+    grid-template-columns: auto auto minmax(0, 1fr);
 }
 
 #main-content .calendar-view-compact .calendar-month-label {
@@ -337,11 +351,15 @@
 }
 
 @media (max-width: 575.98px) {
-    #main-content .calendar-toolbar {
+    #main-content .calendar-toolbar-with-sources {
         grid-template-areas:
-            "prev today switch next refresh add"
-            "filter filter filter filter filter filter";
-        grid-template-columns: auto auto minmax(0, 1fr) auto auto auto;
+            "prev today switch"
+            "actions actions actions";
+        grid-template-columns: auto auto minmax(0, 1fr);
+    }
+
+    #main-content .calendar-toolbar-actions {
+        width: 100%;
     }
 
     #main-content .calendar-month-label {
