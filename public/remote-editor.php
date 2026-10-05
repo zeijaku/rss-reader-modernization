@@ -145,7 +145,7 @@ if (!is_string($initialJson)) {
 
     <div class="alert alert-warning remote-editor-phase-note" role="note">
       <i class="fas fa-info-circle fa-fw" aria-hidden="true"></i>
-      V1.30-D checkpointではRemote保存を有効化しています。保存時はSHA-256でRemote側の変更を確認し、競合時は上書きせず停止します。
+      Remote保存ではSHA-256でRemote側の変更を確認し、競合時は上書きせず停止します。
     </div>
 
     <div id="remoteEditorNotice" class="alert d-none" role="status" aria-live="polite"></div>
