@@ -1,0 +1,69 @@
+name: V1.44 Dev8 Calendar Modal Layout Package
+
+on:
+  push:
+    branches:
+      - artifact/v1.44-dev8-modal-layout
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build incremental review ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG="rss-reader-v1.44.0-dev.8-calendar-modal-layout"
+          mkdir -p "$PKG/app" "$PKG/public/css" "$PKG/public/js"
+
+          cp app/version.php "$PKG/app/version.php"
+          cp public/css/calendar-event-details.css "$PKG/public/css/calendar-event-details.css"
+          cp public/css/calendar-recurrence.css "$PKG/public/css/calendar-recurrence.css"
+          cp public/js/calendar-event-details.js "$PKG/public/js/calendar-event-details.js"
+          cp public/js/calendar-recurrence.js "$PKG/public/js/calendar-recurrence.js"
+
+          cat > "$PKG/APPLY.txt" <<'EOF'
+          RSS Reader Modernization V1.44 Calendar event modal layout polish
+          Target checkpoint: 1.44.0-dev.8
+          Source development HEAD: c9db38153780f4920a4440f75209846f92b7eacd
+
+          APPLY
+          1. Apply over the current V1.44 dev.7 review state.
+          2. Overwrite the included files, preserving paths.
+          3. No database migration is required.
+          4. Reload Dashboard. APP_ASSET_REVISION is 1.44.0-dev.8.
+          5. This is a review/development checkpoint, not a formal release.
+
+          LAYOUT CHANGE ONLY
+          - No Calendar fields, labels, help text or saved data are added or removed.
+          - Existing title / Calendar / start date / end date remain unchanged.
+          - All-day, time, recurrence, reminder and deadline controls now share one schedule grid.
+          - Desktop aligns Repeat and Reminder side by side.
+          - Repeat-until appears below Repeat only when enabled.
+          - Deadline highlight spans the full width below schedule/notification controls.
+          - Smartphone collapses the same controls to one column.
+          - Existing Details (Location / URL / Memo) behavior is unchanged.
+          - Handles both script creation orders so delayed recurrence controls still merge into the same grid.
+          EOF
+
+          python3 - <<'PY'
+          import shutil
+          shutil.make_archive(
+              "rss-reader-v1.44.0-dev.8-calendar-modal-layout",
+              "zip",
+              ".",
+              "rss-reader-v1.44.0-dev.8-calendar-modal-layout",
+          )
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-v1.44.0-dev.8-calendar-modal-layout
+          path: rss-reader-v1.44.0-dev.8-calendar-modal-layout.zip
+          if-no-files-found: error
+          retention-days: 7
