@@ -62,24 +62,91 @@
     column-gap: .75rem;
 }
 
-.calendar-event-detail-fields .calendar-event-time-fields {
+.calendar-event-detail-fields .calendar-event-time-fields,
+.calendar-event-detail-fields .calendar-event-detail-loading,
+.calendar-event-detail-fields .calendar-event-location-field,
+.calendar-event-detail-fields .calendar-event-url-field {
     grid-column: 1 / -1;
-    grid-row: 1;
 }
 
 .calendar-event-detail-fields .calendar-event-all-day-field {
     grid-column: 1;
-    grid-row: 2;
     align-self: center;
-    margin-top: 1.65rem;
+    margin-top: 0;
 }
 
 .calendar-event-detail-fields .calendar-event-reminder-field {
     grid-column: 2;
-    grid-row: 2;
 }
 
-.calendar-event-detail-fields .calendar-event-detail-loading {
+/* V1.44 review: recurrence, time, reminder and deadline share one layout.
+ * This keeps the same fields/help text while aligning related controls. */
+.calendar-event-schedule-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+        "allDay allDay"
+        "time time"
+        "repeat reminder"
+        "repeatUntil ."
+        "repeatHelp repeatHelp"
+        "deadline deadline"
+        "recurrenceStatus recurrenceStatus"
+        "detailStatus detailStatus";
+    column-gap: .75rem;
+    row-gap: 0;
+    align-items: start;
+    margin-bottom: .35rem;
+}
+
+.calendar-event-schedule-fields > .calendar-event-detail-fields {
+    display: contents;
+}
+
+.calendar-event-schedule-fields .calendar-event-all-day-field {
+    grid-area: allDay;
+    margin-top: 0;
+    margin-bottom: .45rem !important;
+    padding-top: .1rem;
+}
+
+.calendar-event-schedule-fields .calendar-event-time-fields {
+    grid-area: time;
+}
+
+.calendar-event-schedule-fields .calendar-event-repeat-field {
+    grid-area: repeat;
+}
+
+.calendar-event-schedule-fields .calendar-event-repeat-until-field {
+    grid-area: repeatUntil;
+}
+
+.calendar-event-schedule-fields .calendar-event-reminder-field {
+    grid-area: reminder;
+}
+
+.calendar-event-schedule-fields .calendar-event-recurrence-help {
+    grid-area: repeatHelp;
+}
+
+.calendar-event-schedule-fields .calendar-event-deadline-field {
+    grid-area: deadline;
+    margin-top: .1rem;
+    padding-top: .6rem;
+    border-top: 1px solid var(--bs-border-color, rgba(0, 0, 0, .175));
+}
+
+.calendar-event-schedule-fields .calendar-event-recurrence-loading {
+    grid-area: recurrenceStatus;
+}
+
+.calendar-event-schedule-fields .calendar-event-detail-loading {
+    grid-area: detailStatus;
+}
+
+.calendar-event-schedule-fields .calendar-event-location-field,
+.calendar-event-schedule-fields .calendar-event-url-field {
     grid-column: 1 / -1;
 }
 
@@ -122,12 +189,28 @@
     .calendar-event-detail-fields .calendar-event-time-fields,
     .calendar-event-detail-fields .calendar-event-all-day-field,
     .calendar-event-detail-fields .calendar-event-reminder-field,
-    .calendar-event-detail-fields .calendar-event-detail-loading {
+    .calendar-event-detail-fields .calendar-event-detail-loading,
+    .calendar-event-detail-fields .calendar-event-location-field,
+    .calendar-event-detail-fields .calendar-event-url-field {
         grid-column: 1;
         grid-row: auto;
     }
 
     .calendar-event-detail-fields .calendar-event-all-day-field {
         margin-top: 0;
+    }
+
+    .calendar-event-schedule-fields {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "allDay"
+            "time"
+            "repeat"
+            "repeatUntil"
+            "repeatHelp"
+            "reminder"
+            "deadline"
+            "recurrenceStatus"
+            "detailStatus";
     }
 }
