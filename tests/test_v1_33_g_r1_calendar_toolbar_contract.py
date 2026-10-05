@@ -48,12 +48,13 @@ for markup, name in ((dashboard, 'Dashboard'), (stock, 'Stock')):
           and toolbar_markup.count('data-calendar-view-mode="month"') == 1,
           f'{name} retains one accessible day/week/month control group')
 
-check('grid-template-areas: "prev today switch filter next refresh add";' in css
-      and 'grid-template-columns: auto auto minmax(0, 1fr) auto auto auto auto;' in css,
-      'wide Calendar toolbar keeps the Calendar filter with the primary controls')
-check('#main-content .calendar-toolbar-stack .calendar-toolbar {' in css
-      and css.count('"filter filter filter filter filter filter"') >= 2,
-      'only truly narrow cards and Smartphone layouts move the Calendar filter to a second row')
+check('grid-template-areas: "prev today switch actions";' in css
+      and 'grid-template-columns: auto auto minmax(0, 1fr) auto;' in css
+      and '.calendar-toolbar-actions' in css,
+      'wide Calendar toolbar keeps all right-side controls in one actions cell')
+check('#main-content .calendar-toolbar-stack .calendar-toolbar-with-sources {' in css
+      and '"actions actions actions"' in css,
+      'only truly narrow cards and Smartphone layouts move the grouped actions to a second row')
 check('grid-template-areas' not in deadline_css,
       'later-loaded Deadline CSS does not override the Calendar toolbar grid')
 check(dashboard.index('calendar-month-label') < dashboard.index('<div class="calendar-toolbar">')
