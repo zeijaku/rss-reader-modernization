@@ -48,8 +48,9 @@ check('.calendar-event-modal .modal-content > form' in event_css
 check('.calendar-event-modal .modal-body' in event_css and 'overflow-y: auto' in event_css,
       'expanded Calendar details scroll inside the modal body so footer actions remain reachable')
 check("calendar-event-recurrence-fields calendar-event-schedule-fields" in recurrence
-      and "calendar-event-repeat-field" in recurrence,
-      'recurrence controls expose stable hooks for the shared schedule grid')
+      and "calendar-event-repeat-field" in recurrence
+      and "wrapper.appendChild(detailFields)" in recurrence,
+      'recurrence controls expose stable hooks and merge delayed fields into the shared schedule grid')
 check("calendar-event-deadline-field" in details
       and "schedule.appendChild(wrapper)" in details,
       'time/reminder/deadline controls join the same schedule grid without changing field behavior')
