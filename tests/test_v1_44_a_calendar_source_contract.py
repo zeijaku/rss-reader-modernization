@@ -65,11 +65,12 @@ require(widgets, "calendar-source-filter-toggle", "Calendar Widget needs a sourc
 require(widgets, "calendar-source-filter-menu", "Calendar Widget needs a source filter menu.")
 if "calendar-source-bar" in widgets:
     raise AssertionError("Calendar source filter must stay in the primary Calendar toolbar on normal-width layouts.")
+require(widgets, "calendar-toolbar-actions", "Calendar source filter must share one toolbar action group with next/refresh/add controls.")
 
 views_css = read("public/css/calendar-views.css")
-require(views_css, '"prev today switch filter next refresh add"', "Desktop Calendar toolbar must keep source filter on the first row.")
-require(views_css, ".calendar-toolbar-stack .calendar-toolbar", "Only the dedicated toolbar stack class may move the source filter to a second row.")
-require(views_css, '"filter filter filter filter filter filter"', "Truly narrow Calendar toolbars may move the source filter to a second row.")
+require(views_css, '"prev today switch actions"', "Desktop Calendar toolbar must keep right-side actions on the first row.")
+require(views_css, ".calendar-toolbar-actions", "Calendar source filter and right-side buttons must be grouped in one actions cell.")
+require(views_css, ".calendar-toolbar-stack .calendar-toolbar-with-sources", "Only the dedicated toolbar stack class may move grouped actions to a second row.")
 
 core_js = read("public/js/calendar-core.js")
 require(core_js, "width > 0 && width < 720", "Week-view compact behavior must retain its 720px card-width threshold.")
