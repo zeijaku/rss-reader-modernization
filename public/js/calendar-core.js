@@ -470,7 +470,6 @@
             .attr('data-calendar-source-start-time', publicTime(item.source_start_time !== undefined ? item.source_start_time : item.start_time))
             .attr('data-calendar-source-end-time', publicTime(item.source_end_time !== undefined ? item.source_end_time : item.end_time))
             .attr('data-calendar-source-url', String(item.source_url !== undefined && item.source_url !== null ? item.source_url : item.url || ''))
-            .attr('data-calendar-source-location', String(item.source_location !== undefined && item.source_location !== null ? item.source_location : item.location || ''))
             .attr('data-calendar-source-reminder', String(item.source_reminder !== undefined ? item.source_reminder : item.reminder || 'none'))
             .attr('data-calendar-source-id', String(item.calendar_source_id !== undefined ? item.calendar_source_id : '0'))
             .attr('data-calendar-source-name', String(item.calendar_source_name || '既定Calendar'))
@@ -482,7 +481,6 @@
             .attr('data-calendar-event-start-time', publicTime(item.start_time))
             .attr('data-calendar-event-end-time', publicTime(item.end_time))
             .attr('data-calendar-event-url', String(item.url || ''))
-            .attr('data-calendar-event-location', String(item.location || ''))
             .attr('data-calendar-event-deadline-highlight', item.deadline_highlight ? '1' : '0')
             .attr('data-calendar-source-deadline-highlight', (item.source_deadline_highlight !== undefined ? item.source_deadline_highlight : item.deadline_highlight) ? '1' : '0')
             .attr('data-calendar-event-reminder', String(item.reminder || 'none'))
@@ -540,6 +538,7 @@
             ? Number(element.getBoundingClientRect().width || 0)
             : 0;
         $card.toggleClass('calendar-view-compact', width > 0 && width < 720);
+        $card.toggleClass('calendar-toolbar-stack', width > 0 && width < 560);
     }
 
     function observeCalendar($card) {
