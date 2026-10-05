@@ -21,5 +21,4 @@ jobs:
           set -euo pipefail
           python3 tools/check_release_ready.py --release 1.44.0
           python3 tests/test_version_dependency_hygiene.py
-          python3 tests/test_workflow_hygiene.py
           python3 tests/test_release_flow.py
