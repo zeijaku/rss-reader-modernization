@@ -538,6 +538,7 @@
             ? Number(element.getBoundingClientRect().width || 0)
             : 0;
         $card.toggleClass('calendar-view-compact', width > 0 && width < 720);
+        $card.toggleClass('calendar-toolbar-stack', width > 0 && width < 560);
     }
 
     function observeCalendar($card) {
