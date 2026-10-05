@@ -1,0 +1,68 @@
+name: V1.44 Dev4 Toolbar Stack Fix Package
+
+on:
+  push:
+    branches:
+      - artifact/v1.44-dev4-toolbar-stack-fix
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build incremental review ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG="rss-reader-v1.44.0-dev.4-calendar-toolbar-stack-fix"
+          mkdir -p "$PKG/app/view" "$PKG/public/css" "$PKG/public/js"
+
+          cp app/version.php "$PKG/app/version.php"
+          cp app/view/dashboard_widgets.php "$PKG/app/view/dashboard_widgets.php"
+          cp public/css/calendar-views.css "$PKG/public/css/calendar-views.css"
+          cp public/css/calendar-sources.css "$PKG/public/css/calendar-sources.css"
+          cp public/js/calendar-core.js "$PKG/public/js/calendar-core.js"
+
+          cat > "$PKG/APPLY.txt" <<'EOF'
+          RSS Reader Modernization V1.44 Calendar toolbar stack fix
+          Target checkpoint: 1.44.0-dev.4
+          Source development HEAD: a213e03d31d118ed62feec51787f5b8e399e168c
+
+          PREREQUISITE
+          - Apply this over the previously tested V1.44-A+B dev.3 state.
+          - No database migration is required.
+
+          APPLY
+          1. Back up the current application files.
+          2. Overwrite the included files, preserving paths.
+          3. Reload the Dashboard. APP_ASSET_REVISION is 1.44.0-dev.4.
+          4. This is a review/development checkpoint, not a formal release.
+
+          FIX
+          - Week-view compact behavior keeps its existing <720px card-width threshold.
+          - Toolbar stacking is now independent and only applies below 560px card width.
+          - Smartphone CSS still stacks the Calendar filter on narrow viewports.
+          - On normal PC width the Calendar filter stays on the primary toolbar.
+          - The softened blue Calendar source dot from dev.3 is retained.
+          EOF
+
+          python3 - <<'PY'
+          import shutil
+          shutil.make_archive(
+              "rss-reader-v1.44.0-dev.4-calendar-toolbar-stack-fix",
+              "zip",
+              ".",
+              "rss-reader-v1.44.0-dev.4-calendar-toolbar-stack-fix",
+          )
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-v1.44.0-dev.4-calendar-toolbar-stack-fix
+          path: rss-reader-v1.44.0-dev.4-calendar-toolbar-stack-fix.zip
+          if-no-files-found: error
+          retention-days: 7
