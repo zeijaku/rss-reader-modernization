@@ -176,10 +176,11 @@ try {
         $_POST['calendar_event_url'] ?? '',
         $range[0],
         $range[1],
-        $_POST['calendar_event_deadline_highlight'] ?? null
+        $_POST['calendar_event_deadline_highlight'] ?? null,
+        $_POST['calendar_event_location'] ?? ''
     );
     if ($timeSettings === null) {
-        calendar_recurrence_error('validation_error', 'Calendar event time or URL is invalid.', 422);
+        calendar_recurrence_error('validation_error', 'Calendar event time, URL or location is invalid.', 422);
     }
 
     if ($action === 'calendar.occurrence.update') {
@@ -231,7 +232,8 @@ try {
             $color,
             $timeSettings,
             $repeatSettings,
-            $reminder
+            $reminder,
+            $_POST['calendar_source_id'] ?? null
         );
         calendar_recurrence_success([
             'event_id' => $eventId,
@@ -240,6 +242,7 @@ try {
             'start_time' => $timeSettings['start_time'] === null ? null : substr($timeSettings['start_time'], 0, 5),
             'end_time' => $timeSettings['end_time'] === null ? null : substr($timeSettings['end_time'], 0, 5),
             'url' => $timeSettings['url'],
+            'location' => $timeSettings['location'],
             'repeat_type' => $repeatSettings['repeat_type'],
             'repeat_until' => $repeatSettings['repeat_until'],
             'deadline_highlight' => $timeSettings['deadline_highlight'] ?? false,
@@ -261,7 +264,8 @@ try {
         $color,
         $timeSettings,
         $repeatSettings,
-        $reminder
+        $reminder,
+        $_POST['calendar_source_id'] ?? null
     )) {
         calendar_recurrence_error('not_found', 'Calendar event was not found.', 404);
     }

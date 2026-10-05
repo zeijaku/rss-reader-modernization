@@ -1,0 +1,122 @@
+/* V1.44-A: multiple Calendar / source controls. */
+#main-content .calendar-source-filter {
+    flex: 0 0 auto;
+}
+
+#main-content .calendar-source-filter-toggle {
+    display: inline-flex;
+    min-width: 7.5rem;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+#main-content .calendar-source-filter-menu {
+    min-width: 13rem;
+    max-width: min(20rem, 90vw);
+}
+
+#main-content .calendar-source-filter-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 6px 8px;
+    cursor: pointer;
+}
+
+#main-content .calendar-source-filter-item .form-check-input {
+    flex: 0 0 auto;
+    margin-top: 0;
+}
+
+.calendar-source-icon {
+    display: inline-block;
+    width: .72rem;
+    flex: 0 0 .72rem;
+    color: var(--bs-secondary, #6c757d);
+    font-size: .66rem;
+    line-height: 1;
+    text-align: center;
+}
+
+.calendar-source-icon-blue {
+    color: #60a5fa;
+}
+
+.calendar-source-icon-green {
+    color: #198754;
+}
+
+.calendar-source-icon-purple {
+    color: #6f42c1;
+}
+
+.calendar-source-icon-yellow {
+    color: #ffc107;
+}
+
+.calendar-source-icon-red {
+    color: #dc3545;
+}
+
+#main-content .calendar-event-entry > .calendar-source-icon {
+    margin-right: 3px;
+    align-self: center;
+    font-size: .62rem;
+}
+
+.calendar-source-manager-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 7rem auto;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+.calendar-source-manager-row:last-child {
+    border-bottom: 0;
+}
+
+.calendar-source-manager-name-wrap {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 7px;
+}
+
+.calendar-source-manager-name-wrap .form-control {
+    min-width: 0;
+}
+
+.calendar-source-manager-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.calendar-source-default-badge {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 575.98px) {
+    #main-content .calendar-toolbar-stack .calendar-source-filter,
+    #main-content .calendar-toolbar-stack .calendar-source-filter-toggle {
+        width: 100%;
+    }
+
+    #main-content .calendar-source-filter-toggle {
+        min-width: 0;
+    }
+
+    .calendar-source-manager-row {
+        grid-template-columns: minmax(0, 1fr) 6rem;
+    }
+
+    .calendar-source-manager-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-end;
+    }
+}

@@ -16,8 +16,10 @@ def check(condition: bool, label: str) -> None:
 views = text('public/js/calendar-views.js')
 core = text('public/js/calendar-core.js')
 details = text('public/js/calendar-event-details.js')
+recurrence = text('public/js/calendar-recurrence.js')
 dashboard_css = text('public/css/dashboard.css')
 event_css = text('public/css/calendar-event-details.css')
+recurrence_css = text('public/css/calendar-recurrence.css')
 modals = text('app/view/dashboard_modals.php')
 page = text('public/remote-editor.php')
 editor_js = text('public/js/remote-editor.js')
@@ -45,6 +47,27 @@ check('.calendar-event-modal .modal-content > form' in event_css
       'Calendar event form preserves the scrollable modal flex boundary')
 check('.calendar-event-modal .modal-body' in event_css and 'overflow-y: auto' in event_css,
       'expanded Calendar details scroll inside the modal body so footer actions remain reachable')
+check("calendar-event-recurrence-fields calendar-event-schedule-fields" in recurrence
+      and "calendar-event-repeat-field" in recurrence
+      and "wrapper.appendChild(detailFields)" in recurrence,
+      'recurrence controls expose stable hooks and merge delayed fields into the shared schedule grid')
+check("calendar-event-deadline-field" in details
+      and "schedule.appendChild(wrapper)" in details,
+      'time/reminder/deadline controls join the same schedule grid without changing field behavior')
+check('"repeat reminder"' in event_css
+      and '"repeatUntil ."' in event_css
+      and '"deadline deadline"' in event_css,
+      'desktop Calendar modal aligns repeat/reminder and keeps deadline full width')
+check('"repeat"' in event_css
+      and '"reminder"' in event_css
+      and '@media (max-width: 575.98px)' in event_css,
+      'Smartphone Calendar modal collapses the same schedule controls to one column')
+check(':not(.calendar-event-schedule-fields)' in recurrence_css,
+      'recurrence stylesheet no longer competes with the shared event modal grid')
+for label in ['終日', 'リマインダー', '期日を強調する']:
+    check(label in details, f'Calendar modal preserves existing {label} information')
+for label in ['繰り返し', '繰り返し終了日']:
+    check(label in recurrence, f'Calendar modal preserves existing {label} information')
 
 check('id="remoteEditorSurface"' in page, 'Remote Editor exposes a dedicated editor surface')
 check('id="remoteEditorLineNumbers"' in page and 'aria-hidden="true"' in page,

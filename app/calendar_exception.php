@@ -93,6 +93,7 @@ function calendar_event_occurrence_revision(array $sourceOccurrence, ?array $exc
         'start_time' => $sourceOccurrence['start_time'] ?? null,
         'end_time' => $sourceOccurrence['end_time'] ?? null,
         'url' => $sourceOccurrence['url'] ?? null,
+        'location' => $sourceOccurrence['location'] ?? null,
         'deadline_highlight' => (bool) ($sourceOccurrence['deadline_highlight'] ?? false),
         'reminder' => (string) ($sourceOccurrence['reminder'] ?? $sourceOccurrence['source_reminder'] ?? 'none'),
         'repeat_type' => (string) ($sourceOccurrence['repeat_type'] ?? ''),
@@ -148,7 +149,8 @@ function calendar_event_exception_override_item(array $sourceOccurrence, array $
         $exceptionRow['calendar_event_exception_url'] ?? null,
         $range[0],
         $range[1],
-        $timeSettings['deadline_highlight'] ?? null
+        $exceptionRow['calendar_event_exception_deadline_highlight'] ?? null,
+        $exceptionRow['calendar_event_exception_location'] ?? ''
     );
     if ($time === null) {
         throw new UnexpectedValueException('Calendar occurrence override time data is invalid.');
@@ -172,6 +174,7 @@ function calendar_event_exception_override_item(array $sourceOccurrence, array $
         'source_start_time' => $sourceOccurrence['source_start_time'] ?? $sourceOccurrence['start_time'],
         'source_end_time' => $sourceOccurrence['source_end_time'] ?? $sourceOccurrence['end_time'],
         'source_url' => $sourceOccurrence['source_url'] ?? $sourceOccurrence['url'],
+        'source_location' => $sourceOccurrence['source_location'] ?? $sourceOccurrence['location'] ?? null,
         'source_deadline_highlight' => (bool) ($sourceOccurrence['source_deadline_highlight'] ?? $sourceOccurrence['deadline_highlight'] ?? false),
         'deadline_highlight' => (bool) ($exceptionRow['calendar_event_exception_deadline_highlight'] ?? $sourceOccurrence['deadline_highlight'] ?? false),
         'source_reminder' => (string) ($sourceOccurrence['source_reminder'] ?? $sourceOccurrence['reminder'] ?? 'none'),
@@ -179,6 +182,7 @@ function calendar_event_exception_override_item(array $sourceOccurrence, array $
         'start_time' => $time['start_time'] === null ? null : substr($time['start_time'], 0, 5),
         'end_time' => $time['end_time'] === null ? null : substr($time['end_time'], 0, 5),
         'url' => $time['url'],
+        'location' => $time['location'],
         'reminder' => (string) ($sourceOccurrence['reminder'] ?? $sourceOccurrence['source_reminder'] ?? 'none'),
         'repeat_type' => (string) $sourceOccurrence['repeat_type'],
         'repeat_until' => $sourceOccurrence['repeat_until'] ?? null,
@@ -399,7 +403,7 @@ function calendar_event_exception_mutation_state(
 }
 
 /**
- * @param array{all_day:bool,start_time:?string,end_time:?string,url:?string}|null $settings
+ * @param array{all_day:bool,start_time:?string,end_time:?string,url:?string,location:?string}|null $settings
  * @return array<string,mixed>
  */
 function calendar_event_exception_save(
@@ -432,6 +436,7 @@ function calendar_event_exception_save(
         ':start_time' => $settings['start_time'] ?? null,
         ':end_time' => $settings['end_time'] ?? null,
         ':url' => $settings['url'] ?? null,
+        ':location' => $settings['location'] ?? null,
         ':highlight' => ($settings['deadline_highlight'] ?? null) === null ? null : ($settings['deadline_highlight'] ? 1 : 0),
         ':updated_at' => $now,
         ':owner' => $ownerId,
@@ -447,10 +452,10 @@ function calendar_event_exception_save(
             . 'calendar_event_exception_start_date, calendar_event_exception_end_date, '
             . 'calendar_event_exception_title, calendar_event_exception_note, calendar_event_exception_color, '
             . 'calendar_event_exception_all_day, calendar_event_exception_start_time, '
-            . 'calendar_event_exception_end_time, calendar_event_exception_url, calendar_event_exception_deadline_highlight, '
+            . 'calendar_event_exception_end_time, calendar_event_exception_url, calendar_event_exception_location, calendar_event_exception_deadline_highlight, '
             . 'calendar_event_exception_created_at, calendar_event_exception_updated_at) VALUES ('
             . ':owner, :event_id, :original_start, :kind, 1, 0, :start_date, :end_date, '
-            . ':title, :note, :color, :all_day, :start_time, :end_time, :url, :highlight, :created_at, :updated_at)'
+            . ':title, :note, :color, :all_day, :start_time, :end_time, :url, :location, :highlight, :created_at, :updated_at)'
         );
         $params[':created_at'] = $now;
         $stmt->execute($params);
@@ -468,7 +473,7 @@ function calendar_event_exception_save(
             . 'calendar_event_exception_all_day = :all_day, '
             . 'calendar_event_exception_start_time = :start_time, '
             . 'calendar_event_exception_end_time = :end_time, '
-            . 'calendar_event_exception_url = :url, calendar_event_exception_deadline_highlight = :highlight, '
+            . 'calendar_event_exception_url = :url, calendar_event_exception_location = :location, calendar_event_exception_deadline_highlight = :highlight, '
             . 'calendar_event_exception_updated_at = :updated_at '
             . 'WHERE calendar_event_exception_owner = :owner '
             . 'AND calendar_event_exception_event_id = :event_id '
@@ -483,7 +488,7 @@ function calendar_event_exception_save(
     return $saved;
 }
 
-/** @param array{all_day:bool,start_time:?string,end_time:?string,url:?string} $timeSettings @return array<string,mixed> */
+/** @param array{all_day:bool,start_time:?string,end_time:?string,url:?string,location:?string} $timeSettings @return array<string,mixed> */
 function calendar_event_occurrence_update(
     int $ownerId,
     int $eventId,
@@ -507,7 +512,8 @@ function calendar_event_occurrence_update(
         $timeSettings['url'] ?? null,
         $range[0],
         $range[1],
-        $timeSettings['deadline_highlight'] ?? null
+        $timeSettings['deadline_highlight'] ?? null,
+        $timeSettings['location'] ?? ''
     );
     if ($title === null || $note === null || $range === null || $color === null || $time === null) {
         throw new InvalidArgumentException('Calendar occurrence settings are invalid.');

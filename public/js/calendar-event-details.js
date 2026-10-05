@@ -80,6 +80,32 @@
         return label;
     }
 
+    function mapsSearchUrl(location) {
+        var value = String(location || '').trim();
+        return value === ''
+            ? ''
+            : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(value);
+    }
+
+    function syncLocationMapLink(form, prefix) {
+        if (!form) {
+            return;
+        }
+        var input = form.querySelector('.' + prefix + 'CalendarEventLocation');
+        var link = form.querySelector('.calendar-event-location-map-link');
+        if (!input || !link) {
+            return;
+        }
+        var href = mapsSearchUrl(input.value);
+        if (href === '') {
+            link.hidden = true;
+            link.removeAttribute('href');
+            return;
+        }
+        link.href = href;
+        link.hidden = false;
+    }
+
     function createEventDetailFields(formId, prefix) {
         var form = document.getElementById(formId);
         if (!form || form.querySelector('.calendar-event-detail-fields')) {
@@ -133,6 +159,29 @@
         timeRow.appendChild(endGroup);
         wrapper.appendChild(timeRow);
 
+        var locationGroup = document.createElement('div');
+        locationGroup.className = 'mb-3 calendar-event-location-field';
+        var location = document.createElement('input');
+        location.type = 'text';
+        location.maxLength = 255;
+        location.className = 'form-control ' + prefix + 'CalendarEventLocation';
+        location.id = prefix + 'CalendarEventLocation';
+        location.autocomplete = 'off';
+        location.placeholder = '例: 広島駅';
+        locationGroup.appendChild(createSmallLabel('場所', location.id));
+        locationGroup.appendChild(location);
+        var mapLink = document.createElement('a');
+        mapLink.className = 'btn btn-sm btn-outline-secondary mt-2 calendar-event-location-map-link';
+        mapLink.target = '_blank';
+        mapLink.rel = 'noopener noreferrer';
+        mapLink.textContent = 'Google Mapsで開く';
+        mapLink.hidden = true;
+        locationGroup.appendChild(mapLink);
+        location.addEventListener('input', function () {
+            syncLocationMapLink(form, prefix);
+        });
+        wrapper.appendChild(locationGroup);
+
         var urlGroup = document.createElement('div');
         urlGroup.className = 'mb-3 calendar-event-url-field';
         var url = document.createElement('input');
@@ -176,7 +225,7 @@
         reminderGroup.appendChild(reminderHelp);
         wrapper.appendChild(reminderGroup);
         var deadlineGroup = document.createElement('div');
-        deadlineGroup.className = 'form-check mb-3';
+        deadlineGroup.className = 'form-check mb-3 calendar-event-deadline-field';
         var deadline = document.createElement('input');
         deadline.type = 'checkbox'; deadline.className = 'form-check-input ' + prefix + 'CalendarEventDeadlineHighlight';
         deadline.id = prefix + 'CalendarEventDeadlineHighlight';
@@ -192,10 +241,15 @@
         loading.className = 'small text-muted calendar-event-detail-loading';
         loading.setAttribute('role', 'status');
         loading.hidden = true;
-        loading.textContent = '時刻・URL情報を読み込んでいます...';
+        loading.textContent = '時刻・場所・URL情報を読み込んでいます...';
         wrapper.appendChild(loading);
 
-        if (noteGroup && noteGroup.parentNode === body) {
+        var schedule = body.querySelector('.calendar-event-schedule-fields')
+            || body.querySelector('.calendar-event-recurrence-fields');
+        if (schedule) {
+            schedule.classList.add('calendar-event-schedule-fields');
+            schedule.appendChild(wrapper);
+        } else if (noteGroup && noteGroup.parentNode === body) {
             body.insertBefore(wrapper, noteGroup);
         } else {
             body.appendChild(wrapper);
@@ -284,6 +338,8 @@
         $('.registerCalendarEventStartTime').val('');
         $('.registerCalendarEventEndTime').val('');
         $('.registerCalendarEventUrl').val('');
+        $('.registerCalendarEventLocation').val('');
+        syncLocationMapLink(form, 'register');
         $('.registerCalendarEventReminder').val('none');
         $('.registerCalendarEventDeadlineHighlight').prop('checked', false);
         syncTimeState(form);
@@ -301,11 +357,13 @@
             calendar_event_start_date: formValue(form, '.' + prefix + 'CalendarEventStartDate'),
             calendar_event_end_date: formValue(form, '.' + prefix + 'CalendarEventEndDate'),
             calendar_event_note: formValue(form, '.' + prefix + 'CalendarEventNote'),
+            calendar_source_id: formValue(form, '.' + prefix + 'CalendarEventSource'),
             calendar_event_color: validColor(formValue(form, '.' + prefix + 'CalendarEventColor')),
             calendar_event_all_day: isAllDay ? '1' : '0',
             calendar_event_start_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventStartTime'),
             calendar_event_end_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventEndTime'),
             calendar_event_url: formValue(form, '.' + prefix + 'CalendarEventUrl'),
+            calendar_event_location: formValue(form, '.' + prefix + 'CalendarEventLocation'),
             calendar_event_deadline_highlight: form.querySelector('.' + prefix + 'CalendarEventDeadlineHighlight') && form.querySelector('.' + prefix + 'CalendarEventDeadlineHighlight').checked ? '1' : '0',
             calendar_event_reminder: formValue(form, '.' + prefix + 'CalendarEventReminder') || 'none'
         };
@@ -381,12 +439,14 @@
             return null;
         }
         var url = item && typeof item.url === 'string' ? item.url : '';
+        var location = item && typeof item.location === 'string' ? item.location : '';
         return {
             event_id: id,
             all_day: !(item && item.all_day === false),
             start_time: publicTime(item && item.start_time),
             end_time: publicTime(item && item.end_time),
             url: url,
+            location: location,
             deadlineHighlight: !!(item && item.deadline_highlight),
             reminder: item && typeof item.reminder === 'string' ? item.reminder : 'none'
         };
@@ -418,6 +478,7 @@
             .attr('data-calendar-event-start-time', meta.start_time)
             .attr('data-calendar-event-end-time', meta.end_time)
             .attr('data-calendar-event-url', meta.url)
+            .attr('data-calendar-event-location', meta.location)
             .attr('data-calendar-event-deadline-highlight', meta.deadlineHighlight ? '1' : '0')
             .attr('data-calendar-event-reminder', meta.reminder);
 
@@ -451,6 +512,7 @@
                 start_time: '',
                 end_time: '',
                 url: '',
+                location: '',
                 reminder: 'none'
             };
             decorateEntry($entry, meta);
@@ -485,6 +547,8 @@
         $('.changeCalendarEventStartTime').val(String(trigger.getAttribute('data-calendar-event-start-time') || ''));
         $('.changeCalendarEventEndTime').val(String(trigger.getAttribute('data-calendar-event-end-time') || ''));
         $('.changeCalendarEventUrl').val(String(trigger.getAttribute('data-calendar-event-url') || ''));
+        $('.changeCalendarEventLocation').val(String(trigger.getAttribute('data-calendar-event-location') || ''));
+        syncLocationMapLink(form, 'change');
         $('.changeCalendarEventDeadlineHighlight').prop('checked', trigger.getAttribute('data-calendar-event-deadline-highlight') === '1');
         $('.changeCalendarEventReminder').val(String(trigger.getAttribute('data-calendar-event-reminder') || 'none'));
         syncTimeState(form);
@@ -508,7 +572,7 @@
         var month = Number($card.attr('data-calendar-month') || 0);
         if (year < 2000 || year > 2100 || month < 1 || month > 12) {
             setMetaLoading(form, true);
-            showNotice('予定の時刻・URL情報を確認出来ないため変更を保存出来ません', 'danger');
+            showNotice('予定の時刻・場所・URL情報を確認出来ないため変更を保存出来ません', 'danger');
             return;
         }
 
@@ -519,7 +583,7 @@
                     populateEditFields(trigger);
                     return;
                 }
-                showNotice('予定の時刻・URL情報を読み込めませんでした', 'danger');
+                showNotice('予定の時刻・場所・URL情報を読み込めませんでした', 'danger');
             })
             .fail(function (xhr, status) {
                 showNotice(errorMessage(xhr, status), 'danger');
@@ -619,6 +683,10 @@
             .off('shown.bs.modal' + namespace, '#registerCalendarEvent')
             .on('shown.bs.modal' + namespace, '#registerCalendarEvent', focusAddTitle);
     }
+
+    window.iGuguruCalendarLocation = {
+        mapsSearchUrl: mapsSearchUrl
+    };
 
     document.addEventListener('submit', captureSubmit, true);
     document.addEventListener('click', captureClick, true);

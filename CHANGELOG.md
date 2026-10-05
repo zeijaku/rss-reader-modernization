@@ -1,3 +1,12 @@
+## 1.44.0 - 2026-10-05
+
+- Add owner-scoped multiple Calendar sources with create/rename/color/delete management, a default Calendar, and a multi-select visibility filter. Existing events are backfilled to each owner's default Calendar, while Calendar membership is preserved across normal edits, recurrence, occurrence handling, Copy and Drag & Drop.
+- Add optional event Location data for parent events and occurrence overrides. Calendar details can open an encoded Google Maps search URL without Google Maps/Places API keys or OAuth.
+- Preserve existing Calendar day/week/month views, Reminder, Deadline highlight, event colors, URL/Memo, Task projections and partial-refresh behavior while integrating Calendar source metadata.
+- Refine Calendar UI after browser review: keep the source filter on the primary desktop toolbar, group right-side Calendar controls so later CSS cannot auto-place the filter on a second row, use colored layer-group source icons, and organize the add/change event modal schedule controls into one aligned desktop grid with a one-column Smartphone fallback.
+- Add MySQL/MariaDB migrations 033 and 034. Shared-host compatibility avoids `information_schema` reads and uses hidden owner=0 / flag=255 Calendar-source marker rows for idempotent DDL completion. Existing V1.43.1 databases must apply 033 then 034; fresh installs use the current schema directly.
+- Verified PHP 8.1 / PHP 8.4 Current regression and user browser confirmation of the Calendar toolbar, source icons and reorganized event modal.
+
 ## 1.43.1 - 2026-10-04
 
 - Normalize Dashboard Widget chrome across the supported card families: 1px outer border, 4px radius, clipped overflow, and a non-shrinking 44px visible header.

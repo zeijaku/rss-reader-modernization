@@ -2,7 +2,7 @@
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
 -- Fresh installs use this file only; historical migrations remain upgrade-only for existing databases.
--- The schema includes all current tables and columns introduced through migrations 001-031.
+-- The schema includes all current tables and columns introduced through migrations 001-034.
 -- See docs/installation.md and docs/update-history.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
@@ -19,6 +19,7 @@ SET @t_content_stock = CONCAT('`', @table_prefix, 'content_stock`');
 SET @t_feed_item_state = CONCAT('`', @table_prefix, 'feed_item_state`');
 SET @t_memo = CONCAT('`', @table_prefix, 'memo`');
 SET @t_task = CONCAT('`', @table_prefix, 'task`');
+SET @t_calendar_source = CONCAT('`', @table_prefix, 'calendar_source`');
 SET @t_calendar_event = CONCAT('`', @table_prefix, 'calendar_event`');
 SET @t_calendar_event_exception = CONCAT('`', @table_prefix, 'calendar_event_exception`');
 SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
@@ -166,6 +167,24 @@ SET @sql = CONCAT(
 );
 PREPARE v11g_stmt FROM @sql; EXECUTE v11g_stmt; DEALLOCATE PREPARE v11g_stmt;
 
+-- V1.44-A Multiple Calendar / Source (033).
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_calendar_source, ' (',
+  '`calendar_source_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`calendar_source_date` DATETIME NOT NULL,',
+  '`calendar_source_updated_at` DATETIME NOT NULL,',
+  '`calendar_source_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0,',
+  '`calendar_source_owner` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`calendar_source_name` VARCHAR(40) NOT NULL,',
+  '`calendar_source_color` VARCHAR(16) NOT NULL DEFAULT ''blue'',',
+  '`calendar_source_default` TINYINT UNSIGNED NOT NULL DEFAULT 0,',
+  '`calendar_source_sort_order` INT UNSIGNED NOT NULL DEFAULT 0,',
+  'PRIMARY KEY (`calendar_source_id`),',
+  'KEY `idx_calendar_source_owner` (`calendar_source_owner`, `calendar_source_flag`, `calendar_source_default`, `calendar_source_sort_order`, `calendar_source_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Calendar source'''
+);
+PREPARE v144a_schema_stmt FROM @sql; EXECUTE v144a_schema_stmt; DEALLOCATE PREPARE v144a_schema_stmt;
+
 -- V1.25 Calendar recurrence (019) is integrated in the fresh-install calendar_event table.
 SET @sql = CONCAT(
   'CREATE TABLE ', @t_calendar_event, ' (',
@@ -174,6 +193,7 @@ SET @sql = CONCAT(
   '`calendar_event_updated_at` DATETIME NOT NULL,',
   '`calendar_event_flag` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT ''0:有効/1:無効'',',
   '`calendar_event_owner` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
+  '`calendar_event_source_id` BIGINT UNSIGNED NULL DEFAULT NULL COMMENT ''calendar_source.calendar_source_id'',',
   '`calendar_event_title` VARCHAR(256) NOT NULL,',
   '`calendar_event_start_date` DATE NOT NULL,',
   '`calendar_event_end_date` DATE NOT NULL,',
@@ -183,12 +203,14 @@ SET @sql = CONCAT(
   '`calendar_event_start_time` TIME NULL DEFAULT NULL,',
   '`calendar_event_end_time` TIME NULL DEFAULT NULL,',
   '`calendar_event_url` VARCHAR(2048) NULL DEFAULT NULL,',
+  '`calendar_event_location` VARCHAR(255) NULL DEFAULT NULL,',
   '`calendar_event_repeat_type` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none'',',
   '`calendar_event_repeat_until` DATE NULL DEFAULT NULL,',
   '`calendar_event_deadline_highlight` TINYINT UNSIGNED NOT NULL DEFAULT 0,',
   '`calendar_event_reminder` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none'',',
   'PRIMARY KEY (`calendar_event_id`),',
-  'KEY `idx_calendar_event_owner_range` (`calendar_event_owner`, `calendar_event_flag`, `calendar_event_start_date`, `calendar_event_end_date`, `calendar_event_id`)',
+  'KEY `idx_calendar_event_owner_range` (`calendar_event_owner`, `calendar_event_flag`, `calendar_event_start_date`, `calendar_event_end_date`, `calendar_event_id`),',
+  'KEY `idx_calendar_event_source` (`calendar_event_owner`, `calendar_event_source_id`, `calendar_event_flag`, `calendar_event_start_date`)',
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Calendar予定保管'''
 );
 PREPARE v11i_stmt FROM @sql; EXECUTE v11i_stmt; DEALLOCATE PREPARE v11i_stmt;
@@ -213,6 +235,7 @@ SET @sql = CONCAT(
   '`calendar_event_exception_end_time` TIME NULL DEFAULT NULL,',
   '`calendar_event_exception_deadline_highlight` TINYINT UNSIGNED NULL DEFAULT NULL,',
   '`calendar_event_exception_url` VARCHAR(2048) NULL DEFAULT NULL,',
+  '`calendar_event_exception_location` VARCHAR(255) NULL DEFAULT NULL,',
   '`calendar_event_exception_created_at` DATETIME NOT NULL,',
   '`calendar_event_exception_updated_at` DATETIME NOT NULL,',
   'PRIMARY KEY (`calendar_event_exception_id`),',

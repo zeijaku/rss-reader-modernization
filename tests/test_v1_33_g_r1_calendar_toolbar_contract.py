@@ -8,6 +8,7 @@ root = Path(__file__).resolve().parents[1]
 dashboard = (root / 'app/view/dashboard_widgets.php').read_text(encoding='utf-8')
 stock = (root / 'public/stock.php').read_text(encoding='utf-8')
 css = (root / 'public/css/calendar-views.css').read_text(encoding='utf-8')
+deadline_css = (root / 'public/css/calendar-deadline.css').read_text(encoding='utf-8')
 loader = (root / 'public/js/calendar.js').read_text(encoding='utf-8')
 version_constants = read_app_version_constants(root)
 current_version = version_constants.get('APP_VERSION', '')
@@ -29,11 +30,12 @@ def check(condition: bool, message: str) -> None:
 
 
 for markup, name in ((dashboard, 'Dashboard'), (stock, 'Stock')):
-    toolbar_start = markup.index('<div class="calendar-toolbar">')
+    toolbar_start = markup.index('class="calendar-toolbar')
+    toolbar_start = markup.rfind('<div ', 0, toolbar_start + 1)
     weekdays_start = markup.index('<div class="calendar-weekdays"', toolbar_start)
     toolbar_markup = markup[toolbar_start:weekdays_start]
 
-    check(toolbar_markup.count('class="calendar-toolbar"') == 1
+    check(len(re.findall(r'class="calendar-toolbar(?:\s|")', toolbar_markup)) == 1
           and toolbar_markup.count('class="btn-group btn-group-sm calendar-view-switch"') == 1,
           f'{name} keeps the view switch inside the Calendar toolbar')
     check(toolbar_markup.index('calendar-prev-month')
@@ -47,13 +49,17 @@ for markup, name in ((dashboard, 'Dashboard'), (stock, 'Stock')):
           and toolbar_markup.count('data-calendar-view-mode="month"') == 1,
           f'{name} retains one accessible day/week/month control group')
 
-check('grid-template-areas: "prev today switch next add";' in css
-      and 'grid-template-columns: auto auto minmax(0, 1fr) auto auto;' in css,
-      'wide Calendar toolbar uses one five-part row')
-check(css.count('"prev today switch next add"') >= 3 and '"switch switch switch switch switch"' not in css,
-      'wide, compact and Smartphone toolbars keep one row')
-check(dashboard.index('calendar-month-label') < dashboard.index('<div class="calendar-toolbar">')
-      and stock.index('calendar-month-label') < stock.index('<div class="calendar-toolbar">'),
+check('grid-template-areas: "prev today switch actions";' in css
+      and 'grid-template-columns: auto auto minmax(0, 1fr) auto;' in css
+      and '.calendar-toolbar-actions' in css,
+      'wide Calendar toolbar keeps all right-side controls in one actions cell')
+check('#main-content .calendar-toolbar-stack .calendar-toolbar-with-sources {' in css
+      and '"actions actions actions"' in css,
+      'only truly narrow cards and Smartphone layouts move the grouped actions to a second row')
+check('grid-template-areas' not in deadline_css,
+      'later-loaded Deadline CSS does not override the Calendar toolbar grid')
+check(dashboard.index('calendar-month-label') < dashboard.index('class="calendar-toolbar')
+      and stock.index('calendar-month-label') < stock.index('class="calendar-toolbar'),
       'period label appears in the Calendar card header in both views')
 check('grid-area: switch;' in css and 'width: min(100%, 15rem);' in css,
       'view switch stays centered and bounded in compact layouts')

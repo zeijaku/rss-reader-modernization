@@ -471,6 +471,9 @@
             .attr('data-calendar-source-end-time', publicTime(item.source_end_time !== undefined ? item.source_end_time : item.end_time))
             .attr('data-calendar-source-url', String(item.source_url !== undefined && item.source_url !== null ? item.source_url : item.url || ''))
             .attr('data-calendar-source-reminder', String(item.source_reminder !== undefined ? item.source_reminder : item.reminder || 'none'))
+            .attr('data-calendar-source-id', String(item.calendar_source_id !== undefined ? item.calendar_source_id : '0'))
+            .attr('data-calendar-source-name', String(item.calendar_source_name || '既定Calendar'))
+            .attr('data-calendar-source-label-color', validEventColor(item.calendar_source_color || 'blue'))
             .attr('data-calendar-event-color', color)
             .attr('data-calendar-event-color-ready', '1')
             .attr('data-calendar-event-meta-ready', '1')
@@ -488,7 +491,7 @@
             .attr('aria-label', multiDay ? String(item.title || '') + '、' + date + '、複数日予定' : null)
             .attr('title', (item.note ? item.title + ': ' + item.note : item.title)
                 + (exceptionKind === 'cancelled' ? '（取消済み）' : (repeat !== 'none' ? '（繰り返し予定）' : '')))
-            .append($('<i>').addClass('far fa-calendar').attr('aria-hidden', 'true'));
+            .append($('<i>').addClass('fas fa-layer-group calendar-source-icon').attr('aria-hidden', 'true'));
         var timeLabel = eventTimeLabel(item, date);
         if (timeLabel !== '') {
             $button.append($('<span>').addClass('calendar-event-time-label').text(timeLabel));
@@ -535,6 +538,7 @@
             ? Number(element.getBoundingClientRect().width || 0)
             : 0;
         $card.toggleClass('calendar-view-compact', width > 0 && width < 720);
+        $card.toggleClass('calendar-toolbar-stack', width > 0 && width < 560);
     }
 
     function observeCalendar($card) {
@@ -831,22 +835,26 @@
     }
 
     function renderCalendar($card, data) {
-        var mode = String(data.view_mode || 'month');
-        updateCalendarChrome($card, data);
+        var sourceModule = window.iGuguruCalendarSources;
+        var displayData = sourceModule && typeof sourceModule.filterCardData === 'function'
+            ? sourceModule.filterCardData($card, data)
+            : data;
+        var mode = String(displayData.view_mode || 'month');
+        updateCalendarChrome($card, displayData);
         if (mode === 'day' && calendarViewModule()) {
-            renderDayCalendar($card, data);
+            renderDayCalendar($card, displayData);
         } else if (mode === 'week' && calendarViewModule()) {
-            renderWeekCalendar($card, data);
+            renderWeekCalendar($card, displayData);
         } else {
-            renderMonthCalendar($card, data);
+            renderMonthCalendar($card, displayData);
         }
         $card
-            .data('calendar-range-events', Array.isArray(data.events) ? data.events : [])
+            .data('calendar-range-events', Array.isArray(displayData.events) ? displayData.events : [])
             .data('calendar-range-data', data)
             .attr('data-calendar-range-ready', '1')
             .attr('data-calendar-recurrence-ready', '1')
             .attr('data-calendar-event-meta-ready', '1');
-        $card.trigger('calendar:rangeLoaded', [data]);
+        $card.trigger('calendar:rangeLoaded', [data, displayData]);
     }
 
     function refreshVisibleCalendars() {
@@ -888,7 +896,7 @@
             }
             return value;
         }
-        return JSON.stringify(stable({events:data.events || [], tasks:data.tasks || [], holidays:data.holidays || {}, cancelled:data.cancelled_occurrences || [], start:data.range_start, end:data.range_end}));
+        return JSON.stringify(stable({events:data.events || [], sources:data.sources || [], tasks:data.tasks || [], holidays:data.holidays || {}, cancelled:data.cancelled_occurrences || [], start:data.range_start, end:data.range_end}));
     }
 
     function refreshCalendarsQuietly(manualCard) {
@@ -1110,6 +1118,14 @@
             .on('click' + eventNamespace, '.calendar-today', function () {
                 var $card = $(this).closest('[data-dashboard-widget-type="calendar"]');
                 loadCalendarView($card, calendarViewMode($card), localIsoDate(new Date()));
+            })
+            .off('calendar:sourceFilterChanged' + eventNamespace, '[data-dashboard-widget-type="calendar"]')
+            .on('calendar:sourceFilterChanged' + eventNamespace, '[data-dashboard-widget-type="calendar"]', function () {
+                var $card = $(this);
+                var data = $card.data('calendar-range-data');
+                if (data && typeof data === 'object') {
+                    renderCalendar($card, data);
+                }
             })
             .off('click' + eventNamespace, '.calendar-view-mode')
             .on('click' + eventNamespace, '.calendar-view-mode', function () {

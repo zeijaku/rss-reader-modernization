@@ -105,10 +105,10 @@
         }
         var body = form.querySelector('.modal-body') || form;
         var wrapper = document.createElement('div');
-        wrapper.className = 'calendar-event-recurrence-fields';
+        wrapper.className = 'calendar-event-recurrence-fields calendar-event-schedule-fields';
 
         var repeatGroup = document.createElement('div');
-        repeatGroup.className = 'mb-3';
+        repeatGroup.className = 'mb-3 calendar-event-repeat-field';
         var repeat = document.createElement('select');
         repeat.className = 'form-select ' + prefix + 'CalendarEventRepeatType';
         repeat.id = prefix + 'CalendarEventRepeatType';
@@ -154,7 +154,10 @@
         var note = body.querySelector('textarea');
         var noteGroup = note ? note.closest('.mb-3') : null;
         if (detailFields && detailFields.parentNode === body) {
-            detailFields.insertAdjacentElement('afterend', wrapper);
+            body.insertBefore(wrapper, detailFields);
+            wrapper.appendChild(detailFields);
+        } else if (detailFields && detailFields.parentNode !== wrapper) {
+            wrapper.appendChild(detailFields);
         } else if (noteGroup && noteGroup.parentNode === body) {
             body.insertBefore(wrapper, noteGroup);
         } else {
@@ -237,11 +240,13 @@
             calendar_event_start_date: formValue(form, '.' + prefix + 'CalendarEventStartDate'),
             calendar_event_end_date: formValue(form, '.' + prefix + 'CalendarEventEndDate'),
             calendar_event_note: formValue(form, '.' + prefix + 'CalendarEventNote'),
+            calendar_source_id: formValue(form, '.' + prefix + 'CalendarEventSource'),
             calendar_event_color: validColor(formValue(form, '.' + prefix + 'CalendarEventColor')),
             calendar_event_all_day: isAllDay ? '1' : '0',
             calendar_event_start_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventStartTime'),
             calendar_event_end_time: isAllDay ? '' : formValue(form, '.' + prefix + 'CalendarEventEndTime'),
             calendar_event_url: formValue(form, '.' + prefix + 'CalendarEventUrl'),
+            calendar_event_location: formValue(form, '.' + prefix + 'CalendarEventLocation'),
             calendar_event_deadline_highlight: form.querySelector('.' + prefix + 'CalendarEventDeadlineHighlight') && form.querySelector('.' + prefix + 'CalendarEventDeadlineHighlight').checked ? '1' : '0',
             calendar_event_reminder: formValue(form, '.' + prefix + 'CalendarEventReminder') || 'none',
             calendar_event_repeat_type: validRepeat(formValue(form, '.' + prefix + 'CalendarEventRepeatType')),
@@ -429,6 +434,7 @@
             .attr('data-calendar-source-start-time', publicTime(item.source_start_time !== undefined ? item.source_start_time : item.start_time))
             .attr('data-calendar-source-end-time', publicTime(item.source_end_time !== undefined ? item.source_end_time : item.end_time))
             .attr('data-calendar-source-url', String(item.source_url !== undefined && item.source_url !== null ? item.source_url : item.url || ''))
+            .attr('data-calendar-source-location', String(item.source_location !== undefined && item.source_location !== null ? item.source_location : item.location || ''))
             .attr('data-calendar-source-reminder', String(item.source_reminder !== undefined ? item.source_reminder : item.reminder || 'none'))
             .attr('data-calendar-event-color', color)
             .attr('data-calendar-event-color-ready', '1')
@@ -437,6 +443,7 @@
             .attr('data-calendar-event-start-time', publicTime(item.start_time))
             .attr('data-calendar-event-end-time', publicTime(item.end_time))
             .attr('data-calendar-event-url', String(item.url || ''))
+            .attr('data-calendar-event-location', String(item.location || ''))
             .attr('data-calendar-event-deadline-highlight', item.deadline_highlight ? '1' : '0')
             .attr('data-calendar-source-deadline-highlight', (item.source_deadline_highlight !== undefined ? item.source_deadline_highlight : item.deadline_highlight) ? '1' : '0')
             .attr('data-calendar-event-reminder', String(item.reminder || item.source_reminder || 'none'))

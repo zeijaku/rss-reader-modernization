@@ -73,7 +73,11 @@ check('Series change would invalidate occurrence exceptions' in domain, 'series 
 check('calendar_event_exception_assert_series_change_allowed(' in calendar, 'legacy basic Calendar update path invokes the series guard')
 check('calendar_event_exception_assert_series_change_allowed(' in recurrence, 'combined recurrence update path invokes the series guard')
 check('calendar_event_exception_apply_range(' in range_php, 'common range expansion applies occurrence exceptions')
-check("'cancelled_occurrences' => $eventState['cancelled_occurrences']" in range_php, 'range API data retains cancelled items for restore UI')
+check(
+    "'cancelled_occurrences' => $eventState['cancelled_occurrences']" in range_php
+    or "'cancelled_occurrences' => $cancelledSourceState['events']" in range_php,
+    'range API data retains cancelled items for restore UI'
+)
 
 for action in ('calendar.occurrence.update', 'calendar.occurrence.cancel', 'calendar.occurrence.restore'):
     check(f"'{action}'" in api, f'{action} is in the fixed action allowlist')

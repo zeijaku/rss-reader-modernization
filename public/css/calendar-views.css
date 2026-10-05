@@ -1,9 +1,23 @@
 /* V1.33-G: day/week/month switching, day timeline and card-width-aware week list. */
 #main-content .calendar-toolbar {
     display: grid;
-    grid-template-areas: "prev today switch next add";
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "prev today switch filter next refresh add";
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto auto auto;
     align-items: center;
+}
+
+#main-content .calendar-toolbar-with-sources {
+    grid-template-areas: "prev today switch actions";
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+}
+
+#main-content .calendar-toolbar-actions {
+    display: flex;
+    grid-area: actions;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    white-space: nowrap;
 }
 
 #main-content .calendar-prev-month {
@@ -20,6 +34,10 @@
 
 #main-content .calendar-next-month {
     grid-area: next;
+}
+
+#main-content .calendar-refresh {
+    grid-area: refresh;
 }
 
 #main-content .calendar-event-add-trigger {
@@ -46,11 +64,12 @@
     color: #fff;
 }
 
-#main-content .calendar-view-compact .calendar-toolbar {
+#main-content .calendar-toolbar-stack .calendar-toolbar-with-sources {
     min-width: 0;
     grid-template-areas:
-        "prev today switch next add";
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+        "prev today switch"
+        "actions actions actions";
+    grid-template-columns: auto auto minmax(0, 1fr);
 }
 
 #main-content .calendar-view-compact .calendar-month-label {
@@ -332,10 +351,15 @@
 }
 
 @media (max-width: 575.98px) {
-    #main-content .calendar-toolbar {
+    #main-content .calendar-toolbar-with-sources {
         grid-template-areas:
-            "prev today switch next add";
-        grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+            "prev today switch"
+            "actions actions actions";
+        grid-template-columns: auto auto minmax(0, 1fr);
+    }
+
+    #main-content .calendar-toolbar-actions {
+        width: 100%;
     }
 
     #main-content .calendar-month-label {

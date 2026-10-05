@@ -9,8 +9,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.43.1`
-Release tag: `v1.43.1`
+**Stable release:** `RSS Reader Modernization 1.44.0`
+Release tag: `v1.44.0`
+
+Version 1.44.0は、Calendarを複数のOwner専用Calendarへ分けて表示・管理できるようにし、予定へ任意の場所とGoogle Maps検索リンクを追加するFeature Releaseです。既存予定は既定Calendarへ安全に引き継ぎ、Calendar filter、色付きlayer icon、Calendar選択／移動、繰り返し・Occurrence・Copy・Drag & Dropの既存動作を維持します。予定入力Modalも既存項目・説明を維持したまま日時／通知Gridを整理します。V1.43.1からはMigration 033 → 034の順で適用します。[正式版の更新・確認手順](docs/v1.44.0-release.md)を参照してください。
 
 Version 1.43.1は、Dashboard Widgetの外枠・header表示を共通規格へ整理し、Feed / Search Feedのheaderをtable外の通常divへ構造統一します。Desktopの「ページ上部」は「ページ / 上部」の意図した2行表示へ調整します。機能ロジック、DB、API、取得処理には変更ありません。[正式版の更新・確認手順](docs/v1.43.1-release.md)を参照してください。
 
@@ -55,7 +57,10 @@ Application Versionの正本は `app/version.php`、Versionごとの変更履歴
 - Memo
 - Task
 - Calendarの日／週／月表示
-- Calendarの終日／時刻／URL／5色予定
+- Calendarの終日／時刻／URL／場所／5色予定
+- 複数Calendarの作成／名称・識別色変更／表示Filter
+- 予定のCalendar選択／移動
+- 場所からGoogle Maps検索を開くリンク（API Key不要）
 - 複数日予定
 - 毎日／毎週／毎月／毎年の繰り返し
 - Occurrence単位の変更／削除

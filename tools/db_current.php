@@ -20,6 +20,7 @@ function current_schema_tables(): array
         'feed_item_state',
         'memo',
         'task',
+        'calendar_source',
         'calendar_event',
         'calendar_event_exception',
         'dashboard_widget',
@@ -47,17 +48,26 @@ function current_schema_tables(): array
 function current_schema_required_columns(): array
 {
     return [
+        'calendar_source' => [
+            'calendar_source_owner',
+            'calendar_source_name',
+            'calendar_source_color',
+            'calendar_source_default',
+        ],
         'calendar_event' => [
+            'calendar_event_source_id',
             'calendar_event_color',
             'calendar_event_repeat_type',
             'calendar_event_repeat_until',
             'calendar_event_reminder',
             'calendar_event_deadline_highlight',
+            'calendar_event_location',
         ],
         'calendar_event_exception' => [
             'calendar_event_exception_kind',
             'calendar_event_exception_revision',
             'calendar_event_exception_deadline_highlight',
+            'calendar_event_exception_location',
         ],
         'notification' => [
             'notification_source_key',
@@ -110,7 +120,8 @@ function current_schema_required_indexes(): array
         'user_conf' => ['PRIMARY', 'uq_user_conf_user_id'],
         'content' => ['PRIMARY', 'idx_content_owner_location_flag_id'],
         'content_stock' => ['PRIMARY', 'idx_stock_owner_flag_archived_id'],
-        'calendar_event' => ['PRIMARY', 'idx_calendar_event_owner_range'],
+        'calendar_source' => ['PRIMARY', 'idx_calendar_source_owner'],
+        'calendar_event' => ['PRIMARY', 'idx_calendar_event_owner_range', 'idx_calendar_event_source'],
         'calendar_event_exception' => ['PRIMARY', 'uq_cal_exception_owner_event_original'],
         'notification' => ['PRIMARY', 'uq_notification_owner_source'],
         'remember_token' => ['PRIMARY', 'uq_remember_token_selector'],

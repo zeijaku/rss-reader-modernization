@@ -698,6 +698,7 @@
         <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerCalendarEventTitle"><i class="fas fa-calendar-plus" aria-hidden="true"></i> 予定を追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <div class="mb-3"><label class="form-label" for="registerCalendarEventTitleValue"><small class="text-dark">予定</small></label><input type="text" class="form-control registerCalendarEventTitleValue" id="registerCalendarEventTitleValue" maxlength="128" required></div>
+            <div class="mb-3 calendar-event-source-field"><label class="form-label" for="registerCalendarEventSource"><small class="text-dark">Calendar</small></label><select class="form-select registerCalendarEventSource" id="registerCalendarEventSource" required><option value="">読み込み中...</option></select></div>
             <div class="row g-2"><div class="mb-3 col-6"><label class="form-label" for="registerCalendarEventStartDate"><small class="text-dark">開始日</small></label><input type="date" class="form-control registerCalendarEventStartDate" id="registerCalendarEventStartDate" required></div><div class="mb-3 col-6"><label class="form-label" for="registerCalendarEventEndDate"><small class="text-dark">終了日</small></label><input type="date" class="form-control registerCalendarEventEndDate" id="registerCalendarEventEndDate" required></div></div>
             <div class="mb-3"><label class="form-label" for="registerCalendarEventNote"><small class="text-dark">メモ</small></label><textarea class="form-control registerCalendarEventNote" id="registerCalendarEventNote" maxlength="2000" rows="2"></textarea></div>
         </div>
@@ -725,11 +726,32 @@
                 <div class="calendar-occurrence-context small text-muted" role="status"></div>
             </fieldset>
             <div class="mb-3"><label class="form-label" for="changeCalendarEventTitleValue"><small class="text-dark">予定</small></label><input type="text" class="form-control changeCalendarEventTitleValue" id="changeCalendarEventTitleValue" maxlength="128" required></div>
+            <div class="mb-3 calendar-event-source-field"><label class="form-label" for="changeCalendarEventSource"><small class="text-dark">Calendar</small></label><select class="form-select changeCalendarEventSource" id="changeCalendarEventSource" required><option value="">読み込み中...</option></select><small class="form-text text-muted calendar-event-source-help" hidden>個別OccurrenceではCalendarを変更出来ません。シリーズ全体を選択すると変更出来ます。</small></div>
             <div class="row g-2"><div class="mb-3 col-6"><label class="form-label" for="changeCalendarEventStartDate"><small class="text-dark">開始日</small></label><input type="date" class="form-control changeCalendarEventStartDate" id="changeCalendarEventStartDate" required></div><div class="mb-3 col-6"><label class="form-label" for="changeCalendarEventEndDate"><small class="text-dark">終了日</small></label><input type="date" class="form-control changeCalendarEventEndDate" id="changeCalendarEventEndDate" required></div></div>
             <div class="mb-3"><label class="form-label" for="changeCalendarEventNote"><small class="text-dark">メモ</small></label><textarea class="form-control changeCalendarEventNote" id="changeCalendarEventNote" maxlength="2000" rows="2"></textarea></div>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-secondary restore_calendar_occurrence" hidden>個別変更を元に戻す</button><button type="button" class="btn btn-outline-danger delete_calendar_event">削除する</button><button type="submit" class="btn btn-primary calendar-event-submit">変更する</button></div>
         </form>
+    </div></div>
+</div>
+
+<!-- Calendar管理モーダル -->
+<div class="modal fade" id="calendarSourceManager" tabindex="-1" role="dialog" aria-labelledby="calendarSourceManagerTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document"><div class="modal-content">
+        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="calendarSourceManagerTitle"><i class="fas fa-layer-group" aria-hidden="true"></i> Calendar管理</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+        <div class="modal-body">
+            <form id="calendarSourceCreateForm" class="calendar-source-create-form">
+                <div class="row g-2 align-items-end">
+                    <div class="col-sm-7"><label class="form-label" for="calendarSourceCreateName"><small class="text-dark">新しいCalendar名</small></label><input type="text" class="form-control calendarSourceCreateName" id="calendarSourceCreateName" maxlength="40" required></div>
+                    <div class="col-sm-3"><label class="form-label" for="calendarSourceCreateColor"><small class="text-dark">識別色</small></label><select class="form-select calendarSourceCreateColor" id="calendarSourceCreateColor"><option value="blue">青</option><option value="green">緑</option><option value="purple">紫</option><option value="yellow">黄</option><option value="red">赤</option></select></div>
+                    <div class="col-sm-2 d-grid"><button type="submit" class="btn btn-primary">追加</button></div>
+                </div>
+            </form>
+            <hr>
+            <div class="calendar-source-manager-list" aria-live="polite"><span class="text-muted small">Calendarを読み込んでいます</span></div>
+            <small class="form-text text-muted d-block mt-2">既定Calendarは削除出来ません。ほかのCalendarを削除すると、その予定は既定Calendarへ移動します。</small>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button></div>
     </div></div>
 </div>
 

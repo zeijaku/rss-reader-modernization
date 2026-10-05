@@ -16,7 +16,7 @@ def check(condition: bool, message: str) -> None:
 
 expected_tables = {
     'user_info', 'user_conf', 'content', 'content_stock', 'feed_item_state',
-    'memo', 'task', 'calendar_event', 'calendar_event_exception',
+    'memo', 'task', 'calendar_source', 'calendar_event', 'calendar_event_exception',
     'dashboard_widget', 'notification', 'remember_token', 'mail_account',
     'link_item', 'stock_tag', 'stock_tag_map', 'feed_keyword', 'feed_metadata',
     'feed_health', 'rss_rule', 'rss_rule_condition', 'user_file',
@@ -24,7 +24,7 @@ expected_tables = {
     'auth_audit_log',
 }
 listed = set(re.findall(r"^\s*'([a-z][a-z0-9_]+)',\s*$", TOOL, re.M))
-check(expected_tables <= listed, 'Current DB verifier carries all 27 required logical tables')
+check(expected_tables <= listed, 'Current DB verifier carries all 28 required logical tables')
 check("information_schema.TABLES" in TOOL and "information_schema.COLUMNS" in TOOL
       and "information_schema.STATISTICS" in TOOL,
       'Current DB verifier reads table, column and index metadata')
