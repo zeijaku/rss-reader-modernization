@@ -491,7 +491,7 @@
             .attr('aria-label', multiDay ? String(item.title || '') + '、' + date + '、複数日予定' : null)
             .attr('title', (item.note ? item.title + ': ' + item.note : item.title)
                 + (exceptionKind === 'cancelled' ? '（取消済み）' : (repeat !== 'none' ? '（繰り返し予定）' : '')))
-            .append($('<i>').addClass('far fa-calendar').attr('aria-hidden', 'true'));
+            .append($('<i>').addClass('fas fa-layer-group calendar-source-icon').attr('aria-hidden', 'true'));
         var timeLabel = eventTimeLabel(item, date);
         if (timeLabel !== '') {
             $button.append($('<span>').addClass('calendar-event-time-label').text(timeLabel));
