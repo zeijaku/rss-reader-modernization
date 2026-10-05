@@ -8,6 +8,7 @@ root = Path(__file__).resolve().parents[1]
 dashboard = (root / 'app/view/dashboard_widgets.php').read_text(encoding='utf-8')
 stock = (root / 'public/stock.php').read_text(encoding='utf-8')
 css = (root / 'public/css/calendar-views.css').read_text(encoding='utf-8')
+deadline_css = (root / 'public/css/calendar-deadline.css').read_text(encoding='utf-8')
 loader = (root / 'public/js/calendar.js').read_text(encoding='utf-8')
 version_constants = read_app_version_constants(root)
 current_version = version_constants.get('APP_VERSION', '')
@@ -53,6 +54,8 @@ check('grid-template-areas: "prev today switch filter next refresh add";' in css
 check('#main-content .calendar-toolbar-stack .calendar-toolbar {' in css
       and css.count('"filter filter filter filter filter filter"') >= 2,
       'only truly narrow cards and Smartphone layouts move the Calendar filter to a second row')
+check('grid-template-areas' not in deadline_css,
+      'later-loaded Deadline CSS does not override the Calendar toolbar grid')
 check(dashboard.index('calendar-month-label') < dashboard.index('<div class="calendar-toolbar">')
       and stock.index('calendar-month-label') < stock.index('<div class="calendar-toolbar">'),
       'period label appears in the Calendar card header in both views')
