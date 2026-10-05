@@ -15,5 +15,3 @@
 #main-content .dashboard-widget .calendar-card-header > .calendar-widget-title { grid-column:1; grid-row:1; justify-self:stretch; width:auto; margin:0; padding-left:calc(var(--widget-header-action-size,36px) + 6px) !important; }
 #main-content .dashboard-widget .calendar-card-header > .calendar-widget-edit-trigger { grid-column:3; grid-row:1; justify-self:end; }
 
-#main-content .calendar-toolbar, #main-content .calendar-view-compact .calendar-toolbar { grid-template-areas:"prev today switch next refresh add"; grid-template-columns:auto auto minmax(0,1fr) auto auto auto; }
-#main-content .calendar-refresh { grid-area:refresh; }
