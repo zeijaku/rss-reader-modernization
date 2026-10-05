@@ -105,10 +105,10 @@
         }
         var body = form.querySelector('.modal-body') || form;
         var wrapper = document.createElement('div');
-        wrapper.className = 'calendar-event-recurrence-fields';
+        wrapper.className = 'calendar-event-recurrence-fields calendar-event-schedule-fields';
 
         var repeatGroup = document.createElement('div');
-        repeatGroup.className = 'mb-3';
+        repeatGroup.className = 'mb-3 calendar-event-repeat-field';
         var repeat = document.createElement('select');
         repeat.className = 'form-select ' + prefix + 'CalendarEventRepeatType';
         repeat.id = prefix + 'CalendarEventRepeatType';
