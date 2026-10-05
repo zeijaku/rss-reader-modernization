@@ -1,0 +1,63 @@
+name: V1.44 Dev7 Layer Source Icon Package
+
+on:
+  push:
+    branches:
+      - artifact/v1.44-dev7-layer-source-icon
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build incremental review ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG="rss-reader-v1.44.0-dev.7-calendar-layer-source-icon"
+          mkdir -p "$PKG/app" "$PKG/public/css" "$PKG/public/js"
+
+          cp app/version.php "$PKG/app/version.php"
+          cp public/css/calendar-sources.css "$PKG/public/css/calendar-sources.css"
+          cp public/js/calendar-core.js "$PKG/public/js/calendar-core.js"
+          cp public/js/calendar-sources.js "$PKG/public/js/calendar-sources.js"
+
+          cat > "$PKG/APPLY.txt" <<'EOF'
+          RSS Reader Modernization V1.44 Calendar source icon update
+          Target checkpoint: 1.44.0-dev.7
+          Source development HEAD: e9f69fcf98a0a0e6c3bd2e4e3b852f2582681e53
+
+          APPLY
+          1. Apply over the current V1.44 dev.6 review state.
+          2. Overwrite the included files, preserving paths.
+          3. No database migration is required.
+          4. Reload Dashboard. APP_ASSET_REVISION is 1.44.0-dev.7.
+
+          CHANGE
+          - Replaces the circular Calendar source marker with the same Font Awesome
+            layer-group icon used by the "すべて" Calendar source filter.
+          - Keeps each Calendar's source color on the layer icon.
+          - Uses the layer icon consistently for Calendar event entries, source filter
+            entries and Calendar source management rows.
+          EOF
+
+          python3 - <<'PY'
+          import shutil
+          shutil.make_archive(
+              "rss-reader-v1.44.0-dev.7-calendar-layer-source-icon",
+              "zip",
+              ".",
+              "rss-reader-v1.44.0-dev.7-calendar-layer-source-icon",
+          )
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-v1.44.0-dev.7-calendar-layer-source-icon
+          path: rss-reader-v1.44.0-dev.7-calendar-layer-source-icon.zip
+          if-no-files-found: error
+          retention-days: 7
