@@ -1,0 +1,25 @@
+name: V1.44.0 Release Readiness
+
+on:
+  push:
+    branches:
+      - artifact/v1.44.0-release-readiness
+
+permissions:
+  contents: read
+
+jobs:
+  release-ready:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate release-ready source
+        run: |
+          set -euo pipefail
+          python3 tools/check_release_ready.py --release 1.44.0
+          python3 tests/test_version_dependency_hygiene.py
+          python3 tests/test_workflow_hygiene.py
+          python3 tests/test_release_flow.py
