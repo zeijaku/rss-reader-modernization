@@ -8,12 +8,16 @@
 }
 
 .calendar-event-recurrence-fields .calendar-event-recurrence-help {
-    margin-top: -0.35rem;
-    margin-bottom: 0.75rem;
+    margin-top: -0.2rem;
+    margin-bottom: 0.65rem;
 }
 
 .calendar-event-recurrence-fields .calendar-event-recurrence-loading {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.65rem;
+}
+
+.calendar-event-recurrence-fields.calendar-event-schedule-fields {
+    margin-bottom: 0.35rem;
 }
 
 #main-content .calendar-entry .calendar-event-repeat-label {
@@ -30,17 +34,18 @@
 }
 
 
-/* V1.36-D: recurrence controls share a row on wider Calendar modals. */
+/* Standalone fallback only. Normal event modals use the shared schedule grid
+ * from calendar-event-details.css so recurrence/notification controls align together. */
 @media (min-width: 576px) {
-    .calendar-event-modal .calendar-event-recurrence-fields {
+    .calendar-event-modal .calendar-event-recurrence-fields:not(.calendar-event-schedule-fields) {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         column-gap: .75rem;
         margin-bottom: .35rem;
     }
 
-    .calendar-event-modal .calendar-event-recurrence-help,
-    .calendar-event-modal .calendar-event-recurrence-loading {
+    .calendar-event-modal .calendar-event-recurrence-fields:not(.calendar-event-schedule-fields) .calendar-event-recurrence-help,
+    .calendar-event-modal .calendar-event-recurrence-fields:not(.calendar-event-schedule-fields) .calendar-event-recurrence-loading {
         grid-column: 1 / -1;
     }
 }
