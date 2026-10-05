@@ -225,7 +225,7 @@
         reminderGroup.appendChild(reminderHelp);
         wrapper.appendChild(reminderGroup);
         var deadlineGroup = document.createElement('div');
-        deadlineGroup.className = 'form-check mb-3';
+        deadlineGroup.className = 'form-check mb-3 calendar-event-deadline-field';
         var deadline = document.createElement('input');
         deadline.type = 'checkbox'; deadline.className = 'form-check-input ' + prefix + 'CalendarEventDeadlineHighlight';
         deadline.id = prefix + 'CalendarEventDeadlineHighlight';
@@ -244,7 +244,12 @@
         loading.textContent = '時刻・場所・URL情報を読み込んでいます...';
         wrapper.appendChild(loading);
 
-        if (noteGroup && noteGroup.parentNode === body) {
+        var schedule = body.querySelector('.calendar-event-schedule-fields')
+            || body.querySelector('.calendar-event-recurrence-fields');
+        if (schedule) {
+            schedule.classList.add('calendar-event-schedule-fields');
+            schedule.appendChild(wrapper);
+        } else if (noteGroup && noteGroup.parentNode === body) {
             body.insertBefore(wrapper, noteGroup);
         } else {
             body.appendChild(wrapper);
