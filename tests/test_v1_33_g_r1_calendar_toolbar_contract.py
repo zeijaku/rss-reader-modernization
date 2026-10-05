@@ -50,9 +50,9 @@ for markup, name in ((dashboard, 'Dashboard'), (stock, 'Stock')):
 check('grid-template-areas: "prev today switch filter next refresh add";' in css
       and 'grid-template-columns: auto auto minmax(0, 1fr) auto auto auto auto;' in css,
       'wide Calendar toolbar keeps the Calendar filter with the primary controls')
-check(css.count('"prev today switch next refresh add"') >= 2
+check('#main-content .calendar-toolbar-stack .calendar-toolbar {' in css
       and css.count('"filter filter filter filter filter filter"') >= 2,
-      'compact and Smartphone toolbars move only the Calendar filter to a second row')
+      'only truly narrow cards and Smartphone layouts move the Calendar filter to a second row')
 check(dashboard.index('calendar-month-label') < dashboard.index('<div class="calendar-toolbar">')
       and stock.index('calendar-month-label') < stock.index('<div class="calendar-toolbar">'),
       'period label appears in the Calendar card header in both views')
