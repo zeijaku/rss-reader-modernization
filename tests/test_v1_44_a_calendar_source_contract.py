@@ -77,7 +77,10 @@ require(core_js, "width > 0 && width < 720", "Week-view compact behavior must re
 require(core_js, "width > 0 && width < 560", "Toolbar stacking must use the narrower dedicated threshold.")
 
 sources_css = read("public/css/calendar-sources.css")
-require(sources_css, "background: #60a5fa;", "Blue Calendar source marker must use the softer V1.44 review color.")
+require(sources_css, ".calendar-source-icon-blue", "Calendar source stylesheet must expose the blue layer-icon marker.")
+require(sources_css, "color: #60a5fa;", "Blue Calendar source layer icon must keep the softer V1.44 review color.")
+if ".calendar-source-dot" in sources_css:
+    raise AssertionError("Legacy circular Calendar source markers must be removed.")
 
 modals = read("app/view/dashboard_modals.php")
 for needle in [
@@ -100,6 +103,7 @@ for needle in [
     "data-calendar-source-id",
     "data-calendar-source-name",
     "data-calendar-source-label-color",
+    "fas fa-layer-group calendar-source-icon",
     "sources:data.sources || []",
     "filterCardData",
     "calendar:sourceFilterChanged",
@@ -126,6 +130,7 @@ sources_js = read("public/js/calendar-sources.js")
 for needle in [
     "rss-calendar-source-hidden:",
     "calendar-source-filter-check",
+    "fas fa-layer-group calendar-source-icon",
     "filterRangeData",
     "calendar:sourceFilterChanged",
     "calendar.source.create",
