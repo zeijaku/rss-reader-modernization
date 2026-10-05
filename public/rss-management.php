@@ -69,7 +69,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
   <div class="row justify-content-center">
     <div class="col-12 col-xl-10">
       <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 mb-3">
-        <h1 class="h4 mb-0"><i class="fas fa-rss fa-fw" aria-hidden="true"></i>RSS管理 <span class="badge text-bg-secondary align-middle">V1.22-A</span></h1>
+        <h1 class="h4 mb-0"><i class="fas fa-rss fa-fw" aria-hidden="true"></i>RSS管理</h1>
         <a class="btn btn-sm btn-outline-secondary" href="./"><i class="fas fa-arrow-left fa-fw" aria-hidden="true"></i>Dashboardへ戻る</a>
       </div>
 
