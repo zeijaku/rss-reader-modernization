@@ -1,0 +1,66 @@
+name: V1.44 Dev6 Deadline Grid Fix Package
+
+on:
+  push:
+    branches:
+      - artifact/v1.44-dev6-deadline-grid-fix
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build incremental review ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          PKG="rss-reader-v1.44.0-dev.6-calendar-toolbar-deadline-grid-fix"
+          mkdir -p "$PKG/app/view" "$PKG/public/css" "$PKG/public/js"
+
+          cp app/version.php "$PKG/app/version.php"
+          cp app/view/dashboard_widgets.php "$PKG/app/view/dashboard_widgets.php"
+          cp public/css/calendar-views.css "$PKG/public/css/calendar-views.css"
+          cp public/css/calendar-sources.css "$PKG/public/css/calendar-sources.css"
+          cp public/css/calendar-deadline.css "$PKG/public/css/calendar-deadline.css"
+          cp public/js/calendar-core.js "$PKG/public/js/calendar-core.js"
+
+          cat > "$PKG/APPLY.txt" <<'EOF'
+          RSS Reader Modernization V1.44 Calendar toolbar final browser fix
+          Target checkpoint: 1.44.0-dev.6
+          Source development HEAD: 0f4d8800fbfdf4865d0dcdada62ebbbe4e3cfac6
+
+          APPLY
+          1. Apply over the current V1.44 dev.4/dev.5 review state.
+          2. Overwrite the included files, preserving paths.
+          3. No database migration is required.
+          4. Reload Dashboard. APP_ASSET_REVISION is 1.44.0-dev.6.
+
+          ROOT CAUSE FIX
+          - A later-loaded calendar-deadline.css still redefined the old Calendar toolbar grid.
+          - That old grid had no slot for the Calendar source filter, so the browser auto-placed
+            "すべて" on a second row even though horizontal space remained.
+          - The obsolete Deadline grid override is removed.
+          - The source filter + next + refresh + add controls stay grouped in one right-side cell.
+          - Truly narrow cards / Smartphone layouts may still stack the grouped controls.
+          EOF
+
+          python3 - <<'PY'
+          import shutil
+          shutil.make_archive(
+              "rss-reader-v1.44.0-dev.6-calendar-toolbar-deadline-grid-fix",
+              "zip",
+              ".",
+              "rss-reader-v1.44.0-dev.6-calendar-toolbar-deadline-grid-fix",
+          )
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rss-reader-v1.44.0-dev.6-calendar-toolbar-deadline-grid-fix
+          path: rss-reader-v1.44.0-dev.6-calendar-toolbar-deadline-grid-fix.zip
+          if-no-files-found: error
+          retention-days: 7
