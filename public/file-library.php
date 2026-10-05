@@ -203,7 +203,7 @@ $uploadMaxLabel = user_file_library_format_bytes(APP_FILE_UPLOAD_MAX_BYTES);
 <main id="main-content" class="igcontainer container-fluid" tabindex="-1">
   <div class="file-library-shell">
     <div class="file-library-toolbar mt-3 mb-3">
-      <h1 class="h4 mb-0"><i class="fas fa-folder-open fa-fw" aria-hidden="true"></i>File Library <span class="badge text-bg-secondary align-middle">V1.28-F</span></h1>
+      <h1 class="h4 mb-0"><i class="fas fa-folder-open fa-fw" aria-hidden="true"></i>File Library</h1>
       <a class="btn btn-sm btn-outline-secondary" href="./"><i class="fas fa-arrow-left fa-fw" aria-hidden="true"></i>Dashboardへ戻る</a>
     </div>
 
