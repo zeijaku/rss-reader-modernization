@@ -154,7 +154,10 @@
         var note = body.querySelector('textarea');
         var noteGroup = note ? note.closest('.mb-3') : null;
         if (detailFields && detailFields.parentNode === body) {
-            detailFields.insertAdjacentElement('afterend', wrapper);
+            body.insertBefore(wrapper, detailFields);
+            wrapper.appendChild(detailFields);
+        } else if (detailFields && detailFields.parentNode !== wrapper) {
+            wrapper.appendChild(detailFields);
         } else if (noteGroup && noteGroup.parentNode === body) {
             body.insertBefore(wrapper, noteGroup);
         } else {
