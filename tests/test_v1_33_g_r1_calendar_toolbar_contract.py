@@ -35,7 +35,7 @@ for markup, name in ((dashboard, 'Dashboard'), (stock, 'Stock')):
     weekdays_start = markup.index('<div class="calendar-weekdays"', toolbar_start)
     toolbar_markup = markup[toolbar_start:weekdays_start]
 
-    check(toolbar_markup.count('class="calendar-toolbar') == 1
+    check(len(re.findall(r'class="calendar-toolbar(?:\\s|")', toolbar_markup)) == 1
           and toolbar_markup.count('class="btn-group btn-group-sm calendar-view-switch"') == 1,
           f'{name} keeps the view switch inside the Calendar toolbar')
     check(toolbar_markup.index('calendar-prev-month')
