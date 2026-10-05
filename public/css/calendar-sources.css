@@ -1,7 +1,6 @@
 /* V1.44-A: multiple Calendar / source controls. */
 #main-content .calendar-source-filter {
-    grid-area: filter;
-    justify-self: end;
+    flex: 0 0 auto;
 }
 
 #main-content .calendar-source-filter-toggle {
@@ -101,13 +100,8 @@
 }
 
 @media (max-width: 575.98px) {
-    #main-content .calendar-source-filter {
-        width: 100%;
-        justify-self: stretch;
-        padding-top: 4px;
-    }
-
-    #main-content .calendar-source-filter-toggle {
+    #main-content .calendar-toolbar-stack .calendar-source-filter,
+    #main-content .calendar-toolbar-stack .calendar-source-filter-toggle {
         width: 100%;
     }
 
