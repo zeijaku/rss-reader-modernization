@@ -41,7 +41,7 @@ for markup, name in ((dashboard, 'Dashboard'), (stock, 'Stock')):
 
 check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1),
       'G contract runs on V1.33.1 or later')
-revision_match = re.fullmatch(r'(\\d+)\\.(\\d+)\\.(\\d+)(?:-(?:rc\\d+|dev\\.\\d+))?', current_revision)
+revision_match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)(?:-(?:rc\d+|dev\.\d+))?', current_revision)
 check(revision_match is not None and tuple(map(int, revision_match.groups()[:3])) >= (1, 33, 1),
       'current asset revision remains a supported release or development checkpoint')
 check(loader.index("assetUrl('./js/calendar-month-layout.js')")
