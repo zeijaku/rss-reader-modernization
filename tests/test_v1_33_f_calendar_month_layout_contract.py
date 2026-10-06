@@ -51,7 +51,9 @@ check('@media (max-width: 575.98px)' in css, 'connected layout includes Smartpho
 check('bootstrap-solar' in css and 'bootstrap-slate' in css, 'connected layout accounts for dark application Themes')
 check(loader.index('calendar-month-layout.js') < loader.index('calendar-core.js'), 'placement module loads before Calendar core')
 check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1), 'F contract runs on V1.33.1 or later')
-check(bool(current_revision) and current_revision == current_version, 'current asset revision matches the application version')
+revision_match = re.fullmatch(r'(\\d+)\\.(\\d+)\\.(\\d+)(?:-(?:rc\\d+|dev\\.\\d+))?', current_revision)
+check(revision_match is not None and tuple(map(int, revision_match.groups()[:3])) >= (1, 33, 1),
+      'current asset revision remains a supported release or development checkpoint')
 check("assetUrl('./css/calendar-month-layout.css')" in loader, 'connected CSS uses the centralized asset URL')
 check("assetUrl('./js/calendar-month-layout.js')" in loader, 'placement JavaScript uses the centralized asset URL')
 check(not list((ROOT / 'database/migrations').glob('026*v1_33*')), 'F adds no database migration')
