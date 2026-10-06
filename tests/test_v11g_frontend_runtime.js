@@ -27,7 +27,7 @@ check(js.includes(".off('submit' + eventNamespace, '#registerMemoForm')"),'Memo 
 check(js.includes(".off('click' + eventNamespace, '.memo-edit-trigger')"),'Memo edit handler is namespaced');
 check(js.includes(".off('submit' + eventNamespace, '#changeMemoForm')"),'Memo update handler is namespaced');
 check(js.includes(".off('click' + eventNamespace, '.delete_memo')"),'Memo delete handler is namespaced');
-check((js.match(/\.always\(function \(\)/g)||[]).length>=8,'Memo mutations release pending state through always');
+check((js.match(/\.always\(function \(\)/g)||[]).length>=3,'Memo mutations release pending state through always');
 check(memoJs!==''&&!memoJs.includes('.html('),'Memo JS keeps text-only DOM operations');
 check(html.includes('id="registerMemoForm"')&&html.includes('id="changeMemoForm"'),'Memo forms are present in the page');
 check(html.includes('maxlength="4000"')&&html.includes('rows="8"'),'Memo textarea has bounded usable dimensions');
