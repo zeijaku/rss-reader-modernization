@@ -18,7 +18,7 @@ opml_api = (ROOT / "app/api/opml.php").read_text(encoding="utf-8")
 opml = (ROOT / "app/opml.php").read_text(encoding="utf-8")
 schema = (ROOT / "database/schema.sql").read_text(encoding="utf-8")
 
-check("category_path VARCHAR(512)" in schema, "V1.45-A reuses the existing feed_metadata.category_path column")
+check("`category_path` VARCHAR(512)" in schema, "V1.45-A reuses the existing feed_metadata.category_path column")
 check("feed_categories" not in schema, "V1.45-A does not introduce a separate Category table")
 
 check("function feed_metadata_set_category_owned" in feed_metadata, "Owner-scoped per-Feed Category setter exists")
