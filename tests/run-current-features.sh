@@ -81,7 +81,7 @@ php -l "$ROOT/app/search_feed.php"
 php -l "$ROOT/public/index.php"
 php -l "$ROOT/app/view/dashboard_widgets.php"
 node --check "$ROOT/public/js/dashboard.js"
-node --check "$ROOT/public/js/search-feed-category.js"
+node --check "$ROOT/public/js/search-feed-owned-category.js"
 
 echo '== Current feature contracts: Feed Health =='
 python3 "$SCRIPT_DIR/test_v122b_feed_health.py"
