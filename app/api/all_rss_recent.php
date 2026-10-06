@@ -12,12 +12,14 @@ function api_widget_all_rss_recent_create(int $userId, array $input): array
     $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
     $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $limit = all_rss_recent_validate_limit($input['recent_limit'] ?? null);
-    if ($location === null || $style === null || $width === null || $height === null || $limit === null) {
+    $categoryFilter = all_rss_recent_validate_category_filter($input['recent_category_filter'] ?? 'all');
+    if ($location === null || $style === null || $width === null || $height === null || $limit === null || $categoryFilter === null) {
         return api_validation_error('All RSS Recent Widget settings are invalid.');
     }
+    $feedCategoryPath = all_rss_recent_category_path_from_filter($categoryFilter);
 
     try {
-        $widgetId = all_rss_recent_create($userId, $location, $style, $width, $height, $limit);
+        $widgetId = all_rss_recent_create($userId, $location, $style, $width, $height, $limit, $feedCategoryPath);
     } catch (InvalidArgumentException $exception) {
         return api_validation_error($exception->getMessage());
     } catch (PDOException $exception) {
@@ -36,12 +38,14 @@ function api_widget_all_rss_recent_update(int $userId, array $input): array
     $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
     $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $limit = all_rss_recent_validate_limit($input['recent_limit'] ?? null);
-    if ($widgetId === null || $style === null || $width === null || $height === null || $limit === null) {
+    $categoryFilter = all_rss_recent_validate_category_filter($input['recent_category_filter'] ?? 'all');
+    if ($widgetId === null || $style === null || $width === null || $height === null || $limit === null || $categoryFilter === null) {
         return api_validation_error('All RSS Recent Widget settings are invalid.');
     }
+    $feedCategoryPath = all_rss_recent_category_path_from_filter($categoryFilter);
 
     try {
-        if (!all_rss_recent_update($userId, $widgetId, $style, $width, $height, $limit)) {
+        if (!all_rss_recent_update($userId, $widgetId, $style, $width, $height, $limit, $feedCategoryPath)) {
             return api_error('not_found', 'All RSS Recent Widget was not found.', 404);
         }
     } catch (InvalidArgumentException $exception) {
