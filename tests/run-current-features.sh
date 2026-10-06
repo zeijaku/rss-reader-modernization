@@ -59,6 +59,18 @@ php -l "$ROOT/app/feed_metadata.php"
 php -l "$ROOT/app/api/feed_category.php"
 node --check "$ROOT/public/js/rss-management.js"
 
+echo '== Current feature contracts: All RSS Recent Category =='
+php "$SCRIPT_DIR/test_current_all_rss_recent_category.php"
+php "$SCRIPT_DIR/test_current_all_rss_recent_category_api.php"
+php "$SCRIPT_DIR/test_current_all_rss_recent_category_sqlite.php"
+python3 "$SCRIPT_DIR/test_current_all_rss_recent_category_contract.py"
+node "$SCRIPT_DIR/test_current_all_rss_recent_category_ui.js"
+php -l "$ROOT/app/all_rss_recent.php"
+php -l "$ROOT/app/api/all_rss_recent.php"
+php -l "$ROOT/app/view/dashboard_modals.php"
+php -l "$ROOT/app/view/dashboard_widgets.php"
+node --check "$ROOT/public/js/all-rss-recent.js"
+
 echo '== Current feature contracts: Feed Health =='
 python3 "$SCRIPT_DIR/test_v122b_feed_health.py"
 php "$SCRIPT_DIR/test_v122b_feed_health_runtime.php"
