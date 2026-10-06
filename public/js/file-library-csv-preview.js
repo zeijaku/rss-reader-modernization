@@ -183,14 +183,7 @@
     }
 
     function initializeCsvPreview() {
-        var badge;
         bindCsvPreview();
-        badge = document.querySelector('.file-library-toolbar .badge');
-        if (badge) { badge.textContent = 'V1.28-E'; }
-        window.setTimeout(function () {
-            var lateBadge = document.querySelector('.file-library-toolbar .badge');
-            if (lateBadge) { lateBadge.textContent = 'V1.28-E'; }
-        }, 0);
     }
 
     if (document.readyState === 'loading') {
