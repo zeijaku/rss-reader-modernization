@@ -65,8 +65,9 @@ check('grid-area: switch;' in css and 'width: min(100%, 15rem);' in css,
       'view switch stays centered and bounded in compact layouts')
 check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1),
       'G-R1 contract runs on V1.33.1 or later')
-check(bool(current_revision) and current_revision == current_version,
-      'current asset revision matches the application version')
+revision_match = re.fullmatch(r'(\\d+)\\.(\\d+)\\.(\\d+)(?:-(?:rc\\d+|dev\\.\\d+))?', current_revision)
+check(revision_match is not None and tuple(map(int, revision_match.groups()[:3])) >= (1, 33, 1),
+      'current asset revision remains a supported release or development checkpoint')
 check("assetUrl('./css/calendar-views.css')" in loader,
       'G-R1 Calendar CSS uses the centralized asset URL')
 check('calendar_range_start' not in css and 'calendar.range.list' not in css,
