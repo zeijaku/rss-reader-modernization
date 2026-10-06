@@ -7,16 +7,25 @@ const path = require('path');
 const source = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'search-feed-category.js'), 'utf8');
 
 const listeners = {};
+const selectorMap = {};
+const capturedRequests = [];
 const documentObject = {
     addEventListener(type, handler) { listeners[type] = handler; },
-    querySelector() { return null; },
+    querySelector(selector) { return selectorMap[selector] || null; },
     createElement(tag) {
         return {tagName: String(tag || '').toUpperCase(), value: '', textContent: ''};
     }
 };
 const windowObject = {
     setTimeout(fn) { fn(); },
-    IGuguruDashboardCore: null
+    IGuguruDashboardCore: {
+        apiRequest(action, data, timeout) {
+            capturedRequests.push({action, data, timeout});
+            return {done() { return this; }, fail() { return this; }, always() { return this; }};
+        },
+        apiResponseOk(response) { return !!(response && response.ok === true); },
+        showNotice() {}
+    }
 };
 const context = {
     window: windowObject,
@@ -98,6 +107,18 @@ ui.populateCategorySelect(invalid, ['技術'], 'broken');
 check(invalid.value === 'all', 'Invalid selection falls back to All safely');
 
 check(typeof listeners.click === 'function', 'Lazy Category loader registers a click handler instead of loading at page startup');
+
+selectorMap['.registerSearchOwnedCategory'] = {value: 'category:技術'};
+selectorMap['.changeSearchOwnedCategory'] = {value: 'uncategorized'};
+windowObject.IGuguruDashboardCore.apiRequest('widget.search.create', {search_query: 'PHP'}, 10000);
+windowObject.IGuguruDashboardCore.apiRequest('widget.search.update', {search_query: 'AWS'}, 10000);
+windowObject.IGuguruDashboardCore.apiRequest('widget.search.fetch', {widget_id: '1'}, 10000);
+
+check(capturedRequests[0].data.search_owned_category_filter === 'category:技術', 'New helper injects Register Category even when dashboard.js does not know the field');
+check(capturedRequests[1].data.search_owned_category_filter === 'uncategorized', 'New helper injects Change Category even when dashboard.js is cached');
+check(!Object.prototype.hasOwnProperty.call(capturedRequests[2].data, 'search_owned_category_filter'), 'Non-mutating Search Feed requests are left unchanged');
+check(ui.addOwnedCategoryToPayload('widget.search.create', {search_query: 'x'}).search_owned_category_filter === 'category:技術', 'Payload bridge is directly testable');
+check(windowObject.IGuguruDashboardCore.apiRequest.__searchFeedOwnedCategoryBridge === true, 'API bridge is installed exactly on the new uncached helper');
 
 if (failures > 0) {
     console.error(`${failures}/${tests} Search Feed Category UI checks failed.`);
