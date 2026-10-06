@@ -83,6 +83,15 @@ php -l "$ROOT/app/view/dashboard_widgets.php"
 node --check "$ROOT/public/js/dashboard.js"
 node --check "$ROOT/public/js/search-feed-owned-category.js"
 
+echo '== Current feature contracts: OPML Category compatibility =='
+php "$SCRIPT_DIR/opml_v122a_test.php"
+php "$SCRIPT_DIR/test_current_opml_category_compat.php"
+php "$SCRIPT_DIR/test_current_opml_category_sqlite.php"
+php "$SCRIPT_DIR/test_current_opml_limits.php"
+python3 "$SCRIPT_DIR/test_current_opml_category_contract.py"
+php -l "$ROOT/app/opml.php"
+php -l "$ROOT/app/api/opml.php"
+
 echo '== Current feature contracts: Feed Health =='
 python3 "$SCRIPT_DIR/test_v122b_feed_health.py"
 php "$SCRIPT_DIR/test_v122b_feed_health_runtime.php"

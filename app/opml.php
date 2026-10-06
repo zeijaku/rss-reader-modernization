@@ -48,23 +48,51 @@ function opml_category_path(array $segments): string
     return opml_limited_text($path, FEED_METADATA_CATEGORY_MAX_LENGTH);
 }
 
-/** @return list<string> */
-function opml_category_attribute_segments(string $value): array
+/** @return list<list<string>> */
+function opml_category_attribute_paths(string $value): array
 {
-    $segments = [];
+    $paths = [];
     foreach (preg_split('/\s*,\s*/u', $value) ?: [] as $category) {
         $category = trim((string) $category, " \t\n\r\0\x0B/");
         if ($category === '') {
             continue;
         }
+        $segments = [];
         foreach (preg_split('#\s*/\s*#u', $category) ?: [] as $part) {
             $part = opml_limited_text((string) $part, FEED_METADATA_TITLE_MAX_LENGTH);
             if ($part !== '') {
                 $segments[] = $part;
             }
         }
+        if ($segments !== []) {
+            $paths[] = $segments;
+        }
     }
-    return $segments;
+    return $paths;
+}
+
+/** @return list<string> */
+function opml_category_attribute_segments(string $value): array
+{
+    $paths = opml_category_attribute_paths($value);
+    return $paths[0] ?? [];
+}
+
+function opml_category_attribute_value(string $categoryPath): string
+{
+    $categoryPath = app_validate_text($categoryPath, FEED_METADATA_CATEGORY_MAX_LENGTH, true) ?? '';
+    if ($categoryPath === '') {
+        return '';
+    }
+    $segments = preg_split('/\s+\/\s+/u', $categoryPath);
+    $clean = [];
+    foreach (is_array($segments) ? $segments : [] as $segment) {
+        $segment = opml_limited_text((string) $segment, FEED_METADATA_TITLE_MAX_LENGTH);
+        if ($segment !== '') {
+            $clean[] = $segment;
+        }
+    }
+    return $clean === [] ? '' : '/' . implode('/', $clean);
 }
 
 /**
@@ -149,7 +177,10 @@ function opml_parse(string $xml): array
                             }
                         }
                     }
-                    $categorySegments = array_merge($parents, opml_category_attribute_segments($categoryRaw));
+                    $categorySegments = $parents;
+                    if ($categorySegments === [] && $categoryRaw !== '') {
+                        $categorySegments = opml_category_attribute_segments($categoryRaw);
+                    }
                     $feeds[] = [
                         'title' => $label,
                         'feed_url' => $feedUrl,
@@ -163,7 +194,7 @@ function opml_parse(string $xml): array
                 if ($label !== '') {
                     $nextParents[] = $label;
                 }
-                if ($categoryRaw !== '') {
+                if ($nextParents === $parents && $categoryRaw !== '') {
                     $nextParents = array_merge($nextParents, opml_category_attribute_segments($categoryRaw));
                 }
                 $walk($outline, $nextParents, $depth + 1);
@@ -210,7 +241,12 @@ function opml_build_export(array $feeds): string
             }
             $node =& $node['children'][$segment];
         }
-        $node['feeds'][] = ['title' => $title, 'feed_url' => $url, 'site_url' => $siteUrl];
+        $node['feeds'][] = [
+            'title' => $title,
+            'feed_url' => $url,
+            'site_url' => $siteUrl,
+            'category' => opml_category_attribute_value($categoryPath),
+        ];
         unset($node);
     }
 
@@ -226,6 +262,9 @@ function opml_build_export(array $feeds): string
             $xml .= $indent . '<outline type="rss" text="' . opml_xml_escape($feed['title']) . '" title="' . opml_xml_escape($feed['title']) . '" xmlUrl="' . opml_xml_escape($feed['feed_url']) . '"';
             if ($feed['site_url'] !== '') {
                 $xml .= ' htmlUrl="' . opml_xml_escape($feed['site_url']) . '"';
+            }
+            if (($feed['category'] ?? '') !== '') {
+                $xml .= ' category="' . opml_xml_escape((string) $feed['category']) . '"';
             }
             $xml .= " />\n";
         }
