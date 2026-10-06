@@ -61,3 +61,22 @@ jobs:
       - name: Run the local CI-equivalent gate
         run: bash tests/run-ci.sh
 
+      - name: Package V1.45-B review files
+        if: ${{ matrix.php == '8.4' }}
+        run: |
+          zip -r v145b-review.zip \
+            app/all_rss_recent.php \
+            app/api/all_rss_recent.php \
+            app/view/dashboard_modals.php \
+            app/view/dashboard_widgets.php \
+            public/js/all-rss-recent.js
+
+      - name: Upload V1.45-B review artifact
+        if: ${{ matrix.php == '8.4' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: v145b-review
+          path: v145b-review.zip
+          if-no-files-found: error
+          retention-days: 1
+
