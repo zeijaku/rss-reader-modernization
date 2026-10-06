@@ -40,8 +40,8 @@ check("自分の登録RSS" in index and "共通RSS" in index and "両方" in ind
 check("search-feed-category.js" in index, "Dedicated Search Feed Category helper is loaded")
 check(index.find("dashboard.js") < index.find("search-feed-category.js"), "Category helper loads after dashboard core behavior")
 
-check("search_owned_category_filter" in dashboard, "Dashboard submit payload includes owned Category filter")
-check("data-search-owned-category-filter" in dashboard, "Dashboard edit restores the owned Category setting")
+check("search_owned_category_filter" not in dashboard, "Search Feed Category does not depend on a changed cached dashboard.js")
+check("addOwnedCategoryToPayload" in helper and "__searchFeedOwnedCategoryBridge" in helper, "New uncached helper injects owned Category into create/update API payloads")
 check("data-search-owned-category-filter" in widgets, "Rendered Search Feed card exposes owned Category edit state")
 check("data-feed-category-filter" in widgets, "All RSS Recent Category edit state remains independently exposed")
 
