@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/feed_metadata.php';
+
 function search_feed_defaults(): array
 {
     return ['schema'=>1,'query'=>'','scope'=>'owned','condition'=>'or','limit'=>10,'category'=>'all'];
@@ -29,6 +31,26 @@ function search_feed_validate_category(mixed $v): ?string
     if (!is_string($v) || app_text_length($v)>32) return null;
     return $v==='all' || in_array($v,search_feed_common_categories(),true) ? $v : null;
 }
+function search_feed_validate_owned_category_filter(mixed $value): ?string
+{
+    if (!is_string($value)) return null;
+    if ($value === 'all' || $value === 'uncategorized') return $value;
+    if (!str_starts_with($value, 'category:')) return null;
+    $categoryPath = feed_metadata_validate_category_path(substr($value, 9), false);
+    return $categoryPath === null ? null : 'category:' . $categoryPath;
+}
+function search_feed_owned_category_path_from_filter(string $filter): ?string
+{
+    if ($filter === 'all') return null;
+    if ($filter === 'uncategorized') return '';
+    return substr($filter, 9);
+}
+function search_feed_owned_category_filter_value(?string $categoryPath): string
+{
+    if ($categoryPath === null) return 'all';
+    if ($categoryPath === '') return 'uncategorized';
+    return 'category:' . $categoryPath;
+}
 /** @return list<array<string,mixed>> */
 function search_feed_common_catalog(): array
 {
@@ -50,13 +72,17 @@ function search_feed_config_from_input(array $in): ?array
     $c=search_feed_validate_condition($in['search_condition']??null);
     $l=search_feed_validate_limit($in['search_limit']??null);
     $g=search_feed_validate_category($in['search_category']??'all');
-    if($q===null||$q===''||$s===null||$c===null||$l===null||$g===null)return null;
-    return ['schema'=>1,'query'=>$q,'scope'=>$s,'condition'=>$c,'limit'=>$l,'category'=>$g];
+    $ownedFilter=search_feed_validate_owned_category_filter($in['search_owned_category_filter']??'all');
+    if($q===null||$q===''||$s===null||$c===null||$l===null||$g===null||$ownedFilter===null)return null;
+    $config=['schema'=>1,'query'=>$q,'scope'=>$s,'condition'=>$c,'limit'=>$l,'category'=>$g];
+    $ownedCategoryPath=search_feed_owned_category_path_from_filter($ownedFilter);
+    if($ownedCategoryPath!==null)$config['owned_category_path']=$ownedCategoryPath;
+    return $config;
 }
 function search_feed_config_from_storage(mixed $v): array
 {
     $d=search_feed_defaults(); $x=dashboard_widget_decode_config($v);
-    return [
+    $config=[
       'schema'=>1,
       'query'=>search_feed_validate_query($x['query']??null) ?: $d['query'],
       'scope'=>search_feed_validate_scope($x['scope']??null) ?? $d['scope'],
@@ -64,6 +90,11 @@ function search_feed_config_from_storage(mixed $v): array
       'limit'=>search_feed_validate_limit($x['limit']??null) ?? $d['limit'],
       'category'=>search_feed_validate_category($x['category']??null) ?? $d['category'],
     ];
+    if(array_key_exists('owned_category_path',$x)&&is_string($x['owned_category_path'])){
+        $ownedCategoryPath=feed_metadata_validate_category_path($x['owned_category_path'],true);
+        if($ownedCategoryPath!==null)$config['owned_category_path']=$ownedCategoryPath;
+    }
+    return $config;
 }
 function search_feed_terms(string $query): array
 {
@@ -82,11 +113,18 @@ function search_feed_item_matches(array $item,array $terms,string $condition): b
     $hits=0; foreach($terms as $t){if(search_feed_text_contains($text,$t))$hits++;}
     return $condition==='and' ? $hits===count($terms) : $hits>0;
 }
-function search_feed_owned_sources(int $ownerId): array
+function search_feed_owned_sources(int $ownerId, ?string $ownedCategoryPath=null): array
 {
-    $stmt=conn_db()->prepare('SELECT content_id, content_owner, content_value FROM '.db_table_identifier('content').' WHERE content_owner=:owner AND content_flag=0 ORDER BY content_id ASC');
-    $stmt->execute([':owner'=>$ownerId]); $out=[];
-    foreach($stmt->fetchAll() as $r){if(!is_array($r))continue; $url=app_validate_feed_url($r['content_value']??null); $id=app_validate_positive_int($r['content_id']??null); if($url!==null&&$id!==null)$out[]=['source_id'=>$id,'url'=>$url,'name'=>''];}
+    $out=[];
+    foreach(feed_metadata_list_owned($ownerId) as $r){
+        if(!is_array($r))continue;
+        $url=app_validate_feed_url($r['feed_url']??null);
+        $id=app_validate_positive_int($r['content_id']??null);
+        $categoryPath=is_string($r['category_path']??null)?$r['category_path']:'';
+        if($url===null||$id===null)continue;
+        if($ownedCategoryPath!==null&&$categoryPath!==$ownedCategoryPath)continue;
+        $out[]=['source_id'=>$id,'url'=>$url,'name'=>''];
+    }
     return $out;
 }
 function search_feed_common_sources(int $ownerId,string $category): array
@@ -121,12 +159,13 @@ function search_feed_execute(int $ownerId,int $widgetId): array
 {
     $row=search_feed_owned_widget($ownerId,$widgetId); if($row===null)return ['ok'=>false,'code'=>'not_found'];
     $cfg=search_feed_config_from_storage($row['widget_config']??null); if($cfg['query']==='')return ['ok'=>false,'code'=>'invalid_config'];
-    $sources=[]; if(in_array($cfg['scope'],['owned','both'],true))$sources=array_merge($sources,search_feed_owned_sources($ownerId)); if(in_array($cfg['scope'],['common','both'],true))$sources=array_merge($sources,search_feed_common_sources($ownerId,$cfg['category']));
+    $ownedCategoryPath=array_key_exists('owned_category_path',$cfg)?(string)$cfg['owned_category_path']:null;
+    $sources=[]; if(in_array($cfg['scope'],['owned','both'],true))$sources=array_merge($sources,search_feed_owned_sources($ownerId,$ownedCategoryPath)); if(in_array($cfg['scope'],['common','both'],true))$sources=array_merge($sources,search_feed_common_sources($ownerId,$cfg['category']));
     $seenUrl=[];$unique=[];foreach($sources as $s){if(isset($seenUrl[$s['url']]))continue;$seenUrl[$s['url']]=1;$unique[]=$s;}
     $terms=search_feed_terms($cfg['query']);$items=[];$failed=0;$service=FeedFetchService::fromRuntimeConfiguration();
     foreach($unique as $s){try{$source=FeedSource::fromValidatedValues((int)$s['source_id'],$ownerId,(string)$s['url']);$loaded=$service->load($source);if(($loaded['ok']??false)!==true){$failed++;continue;}$rawFeed=is_array($loaded['result_feed']??null)?$loaded['result_feed']:[];$effective=is_string($loaded['effective_url']??null)?$loaded['effective_url']:(string)$s['url'];$feed=api_safe_feed_payload($rawFeed,$effective);$channel=is_array($feed['channel']??null)?$feed['channel']:[];foreach(is_array($feed['item']??null)?$feed['item']:[] as $item){if(!is_array($item)||!search_feed_item_matches($item,$terms,$cfg['condition']))continue;$link=(string)($item['link']??'');$key=hash('sha256',$link."\n".(string)($item['title']??''));if(isset($items[$key]))continue;$item['source_title']=(string)($channel['title']??$s['name']);$items[$key]=$item;}}catch(Throwable){$failed++;}}
     $items=array_slice(array_values($items),0,$cfg['limit']);
-    return ['ok'=>true,'query'=>$cfg['query'],'items'=>$items,'source_count'=>count($unique),'failed_count'=>$failed,'limit'=>$cfg['limit']];
+    return ['ok'=>true,'query'=>$cfg['query'],'items'=>$items,'source_count'=>count($unique),'failed_count'=>$failed,'limit'=>$cfg['limit'],'owned_category_filter'=>search_feed_owned_category_filter_value($ownedCategoryPath)];
 }
 
 /** @return list<array{source_id:int,name:string,category:string,url:string}> */
