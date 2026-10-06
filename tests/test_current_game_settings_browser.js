@@ -30,7 +30,7 @@ function check(value, label) { assert.ok(value, label); checks++; console.log('P
    return html(Object.entries(types).map(([id, type]) => card(id, type)).join(''))
     .replace('</head>', '<meta name="csrf-token" content="fixture-csrf"></head>')
     .replace('<body>', '<body><div id="app-notice" hidden></div><div id="changeGameWidget">' + form + '</div>')
-    .replace('</body>', '<script src="/js/bootstrap.bundle-5.3.8.min.js"></script><script src="/js/dashboard-core.js"></script><script src="/js/dashboard.js"></script><script src="/js/widget-card-refresh.js"></script>' + (modern ? '<script src="/js/widget-settings-no-reload.js"></script>' : '') + '</body>');
+    .replace('</body>', '<script src="/js/bootstrap.bundle-5.3.8.min.js"></script><script src="/js/dashboard-core.js"></script><script src="/js/dashboard-game.js"></script><script src="/js/dashboard.js"></script><script src="/js/widget-card-refresh.js"></script>' + (modern ? '<script src="/js/widget-settings-no-reload.js"></script>' : '') + '</body>');
   }
   await context.route('http://game.test/**', async route => {
    const req = route.request(), url = new URL(req.url());
