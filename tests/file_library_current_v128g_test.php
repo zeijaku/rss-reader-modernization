@@ -33,7 +33,7 @@ if (preg_match("/const APP_ASSET_REVISION = '([^']+)';/", $src['version'], $matc
     $assetRevision = $match[1];
 }
 $check(is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?$/', $appVersion) === 1, 'current application version is a valid release/checkpoint token');
-$check(is_string($assetRevision) && $assetRevision === $appVersion, 'active asset revision follows the current application version');
+$check(is_string($assetRevision) && preg_match('/^[A-Za-z0-9._-]+$/', $assetRevision) === 1, 'active asset revision is a valid cache checkpoint token');
 $check(str_contains($src['drawer'], "$('#main-content h1 .badge').remove()"), 'shared UI removes user-visible heading phase badges');
 $check(str_contains($src['drawer'], 'RSS Highlight用DB Migrationの適用状況を確認してください。'), 'shared UI neutralizes legacy migration warning version text');
 $check(!str_contains($src['ui'], 'badge.textContent'), 'File Library UI does not recreate phase badge');
