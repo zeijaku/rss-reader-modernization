@@ -83,6 +83,20 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
           <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center gap-2"><strong>登録RSS</strong><span class="small text-muted"><span id="rssManagementCount">-</span>件</span></div>
             <div class="card-body p-0">
+              <div class="p-3 border-bottom" id="rssCategoryToolbar" hidden>
+                <div class="row g-2 align-items-end">
+                  <div class="col-12 col-md-6 col-lg-4">
+                    <label class="form-label small mb-1" for="rssCategoryFilter">Category絞り込み</label>
+                    <select class="form-select form-select-sm" id="rssCategoryFilter" aria-label="CategoryでRSS一覧を絞り込み">
+                      <option value="all">すべて</option>
+                    </select>
+                  </div>
+                  <div class="col-12 col-md-auto">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="rssCategoryManageButton" data-bs-toggle="modal" data-bs-target="#rssCategoryManageModal" disabled><i class="fas fa-folder-open fa-fw" aria-hidden="true"></i>Category管理</button>
+                  </div>
+                </div>
+                <div class="form-text">CategoryはFeed単位で設定します。未設定のFeedは「未分類」として扱います。</div>
+              </div>
               <div id="rssManagementListStatus" class="alert alert-light rounded-0 mb-0" role="status">RSS一覧を読み込んでいます。</div>
               <div class="table-responsive" id="rssManagementTableWrap" hidden>
                 <table class="table table-sm table-hover align-middle mb-0">
@@ -123,6 +137,59 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
             </div>
           </div>
         </section>
+      </div>
+
+      <div class="modal fade" id="rssCategoryEditModal" tabindex="-1" aria-labelledby="rssCategoryEditModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2 class="modal-title fs-6" id="rssCategoryEditModalLabel">Feed Category設定</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+            </div>
+            <div class="modal-body">
+              <p class="small mb-3"><strong id="rssCategoryEditFeedLabel">-</strong></p>
+              <input type="hidden" id="rssCategoryEditContentId" value="">
+              <label class="form-label" for="rssCategoryEditSelect">既存Category</label>
+              <select class="form-select" id="rssCategoryEditSelect">
+                <option value="">未分類</option>
+              </select>
+              <label class="form-label mt-3" for="rssCategoryNewInput">新しいCategory</label>
+              <input type="text" class="form-control" id="rssCategoryNewInput" maxlength="512" autocomplete="off" placeholder="例: 技術 / Cloud">
+              <div class="form-text">入力した場合は既存Categoryの選択より優先します。「 / 」を含む階層名もそのまま保持します。</div>
+              <div id="rssCategoryEditResult" class="alert mt-3 mb-0" role="status" aria-live="polite" hidden></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+              <button type="button" class="btn btn-primary" id="rssCategorySaveButton">保存</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="rssCategoryManageModal" tabindex="-1" aria-labelledby="rssCategoryManageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2 class="modal-title fs-6" id="rssCategoryManageModalLabel">Category管理</h2>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+            </div>
+            <div class="modal-body">
+              <label class="form-label" for="rssCategoryManageSelect">対象Category</label>
+              <select class="form-select" id="rssCategoryManageSelect"></select>
+              <label class="form-label mt-3" for="rssCategoryRenameInput">変更後のCategory名</label>
+              <input type="text" class="form-control" id="rssCategoryRenameInput" maxlength="512" autocomplete="off">
+              <div class="form-text">既存Category名へ変更した場合は、そのCategoryへまとめられます。</div>
+              <div id="rssCategoryManageResult" class="alert mt-3 mb-0" role="status" aria-live="polite" hidden></div>
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-outline-danger" id="rssCategoryDeleteButton"><i class="fas fa-trash-alt fa-fw" aria-hidden="true"></i>Category削除</button>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+                <button type="button" class="btn btn-primary" id="rssCategoryRenameButton">名前変更</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
