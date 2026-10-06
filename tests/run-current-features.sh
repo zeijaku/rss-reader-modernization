@@ -51,6 +51,7 @@ node --check "$ROOT/tests/test_current_drawer_browser.js"
 
 echo '== Current feature contracts: Feed Category =='
 php "$SCRIPT_DIR/test_current_feed_category.php"
+php "$SCRIPT_DIR/test_current_feed_category_sqlite.php"
 python3 "$SCRIPT_DIR/test_current_feed_category_contract.py"
 node "$SCRIPT_DIR/test_current_feed_category_ui.js"
 sh "$SCRIPT_DIR/test_current_feed_category_mariadb.sh"
