@@ -49,6 +49,15 @@ python3 "$SCRIPT_DIR/test_current_drawer_contract.py"
 node --check "$ROOT/public/js/drawer-categories.js"
 node --check "$ROOT/tests/test_current_drawer_browser.js"
 
+echo '== Current feature contracts: Feed Category =='
+php "$SCRIPT_DIR/test_current_feed_category.php"
+python3 "$SCRIPT_DIR/test_current_feed_category_contract.py"
+node "$SCRIPT_DIR/test_current_feed_category_ui.js"
+sh "$SCRIPT_DIR/test_current_feed_category_mariadb.sh"
+php -l "$ROOT/app/feed_metadata.php"
+php -l "$ROOT/app/api/feed_category.php"
+node --check "$ROOT/public/js/rss-management.js"
+
 echo '== Current feature contracts: Feed Health =='
 python3 "$SCRIPT_DIR/test_v122b_feed_health.py"
 php "$SCRIPT_DIR/test_v122b_feed_health_runtime.php"
