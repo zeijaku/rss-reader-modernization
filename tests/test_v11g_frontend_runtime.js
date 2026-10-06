@@ -1,16 +1,14 @@
 'use strict';
 const fs=require('fs'); const path=require('path');
 const root=path.resolve(__dirname,'..');
-const js=fs.readFileSync(path.join(root,'public/js/dashboard.js'),'utf8');
+const js=fs.readFileSync(path.join(root,'public/js/dashboard-memo.js'),'utf8');
 const html=[
   fs.readFileSync(path.join(root,'public/index.php'),'utf8'),
   fs.readFileSync(path.join(root,'app/view/dashboard_widgets.php'),'utf8'),
   fs.readFileSync(path.join(root,'app/view/dashboard_modals.php'),'utf8')
 ].join('\n');
 const css=fs.readFileSync(path.join(root,'public/css/dashboard.css'),'utf8');
-const memoStart=js.indexOf("function memoFormPayload(prefix)");
-const memoEnd=js.indexOf("function taskWidgetFormPayload(prefix)", memoStart);
-const memoJs=memoStart>=0&&memoEnd>memoStart?js.slice(memoStart,memoEnd):'';
+const memoJs=js;
 let checks=0, failures=0;
 function check(cond,msg){checks++;console.log((cond?'PASS':'FAIL')+': '+msg);if(!cond)failures++;}
 check(js.includes("function memoFormPayload(prefix)"),'Memo payload helper exists');
