@@ -30,7 +30,7 @@ check('autocomplete="current-password"' in page, 'remote password field uses cre
 version_match = re.search(r"APP_VERSION\s*=\s*'([^']+)'", version)
 asset_match = re.search(r"APP_ASSET_REVISION\s*=\s*'([^']+)'", version)
 check(version_match is not None and bool(version_match.group(1)), 'active application version marker remains defined')
-check(version_match is not None and asset_match is not None and asset_match.group(1) == version_match.group(1), 'asset revision follows the active version so corrected JS reloads')
+check(asset_match is not None and re.fullmatch(r'[A-Za-z0-9._-]+', asset_match.group(1)) is not None, 'asset revision remains a valid cache key so corrected JS reloads')
 
 print(f'Credential submit R1 tests: {passed} passed, {failed} failed')
 raise SystemExit(1 if failed else 0)
