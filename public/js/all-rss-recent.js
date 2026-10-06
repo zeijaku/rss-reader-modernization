@@ -5,10 +5,77 @@
     var QUERY_SENTINEL = '全RSS新着\u2060';
     var catalogObserver = null;
     var initialized = false;
+    var categoryPathsCache = null;
+    var categoryRequest = null;
 
     function csrfToken() {
         var meta = document.querySelector('meta[name="csrf-token"]');
         return meta ? String(meta.getAttribute('content') || '') : '';
+    }
+
+    function categoryFilterValue(categoryPath) {
+        return 'category:' + String(categoryPath || '');
+    }
+
+    function categoryPathFromFilterValue(filterValue) {
+        filterValue = String(filterValue || '');
+        return filterValue.indexOf('category:') === 0 ? filterValue.substring(9) : '';
+    }
+
+    function categoryPathsFromFeeds(feeds) {
+        var categories = [];
+        (Array.isArray(feeds) ? feeds : []).forEach(function (feed) {
+            var categoryPath = feed && typeof feed.category_path === 'string' ? feed.category_path : '';
+            if (categoryPath !== '' && categories.indexOf(categoryPath) === -1) {
+                categories.push(categoryPath);
+            }
+        });
+        categories.sort(function (left, right) {
+            return left.localeCompare(right, 'ja');
+        });
+        return categories;
+    }
+
+    function populateCategorySelect(select, categories, preferredValue) {
+        if (!select) {
+            return;
+        }
+        preferredValue = String(preferredValue || select.value || 'all');
+        while (select.firstChild) {
+            select.removeChild(select.firstChild);
+        }
+
+        function option(value, label) {
+            var node = document.createElement('option');
+            node.value = value;
+            node.textContent = label;
+            select.appendChild(node);
+        }
+
+        option('all', 'すべて');
+        option('uncategorized', '未分類');
+        categories.forEach(function (categoryPath) {
+            option(categoryFilterValue(categoryPath), categoryPath);
+        });
+
+        var exists = Array.prototype.some.call(select.options || [], function (item) {
+            return item.value === preferredValue;
+        });
+        if (!exists && preferredValue.indexOf('category:') === 0) {
+            var staleCategory = categoryPathFromFilterValue(preferredValue);
+            if (staleCategory !== '') {
+                option(preferredValue, staleCategory + '（現在設定・該当Feedなし）');
+                exists = true;
+            }
+        }
+        select.value = exists ? preferredValue : 'all';
+    }
+
+    function applyCategoryOptions(categories, changePreferredValue) {
+        var registerSelect = document.querySelector('.registerAllRssRecentCategory');
+        var changeSelect = document.querySelector('.changeAllRssRecentCategory');
+        populateCategorySelect(registerSelect, categories, registerSelect ? registerSelect.value || 'all' : 'all');
+        populateCategorySelect(changeSelect, categories, changePreferredValue || (changeSelect ? changeSelect.value : 'all'));
     }
 
     function allRssCards() {
@@ -83,11 +150,17 @@
         if (!card) {
             return;
         }
+        var edit = card.querySelector('.search-edit-trigger');
+        var categoryFilter = typeof result.feed_category_filter === 'string'
+            ? result.feed_category_filter : 'all';
+        if (edit) {
+            edit.setAttribute('data-feed-category-filter', categoryFilter);
+        }
         if (items.length === 0) {
             var empty = card.querySelector('.feed-state-message');
             if (empty) {
                 empty.textContent = Number(result.source_count || 0) === 0
-                    ? '登録RSSがありません'
+                    ? (categoryFilter === 'all' ? '登録RSSがありません' : '選択したCategoryに登録RSSがありません')
                     : '表示する記事はありません';
             }
             return;
@@ -290,6 +363,38 @@
         return xhr;
     }
 
+    function loadCategoryOptions($, changePreferredValue) {
+        if (Array.isArray(categoryPathsCache)) {
+            applyCategoryOptions(categoryPathsCache, changePreferredValue);
+            return;
+        }
+        if (categoryRequest) {
+            categoryRequest.done(function () {
+                if (Array.isArray(categoryPathsCache)) {
+                    applyCategoryOptions(categoryPathsCache, changePreferredValue);
+                }
+            });
+            return;
+        }
+
+        categoryRequest = request($, 'opml.list', {}, null);
+        if (!categoryRequest) {
+            return;
+        }
+        categoryRequest.done(function (response) {
+            if (!responseOk(response)) {
+                return;
+            }
+            var feeds = response.data && Array.isArray(response.data.feeds) ? response.data.feeds : [];
+            categoryPathsCache = categoryPathsFromFeeds(feeds);
+            applyCategoryOptions(categoryPathsCache, changePreferredValue);
+        }).fail(function () {
+            showNotice('Feed Category一覧を取得出来ませんでした', 'danger');
+        }).always(function () {
+            categoryRequest = null;
+        });
+    }
+
     function formValue(form, selector) {
         var element = form ? form.querySelector(selector) : null;
         return element ? element.value : '';
@@ -298,6 +403,7 @@
     function formPayload(form, prefix) {
         return {
             recent_limit: formValue(form, '.' + prefix + 'AllRssRecentLimit'),
+            recent_category_filter: formValue(form, '.' + prefix + 'AllRssRecentCategory') || 'all',
             widget_style: formValue(form, '.' + prefix + 'AllRssRecentStyle'),
             widget_width: formValue(form, '.' + prefix + 'AllRssRecentWidth'),
             widget_height: formValue(form, '.' + prefix + 'AllRssRecentHeight')
@@ -315,19 +421,28 @@
         var style = form.querySelector('.changeAllRssRecentStyle');
         var width = form.querySelector('.changeAllRssRecentWidth');
         var height = form.querySelector('.changeAllRssRecentHeight');
+        var category = form.querySelector('.changeAllRssRecentCategory');
+        var categoryFilter = String(trigger.getAttribute('data-feed-category-filter') || 'all');
         if (id) { id.value = widgetId; }
         if (limit) { limit.value = String(trigger.getAttribute('data-search-limit') || '10'); }
         if (style) { style.value = String(trigger.getAttribute('data-widget-style') || 'secondary'); }
         if (width) { width.value = String(trigger.getAttribute('data-widget-width') || '2'); }
         if (height) { height.value = String(trigger.getAttribute('data-widget-height') || '2'); }
+        if (category) { category.value = categoryFilter; }
+        return categoryFilter;
     }
 
     function bindForms($) {
         document.addEventListener('click', function (event) {
-            var trigger = event.target && event.target.closest
-                ? event.target.closest('.all-rss-recent-edit-trigger') : null;
+            var target = event.target && event.target.closest ? event.target : null;
+            var catalogTrigger = target ? target.closest('[data-all-rss-recent-catalog="1"]') : null;
+            if (catalogTrigger) {
+                loadCategoryOptions($, null);
+            }
+
+            var trigger = target ? target.closest('.all-rss-recent-edit-trigger') : null;
             if (trigger) {
-                fillChangeModal(trigger);
+                loadCategoryOptions($, fillChangeModal(trigger));
             }
         });
 
@@ -412,7 +527,11 @@
     window.RssAllRecent = {
         ensureCatalogTile: ensureCatalogTile,
         prepareCards: prepareCards,
-        querySentinel: QUERY_SENTINEL
+        querySentinel: QUERY_SENTINEL,
+        categoryFilterValue: categoryFilterValue,
+        categoryPathFromFilterValue: categoryPathFromFilterValue,
+        categoryPathsFromFeeds: categoryPathsFromFeeds,
+        populateCategorySelect: populateCategorySelect
     };
 
     if (document.readyState === 'loading') {
