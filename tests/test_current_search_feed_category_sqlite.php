@@ -86,8 +86,8 @@ v145c_sqlite_check(array_column(search_feed_owned_sources(7, ''), 'source_id') =
 v145c_sqlite_check(array_column(search_feed_owned_sources(7, 'all'), 'source_id') === [3], 'Real Category named all is independently selectable');
 v145c_sqlite_check(search_feed_owned_sources(7, '存在しない') === [], 'Missing Category returns no owned source rather than All');
 v145c_sqlite_check(array_column(search_feed_owned_sources(8, '技術'), 'source_id') === [4], 'Other owner receives only their matching Feed');
-v145c_sqlite_check(!in_array(5, array_column(search_feed_owned_sources(7, null), true), true), 'Inactive Feed is excluded');
-v145c_sqlite_check(!in_array(4, array_column(search_feed_owned_sources(7, null), true), true), 'Other owner Feed is excluded');
+v145c_sqlite_check(!in_array(5, array_column(search_feed_owned_sources(7, null), 'source_id'), true), 'Inactive Feed is excluded');
+v145c_sqlite_check(!in_array(4, array_column(search_feed_owned_sources(7, null), 'source_id'), true), 'Other owner Feed is excluded');
 
 $config = [
     'schema'=>1,
