@@ -4,7 +4,7 @@ const fs = require('fs');
 const vm = require('vm');
 const path = require('path');
 
-const source = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'search-feed-category.js'), 'utf8');
+const source = fs.readFileSync(path.join(__dirname, '..', 'public', 'js', 'search-feed-owned-category.js'), 'utf8');
 
 const listeners = {};
 const selectorMap = {};
@@ -37,7 +37,7 @@ const context = {
 };
 
 vm.createContext(context);
-vm.runInContext(source, context, {filename: 'search-feed-category.js'});
+vm.runInContext(source, context, {filename: 'search-feed-owned-category.js'});
 
 const ui = windowObject.SearchFeedOwnedCategory;
 let tests = 0;
