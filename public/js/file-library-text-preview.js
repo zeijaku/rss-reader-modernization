@@ -130,14 +130,7 @@
     }
 
     function initializeTextPreview() {
-        var badge;
         bindTextPreview();
-        badge = document.querySelector('.file-library-toolbar .badge');
-        if (badge) { badge.textContent = 'V1.28-D'; }
-        window.setTimeout(function () {
-            var lateBadge = document.querySelector('.file-library-toolbar .badge');
-            if (lateBadge) { lateBadge.textContent = 'V1.28-D'; }
-        }, 0);
     }
 
     if (document.readyState === 'loading') {
