@@ -169,6 +169,7 @@ require_once __DIR__ . '/api/dashboard.php';
 require_once __DIR__ . '/api/account.php';
 require_once __DIR__ . '/api/integrations.php';
 require_once __DIR__ . '/api/opml.php';
+require_once __DIR__ . '/api/feed_category.php';
 require_once __DIR__ . '/api/feed_health.php';
 require_once __DIR__ . '/api/rss_rule.php';
 
@@ -199,6 +200,9 @@ function api_dispatch(string $action, int $userId, array $input): array
         'feed.new.clear' => api_feed_new_clear($userId, $input),
         'feed.keyword.create' => api_feed_keyword_create($userId, $input),
         'feed.keyword.delete' => api_feed_keyword_delete($userId, $input),
+        'feed.category.set' => api_feed_category_dispatch($action, $userId, $input),
+        'feed.category.rename' => api_feed_category_dispatch($action, $userId, $input),
+        'feed.category.delete' => api_feed_category_dispatch($action, $userId, $input),
         'feed.health.get' => api_feed_health_get($userId, $input),
         'feed.health.list' => api_feed_health_list($userId),
         'feed.health.recheck' => api_feed_health_recheck($userId, $input),
