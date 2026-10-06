@@ -4,6 +4,36 @@
     var categoryPathsCache = null;
     var categoryRequest = null;
 
+    function ownedCategoryValueForAction(action) {
+        var selector = action === 'widget.search.create'
+            ? '.registerSearchOwnedCategory'
+            : (action === 'widget.search.update' ? '.changeSearchOwnedCategory' : '');
+        var select = selector !== '' ? document.querySelector(selector) : null;
+        return select ? String(select.value || 'all') : 'all';
+    }
+
+    function addOwnedCategoryToPayload(action, data) {
+        if (action !== 'widget.search.create' && action !== 'widget.search.update') {
+            return data;
+        }
+        var payload = Object.assign({}, data || {});
+        payload.search_owned_category_filter = ownedCategoryValueForAction(action);
+        return payload;
+    }
+
+    function installApiRequestBridge() {
+        var core = window.IGuguruDashboardCore;
+        if (!core || typeof core.apiRequest !== 'function' || core.apiRequest.__searchFeedOwnedCategoryBridge === true) {
+            return;
+        }
+        var originalApiRequest = core.apiRequest;
+        var wrapped = function (action, data, timeout) {
+            return originalApiRequest.call(core, action, addOwnedCategoryToPayload(action, data), timeout);
+        };
+        wrapped.__searchFeedOwnedCategoryBridge = true;
+        core.apiRequest = wrapped;
+    }
+
     function categoryFilterValue(categoryPath) {
         return 'category:' + String(categoryPath || '');
     }
@@ -128,6 +158,8 @@
         });
     }
 
+    installApiRequestBridge();
+
     document.addEventListener('click', function (event) {
         var target = event.target && event.target.closest ? event.target : null;
         if (!target) {
@@ -156,6 +188,8 @@
         categoryFilterValue: categoryFilterValue,
         categoryPathFromFilterValue: categoryPathFromFilterValue,
         categoryPathsFromFeeds: categoryPathsFromFeeds,
-        populateCategorySelect: populateCategorySelect
+        populateCategorySelect: populateCategorySelect,
+        addOwnedCategoryToPayload: addOwnedCategoryToPayload,
+        installApiRequestBridge: installApiRequestBridge
     };
 })(window, document);
