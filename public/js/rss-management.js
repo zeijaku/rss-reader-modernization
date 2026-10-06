@@ -125,11 +125,12 @@
     }
     function loadFeeds() {
         return apiPost('opml.list').done(function (feedResponse) {
-            currentFeeds = feedResponse.data && Array.isArray(feedResponse.data.feeds) ? feedResponse.data.feeds : [];
+            var feeds = feedResponse.data && Array.isArray(feedResponse.data.feeds) ? feedResponse.data.feeds : [];
+            currentFeeds = feeds;
             currentHealthMap = {};
             refreshCategoryControls();
-            renderFeeds(currentFeeds, currentHealthMap);
-            if (currentFeeds.length > 0) loadHealthForFeeds(currentFeeds);
+            renderFeeds(feeds, {});
+            if (feeds.length > 0) loadHealthForFeeds(feeds);
         }).fail(function (xhr) {
             var message = xhr.responseJSON && xhr.responseJSON.error ? xhr.responseJSON.error.message : 'RSS一覧の取得に失敗しました。';
             currentFeeds = [];
