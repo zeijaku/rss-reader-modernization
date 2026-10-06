@@ -71,6 +71,18 @@ php -l "$ROOT/app/view/dashboard_modals.php"
 php -l "$ROOT/app/view/dashboard_widgets.php"
 node --check "$ROOT/public/js/all-rss-recent.js"
 
+echo '== Current feature contracts: Search Feed Category =='
+php "$SCRIPT_DIR/test_current_search_feed_category.php"
+php "$SCRIPT_DIR/test_current_search_feed_category_sqlite.php"
+python3 "$SCRIPT_DIR/test_current_search_feed_category_contract.py"
+node "$SCRIPT_DIR/test_current_search_feed_category_ui.js"
+php "$SCRIPT_DIR/test_v12c_search_feed.php"
+php -l "$ROOT/app/search_feed.php"
+php -l "$ROOT/public/index.php"
+php -l "$ROOT/app/view/dashboard_widgets.php"
+node --check "$ROOT/public/js/dashboard.js"
+node --check "$ROOT/public/js/search-feed-owned-category.js"
+
 echo '== Current feature contracts: Feed Health =='
 python3 "$SCRIPT_DIR/test_v122b_feed_health.py"
 php "$SCRIPT_DIR/test_v122b_feed_health_runtime.php"
