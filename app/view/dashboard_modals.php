@@ -162,7 +162,15 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" class="registerAllRssRecentLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
-                <p class="small text-muted">登録しているRSSを横断し、公開日時の新しい順に表示します。既存のRSS Widgetは変更しません。</p>
+                <p class="small text-muted">登録しているRSSを横断し、公開日時の新しい順に表示します。Categoryを指定すると、そのCategoryのFeedだけを取得対象にします。</p>
+                <div class="mb-3">
+                    <label class="form-label" for="registerAllRssRecentCategory">Feed Category</label>
+                    <select id="registerAllRssRecentCategory" class="form-select registerAllRssRecentCategory">
+                        <option value="all" selected>すべて</option>
+                        <option value="uncategorized">未分類</option>
+                    </select>
+                    <div class="form-text">RSS管理で設定したFeed Categoryを使用します。</div>
+                </div>
                 <div class="row g-2">
                     <div class="mb-3 col-6"><label class="form-label" for="registerAllRssRecentLimit">表示件数</label><select id="registerAllRssRecentLimit" class="form-select registerAllRssRecentLimit"><option value="5">5件</option><option value="10" selected>10件</option><option value="20">20件</option><option value="30">30件</option></select></div>
                     <div class="mb-3 col-6"><label class="form-label" for="registerAllRssRecentStyle">見出し色</label><select id="registerAllRssRecentStyle" class="form-select registerAllRssRecentStyle"><option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary" selected>secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
@@ -187,7 +195,15 @@
             </div>
             <div class="modal-body">
                 <input type="hidden" class="changeAllRssRecentId">
-                <p class="small text-muted">全RSS新着の表示件数とカードサイズを変更します。</p>
+                <p class="small text-muted">全RSS新着の取得対象Category、表示件数、カードサイズを変更します。</p>
+                <div class="mb-3">
+                    <label class="form-label" for="changeAllRssRecentCategory">Feed Category</label>
+                    <select id="changeAllRssRecentCategory" class="form-select changeAllRssRecentCategory">
+                        <option value="all">すべて</option>
+                        <option value="uncategorized">未分類</option>
+                    </select>
+                    <div class="form-text">Category名を変更・削除した場合は、ここで選び直せます。</div>
+                </div>
                 <div class="row g-2">
                     <div class="mb-3 col-6"><label class="form-label" for="changeAllRssRecentLimit">表示件数</label><select id="changeAllRssRecentLimit" class="form-select changeAllRssRecentLimit"><option value="5">5件</option><option value="10">10件</option><option value="20">20件</option><option value="30">30件</option></select></div>
                     <div class="mb-3 col-6"><label class="form-label" for="changeAllRssRecentStyle">見出し色</label><select id="changeAllRssRecentStyle" class="form-select changeAllRssRecentStyle"><option value="success">success</option><option value="primary">primary</option><option value="info">info</option><option value="secondary">secondary</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
