@@ -117,7 +117,7 @@
             healthRows.forEach(function (health) { currentHealthMap[String(health.content_id || '')] = health; });
             renderFeeds(feeds, currentHealthMap);
         }).fail(function () {
-            if (feeds.length > 0) {
+            if (filterFeeds(feeds, currentFilter).length > 0) {
                 setAlert($('#rssManagementListStatus'), 'warning', 'RSS一覧は表示していますが、Feed Healthの取得に失敗しました。');
                 $('#rssManagementTableWrap').prop('hidden', false);
             }
