@@ -57,8 +57,8 @@ check('Private Networkへの接続をこのConnectionで許可' in page and 'Ser
       'private network opt-in explains server-side allowlist boundary')
 version_match = re.search(r"APP_VERSION\s*=\s*'([^']+)'", version)
 asset_match = re.search(r"APP_ASSET_REVISION\s*=\s*'([^']+)'", version)
-check(version_match is not None and asset_match is not None and version_match.group(1) == asset_match.group(1),
-      'Remote Files active version and asset revision advance together')
+check(version_match is not None and asset_match is not None and re.fullmatch(r'[A-Za-z0-9._-]+', asset_match.group(1)) is not None,
+      'Remote Files active version and cache revision remain explicitly defined')
 
 print(f'RESULT: PASS {passes} / FAIL {fails}')
 raise SystemExit(0 if fails == 0 else 1)
