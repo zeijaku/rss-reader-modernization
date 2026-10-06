@@ -23,10 +23,10 @@ check(js.includes("$card.find('.memo-title').first().text()"),'Memo title edit u
 check(js.includes("$card.find('.memo-body').first().text()"),'Memo body edit uses text extraction');
 check(!js.includes("$card.find('.memo-body').first().html()"),'Memo edit never reads HTML');
 check(js.includes("window.confirm('このMemoを削除しますか？')"),'Memo delete has an explicit confirmation');
-check(js.includes(".off('submit' + eventNamespace, '#registerMemoForm')"),'Memo create handler is namespaced');
-check(js.includes(".off('click' + eventNamespace, '.memo-edit-trigger')"),'Memo edit handler is namespaced');
-check(js.includes(".off('submit' + eventNamespace, '#changeMemoForm')"),'Memo update handler is namespaced');
-check(js.includes(".off('click' + eventNamespace, '.delete_memo')"),'Memo delete handler is namespaced');
+check(js.includes(".off('submit' + namespace, '#registerMemoForm')"),'Memo create handler is namespaced');
+check(js.includes(".off('click' + namespace, '.memo-edit-trigger')"),'Memo edit handler is namespaced');
+check(js.includes(".off('submit' + namespace, '#changeMemoForm')"),'Memo update handler is namespaced');
+check(js.includes(".off('click' + namespace, '.delete_memo')"),'Memo delete handler is namespaced');
 check((js.match(/\.always\(function \(\)/g)||[]).length>=3,'Memo mutations release pending state through always');
 check(memoJs!==''&&!memoJs.includes('.html('),'Memo JS keeps text-only DOM operations');
 check(html.includes('id="registerMemoForm"')&&html.includes('id="changeMemoForm"'),'Memo forms are present in the page');
