@@ -1,3 +1,13 @@
+## 1.45.0 - 2026-10-06
+
+- Add Feed Category management on RSS Management using the existing owner-scoped `feed_metadata.category_path`: assign or clear a Feed Category, create a path while editing a Feed, filter the registered RSS list, rename a Category across active owned Feeds, and delete a Category by returning its Feeds to Uncategorized. No Category table or database migration is introduced.
+- Add Feed Category filtering to All RSS Recent. Existing Widgets without a stored Category remain equivalent to `すべて`; `未分類`, exact Category paths, hierarchical paths, and a real Category named `all` remain distinct. Matching owned Feed sources are selected before outbound RSS fetching.
+- Add a separate `自分のRSS Category` filter to Search Feed while preserving the existing common-RSS `category` filter. For `owned` / `both` scopes only the owned source set uses `owned_category_path`; common RSS keeps its independent Category behavior. The final browser implementation avoids depending on a modified cached `dashboard.js` by using the dedicated `search-feed-owned-category.js` helper.
+- Harden OPML Category interoperability. Nested OPML outline hierarchy remains authoritative; flat OPML `category` attributes are parsed as comma-separated slash-delimited paths and the first path is used for the application's 1 Feed = 1 Category model. Export retains hierarchy and also emits a standard slash-delimited `category` attribute.
+- Preserve duplicate-import behavior: an existing owned Feed keeps its current title/site/category metadata, same-file duplicate URLs use the first successful import, and another owner's same URL does not block the current user's import.
+- Preserve existing security and compatibility boundaries: owner/active Feed scoping, POST + CSRF mutation paths, OPML UTF-8/control/DOCTYPE/ENTITY protections, network fetch boundaries, legacy Search/All RSS Recent settings, and all non-RSS features. No DB migration or required config change.
+- Verified focused Category/API/UI/SQLite/OPML round-trip/security-limit coverage, full Current regression on PHP 8.1 and PHP 8.4, and user browser confirmation of RSS Management, All RSS Recent and Search Feed Category behavior.
+
 ## 1.44.0 - 2026-10-05
 
 - Add owner-scoped multiple Calendar sources with create/rename/color/delete management, a default Calendar, and a multi-select visibility filter. Existing events are backfilled to each owner's default Calendar, while Calendar membership is preserved across normal edits, recurrence, occurrence handling, Copy and Drag & Drop.

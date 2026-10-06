@@ -9,8 +9,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.44.0`
-Release tag: `v1.44.0`
+**Stable release:** `RSS Reader Modernization 1.45.0`
+Release tag: `v1.45.0`
+
+Version 1.45.0は、Feed単位のCategory管理を追加し、RSS管理・全RSS新着・Search Feedを同じCategory metadataで連携するFeature Releaseです。Categoryの作成・変更・Rename・削除、All RSS Recentの取得前絞り込み、Search Feedの「自分のRSS Category」絞り込み、OPML Category互換性を追加します。既存Widgetは「すべて」として互換動作し、Database Migration / Config変更はありません。[正式版の更新・確認手順](docs/v1.45.0-release.md)を参照してください。
 
 Version 1.44.0は、Calendarを複数のOwner専用Calendarへ分けて表示・管理できるようにし、予定へ任意の場所とGoogle Maps検索リンクを追加するFeature Releaseです。既存予定は既定Calendarへ安全に引き継ぎ、Calendar filter、色付きlayer icon、Calendar選択／移動、繰り返し・Occurrence・Copy・Drag & Dropの既存動作を維持します。予定入力Modalも既存項目・説明を維持したまま日時／通知Gridを整理します。V1.43.1からはMigration 033 → 034の順で適用します。[正式版の更新・確認手順](docs/v1.44.0-release.md)を参照してください。
 
@@ -35,9 +37,9 @@ Application Versionの正本は `app/version.php`、Versionごとの変更履歴
 - ユーザーごとのFeed URL登録・変更・論理削除
 - 4タブへのFeed配置
 - Feed Card単位の個別更新
-- Search Feedによる登録RSS横断検索
-- 全RSS新着による所有RSS横断の新着記事集約
-- RSS Management / OPML Import・Export
+- Search Feedによる登録RSS横断検索・Feed Category絞り込み
+- 全RSS新着による所有RSS横断の新着記事集約・Feed Category絞り込み
+- RSS Management / Feed Category管理 / OPML Import・Export
 - Feed Health
 - RSS RulesによるHighlight / Hide / Stock / Task action
 - Keyword Highlight
