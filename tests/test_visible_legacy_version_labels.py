@@ -5,6 +5,9 @@ ROOT = Path(__file__).resolve().parents[1]
 FORBIDDEN = {
     "public/rss-management.php": ["V1.22-A"],
     "public/file-library.php": ["V1.28-F"],
+    "public/js/file-library-core.js": ["V1.28-C"],
+    "public/js/file-library-text-preview.js": ["V1.28-D"],
+    "public/js/file-library-csv-preview.js": ["V1.28-E"],
     "public/remote-editor.php": ["V1.30-D checkpoint"],
     "public/settings.php": ["V1.12-BのDB Migration"],
     "public/js/info-board.js": ["V1.26-Cでは", "V1.26-DのTicker"],
