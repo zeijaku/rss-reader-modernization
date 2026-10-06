@@ -61,3 +61,17 @@ jobs:
       - name: Run the local CI-equivalent gate
         run: bash tests/run-ci.sh
 
+      - name: Package V1.45-D review files
+        if: ${{ matrix.php == '8.4' }}
+        run: |
+          zip -r v145d-review.zip app/opml.php
+
+      - name: Upload V1.45-D review artifact
+        if: ${{ matrix.php == '8.4' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: v145d-review
+          path: v145d-review.zip
+          if-no-files-found: error
+          retention-days: 1
+
