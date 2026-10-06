@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/feed_metadata.php';
+
 /**
  * V1.20-E: All RSS Recent Widget.
  *
@@ -26,10 +28,56 @@ function all_rss_recent_validate_limit(mixed $value): ?int
     return $limit !== null && in_array($limit, all_rss_recent_allowed_limits(), true) ? $limit : null;
 }
 
-/** @return array{schema:int,mode:string,query:string,scope:string,condition:string,limit:int,category:string} */
-function all_rss_recent_config(int $limit): array
+function all_rss_recent_validate_category_filter(mixed $value): ?string
 {
-    return [
+    if (!is_string($value)) {
+        return null;
+    }
+    if ($value === 'all' || $value === 'uncategorized') {
+        return $value;
+    }
+    if (!str_starts_with($value, 'category:')) {
+        return null;
+    }
+
+    $categoryPath = feed_metadata_validate_category_path(substr($value, 9), false);
+    return $categoryPath === null ? null : 'category:' . $categoryPath;
+}
+
+function all_rss_recent_category_path_from_filter(string $filter): ?string
+{
+    if ($filter === 'all') {
+        return null;
+    }
+    if ($filter === 'uncategorized') {
+        return '';
+    }
+    return substr($filter, 9);
+}
+
+function all_rss_recent_category_filter_value(?string $categoryPath): string
+{
+    if ($categoryPath === null) {
+        return 'all';
+    }
+    if ($categoryPath === '') {
+        return 'uncategorized';
+    }
+    return 'category:' . $categoryPath;
+}
+
+/** @return array<string,mixed> */
+function all_rss_recent_config(int $limit, ?string $feedCategoryPath = null): array
+{
+    if ($feedCategoryPath !== null) {
+        $validatedCategoryPath = feed_metadata_validate_category_path($feedCategoryPath, true);
+        if ($validatedCategoryPath === null) {
+            throw new InvalidArgumentException('All RSS Recent Category is invalid.');
+        }
+        $feedCategoryPath = $validatedCategoryPath;
+    }
+
+    $config = [
         'schema' => 1,
         'mode' => ALL_RSS_RECENT_MODE,
         'query' => ALL_RSS_RECENT_QUERY,
@@ -38,21 +86,36 @@ function all_rss_recent_config(int $limit): array
         'limit' => $limit,
         'category' => 'all',
     ];
+    if ($feedCategoryPath !== null) {
+        $config['feed_category_path'] = $feedCategoryPath;
+    }
+    return $config;
 }
 
-/** @return array{schema:int,mode:string,query:string,scope:string,condition:string,limit:int,category:string}|null */
+/** @return array<string,mixed>|null */
 function all_rss_recent_config_from_storage(mixed $value): ?array
 {
     $config = dashboard_widget_decode_config($value);
     $mode = is_string($config['mode'] ?? null) ? $config['mode'] : '';
     $query = is_string($config['query'] ?? null) ? $config['query'] : '';
     $limit = all_rss_recent_validate_limit($config['limit'] ?? null);
+    $feedCategoryPath = null;
 
     if ($mode !== ALL_RSS_RECENT_MODE || $query !== ALL_RSS_RECENT_QUERY || $limit === null) {
         return null;
     }
 
-    return all_rss_recent_config($limit);
+    if (array_key_exists('feed_category_path', $config)) {
+        if (!is_string($config['feed_category_path'])) {
+            return null;
+        }
+        $feedCategoryPath = feed_metadata_validate_category_path($config['feed_category_path'], true);
+        if ($feedCategoryPath === null) {
+            return null;
+        }
+    }
+
+    return all_rss_recent_config($limit, $feedCategoryPath);
 }
 
 /** @return array<string,mixed>|null */
@@ -80,7 +143,8 @@ function all_rss_recent_create(
     string $style,
     int $width,
     int $height,
-    int $limit
+    int $limit,
+    ?string $feedCategoryPath = null
 ): int {
     if ($ownerId <= 0
         || dashboard_widget_validate_location($location) === null
@@ -96,7 +160,7 @@ function all_rss_recent_create(
         $location,
         $style,
         $width,
-        all_rss_recent_config($limit),
+        all_rss_recent_config($limit, $feedCategoryPath),
         $height
     );
 }
@@ -107,7 +171,8 @@ function all_rss_recent_update(
     string $style,
     int $width,
     int $height,
-    int $limit
+    int $limit,
+    ?string $feedCategoryPath = null
 ): bool {
     if ($ownerId <= 0 || $widgetId <= 0
         || app_normalize_content_style($style) === null
@@ -125,7 +190,7 @@ function all_rss_recent_update(
         $widgetId,
         $style,
         $width,
-        all_rss_recent_config($limit),
+        all_rss_recent_config($limit, $feedCategoryPath),
         $height
     );
 }
@@ -136,6 +201,33 @@ function all_rss_recent_delete(int $ownerId, int $widgetId): bool
         return false;
     }
     return search_feed_delete($ownerId, $widgetId);
+}
+
+/** @return list<array{source_id:int,url:string,name:string}> */
+function all_rss_recent_owned_sources(int $ownerId, ?string $feedCategoryPath): array
+{
+    $rows = feed_metadata_list_owned($ownerId);
+    $sources = [];
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $sourceId = app_validate_positive_int($row['content_id'] ?? null);
+        $url = app_validate_feed_url($row['feed_url'] ?? null);
+        $categoryPath = is_string($row['category_path'] ?? null) ? $row['category_path'] : '';
+        if ($sourceId === null || $url === null) {
+            continue;
+        }
+        if ($feedCategoryPath !== null && $categoryPath !== $feedCategoryPath) {
+            continue;
+        }
+        $sources[] = [
+            'source_id' => $sourceId,
+            'url' => $url,
+            'name' => '',
+        ];
+    }
+    return $sources;
 }
 
 function all_rss_recent_item_timestamp(array $item): int
@@ -164,7 +256,10 @@ function all_rss_recent_execute(int $ownerId, int $widgetId): array
         return ['ok' => false, 'code' => 'invalid_config'];
     }
 
-    $sources = search_feed_owned_sources($ownerId);
+    $feedCategoryPath = array_key_exists('feed_category_path', $config)
+        ? (string) $config['feed_category_path']
+        : null;
+    $sources = all_rss_recent_owned_sources($ownerId, $feedCategoryPath);
     $uniqueSources = [];
     $seenUrls = [];
     foreach ($sources as $source) {
@@ -256,5 +351,6 @@ function all_rss_recent_execute(int $ownerId, int $widgetId): array
         'source_count' => count($uniqueSources),
         'failed_count' => $failed,
         'limit' => $limit,
+        'feed_category_filter' => all_rss_recent_category_filter_value($feedCategoryPath),
     ];
 }
