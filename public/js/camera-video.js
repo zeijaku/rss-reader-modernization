@@ -367,7 +367,7 @@
             message = 'Autoでは形式を判定出来ません。編集から形式を手動指定してください。';
             icon = 'fa-circle-question';
         } else if (sourceType === 'iframe') {
-            message = 'iframeはV1.17では未対応です。元のMedia URLまたは対応形式を指定してください。';
+            message = 'iframeには未対応です。元のMedia URLまたは対応形式を指定してください。';
         }
         $('<i>').addClass('fas ' + icon + ' camera-video-placeholder-icon').attr('aria-hidden', 'true').appendTo($stage);
         $('<strong>').addClass('camera-video-source-type').text(sourceLabel(sourceType)).appendTo($stage);

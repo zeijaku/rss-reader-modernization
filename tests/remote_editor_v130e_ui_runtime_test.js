@@ -137,7 +137,7 @@ const flush = () => new Promise(resolve => setTimeout(resolve, 0));
     check(elements.remoteEditorMetaBom.textContent === 'Yes', 'BOM metadata remains visible while textarea omits BOM');
     check(elements.remoteEditorDirtyState.textContent === 'Remoteと同じ', 'initial normalized buffer is clean');
     check(elements.remoteEditorReload.attributes['aria-label'] === 'Remoteから再読込', 'normal reload accessible label is non-conflict wording');
-    check(phaseNote.textContent.includes('V1.30-E checkpoint'), 'E checkpoint guidance is rendered at startup');
+    check(phaseNote.textContent.includes('競合時はSaveを停止'), 'current conflict guidance is rendered at startup');
 
     elements.remoteEditorText.value = 'one\ntwo\nlocal\n';
     elements.remoteEditorText.dispatch('input');

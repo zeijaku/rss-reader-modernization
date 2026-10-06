@@ -310,7 +310,6 @@
     }
 
     function bindFileDetail() {
-        var badge = document.querySelector('.file-library-toolbar .badge');
         var cards = document.querySelectorAll('.file-library-card');
         var modalElement;
         var modal;
@@ -320,7 +319,6 @@
         var content;
         var requestSerial = 0;
         var i;
-        if (badge) { badge.textContent = 'V1.28-C'; }
         if (!window.bootstrap || !window.bootstrap.Modal || typeof window.fetch !== 'function') { return; }
 
         modalElement = document.createElement('div');

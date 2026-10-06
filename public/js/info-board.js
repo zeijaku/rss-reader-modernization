@@ -387,7 +387,7 @@
                   '</div>' +
                   '<div class="modal-body">' +
                     '<input type="hidden" class="registerInfoBoardLocation" value="0">' +
-                    '<p class="small text-muted">RSSのNEWSをInformation Board形式で表示します。V1.26-Cでは静的な一覧表示です。</p>' +
+                    '<p class="small text-muted">RSSのNEWSをInformation Board形式で表示します。</p>' +
                     formFields('register') +
                   '</div>' +
                   '<div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary">このタブに追加する</button></div>' +
@@ -434,7 +434,7 @@
             '</select></div>' +
             '<div class="mb-3 col-md-4"><label class="form-label" for="' + p + 'InfoBoardSpeed">Ticker速度</label><select class="form-select ' + p + 'InfoBoardSpeed" id="' + p + 'InfoBoardSpeed">' +
               option('slow', 'slow', false) + option('normal', 'normal', true) + option('fast', 'fast', false) +
-            '</select><small class="form-text text-muted">速度設定はV1.26-DのTicker表示で使用します。</small></div>' +
+            '</select><small class="form-text text-muted">Ticker表示の速度を設定します。</small></div>' +
             '<div class="mb-3 col-md-4"><label class="form-label" for="' + p + 'InfoBoardSummaryMax">概要文字数</label><select class="form-select ' + p + 'InfoBoardSummaryMax" id="' + p + 'InfoBoardSummaryMax">' +
               option('100', '100文字', false) + option('200', '200文字', true) + option('300', '300文字', false) +
             '</select></div>' +

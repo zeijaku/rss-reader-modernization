@@ -478,7 +478,7 @@
     });
 
     if (el.phaseNote) {
-        el.phaseNote.textContent = 'V1.30-E checkpoint：競合時はSaveを停止してローカル入力を保持します。LF / CRLFとUTF-8 BOMは元Remoteの形式を基準に保存します。';
+        el.phaseNote.textContent = '競合時はSaveを停止してローカル入力を保持します。LF / CRLFとUTF-8 BOMは元Remoteの形式を基準に保存します。';
     }
     syncLineNumbers();
     updateConflictUi();

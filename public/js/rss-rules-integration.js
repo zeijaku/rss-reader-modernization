@@ -7,7 +7,7 @@
             return;
         }
         $pane.find('> .alert-info').first().text(
-            'V1.22-Dでは有効なRuleをRSS取得時に適用します。Highlightは記事を強調、Hideは一致記事を非表示、Auto Stockは一致記事を重複を避けてStockへ追加します。'
+            '有効なRuleをRSS取得時に適用します。Highlightは記事を強調、Hideは一致記事を非表示、Auto Stockは一致記事を重複を避けてStockへ追加します。'
         );
     }
 

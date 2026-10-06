@@ -220,7 +220,7 @@ $navbarScheme = $navbarBackground === 'light' ? 'light' : 'dark';
                 <div class="card-body">
                     <p class="small text-muted mb-3">RSS記事タイトルで強調したいKeywordを登録します。RSS WidgetとSearch Feedの両方で利用します。</p>
                     <?php if ($feedKeywordLoadFailed): ?>
-                        <div class="alert alert-warning small" role="alert">Keywordを読み込めませんでした。V1.12-BのDB Migration適用状況を確認してください。</div>
+                        <div class="alert alert-warning small" role="alert">Keywordを読み込めませんでした。RSS Highlight用DB Migrationの適用状況を確認してください。</div>
                     <?php endif; ?>
                     <form id="rssHighlightKeywordForm" method="post" action="./">
                         <label class="form-label" for="rssHighlightKeywordInput"><small class="text-dark">Keyword</small></label>

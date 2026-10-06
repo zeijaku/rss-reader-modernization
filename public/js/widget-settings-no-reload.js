@@ -377,7 +377,7 @@
             $('<i>').addClass('fas fa-camera camera-video-snapshot-placeholder-icon').attr('aria-hidden', 'true').appendTo($placeholder);
             $('<span>').addClass('camera-video-snapshot-status').attr({role:'status','aria-live':'polite'}).text('読み込み待ち').appendTo($placeholder);
         } else {
-            var message = renderType === 'unknown' ? 'Autoでは形式を判定出来ません。編集から形式を手動指定してください。' : (renderType === 'iframe' ? 'iframeはV1.17では未対応です。元のMedia URLまたは対応形式を指定してください。' : '読み込み準備中…');
+            var message = renderType === 'unknown' ? 'Autoでは形式を判定出来ません。編集から形式を手動指定してください。' : (renderType === 'iframe' ? 'iframeには未対応です。元のMedia URLまたは対応形式を指定してください。' : '読み込み準備中…');
             $('<i>').addClass('fas ' + (renderType === 'unknown' ? 'fa-circle-question' : 'fa-video') + ' camera-video-placeholder-icon').attr('aria-hidden','true').appendTo($stage);
             $('<strong>').addClass('camera-video-source-type').text(sourceLabel(renderType)).appendTo($stage);
             $('<span>').addClass('camera-video-foundation-note').text(message).appendTo($stage);
