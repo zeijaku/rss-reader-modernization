@@ -17,7 +17,7 @@ check(js.includes("apiRequestPromise(action, payload, 3000)"),'Memo mutations us
 for(const action of ['widget.memo.create','widget.memo.update','widget.memo.delete']) check(js.includes(action),action+' contract is preserved');
 check(js.includes("payload.widget_location = value('.registerMemoLocation')"),'Memo create sends the current tab location');
 check(js.includes("payload.widget_id = value('.changeMemoWidgetId')"),'Memo update sends the selected Widget ID');
-check(js.includes("title ? title.textContent"),'Memo title edit uses textContent extraction');
+check(js.includes("title && title.textContent ? title.textContent : 'Memo'"),'Memo title edit uses textContent extraction with the existing empty-title fallback');
 check(js.includes("body ? body.textContent"),'Memo body edit uses textContent extraction');
 check(!js.includes('.innerHTML')&&!js.includes('.html('),'Memo edit never reads or writes HTML');
 check(js.includes("window.confirm('このMemoを削除しますか？')"),'Memo delete has an explicit confirmation');
