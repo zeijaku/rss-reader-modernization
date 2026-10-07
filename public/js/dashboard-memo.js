@@ -86,7 +86,7 @@
         const body = card ? first('.memo-body', card) : null;
         setValue('.changeMemoWidgetId', attribute(trigger, 'data-widget-id', ''));
         setValue('.changeMemoId', attribute(trigger, 'data-memo-id', ''));
-        setValue('.changeMemoTitleValue', title ? title.textContent : 'Memo');
+        setValue('.changeMemoTitleValue', title && title.textContent ? title.textContent : 'Memo');
         setValue('.changeMemoBody', body ? body.textContent : '');
         setValue('.changeMemoStyle', attribute(trigger, 'data-widget-style', 'success'));
         setValue('.changeMemoWidth', attribute(trigger, 'data-widget-width', '1'));
