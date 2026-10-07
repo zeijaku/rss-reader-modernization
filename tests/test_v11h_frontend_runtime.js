@@ -1,16 +1,14 @@
 'use strict';
 const fs=require('fs'); const path=require('path');
 const root=path.resolve(__dirname,'..');
-const js=fs.readFileSync(path.join(root,'public/js/dashboard.js'),'utf8');
+const js=fs.readFileSync(path.join(root,'public/js/dashboard-task.js'),'utf8');
 const html=[
   fs.readFileSync(path.join(root,'public/index.php'),'utf8'),
   fs.readFileSync(path.join(root,'app/view/dashboard_widgets.php'),'utf8'),
   fs.readFileSync(path.join(root,'app/view/dashboard_modals.php'),'utf8')
 ].join('\n');
 const css=fs.readFileSync(path.join(root,'public/css/dashboard.css'),'utf8');
-const taskStart=js.indexOf("function taskWidgetFormPayload(prefix)");
-const taskEnd=js.indexOf("function renderClock($card, now)", taskStart);
-const taskJs=taskStart>=0&&taskEnd>taskStart?js.slice(taskStart,taskEnd):'';
+const taskJs=js;
 let checks=0,failures=0;
 function check(cond,msg){checks++;console.log((cond?'PASS':'FAIL')+': '+msg);if(!cond)failures++;}
 check(js.includes('function taskWidgetFormPayload(prefix)'), 'Task Widget payload helper exists');
@@ -29,7 +27,7 @@ check(js.includes("payload.task_id = $('.changeTaskItemId').val()"), 'Task updat
 check(js.includes("window.confirm('このTask Widgetと中のTaskを削除しますか？')"), 'Task Widget deletion confirms cascade');
 check(js.includes("window.confirm('このTaskを削除しますか？')"), 'Task item deletion confirms');
 for (const selector of ['#registerTaskWidgetForm','.task-widget-edit-trigger','#changeTaskWidgetForm','.delete_task_widget','.task-item-create-form','.task-item-edit-trigger','#changeTaskItemForm','.task-toggle','.delete_task_item']) check(js.includes(`.off('`) && js.includes(selector), `Task handler is present for ${selector}`);
-check((js.match(/\.always\(function \(\)/g)||[]).length>=15, 'Task mutations release pending state through always');
+check((js.match(/\.always\(function \(\)/g)||[]).length>=7, 'Task mutations release pending state through always');
 check(taskJs!==''&&!taskJs.includes('.html('), 'Task JS keeps text-only DOM operations');
 check(html.includes('id="registerTaskWidgetForm"')&&html.includes('id="changeTaskWidgetForm"')&&html.includes('id="changeTaskItemForm"'), 'Task forms are present');
 check(html.includes('maxlength="128"')&&html.includes('type="date"'), 'Task inputs are bounded');

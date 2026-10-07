@@ -15,7 +15,7 @@ const APP_VERSION_LABEL = 'RSS Reader Modernization 1.45.0';
  * Development checkpoints use their own visible revision so browsers do not
  * reuse older checkpoint assets while development continues.
  */
-const APP_ASSET_REVISION = '1.45.0';
+const APP_ASSET_REVISION = '1.46.0-dev.1';
 
 /**
  * V1.26-D: scoped cache key for the Information Board bootstrap chain.

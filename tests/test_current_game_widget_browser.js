@@ -14,7 +14,7 @@ function menuHtml(source){
  assert.ok(menu,'production Drawer markup exists in '+source);
  return html('').replace(/<select\b[^>]*\bid="registerGameType"[^>]*>[\s\S]*?<\/select>/,select[0]).replace('<body>',`<body><button id="openDrawer" data-bs-toggle="offcanvas" data-bs-target="#drawerMenu">Menu</button><nav id="drawerMenu" class="offcanvas offcanvas-end"><ul class="drawer-menu">${menu[0]}</ul></nav><div id="registerGameWidget" class="modal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form id="registerGameWidgetForm">`)
  .replace('<div id="main-content"','</form></div></div></div><div id="main-content"')
- .replace('</body>','<script src="/js/bootstrap.bundle-5.3.8.min.js"></script><script src="/js/dashboard-core.js"></script><script src="/js/dashboard.js"></script></body>');
+ .replace('</body>','<script src="/js/bootstrap.bundle-5.3.8.min.js"></script><script src="/js/dashboard-core.js"></script><script src="/js/dashboard-game.js"></script><script src="/js/dashboard.js"></script></body>');
 }
 (async()=>{
 const browser=await chromium.launch({executablePath:process.env.GAME_TEST_CHROME||chromium.executablePath(),headless:true,args:['--no-sandbox']});

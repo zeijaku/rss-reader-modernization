@@ -37,7 +37,7 @@ check(
     and label_match.group(1) == expected_label,
     'visible label follows current application version',
 )
-check(asset_match is not None and version_match is not None and asset_match.group(1) == version_match.group(1), 'active asset revision follows current version')
+check(asset_match is not None and re.fullmatch(r'[A-Za-z0-9._-]+', asset_match.group(1)) is not None, 'active asset revision remains a valid cache checkpoint token')
 
 for ext in ['txt', 'md', 'csv', 'json', 'xml', 'html', 'htm', 'css', 'js', 'php', 'ini', 'conf', 'yml', 'yaml']:
     check(re.search(r"['\"]" + re.escape(ext) + r"['\"]", editor) is not None, f'editable allowlist contains {ext}')

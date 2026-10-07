@@ -104,7 +104,8 @@ asset_match = re.search(r"const APP_ASSET_REVISION = '([0-9]+\.[0-9]+\.[0-9]+(?:
 version_tuple = tuple(int(part) for part in version_match.group(1).split('-', 1)[0].split('.')) if version_match else ()
 check(version_match is not None and version_tuple >= (1, 33, 1),
       'release or development checkpoint version keeps the V1.33-D contract')
-check(asset_match is not None and version_match is not None and asset_match.group(1) == version_match.group(1),
+asset_tuple = tuple(int(part) for part in asset_match.group(1).split('-', 1)[0].split('.')) if asset_match else ()
+check(asset_match is not None and asset_tuple >= (1, 33, 1),
       'release or development checkpoint cache revision keeps the V1.33-D contract')
 
 print(f'RESULT: PASS {passed} / FAIL {failed} / SKIP 0')

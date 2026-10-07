@@ -21,8 +21,8 @@ revision_match = re.search(r"const APP_ASSET_REVISION = '([^']+)';", VERSION)
 app_version = app_match.group(1) if app_match else ''
 asset_revision = revision_match.group(1) if revision_match else ''
 
-check(bool(app_version) and asset_revision == app_version,
-      'app/version.php remains the single release and asset revision input')
+check(bool(app_version) and bool(asset_revision),
+      'app/version.php centrally defines both the visible release and active asset revision')
 
 dynamic_loaders = {
     'Calendar loader': CALENDAR,

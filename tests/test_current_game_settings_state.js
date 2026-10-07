@@ -23,7 +23,7 @@ for (const mode of ['localStorage', 'sessionStorage']) {
  window.RssGameWidget = scope;
  window.RssMiniGame = {removeWidgetState: id => calls.push('icon:' + id)};
  window.RssLightsOut = {removeWidgetState: id => calls.push('lights:' + id)};
- const reload = new Function('window', fn('public/js/dashboard.js', 'removeGameWidgetBrowserState') + '\nreturn removeGameWidgetBrowserState;')(window);
+ const reload = new Function('window', fn('public/js/dashboard-game.js', 'removeGameWidgetBrowserState') + '\nreturn removeGameWidgetBrowserState;')(window);
  const partial = new Function('window', fn('public/js/widget-settings-no-reload.js', 'removeOldGameState') + '\nreturn removeOldGameState;')(window);
  function seed() { values.clear(); calls.length = 0; for (const owner of [7, 8]) for (const widget of [1, 2]) for (const game of keys) { const key = scope.storageKey(owner, widget, game); storage.setItem(key, game === 'word_tiles' ? '3' : '5'); storage.setItem(key + '.state', game + ':board/rack/bag/pending'); } }
  function own() { return keys.every(game => storage.getItem(scope.storageKey(7, 1, game) + '.state') !== null); }

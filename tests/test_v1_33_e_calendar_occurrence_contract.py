@@ -43,7 +43,9 @@ for modal in modals:
 
 check(loader.index('calendar-occurrence.js') < loader.index('calendar-recurrence.js'), 'occurrence handler loads before series submit handler')
 check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1), 'E contract runs on V1.33.1 or later')
-check(bool(current_revision) and current_revision == current_version, 'current asset revision matches the application version')
+revision_match = re.fullmatch(r'(\d+)\.(\d+)\.(\d+)(?:-(?:rc\d+|dev\.\d+))?', current_revision)
+check(revision_match is not None and tuple(map(int, revision_match.groups()[:3])) >= (1, 33, 1),
+      'current asset revision remains a supported release or development checkpoint')
 check("assetUrl('./css/calendar-occurrence.css')" in loader, 'occurrence CSS uses the centralized asset URL')
 check("assetUrl('./js/calendar-occurrence.js')" in loader, 'occurrence JavaScript uses the centralized asset URL')
 
