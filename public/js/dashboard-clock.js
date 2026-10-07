@@ -76,8 +76,7 @@
                 if (apiResponseOk(data)) {
                     onSuccess(data);
                 }
-            })
-            .catch(requestFailReason)
+            }, requestFailReason)
             .finally(function () {
                 requestEndElement(button);
             });
