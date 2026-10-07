@@ -1,79 +1,108 @@
-(function ($, window, document) {
+(function (window, document) {
     'use strict';
 
-    var dashboardCore = window.IGuguruDashboardCore;
+    const dashboardCore = window.IGuguruDashboardCore;
     if (!dashboardCore) {
         throw new Error('Dashboard core is not available.');
     }
 
-    var apiRequest = dashboardCore.apiRequest;
-    var apiResponseOk = dashboardCore.apiResponseOk;
-    var requestStart = dashboardCore.requestStart;
-    var requestEnd = dashboardCore.requestEnd;
-    var requestFail = dashboardCore.requestFail;
-    var showNotice = dashboardCore.showNotice;
+    const apiRequestPromise = dashboardCore.apiRequestPromise;
+    const apiResponseOk = dashboardCore.apiResponseOk;
+    const requestStartElement = dashboardCore.requestStartElement;
+    const requestEndElement = dashboardCore.requestEndElement;
+    const requestFailReason = dashboardCore.requestFailReason;
+    const showNotice = dashboardCore.showNotice;
+    let eventsBound = false;
+
+    function first(selector, scope) {
+        return (scope || document).querySelector(selector);
+    }
+
+    function value(selector) {
+        const element = first(selector);
+        return element ? element.value : undefined;
+    }
+
+    function setValue(selector, nextValue) {
+        const element = first(selector);
+        if (element) {
+            element.value = String(nextValue);
+        }
+    }
+
+    function attribute(element, name, fallback) {
+        if (!element || typeof element.getAttribute !== 'function') {
+            return fallback;
+        }
+        const result = element.getAttribute(name);
+        return result === null ? fallback : result;
+    }
+
+    function closestMatch(target, selector) {
+        return target && typeof target.closest === 'function' ? target.closest(selector) : null;
+    }
+
+    function submitButton(form) {
+        return form ? form.querySelector('button[type="submit"]') : null;
+    }
 
     function memoFormPayload(prefix) {
         return {
-            'memo_title': $('.' + prefix + 'MemoTitleValue').val(),
-            'memo_body': $('.' + prefix + 'MemoBody').val(),
-            'widget_style': $('.' + prefix + 'MemoStyle').val(),
-            'widget_width': $('.' + prefix + 'MemoWidth').val(),
-            'widget_height': $('.' + prefix + 'MemoHeight').val()
+            'memo_title': value('.' + prefix + 'MemoTitleValue'),
+            'memo_body': value('.' + prefix + 'MemoBody'),
+            'widget_style': value('.' + prefix + 'MemoStyle'),
+            'widget_width': value('.' + prefix + 'MemoWidth'),
+            'widget_height': value('.' + prefix + 'MemoHeight')
         };
     }
 
-    function addMemo($form) {
-        var $button = $form.find('button[type="submit"]');
-        if (!requestStart($button)) {
+    function runMutation(button, action, payload, onSuccess) {
+        if (!requestStartElement(button)) {
             return;
         }
-        var payload = memoFormPayload('register');
-        payload.widget_location = $('.registerMemoLocation').val();
-        apiRequest('widget.memo.create', payload, 3000)
-            .done(function (data) {
+        apiRequestPromise(action, payload, 3000)
+            .then(function (data) {
                 if (apiResponseOk(data)) {
-                    window.location.reload();
+                    onSuccess(data);
                 }
             })
-            .fail(requestFail)
-            .always(function () {
-                requestEnd($button);
+            .catch(requestFailReason)
+            .finally(function () {
+                requestEndElement(button);
             });
     }
 
-    function editMemo($trigger) {
-        var $card = $trigger.closest('[data-dashboard-widget-type="memo"]');
-        $('.changeMemoWidgetId').val(String($trigger.attr('data-widget-id') || ''));
-        $('.changeMemoId').val(String($trigger.attr('data-memo-id') || ''));
-        $('.changeMemoTitleValue').val(String($card.find('.memo-title').first().text() || 'Memo'));
-        $('.changeMemoBody').val(String($card.find('.memo-body').first().text() || ''));
-        $('.changeMemoStyle').val(String($trigger.attr('data-widget-style') || 'success'));
-        $('.changeMemoWidth').val(String($trigger.attr('data-widget-width') || '1'));
-        $('.changeMemoHeight').val(String($trigger.attr('data-widget-height') || '1'));
+    function addMemo(form) {
+        const payload = memoFormPayload('register');
+        payload.widget_location = value('.registerMemoLocation');
+        runMutation(submitButton(form), 'widget.memo.create', payload, function () {
+            window.location.reload();
+        });
     }
 
-    function changeMemo($form) {
-        var $button = $form.find('button[type="submit"]');
-        if (!requestStart($button)) {
-            return;
-        }
-        var payload = memoFormPayload('change');
-        payload.widget_id = $('.changeMemoWidgetId').val();
-        apiRequest('widget.memo.update', payload, 3000)
-            .done(function (data) {
-                if (apiResponseOk(data)) {
-                    window.location.reload();
-                }
-            })
-            .fail(requestFail)
-            .always(function () {
-                requestEnd($button);
-            });
+    function editMemo(trigger) {
+        const card = closestMatch(trigger, '[data-dashboard-widget-type="memo"]');
+        const title = card ? first('.memo-title', card) : null;
+        const body = card ? first('.memo-body', card) : null;
+        setValue('.changeMemoWidgetId', attribute(trigger, 'data-widget-id', ''));
+        setValue('.changeMemoId', attribute(trigger, 'data-memo-id', ''));
+        setValue('.changeMemoTitleValue', title ? title.textContent : 'Memo');
+        setValue('.changeMemoBody', body ? body.textContent : '');
+        setValue('.changeMemoStyle', attribute(trigger, 'data-widget-style', 'success'));
+        setValue('.changeMemoWidth', attribute(trigger, 'data-widget-width', '1'));
+        setValue('.changeMemoHeight', attribute(trigger, 'data-widget-height', '1'));
     }
 
-    function deleteMemo($button) {
-        var widgetId = String($('.changeMemoWidgetId').val() || '');
+    function changeMemo(form) {
+        const payload = memoFormPayload('change');
+        payload.widget_id = value('.changeMemoWidgetId');
+        runMutation(submitButton(form), 'widget.memo.update', payload, function () {
+            window.location.reload();
+        });
+    }
+
+    function deleteMemo(button) {
+        const widgetId = String(value('.changeMemoWidgetId') || '');
         if (!/^\d+$/.test(widgetId)) {
             showNotice('削除するMemoを確認出来ませんでした', 'danger');
             return;
@@ -81,48 +110,47 @@
         if (!window.confirm('このMemoを削除しますか？')) {
             return;
         }
-        if (!requestStart($button)) {
-            return;
-        }
-        apiRequest('widget.memo.delete', {'widget_id': widgetId}, 3000)
-            .done(function (data) {
-                if (apiResponseOk(data)) {
-                    window.location.reload();
-                }
-            })
-            .fail(requestFail)
-            .always(function () {
-                requestEnd($button);
-            });
+        runMutation(button, 'widget.memo.delete', {'widget_id': widgetId}, function () {
+            window.location.reload();
+        });
     }
 
-    function bindEvents(eventNamespace) {
-        var namespace = typeof eventNamespace === 'string' && eventNamespace !== ''
-            ? eventNamespace
-            : '.iguguruDashboard';
+    function handleSubmit(event) {
+        const registerForm = closestMatch(event.target, '#registerMemoForm');
+        if (registerForm) {
+            event.preventDefault();
+            addMemo(registerForm);
+            return;
+        }
+        const changeForm = closestMatch(event.target, '#changeMemoForm');
+        if (changeForm) {
+            event.preventDefault();
+            changeMemo(changeForm);
+        }
+    }
 
-        $(document)
-            .off('submit' + namespace, '#registerMemoForm')
-            .on('submit' + namespace, '#registerMemoForm', function (event) {
-                event.preventDefault();
-                addMemo($(this));
-            })
-            .off('click' + namespace, '.memo-edit-trigger')
-            .on('click' + namespace, '.memo-edit-trigger', function () {
-                editMemo($(this));
-            })
-            .off('submit' + namespace, '#changeMemoForm')
-            .on('submit' + namespace, '#changeMemoForm', function (event) {
-                event.preventDefault();
-                changeMemo($(this));
-            })
-            .off('click' + namespace, '.delete_memo')
-            .on('click' + namespace, '.delete_memo', function () {
-                deleteMemo($(this));
-            });
+    function handleClick(event) {
+        const editTrigger = closestMatch(event.target, '.memo-edit-trigger');
+        if (editTrigger) {
+            editMemo(editTrigger);
+            return;
+        }
+        const deleteTrigger = closestMatch(event.target, '.delete_memo');
+        if (deleteTrigger) {
+            deleteMemo(deleteTrigger);
+        }
+    }
+
+    function bindEvents() {
+        if (eventsBound) {
+            return;
+        }
+        eventsBound = true;
+        document.addEventListener('submit', handleSubmit);
+        document.addEventListener('click', handleClick);
     }
 
     window.IGuguruDashboardMemo = {
         bindEvents: bindEvents
     };
-})(jQuery, window, document);
+})(window, document);
