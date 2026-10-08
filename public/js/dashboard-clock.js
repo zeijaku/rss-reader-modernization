@@ -1,83 +1,116 @@
-(function ($, window, document) {
+(function (window, document) {
     'use strict';
 
-    var dashboardCore = window.IGuguruDashboardCore;
+    const dashboardCore = window.IGuguruDashboardCore;
     if (!dashboardCore) {
         throw new Error('Dashboard core is not available.');
     }
 
-    var apiRequest = dashboardCore.apiRequest;
-    var apiResponseOk = dashboardCore.apiResponseOk;
-    var requestStart = dashboardCore.requestStart;
-    var requestEnd = dashboardCore.requestEnd;
-    var requestFail = dashboardCore.requestFail;
-    var showNotice = dashboardCore.showNotice;
+    const apiRequestPromise = dashboardCore.apiRequestPromise;
+    const apiResponseOk = dashboardCore.apiResponseOk;
+    const requestStartElement = dashboardCore.requestStartElement;
+    const requestEndElement = dashboardCore.requestEndElement;
+    const requestFailReason = dashboardCore.requestFailReason;
+    const showNotice = dashboardCore.showNotice;
+    let eventsBound = false;
+
+    function first(selector, scope) {
+        return (scope || document).querySelector(selector);
+    }
+
+    function value(selector) {
+        const element = first(selector);
+        return element ? element.value : undefined;
+    }
+
+    function setValue(selector, nextValue) {
+        const element = first(selector);
+        if (element) {
+            element.value = String(nextValue);
+        }
+    }
+
+    function setChecked(selector, checked) {
+        const element = first(selector);
+        if (element) {
+            element.checked = Boolean(checked);
+        }
+    }
+
+    function attribute(element, name, fallback) {
+        if (!element || typeof element.getAttribute !== 'function') {
+            return fallback;
+        }
+        const result = element.getAttribute(name);
+        return result === null ? fallback : result;
+    }
+
+    function closestMatch(target, selector) {
+        return target && typeof target.closest === 'function' ? target.closest(selector) : null;
+    }
+
+    function submitButton(form) {
+        return form ? form.querySelector('button[type="submit"]') : null;
+    }
 
     function clockFormPayload(prefix) {
+        const showSeconds = first('.' + prefix + 'ClockShowSeconds');
+        const showDate = first('.' + prefix + 'ClockShowDate');
         return {
-            'clock_title': $('.' + prefix + 'ClockName').val(),
-            'clock_hour_format': $('.' + prefix + 'ClockHourFormat').val(),
-            'clock_show_seconds': $('.' + prefix + 'ClockShowSeconds').prop('checked') ? '1' : '0',
-            'clock_show_date': $('.' + prefix + 'ClockShowDate').prop('checked') ? '1' : '0',
-            'widget_style': $('.' + prefix + 'ClockStyle').val(),
-            'widget_width': $('.' + prefix + 'ClockWidth').val(),
-            'widget_height': $('.' + prefix + 'ClockHeight').val()
+            'clock_title': value('.' + prefix + 'ClockName'),
+            'clock_hour_format': value('.' + prefix + 'ClockHourFormat'),
+            'clock_show_seconds': showSeconds && showSeconds.checked ? '1' : '0',
+            'clock_show_date': showDate && showDate.checked ? '1' : '0',
+            'widget_style': value('.' + prefix + 'ClockStyle'),
+            'widget_width': value('.' + prefix + 'ClockWidth'),
+            'widget_height': value('.' + prefix + 'ClockHeight')
         };
     }
 
-    function addClock($form) {
-        var $button = $form.find('button[type="submit"]');
-        if (!requestStart($button)) {
+    function runMutation(button, action, payload, onSuccess) {
+        if (!requestStartElement(button)) {
             return;
         }
-
-        var payload = clockFormPayload('register');
-        payload.widget_location = $('.registerClockLocation').val();
-        apiRequest('widget.clock.create', payload, 3000)
-            .done(function (data) {
+        apiRequestPromise(action, payload, 3000)
+            .then(function (data) {
                 if (apiResponseOk(data)) {
-                    window.location.reload();
+                    onSuccess(data);
                 }
-            })
-            .fail(requestFail)
-            .always(function () {
-                requestEnd($button);
+            }, requestFailReason)
+            .finally(function () {
+                requestEndElement(button);
             });
     }
 
-    function editClock($trigger) {
-        $('.changeClockId').val(String($trigger.attr('data-widget-id') || ''));
-        $('.changeClockName').val(String($trigger.attr('data-clock-title') || 'Clock'));
-        $('.changeClockHourFormat').val(String($trigger.attr('data-clock-hour-format') || '24'));
-        $('.changeClockShowSeconds').prop('checked', String($trigger.attr('data-clock-show-seconds') || '0') === '1');
-        $('.changeClockShowDate').prop('checked', String($trigger.attr('data-clock-show-date') || '1') === '1');
-        $('.changeClockStyle').val(String($trigger.attr('data-widget-style') || 'primary'));
-        $('.changeClockWidth').val(String($trigger.attr('data-widget-width') || '1'));
-        $('.changeClockHeight').val(String($trigger.attr('data-widget-height') || '1'));
+    function addClock(form) {
+        const payload = clockFormPayload('register');
+        payload.widget_location = value('.registerClockLocation');
+        runMutation(submitButton(form), 'widget.clock.create', payload, function () {
+            window.location.reload();
+        });
     }
 
-    function changeClock($form) {
-        var $button = $form.find('button[type="submit"]');
-        if (!requestStart($button)) {
-            return;
-        }
-
-        var payload = clockFormPayload('change');
-        payload.widget_id = $('.changeClockId').val();
-        apiRequest('widget.clock.update', payload, 3000)
-            .done(function (data) {
-                if (apiResponseOk(data)) {
-                    window.location.reload();
-                }
-            })
-            .fail(requestFail)
-            .always(function () {
-                requestEnd($button);
-            });
+    function editClock(trigger) {
+        setValue('.changeClockId', attribute(trigger, 'data-widget-id', ''));
+        setValue('.changeClockName', attribute(trigger, 'data-clock-title', 'Clock'));
+        setValue('.changeClockHourFormat', attribute(trigger, 'data-clock-hour-format', '24'));
+        setChecked('.changeClockShowSeconds', attribute(trigger, 'data-clock-show-seconds', '0') === '1');
+        setChecked('.changeClockShowDate', attribute(trigger, 'data-clock-show-date', '1') === '1');
+        setValue('.changeClockStyle', attribute(trigger, 'data-widget-style', 'primary'));
+        setValue('.changeClockWidth', attribute(trigger, 'data-widget-width', '1'));
+        setValue('.changeClockHeight', attribute(trigger, 'data-widget-height', '1'));
     }
 
-    function deleteClock($button) {
-        var widgetId = String($('.changeClockId').val() || '');
+    function changeClock(form) {
+        const payload = clockFormPayload('change');
+        payload.widget_id = value('.changeClockId');
+        runMutation(submitButton(form), 'widget.clock.update', payload, function () {
+            window.location.reload();
+        });
+    }
+
+    function deleteClock(button) {
+        const widgetId = String(value('.changeClockId') || '');
         if (!/^\d+$/.test(widgetId)) {
             showNotice('削除するClockを確認出来ませんでした', 'danger');
             return;
@@ -85,52 +118,50 @@
         if (!window.confirm('このClockを削除しますか？Browserに保存されたTimer状態も削除します。')) {
             return;
         }
-        if (!requestStart($button)) {
-            return;
-        }
-
-        apiRequest('widget.clock.delete', {'widget_id': widgetId}, 3000)
-            .done(function (data) {
-                if (apiResponseOk(data)) {
-                    if (window.RssClockTimer && typeof window.RssClockTimer.removeWidgetState === 'function') {
-                        window.RssClockTimer.removeWidgetState(widgetId);
-                    }
-                    window.location.reload();
-                }
-            })
-            .fail(requestFail)
-            .always(function () {
-                requestEnd($button);
-            });
+        runMutation(button, 'widget.clock.delete', {'widget_id': widgetId}, function () {
+            if (window.RssClockTimer && typeof window.RssClockTimer.removeWidgetState === 'function') {
+                window.RssClockTimer.removeWidgetState(widgetId);
+            }
+            window.location.reload();
+        });
     }
 
-    function bindEvents(eventNamespace) {
-        var namespace = typeof eventNamespace === 'string' && eventNamespace !== ''
-            ? eventNamespace
-            : '.iguguruDashboard';
+    function handleSubmit(event) {
+        const registerForm = closestMatch(event.target, '#registerClockForm');
+        if (registerForm) {
+            event.preventDefault();
+            addClock(registerForm);
+            return;
+        }
+        const changeForm = closestMatch(event.target, '#changeClockForm');
+        if (changeForm) {
+            event.preventDefault();
+            changeClock(changeForm);
+        }
+    }
 
-        $(document)
-            .off('submit' + namespace, '#registerClockForm')
-            .on('submit' + namespace, '#registerClockForm', function (event) {
-                event.preventDefault();
-                addClock($(this));
-            })
-            .off('click' + namespace, '.clock-edit-trigger')
-            .on('click' + namespace, '.clock-edit-trigger', function () {
-                editClock($(this));
-            })
-            .off('submit' + namespace, '#changeClockForm')
-            .on('submit' + namespace, '#changeClockForm', function (event) {
-                event.preventDefault();
-                changeClock($(this));
-            })
-            .off('click' + namespace, '.delete_clock')
-            .on('click' + namespace, '.delete_clock', function () {
-                deleteClock($(this));
-            });
+    function handleClick(event) {
+        const editTrigger = closestMatch(event.target, '.clock-edit-trigger');
+        if (editTrigger) {
+            editClock(editTrigger);
+            return;
+        }
+        const deleteTrigger = closestMatch(event.target, '.delete_clock');
+        if (deleteTrigger) {
+            deleteClock(deleteTrigger);
+        }
+    }
+
+    function bindEvents() {
+        if (eventsBound) {
+            return;
+        }
+        eventsBound = true;
+        document.addEventListener('submit', handleSubmit);
+        document.addEventListener('click', handleClick);
     }
 
     window.IGuguruDashboardClock = {
         bindEvents: bindEvents
     };
-})(jQuery, window, document);
+})(window, document);

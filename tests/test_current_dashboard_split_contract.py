@@ -15,6 +15,7 @@ def check(condition: bool, message: str) -> None:
 
 
 index = text('public/index.php')
+core = text('public/js/dashboard-core.js')
 dashboard = text('public/js/dashboard.js')
 runner = text('tests/run-current.sh')
 
@@ -55,20 +56,40 @@ for label, (path, namespace, actions, selectors) in modules.items():
     asset = path.removeprefix('public/')
     tag = f"app_asset_url('{asset}')"
     load_positions.append(index.find(tag))
-    check(index.find(tag) >= 0, f'{label} split controller is loaded through app_asset_url')
+    check(index.find(tag) >= 0, f'{label} controller is loaded through app_asset_url')
     check('window.IGuguruDashboardCore' in source, f'{label} consumes the shared Dashboard core')
-    check(f'window.{namespace} = {{' in source, f'{label} exposes one explicit split-controller namespace')
-    check('bindEvents: bindEvents' in source, f'{label} exposes its delegated-event binder')
-    check('$.ajax(' not in source, f'{label} does not duplicate the shared jQuery transport')
-    check("url: './api_v1.php'" not in source, f'{label} does not duplicate the API endpoint')
+    check(f'window.{namespace} = {{' in source, f'{label} exposes one explicit controller namespace')
+    check('bindEvents: bindEvents' in source, f'{label} exposes its event binder')
+    check('document.addEventListener(' in source, f'{label} uses native delegated events')
+    check('.querySelector(' in source, f'{label} uses native querySelector')
+    check('.closest(' in source, f'{label} preserves delegated dynamic-element lookup with closest')
+    check('apiRequestPromise(' in source, f'{label} uses the native Promise adapter')
+    check('requestStartElement(' in source and 'requestEndElement(' in source,
+          f'{label} uses native duplicate-submit protection')
+    check('jQuery' not in source and '$(' not in source and '$.' not in source,
+          f'{label} has no direct jQuery dependency')
+    check('.on(' not in source and '.off(' not in source,
+          f'{label} has no jQuery event binding')
+    check('var ' not in source, f'{label} no longer declares legacy var bindings')
+    check("url: './api_v1.php'" not in source and 'fetch(' not in source,
+          f'{label} does not duplicate or bypass the shared API transport')
     for action in actions:
         check(action in source, f'{label} preserves API action: {action}')
     for selector in selectors:
         check(selector in source, f'{label} preserves delegated selector: {selector}')
 
 load_positions.append(index.find(dashboard_tag))
-check(all(pos >= 0 for pos in load_positions), 'all split Dashboard scripts are present in the Dashboard entrypoint')
-check(load_positions == sorted(load_positions), 'load order is core -> split controllers -> dashboard.js')
+check(all(pos >= 0 for pos in load_positions), 'all Dashboard scripts are present in the Dashboard entrypoint')
+check(load_positions == sorted(load_positions), 'load order remains core -> split controllers -> dashboard.js')
+
+for helper in ('apiRequestPromise', 'requestStartElement', 'requestEndElement', 'requestFailReason'):
+    check(f'function {helper}' in core and f'{helper}: {helper}' in core,
+          f'Dashboard core exposes native adapter: {helper}')
+check('$.ajax({' in core, 'C intentionally keeps the proven jQuery transport centralized in Dashboard core')
+check("xhr.getResponseHeader('X-CSRF-Token')" in core,
+      'C preserves jQuery transport CSRF rotation handling')
+check("xhr.status === 401 && code === 'unauthenticated'" in core,
+      'C preserves the existing unauthenticated reload boundary')
 
 extracted_functions = [
     'clockFormPayload', 'addClock', 'editClock', 'changeClock', 'deleteClock',
@@ -80,20 +101,22 @@ extracted_functions = [
     'changeTaskItem', 'toggleTaskItem', 'deleteTaskItem',
 ]
 for name in extracted_functions:
-    check(f'function {name}(' not in dashboard, f'dashboard.js no longer owns extracted function: {name}')
+    check(f'function {name}(' not in dashboard, f'dashboard.js still does not reclaim extracted function: {name}')
 
 for namespace in ('IGuguruDashboardTask', 'IGuguruDashboardMemo', 'IGuguruDashboardGame', 'IGuguruDashboardClock'):
     check(f'bindFeatureModule(window.{namespace});' in dashboard,
-          f'dashboard.js initializes split controller: {namespace}')
+          f'dashboard.js initializes native controller: {namespace}')
 
 check("function renderClock($card, now)" in dashboard,
-      'Clock display/timer rendering remains in dashboard.js in B')
+      'Clock display/timer rendering remains untouched in dashboard.js')
 check("function widgetBeginDrag(" in dashboard and "function widgetFinishDrag(" in dashboard,
-      'Dashboard D&D remains untouched in B')
+      'Dashboard D&D remains untouched in C')
 check("function fetch_content(" in dashboard,
-      'RSS feed rendering/refresh remains untouched in B')
+      'RSS feed rendering/refresh remains untouched in C')
 
 for test_name in (
+    'test_current_dashboard_core_contract.py',
+    'test_current_dashboard_core_runtime.js',
     'test_current_dashboard_split_contract.py',
     'test_current_dashboard_split_runtime.js',
 ):

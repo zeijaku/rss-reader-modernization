@@ -60,7 +60,15 @@ check("xhr.getResponseHeader('X-CSRF-Token')" in core, 'Dashboard core keeps res
 check("/^[a-f0-9]{64}$/.test(token)" in core, 'Dashboard core validates rotated CSRF token shape')
 check("xhr.status === 401 && code === 'unauthenticated'" in core, 'Dashboard core keeps the unauthenticated reload boundary')
 check("'通信がタイムアウトしました'" in core and "'通信に失敗しました'" in core, 'Dashboard core preserves controlled request error messages')
-check("'request-pending'" in core and ".prop('disabled', true)" in core, 'Dashboard core preserves duplicate-submit protection')
+check("'request-pending'" in core and ".prop('disabled', true)" in core, 'Dashboard core preserves legacy jQuery duplicate-submit protection')
+check("function apiRequestPromise" in core and ".done(function (response)" in core and ".fail(function (xhr, textStatus, errorThrown)" in core,
+      'Dashboard core exposes a native Promise adapter without replacing the proven transport')
+check("function requestStartElement" in core and "button.disabled = true" in core,
+      'Dashboard core exposes native duplicate-submit protection')
+check("function requestEndElement" in core and "button.disabled = false" in core,
+      'Dashboard core exposes native request completion handling')
+check("function requestFailReason" in core and "requestFail(failure.xhr || null, failure.textStatus || '')" in core,
+      'Dashboard core adapts native Promise rejection to the existing controlled error handler')
 
 for helper in (
     'appCsrfToken',
@@ -75,6 +83,9 @@ for helper in (
     'requestFail',
 ):
     check(f'function {helper}' in dashboard, f'Dashboard keeps compatibility wrapper: {helper}')
+
+for helper in ('apiRequestPromise', 'requestStartElement', 'requestEndElement', 'requestFailReason'):
+    check(f'{helper}: {helper}' in core, f'Dashboard core exports native adapter: {helper}')
 
 for unsafe in ('.html(', 'innerHTML', 'insertAdjacentHTML', 'document.write(', 'eval(', 'new Function'):
     check(unsafe not in core, f'Dashboard core avoids unsafe DOM/code operation: {unsafe}')

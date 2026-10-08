@@ -120,6 +120,48 @@
         });
     }
 
+    function apiRequestPromise(action, data, timeout) {
+        return new Promise(function (resolve, reject) {
+            apiRequest(action, data, timeout)
+                .done(function (response) {
+                    resolve(response);
+                })
+                .fail(function (xhr, textStatus, errorThrown) {
+                    reject({
+                        xhr: xhr,
+                        textStatus: textStatus,
+                        errorThrown: errorThrown
+                    });
+                });
+        });
+    }
+
+    function requestStartElement(button) {
+        if (!button || typeof button.getAttribute !== 'function') {
+            return false;
+        }
+        if (button.getAttribute('data-request-pending') === 'true') {
+            return false;
+        }
+        clearNotice();
+        button.setAttribute('data-request-pending', 'true');
+        button.disabled = true;
+        return true;
+    }
+
+    function requestEndElement(button) {
+        if (!button || typeof button.setAttribute !== 'function') {
+            return;
+        }
+        button.setAttribute('data-request-pending', 'false');
+        button.disabled = false;
+    }
+
+    function requestFailReason(reason) {
+        var failure = reason && typeof reason === 'object' ? reason : {};
+        requestFail(failure.xhr || null, failure.textStatus || '');
+    }
+
     function requestStart($button) {
         if ($button.data('request-pending') === true) {
             return false;
@@ -145,8 +187,12 @@
         showNotice: showNotice,
         apiResponseOk: apiResponseOk,
         apiRequest: apiRequest,
+        apiRequestPromise: apiRequestPromise,
         requestStart: requestStart,
         requestEnd: requestEnd,
-        requestFail: requestFail
+        requestFail: requestFail,
+        requestStartElement: requestStartElement,
+        requestEndElement: requestEndElement,
+        requestFailReason: requestFailReason
     };
 })(jQuery, window, document);

@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
 const coreSource = fs.readFileSync(path.join(root, 'public/js/dashboard-core.js'), 'utf8');
 const clockSource = fs.readFileSync(path.join(root, 'public/js/dashboard-clock.js'), 'utf8');
+const cssSource = fs.readFileSync(path.join(root, 'public/css/dashboard.css'), 'utf8');
 let failures = 0;
 const intervalCalls = [];
 function check(ok, message) { console.log((ok ? 'PASS' : 'FAIL') + ': ' + message); if (!ok) failures++; }
@@ -82,6 +83,7 @@ class Wrapper {
 }
 
 const handlers=new Map();
+const nativeHandlers=new Map();
 const ajaxCalls=[];
 class Deferred {
     constructor(){this.doneFns=[];this.failFns=[];this.alwaysFns=[];}
@@ -109,6 +111,8 @@ const pageTop=new Element('div',{id:'page-top'});
 body.appendChild(notice);body.appendChild(pageTop);
 const documentObject=new Element('document'); documentObject.activeElement=null; documentObject.body=body; documentObject.createElement=(tag)=>new Element(tag); let pointTarget=grid.children[0]; documentObject.elementFromPoint=()=>pointTarget;
 documentObject.getElementById=()=>null;
+documentObject.querySelector=()=>null;
+documentObject.addEventListener=(type,fn)=>{const list=nativeHandlers.get(type)||[];list.push(fn);nativeHandlers.set(type,list);};
 const scheduledTimers=[];
 const windowObject={
     matchMedia:()=>({matches:false}),
@@ -139,7 +143,7 @@ function $(arg){
 $.extend=(...args)=>Object.assign(...args); $.fn={};
 $.ajax=(options)=>{const d=new Deferred();ajaxCalls.push({options,deferred:d});return d;};
 
-const context={jQuery:$,window:windowObject,document:documentObject,console,JSON,Number,Object,Array,String,Math,RegExp,Date,Intl,setTimeout:windowObject.setTimeout,clearTimeout:windowObject.clearTimeout,setInterval:windowObject.setInterval,clearInterval:windowObject.clearInterval};
+const context={jQuery:$,window:windowObject,document:documentObject,console,Promise,JSON,Number,Object,Array,String,Math,RegExp,Date,Intl,setTimeout:windowObject.setTimeout,clearTimeout:windowObject.clearTimeout,setInterval:windowObject.setInterval,clearInterval:windowObject.clearInterval};
 vm.runInNewContext(coreSource,context,{filename:'dashboard-core.js'});
 vm.runInNewContext(clockSource,context,{filename:'dashboard-clock.js'});
 vm.runInNewContext(source,context,{filename:'dashboard.js'});
@@ -154,10 +158,12 @@ clockCard.attrs['data-clock-show-date']='0';
 intervalCalls[0].fn();
 check(clockTime.textValue.split(':').length>=3,'Clock can render seconds');
 check(clockDate.hidden===true,'Clock date can be hidden');
-check(typeof handlers.get('submit.iguguruDashboard|#registerClockForm')==='function','Clock create form handler is registered');
-check(typeof handlers.get('click.iguguruDashboard|.clock-edit-trigger')==='function','Clock edit trigger handler is registered');
-check(typeof handlers.get('submit.iguguruDashboard|#changeClockForm')==='function','Clock update form handler is registered');
-check(typeof handlers.get('click.iguguruDashboard|.delete_clock')==='function','Clock delete handler is registered');
+check((nativeHandlers.get('submit')||[]).length===1,'Clock create/update share one native delegated submit handler');
+check((nativeHandlers.get('click')||[]).length===1,'Clock edit/delete share one native delegated click handler');
+check(cssSource.includes('.dashboard-grid > .clock-card[data-widget-width="1"] .clock-time'), 'one-column Clock has a conservative narrow-width fallback');
+check(cssSource.includes('@supports (font-size: 1cqw)'), 'Clock uses a guarded container-relative sizing enhancement');
+check(cssSource.includes('container-type: inline-size'), 'Clock view establishes an inline-size query container');
+check(cssSource.includes('font-size: clamp(1.5rem, 10cqw, 3.5rem)'), 'Clock time scales from the actual Widget width when supported');
 
 const keyHandler=handlers.get('keydown.iguguruDashboard|.widget-drag-handle');
 check(typeof keyHandler==='function','Keyboard reorder handler is registered once');

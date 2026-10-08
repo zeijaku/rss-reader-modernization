@@ -25,259 +25,407 @@ function check(condition, message) {
 }
 
 class Element {
-    constructor(name) {
-        this.name = name;
-        this.attrs = {};
-        this.props = {};
+    constructor(selectors = [], attrs = {}) {
+        this.selectors = new Set(selectors);
+        this.attrs = Object.assign({}, attrs);
+        this.children = [];
+        this.parentElement = null;
+        this.localQueries = new Map();
         this.value = '';
-        this.textValue = '';
-        this.childrenBySelector = new Map();
+        this.checked = false;
+        this.disabled = false;
+        this.textContent = '';
     }
-}
 
-class Wrapper {
-    constructor(elements = []) {
-        this.elements = elements;
+    appendChild(child) {
+        child.parentElement = this;
+        this.children.push(child);
+        return child;
     }
-    get length() { return this.elements.length; }
-    first() { return new Wrapper(this.elements.slice(0, 1)); }
-    get(index) { return this.elements[index]; }
-    val(value) {
-        if (arguments.length === 0) return this.elements[0] ? this.elements[0].value : undefined;
-        this.elements.forEach(el => { el.value = String(value); });
-        return this;
+
+    matches(selector) {
+        return String(selector).split(',').some((item) => this.selectors.has(item.trim()));
     }
-    attr(name, value) {
-        if (arguments.length === 1) return this.elements[0] ? this.elements[0].attrs[name] : undefined;
-        this.elements.forEach(el => { el.attrs[name] = String(value); });
-        return this;
-    }
-    prop(name, value) {
-        if (arguments.length === 1) return this.elements[0] ? this.elements[0].props[name] : undefined;
-        this.elements.forEach(el => { el.props[name] = value; });
-        return this;
-    }
-    text(value) {
-        if (arguments.length === 0) return this.elements[0] ? this.elements[0].textValue : '';
-        this.elements.forEach(el => { el.textValue = String(value); });
-        return this;
-    }
-    find(selector) {
-        const first = this.elements[0];
-        if (!first) return new Wrapper();
-        return first.childrenBySelector.get(selector) || new Wrapper();
-    }
-    closest() {
-        const first = this.elements[0];
-        return first && first.closestWrapper ? first.closestWrapper : new Wrapper();
-    }
-    off(eventName, selector) {
-        handlers.delete(eventName + '|' + (selector || ''));
-        return this;
-    }
-    on(eventName, selector, callback) {
-        if (typeof selector === 'function') {
-            callback = selector;
-            selector = '';
+
+    closest(selector) {
+        let current = this;
+        while (current) {
+            if (current.matches(selector)) {
+                return current;
+            }
+            current = current.parentElement;
         }
-        handlers.set(eventName + '|' + (selector || ''), callback);
-        return this;
+        return null;
+    }
+
+    querySelector(selector) {
+        if (this.localQueries.has(selector)) {
+            return this.localQueries.get(selector);
+        }
+        for (const child of this.children) {
+            if (child.matches(selector)) {
+                return child;
+            }
+            const nested = child.querySelector(selector);
+            if (nested) {
+                return nested;
+            }
+        }
+        return null;
+    }
+
+    getAttribute(name) {
+        return Object.prototype.hasOwnProperty.call(this.attrs, name) ? String(this.attrs[name]) : null;
+    }
+
+    setAttribute(name, value) {
+        this.attrs[name] = String(value);
     }
 }
 
-const documentObject = {};
-const handlers = new Map();
-const registry = new Map();
-const apiCalls = [];
-const requestStarts = [];
-const requestEnds = [];
-let reloads = 0;
+class DocumentHarness {
+    constructor() {
+        this.queries = new Map();
+        this.handlers = new Map();
+    }
 
-function element(name, value = '') {
-    const el = new Element(name);
-    el.value = value;
-    return el;
+    querySelector(selector) {
+        return this.queries.get(selector) || null;
+    }
+
+    add(selector, element) {
+        this.queries.set(selector, element);
+        element.selectors.add(selector);
+        return element;
+    }
+
+    addEventListener(type, handler) {
+        const list = this.handlers.get(type) || [];
+        list.push(handler);
+        this.handlers.set(type, list);
+    }
+
+    listenerCount(type) {
+        return (this.handlers.get(type) || []).length;
+    }
+
+    dispatch(type, target) {
+        const event = {
+            type,
+            target,
+            prevented: false,
+            preventDefault() {
+                this.prevented = true;
+            }
+        };
+        for (const handler of this.handlers.get(type) || []) {
+            handler(event);
+        }
+        return event;
+    }
 }
 
-function setSelector(selector, value, props = {}) {
-    const el = element(selector, value);
-    el.props = Object.assign({}, props);
-    const wrapper = new Wrapper([el]);
-    registry.set(selector, wrapper);
-    return wrapper;
+function control(documentObject, selector, value = '', attrs = {}) {
+    const element = new Element([selector], attrs);
+    element.value = String(value);
+    documentObject.add(selector, element);
+    return element;
 }
 
-function form(name) {
-    const el = element(name);
-    const button = element(name + ':submit');
-    const buttonWrapper = new Wrapper([button]);
-    el.childrenBySelector.set('button[type="submit"]', buttonWrapper);
-    return {el, wrapper: new Wrapper([el]), button, buttonWrapper};
+function form(documentObject, selector, attrs = {}) {
+    const element = new Element([selector], attrs);
+    const button = new Element(['button[type="submit"]']);
+    element.localQueries.set('button[type="submit"]', button);
+    element.appendChild(button);
+    documentObject.add(selector, element);
+    return {element, button};
 }
 
-function $(arg) {
-    if (arg === documentObject) return documentWrapper;
-    if (arg instanceof Element) return new Wrapper([arg]);
-    if (typeof arg === 'string') return registry.get(arg) || new Wrapper();
-    return new Wrapper();
+function localControl(scope, selector, value = '') {
+    const element = new Element([selector]);
+    element.value = String(value);
+    scope.localQueries.set(selector, element);
+    scope.appendChild(element);
+    return element;
 }
 
-const documentWrapper = new Wrapper([element('document')]);
-const windowObject = {
-    location: {
-        reload() { reloads += 1; }
-    },
-    confirm() { return true; },
-    RssClockTimer: {removeWidgetState() {}},
-    RssGameWidget: {removeWidgetState() {}},
-    RssMiniGame: {removeWidgetState() {}},
-    RssLightsOut: {removeWidgetState() {}}
-};
+async function flush() {
+    await Promise.resolve();
+    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+}
 
-function deferredSuccess() {
-    return {
-        done(fn) { fn({ok: true}); return this; },
-        fail() { return this; },
-        always(fn) { fn(); return this; }
+(async () => {
+    const documentObject = new DocumentHarness();
+    const apiCalls = [];
+    const requestStarts = [];
+    const requestEnds = [];
+    const failures = [];
+    const notices = [];
+    const gameStateCalls = [];
+    let reloads = 0;
+
+    const windowObject = {
+        location: {
+            reload() {
+                reloads += 1;
+            }
+        },
+        confirm() {
+            return true;
+        },
+        RssClockTimer: {
+            removeWidgetState(id) {
+                gameStateCalls.push('clock:' + id);
+            }
+        },
+        RssGameWidget: {
+            removeWidgetState(id) {
+                gameStateCalls.push('game:' + id);
+            }
+        },
+        RssMiniGame: {
+            removeWidgetState(id) {
+                gameStateCalls.push('icon:' + id);
+            }
+        },
+        RssLightsOut: {
+            removeWidgetState(id) {
+                gameStateCalls.push('lights:' + id);
+            }
+        }
     };
-}
 
-windowObject.IGuguruDashboardCore = {
-    apiRequest(action, data, timeout) {
-        apiCalls.push({action, data: Object.assign({}, data), timeout});
-        return deferredSuccess();
-    },
-    apiResponseOk(data) { return Boolean(data && data.ok === true); },
-    requestStart(button) { requestStarts.push(button); return true; },
-    requestEnd(button) { requestEnds.push(button); },
-    requestFail() {},
-    showNotice() {}
-};
+    windowObject.IGuguruDashboardCore = {
+        apiRequestPromise(action, data, timeout) {
+            apiCalls.push({action, data: Object.assign({}, data), timeout});
+            return Promise.resolve({ok: true});
+        },
+        apiResponseOk(data) {
+            return Boolean(data && data.ok === true);
+        },
+        requestStartElement(button) {
+            if (!button || button.getAttribute('data-request-pending') === 'true') {
+                return false;
+            }
+            button.setAttribute('data-request-pending', 'true');
+            button.disabled = true;
+            requestStarts.push(button);
+            return true;
+        },
+        requestEndElement(button) {
+            if (button) {
+                button.setAttribute('data-request-pending', 'false');
+                button.disabled = false;
+            }
+            requestEnds.push(button);
+        },
+        requestFailReason(reason) {
+            failures.push(reason);
+        },
+        showNotice(message, type) {
+            notices.push({message, type});
+        }
+    };
 
-const context = {
-    jQuery: $,
-    window: windowObject,
-    document: documentObject,
-    console,
-    String,
-    Number,
-    Object,
-    Array,
-    RegExp
-};
+    const context = {
+        window: windowObject,
+        document: documentObject,
+        console,
+        Promise,
+        String,
+        Number,
+        Object,
+        Array,
+        RegExp,
+        Boolean
+    };
 
-for (const [label, source] of Object.entries(sources)) {
-    vm.runInNewContext(source, context, {filename: 'dashboard-' + label.toLowerCase() + '.js'});
-}
+    for (const [label, source] of Object.entries(sources)) {
+        vm.runInNewContext(source, context, {filename: 'dashboard-' + label.toLowerCase() + '.js'});
+    }
 
-check(typeof windowObject.IGuguruDashboardTask?.bindEvents === 'function', 'Task split controller exports bindEvents');
-check(typeof windowObject.IGuguruDashboardMemo?.bindEvents === 'function', 'Memo split controller exports bindEvents');
-check(typeof windowObject.IGuguruDashboardGame?.bindEvents === 'function', 'Game split controller exports bindEvents');
-check(typeof windowObject.IGuguruDashboardClock?.bindEvents === 'function', 'Clock split controller exports bindEvents');
+    const modules = [
+        windowObject.IGuguruDashboardTask,
+        windowObject.IGuguruDashboardMemo,
+        windowObject.IGuguruDashboardGame,
+        windowObject.IGuguruDashboardClock
+    ];
+    modules.forEach((module) => module.bindEvents('.iguguruDashboard'));
 
-for (const module of [
-    windowObject.IGuguruDashboardTask,
-    windowObject.IGuguruDashboardMemo,
-    windowObject.IGuguruDashboardGame,
-    windowObject.IGuguruDashboardClock
-]) {
-    module.bindEvents('.iguguruDashboard');
-}
+    check(documentObject.listenerCount('submit') === 4, 'four native delegated submit listeners are registered');
+    check(documentObject.listenerCount('click') === 4, 'four native delegated click listeners are registered');
+    check(documentObject.listenerCount('change') === 1, 'Game registers one native delegated change listener');
 
-const expectedHandlers = [
-    'submit.iguguruDashboard|#registerTaskWidgetForm',
-    'click.iguguruDashboard|.task-widget-edit-trigger',
-    'submit.iguguruDashboard|#changeTaskWidgetForm',
-    'click.iguguruDashboard|.delete_task_widget',
-    'submit.iguguruDashboard|.task-item-create-form',
-    'click.iguguruDashboard|.task-item-edit-trigger',
-    'submit.iguguruDashboard|#changeTaskItemForm',
-    'click.iguguruDashboard|.task-toggle',
-    'click.iguguruDashboard|.delete_task_item',
-    'submit.iguguruDashboard|#registerMemoForm',
-    'click.iguguruDashboard|.memo-edit-trigger',
-    'submit.iguguruDashboard|#changeMemoForm',
-    'click.iguguruDashboard|.delete_memo',
-    'submit.iguguruDashboard|#registerGameWidgetForm',
-    'change.iguguruDashboard|.registerGameType',
-    'change.iguguruDashboard|.changeGameType',
-    'click.iguguruDashboard|.mini-game-edit-trigger',
-    'submit.iguguruDashboard|#changeGameWidgetForm',
-    'click.iguguruDashboard|.delete_game_widget',
-    'submit.iguguruDashboard|#registerClockForm',
-    'click.iguguruDashboard|.clock-edit-trigger',
-    'submit.iguguruDashboard|#changeClockForm',
-    'click.iguguruDashboard|.delete_clock'
-];
-expectedHandlers.forEach(key => check(typeof handlers.get(key) === 'function', 'delegated handler registered: ' + key));
-const firstHandlerCount = handlers.size;
-windowObject.IGuguruDashboardTask.bindEvents('.iguguruDashboard');
-windowObject.IGuguruDashboardMemo.bindEvents('.iguguruDashboard');
-windowObject.IGuguruDashboardGame.bindEvents('.iguguruDashboard');
-windowObject.IGuguruDashboardClock.bindEvents('.iguguruDashboard');
-check(handlers.size === firstHandlerCount, 'rebinding keeps one namespaced handler per selector');
+    modules.forEach((module) => module.bindEvents('.iguguruDashboard'));
+    check(documentObject.listenerCount('submit') === 4, 'rebinding does not duplicate native submit listeners');
+    check(documentObject.listenerCount('click') === 4, 'rebinding does not duplicate native click listeners');
+    check(documentObject.listenerCount('change') === 1, 'rebinding does not duplicate native change listeners');
 
-setSelector('.registerTaskWidgetTitleValue', 'Tasks');
-setSelector('.registerTaskWidgetStyle', 'primary');
-setSelector('.registerTaskWidgetWidth', '2');
-setSelector('.registerTaskWidgetHeight', '3');
-setSelector('.registerTaskWidgetLocation', '1');
-const taskForm = form('task-form');
-handlers.get('submit.iguguruDashboard|#registerTaskWidgetForm').call(taskForm.el, {preventDefault() {}});
-let call = apiCalls.at(-1);
-check(call.action === 'widget.task.create', 'Task create keeps API action');
-check(call.data.task_widget_title === 'Tasks' && call.data.widget_location === '1' && call.data.widget_width === '2',
-    'Task create keeps payload fields');
+    control(documentObject, '.registerTaskWidgetTitleValue', 'Tasks');
+    control(documentObject, '.registerTaskWidgetStyle', 'primary');
+    control(documentObject, '.registerTaskWidgetWidth', '2');
+    control(documentObject, '.registerTaskWidgetHeight', '3');
+    control(documentObject, '.registerTaskWidgetLocation', '1');
+    const taskRegister = form(documentObject, '#registerTaskWidgetForm');
+    const taskSubmit = documentObject.dispatch('submit', taskRegister.element);
+    check(taskSubmit.prevented, 'Task create prevents native form submission');
+    await flush();
+    let call = apiCalls.at(-1);
+    check(call.action === 'widget.task.create', 'Task create preserves API action');
+    check(call.data.task_widget_title === 'Tasks' && call.data.widget_location === '1' && call.data.widget_width === '2',
+        'Task create preserves payload fields');
+    check(taskRegister.button.disabled === false, 'Task create releases the native pending guard');
 
-setSelector('.registerMemoTitleValue', 'Memo title');
-setSelector('.registerMemoBody', 'Memo body');
-setSelector('.registerMemoStyle', 'success');
-setSelector('.registerMemoWidth', '2');
-setSelector('.registerMemoHeight', '2');
-setSelector('.registerMemoLocation', '0');
-const memoForm = form('memo-form');
-handlers.get('submit.iguguruDashboard|#registerMemoForm').call(memoForm.el, {preventDefault() {}});
-call = apiCalls.at(-1);
-check(call.action === 'widget.memo.create', 'Memo create keeps API action');
-check(call.data.memo_title === 'Memo title' && call.data.memo_body === 'Memo body' && call.data.widget_location === '0',
-    'Memo create keeps payload fields');
+    control(documentObject, '.registerMemoTitleValue', 'Memo title');
+    control(documentObject, '.registerMemoBody', 'Memo body');
+    control(documentObject, '.registerMemoStyle', 'success');
+    control(documentObject, '.registerMemoWidth', '2');
+    control(documentObject, '.registerMemoHeight', '2');
+    control(documentObject, '.registerMemoLocation', '0');
+    const memoRegister = form(documentObject, '#registerMemoForm');
+    documentObject.dispatch('submit', memoRegister.element);
+    documentObject.dispatch('submit', memoRegister.element);
+    check(apiCalls.filter((entry) => entry.action === 'widget.memo.create').length === 1,
+        'Memo duplicate submit is blocked while the native request guard is pending');
+    await flush();
+    call = apiCalls.at(-1);
+    check(call.action === 'widget.memo.create', 'Memo create preserves API action');
+    check(call.data.memo_title === 'Memo title' && call.data.memo_body === 'Memo body' && call.data.widget_location === '0',
+        'Memo create preserves payload fields');
 
-setSelector('.registerGameTitleValue', 'Maze Chase');
-const registerGameType = setSelector('.registerGameType', 'maze_chase');
-registerGameType.attr('data-previous-game-type', 'icon_quest');
-setSelector('.registerGameStyle', 'secondary');
-setSelector('.registerGameWidth', '2');
-setSelector('.registerGameHeight', '2');
-setSelector('.registerGameLocation', '3');
-const gameForm = form('game-form');
-handlers.get('submit.iguguruDashboard|#registerGameWidgetForm').call(gameForm.el, {preventDefault() {}});
-call = apiCalls.at(-1);
-check(call.action === 'widget.game.create', 'Game create keeps API action');
-check(call.data.game_type === 'maze_chase' && call.data.game_title === 'Maze Chase' && call.data.widget_location === '3',
-    'Game create keeps payload fields');
+    control(documentObject, '.registerGameTitleValue', 'Icon Quest');
+    const registerGameType = control(documentObject, '.registerGameType', 'maze_chase', {'data-previous-game-type': 'icon_quest'});
+    control(documentObject, '.registerGameStyle', 'secondary');
+    control(documentObject, '.registerGameWidth', '2');
+    control(documentObject, '.registerGameHeight', '2');
+    control(documentObject, '.registerGameLocation', '3');
+    documentObject.dispatch('change', registerGameType);
+    check(documentObject.querySelector('.registerGameTitleValue').value === 'Maze Chase',
+        'Game type change preserves automatic default-title behavior');
+    const gameRegister = form(documentObject, '#registerGameWidgetForm');
+    documentObject.dispatch('submit', gameRegister.element);
+    await flush();
+    call = apiCalls.at(-1);
+    check(call.action === 'widget.game.create', 'Game create preserves API action');
+    check(call.data.game_type === 'maze_chase' && call.data.game_title === 'Maze Chase' && call.data.widget_location === '3',
+        'Game create preserves payload fields');
 
-setSelector('.registerGameTitleValue', 'Icon Quest');
-registerGameType.val('maze_chase').attr('data-previous-game-type', 'icon_quest');
-handlers.get('change.iguguruDashboard|.registerGameType').call(registerGameType.get(0), {});
-check(registry.get('.registerGameTitleValue').val() === 'Maze Chase', 'Game type change keeps automatic default-title behavior');
+    control(documentObject, '.registerClockName', 'Clock');
+    control(documentObject, '.registerClockHourFormat', '24');
+    const showSeconds = control(documentObject, '.registerClockShowSeconds');
+    const showDate = control(documentObject, '.registerClockShowDate');
+    showSeconds.checked = true;
+    showDate.checked = false;
+    control(documentObject, '.registerClockStyle', 'primary');
+    control(documentObject, '.registerClockWidth', '1');
+    control(documentObject, '.registerClockHeight', '2');
+    control(documentObject, '.registerClockLocation', '2');
+    const clockRegister = form(documentObject, '#registerClockForm');
+    documentObject.dispatch('submit', clockRegister.element);
+    await flush();
+    call = apiCalls.at(-1);
+    check(call.action === 'widget.clock.create', 'Clock create preserves API action');
+    check(call.data.clock_show_seconds === '1' && call.data.clock_show_date === '0' && call.data.widget_location === '2',
+        'Clock create preserves checkbox and location payload semantics');
 
-setSelector('.registerClockName', 'Clock');
-setSelector('.registerClockHourFormat', '24');
-setSelector('.registerClockShowSeconds', '', {checked: true});
-setSelector('.registerClockShowDate', '', {checked: false});
-setSelector('.registerClockStyle', 'primary');
-setSelector('.registerClockWidth', '1');
-setSelector('.registerClockHeight', '2');
-setSelector('.registerClockLocation', '2');
-const clockForm = form('clock-form');
-handlers.get('submit.iguguruDashboard|#registerClockForm').call(clockForm.el, {preventDefault() {}});
-call = apiCalls.at(-1);
-check(call.action === 'widget.clock.create', 'Clock create keeps API action');
-check(call.data.clock_show_seconds === '1' && call.data.clock_show_date === '0' && call.data.widget_location === '2',
-    'Clock create keeps checkbox and location payload semantics');
+    const changeMemoWidgetId = control(documentObject, '.changeMemoWidgetId', '');
+    control(documentObject, '.changeMemoId', '');
+    const changeMemoTitle = control(documentObject, '.changeMemoTitleValue', '');
+    const changeMemoBody = control(documentObject, '.changeMemoBody', '');
+    control(documentObject, '.changeMemoStyle', '');
+    control(documentObject, '.changeMemoWidth', '');
+    control(documentObject, '.changeMemoHeight', '');
+    const memoCard = new Element(['[data-dashboard-widget-type="memo"]']);
+    const memoTitle = new Element(['.memo-title']);
+    memoTitle.textContent = 'Existing memo';
+    const memoBody = new Element(['.memo-body']);
+    memoBody.textContent = '<b>text only</b>';
+    memoCard.localQueries.set('.memo-title', memoTitle);
+    memoCard.localQueries.set('.memo-body', memoBody);
+    memoCard.appendChild(memoTitle);
+    memoCard.appendChild(memoBody);
+    const memoEdit = new Element(['.memo-edit-trigger'], {
+        'data-widget-id': '51',
+        'data-memo-id': '61',
+        'data-widget-style': 'info',
+        'data-widget-width': '2',
+        'data-widget-height': '1'
+    });
+    const memoEditIcon = new Element(['.memo-edit-icon']);
+    memoEdit.appendChild(memoEditIcon);
+    memoCard.appendChild(memoEdit);
+    documentObject.dispatch('click', memoEditIcon);
+    check(changeMemoWidgetId.value === '51' && changeMemoTitle.value === 'Existing memo',
+        'Memo edit works through delegated closest() from a nested click target');
+    check(changeMemoBody.value === '<b>text only</b>', 'Memo edit keeps textContent and never interprets stored HTML');
 
-check(requestStarts.length === 4 && requestEnds.length === 4, 'split create mutations preserve pending-request lifecycle');
-check(reloads === 4, 'successful split create mutations keep reload behavior');
+    // Task Item partial-refresh behavior is covered by test_current_task_partial_refresh_runtime.js.
 
-console.log('RESULT: PASS ' + passed + ' / FAIL ' + failed + ' / SKIP 0');
-process.exit(failed === 0 ? 0 : 1);
+    const changeClockId = control(documentObject, '.changeClockId', '');
+    const changeClockName = control(documentObject, '.changeClockName', '');
+    control(documentObject, '.changeClockHourFormat', '');
+    const changeSeconds = control(documentObject, '.changeClockShowSeconds');
+    const changeDate = control(documentObject, '.changeClockShowDate');
+    control(documentObject, '.changeClockStyle', '');
+    control(documentObject, '.changeClockWidth', '');
+    control(documentObject, '.changeClockHeight', '');
+    const clockEdit = new Element(['.clock-edit-trigger'], {
+        'data-widget-id': '81',
+        'data-clock-title': 'Office',
+        'data-clock-hour-format': '12',
+        'data-clock-show-seconds': '1',
+        'data-clock-show-date': '0',
+        'data-widget-style': 'warning',
+        'data-widget-width': '2',
+        'data-widget-height': '2'
+    });
+    documentObject.dispatch('click', clockEdit);
+    check(changeClockId.value === '81' && changeClockName.value === 'Office',
+        'Clock edit preserves Widget ID and title');
+    check(changeSeconds.checked === true && changeDate.checked === false,
+        'Clock edit preserves checkbox state');
+
+    control(documentObject, '.changeGameWidgetId', '91');
+    control(documentObject, '.changeGameTitleValue', 'Maze Chase');
+    const changeGameType = control(documentObject, '.changeGameType', 'falling_blocks', {
+        'data-previous-game-type': 'maze_chase',
+        'data-original-game-type': 'icon_quest'
+    });
+    control(documentObject, '.changeGameStyle', 'secondary');
+    control(documentObject, '.changeGameWidth', '2');
+    control(documentObject, '.changeGameHeight', '2');
+    const gameChange = form(documentObject, '#changeGameWidgetForm');
+    documentObject.dispatch('submit', gameChange.element);
+    await flush();
+    call = apiCalls.at(-1);
+    check(call.action === 'widget.game.update' && call.data.widget_id === '91' && call.data.game_type === 'falling_blocks',
+        'Game update preserves Widget ID and selected type');
+    check(gameStateCalls.includes('icon:91'), 'Game type change preserves old-family Browser state cleanup');
+
+    const gameDelete = new Element(['.delete_game_widget']);
+    documentObject.dispatch('click', gameDelete);
+    await flush();
+    call = apiCalls.at(-1);
+    check(call.action === 'widget.game.delete' && call.data.widget_id === '91', 'Game delete preserves Widget ID payload');
+    check(gameStateCalls.includes('game:91') && gameStateCalls.includes('lights:91'),
+        'Game delete preserves multi-family Browser state cleanup');
+
+    const clockDelete = new Element(['.delete_clock']);
+    documentObject.dispatch('click', clockDelete);
+    await flush();
+    call = apiCalls.at(-1);
+    check(call.action === 'widget.clock.delete' && call.data.widget_id === '81', 'Clock delete preserves Widget ID payload');
+    check(gameStateCalls.includes('clock:81'), 'Clock delete preserves Timer Browser state cleanup');
+
+    check(failures.length === 0, 'native controller success path does not invoke request failure handling');
+    check(notices.length === 0, 'valid native controller workflow does not emit error notices');
+    check(requestStarts.length === requestEnds.length, 'every started native mutation releases its pending guard');
+    check(reloads >= 7, 'Widget-level native mutations preserve existing reload behavior');
+
+    console.log('RESULT: PASS ' + passed + ' / FAIL ' + failed + ' / SKIP 0');
+    process.exit(failed === 0 ? 0 : 1);
+})().catch((error) => {
+    console.error(error);
+    process.exit(1);
+});
