@@ -3239,3 +3239,29 @@ legend.text-dark {
     #page-top a > i { font-size: 24px; }
     #page-top .page-top-label { display: none; }
 }
+
+
+/* V1.46-C R1: fit Clock text to the Widget's actual inline width.
+ * The legacy vw sizing follows the browser viewport and can overflow a narrow
+ * one-column Clock on a wide desktop. Keep a conservative fallback for older
+ * engines, then prefer container-relative sizing when available. */
+.dashboard-grid > .clock-card[data-widget-width="1"] .clock-time {
+    max-width: 100%;
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.clock-view-clock {
+    width: 100%;
+    min-width: 0;
+}
+
+@supports (font-size: 1cqw) {
+    .clock-view-clock {
+        container-type: inline-size;
+    }
+
+    .dashboard-grid > .clock-card[data-widget-width] .clock-time {
+        max-width: 100%;
+        font-size: clamp(1.5rem, 10cqw, 3.5rem);
+    }
+}
