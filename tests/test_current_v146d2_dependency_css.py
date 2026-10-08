@@ -85,9 +85,8 @@ check("assetUrl('./css/calendar-polish.css')" in calendar,
       'Calendar loads the consolidated polish stylesheet through the current asset revision')
 check('calendar-polish-r3.css' not in calendar and 'data-calendar-polish-r3-style' not in calendar,
       'Calendar no longer requests the former R3 patch stylesheet')
-legacy_r3_body = re.sub(r'^/\*[\s\S]*?\*/\s*', '', calendar_r3_legacy).strip()
-check(legacy_r3_body in calendar_polish,
-      'all former Calendar R3 CSS behavior is retained inside calendar-polish.css')
+check(not (ROOT / 'public/css/calendar-polish-r3.css').exists(),
+      'obsolete Calendar R3 patch stylesheet is removed from Current source')
 check('.calendar-upcoming-item[hidden]' in calendar_polish
       and '.calendar-upcoming-toggle-wrap' in calendar_polish
       and '[data-calendar-height-held="1"]' in calendar_polish,
