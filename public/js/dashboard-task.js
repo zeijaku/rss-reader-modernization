@@ -70,12 +70,168 @@
         apiRequestPromise(action, payload, 3000)
             .then(function (data) {
                 if (apiResponseOk(data)) {
-                    onSuccess(data);
+                    return onSuccess(data);
                 }
+                return false;
             }, requestFailReason)
             .finally(function () {
                 requestEndElement(button);
             });
+    }
+
+    function priorityLabel(priority) {
+        if (priority === 'high') {
+            return '高';
+        }
+        if (priority === 'low') {
+            return '低';
+        }
+        return '通常';
+    }
+
+    function createElement(tagName, className, text) {
+        const element = document.createElement(tagName);
+        if (className) {
+            element.className = className;
+        }
+        if (typeof text === 'string') {
+            element.textContent = text;
+        }
+        return element;
+    }
+
+    function clearChildren(element) {
+        while (element && element.firstChild) {
+            element.removeChild(element.firstChild);
+        }
+    }
+
+    function appendTaskItem(list, task) {
+        const taskId = Number(task && task.task_id);
+        if (!Number.isInteger(taskId) || taskId <= 0) {
+            return;
+        }
+
+        const title = typeof task.title === 'string' ? task.title : '';
+        const dueDate = typeof task.due_date === 'string' ? task.due_date : '';
+        const priority = ['normal', 'high', 'low'].indexOf(task.priority) !== -1 ? task.priority : 'normal';
+        const completed = task.completed === true || String(task.completed) === '1';
+
+        const item = createElement('li', 'task-item task-priority-' + priority + (completed ? ' task-completed' : ''));
+        item.setAttribute('data-task-id', String(taskId));
+        item.setAttribute('data-task-completed', completed ? '1' : '0');
+
+        const toggle = createElement('button', 'btn btn-link task-toggle');
+        toggle.type = 'button';
+        toggle.setAttribute('data-task-id', String(taskId));
+        toggle.setAttribute('data-task-completed', completed ? '1' : '0');
+        toggle.setAttribute('aria-label', (completed ? '未完了に戻す: ' : '完了にする: ') + title);
+        toggle.title = completed ? '未完了に戻す' : '完了にする';
+        const toggleIcon = createElement('i', completed ? 'fas fa-check-circle text-success' : 'far fa-circle text-muted');
+        toggleIcon.setAttribute('aria-hidden', 'true');
+        toggle.appendChild(toggleIcon);
+        item.appendChild(toggle);
+
+        const main = createElement('div', 'task-item-main');
+        main.appendChild(createElement('div', 'task-item-title', title));
+        const meta = createElement('div', 'task-item-meta');
+        meta.appendChild(createElement('span', 'task-priority-label task-priority-label-' + priority, '優先度 ' + priorityLabel(priority)));
+        if (dueDate !== '') {
+            const due = createElement('time', 'task-due-date');
+            due.setAttribute('datetime', dueDate);
+            const dueIcon = createElement('i', 'far fa-calendar-alt');
+            dueIcon.setAttribute('aria-hidden', 'true');
+            due.appendChild(dueIcon);
+            due.appendChild(document.createTextNode(' ' + dueDate));
+            meta.appendChild(due);
+        }
+        main.appendChild(meta);
+        item.appendChild(main);
+
+        const edit = createElement('button', 'btn btn-link task-item-edit-trigger');
+        edit.type = 'button';
+        edit.setAttribute('data-task-id', String(taskId));
+        edit.setAttribute('data-task-title', title);
+        edit.setAttribute('data-task-due-date', dueDate);
+        edit.setAttribute('data-task-priority', priority);
+        edit.setAttribute('data-bs-toggle', 'modal');
+        edit.setAttribute('data-bs-target', '#changeTaskItem');
+        edit.setAttribute('aria-label', 'このTaskを編集');
+        const editIcon = createElement('i', 'fas fa-ellipsis-v');
+        editIcon.setAttribute('aria-hidden', 'true');
+        edit.appendChild(editIcon);
+        item.appendChild(edit);
+
+        list.appendChild(item);
+    }
+
+    function renderTaskItems(card, tasks) {
+        const list = first('.task-list', card);
+        if (!list) {
+            return false;
+        }
+        clearChildren(list);
+        if (!Array.isArray(tasks) || tasks.length === 0) {
+            list.appendChild(createElement('li', 'task-empty text-muted', 'Taskはまだありません。'));
+            return true;
+        }
+        tasks.forEach(function (task) {
+            appendTaskItem(list, task);
+        });
+        if (!list.firstChild) {
+            list.appendChild(createElement('li', 'task-empty text-muted', 'Taskはまだありません。'));
+        }
+        return true;
+    }
+
+    function refreshTaskWidget(card) {
+        if (!card) {
+            showNotice('Task Widgetを確認出来ませんでした。ページを再読み込みしてください。', 'danger');
+            return Promise.resolve(false);
+        }
+        const widgetId = String(attribute(card, 'data-dashboard-widget-id', ''));
+        const location = String(attribute(card, 'data-dashboard-widget-location', ''));
+        if (!/^\d+$/.test(widgetId) || !/^[0-3]$/.test(location)) {
+            showNotice('Task Widgetの表示情報を確認出来ませんでした。ページを再読み込みしてください。', 'danger');
+            return Promise.resolve(false);
+        }
+
+        return apiRequestPromise('widget.list', {'widget_location': location}, 5000)
+            .then(function (data) {
+                if (!apiResponseOk(data)) {
+                    return false;
+                }
+                const widgets = data && data.data && Array.isArray(data.data.widgets) ? data.data.widgets : [];
+                const taskWidget = widgets.find(function (widget) {
+                    return widget
+                        && String(widget.widget_id) === widgetId
+                        && widget.widget_type === 'task';
+                });
+                if (!taskWidget || !renderTaskItems(card, taskWidget.tasks)) {
+                    showNotice('Task Widgetの再描画に失敗しました。ページを再読み込みしてください。', 'danger');
+                    return false;
+                }
+                return true;
+            }, function (reason) {
+                requestFailReason(reason);
+                return false;
+            });
+    }
+
+    function taskCardForTaskId(taskId) {
+        if (!/^\d+$/.test(String(taskId || ''))) {
+            return null;
+        }
+        const item = first('.task-card [data-task-id="' + String(taskId) + '"]');
+        return closestMatch(item, '[data-dashboard-widget-type="task"]');
+    }
+
+    function closeTaskItemModal() {
+        const modal = first('#changeTaskItem');
+        const dismiss = modal ? first('[data-bs-dismiss="modal"]', modal) : null;
+        if (dismiss && typeof dismiss.click === 'function') {
+            dismiss.click();
+        }
     }
 
     function addTaskWidget(form) {
@@ -117,10 +273,16 @@
     }
 
     function addTaskItem(form) {
+        const card = closestMatch(form, '[data-dashboard-widget-type="task"]');
         const payload = taskItemPayload(form);
         payload.widget_id = attribute(form, 'data-widget-id', '');
         runMutation(submitButton(form), 'task.item.create', payload, function () {
-            window.location.reload();
+            return refreshTaskWidget(card).then(function (updated) {
+                if (updated && typeof form.reset === 'function') {
+                    form.reset();
+                }
+                return updated;
+            });
         });
     }
 
@@ -134,8 +296,14 @@
     function changeTaskItem(form) {
         const payload = taskItemPayload(form);
         payload.task_id = value('.changeTaskItemId');
+        const card = taskCardForTaskId(payload.task_id);
         runMutation(submitButton(form), 'task.item.update', payload, function () {
-            window.location.reload();
+            return refreshTaskWidget(card).then(function (updated) {
+                if (updated) {
+                    closeTaskItemModal();
+                }
+                return updated;
+            });
         });
     }
 
@@ -145,11 +313,20 @@
         if (!/^\d+$/.test(taskId)) {
             return;
         }
+        const card = closestMatch(button, '[data-dashboard-widget-type="task"]');
         runMutation(button, 'task.item.toggle', {
             'task_id': taskId,
             'task_completed': completed ? '0' : '1'
         }, function () {
-            window.location.reload();
+            return refreshTaskWidget(card).then(function (updated) {
+                if (updated) {
+                    const refreshedToggle = first('.task-card [data-task-id="' + taskId + '"] .task-toggle');
+                    if (refreshedToggle && typeof refreshedToggle.focus === 'function') {
+                        refreshedToggle.focus();
+                    }
+                }
+                return updated;
+            });
         });
     }
 
@@ -162,8 +339,14 @@
         if (!window.confirm('このTaskを削除しますか？')) {
             return;
         }
+        const card = taskCardForTaskId(taskId);
         runMutation(button, 'task.item.delete', {'task_id': taskId}, function () {
-            window.location.reload();
+            return refreshTaskWidget(card).then(function (updated) {
+                if (updated) {
+                    closeTaskItemModal();
+                }
+                return updated;
+            });
         });
     }
 
