@@ -59,7 +59,10 @@ check(bool(active_revision)
       and 'document.currentScript' in camera_streaming
       and "assetUrl('./css/camera-video-streaming.css')" in camera_streaming,
       "Camera streaming fallback CSS inherits the entry-script revision")
-check('sha384-5E8B0pTlZZJMabWpC0fyYf6OUpe15jJij34BqBAh4NXoHAlLNOjCPRrwtOXOQFAn' in camera_streaming, "hls.js SRI retains the browser-computed SHA-384 digest")
+check("HLS_LIBRARY_PATH = './js/hls-1.7.3.min.js'" in camera_streaming
+      and 'script.src = assetUrl(HLS_LIBRARY_PATH)' in camera_streaming
+      and 'cdn.jsdelivr.net' not in camera_streaming,
+      "hls.js remains revision-aware while using the vendored same-origin asset")
 
 failed = [m for ok, m in checks if not ok]
 print(f"RESULT: PASS {len(checks)-len(failed)} / FAIL {len(failed)} / SKIP 0")
