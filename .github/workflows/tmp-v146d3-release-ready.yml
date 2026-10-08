@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   verify:
-    if: github.event.head_commit.message == 'Retry temporary V1.46-D3 release-ready workflow'
+    if: github.event.head_commit.message == 'Fix temporary V1.46-D3 release-ready workflow'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,34 +23,22 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf dist
-          python3 tools/build_release_package.py --release 1.46.0 --mode final --output-dir dist
-          python3 tools/verify_release_package.py --release 1.46.0             dist/rss-reader-modernization-1.46.0.zip             dist/rss-reader-modernization-1.46.0.zip.sha256
+
+          python3 tools/build_release_package.py             --release 1.46.0             --mode final             --output-dir dist
+
+          python3 tools/verify_release_package.py             --release 1.46.0             dist/rss-reader-modernization-1.46.0.zip             dist/rss-reader-modernization-1.46.0.zip.sha256
 
           unzip -Z1 dist/rss-reader-modernization-1.46.0.zip > /tmp/runtime-files.txt
-          cat /tmp/runtime-files.txt
 
           for obsolete in             public/css/calendar-polish-r3.css             public/css/drawer-v121b.css             public/css/drawer-v121c.css             licenses/hls.js-1.6.16-Apache-2.0.txt             licenses/fontawesome-5.3.1-LICENSE.txt
           do
-            if grep -Eq "(^|/)${obsolete//./\\.}$" /tmp/runtime-files.txt; then
+            if grep -Fq "/$obsolete" /tmp/runtime-files.txt; then
               echo "Obsolete file unexpectedly packaged: $obsolete" >&2
               exit 1
             fi
           done
 
-          grep -Eq '(^|/)public/js/hls-1\.7\.3\.min\.js
-          sha256sum public/js/hls-1.7.3.min.js
-          cat dist/rss-reader-modernization-1.46.0.zip.sha256
-
-      - name: Upload verification runtime
-        uses: actions/upload-artifact@v4
-        with:
-          name: V1.46.0-release-ready-runtime
-          path: |
-            dist/rss-reader-modernization-1.46.0.zip
-            dist/rss-reader-modernization-1.46.0.zip.sha256
-          if-no-files-found: error
-          retention-days: 7
- /tmp/runtime-files.txt
+          grep -Fq "/public/js/hls-1.7.3.min.js" /tmp/runtime-files.txt
           sha256sum public/js/hls-1.7.3.min.js
           cat dist/rss-reader-modernization-1.46.0.zip.sha256
 
