@@ -1,3 +1,24 @@
+## Version 1.45.0からVersion 1.46.0
+
+V1.46.0はFrontend Modernization Releaseです。Database構造変更、Migration、SQL、新規必須Configはありません。
+
+1. Application code、`config/local.php`、実DB、必要な`var/` DataをBackupする。
+2. 正式Runtime ZIPとSHA-256を確認し、既存Applicationへ相対Pathで上書きする。
+3. SQL、Migration、`schema.sql`は実行しない。
+4. 旧環境に残る `calendar-polish-r3.css`、`drawer-v121b.css`、`drawer-v121c.css`、旧hls.js 1.6.16 / Font Awesome 5.3.1 license copyは削除可能。
+5. BrowserをReloadし、Footerが `RSS Reader Modernization 1.46.0` であることを確認する。
+6. Task Item部分更新、1列Clock、Drawer、Calendar、HLSを利用している場合はHLS Playerを確認する。
+7. Networkでhls.jsがsame-originの `hls-1.7.3.min.js?v=1.46.0` から取得され、jsDelivrから取得されないことを確認する。
+
+```text
+DB schema / Migration       変更なし
+Public API                  破壊的変更なし
+必須設定                    追加なし
+Browser Cache               APP_ASSET_REVISION=1.46.0
+削除file                    Calendar / Drawer旧CSS 3file、旧dependency license 2file
+正式Tag / GitHub Release    v1.46.0
+```
+
 # Historical Update / Migration History
 
 ## V1.41.0 Calendar期日強調
