@@ -56,7 +56,7 @@ check('destroyHls' in streaming and 'hls.destroy()' in streaming, 'HLS teardown 
 check('nativeHlsSupported' in streaming and 'application/vnd.apple.mpegurl' in streaming,
       'Native HLS fallback remains available')
 check('autoplay' not in streaming.lower(), 'HLS playback still does not force autoplay')
-check('./js/camera-video-streaming.js?v=' in calendar, 'Calendar loader still revision-loads Camera/HLS module')
+check("loadScript(assetUrl('./js/camera-video-streaming.js'));" in calendar, 'Calendar loader still revision-loads Camera/HLS module')
 
 check(license_path.is_file(), 'hls.js 1.7.3 Apache-2.0 license copy exists')
 check(
