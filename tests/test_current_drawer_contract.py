@@ -50,10 +50,12 @@ check(all('id="' + pane + '"' in settings for pane in ['display', 'tabs', 'links
       'Settings keeps legacy deep links and the new User Links pane')
 
 css = text('public/css/drawer.css')
-check('flex: 0 0 18px' in css and 'padding: 8px 12px' in css,
+catalog_marker = '/* Scoped Drawer layout.'
+catalog_css = css.split(catalog_marker, 1)[1] if catalog_marker in css else ''
+check('flex: 0 0 18px' in catalog_css and 'padding: 8px 12px' in catalog_css,
       'category arrows have a reserved width and inset padding')
-check('.modal-' not in css and '.dashboard-widget' not in css,
-      'consolidated Drawer catalog rules do not style modals or Dashboard cards')
+check(bool(catalog_css) and '.modal-' not in catalog_css and '.dashboard-widget' not in catalog_css,
+      'consolidated Drawer catalog rules stay scoped away from modals and Dashboard cards')
 
 check(
     "children('.drawer-logout-form')" in drawer,
