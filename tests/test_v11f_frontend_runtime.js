@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
 const coreSource = fs.readFileSync(path.join(root, 'public/js/dashboard-core.js'), 'utf8');
 const clockSource = fs.readFileSync(path.join(root, 'public/js/dashboard-clock.js'), 'utf8');
+const cssSource = fs.readFileSync(path.join(root, 'public/css/dashboard.css'), 'utf8');
 let failures = 0;
 const intervalCalls = [];
 function check(ok, message) { console.log((ok ? 'PASS' : 'FAIL') + ': ' + message); if (!ok) failures++; }
@@ -159,6 +160,10 @@ check(clockTime.textValue.split(':').length>=3,'Clock can render seconds');
 check(clockDate.hidden===true,'Clock date can be hidden');
 check((nativeHandlers.get('submit')||[]).length===1,'Clock create/update share one native delegated submit handler');
 check((nativeHandlers.get('click')||[]).length===1,'Clock edit/delete share one native delegated click handler');
+check(cssSource.includes('.dashboard-grid > .clock-card[data-widget-width="1"] .clock-time'), 'one-column Clock has a conservative narrow-width fallback');
+check(cssSource.includes('@supports (font-size: 1cqw)'), 'Clock uses a guarded container-relative sizing enhancement');
+check(cssSource.includes('container-type: inline-size'), 'Clock view establishes an inline-size query container');
+check(cssSource.includes('font-size: clamp(1.5rem, 10cqw, 3.5rem)'), 'Clock time scales from the actual Widget width when supported');
 
 const keyHandler=handlers.get('keydown.iguguruDashboard|.widget-drag-handle');
 check(typeof keyHandler==='function','Keyboard reorder handler is registered once');
