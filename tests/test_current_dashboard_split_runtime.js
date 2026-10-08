@@ -360,36 +360,7 @@ async function flush() {
         'Memo edit works through delegated closest() from a nested click target');
     check(changeMemoBody.value === '<b>text only</b>', 'Memo edit keeps textContent and never interprets stored HTML');
 
-    control(documentObject, '.changeTaskItemId', '71');
-    const taskChangeForm = form(documentObject, '#changeTaskItemForm');
-    localControl(taskChangeForm.element, '.task-create-title, .changeTaskItemTitleValue', 'Changed task');
-    localControl(taskChangeForm.element, '.task-create-due, .changeTaskItemDueDate', '2026-10-08');
-    localControl(taskChangeForm.element, '.task-create-priority, .changeTaskItemPriority', 'high');
-    documentObject.dispatch('submit', taskChangeForm.element);
-    await flush();
-    call = apiCalls.at(-1);
-    check(call.action === 'task.item.update' && call.data.task_id === '71', 'Task item update preserves selected Task ID');
-    check(call.data.task_title === 'Changed task' && call.data.task_due_date === '2026-10-08' && call.data.task_priority === 'high',
-        'Task item update preserves native form payload');
-
-    const taskCreateForm = new Element(['.task-item-create-form'], {'data-widget-id': '44'});
-    const taskCreateButton = new Element(['button[type="submit"]']);
-    taskCreateForm.localQueries.set('button[type="submit"]', taskCreateButton);
-    taskCreateForm.appendChild(taskCreateButton);
-    localControl(taskCreateForm, '.task-create-title, .changeTaskItemTitleValue', 'New task');
-    localControl(taskCreateForm, '.task-create-due, .changeTaskItemDueDate', '');
-    localControl(taskCreateForm, '.task-create-priority, .changeTaskItemPriority', 'normal');
-    documentObject.dispatch('submit', taskCreateForm);
-    await flush();
-    call = apiCalls.at(-1);
-    check(call.action === 'task.item.create' && call.data.widget_id === '44', 'Task item create stays scoped to its Widget');
-
-    const taskToggle = new Element(['.task-toggle'], {'data-task-id': '72', 'data-task-completed': '1'});
-    documentObject.dispatch('click', taskToggle);
-    await flush();
-    call = apiCalls.at(-1);
-    check(call.action === 'task.item.toggle' && call.data.task_id === '72' && call.data.task_completed === '0',
-        'Task completion preserves explicit 1-to-0 toggle semantics');
+    // Task Item partial-refresh behavior is covered by test_current_task_partial_refresh_runtime.js.
 
     const changeClockId = control(documentObject, '.changeClockId', '');
     const changeClockName = control(documentObject, '.changeClockName', '');
@@ -450,7 +421,7 @@ async function flush() {
     check(failures.length === 0, 'native controller success path does not invoke request failure handling');
     check(notices.length === 0, 'valid native controller workflow does not emit error notices');
     check(requestStarts.length === requestEnds.length, 'every started native mutation releases its pending guard');
-    check(reloads >= 9, 'successful native mutations preserve existing reload behavior');
+    check(reloads >= 7, 'Widget-level native mutations preserve existing reload behavior');
 
     console.log('RESULT: PASS ' + passed + ' / FAIL ' + failed + ' / SKIP 0');
     process.exit(failed === 0 ? 0 : 1);
