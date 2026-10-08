@@ -25,6 +25,14 @@ node --check "$ROOT/public/js/calendar.js"
 node --check "$ROOT/public/js/camera-video-streaming.js"
 node --check "$ROOT/public/js/rss-management.js"
 
+echo '== Current feature contracts: V1.46-D2 dependency / CSS finishing =='
+python3 "$SCRIPT_DIR/test_current_v146d2_dependency_css.py"
+node "$SCRIPT_DIR/test_current_hls_loader_runtime.js"
+node --check "$ROOT/public/js/hls-1.7.3.min.js"
+node --check "$ROOT/public/js/camera-video-streaming.js"
+node --check "$ROOT/public/js/drawer-categories.js"
+node --check "$ROOT/public/js/calendar.js"
+
 echo '== Current feature contracts: Security hardening =='
 python3 "$SCRIPT_DIR/test_v119c_registration_throttle.py"
 python3 "$SCRIPT_DIR/test_v119c_api_request_limit.py"

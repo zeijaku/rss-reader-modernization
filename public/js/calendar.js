@@ -59,7 +59,6 @@
     loadStyle(assetUrl('./css/calendar-month-layout.css'), 'data-calendar-month-layout-style');
     loadStyle(assetUrl('./css/calendar-views.css'), 'data-calendar-views-style');
     loadStyle(assetUrl('./css/calendar-polish.css'), 'data-calendar-polish-style');
-    loadStyle(assetUrl('./css/calendar-polish-r3.css'), 'data-calendar-polish-r3-style');
     loadStyle(assetUrl('./css/calendar-deadline.css'), 'data-calendar-deadline-style');
     loadStyle(assetUrl('./css/block-collapse.css'), 'data-block-collapse-style');
     loadStyle(assetUrl('./css/stock-state-ui.css'), 'data-stock-state-ui-style');

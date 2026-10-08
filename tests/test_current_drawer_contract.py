@@ -52,8 +52,10 @@ check(all('id="' + pane + '"' in settings for pane in ['display', 'tabs', 'links
 css = text('public/css/drawer-catalog.css')
 check('flex: 0 0 18px' in css and 'padding: 8px 12px' in css,
       'category arrows have a reserved width and inset padding')
-check('.modal-' not in css and '.dashboard-widget' not in css,
-      'catalog layout does not style modals or Dashboard cards')
+check('@media (max-width: 575.98px)' in css and '.modal-dialog' in css and '.dashboard-widget' not in css,
+      'consolidated Drawer CSS preserves the existing mobile Modal containment without styling Dashboard cards')
+check('drawer-v121b.css' not in drawer and 'drawer-v121c.css' not in drawer,
+      'Current Drawer runtime no longer requests version-named visual/mobile patch stylesheets')
 
 check(
     "children('.drawer-logout-form')" in drawer,

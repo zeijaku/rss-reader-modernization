@@ -13,7 +13,7 @@ Repository全体のThird-Party Noticeは [`../THIRD_PARTY_NOTICES.md`](../THIRD_
 | jQuery | 3.7.1 full build | `public/js/jquery-3.7.1.min.js` | MIT |
 | Popper | Bootstrap bundle内蔵 | standalone runtime fileなし | MIT |
 | Font Awesome Free | 6.7.2 | `public/css/all.css`, TTF / WOFF2 | CC BY 4.0 / SIL OFL 1.1 / MIT |
-| hls.js | 1.6.16 | HLS Widget使用時だけpinned CDN URL + SRIでlazy load | Apache-2.0 |
+| hls.js | 1.7.3 | `public/js/hls-1.7.3.min.js` をHLS Widget使用時だけlazy load | Apache-2.0 |
 | PHPMailer | 7.1.1 | `app/mail/vendor/phpmailer/phpmailer/` | LGPL-2.1-only |
 
 ## Frontend
@@ -37,7 +37,7 @@ jQueryはAJAXを含む3.7.1 full buildを使用します。
 
 Popperのstandalone runtime fileは使用せず、必要なBootstrap Componentは`bootstrap.bundle-5.3.8.min.js`内の実装を使用します。
 
-HLS WidgetはBrowser Native HLSを優先し、必要な場合だけhls.js 1.6.16を固定URLからSRI付きで読み込みます。
+HLS WidgetはBrowser Native HLSをFallbackとして維持し、MSE対応Browserでは必要な場合だけRepository同梱のhls.js 1.7.3を`APP_ASSET_REVISION`付きでlazy loadします。外部CDNから実行JavaScriptを取得しません。配布artifactのSHA-256は`docs/hls.js-1.7.3-sha256.txt`で固定します。
 
 ## Backend mail dependency
 
