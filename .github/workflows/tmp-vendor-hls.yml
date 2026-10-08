@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   vendor:
-    if: github.event.head_commit.message == 'Retry temporary hls vendor workflow'
+    if: github.event.head_commit.message == 'Finalize temporary hls vendor workflow'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,8 +25,11 @@ jobs:
           curl --fail --location --retry 3             --output /tmp/hls-release.zip             https://github.com/video-dev/hls.js/releases/download/v1.7.3/release.zip
           echo "abbda85f3e9b8325fc6b8dbf4fa612ea87144ebad93c2150594e64aad58ec529  /tmp/hls-release.zip" | sha256sum --check
           unzip -p /tmp/hls-release.zip dist/hls.min.js > public/js/hls-1.7.3.min.js
-          grep -F "hls.js v1.7.3" public/js/hls-1.7.3.min.js
+          test -s public/js/hls-1.7.3.min.js
+          test "$(wc -c < public/js/hls-1.7.3.min.js)" -eq 619692
           sha256sum public/js/hls-1.7.3.min.js > docs/hls.js-1.7.3-sha256.txt
+          head -c 160 public/js/hls-1.7.3.min.js
+          echo
           cat docs/hls.js-1.7.3-sha256.txt
 
       - name: Commit vendored artifact
