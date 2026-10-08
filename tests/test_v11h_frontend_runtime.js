@@ -18,6 +18,10 @@ check(js.includes("'task_due_date': value('.task-create-due, .changeTaskItemDueD
 check(js.includes("'task_priority': value('.task-create-priority, .changeTaskItemPriority', scope)"), 'Task priority comes from native select controls');
 for (const action of ['widget.task.create','widget.task.update','widget.task.delete','task.item.create','task.item.update','task.item.toggle','task.item.delete']) check(js.includes(action), action+' contract is preserved');
 check(js.includes("'task_completed': completed ? '0' : '1'"), 'Task completion explicitly toggles 0 and 1');
+check(js.includes("apiRequestPromise('widget.list', {'widget_location': location}, 5000)"), 'Task Item mutations refresh only the current Dashboard location');
+check(js.includes('function renderTaskItems(card, tasks)'), 'Task controller has a focused Task-list renderer');
+check(js.includes('element.textContent = text'), 'Task partial redraw writes untrusted text through textContent');
+check((js.match(/window\.location\.reload\(\)/g)||[]).length===3, 'Only Task Widget-level create/update/delete still reload the whole page');
 check(js.includes("payload.widget_id = attribute(form, 'data-widget-id', '')"), 'Task create remains scoped to its Widget');
 check(js.includes("payload.task_id = value('.changeTaskItemId')"), 'Task update sends selected Task ID');
 check(js.includes("window.confirm('このTask Widgetと中のTaskを削除しますか？')"), 'Task Widget deletion confirms cascade');
@@ -28,7 +32,7 @@ check(js.includes("document.addEventListener('click', handleClick)"), 'Task uses
 check(js.includes('if (eventsBound)'), 'Task native event binding is idempotent');
 check(js.includes('.finally(function ()'), 'Task mutations always release native pending state');
 check(!js.includes('jQuery')&&!js.includes('$(')&&!js.includes('.on(')&&!js.includes('.off('), 'Task controller has no direct jQuery dependency');
-check(!js.includes('.innerHTML')&&!js.includes('.html('), 'Task JS keeps text-only DOM operations');
+check(!js.includes('.innerHTML')&&!js.includes('.html('), 'Task partial redraw keeps text-only DOM operations');
 check(html.includes('id="registerTaskWidgetForm"')&&html.includes('id="changeTaskWidgetForm"')&&html.includes('id="changeTaskItemForm"'), 'Task forms are present');
 check(html.includes('maxlength="128"')&&html.includes('type="date"'), 'Task inputs are bounded');
 check(html.includes('data-dashboard-widget-type="task"'), 'Task card exposes its Widget type');
