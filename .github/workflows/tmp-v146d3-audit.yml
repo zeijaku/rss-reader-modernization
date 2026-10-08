@@ -1,0 +1,25 @@
+name: Temporary D3 obsolete-reference audit
+
+on:
+  push:
+    branches:
+      - feature/v1.46-d3-final-cleanup-release
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    if: github.event.head_commit.message == 'Add temporary D3 reference audit'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Find obsolete references
+        shell: bash
+        run: |
+          set -u
+          for needle in             'calendar-polish-r3.css'             'drawer-v121b.css'             'drawer-v121c.css'             'hls.js-1.6.16-Apache-2.0.txt'             'hls.js@1.6.16'             'sha384-5E8B0pTlZZJMabWpC0fyYf6OUpe15jJij34BqBAh4NXoHAlLNOjCPRrwtOXOQFAn'
+          do
+            echo "===== $needle ====="
+            grep -RInF --exclude-dir=.git -- "$needle" . || true
+          done
