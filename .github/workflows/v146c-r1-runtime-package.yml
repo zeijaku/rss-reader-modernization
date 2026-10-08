@@ -1,0 +1,46 @@
+name: V1.46-C R1 Runtime Check Package
+
+on:
+  push:
+    branches:
+      - feature/v1.46-c-native-dashboard-controllers
+    paths:
+      - '.github/workflows/v146c-r1-runtime-package.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact feature HEAD
+        uses: actions/checkout@v4
+
+      - name: Build runtime-only verification ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          zip -X -q dist/V1.46-C-R1-runtime-check.zip \
+            app/version.php \
+            public/css/dashboard.css \
+            public/js/dashboard-core.js \
+            public/js/dashboard-task.js \
+            public/js/dashboard-memo.js \
+            public/js/dashboard-game.js \
+            public/js/dashboard-clock.js
+          (cd dist && sha256sum V1.46-C-R1-runtime-check.zip > V1.46-C-R1-runtime-check.zip.sha256)
+          unzip -Z1 dist/V1.46-C-R1-runtime-check.zip
+
+      - name: Upload runtime verification package
+        uses: actions/upload-artifact@v4
+        with:
+          name: v146c-r1-runtime-check
+          path: |
+            dist/V1.46-C-R1-runtime-check.zip
+            dist/V1.46-C-R1-runtime-check.zip.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
