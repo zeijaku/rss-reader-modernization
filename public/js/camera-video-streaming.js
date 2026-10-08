@@ -4,9 +4,8 @@
     var revisionMatch = sourceScript && typeof sourceScript.src === 'string' ? /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(sourceScript.src) : null;
     var assetRevision = revisionMatch ? revisionMatch[1] : '';
     var observer = null, processedAttribute = 'data-camera-streaming-processed', hlsLibraryPromise = null;
-    var HLS_LIBRARY_VERSION = '1.6.16';
-    var HLS_LIBRARY_URL = 'https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js';
-    var HLS_LIBRARY_INTEGRITY = 'sha384-5E8B0pTlZZJMabWpC0fyYf6OUpe15jJij34BqBAh4NXoHAlLNOjCPRrwtOXOQFAn';
+    var HLS_LIBRARY_VERSION = '1.7.3';
+    var HLS_LIBRARY_URL = assetUrl('./js/hls-1.7.3.min.js');
     function assetUrl(path) { return assetRevision === '' ? path : path + (path.indexOf('?') === -1 ? '?' : '&') + 'v=' + encodeURIComponent(assetRevision); }
     function injectStylesheet() { if (document.querySelector('link[data-camera-video-streaming-style]')) return; var link = document.createElement('link'); link.rel = 'stylesheet'; link.href = assetUrl('./css/camera-video-streaming.css'); link.setAttribute('data-camera-video-streaming-style', 'true'); document.head.appendChild(link); }
     function addStatus($stage, message, type) { var className = 'camera-video-streaming-status'; if (type === 'error') className += ' is-error'; else if (type === 'warning') className += ' is-warning'; return $('<div>').addClass(className).attr({role: type === 'error' ? 'alert' : 'status', 'aria-live': 'polite'}).text(String(message || '')).appendTo($stage); }
@@ -14,7 +13,7 @@
     function mixedContent(mediaUrl) { return window.location.protocol === 'https:' && /^http:\/\//i.test(String(mediaUrl || '')); }
     function loadHlsLibrary() {
         if (window.Hls && String(window.Hls.version || '') === HLS_LIBRARY_VERSION) return window.Promise.resolve(window.Hls); if (hlsLibraryPromise) return hlsLibraryPromise;
-        hlsLibraryPromise = new window.Promise(function (resolve, reject) { var script = document.createElement('script'); script.src = HLS_LIBRARY_URL; script.async = true; script.integrity = HLS_LIBRARY_INTEGRITY; script.crossOrigin = 'anonymous'; script.referrerPolicy = 'no-referrer'; script.setAttribute('data-camera-hls-library', HLS_LIBRARY_VERSION); script.onload = function () { if (!window.Hls || String(window.Hls.version || '') !== HLS_LIBRARY_VERSION) { reject(new Error('Unexpected hls.js version.')); return; } resolve(window.Hls); }; script.onerror = function () { reject(new Error('hls.js load failed.')); }; document.head.appendChild(script); }).catch(function (error) { hlsLibraryPromise = null; throw error; }); return hlsLibraryPromise;
+        hlsLibraryPromise = new window.Promise(function (resolve, reject) { var script = document.createElement('script'); script.src = HLS_LIBRARY_URL; script.async = true; script.setAttribute('data-camera-hls-library', HLS_LIBRARY_VERSION); script.onload = function () { if (!window.Hls || String(window.Hls.version || '') !== HLS_LIBRARY_VERSION) { reject(new Error('Unexpected hls.js version.')); return; } resolve(window.Hls); }; script.onerror = function () { reject(new Error('hls.js load failed.')); }; document.head.appendChild(script); }).catch(function (error) { hlsLibraryPromise = null; throw error; }); return hlsLibraryPromise;
     }
     function nativeHlsSupported(video) { return !!video && typeof video.canPlayType === 'function' && (video.canPlayType('application/vnd.apple.mpegurl') !== '' || video.canPlayType('application/x-mpegURL') !== ''); }
     function destroyHls($card) { var hls = $card.data('camera-hls-instance'); if (hls && typeof hls.destroy === 'function') { try { hls.destroy(); } catch (error) {} } $card.removeData('camera-hls-instance'); }
