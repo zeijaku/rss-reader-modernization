@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__);
 $ui = file_get_contents($root . '/public/js/calendar-polish-r3.js');
-$css = file_get_contents($root . '/public/css/calendar-polish-r3.css');
+$css = file_get_contents($root . '/public/css/calendar-polish.css');
 $loader = file_get_contents($root . '/public/js/calendar.js');
 $version = file_get_contents($root . '/app/version.php');
 
@@ -28,7 +28,8 @@ $checks = [
     'current APP_VERSION is defined' => is_string($appVersion) && preg_match('/^\d+\.\d+\.\d+(?:-[A-Za-z0-9._-]+)?$/', $appVersion) === 1,
     'active asset revision is defined' => is_string($assetRevision) && preg_match('/^[A-Za-z0-9._-]+$/', $assetRevision) === 1,
     'R2 Calendar polish uses the centralized asset URL' => str_contains($loader, "assetUrl('./js/calendar-polish.js')"),
-    'R3 CSS uses the centralized asset URL' => str_contains($loader, "assetUrl('./css/calendar-polish-r3.css')"),
+    'R3 CSS is consolidated into the centralized Calendar polish asset' => str_contains($loader, "assetUrl('./css/calendar-polish.css')")
+        && !str_contains($loader, 'calendar-polish-r3.css'),
     'R3 JS uses the centralized asset URL' => str_contains($loader, "assetUrl('./js/calendar-polish-r3.js')"),
     'upcoming collapsed limit is three' => str_contains($ui, 'upcomingCollapsedLimit = 3'),
     'upcoming extra items are hidden while collapsed' => str_contains($ui, 'index >= upcomingCollapsedLimit')
