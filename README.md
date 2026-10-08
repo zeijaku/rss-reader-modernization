@@ -9,10 +9,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.45.0`
-Release tag: `v1.45.0`
+**Stable release:** `RSS Reader Modernization 1.46.0`
+Release tag: `v1.46.0`
 
-Version 1.45.0は、Feed単位のCategory管理を追加し、RSS管理・全RSS新着・Search Feedを同じCategory metadataで連携するFeature Releaseです。Categoryの作成・変更・Rename・削除、All RSS Recentの取得前絞り込み、Search Feedの「自分のRSS Category」絞り込み、OPML Category互換性を追加します。既存Widgetは「すべて」として互換動作し、Database Migration / Config変更はありません。[正式版の更新・確認手順](docs/v1.45.0-release.md)を参照してください。
+Version 1.46.0は、既存機能を維持したままFrontend legacy依存を段階的に整理するModernization Releaseです。DashboardのTask / Memo / Game / Clock controllerを分割し、その4 controllerをNative DOM / Eventへ移行、Task Item更新を対象Widgetだけの部分更新へ変更します。hls.jsは1.7.3をRepositoryへ同梱して外部CDN実行依存を解消し、Calendar / Drawerの後付けCSS層を統合します。Database Migration / 必須Config変更はありません。[正式版の更新・確認手順](docs/v1.46.0-release.md)を参照してください。\n\nVersion 1.45.0は、Feed単位のCategory管理を追加し、RSS管理・全RSS新着・Search Feedを同じCategory metadataで連携するFeature Releaseです。Categoryの作成・変更・Rename・削除、All RSS Recentの取得前絞り込み、Search Feedの「自分のRSS Category」絞り込み、OPML Category互換性を追加します。既存Widgetは「すべて」として互換動作し、Database Migration / Config変更はありません。[正式版の更新・確認手順](docs/v1.45.0-release.md)を参照してください。
 
 Version 1.44.0は、Calendarを複数のOwner専用Calendarへ分けて表示・管理できるようにし、予定へ任意の場所とGoogle Maps検索リンクを追加するFeature Releaseです。既存予定は既定Calendarへ安全に引き継ぎ、Calendar filter、色付きlayer icon、Calendar選択／移動、繰り返し・Occurrence・Copy・Drag & Dropの既存動作を維持します。予定入力Modalも既存項目・説明を維持したまま日時／通知Gridを整理します。V1.43.1からはMigration 033 → 034の順で適用します。[正式版の更新・確認手順](docs/v1.44.0-release.md)を参照してください。
 

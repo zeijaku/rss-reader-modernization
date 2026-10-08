@@ -22,11 +22,8 @@ def check(condition: bool, message: str) -> None:
 streaming = text('public/js/camera-video-streaming.js')
 calendar = text('public/js/calendar.js')
 calendar_polish = text('public/css/calendar-polish.css')
-calendar_r3_legacy = text('public/css/calendar-polish-r3.css')
 drawer = text('public/js/drawer-categories.js')
 drawer_css = text('public/css/drawer-catalog.css')
-drawer_b_legacy = text('public/css/drawer-v121b.css')
-drawer_c_legacy = text('public/css/drawer-v121c.css')
 deps = text('docs/dependencies.md')
 notices = text('THIRD_PARTY_NOTICES.md')
 license_text = text('licenses/hls.js-1.7.3-Apache-2.0.txt')
@@ -88,9 +85,8 @@ check("assetUrl('./css/calendar-polish.css')" in calendar,
       'Calendar loads the consolidated polish stylesheet through the current asset revision')
 check('calendar-polish-r3.css' not in calendar and 'data-calendar-polish-r3-style' not in calendar,
       'Calendar no longer requests the former R3 patch stylesheet')
-legacy_r3_body = re.sub(r'^/\*[\s\S]*?\*/\s*', '', calendar_r3_legacy).strip()
-check(legacy_r3_body in calendar_polish,
-      'all former Calendar R3 CSS behavior is retained inside calendar-polish.css')
+check(not (ROOT / 'public/css/calendar-polish-r3.css').exists(),
+      'obsolete Calendar R3 patch stylesheet is removed from Current source')
 check('.calendar-upcoming-item[hidden]' in calendar_polish
       and '.calendar-upcoming-toggle-wrap' in calendar_polish
       and '[data-calendar-height-held="1"]' in calendar_polish,
@@ -102,8 +98,9 @@ check('drawer-v121b.css' not in drawer and 'drawer-v121c.css' not in drawer,
       'Drawer runtime has no references to the former version-named CSS files')
 check("link.href = './css/drawer-catalog.css'" in drawer and 'assetRevision' in drawer,
       'Drawer loads one consolidated stylesheet with the active asset revision')
-check(drawer_b_legacy.strip() in drawer_css and drawer_c_legacy.strip() in drawer_css,
-      'former Drawer visual and mobile CSS rules are preserved byte-for-byte in the consolidated stylesheet')
+check(not (ROOT / 'public/css/drawer-v121b.css').exists()
+      and not (ROOT / 'public/css/drawer-v121c.css').exists(),
+      'obsolete version-named Drawer patch stylesheets are removed from Current source')
 b_pos = drawer_css.find('/* V1.21-B:')
 c_pos = drawer_css.find('/* V1.21-C:')
 catalog_pos = drawer_css.find('/* Scoped Drawer layout.')
@@ -115,10 +112,14 @@ check('min-height: 44px' in drawer_css and 'env(safe-area-inset-top)' in drawer_
 
 app_version = re.search(r"const APP_VERSION = '([^']+)';", version)
 asset_revision = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
-check(bool(app_version and app_version.group(1) == '1.45.0'),
-      'visible APP_VERSION remains 1.45.0 during V1.46 development')
-check(bool(asset_revision and asset_revision.group(1).startswith('1.46.0-dev.')),
-      'D2 uses a V1.46 development asset revision without publishing the release')
+check(bool(app_version and app_version.group(1) == '1.46.0'),
+      'visible APP_VERSION is finalized at 1.46.0')
+check(bool(asset_revision and asset_revision.group(1) == '1.46.0'),
+      'formal V1.46 release uses the immutable 1.46.0 asset revision')
+check(not (ROOT / 'licenses/hls.js-1.6.16-Apache-2.0.txt').exists(),
+      'obsolete hls.js 1.6.16 license copy is removed')
+check(not (ROOT / 'licenses/fontawesome-5.3.1-LICENSE.txt').exists(),
+      'obsolete Font Awesome 5.3.1 license copy is removed')
 
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
