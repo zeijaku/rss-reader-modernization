@@ -44,37 +44,15 @@
         'settings': ['./rss-management', './settings']
     };
 
-    function injectCatalogStyles() {
+    function injectDrawerStyles() {
         var link;
-        if (document.querySelector('link[data-drawer-catalog-style]')) { return; }
-        link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = './css/drawer-catalog.css' + (assetRevision === '' ? '' : '?v=' + encodeURIComponent(assetRevision));
-        link.setAttribute('data-drawer-catalog-style', 'true');
-        document.head.appendChild(link);
-    }
-
-    function injectVisualStyles() {
-        var link;
-        if (document.querySelector('link[data-drawer-v121b-style]')) {
+        if (document.querySelector('link[data-drawer-style]')) {
             return;
         }
         link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = './css/drawer-v121b.css?v=1.21.0';
-        link.setAttribute('data-drawer-v121b-style', 'true');
-        document.head.appendChild(link);
-    }
-
-    function injectMobileStyles() {
-        var link;
-        if (document.querySelector('link[data-drawer-v121c-style]')) {
-            return;
-        }
-        link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = './css/drawer-v121c.css?v=1.21.0';
-        link.setAttribute('data-drawer-v121c-style', 'true');
+        link.href = './css/drawer.css' + (assetRevision === '' ? '' : '?v=' + encodeURIComponent(assetRevision));
+        link.setAttribute('data-drawer-style', 'true');
         document.head.appendChild(link);
     }
 
@@ -326,9 +304,7 @@
 
     $(function () {
         removeUserVisiblePhaseMarkers();
-        injectVisualStyles();
-        injectMobileStyles();
-        injectCatalogStyles();
+        injectDrawerStyles();
         // Mail / Camera add their Drawer entries from their own ready handlers.
         // Run one task later so those existing modules remain untouched.
         window.setTimeout(organizeDrawer, 0);
