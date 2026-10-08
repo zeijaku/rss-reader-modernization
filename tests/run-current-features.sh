@@ -23,6 +23,7 @@ python3 "$SCRIPT_DIR/test_current_asset_revision_contract.py"
 node "$SCRIPT_DIR/test_current_asset_revision_runtime.js"
 node --check "$ROOT/public/js/calendar.js"
 node --check "$ROOT/public/js/camera-video-streaming.js"
+python3 "$SCRIPT_DIR/test_current_dependency_css_finish.py"
 node --check "$ROOT/public/js/rss-management.js"
 
 echo '== Current feature contracts: Security hardening =='
