@@ -4,9 +4,8 @@
     var revisionMatch = sourceScript && typeof sourceScript.src === 'string' ? /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(sourceScript.src) : null;
     var assetRevision = revisionMatch ? revisionMatch[1] : '';
     var observer = null, processedAttribute = 'data-camera-streaming-processed', hlsLibraryPromise = null;
-    var HLS_LIBRARY_VERSION = '1.6.16';
-    var HLS_LIBRARY_URL = 'https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js';
-    var HLS_LIBRARY_INTEGRITY = 'sha384-5E8B0pTlZZJMabWpC0fyYf6OUpe15jJij34BqBAh4NXoHAlLNOjCPRrwtOXOQFAn';
+    var HLS_LIBRARY_VERSION = '1.7.3';
+    var HLS_LIBRARY_PATH = './js/hls-1.7.3.min.js';
     function assetUrl(path) { return assetRevision === '' ? path : path + (path.indexOf('?') === -1 ? '?' : '&') + 'v=' + encodeURIComponent(assetRevision); }
     function injectStylesheet() { if (document.querySelector('link[data-camera-video-streaming-style]')) return; var link = document.createElement('link'); link.rel = 'stylesheet'; link.href = assetUrl('./css/camera-video-streaming.css'); link.setAttribute('data-camera-video-streaming-style', 'true'); document.head.appendChild(link); }
     function addStatus($stage, message, type) { var className = 'camera-video-streaming-status'; if (type === 'error') className += ' is-error'; else if (type === 'warning') className += ' is-warning'; return $('<div>').addClass(className).attr({role: type === 'error' ? 'alert' : 'status', 'aria-live': 'polite'}).text(String(message || '')).appendTo($stage); }
