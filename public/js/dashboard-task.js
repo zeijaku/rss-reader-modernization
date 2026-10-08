@@ -320,7 +320,7 @@
         }, function () {
             return refreshTaskWidget(card).then(function (updated) {
                 if (updated) {
-                    const refreshedToggle = first('.task-card [data-task-id="' + taskId + '"] .task-toggle');
+                    const refreshedToggle = first('.task-toggle[data-task-id="' + taskId + '"]');
                     if (refreshedToggle && typeof refreshedToggle.focus === 'function') {
                         refreshedToggle.focus();
                     }
