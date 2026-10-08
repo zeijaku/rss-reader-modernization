@@ -38,8 +38,8 @@ for label in ['表示', 'Widget追加', 'ファイル', '管理・設定', 'ユ�
 for label in ['Feed', 'Information', 'Utility', 'Media', 'Game']:
     check("label: '" + label + "'" in drawer, f'Widget catalog keeps category: {label}')
 
-check("./css/drawer-catalog.css" in drawer and 'assetRevision' in drawer,
-      'catalog stylesheet inherits the PHP-versioned organizer asset revision')
+check("./css/drawer.css" in drawer and "data-drawer-style" in drawer and 'assetRevision' in drawer,
+      'consolidated Drawer stylesheet inherits the PHP-versioned organizer asset revision')
 check("'files': ['./file-library', './remote-files']" in drawer,
       'File Library / Remote Files retain their original URLs in the Files section')
 check("'settings': ['./rss-management', './settings']" in drawer and 'ensureSettingsItem($menu)' in drawer,
@@ -49,11 +49,11 @@ check("not('.drawer-mobile-links')" in drawer,
 check(all('id="' + pane + '"' in settings for pane in ['display', 'tabs', 'links', 'highlight']),
       'Settings keeps legacy deep links and the new User Links pane')
 
-css = text('public/css/drawer-catalog.css')
+css = text('public/css/drawer.css')
 check('flex: 0 0 18px' in css and 'padding: 8px 12px' in css,
       'category arrows have a reserved width and inset padding')
 check('.modal-' not in css and '.dashboard-widget' not in css,
-      'catalog layout does not style modals or Dashboard cards')
+      'consolidated Drawer catalog rules do not style modals or Dashboard cards')
 
 check(
     "children('.drawer-logout-form')" in drawer,
