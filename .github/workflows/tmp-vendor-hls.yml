@@ -1,0 +1,43 @@
+name: Temporary vendor hls.js 1.7.3
+
+on:
+  push:
+    branches:
+      - feature/v1.46-d2-hls-css-finishing
+
+permissions:
+  contents: write
+
+jobs:
+  vendor:
+    if: github.event.head_commit.message == 'Add temporary hls vendor workflow'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/v1.46-d2-hls-css-finishing
+          fetch-depth: 0
+
+      - name: Download and verify official hls.js release
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3             --output /tmp/hls-release.zip             https://github.com/video-dev/hls.js/releases/download/v1.7.3/release.zip
+          echo "abbda85f3e9b8325fc6b8dbf4fa612ea87144ebad93c2150594e64aad58ec529  /tmp/hls-release.zip" | sha256sum --check
+          unzip -l /tmp/hls-release.zip | sed -n '1,80p'
+          unzip -p /tmp/hls-release.zip dist/hls.min.js > public/js/hls-1.7.3.min.js
+          unzip -p /tmp/hls-release.zip LICENSE > licenses/hls.js-1.7.3-Apache-2.0.txt
+          grep -F "hls.js v1.7.3" public/js/hls-1.7.3.min.js
+          test -s licenses/hls.js-1.7.3-Apache-2.0.txt
+          sha256sum public/js/hls-1.7.3.min.js > docs/hls.js-1.7.3-sha256.txt
+          cat docs/hls.js-1.7.3-sha256.txt
+
+      - name: Commit vendored artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/js/hls-1.7.3.min.js licenses/hls.js-1.7.3-Apache-2.0.txt docs/hls.js-1.7.3-sha256.txt
+          git commit -m "Vendor hls.js 1.7.3"
+          git push origin HEAD:feature/v1.46-d2-hls-css-finishing
