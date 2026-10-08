@@ -1,3 +1,16 @@
+## 1.46.0 - 2026-10-08
+
+- Complete a staged frontend modernization without changing the application's backend security boundaries, database schema, public API contracts, or required configuration. V1.46-A records the dependency/load-order/CSS legacy audit used to choose low-coupling migration targets.
+- Split the low-coupling Dashboard Task, Memo, Game and Clock controllers out of the monolithic `dashboard.js` while preserving existing load order, API actions, payloads, Drag & Drop/feed/Calendar/Mail ownership, and Widget behavior.
+- Reduce direct jQuery DOM/event coupling in those four split controllers. Add native Promise/button adapters around the existing shared Dashboard transport so CSRF rotation, unauthenticated reload handling and API error semantics remain centralized. The shared `$.ajax()` transport intentionally remains for a future dedicated migration.
+- Refine Task Item mutations so create/update/toggle/delete refresh only the affected Task Widget through owner-scoped `widget.list` instead of reloading the whole page. Task Widget create/update/delete continue to use full reload because layout/style settings can change.
+- Fix narrow one-column Clock clipping by preferring container-relative sizing when supported and retaining a conservative fallback for older engines.
+- Keep Bootstrap / Bootswatch 5.3.8, jQuery 3.7.1, Font Awesome Free 6.7.2 and PHPMailer 7.1.1 after dependency audit. Defer jQuery 4 and Font Awesome 7 to dedicated future migrations rather than expanding the finishing phase.
+- Update hls.js from 1.6.16 to 1.7.3 and vendor the official minified artifact locally. Preserve lazy loading, exact runtime-version validation, Native HLS fallback, bounded Network/Media recovery and no-autoplay behavior while removing the runtime executable-JavaScript dependency on jsDelivr.
+- Consolidate the former Calendar R3 polish CSS into `calendar-polish.css` and the Drawer visual/mobile/catalog layers into `drawer-catalog.css` while preserving their previous cascade order. Remove the now-unused patch CSS files from the Current source tree during final cleanup.
+- Remove obsolete hls.js 1.6.16 and Font Awesome 5.3.1 license copies after confirming Current runtime/notices use hls.js 1.7.3 and Font Awesome 6.7.2.
+- Add focused dependency artifact/hash, HLS loader retry/version/fallback, CSS-consolidation and Current compatibility tests, then verify the complete Current regression on PHP 8.1 and PHP 8.4. No database migration or required configuration change is introduced.
+
 ## 1.45.0 - 2026-10-06
 
 - Add Feed Category management on RSS Management using the existing owner-scoped `feed_metadata.category_path`: assign or clear a Feed Category, create a path while editing a Feed, filter the registered RSS list, rename a Category across active owned Feeds, and delete a Category by returning its Feeds to Uncategorized. No Category table or database migration is introduced.
