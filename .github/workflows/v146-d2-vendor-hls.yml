@@ -24,14 +24,15 @@ jobs:
           work="$(mktemp -d)"
           curl --fail --location --retry 3             https://github.com/video-dev/hls.js/releases/download/v1.7.3/release.zip             --output "$work/release.zip"
           unzip -q "$work/release.zip" -d "$work/release"
-          source_file="$(find "$work/release" -type f -path '*/dist/hls.min.js' -print -quit)"
-          license_file="$(find "$work/release" -type f -name LICENSE -print -quit)"
+          echo "Release artifact files:"
+          find "$work/release" -maxdepth 3 -type f -printf '%P\n' | sort | head -80
+          source_file="$(find "$work/release" -type f -name 'hls.min.js' -print -quit)"
           test -n "$source_file"
-          test -n "$license_file"
           test -s "$source_file"
           grep -q '1\.7\.3' "$source_file"
           cp "$source_file" public/js/hls-1.7.3.min.js
-          cp "$license_file" licenses/hls.js-1.7.3-Apache-2.0.txt
+          curl --fail --location --retry 3             https://raw.githubusercontent.com/video-dev/hls.js/v1.7.3/LICENSE             --output licenses/hls.js-1.7.3-Apache-2.0.txt
+          grep -q 'Apache License' licenses/hls.js-1.7.3-Apache-2.0.txt
           echo "hls.js:"
           sha256sum public/js/hls-1.7.3.min.js
           echo "license:"
