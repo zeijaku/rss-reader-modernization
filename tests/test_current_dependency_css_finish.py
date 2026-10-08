@@ -95,6 +95,11 @@ check('#drawerMenu .widget-catalog-grid' in drawer_css and 'grid-template-column
       'Drawer Widget Catalog grid rules are retained')
 check('@media (prefers-reduced-motion: reduce)' in drawer_css,
       'Drawer reduced-motion rule is retained')
+drawer_visual_pos = drawer_css.find('/* V1.21-B:')
+drawer_mobile_pos = drawer_css.find('/* V1.21-C:')
+drawer_catalog_pos = drawer_css.find('/* Scoped Drawer layout.')
+check(0 <= drawer_visual_pos < drawer_mobile_pos < drawer_catalog_pos,
+      'Drawer consolidation preserves visual -> mobile -> catalog cascade order')
 
 # Calendar CSS: retain R3 behavior while removing one historical cascade layer.
 calendar_css_path = PUBLIC / 'css/calendar-polish.css'
@@ -111,6 +116,10 @@ check('.calendar-days[data-calendar-height-held="1"]' in calendar_css,
       'R3 month-switch height stabilization rule is retained')
 check("assetUrl('./css/calendar-deadline.css')" in calendar,
       'Calendar deadline CSS remains isolated rather than being over-consolidated')
+calendar_base_pos = calendar_css.find('/* V1.25-F:')
+calendar_r3_pos = calendar_css.find('/* V1.25-F R3:')
+check(0 <= calendar_base_pos < calendar_r3_pos,
+      'Calendar consolidation preserves base polish -> R3 cascade order')
 
 # D2 remains a no-build-chain finishing change.
 check(not (ROOT / 'package.json').exists(), 'D2 does not introduce an npm runtime/build dependency')
