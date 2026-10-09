@@ -36,6 +36,10 @@ node --check "$ROOT/public/js/calendar.js"
 echo '== Current feature contracts: Security hardening =='
 python3 "$SCRIPT_DIR/test_v119c_registration_throttle.py"
 python3 "$SCRIPT_DIR/test_v119c_api_request_limit.py"
+php "$SCRIPT_DIR/test_current_api_rate_limit.php"
+python3 "$SCRIPT_DIR/test_current_api_rate_limit_http.py"
+python3 "$SCRIPT_DIR/test_current_api_rate_limit_concurrency.py"
+python3 "$SCRIPT_DIR/test_current_public_endpoint_contract.py"
 
 echo '== Current feature contracts: Widget header presentation =='
 python3 "$SCRIPT_DIR/test_current_widget_headers_contract.py"
