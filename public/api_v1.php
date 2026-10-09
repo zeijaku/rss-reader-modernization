@@ -5,6 +5,7 @@ declare(strict_types=1);
 define('APP_RESPONSE_FORMAT', 'json');
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
+require_once dirname(__DIR__) . '/app/api_rate_limit.php';
 require_once dirname(__DIR__) . '/app/api.php';
 require_once dirname(__DIR__) . '/app/calendar_exception.php';
 require_once dirname(__DIR__) . '/app/api/account_totp.php';
@@ -142,6 +143,14 @@ if ($contentLength !== null && $contentLength > $maxRequestBytes) {
 }
 
 try {
+    // Count only authenticated, CSRF-valid, size-checked requests. The shared
+    // per-user buckets cannot be evaded by opening additional browser sessions.
+    $rateLimit = api_rate_limit_consume($userId, $action);
+    if (!$rateLimit['allowed']) {
+        header('Retry-After: ' . (string) $rateLimit['retry_after']);
+        api_emit(api_error('rate_limited', 'Too many requests. Please try again later.', 429));
+    }
+
     // V1.17.1-A/E: authentication and CSRF are already fixed above. Release
     // the file-session lock before DB/outbound I/O so parallel Dashboard
     // requests do not queue behind a slow RSS, Mail, Weather, or other
