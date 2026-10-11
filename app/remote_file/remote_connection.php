@@ -97,7 +97,7 @@ function remote_connection_validate_input(array $input, bool $credentialRequired
     if ($protocol === null) {
         throw new AppRemoteValidationException('invalid_protocol');
     }
-    if ($protocol === 'ftp' && !APP_REMOTE_PLAINTEXT_FTP_ENABLED) {
+    if ($protocol === 'ftp' && defined('APP_REMOTE_PLAINTEXT_FTP_ENABLED') && !APP_REMOTE_PLAINTEXT_FTP_ENABLED) {
         throw new AppRemoteValidationException('plaintext_ftp_disabled');
     }
     $host = remote_normalize_host($input['host'] ?? null);
