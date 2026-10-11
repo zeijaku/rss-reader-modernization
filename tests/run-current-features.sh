@@ -40,6 +40,8 @@ php "$SCRIPT_DIR/test_current_api_rate_limit.php"
 python3 "$SCRIPT_DIR/test_current_api_rate_limit_http.py"
 python3 "$SCRIPT_DIR/test_current_api_rate_limit_concurrency.py"
 python3 "$SCRIPT_DIR/test_current_public_endpoint_contract.py"
+php "$SCRIPT_DIR/test_current_ftp_policy.php"
+python3 "$SCRIPT_DIR/test_current_v147b_security_hardening.py"
 
 echo '== Current feature contracts: Widget header presentation =='
 python3 "$SCRIPT_DIR/test_current_widget_headers_contract.py"
