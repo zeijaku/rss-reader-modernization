@@ -7,6 +7,7 @@ function remote_api_validation_message(string $reason): string
     return match ($reason) {
         'invalid_name' => 'Connection name is invalid.',
         'invalid_protocol' => 'Protocol is invalid.',
+        'plaintext_ftp_disabled' => 'Plain FTP is disabled by server policy; use SFTP or FTPS.',
         'invalid_host' => 'Remote host is invalid.',
         'port_not_allowed' => 'Remote port is not allowed by server policy.',
         'invalid_username' => 'Remote username is invalid.',
@@ -47,6 +48,7 @@ function remote_api_failure(string $operation, int $userId, Throwable $exception
             'not_found' => api_error('not_found', 'Remote connection was not found.', 404),
             'file_not_found' => api_error('not_found', 'File was not found.', 404),
             'connection_disabled' => api_error('remote_connection_disabled', 'Remote connection is disabled.', 409),
+            'plaintext_ftp_disabled' => api_error('remote_plaintext_ftp_disabled', 'Plain FTP is disabled by server policy; use SFTP or FTPS.', 403),
             'target_exists' => api_error('target_exists', 'A remote item already exists at the destination.', 409),
             'transfer_too_large' => api_error('transfer_too_large', 'Remote transfer exceeded the configured size limit.', 413),
             'dependency_unavailable' => api_error('remote_dependency_unavailable', 'Required remote protocol support is unavailable on this server.', 503),
