@@ -20,7 +20,7 @@ function remote_service_provider(int $ownerId, int $connectionId, ?callable $tra
     $row = remote_service_owned_connection($ownerId, $connectionId, true);
     // Enforce policy on saved connections as well as create/update; fail before
     // resolving hosts, decrypting credentials, or initiating network traffic.
-    if ((string) ($row['remote_connection_protocol'] ?? '') === 'ftp' && !APP_REMOTE_PLAINTEXT_FTP_ENABLED) {
+    if ((string) ($row['remote_connection_protocol'] ?? '') === 'ftp' && defined('APP_REMOTE_PLAINTEXT_FTP_ENABLED') && !APP_REMOTE_PLAINTEXT_FTP_ENABLED) {
         throw new AppRemoteTransportException('plaintext_ftp_disabled');
     }
     $target = remote_validate_target(
