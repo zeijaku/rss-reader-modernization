@@ -101,6 +101,8 @@ return [
     'APP_REMOTE_CREDENTIAL_KEY_ID' => 'primary',
     'APP_REMOTE_CREDENTIAL_KEY_B64' => 'replace-with-base64-encoded-32-byte-key',
     'APP_REMOTE_ALLOWED_PORTS' => '21,22,443',
+    // Set false to disable unencrypted FTP for both existing and new connections.
+    'APP_REMOTE_PLAINTEXT_FTP_ENABLED' => true,
     'APP_REMOTE_PRIVATE_NETWORK_ENABLED' => false,
     'APP_REMOTE_PRIVATE_NETWORK_CIDRS' => '',
     'APP_REMOTE_CONNECT_TIMEOUT_MS' => '5000',
