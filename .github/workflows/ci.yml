@@ -64,6 +64,12 @@ jobs:
       - name: P1 security contract check
         run: python3 tests/test_current_v147b_security_hardening.py
 
+      - name: Current baseline regression
+        run: bash tests/run-current.sh
+
+      - name: Current feature contracts
+        run: bash tests/run-current-features.sh
+
       - name: Run the local CI-equivalent gate
         run: bash tests/run-ci.sh
 
