@@ -330,6 +330,15 @@ Session / Remember Me cookieの`Secure`判定はApplicationが直接認識する
 
 Public Endpoint一覧は[`v1-19-public-endpoints.md`](v1-19-public-endpoints.md)、今後の追加機能Reviewは[`v1-19-security-checklist.md`](v1-19-security-checklist.md)を参照してください。
 
+## V1.47-B P1: FTP deployment policy and error-log minimization
+
+- 既存のRemote Files画面には平文FTPの暗号化欠如警告があります。この警告は継続します。
+- `APP_REMOTE_PLAINTEXT_FTP_ENABLED` はデフォルト `true`（従来互換）。本番の `config/local.php` または環境変数で `false` を指定すると、平文FTPの接続新規作成・更新・保存済み接続の利用を拒否します。
+- 保存済み接続は削除しません。再び `true` に戻せば利用可能ですが、機密通信にはSFTP/FTPSを推奨します。
+- 対象は `ftp` のみ。暗号化された `ftps`、`sftp`、HTTPS WebDAVには適用されません。
+- 公開API境界と起動時の未捕捉例外ログは、メッセージ本文・ファイルパス・行番号を記録せず、追跡用referenceと例外クラス（APIはaction/user IDも）を記録します。個別モジュールが出力するログについては別途点検が必要です。
+- P0のAPI制限（デフォルト全体600回/分、network分類120回/分）は互換性優先の**暫定値**です。合理的な本番閾値には実測データが必要です。
+
 ## Production checklist
 
 - HTTPSを使用。
