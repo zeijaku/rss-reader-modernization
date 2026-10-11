@@ -114,7 +114,7 @@ app_version = re.search(r"const APP_VERSION = '([^']+)';", version)
 asset_revision = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
 # Current-following regression must accept a verified development marker;
 # the V1.46.0 formal release is already pinned by historical release tests.
-check(bool(app_version and re.fullmatch(r'\\d+\\.\\d+\\.\\d+(?:-(?:dev\\.[1-9]\\d*|rc[1-9]\\d*))?', app_version.group(1))),
+check(bool(app_version and re.fullmatch(r'\d+\.\d+\.\d+(?:-(?:dev\.[1-9]\d*|rc[1-9]\d*))?', app_version.group(1))),
       'visible APP_VERSION is a supported formal or staged version')
 check(bool(asset_revision and re.fullmatch(r'[A-Za-z0-9._-]+', asset_revision.group(1))),
       'current asset revision is non-empty and URL-safe')
