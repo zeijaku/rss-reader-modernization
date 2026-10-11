@@ -24,11 +24,11 @@ browser = read('public/js/remote-files.js')
 
 check("APP_REMOTE_PLAINTEXT_FTP_ENABLED', app_env_bool('APP_REMOTE_PLAINTEXT_FTP_ENABLED', true)" in bootstrap,
       'legacy FTP remains enabled by default for compatibility')
-check("if ($protocol === 'ftp' && !APP_REMOTE_PLAINTEXT_FTP_ENABLED)" in conn,
+check("if ($protocol === 'ftp' && defined('APP_REMOTE_PLAINTEXT_FTP_ENABLED') && !APP_REMOTE_PLAINTEXT_FTP_ENABLED)" in conn,
       'connection input rejects new or updated FTP when disabled')
 check("throw new AppRemoteValidationException('plaintext_ftp_disabled');" in conn,
       'FTP input has explicit validation error')
-check("if ((string) ($row['remote_connection_protocol'] ?? '') === 'ftp' && !APP_REMOTE_PLAINTEXT_FTP_ENABLED)" in service,
+check("if ((string) ($row['remote_connection_protocol'] ?? '') === 'ftp' && defined('APP_REMOTE_PLAINTEXT_FTP_ENABLED') && !APP_REMOTE_PLAINTEXT_FTP_ENABLED)" in service,
       'saved FTP connections are blocked by server policy')
 check(service.index("throw new AppRemoteTransportException('plaintext_ftp_disabled')") < service.index('remote_validate_target('),
       'server policy runs before DNS and credential decryption')
