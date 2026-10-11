@@ -58,6 +58,12 @@ jobs:
           python --version
           node --version
 
+      - name: P1 PHP policy runtime check
+        run: php tests/test_current_ftp_policy.php
+
+      - name: P1 security contract check
+        run: python3 tests/test_current_v147b_security_hardening.py
+
       - name: Run the local CI-equivalent gate
         run: bash tests/run-ci.sh
 
