@@ -61,3 +61,64 @@ jobs:
       - name: Run the local CI-equivalent gate
         run: bash tests/run-ci.sh
 
+
+  v147b_overlay:
+    name: Verified V1.47-B overlay ZIP
+    needs: regression
+    if: ${{ github.event_name == 'pull_request' && github.head_ref == 'security/v1.47-b-p1-ftp-policy-log-minimization' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout tested source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Assemble deployment overlay after PHP 8.1 and 8.4 passes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cat > dist/DEPLOY_V1.47-B_P1.txt <<'EOF'
+          V1.47-B P1 / 1.47.0-dev.2 / inspection build
+          Base: V1.46.0 + reviewed V1.47-B P0.
+          Extract this overlay at the application ROOT, preserving app/ and public/.
+          Backup the current production files first, particularly public/api_v1.php,
+          app/version.php, and the existing Remote Files PHP modules.
+          Apply app/ files first and public/api_v1.php last, then verify browser
+          footer 1.47.0-dev.2 and test login/2FA, RSS, File Library, Remote Files,
+          Calendar and Mail. Do not overwrite config/local.php, database or var/.
+          APP_REMOTE_PLAINTEXT_FTP_ENABLED defaults to true for compatibility.
+          Set to false in private config only when you intend to forbid plain FTP.
+          Roll back by restoring backed-up modified files; adding app/api_rate_limit.php
+          does not change data. No database migration.
+          P0 rate limit defaults are provisional pending traffic measurement.
+          GitHub pull requests #146 and #151 remain unmerged/verification only.
+          EOF
+          files=(
+            app/api_rate_limit.php
+            app/bootstrap.php
+            app/version.php
+            app/remote_file/remote_bootstrap.php
+            app/remote_file/remote_connection.php
+            app/remote_file/remote_service.php
+            app/remote_file/remote_api.php
+            public/api_v1.php
+          )
+          sha256sum "${files[@]}" > dist/SHA256SUMS.txt
+          zip -q dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip "${files[@]}" -j -D -x "**/.git/*" >/dev/null
+          # Preserve directories in the deploy ZIP rather than flattening them.
+          rm -f dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip
+          zip -q dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip "${files[@]}"
+          (cd dist && zip -q RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip DEPLOY_V1.47-B_P1.txt SHA256SUMS.txt)
+          unzip -Z1 dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip | sort > dist/actual-files.txt
+          printf '%s\\n' "${files[@]}" DEPLOY_V1.47-B_P1.txt SHA256SUMS.txt | sort > dist/expected-files.txt
+          diff -u dist/expected-files.txt dist/actual-files.txt
+          unzip -tq dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip
+      - name: Upload tested runtime ZIP
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: RSS_Reader_V1.47-B_P1_dev2_runtime_overlay
+          path: dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip
+          if-no-files-found: error
+          retention-days: 30
