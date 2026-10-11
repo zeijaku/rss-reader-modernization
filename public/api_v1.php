@@ -207,15 +207,14 @@ try {
         $reference = substr(hash('sha256', uniqid('', true)), 0, 12);
     }
 
+    // Never log arbitrary exception messages or filesystem paths: outbound
+    // libraries may embed URLs, auth tokens, credentials, or user file names.
     error_log(sprintf(
-        'API exception ref=%s action=%s user_id=%d [%s] at %s:%d: %s',
+        'API exception ref=%s action=%s user_id=%d class=%s',
         $reference,
         $action,
         $userId,
-        $exception::class,
-        $exception->getFile(),
-        $exception->getLine(),
-        $exception->getMessage()
+        $exception::class
     ));
 
     api_emit(api_error('internal_error', 'Internal server error. Reference: ' . $reference, 500));
