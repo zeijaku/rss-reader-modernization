@@ -64,12 +64,6 @@ jobs:
       - name: P1 security contract check
         run: python3 tests/test_current_v147b_security_hardening.py
 
-      - name: Current baseline regression
-        run: bash tests/run-current.sh
-
-      - name: Current feature contracts
-        run: bash tests/run-current-features.sh
-
       - name: Run the local CI-equivalent gate
         run: bash tests/run-ci.sh
 
@@ -118,13 +112,10 @@ jobs:
             public/api_v1.php
           )
           sha256sum "${files[@]}" > dist/SHA256SUMS.txt
-          zip -q dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip "${files[@]}" -j -D -x "**/.git/*" >/dev/null
-          # Preserve directories in the deploy ZIP rather than flattening them.
-          rm -f dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip
           zip -q dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip "${files[@]}"
           (cd dist && zip -q RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip DEPLOY_V1.47-B_P1.txt SHA256SUMS.txt)
           unzip -Z1 dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip | sort > dist/actual-files.txt
-          printf '%s\\n' "${files[@]}" DEPLOY_V1.47-B_P1.txt SHA256SUMS.txt | sort > dist/expected-files.txt
+          printf '%s\n' "${files[@]}" DEPLOY_V1.47-B_P1.txt SHA256SUMS.txt | sort > dist/expected-files.txt
           diff -u dist/expected-files.txt dist/actual-files.txt
           unzip -tq dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip
       - name: Upload tested runtime ZIP
