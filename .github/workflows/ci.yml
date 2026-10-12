@@ -148,7 +148,7 @@ jobs:
           diff -u dist/expected-files.txt dist/actual-files.txt
           unzip -tq dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip
       - name: Upload tested runtime ZIP
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: RSS_Reader_V1.47-B_P1_dev2_runtime_overlay
           path: dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip
@@ -202,7 +202,7 @@ jobs:
           sha256sum -c dist/SHA256SUMS.txt
           unzip -tq dist/RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip
       - name: Publish verified ZIP as Actions artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay
           path: dist/RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip
