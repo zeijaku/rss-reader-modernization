@@ -94,7 +94,7 @@ def run() -> None:
             ' echo "<!doctype html><title>safe-fixture</title>";', encoding="utf-8"
         )
         (backend / "file_content.php").write_text(
-            '<?php header("Content-Security-Policy: default-src \\'none\\'; sandbox");'
+            '<?php header("Content-Security-Policy: default-src \'none\'; sandbox");'
             ' header("Cross-Origin-Resource-Policy: same-origin");'
             ' header("Content-Type: application/pdf");'
             ' header("Cache-Control: no-store, max-age=0");'
