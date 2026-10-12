@@ -9,8 +9,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.46.0`
-Release tag: `v1.46.0`
+**Stable release:** `RSS Reader Modernization 1.47.0`
+Release tag: `v1.47.0`
+
+Version 1.47.0は、APIのユーザー単位レート制限、平文FTPのサーバー側許可／禁止設定、未捕捉例外ログの情報最小化、公開PHPのPATH_INFO／代替拡張子制限を追加するSecurity Releaseです。従来の23公開PHPエンドポイントを維持し、CSPの大幅な強制化・HSTSの新規適用は見送ります。APIの600回／分・通信系120回／分は互換性重視の初期値で、実測後の調整を想定しています。Database Migrationと必須Config変更はありません。[正式版の更新・確認手順](docs/v1.47.0-release.md)を参照してください。
 
 Version 1.46.0は、既存機能を維持したままFrontend legacy依存を段階的に整理するModernization Releaseです。DashboardのTask / Memo / Game / Clock controllerを分割し、その4 controllerをNative DOM / Eventへ移行、Task Item更新を対象Widgetだけの部分更新へ変更します。hls.jsは1.7.3をRepositoryへ同梱して外部CDN実行依存を解消し、Calendar / Drawerの後付けCSS層を統合します。Database Migration / 必須Config変更はありません。[正式版の更新・確認手順](docs/v1.46.0-release.md)を参照してください。\n\nVersion 1.45.0は、Feed単位のCategory管理を追加し、RSS管理・全RSS新着・Search Feedを同じCategory metadataで連携するFeature Releaseです。Categoryの作成・変更・Rename・削除、All RSS Recentの取得前絞り込み、Search Feedの「自分のRSS Category」絞り込み、OPML Category互換性を追加します。既存Widgetは「すべて」として互換動作し、Database Migration / Config変更はありません。[正式版の更新・確認手順](docs/v1.45.0-release.md)を参照してください。
 
