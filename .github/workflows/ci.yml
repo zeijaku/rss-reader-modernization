@@ -236,7 +236,11 @@ jobs:
       - name: Dry-run formal Runtime and Complete Source package verifiers
         run: |
           set -euo pipefail
-          mkdir -p dist
+          mkdir -p dist var/security/api-throttle
+          # Adversarial fixture: generated counters must not leak into either
+          # release ZIP even when this private directory contains live data.
+          printf '%s\n' '{"start":123,"count":99}' > var/security/api-throttle/all-999999.json
+          trap 'rm -f var/security/api-throttle/all-999999.json' EXIT
           python3 tools/build_release_package.py --release 1.47.0 --mode final --output-dir dist
           python3 tools/verify_release_package.py --release 1.47.0 dist/rss-reader-modernization-1.47.0.zip dist/rss-reader-modernization-1.47.0.zip.sha256
           python3 tools/build_complete_package.py --release 1.47.0 --output-dir dist
