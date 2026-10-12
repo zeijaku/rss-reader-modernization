@@ -154,3 +154,57 @@ jobs:
           path: dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip
           if-no-files-found: error
           retention-days: 30
+
+
+  p2c_overlay:
+    name: V1.47-B P2-C verified runtime ZIP
+    needs: [regression, p2b_apache_probe]
+    if: ${{ github.event_name == 'pull_request' && github.head_ref == 'security/v1.47-b-p2c-php-url-boundary' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout verified P2-C commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build only the two changed runtime files
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fxq "const APP_VERSION = '1.47.0-dev.3';" app/version.php
+          grep -Fxq "AcceptPathInfo Off" public/.htaccess
+          mkdir -p dist
+          cat > dist/DEPLOY_V1.47-B_P2-C.txt <<'EOF'
+          V1.47-B P2-C | 1.47.0-dev.3 | test overlay, NOT official release
+          Apply ONLY after successful installation/verification of V1.47-B P1 dev.2.
+          Unzip into the APPLICATION ROOT, retaining app/ and public/ directories.
+          Included files: public/.htaccess and app/version.php. Both existing files
+          must be backed up before applying. Do not delete the root .htaccess.
+          The change blocks PHP PATH_INFO and alternate executable extensions.
+          No other PHP/JS/CSS/DB files, config/local.php or var/ files are changed.
+          First verify footer 1.47.0-dev.3 and standard page navigation:
+          / /stock /settings /rss-management /file-library /remote-files
+          /remote-editor. Then verify 2FA/login, RSS, Calendar, File Library,
+          Remote Files, Mail, Camera and Game as used.
+          Do not create public dummy PHP files to test the deny policy in production.
+          To roll back: restore the two backed-up files. No database migration.
+          No stronger browser CSP directive was deployed. The CSP Report-Only
+          candidate remains isolated to GitHub Actions testing.
+          This overlay is verification-only. PRs #146 #151 #152 #153 are drafts.
+          EOF
+          sha256sum app/version.php public/.htaccess > dist/SHA256SUMS.txt
+          zip -q dist/RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip app/version.php public/.htaccess
+          (cd dist && zip -q RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip DEPLOY_V1.47-B_P2-C.txt SHA256SUMS.txt)
+          unzip -Z1 dist/RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip | sort > dist/actual.txt
+          printf '%s\n' app/version.php public/.htaccess DEPLOY_V1.47-B_P2-C.txt SHA256SUMS.txt | sort > dist/expected.txt
+          diff -u dist/expected.txt dist/actual.txt
+          sha256sum -c dist/SHA256SUMS.txt
+          unzip -tq dist/RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip
+      - name: Publish verified ZIP as Actions artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay
+          path: dist/RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip
+          if-no-files-found: error
+          retention-days: 30
