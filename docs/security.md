@@ -289,15 +289,7 @@ Productionでは次をHosting / Web server側で確認します。
 
 既存のRental Server互換としてApplication RootがWebから見える構成も維持しています。この構成ではRoot `.htaccess` がPrivate pathを拒否し、実在する公開Assetだけを`public/`へ内部Rewriteします。この互換防御はApache / `.htaccess` / `mod_rewrite`が有効であることが前提です。Nginx等へ移す場合はRuleを自動継承しないため、同等の拒否RuleをServer設定へ移してください。
 
-`public/.htaccess`では、直接実行可能なPHPを次の7 Endpointへ明示的に限定します。
-
-- `index.php`
-- `stock.php`
-- `settings.php`
-- `api_v1.php`
-- `logout.php`
-- `connection_probe.php`
-- `error.php`
+`public/.htaccess`では、直接実行可能なPHPをホワイトリストで明示的に限定します。V1.47.0の現行ソースは **23 Endpoint** で、File Library、Remote Files、Calendarなどの後継Endpointも含みます。最新一覧は[`docs/v1-19-public-endpoints.md`](v1-19-public-endpoints.md)を参照してください。現行PHPファイルと許可リストの一致は回帰テストで検証しています。
 
 新しいPHP Endpointを追加する場合は、実装Fileを置くだけでは公開されません。Method、Anonymous可否、Authentication、CSRF、Authorization、DB / External accessを確認してPublic Endpoint MatrixとWhitelistを同時に更新します。
 
@@ -322,7 +314,7 @@ CSPは段階導入を維持し、現在は次を強制します。
 - `form-action 'self'`
 - `object-src 'none'`
 
-`script-src` / `style-src` / `connect-src`の全面制限は、既存Inline Style、動的Style、CDN HLS、各Widget通信の棚卸しなしには追加しません。HSTSも完全HTTPS運用をHosting側で確認してから導入します。
+`script-src` / `style-src` / `connect-src`の全面制限は、既存Inline Style、動的Style、外部Video/HLS、各Widget通信のブラウザ実測なしには追加しません。hls.js自体の実行ファイルはV1.46以降ローカル同梱ですが、配信メディアは外部ドメインになり得ます。HSTSも完全HTTPS運用をHosting側で確認してから導入します。
 
 ### HTTPS detection / proxy
 
