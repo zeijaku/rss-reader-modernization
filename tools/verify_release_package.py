@@ -13,6 +13,11 @@ FORBIDDEN_EXACT = {'config/local.php', '.env', 'rss.sql', 'rss.zip'}
 FORBIDDEN_SUFFIXES = (
     '.sqlite', '.sqlite3', '.db', '.dump', '.bak', '.backup', '.log', '.pid', '.zip'
 )
+RUNTIME_DIRS = (
+    'var/session', 'var/log', 'var/cache', 'var/db-migration',
+    'var/security/login-throttle', 'var/security/api-throttle',
+    'var/m4f-evidence',
+)
 REQUIRED = {
     '.htaccess', 'README.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
     'RELEASE_NOTES.md', 'SECURITY.md', 'app/version.php', 'public/index.php',
@@ -81,6 +86,12 @@ def main() -> int:
         check(REQUIRED <= set(relative), 'release package contains all required files')
         check(not any(rel in FORBIDDEN_EXACT for rel in relative), 'release package excludes private and legacy exact files')
         check(not any(rel.lower().endswith(FORBIDDEN_SUFFIXES) for rel in relative), 'release package excludes runtime/database/archive extensions')
+        generated = [
+            rel for rel in relative
+            for runtime in RUNTIME_DIRS
+            if rel.startswith(runtime + '/') and PurePosixPath(rel).name != '.gitkeep'
+        ]
+        check(not generated, f'release package excludes generated runtime state: {generated[:5]}')
         check(not any('/tests/' in '/' + rel or rel.startswith('tests/') for rel in relative), 'runtime release package excludes test suite')
         check(not any(rel.startswith('.github/') for rel in relative), 'runtime release package excludes GitHub metadata')
         evidence_payload = [
