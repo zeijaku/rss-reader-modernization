@@ -5,8 +5,9 @@ Runs real, unchanged project .htaccess policies against disposable fixture
 files. PHP is deliberately NOT executed: this probes Apache routing/headers,
 NOT application authentication or PHP handler execution.
 
-An adversarial AcceptPathInfo On setting is intentional. Potential gaps are
-reported as observations for P2-C, not silently changed in production.
+An adversarial AcceptPathInfo On server setting remains intentional.
+The P2-C public .htaccess policy MUST reject PHP PATH_INFO and alternate
+executable extensions even under this adverse hosting configuration.
 """
 from __future__ import annotations
 
@@ -72,6 +73,12 @@ def create_fixture(home: Path) -> Path:
         "public/unknown.php": "SAFE_TEST_UNKNOWN_PHP\n",
         "public/nested/deep.php": "SAFE_TEST_NESTED_PHP\n",
         "public/unknown.phtml": "SAFE_TEST_PHTML\n",
+        "public/unknown.php5": "SAFE_TEST_PHP5\n",
+        "public/unknown.php.txt": "SAFE_TEST_PHP_COMPOUND\n",
+        "public/unknown.phar": "SAFE_TEST_PHAR\n",
+        "public/unknown.pht": "SAFE_TEST_PHT\n",
+        "public/nested/hidden.phtml": "SAFE_TEST_NESTED_PHTML\n",
+        "public/index.php.txt": "SAFE_TEST_ALLOWED_PHP_COMPOUND\n",
         "public/js/fixture.js": "console.log('safe-test');\n",
         "public/css/fixture.css": "body{color:black}\n",
         "public/.env": "PLACEHOLDER_ONLY\n",
@@ -197,16 +204,22 @@ DocumentRoot "{document_root}"
                 check(headers.get("cache-control") == "public, max-age=31536000, immutable",
                       f"{mode}: versioned static asset keeps immutable Cache-Control")
 
-        for path in ("/unknown.php/extra", "/unknown.phtml"):
+        # All executable-alternate extensions and PHP + PATH_INFO are denied.
+        # A 403 rewrite or 404 from AcceptPathInfo Off is acceptable. Never
+        # allow 200 or a redirect to the underlying file.
+        disallowed = (
+            "/unknown.php/extra", "/unknown.php/",
+            "/index.php/extra", "/api_v1.php/extra",
+            "/unknown.phtml", "/unknown.php5", "/unknown.php.txt",
+            "/index.php.txt", "/unknown.phar", "/unknown.pht",
+            "/nested/hidden.phtml",
+        )
+        if mode == "app-root":
+            disallowed += ("/public/unknown.php/extra", "/public/unknown.phtml")
+        for path in disallowed:
             status, _ = request(port, path)
-            # This is a security investigation, not an approval of the response.
-            # Presence of a response under an adversarial Apache/PHP configuration
-            # informs the P2-C hardening decision, and must remain visible in CI.
-            print(
-                f"OBSERVATION REQUIRES P2-C REVIEW: {mode} {path} "
-                f"HTTP {status}; PHP was NOT executed in this fixture",
-                flush=True,
-            )
+            check(status in (403, 404),
+                  f"{mode}: disallowed executable/PATH_INFO {path} => 403/404 (got {status})")
     finally:
         process.terminate()
         try:
@@ -226,7 +239,7 @@ def main() -> None:
         shutil.copytree(root / "public", home / "public-only")
         for layout in ("app-root", "public-root"):
             run_layout(home, root, layout)
-    print("PASS: P2-B isolated Apache probe completed; production headers and files were not modified")
+    print("PASS: P2-C Apache executable-URL policy + P2-B header contracts passed")
 
 
 if __name__ == "__main__":
