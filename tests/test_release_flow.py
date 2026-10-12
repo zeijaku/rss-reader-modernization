@@ -107,6 +107,17 @@ check("'.github/workflows/release.yml'" in verify_complete, 'Complete Source ver
 check('GitHub Artifact Attestation' in release_package_doc, 'Release package documentation explains artifact provenance')
 check(release_package_doc.count('gh attestation verify') >= 2, 'Release package documentation shows Runtime and Complete attestation verification')
 
+# V1.47: a generated per-user rate counter must never enter either
+# Runtime or Complete Source release archive even if present in the tree.
+for path in (
+    'tools/build_release_package.py',
+    'tools/verify_release_package.py',
+    'tools/build_complete_package.py',
+    'tools/verify_complete_package.py',
+):
+    check("'var/security/api-throttle'" in text(path),
+          f'{path} explicitly excludes or rejects private API throttle state')
+
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
 raise SystemExit(1 if failed else 0)

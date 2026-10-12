@@ -1,3 +1,26 @@
+## Version 1.46.0からVersion 1.47.0
+
+V1.47.0はSecurity Releaseです。DB構造変更とMigration、新規必須Configはありません。APIレート制限（60秒あたり全体600、通信系120の暫定値）、平文FTPの任意禁止設定、ログ情報の最小化、ApacheのPHP PATH_INFO／代替拡張子の拒否を加えます。基本CSPは維持し、厳格CSPとHSTSは追加しません。
+
+1. アプリケーション、`config/local.php`、Database、`var/`をバックアップし、[V1.47.0正式版の手順](v1.47.0-release.md)を確認する。
+2. SHA-256を検証した正式Runtime ZIPを一式上書きする。開発確認版P0/P1/P2-Cの差分ZIPと混同しない。
+3. SQL、Migration、既存DBへの`schema.sql`再適用は行わない。
+4. Browser／OPcacheを更新し、Footerに`1.47.0`を確認する。
+5. Login／2FA、RSS、Calendar、Mail、Remote Files／Editor、File Library、Game、Cameraの使用中機能、通常の各ページURLを確認する。
+6. `var/security/api-throttle/`の書込み権限と、日常利用で予期しない429がないことを確認する。FTPを禁止したいときだけ`APP_REMOTE_PLAINTEXT_FTP_ENABLED=false`を個別に設定する。
+7. 異常があればバックアップ済みのコード／`public/.htaccess`を復元する。DBロールバックSQLは不要。
+
+```text
+DB schema / Migration       変更なし
+Public API                  認証済みActionに追加レート制限（429）
+必須設定                    追加なし
+任意設定                    API rate limiting／Plain FTP policy
+Browser Cache               APP_ASSET_REVISION=1.47.0
+Apache URL policy           PHP PATH_INFO／代替実行拡張子を拒否
+CSP / HSTS                  新規強制なし
+正式Tag / GitHub Release    v1.47.0（正式公開工程実施後）
+```
+
 ## Version 1.45.0からVersion 1.46.0
 
 V1.46.0はFrontend Modernization Releaseです。Database構造変更、Migration、SQL、新規必須Configはありません。

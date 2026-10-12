@@ -289,15 +289,7 @@ Productionでは次をHosting / Web server側で確認します。
 
 既存のRental Server互換としてApplication RootがWebから見える構成も維持しています。この構成ではRoot `.htaccess` がPrivate pathを拒否し、実在する公開Assetだけを`public/`へ内部Rewriteします。この互換防御はApache / `.htaccess` / `mod_rewrite`が有効であることが前提です。Nginx等へ移す場合はRuleを自動継承しないため、同等の拒否RuleをServer設定へ移してください。
 
-`public/.htaccess`では、直接実行可能なPHPを次の7 Endpointへ明示的に限定します。
-
-- `index.php`
-- `stock.php`
-- `settings.php`
-- `api_v1.php`
-- `logout.php`
-- `connection_probe.php`
-- `error.php`
+`public/.htaccess`では、直接実行可能なPHPをホワイトリストで明示的に限定します。V1.47.0の現行ソースは **23 Endpoint** で、File Library、Remote Files、Calendarなどの後継Endpointも含みます。最新一覧は[`docs/v1-19-public-endpoints.md`](v1-19-public-endpoints.md)を参照してください。現行PHPファイルと許可リストの一致は回帰テストで検証しています。
 
 新しいPHP Endpointを追加する場合は、実装Fileを置くだけでは公開されません。Method、Anonymous可否、Authentication、CSRF、Authorization、DB / External accessを確認してPublic Endpoint MatrixとWhitelistを同時に更新します。
 
@@ -322,13 +314,22 @@ CSPは段階導入を維持し、現在は次を強制します。
 - `form-action 'self'`
 - `object-src 'none'`
 
-`script-src` / `style-src` / `connect-src`の全面制限は、既存Inline Style、動的Style、CDN HLS、各Widget通信の棚卸しなしには追加しません。HSTSも完全HTTPS運用をHosting側で確認してから導入します。
+`script-src` / `style-src` / `connect-src`の全面制限は、既存Inline Style、動的Style、外部Video/HLS、各Widget通信のブラウザ実測なしには追加しません。hls.js自体の実行ファイルはV1.46以降ローカル同梱ですが、配信メディアは外部ドメインになり得ます。HSTSも完全HTTPS運用をHosting側で確認してから導入します。
 
 ### HTTPS detection / proxy
 
 Session / Remember Me cookieの`Secure`判定はApplicationが直接認識するHTTPS状態を基準にします。Reverse Proxy配下だからという理由だけで、任意の`X-Forwarded-Proto`を信頼する変更は行いません。TLS termination構成を採用する場合は、信頼するProxy範囲とHeader上書き保証をServer側で確定してからApplication側対応を検討します。
 
 Public Endpoint一覧は[`v1-19-public-endpoints.md`](v1-19-public-endpoints.md)、今後の追加機能Reviewは[`v1-19-security-checklist.md`](v1-19-security-checklist.md)を参照してください。
+
+## V1.47-B P1: FTP deployment policy and error-log minimization
+
+- 既存のRemote Files画面には平文FTPの暗号化欠如警告があります。この警告は継続します。
+- `APP_REMOTE_PLAINTEXT_FTP_ENABLED` はデフォルト `true`（従来互換）。本番の `config/local.php` または環境変数で `false` を指定すると、平文FTPの接続新規作成・更新・保存済み接続の利用を拒否します。
+- 保存済み接続は削除しません。再び `true` に戻せば利用可能ですが、機密通信にはSFTP/FTPSを推奨します。
+- 対象は `ftp` のみ。暗号化された `ftps`、`sftp`、HTTPS WebDAVには適用されません。
+- 公開API境界と起動時の未捕捉例外ログは、メッセージ本文・ファイルパス・行番号を記録せず、追跡用referenceと例外クラス（APIはaction/user IDも）を記録します。個別モジュールが出力するログについては別途点検が必要です。
+- P0のAPI制限（デフォルト全体600回/分、network分類120回/分）は互換性優先の**暫定値**です。合理的な本番閾値には実測データが必要です。
 
 ## Production checklist
 

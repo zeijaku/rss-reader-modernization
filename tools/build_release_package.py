@@ -48,6 +48,7 @@ RUNTIME_DIRS = (
     'var/cache',
     'var/db-migration',
     'var/security/login-throttle',
+    'var/security/api-throttle',
     'var/m4f-evidence',
 )
 

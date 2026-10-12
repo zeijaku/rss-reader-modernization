@@ -16,13 +16,12 @@ set_exception_handler(static function (Throwable $exception): void {
         $reference = substr(hash('sha256', uniqid('', true)), 0, 12);
     }
 
+    // Exception messages/paths may include credentials, URLs or private paths.
+    // Keep only a correlation reference and class in the server-side log.
     error_log(sprintf(
-        'Unhandled application exception ref=%s [%s] at %s:%d: %s',
+        'Unhandled application exception ref=%s class=%s',
         $reference,
-        $exception::class,
-        $exception->getFile(),
-        $exception->getLine(),
-        $exception->getMessage()
+        $exception::class
     ));
 
     $jsonResponse = defined('APP_RESPONSE_FORMAT') && APP_RESPONSE_FORMAT === 'json';

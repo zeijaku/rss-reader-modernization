@@ -13,7 +13,8 @@ FORBIDDEN_EXACT = {'config/local.php', '.env', 'rss.sql', 'rss.zip'}
 FORBIDDEN_SUFFIXES = ('.sqlite', '.sqlite3', '.db', '.dump', '.bak', '.backup', '.log', '.pid', '.zip')
 RUNTIME_DIRS = (
     'var/session', 'var/log', 'var/cache', 'var/db-migration',
-    'var/security/login-throttle', 'var/m4f-evidence',
+    'var/security/login-throttle',
+    'var/security/api-throttle', 'var/m4f-evidence',
 )
 REQUIRED = {
     '.github/workflows/ci.yml',

@@ -112,10 +112,12 @@ check('min-height: 44px' in drawer_css and 'env(safe-area-inset-top)' in drawer_
 
 app_version = re.search(r"const APP_VERSION = '([^']+)';", version)
 asset_revision = re.search(r"const APP_ASSET_REVISION = '([^']+)';", version)
-check(bool(app_version and app_version.group(1) == '1.46.0'),
-      'visible APP_VERSION is finalized at 1.46.0')
-check(bool(asset_revision and asset_revision.group(1) == '1.46.0'),
-      'formal V1.46 release uses the immutable 1.46.0 asset revision')
+# Current-following regression must accept a verified development marker;
+# the V1.46.0 formal release is already pinned by historical release tests.
+check(bool(app_version and re.fullmatch(r'\d+\.\d+\.\d+(?:-(?:dev\.[1-9]\d*|rc[1-9]\d*))?', app_version.group(1))),
+      'visible APP_VERSION is a supported formal or staged version')
+check(bool(asset_revision and re.fullmatch(r'[A-Za-z0-9._-]+', asset_revision.group(1))),
+      'current asset revision is non-empty and URL-safe')
 check(not (ROOT / 'licenses/hls.js-1.6.16-Apache-2.0.txt').exists(),
       'obsolete hls.js 1.6.16 license copy is removed')
 check(not (ROOT / 'licenses/fontawesome-5.3.1-LICENSE.txt').exists(),

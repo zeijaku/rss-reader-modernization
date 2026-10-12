@@ -11,6 +11,11 @@ if (!defined('APP_REMOTE_CREDENTIAL_KEY_B64')) {
 if (!defined('APP_REMOTE_ALLOWED_PORTS')) {
     define('APP_REMOTE_ALLOWED_PORTS', app_env('APP_REMOTE_ALLOWED_PORTS', '21,22,443'));
 }
+// Explicit deployment switch for legacy unencrypted FTP. Keep existing deployments
+// operational by default; administrators can set false to forbid all FTP traffic.
+if (!defined('APP_REMOTE_PLAINTEXT_FTP_ENABLED')) {
+    define('APP_REMOTE_PLAINTEXT_FTP_ENABLED', app_env_bool('APP_REMOTE_PLAINTEXT_FTP_ENABLED', true));
+}
 if (!defined('APP_REMOTE_PRIVATE_NETWORK_ENABLED')) {
     define('APP_REMOTE_PRIVATE_NETWORK_ENABLED', app_env_bool('APP_REMOTE_PRIVATE_NETWORK_ENABLED', false));
 }

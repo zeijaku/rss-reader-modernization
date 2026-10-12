@@ -58,6 +58,203 @@ jobs:
           python --version
           node --version
 
+      - name: P1 PHP policy runtime check
+        run: php tests/test_current_ftp_policy.php
+
+      - name: P1 security contract check
+        run: python3 tests/test_current_v147b_security_hardening.py
+
       - name: Run the local CI-equivalent gate
         run: bash tests/run-ci.sh
+
+
+  p2b_apache_probe:
+    name: P2-B Apache isolation probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout unchanged application policies
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Ensure Apache 2.4 installed
+        run: |
+          if ! command -v apache2 >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y apache2
+          fi
+          apache2 -v
+      - name: Set up PHP for Apache/PHP header integration
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - name: Probe app-root and public-root access/header policy
+        run: python3 tests/test_current_p2b_apache_probe.py
+      - name: Verify Apache headers combined with real PHP responses
+        run: python3 tests/test_current_p2c_apache_php_csp.py
+
+
+  v147b_overlay:
+    name: Verified V1.47-B overlay ZIP
+    needs: regression
+    if: ${{ github.event_name == 'pull_request' && github.head_ref == 'security/v1.47-b-p1-ftp-policy-log-minimization' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout tested source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Assemble deployment overlay after PHP 8.1 and 8.4 passes
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cat > dist/DEPLOY_V1.47-B_P1.txt <<'EOF'
+          V1.47-B P1 / 1.47.0-dev.2 / inspection build
+          Base: V1.46.0 + reviewed V1.47-B P0.
+          Extract this overlay at the application ROOT, preserving app/ and public/.
+          Backup the current production files first, particularly public/api_v1.php,
+          app/version.php, and the existing Remote Files PHP modules.
+          Apply app/ files first and public/api_v1.php last, then verify browser
+          footer 1.47.0-dev.2 and test login/2FA, RSS, File Library, Remote Files,
+          Calendar and Mail. Do not overwrite config/local.php, database or var/.
+          APP_REMOTE_PLAINTEXT_FTP_ENABLED defaults to true for compatibility.
+          Set to false in private config only when you intend to forbid plain FTP.
+          Roll back by restoring backed-up modified files; adding app/api_rate_limit.php
+          does not change data. No database migration.
+          P0 rate limit defaults are provisional pending traffic measurement.
+          GitHub pull requests #146 and #151 remain unmerged/verification only.
+          EOF
+          files=(
+            app/api_rate_limit.php
+            app/bootstrap.php
+            app/version.php
+            app/remote_file/remote_bootstrap.php
+            app/remote_file/remote_connection.php
+            app/remote_file/remote_service.php
+            app/remote_file/remote_api.php
+            public/api_v1.php
+          )
+          sha256sum "${files[@]}" > dist/SHA256SUMS.txt
+          zip -q dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip "${files[@]}"
+          (cd dist && zip -q RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip DEPLOY_V1.47-B_P1.txt SHA256SUMS.txt)
+          unzip -Z1 dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip | sort > dist/actual-files.txt
+          printf '%s\n' "${files[@]}" DEPLOY_V1.47-B_P1.txt SHA256SUMS.txt | sort > dist/expected-files.txt
+          diff -u dist/expected-files.txt dist/actual-files.txt
+          unzip -tq dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip
+      - name: Upload tested runtime ZIP
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: RSS_Reader_V1.47-B_P1_dev2_runtime_overlay
+          path: dist/RSS_Reader_V1.47-B_P1_dev2_runtime_overlay.zip
+          if-no-files-found: error
+          retention-days: 30
+
+
+  p2c_overlay:
+    name: V1.47-B P2-C verified runtime ZIP
+    needs: [regression, p2b_apache_probe]
+    if: ${{ github.event_name == 'pull_request' && github.head_ref == 'security/v1.47-b-p2c-php-url-boundary' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout verified P2-C commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build only the two changed runtime files
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fxq "const APP_VERSION = '1.47.0-dev.3';" app/version.php
+          grep -Fxq "AcceptPathInfo Off" public/.htaccess
+          mkdir -p dist
+          cat > dist/DEPLOY_V1.47-B_P2-C.txt <<'EOF'
+          V1.47-B P2-C | 1.47.0-dev.3 | test overlay, NOT official release
+          Apply ONLY after successful installation/verification of V1.47-B P1 dev.2.
+          Unzip into the APPLICATION ROOT, retaining app/ and public/ directories.
+          Included files: public/.htaccess and app/version.php. Both existing files
+          must be backed up before applying. Do not delete the root .htaccess.
+          The change blocks PHP PATH_INFO and alternate executable extensions.
+          No other PHP/JS/CSS/DB files, config/local.php or var/ files are changed.
+          First verify footer 1.47.0-dev.3 and standard page navigation:
+          / /stock /settings /rss-management /file-library /remote-files
+          /remote-editor. Then verify 2FA/login, RSS, Calendar, File Library,
+          Remote Files, Mail, Camera and Game as used.
+          Do not create public dummy PHP files to test the deny policy in production.
+          To roll back: restore the two backed-up files. No database migration.
+          No stronger browser CSP directive was deployed. The CSP Report-Only
+          candidate remains isolated to GitHub Actions testing.
+          This overlay is verification-only. PRs #146 #151 #152 #153 are drafts.
+          EOF
+          sha256sum app/version.php public/.htaccess > dist/SHA256SUMS.txt
+          zip -q dist/RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip app/version.php public/.htaccess
+          (cd dist && zip -q RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip DEPLOY_V1.47-B_P2-C.txt SHA256SUMS.txt)
+          unzip -Z1 dist/RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip | sort > dist/actual.txt
+          printf '%s\n' app/version.php public/.htaccess DEPLOY_V1.47-B_P2-C.txt SHA256SUMS.txt | sort > dist/expected.txt
+          diff -u dist/expected.txt dist/actual.txt
+          sha256sum -c dist/SHA256SUMS.txt
+          unzip -tq dist/RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip
+      - name: Publish verified ZIP as Actions artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay
+          path: dist/RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip
+          if-no-files-found: error
+          retention-days: 30
+
+  p2d_release_readiness:
+    name: Generic final release source and package dry run
+    needs: [regression, p2b_apache_probe]
+    if: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout release candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Resolve final release version from source
+        shell: bash
+        run: |
+          set -euo pipefail
+          RELEASE_VERSION="$(awk -F"'" '/^const APP_VERSION = / {print $2; exit}' app/version.php)"
+          if ! [[ "${RELEASE_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo 'Version must be final SemVer before package dry run' >&2
+            exit 1
+          fi
+          echo "RELEASE_VERSION=${RELEASE_VERSION}" >> "${GITHUB_ENV}"
+      - name: Validate release-ready source and current endpoint docs
+        run: |
+          set -euo pipefail
+          python3 tools/check_release_ready.py --release ${RELEASE_VERSION}
+          python3 tests/test_current_public_endpoint_contract.py
+          python3 tests/test_current_public_endpoint_docs.py
+          python3 tests/test_release_flow.py
+      - name: Dry-run formal Runtime and Complete Source package verifiers
+        run: |
+          set -euo pipefail
+          mkdir -p dist var/security/api-throttle
+          # Adversarial fixture: generated counters must not leak into either
+          # release ZIP even when this private directory contains live data.
+          printf '%s\n' '{"start":123,"count":99}' > var/security/api-throttle/all-999999.json
+          trap 'rm -f var/security/api-throttle/all-999999.json' EXIT
+          python3 tools/build_release_package.py --release ${RELEASE_VERSION} --mode final --output-dir dist
+          python3 tools/verify_release_package.py --release ${RELEASE_VERSION} dist/rss-reader-modernization-${RELEASE_VERSION}.zip dist/rss-reader-modernization-${RELEASE_VERSION}.zip.sha256
+          python3 tools/build_complete_package.py --release ${RELEASE_VERSION} --output-dir dist
+          python3 tools/verify_complete_package.py --release ${RELEASE_VERSION} dist/rss-reader-modernization-${RELEASE_VERSION}-complete.zip dist/rss-reader-modernization-${RELEASE_VERSION}-complete.zip.sha256
+          (cd dist && sha256sum -c rss-reader-modernization-${RELEASE_VERSION}.zip.sha256)
+          (cd dist && sha256sum -c rss-reader-modernization-${RELEASE_VERSION}-complete.zip.sha256)
 

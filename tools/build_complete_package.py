@@ -17,7 +17,8 @@ FORBIDDEN_SUFFIXES = ('.sqlite', '.sqlite3', '.db', '.dump', '.bak', '.backup', 
 EXCLUDED_TOP = {'.git', 'dist', 'deliverables', '.idea', '.vscode'}
 RUNTIME_DIRS = (
     'var/session', 'var/log', 'var/cache', 'var/db-migration',
-    'var/security/login-throttle', 'var/m4f-evidence',
+    'var/security/login-throttle',
+    'var/security/api-throttle', 'var/m4f-evidence',
 )
 
 
