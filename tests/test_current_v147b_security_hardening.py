@@ -52,6 +52,9 @@ for p, body in [('app/bootstrap.php', app_bootstrap), ('public/api_v1.php', api_
           p + ' retains exception class and support correlation reference')
 check("api_error('internal_error', 'Internal server error. Reference: ' . $reference, 500)" in api_entry,
       'public API response retains bounded reference and status')
-check("const APP_VERSION = '1.47.0-dev.2';" in read('app/version.php'),
-      'test deployment shows unique development version')
+# Current security contracts must follow the active release; the P1 test must not
+# pin a specific development checkpoint once P2-C or later versions ship.
+version_source = read('app/version.php')
+check("const APP_VERSION = '" in version_source and "const APP_VERSION_LABEL = 'RSS Reader Modernization " in version_source,
+      'current deployment exposes a centrally defined version label')
 print('All current V1.47-B P1 security checks passed.')
