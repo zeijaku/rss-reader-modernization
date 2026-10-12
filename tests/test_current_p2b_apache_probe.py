@@ -183,6 +183,12 @@ DocumentRoot "{document_root}"
             check(status == expected, f"{mode}: {path} -> HTTP {expected} (actual {status})")
             check(headers.get("x-content-type-options") == "nosniff",
                   f"{mode}: security header nosniff on {path}")
+            check(headers.get("x-frame-options") == "SAMEORIGIN",
+                  f"{mode}: clickjacking header retained on {path}")
+            check(headers.get("referrer-policy") == "strict-origin-when-cross-origin",
+                  f"{mode}: referrer policy retained on {path}")
+            check(headers.get("permissions-policy") == "camera=(), microphone=(), geolocation=(), payment=()",
+                  f"{mode}: permissions policy retained on {path}")
             check(headers.get("content-security-policy") == ENFORCED,
                   f"{mode}: existing enforcing CSP unchanged on {path}")
             check(headers.get("content-security-policy-report-only") == REPORT_ONLY,
