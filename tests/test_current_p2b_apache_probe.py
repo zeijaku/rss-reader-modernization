@@ -174,12 +174,10 @@ DocumentRoot "{document_root}"
             raise RuntimeError(f"{mode}: Apache startup timed out")
 
         for path, expected in CASES:
-            # Outside-DocumentRoot private paths are 404, not 403, in the
-            # recommended public-root layout. Both deny access.
-            if mode == "public-root" and path in {
-                "/app/private.php", "/config/local.php", "/tools/unsafe.php",
-                "/var/log/errors.log"
-            }:
+            # In the public-root layout the file is absent, but unknown
+            # *.php paths are still explicitly 403 via the public whitelist.
+            # A missing, non-PHP private log path instead yields 404.
+            if mode == "public-root" and path == "/var/log/errors.log":
                 expected = 404
             status, headers = request(port, path)
             check(status == expected, f"{mode}: {path} -> HTTP {expected} (actual {status})")
