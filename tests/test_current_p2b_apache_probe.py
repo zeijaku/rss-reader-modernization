@@ -111,7 +111,7 @@ def run_layout(home: Path, webroot: Path, mode: str) -> None:
     if apache is None:
         raise RuntimeError("Apache binary unavailable; this probe must not silently skip")
     modules = module_dir()
-    document_root = webroot if mode == "app-root" else webroot / "public"
+    document_root = webroot if mode == "app-root" else home / "public-only"
     config = home / (mode + ".conf")
     error_log = home / (mode + ".error.log")
     port = free_port()
@@ -174,6 +174,13 @@ DocumentRoot "{document_root}"
             raise RuntimeError(f"{mode}: Apache startup timed out")
 
         for path, expected in CASES:
+            # Outside-DocumentRoot private paths are 404, not 403, in the
+            # recommended public-root layout. Both deny access.
+            if mode == "public-root" and path in {
+                "/app/private.php", "/config/local.php", "/tools/unsafe.php",
+                "/var/log/errors.log"
+            }:
+                expected = 404
             status, headers = request(port, path)
             check(status == expected, f"{mode}: {path} -> HTTP {expected} (actual {status})")
             check(headers.get("x-content-type-options") == "nosniff",
@@ -209,6 +216,10 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="rss-p2b-apache-") as tmp:
         home = Path(tmp)
         root = create_fixture(home)
+        # In public-root deployment the parent application .htaccess is not
+        # inside the DocumentRoot. Use a clean sibling tree to avoid Apache
+        # traversal of the app-root fixture's ancestor .htaccess.
+        shutil.copytree(root / "public", home / "public-only")
         for layout in ("app-root", "public-root"):
             run_layout(home, root, layout)
     print("PASS: P2-B isolated Apache probe completed; production headers and files were not modified")
