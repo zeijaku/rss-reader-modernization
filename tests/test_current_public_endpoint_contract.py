@@ -36,6 +36,19 @@ for expression in expressions:
     allowed.add(m.group(1) + '.php')
 check(len(allowed) == len(expressions), 'no duplicate PHP allowlist entries')
 check(allowed == actual, f'PHP allowlist and disk endpoints match (allowlist={sorted(allowed-actual)}, unlisted={sorted(actual-allowed)})')
+# The exact list above still contains all permitted .php endpoints; these
+# fail-closed guards protect against alternate PHP mappings and PATH_INFO.
+check('AcceptPathInfo Off' in POLICY,
+      'public policy forbids PATH_INFO even with a permissive PHP handler')
+check('RewriteRule \\.(?:php[0-9]*|phtml?|pht|phar)(?:/|\\.) - [F,L,NC]' in POLICY,
+      'embedded PHP executable suffixes and PATH_INFO are denied')
+check('RewriteRule \\.(?:php[0-9]+|phtml?|pht|phar)$ - [F,L,NC]' in POLICY,
+      'alternate PHP executable extensions are denied')
+check(POLICY.index('AcceptPathInfo Off') < POLICY.index('RewriteRule ^(?!'),
+      'PATH_INFO policy precedes the exact executable allowlist')
+check(POLICY.index('RewriteRule \\.(?:php[0-9]*|phtml?|pht|phar)') < POLICY.index('RewriteRule ^(?!'),
+      'alternative executable deny precedes the exact executable allowlist')
+
 check('Options -Indexes' in ROOT_POLICY and 'Options -Indexes' in POLICY, 'directory listings disabled at root and public')
 check('RewriteRule ^(?:app|config|tools|var)(?:/|$) - [F,L,NC]' in ROOT_POLICY,
       'root policy forbids private directories including the runtime storage')
