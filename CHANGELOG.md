@@ -1,3 +1,14 @@
+## 1.47.0 - 2026-10-13
+
+- Introduce a per-authenticated-user, file-backed API request rate limit after method/authentication/CSRF/request-size checks. Preserve standard API error handling, and return HTTP 429 with Retry-After on limit exceed. Defaults are 600 total and 120 selected network-heavy requests per 60 seconds; these are compatibility-first provisional operating limits, not empirically optimized thresholds.
+- Add private deployment setting `APP_REMOTE_PLAINTEXT_FTP_ENABLED` to allow or deny plaintext FTP. Default `true` preserves old behavior; `false` rejects new and saved FTP connections without deleting connection records. SFTP and FTPS are unaffected.
+- Minimize unhandled exception logging at API and bootstrap boundaries by omitting raw error messages/source paths and using bounded correlation references; this does not claim a full audit of all module logs.
+- Add `AcceptPathInfo Off` and denial rules for unknown PHP PATH_INFO, compound executable names and alternative PHP extensions. Preserve the existing exact 23-endpoint PHP allowlist and canonical navigation routes.
+- Add isolated Apache 2.4 tests for both supported DocumentRoot layouts, unchanged security headers, forbidden paths, and a PHP backend integration check for the coexistence of common CSP and per-response sandbox CSP.
+- Keep the enforcing CSP unchanged; the speculative Report-Only policy remains confined to tests. Do not force stricter script/style/connect/media/frame directives or HSTS without verified browser/hosting compatibility.
+- Synchronize the Current public endpoint matrix and security documentation with the 23 actual endpoints and add documentation parity regression checks. Keep all application database structures and mandatory configuration unchanged.
+- Verify current PHP 8.1 and PHP 8.4 regressions, plus isolated Apache/PHP tests. Production smoke-test feedback reported no apparent issues in P0/P1/P2-C checkpoints; complete browser/load/hosting configuration verification remains a limitation.
+
 ## 1.46.0 - 2026-10-08
 
 - Complete a staged frontend modernization without changing the application's backend security boundaries, database schema, public API contracts, or required configuration. V1.46-A records the dependency/load-order/CSS legacy audit used to choose low-coupling migration targets.
