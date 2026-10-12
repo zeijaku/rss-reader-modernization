@@ -68,6 +68,28 @@ jobs:
         run: bash tests/run-ci.sh
 
 
+  p2b_apache_probe:
+    name: P2-B Apache isolation probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout unchanged application policies
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Ensure Apache 2.4 installed
+        run: |
+          if ! command -v apache2 >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y apache2
+          fi
+          apache2 -v
+      - name: Probe app-root and public-root access/header policy
+        run: python3 tests/test_current_p2b_apache_probe.py
+
+
   v147b_overlay:
     name: Verified V1.47-B overlay ZIP
     needs: regression
