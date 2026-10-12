@@ -86,8 +86,11 @@ def run() -> None:
         marker = "RewriteCond %{REQUEST_FILENAME} -f [OR]"
         check(policy.count(marker) == 1, "temporary proxy injection has unique safe anchor")
         (public / ".htaccess").write_text(policy.replace(marker, inject + marker), encoding="utf-8")
-        for name in ("index.php", "file_content.php", "error.php", "unknown.php", "unknown.phtml"):
+        for name in ("index.php", "file_content.php", "unknown.php", "unknown.phtml"):
             (public / name).write_text("FAKE_APACHE_FIXTURE", encoding="utf-8")
+        # Denied requests render the normal ErrorDocument; its safe test marker
+        # must differ from the unauthorized dummy resource's marker.
+        (public / "error.php").write_text("SAFE_ERROR_PAGE", encoding="utf-8")
 
         (backend / "index.php").write_text(
             '<?php header("Content-Type: text/html; charset=UTF-8");'
