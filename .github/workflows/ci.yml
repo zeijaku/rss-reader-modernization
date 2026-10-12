@@ -208,3 +208,39 @@ jobs:
           path: dist/RSS_Reader_V1.47-B_P2-C_dev3_runtime_overlay.zip
           if-no-files-found: error
           retention-days: 30
+
+  p2d_release_readiness:
+    name: V1.47.0 release source and package dry run
+    needs: [regression, p2b_apache_probe]
+    if: ${{ github.event_name == 'pull_request' && github.head_ref == 'release/v1.47.0-p2d-readiness' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout release candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+      - name: Validate release-ready source and current endpoint docs
+        run: |
+          set -euo pipefail
+          python3 tools/check_release_ready.py --release 1.47.0
+          python3 tests/test_current_public_endpoint_contract.py
+          python3 tests/test_current_public_endpoint_docs.py
+          python3 tests/test_release_flow.py
+      - name: Dry-run formal Runtime and Complete Source package verifiers
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          python3 tools/build_release_package.py --release 1.47.0 --mode final --output-dir dist
+          python3 tools/verify_release_package.py --release 1.47.0 dist/rss-reader-modernization-1.47.0.zip dist/rss-reader-modernization-1.47.0.zip.sha256
+          python3 tools/build_complete_package.py --release 1.47.0 --output-dir dist
+          python3 tools/verify_complete_package.py --release 1.47.0 dist/rss-reader-modernization-1.47.0-complete.zip dist/rss-reader-modernization-1.47.0-complete.zip.sha256
+          (cd dist && sha256sum -c rss-reader-modernization-1.47.0.zip.sha256)
+          (cd dist && sha256sum -c rss-reader-modernization-1.47.0-complete.zip.sha256)
+
