@@ -1,4 +1,7 @@
 Options -Indexes -MultiViews
+# No public endpoint uses PATH_INFO. Reject suffixes even when the hosting
+# PHP handler would otherwise accept /allowed.php/extra.
+AcceptPathInfo Off
 DirectoryIndex index.php
 
 <IfModule mod_headers.c>
@@ -27,6 +30,12 @@ DirectoryIndex index.php
 Options -Indexes
 
 RewriteEngine On
+
+# P2-C: Do not let alternative PHP handlers or PATH_INFO bypass the
+# exact .php endpoint allowlist. Includes compound names (file.php.jpg).
+# Normal allowlisted, exact .php filenames continue to the unchanged gate.
+RewriteRule \\.(?:php[0-9]*|phtml?|pht|phar)(?:/|\\.) - [F,L,NC]
+RewriteRule \\.(?:php[0-9]+|phtml?|pht|phar)$ - [F,L,NC]
 
 # V1.19-C: public/で直接実行可能なPHPはPublic Endpoint Matrixで明示的に固定する。
 # V1.22-A: authenticated RSS management page is an explicit public endpoint.
