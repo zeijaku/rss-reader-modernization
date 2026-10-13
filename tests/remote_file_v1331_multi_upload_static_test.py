@@ -33,7 +33,7 @@ check("form.set('csrf_token', csrfToken())" in js and "syncCsrf(response)" in js
       'each upload refreshes and sends the current CSRF token')
 check("credentials: 'same-origin'" in js,
       'each upload retains same-origin session credentials')
-check('failures.push' in js and 'successCount' in js and "'Upload完了: '" in js and "'成功 '" in js and "'失敗 '" in js,
+check('failures.push' in js and 'successCount' in js and "'Upload完了: '" in js and "'成功 '" in js and "'件、失敗 '" in js,
       'partial failures are collected and summarized without aborting later files')
 check('el.uploadFile.disabled = true' in js and 'submitButton.disabled = true' in js,
       'duplicate submits are blocked while the queue is processing')
