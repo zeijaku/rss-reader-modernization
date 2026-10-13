@@ -101,6 +101,7 @@
         uploadModal: document.getElementById('remoteUploadModal'),
         uploadForm: document.getElementById('remoteUploadForm'),
         uploadFile: document.getElementById('remoteUploadFile'),
+        uploadDirectory: document.getElementById('remoteUploadDirectory'),
         uploadOverwrite: document.getElementById('remoteUploadOverwrite'),
         uploadStop: document.getElementById('remoteUploadStop'),
         uploadClose: document.getElementById('remoteUploadClose'),
@@ -970,10 +971,72 @@
         if (el.uploadProgressText) { el.uploadProgressText.textContent = '中断を受付ました。現在のファイルの処理後に停止します。'; }
     }
 
+    function directoryUploadItems(files) {
+        if (files.length > 1000) { throw new Error('Directory内のファイルは1000件以下にしてください。'); }
+        var totalBytes = 0;
+        return files.map(function (file) {
+            var raw = String(file.webkitRelativePath || '');
+            var segments = raw.split('/');
+            if (segments.length < 2 || segments.length > 21 || segments.some(function (part) {
+                return !part || part === '.' || part === '..' || part.indexOf('\\\\') >= 0 ||
+                    /[\\u0000-\\u001F\\u007F]/.test(part);
+            })) {
+                throw new Error('Directory内のPathが無効か、深さ20階層を超えています。');
+            }
+            if (segments[segments.length - 1] !== file.name) {
+                throw new Error('Directory内のファイル名が一致しません。');
+            }
+            totalBytes += Number(file.size || 0);
+            if (totalBytes > 500 * 1024 * 1024) {
+                throw new Error('Directory Uploadの合計容量は500MB以下にしてください。');
+            }
+            return {file: file, folders: segments.slice(0, -1), label: raw};
+        });
+    }
+
+    async function ensureRemoteUploadFolder(connectionId, base, folders, known) {
+        var parent = base;
+        for (var index = 0; index < folders.length; index += 1) {
+            var child = pathJoin(parent, folders[index]);
+            if (!known.has(child)) {
+                var listing = await api('remote.file.list', {remote_connection_id: connectionId, path: parent});
+                var existing = (listing.entries || []).find(function (entry) { return entry.name === folders[index]; });
+                if (existing && existing.type !== 'directory') {
+                    throw new Error('同名のFileが存在します: ' + child);
+                }
+                if (!existing) {
+                    try {
+                        await api('remote.file.mkdir', {remote_connection_id: connectionId, path: child});
+                    } catch (error) {
+                        // A concurrent writer may have created it; only proceed after verification.
+                        var verified = await api('remote.file.list', {remote_connection_id: connectionId, path: parent});
+                        var found = (verified.entries || []).some(function (entry) {
+                            return entry.name === folders[index] && entry.type === 'directory';
+                        });
+                        if (!found) { throw error; }
+                    }
+                }
+                known.add(child);
+            }
+            parent = child;
+        }
+        return parent;
+    }
+
     async function uploadFile(event) {
         event.preventDefault();
         if (state.uploadRunning) { return; }
-        var files = el.uploadFile && el.uploadFile.files ? Array.prototype.slice.call(el.uploadFile.files) : [];
+        var directoryFiles = el.uploadDirectory && el.uploadDirectory.files ? Array.prototype.slice.call(el.uploadDirectory.files) : [];
+        var files = directoryFiles.length ? directoryFiles : (el.uploadFile && el.uploadFile.files ? Array.prototype.slice.call(el.uploadFile.files) : []);
+        var items;
+        try {
+            items = directoryFiles.length ? directoryUploadItems(files) : files.map(function (file) {
+                return {file: file, folders: [], label: String(file.name || '')};
+            });
+        } catch (error) {
+            showNotice(error.message || 'Directoryを選択できませんでした。', 'warning');
+            return;
+        }
         if (!state.currentConnectionId || files.length === 0) {
             showNotice('接続先とUploadするファイルを選択してください。', 'warning');
             return;
@@ -981,6 +1044,7 @@
         var connectionId = state.currentConnectionId;
         var currentPath = state.currentPath;
         var overwrite = el.uploadOverwrite.checked;
+        var knownFolders = new Set();
         var submitButton = el.uploadForm ? el.uploadForm.querySelector('button[type="submit"]') : null;
         var successCount = 0;
         var failures = [];
@@ -989,6 +1053,7 @@
         state.uploadRunning = true;
         state.uploadStopRequested = false;
         el.uploadFile.disabled = true;
+        if (el.uploadDirectory) { el.uploadDirectory.disabled = true; }
         el.uploadOverwrite.disabled = true;
         if (submitButton) { submitButton.disabled = true; }
         if (el.uploadStop) { el.uploadStop.classList.remove('d-none'); el.uploadStop.disabled = false; }
@@ -998,13 +1063,18 @@
         try {
             for (var index = 0; index < files.length; index += 1) {
                 if (state.uploadStopRequested) { break; }
-                var file = files[index];
-                updateUploadProgress(processed, files.length, successCount, failures.length, '処理中: ' + String(file.name || ''));
+                var item = items[index];
+                var file = item.file;
+                updateUploadProgress(processed, files.length, successCount, failures.length, '処理中: ' + item.label);
                 try {
+                    var remoteFolder = item.folders.length
+                        ? await ensureRemoteUploadFolder(connectionId, currentPath, item.folders, knownFolders)
+                        : currentPath;
+                    if (state.uploadStopRequested) { break; }
                     var form = new FormData();
                     form.set('csrf_token', csrfToken());
                     form.set('remote_connection_id', String(connectionId));
-                    form.set('path', currentPath);
+                    form.set('path', remoteFolder);
                     form.set('overwrite', overwrite ? '1' : '0');
                     form.set('file', file);
                     var response = await window.fetch('./remote_file_upload_api.php', {method: 'POST', credentials: 'same-origin', body: form});
@@ -1016,10 +1086,10 @@
                     }
                     successCount += 1;
                 } catch (error) {
-                    failures.push({name: String(file.name || '（名前なし）'), message: error.message || 'RemoteへUploadできませんでした。'});
+                    failures.push({name: item.label || '（名前なし）', message: error.message || 'RemoteへUploadできませんでした。'});
                 }
                 processed += 1;
-                updateUploadProgress(processed, files.length, successCount, failures.length, state.uploadStopRequested ? '中断処理中' : '完了: ' + String(file.name || ''));
+                updateUploadProgress(processed, files.length, successCount, failures.length, state.uploadStopRequested ? '中断処理中' : '完了: ' + item.label);
             }
             if (successCount > 0) { await loadDirectory(currentPath); }
             var stopped = state.uploadStopRequested && processed < files.length;
@@ -1039,6 +1109,7 @@
             state.uploadRunning = false;
             state.uploadStopRequested = false;
             el.uploadFile.disabled = false;
+            if (el.uploadDirectory) { el.uploadDirectory.disabled = false; }
             el.uploadOverwrite.disabled = false;
             if (submitButton) { submitButton.disabled = false; }
             if (el.uploadStop) { el.uploadStop.classList.add('d-none'); el.uploadStop.disabled = false; }
@@ -1168,6 +1239,14 @@
         if (el.uploadProgressWrap) { el.uploadProgressWrap.classList.add('d-none'); }
         modals.upload.show();
     }); }
+    if (el.uploadFile && el.uploadDirectory) {
+        el.uploadFile.addEventListener('change', function () {
+            if (el.uploadFile.files.length) { el.uploadDirectory.value = ''; }
+        });
+        el.uploadDirectory.addEventListener('change', function () {
+            if (el.uploadDirectory.files.length) { el.uploadFile.value = ''; }
+        });
+    }
     if (el.uploadStop) { el.uploadStop.addEventListener('click', requestUploadStop); }
     if (el.uploadModal) { el.uploadModal.addEventListener('hide.bs.modal', function (event) {
         if (state.uploadRunning) { event.preventDefault(); }
