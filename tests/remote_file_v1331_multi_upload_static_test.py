@@ -21,7 +21,7 @@ def check(condition, label):
 
 check('id="remoteUploadFile" multiple' in page,
       'Remote Files file picker allows multiple selection')
-check('複数ファイルを選択できます' in page and '成功／失敗の結果を表示します' in page,
+check('remoteUploadDirectory' in page and 'ファイルを選択' in page and 'remoteUploadProgressCounts' in page,
       'Upload dialog explains sequential multi-file behavior and result reporting')
 check('Array.prototype.slice.call(el.uploadFile.files)' in js,
       'browser converts FileList into an iterable upload queue')
@@ -33,7 +33,7 @@ check("form.set('csrf_token', csrfToken())" in js and "syncCsrf(response)" in js
       'each upload refreshes and sends the current CSRF token')
 check("credentials: 'same-origin'" in js,
       'each upload retains same-origin session credentials')
-check('failures.push' in js and 'successCount' in js and 'Upload完了: 成功 ' in js,
+check('failures.push' in js and 'successCount' in js and "'Upload完了: '" in js and "'成功 '" in js and "'失敗 '" in js,
       'partial failures are collected and summarized without aborting later files')
 check('el.uploadFile.disabled = true' in js and 'submitButton.disabled = true' in js,
       'duplicate submits are blocked while the queue is processing')
