@@ -149,6 +149,18 @@ if (!is_string($initialJson)) {
           <button type="button" class="btn btn-outline-primary" id="remoteNewFolder" disabled><i class="fas fa-folder-plus fa-fw" aria-hidden="true"></i>New Folder</button>
           <button type="button" class="btn btn-outline-primary" id="remoteLibraryExport"<?php echo $libraryAvailable ? ' disabled' : ' disabled'; ?>><i class="fas fa-cloud-upload-alt fa-fw" aria-hidden="true"></i>File Library → Remote</button>
         </div>
+        <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
+          <label class="form-label small mb-0" for="remoteSortOrder">並び替え</label>
+          <select class="form-select form-select-sm w-auto" id="remoteSortOrder" aria-label="Remote Filesの並び替え">
+            <option value="default">標準（Directory優先・名前順）</option>
+            <option value="name_asc">名前 昇順</option>
+            <option value="name_desc">名前 降順</option>
+            <option value="size_asc">サイズ 小さい順</option>
+            <option value="size_desc">サイズ 大きい順</option>
+            <option value="date_desc">更新日時 新しい順</option>
+            <option value="date_asc">更新日時 古い順</option>
+          </select>
+        </div>
         <div id="remoteFilesLoading" class="remote-files-loading text-muted d-none" aria-live="polite"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>読み込み中...</span></div>
         <div class="table-responsive remote-files-table-wrap">
           <table class="table table-sm table-hover align-middle mb-0 remote-files-table">
