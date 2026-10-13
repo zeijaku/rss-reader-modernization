@@ -248,8 +248,13 @@ if (!is_string($initialJson)) {
 <div class="modal fade" id="remoteUploadModal" tabindex="-1" aria-labelledby="remoteUploadModalTitle" aria-hidden="true">
   <div class="modal-dialog"><div class="modal-content"><form id="remoteUploadForm" enctype="multipart/form-data">
     <div class="modal-header"><h2 class="modal-title fs-5" id="remoteUploadModalTitle">RemoteへUpload</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
-    <div class="modal-body"><label class="form-label" for="remoteUploadFile">ファイル</label><input class="form-control" type="file" id="remoteUploadFile" multiple required><div class="form-text">複数ファイルを選択できます。ファイルごとに順番にUploadし、成功／失敗の結果を表示します。Application上限: <?php echo app_html(user_file_library_format_bytes(APP_REMOTE_TRANSFER_MAX_BYTES)); ?>。PHP / Web Server側のUpload上限がこれより小さい場合は、そちらが優先されます。</div><div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="remoteUploadOverwrite"><label class="form-check-label" for="remoteUploadOverwrite">同名ファイルがある場合に上書きする</label></div></div>
-    <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">キャンセル</button><button type="submit" class="btn btn-primary"><i class="fas fa-upload fa-fw" aria-hidden="true"></i>Upload</button></div>
+    <div class="modal-body"><label class="form-label" for="remoteUploadFile">ファイル</label><input class="form-control" type="file" id="remoteUploadFile" multiple required><div class="form-text">複数ファイルを選択できます。ファイルごとに順番にUploadし、成功／失敗の結果を表示します。Application上限: <?php echo app_html(user_file_library_format_bytes(APP_REMOTE_TRANSFER_MAX_BYTES)); ?>。PHP / Web Server側のUpload上限がこれより小さい場合は、そちらが優先されます。</div><div class="mt-3 d-none" id="remoteUploadProgressWrap" aria-live="polite">
+      <div class="small mb-1" id="remoteUploadProgressText">準備中</div>
+      <div class="progress" role="progressbar" aria-label="Upload進捗" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="remoteUploadProgressBar"><div class="progress-bar" id="remoteUploadProgressFill" style="width:0%">0%</div></div>
+      <div class="small text-muted mt-1" id="remoteUploadProgressCounts">成功 0件 / 失敗 0件 / 未実行 0件</div>
+    </div>
+    <div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="remoteUploadOverwrite"><label class="form-check-label" for="remoteUploadOverwrite">同名ファイルがある場合に上書きする</label></div></div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline-warning d-none" id="remoteUploadStop">中断（現在のファイル終了後）</button><button type="button" class="btn btn-outline-secondary" id="remoteUploadClose" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary"><i class="fas fa-upload fa-fw" aria-hidden="true"></i>Upload</button></div>
   </form></div></div>
 </div>
 
@@ -302,6 +307,6 @@ if (!is_string($initialJson)) {
 <script src="<?php echo app_html(app_asset_url('js/bootstrap.bundle-5.3.8.min.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/drawer-categories.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/remote-permissions.js')); ?>"></script>
-<script src="<?php echo app_html(app_asset_url('js/remote-files.js') . (str_contains(app_asset_url('js/remote-files.js'), '?') ? '&' : '?') . 'remote_sort=dev4move1'); ?>"></script>
+<script src="<?php echo app_html(app_asset_url('js/remote-files.js') . (str_contains(app_asset_url('js/remote-files.js'), '?') ? '&' : '?') . 'remote_sort=dev5progress1'); ?>"></script>
 </body>
 </html>
