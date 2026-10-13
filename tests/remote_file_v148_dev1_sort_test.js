@@ -6,6 +6,10 @@ const assert = require('assert');
 const source = fs.readFileSync(path.join(__dirname, '..', 'public/js/remote-files.js'), 'utf8');
 const page = fs.readFileSync(path.join(__dirname, '..', 'public/remote-files.php'), 'utf8');
 assert(page.includes('id="remoteSortOrder"'), 'sort selector must exist');
+assert(source.lastIndexOf("el.sortOrder.addEventListener('change'") > source.lastIndexOf('    if (el.previewModal) {'),
+    'sort handler must be registered during initial setup, not during connection refresh');
+assert(page.includes('remote_sort=dev1fix1'), 'updated sort script uses a cache-busting URL');
+
 
 const start = source.indexOf('    function sortedEntries() {');
 const end = source.indexOf('    function renderEntries() {', start);
