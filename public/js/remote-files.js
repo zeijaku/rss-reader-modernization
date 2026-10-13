@@ -538,6 +538,7 @@
                 el.loading.classList.add('d-none');
             }
             renderConnectionMeta();
+            refreshSelectionControls();
         }
     }
 
