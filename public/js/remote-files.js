@@ -34,6 +34,7 @@
         currentConnectionId: requestedConnectionId,
         currentPath: requestedPath,
         entries: [],
+        sortOrder: 'default',
         busy: false,
         privateNetworkServerEnabled: initial.private_network_server_enabled === true
     };
@@ -56,6 +57,7 @@
         path: document.getElementById('remoteCurrentPath'),
         loading: document.getElementById('remoteFilesLoading'),
         body: document.getElementById('remoteFilesBody'),
+        sortOrder: document.getElementById('remoteSortOrder'),
         connectionForm: document.getElementById('remoteConnectionForm'),
         connectionModal: document.getElementById('remoteConnectionModal'),
         connectionModalTitle: document.getElementById('remoteConnectionModalTitle'),
@@ -334,6 +336,36 @@
         return button;
     }
 
+    // Sort only the current directory's already-loaded entries; never change server order or paths.
+    function sortedEntries() {
+        var order = state.sortOrder;
+        if (order === 'default') {
+            return state.entries;
+        }
+        var parts = order.split('_');
+        var key = parts[0];
+        var direction = parts[1] === 'desc' ? -1 : 1;
+        var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
+        return state.entries.slice().sort(function (a, b) {
+            // Keep directories before files for navigability in every sort mode.
+            var groupA = a.type === 'directory' ? 0 : 1;
+            var groupB = b.type === 'directory' ? 0 : 1;
+            if (groupA !== groupB) { return groupA - groupB; }
+            var result = 0;
+            if (key === 'size' || key === 'date') {
+                var valueA = key === 'size' ? a.size : Date.parse(a.modified_at || '');
+                var valueB = key === 'size' ? b.size : Date.parse(b.modified_at || '');
+                var validA = typeof valueA === 'number' && Number.isFinite(valueA);
+                var validB = typeof valueB === 'number' && Number.isFinite(valueB);
+                if (validA !== validB) { return validA ? -1 : 1; }
+                if (validA && valueA !== valueB) { result = valueA < valueB ? -1 : 1; }
+            } else {
+                result = collator.compare(String(a.name || ''), String(b.name || ''));
+            }
+            return result === 0 ? collator.compare(String(a.name || ''), String(b.name || '')) : result * direction;
+        });
+    }
+
     function renderEntries() {
         if (!el.body) {
             return;
@@ -350,7 +382,7 @@
             return;
         }
 
-        state.entries.forEach(function (entry) {
+        sortedEntries().forEach(function (entry) {
             var type = String(entry.type || 'other');
             var name = String(entry.name || '');
             var path = String(entry.path || '');
@@ -459,7 +491,15 @@
             var data = await api('remote.connection.list', {});
             state.connections = Array.isArray(data.connections) ? data.connections : [];
             state.currentConnectionId = Number(selectId || state.currentConnectionId || 0);
-            renderConnectionOptions();
+            if (el.sortOrder) {
+        el.sortOrder.addEventListener('change', function () {
+            var allowed = ['default', 'name_asc', 'name_desc', 'size_asc', 'size_desc', 'date_asc', 'date_desc'];
+            state.sortOrder = allowed.indexOf(el.sortOrder.value) >= 0 ? el.sortOrder.value : 'default';
+            renderEntries();
+        });
+    }
+
+    renderConnectionOptions();
         } catch (error) {
             showNotice(error.message || '接続先一覧を更新できませんでした。', 'danger');
         }
