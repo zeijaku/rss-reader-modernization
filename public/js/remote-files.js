@@ -800,7 +800,9 @@
             });
             syncCsrf(response);
             if (!response.ok) {
-                throw new Error((await response.text()).slice(0, 250) || 'ZIPを作成できませんでした。');
+                var contentType = (response.headers.get('Content-Type') || '').toLowerCase();
+                var errorText = contentType.includes('text/plain') ? (await response.text()).slice(0, 250) : '';
+                throw new Error(errorText || 'ZIPの取得に失敗しました（HTTP ' + String(response.status) + '）。');
             }
             if (!(response.headers.get('Content-Type') || '').toLowerCase().includes('application/zip')) {
                 throw new Error('ZIP応答ではありません。再ログイン後にお試しください。');
