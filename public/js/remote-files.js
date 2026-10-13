@@ -491,14 +491,6 @@
             var data = await api('remote.connection.list', {});
             state.connections = Array.isArray(data.connections) ? data.connections : [];
             state.currentConnectionId = Number(selectId || state.currentConnectionId || 0);
-            if (el.sortOrder) {
-        el.sortOrder.addEventListener('change', function () {
-            var allowed = ['default', 'name_asc', 'name_desc', 'size_asc', 'size_desc', 'date_asc', 'date_desc'];
-            state.sortOrder = allowed.indexOf(el.sortOrder.value) >= 0 ? el.sortOrder.value : 'default';
-            renderEntries();
-        });
-    }
-
     renderConnectionOptions();
         } catch (error) {
             showNotice(error.message || '接続先一覧を更新できませんでした。', 'danger');
@@ -932,6 +924,14 @@
     }
     if (el.previewModal) {
         el.previewModal.addEventListener('hidden.bs.modal', resetPreview);
+    }
+
+    if (el.sortOrder) {
+        el.sortOrder.addEventListener('change', function () {
+            var allowed = ['default', 'name_asc', 'name_desc', 'size_asc', 'size_desc', 'date_asc', 'date_desc'];
+            state.sortOrder = allowed.indexOf(el.sortOrder.value) >= 0 ? el.sortOrder.value : 'default';
+            renderEntries();
+        });
     }
 
     renderConnectionOptions();
