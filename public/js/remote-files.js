@@ -34,6 +34,7 @@
         currentConnectionId: requestedConnectionId,
         currentPath: requestedPath,
         entries: [],
+        selectedPaths: new Set(),
         sortOrder: 'default',
         searchText: '',
         typeFilter: 'all',
@@ -59,6 +60,9 @@
         path: document.getElementById('remoteCurrentPath'),
         loading: document.getElementById('remoteFilesLoading'),
         body: document.getElementById('remoteFilesBody'),
+        selectAll: document.getElementById('remoteSelectAll'),
+        selectedCount: document.getElementById('remoteSelectedCount'),
+        bulkDelete: document.getElementById('remoteBulkDelete'),
         sortOrder: document.getElementById('remoteSortOrder'),
         search: document.getElementById('remoteFileSearch'),
         typeFilter: document.getElementById('remoteTypeFilter'),
@@ -381,16 +385,35 @@
         });
     }
 
+    function selectableEntries() {
+        return visibleEntries().filter(function (entry) {
+            return (entry.type === 'file' || entry.type === 'directory') && typeof entry.path === 'string';
+        });
+    }
+
+    function refreshSelectionControls() {
+        var shown = selectableEntries();
+        var selectedVisible = shown.filter(function (entry) { return state.selectedPaths.has(entry.path); }).length;
+        if (el.selectAll) {
+            el.selectAll.disabled = shown.length === 0 || state.busy;
+            el.selectAll.checked = shown.length > 0 && selectedVisible === shown.length;
+            el.selectAll.indeterminate = selectedVisible > 0 && selectedVisible < shown.length;
+        }
+        if (el.selectedCount) { el.selectedCount.textContent = '選択: ' + String(state.selectedPaths.size) + '件'; }
+        if (el.bulkDelete) { el.bulkDelete.disabled = state.selectedPaths.size === 0 || state.busy; }
+    }
+
     function renderEntries() {
         if (!el.body) {
             return;
         }
         el.body.replaceChildren();
+        refreshSelectionControls();
         var entries = visibleEntries();
         if (entries.length === 0) {
             var emptyRow = document.createElement('tr');
             var emptyCell = document.createElement('td');
-            emptyCell.colSpan = 4;
+            emptyCell.colSpan = 5;
             emptyCell.className = 'remote-files-empty text-muted';
             emptyCell.textContent = !state.currentConnectionId ? '接続先を選択してください。' : state.entries.length === 0 ? 'このDirectoryには項目がありません。' : '検索・絞り込みに一致する項目はありません。';
             emptyRow.appendChild(emptyCell);
@@ -404,6 +427,20 @@
             var path = String(entry.path || '');
             var extension = fileExtension(name);
             var row = document.createElement('tr');
+            var selectCell = document.createElement('td');
+            if (type === 'file' || type === 'directory') {
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'form-check-input';
+                checkbox.checked = state.selectedPaths.has(path);
+                checkbox.setAttribute('aria-label', name + 'を選択');
+                checkbox.addEventListener('change', function () {
+                    if (checkbox.checked) { state.selectedPaths.add(path); }
+                    else { state.selectedPaths.delete(path); }
+                    refreshSelectionControls();
+                });
+                selectCell.appendChild(checkbox);
+            }
             var nameCell = document.createElement('td');
             var nameButton = document.createElement(type === 'directory' ? 'button' : 'span');
             nameButton.className = 'remote-files-name-button';
@@ -467,7 +504,7 @@
                 actions.appendChild(actionButton('fas fa-trash-alt', '削除', 'btn-outline-danger', function () { deleteEntry(entry); }));
             }
             actionCell.appendChild(actions);
-            row.append(nameCell, sizeCell, dateCell, actionCell);
+            row.append(selectCell, nameCell, sizeCell, dateCell, actionCell);
             el.body.appendChild(row);
         });
     }
@@ -485,12 +522,14 @@
             var data = await api('remote.file.list', {remote_connection_id: state.currentConnectionId, path: path});
             state.currentPath = typeof data.path === 'string' ? data.path : '/';
             state.entries = Array.isArray(data.entries) ? data.entries : [];
+            state.selectedPaths.clear();
             if (el.path) {
                 el.path.textContent = state.currentPath;
             }
             renderEntries();
         } catch (error) {
             state.entries = [];
+            state.selectedPaths.clear();
             renderEntries();
             showNotice(error.message || 'Remote Directoryを取得できませんでした。', 'danger');
         } finally {
@@ -716,6 +755,46 @@
         });
     }
 
+    async function deleteSelectedEntries() {
+        if (state.busy || !state.currentConnectionId || state.selectedPaths.size === 0) { return; }
+        var selected = state.entries.filter(function (entry) {
+            return state.selectedPaths.has(entry.path) && (entry.type === 'file' || entry.type === 'directory');
+        });
+        if (!selected.length) { return; }
+        var names = selected.slice(0, 8).map(function (entry) { return entry.name; }).join('、');
+        var more = selected.length > 8 ? ' ほか' + String(selected.length - 8) + '件' : '';
+        if (!window.confirm('選択した' + String(selected.length) + '件をRemote Serverから削除しますか？この操作は元に戻せません。\\n' + names + more)) {
+            return;
+        }
+        // Existing per-item API enforces owner, path and CSRF boundaries for every request.
+        state.busy = true;
+        refreshSelectionControls();
+        var success = 0;
+        var failures = [];
+        try {
+            for (var index = 0; index < selected.length; index += 1) {
+                var entry = selected[index];
+                try {
+                    await api('remote.file.delete', {
+                        remote_connection_id: state.currentConnectionId,
+                        path: entry.path,
+                        directory: entry.type === 'directory' ? '1' : '0'
+                    });
+                    success += 1;
+                    state.selectedPaths.delete(entry.path);
+                } catch (error) {
+                    failures.push(entry.name + ': ' + (error.message || '削除できませんでした。'));
+                }
+            }
+        } finally {
+            state.busy = false;
+        }
+        await loadDirectory(state.currentPath);
+        var message = '一括削除: 成功 ' + String(success) + '件、失敗 ' + String(failures.length) + '件';
+        if (failures.length) { message += '。' + failures.slice(0, 5).join(' / ') + (failures.length > 5 ? ' / ほか' + String(failures.length - 5) + '件' : ''); }
+        showNotice(message, failures.length ? 'warning' : 'success');
+    }
+
     async function deleteEntry(entry) {
         var label = entry.type === 'directory' ? 'Directory' : 'File';
         if (!window.confirm(label + '「' + entry.name + '」をRemote Serverから削除しますか？この操作は元に戻せません。')) {
@@ -904,6 +983,7 @@
             state.currentConnectionId = Number(el.select.value || 0);
             state.currentPath = '/';
             state.entries = [];
+            state.selectedPaths.clear();
             if (el.path) { el.path.textContent = '/'; }
             renderConnectionMeta();
             renderEntries();
@@ -942,6 +1022,16 @@
         el.previewModal.addEventListener('hidden.bs.modal', resetPreview);
     }
 
+    if (el.selectAll) {
+        el.selectAll.addEventListener('change', function () {
+            selectableEntries().forEach(function (entry) {
+                if (el.selectAll.checked) { state.selectedPaths.add(entry.path); }
+                else { state.selectedPaths.delete(entry.path); }
+            });
+            renderEntries();
+        });
+    }
+    if (el.bulkDelete) { el.bulkDelete.addEventListener('click', deleteSelectedEntries); }
     if (el.search) {
         el.search.addEventListener('input', function () {
             state.searchText = el.search.value;
