@@ -802,6 +802,9 @@
             if (!response.ok) {
                 throw new Error((await response.text()).slice(0, 250) || 'ZIPを作成できませんでした。');
             }
+            if (!(response.headers.get('Content-Type') || '').toLowerCase().includes('application/zip')) {
+                throw new Error('ZIP応答ではありません。再ログイン後にお試しください。');
+            }
             var blob = await response.blob();
             if (!blob.size) { throw new Error('ZIPデータを取得できませんでした。'); }
             objectUrl = window.URL.createObjectURL(blob);
