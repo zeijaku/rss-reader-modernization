@@ -39,6 +39,8 @@
         searchText: '',
         typeFilter: 'all',
         busy: false,
+        uploadRunning: false,
+        uploadStopRequested: false,
         privateNetworkServerEnabled: initial.private_network_server_enabled === true
     };
 
@@ -100,6 +102,13 @@
         uploadForm: document.getElementById('remoteUploadForm'),
         uploadFile: document.getElementById('remoteUploadFile'),
         uploadOverwrite: document.getElementById('remoteUploadOverwrite'),
+        uploadStop: document.getElementById('remoteUploadStop'),
+        uploadClose: document.getElementById('remoteUploadClose'),
+        uploadProgressWrap: document.getElementById('remoteUploadProgressWrap'),
+        uploadProgressText: document.getElementById('remoteUploadProgressText'),
+        uploadProgressBar: document.getElementById('remoteUploadProgressBar'),
+        uploadProgressFill: document.getElementById('remoteUploadProgressFill'),
+        uploadProgressCounts: document.getElementById('remoteUploadProgressCounts'),
         libraryModal: document.getElementById('remoteLibraryModal'),
         libraryForm: document.getElementById('remoteLibraryForm'),
         libraryFile: document.getElementById('remoteLibraryFile'),
@@ -937,30 +946,65 @@
         }
     }
 
+    function updateUploadProgress(done, total, success, failed, name) {
+        if (el.uploadProgressWrap) { el.uploadProgressWrap.classList.remove('d-none'); }
+        var percent = total > 0 ? Math.round(done * 100 / total) : 0;
+        if (el.uploadProgressText) {
+            el.uploadProgressText.textContent = String(done) + ' / ' + String(total) + '件処理済み' + (name ? ' — ' + name : '');
+        }
+        if (el.uploadProgressFill) {
+            el.uploadProgressFill.style.width = String(percent) + '%';
+            el.uploadProgressFill.textContent = String(percent) + '%';
+        }
+        if (el.uploadProgressBar) { el.uploadProgressBar.setAttribute('aria-valuenow', String(percent)); }
+        if (el.uploadProgressCounts) {
+            el.uploadProgressCounts.textContent = '成功 ' + String(success) + '件 / 失敗 ' + String(failed) + '件 / 未実行 ' + String(total - done) + '件';
+        }
+    }
+
+    function requestUploadStop() {
+        if (!state.uploadRunning) { return; }
+        // Let the in-flight transfer finish to avoid intentionally leaving a truncated remote file.
+        state.uploadStopRequested = true;
+        if (el.uploadStop) { el.uploadStop.disabled = true; }
+        if (el.uploadProgressText) { el.uploadProgressText.textContent = '中断を受付ました。現在のファイルの処理後に停止します。'; }
+    }
+
     async function uploadFile(event) {
         event.preventDefault();
+        if (state.uploadRunning) { return; }
         var files = el.uploadFile && el.uploadFile.files ? Array.prototype.slice.call(el.uploadFile.files) : [];
         if (!state.currentConnectionId || files.length === 0) {
             showNotice('接続先とUploadするファイルを選択してください。', 'warning');
             return;
         }
-        hideNotice();
+        var connectionId = state.currentConnectionId;
+        var currentPath = state.currentPath;
+        var overwrite = el.uploadOverwrite.checked;
         var submitButton = el.uploadForm ? el.uploadForm.querySelector('button[type="submit"]') : null;
-        var previousSubmitDisabled = submitButton ? submitButton.disabled : false;
-        var previousFileDisabled = el.uploadFile.disabled;
         var successCount = 0;
         var failures = [];
+        var processed = 0;
+        state.uploadRunning = true;
+        state.uploadStopRequested = false;
         el.uploadFile.disabled = true;
+        el.uploadOverwrite.disabled = true;
         if (submitButton) { submitButton.disabled = true; }
+        if (el.uploadStop) { el.uploadStop.classList.remove('d-none'); el.uploadStop.disabled = false; }
+        if (el.uploadClose) { el.uploadClose.disabled = true; }
+        updateUploadProgress(0, files.length, 0, 0, '開始');
+        hideNotice();
         try {
             for (var index = 0; index < files.length; index += 1) {
+                if (state.uploadStopRequested) { break; }
                 var file = files[index];
+                updateUploadProgress(processed, files.length, successCount, failures.length, '処理中: ' + String(file.name || ''));
                 try {
                     var form = new FormData();
                     form.set('csrf_token', csrfToken());
-                    form.set('remote_connection_id', String(state.currentConnectionId));
-                    form.set('path', state.currentPath);
-                    form.set('overwrite', el.uploadOverwrite.checked ? '1' : '0');
+                    form.set('remote_connection_id', String(connectionId));
+                    form.set('path', currentPath);
+                    form.set('overwrite', overwrite ? '1' : '0');
                     form.set('file', file);
                     var response = await window.fetch('./remote_file_upload_api.php', {method: 'POST', credentials: 'same-origin', body: form});
                     syncCsrf(response);
@@ -973,26 +1017,30 @@
                 } catch (error) {
                     failures.push({name: String(file.name || '（名前なし）'), message: error.message || 'RemoteへUploadできませんでした。'});
                 }
+                processed += 1;
+                updateUploadProgress(processed, files.length, successCount, failures.length, state.uploadStopRequested ? '中断処理中' : '完了: ' + String(file.name || ''));
             }
-            if (successCount > 0) {
-                await loadDirectory(state.currentPath);
-            }
-            el.uploadForm.reset();
-            modals.upload.hide();
-            if (failures.length === 0) {
-                showNotice('Remoteへ' + String(successCount) + '件Uploadしました。', 'success');
-            } else {
-                var failureText = failures.slice(0, 10).map(function (failure) {
-                    return failure.name + ': ' + failure.message;
-                }).join(' / ');
-                if (failures.length > 10) {
-                    failureText += ' / ほか' + String(failures.length - 10) + '件';
-                }
-                showNotice('Upload完了: 成功 ' + String(successCount) + '件、失敗 ' + String(failures.length) + '件。' + (failureText ? ' ' + failureText : ''), 'warning');
-            }
+            if (successCount > 0) { await loadDirectory(currentPath); }
+            var stopped = state.uploadStopRequested && processed < files.length;
+            var failureText = failures.slice(0, 10).map(function (failure) {
+                return failure.name + ': ' + failure.message;
+            }).join(' / ');
+            if (failures.length > 10) { failureText += ' / ほか' + String(failures.length - 10) + '件'; }
+            var summary = (stopped ? 'Upload中断: ' : 'Upload完了: ') +
+                '成功 ' + String(successCount) + '件、失敗 ' + String(failures.length) +
+                '件、未実行 ' + String(files.length - processed) + '件。' + (failureText ? ' ' + failureText : '');
+            showNotice(summary, stopped || failures.length ? 'warning' : 'success');
+            if (el.uploadProgressText) { el.uploadProgressText.textContent = summary; }
+            if (el.uploadForm) { el.uploadForm.reset(); }
+            // Keep the completed progress visible until the user closes the dialog.
         } finally {
-            el.uploadFile.disabled = previousFileDisabled;
-            if (submitButton) { submitButton.disabled = previousSubmitDisabled; }
+            state.uploadRunning = false;
+            state.uploadStopRequested = false;
+            el.uploadFile.disabled = false;
+            el.uploadOverwrite.disabled = false;
+            if (submitButton) { submitButton.disabled = false; }
+            if (el.uploadStop) { el.uploadStop.classList.add('d-none'); el.uploadStop.disabled = false; }
+            if (el.uploadClose) { el.uploadClose.disabled = false; }
         }
     }
 
@@ -1111,7 +1159,16 @@
     if (el.refresh) { el.refresh.addEventListener('click', function () { loadDirectory(state.currentPath); }); }
     if (el.up) { el.up.addEventListener('click', function () { loadDirectory(pathParent(state.currentPath)); }); }
     if (el.newFolder) { el.newFolder.addEventListener('click', function () { openNameModal({mode: 'mkdir', title: 'New Folder', label: 'Directory名', value: '', help: '現在のDirectory内に作成します。'}); }); }
-    if (el.uploadOpen) { el.uploadOpen.addEventListener('click', function () { el.uploadForm.reset(); modals.upload.show(); }); }
+    if (el.uploadOpen) { el.uploadOpen.addEventListener('click', function () {
+        if (state.uploadRunning) { return; }
+        el.uploadForm.reset();
+        if (el.uploadProgressWrap) { el.uploadProgressWrap.classList.add('d-none'); }
+        modals.upload.show();
+    }); }
+    if (el.uploadStop) { el.uploadStop.addEventListener('click', requestUploadStop); }
+    if (el.uploadModal) { el.uploadModal.addEventListener('hide.bs.modal', function (event) {
+        if (state.uploadRunning) { event.preventDefault(); }
+    }); }
     if (el.libraryExport) { el.libraryExport.addEventListener('click', function () { renderLibraryOptions(); el.libraryForm.reset(); modals.library.show(); }); }
     if (el.connectionForm) { el.connectionForm.addEventListener('submit', saveConnection); }
     if (el.nameForm) { el.nameForm.addEventListener('submit', submitNameAction); }
