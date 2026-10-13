@@ -9,6 +9,11 @@
 .remote-files-table-wrap { border: 1px solid var(--bs-border-color,#dee2e6); border-radius: .375rem; }
 .remote-files-table { min-width: 720px; }
 .remote-files-table td, .remote-files-table th { vertical-align: middle; }
+/* Keep the bulk selection column identical across folders and file listings. */
+.remote-files-table .remote-files-select-column,
+.remote-files-table th:first-child,
+.remote-files-table td:first-child { width: 64px; min-width: 64px; max-width: 64px; white-space: nowrap; text-align: center; }
+
 .remote-files-name-button { display: inline-flex; max-width: 100%; padding: 0; align-items: center; gap: .5rem; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; text-decoration: none; }
 .remote-files-name-button:hover { text-decoration: underline; }
 .remote-files-entry-name { display: inline-block; max-width: 560px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -142,3 +147,28 @@
 
 .remote-files-name-button:has(.remote-files-entry-name[title$=".sql" i]) .remote-files-entry-icon { color: var(--bs-indigo,#6610f2); }
 .remote-files-name-button:has(.remote-files-entry-name[title$=".sql" i]) .remote-files-entry-icon::before { content: "\f1c0"; }
+
+/* V1.48 dev9: keep search/filter/sort together and bulk actions visually separate. */
+.remote-files-list-controls { border: 1px solid var(--bs-border-color,#dee2e6); border-radius: .5rem; padding: .75rem; background: var(--bs-tertiary-bg,#f8f9fa); }
+.remote-files-filter-row { display: grid; grid-template-columns: minmax(180px,1fr) minmax(120px,170px) minmax(220px,280px); gap: .65rem; align-items: end; }
+.remote-files-filter-row > div { min-width: 0; }
+.remote-files-filter-row .form-select { width: 100%; }
+.remote-files-bulk-panel { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem; border: 1px solid var(--bs-border-color,#dee2e6); border-radius: .5rem; padding: .65rem .75rem; }
+.remote-files-bulk-selection { display: flex; align-items: center; flex-wrap: wrap; gap: .8rem; }
+.remote-files-bulk-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.remote-files-bulk-actions .btn { white-space: nowrap; }
+@media (max-width: 767.98px) {
+  .remote-files-filter-row { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .remote-files-search-field { grid-column: 1 / -1; }
+  .remote-files-sort-field { grid-column: 2; }
+  .remote-files-type-field { grid-column: 1; }
+  .remote-files-bulk-panel { align-items: stretch; }
+  .remote-files-bulk-selection { width: 100%; justify-content: space-between; }
+  .remote-files-bulk-actions { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); width: 100%; }
+  .remote-files-bulk-actions .btn { min-width: 0; padding-left: .25rem; padding-right: .25rem; }
+}
+@media (max-width: 390px) {
+  .remote-files-filter-row { grid-template-columns: 1fr; }
+  .remote-files-search-field, .remote-files-type-field, .remote-files-sort-field { grid-column: 1; }
+  .remote-files-bulk-actions { grid-template-columns: 1fr; }
+}

@@ -1,6 +1,6 @@
 # Public Endpoint Matrix（Current）
 
-この一覧は、**現在の `public/` 直下のPHP 23件**に対応する公開エントリポイント一覧です。公開されることと認証なしで処理を実行できることは異なります。
+この一覧は、**現在の `public/` 直下のPHP 24件**に対応する公開エントリポイント一覧です。公開されることと認証なしで処理を実行できることは異なります。
 実行可能なファイル名の正本は `public/.htaccess` のホワイトリスト、実在数との整合性は `tests/test_current_public_endpoint_contract.py` と `tests/test_current_public_endpoint_docs.py` で検証します。
 
 | Direct PHP endpoint | 主用途 | 想定HTTPメソッド | 認証・CSRFの境界 |
@@ -21,6 +21,7 @@
 | `/reader_image.php` | 認証済みRSS記事画像プロキシ | GET | ログイン必須・限定トークン検証 |
 | `/remote-editor.php` | Remote Text Editor画面 | GET | ログイン必須・接続とパスは個別検証 |
 | `/remote-files.php` | Remote Files画面 | GET | ログイン必須 |
+| `/remote_file_bulk_zip.php` | Remote Files複数選択・DirectoryのZIP一括Download | POST | ログイン必須・CSRF必須・所有者／接続／パス検証 |
 | `/remote_file_content.php` | Remoteダウンロード・画像／PDF表示 | GET | ログイン必須・所有者／接続／パス検証 |
 | `/remote_file_editor_api.php` | Remote Text Editorの読込・保存 | GET／POST | ログイン必須。変更POSTはCSRF必須 |
 | `/remote_file_preview_api.php` | Remote Text／CSVプレビューAPI | GET | ログイン必須・接続／パス検証 |

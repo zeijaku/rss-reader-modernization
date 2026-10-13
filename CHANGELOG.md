@@ -1,3 +1,12 @@
+## 1.48.0 - 2026-10-13
+
+- Expand Remote Files with Sort, search, file type filters, multiselection and batch delete/move.
+- Add per-file Upload progress, queue stop, directory Upload preserving structure and ZIP download for mixed File/Directory selection.
+- Preserve leading dots in Remote Files Upload names without changing File Library normalization. Maintain existing non-recursive directory deletion.
+- Add the new ZIP endpoint to the Apache public allowlist and Public Endpoint Matrix. ZIP operations require PHP ZipArchive.
+- Improve responsive Remote Files filter and action layout. No database migration or new mandatory configuration.
+- User validated dev1–dev9 basic FTPS functionality; CI and release dry-run performed as release gates. See docs/v1.48.0-release.md for deployment and verification limits.
+
 ## 1.47.0 - 2026-10-13
 
 - Introduce a per-authenticated-user, file-backed API request rate limit after method/authentication/CSRF/request-size checks. Preserve standard API error handling, and return HTTP 429 with Retry-After on limit exceed. Defaults are 600 total and 120 selected network-heavy requests per 60 seconds; these are compatibility-first provisional operating limits, not empirically optimized thresholds.

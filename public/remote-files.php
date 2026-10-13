@@ -72,7 +72,7 @@ if (!is_string($initialJson)) {
     <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/' . resolve_theme_stylesheet($ui['conf_style'] ?? null))); ?>">
     <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/all.css')); ?>">
     <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/dashboard.css')); ?>">
-    <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/remote-files.css')); ?>">
+    <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/remote-files.css') . (str_contains(app_asset_url('css/remote-files.css'), '?') ? '&' : '?') . 'remote_ui=dev9'); ?>">
     <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/remote-permissions.css')); ?>">
 </head>
 <body>
@@ -149,11 +149,52 @@ if (!is_string($initialJson)) {
           <button type="button" class="btn btn-outline-primary" id="remoteNewFolder" disabled><i class="fas fa-folder-plus fa-fw" aria-hidden="true"></i>New Folder</button>
           <button type="button" class="btn btn-outline-primary" id="remoteLibraryExport"<?php echo $libraryAvailable ? ' disabled' : ' disabled'; ?>><i class="fas fa-cloud-upload-alt fa-fw" aria-hidden="true"></i>File Library → Remote</button>
         </div>
+        <div class="remote-files-list-controls mb-3">
+          <div class="remote-files-filter-row">
+            <div class="remote-files-search-field">
+              <label class="form-label small mb-1" for="remoteFileSearch">ファイル名検索</label>
+              <input class="form-control form-control-sm" type="search" id="remoteFileSearch" placeholder="名前の一部を入力" autocomplete="off">
+            </div>
+            <div class="remote-files-type-field">
+              <label class="form-label small mb-1" for="remoteTypeFilter">種類</label>
+              <select class="form-select form-select-sm" id="remoteTypeFilter">
+                <option value="all">すべて</option>
+                <option value="file">File</option>
+                <option value="directory">Directory</option>
+              </select>
+            </div>
+            <div class="remote-files-sort-field">
+              <label class="form-label small mb-1" for="remoteSortOrder">並び替え</label>
+              <select class="form-select form-select-sm" id="remoteSortOrder" aria-label="Remote Filesの並び替え">
+                <option value="default">標準（Directory優先・名前順）</option>
+                <option value="name_asc">名前 昇順</option>
+                <option value="name_desc">名前 降順</option>
+                <option value="size_asc">サイズ 小さい順</option>
+                <option value="size_desc">サイズ 大きい順</option>
+                <option value="date_desc">更新日時 新しい順</option>
+                <option value="date_asc">更新日時 古い順</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="remote-files-bulk-panel mb-3" id="remoteBulkToolbar" aria-label="選択項目の一括操作">
+          <div class="remote-files-bulk-selection">
+            <label class="form-check-label d-inline-flex align-items-center gap-2">
+              <input class="form-check-input mt-0" type="checkbox" id="remoteSelectAll" aria-label="表示中の項目を全選択">表示中を全選択
+            </label>
+            <span class="small text-muted" id="remoteSelectedCount" aria-live="polite">選択: 0件</span>
+          </div>
+          <div class="remote-files-bulk-actions">
+            <button type="button" class="btn btn-sm btn-outline-success" id="remoteBulkDownload" disabled><i class="fas fa-file-archive fa-fw" aria-hidden="true"></i> ZIP Download</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="remoteBulkMove" disabled><i class="fas fa-arrows-alt fa-fw" aria-hidden="true"></i> 移動</button>
+            <button type="button" class="btn btn-sm btn-outline-danger" id="remoteBulkDelete" disabled><i class="fas fa-trash-alt fa-fw" aria-hidden="true"></i> 削除</button>
+          </div>
+        </div>
         <div id="remoteFilesLoading" class="remote-files-loading text-muted d-none" aria-live="polite"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>読み込み中...</span></div>
         <div class="table-responsive remote-files-table-wrap">
           <table class="table table-sm table-hover align-middle mb-0 remote-files-table">
-            <thead><tr><th scope="col">Name</th><th scope="col" class="remote-files-size-column">Size</th><th scope="col" class="remote-files-date-column">Updated</th><th scope="col" class="remote-files-action-column">Action</th></tr></thead>
-            <tbody id="remoteFilesBody"><tr><td colspan="4" class="remote-files-empty text-muted">接続先を選択してください。</td></tr></tbody>
+            <thead><tr><th scope="col" class="remote-files-select-column">選択</th><th scope="col">Name</th><th scope="col" class="remote-files-size-column">Size</th><th scope="col" class="remote-files-date-column">Updated</th><th scope="col" class="remote-files-action-column">Action</th></tr></thead>
+            <tbody id="remoteFilesBody"><tr><td colspan="5" class="remote-files-empty text-muted">接続先を選択してください。</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -198,11 +239,36 @@ if (!is_string($initialJson)) {
   </form></div></div>
 </div>
 
+<div class="modal fade" id="remoteBulkMoveModal" tabindex="-1" aria-labelledby="remoteBulkMoveTitle" aria-hidden="true">
+  <div class="modal-dialog"><div class="modal-content"><form id="remoteBulkMoveForm">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="remoteBulkMoveTitle">選択項目を移動</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+    <div class="modal-body">
+      <label class="form-label" for="remoteBulkMoveTarget">移動先Directory（/から始まるPath）</label>
+      <input class="form-control" id="remoteBulkMoveTarget" type="text" required>
+      <div class="form-text">接続先のBase Pathを起点に指定します。存在するDirectoryのみ指定可能です。同名項目は上書きしません。</div>
+      <p class="small text-muted mt-3 mb-0" id="remoteBulkMoveCount"></p>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">キャンセル</button><button type="submit" class="btn btn-primary">移動開始</button></div>
+  </form></div></div>
+</div>
+
 <div class="modal fade" id="remoteUploadModal" tabindex="-1" aria-labelledby="remoteUploadModalTitle" aria-hidden="true">
   <div class="modal-dialog"><div class="modal-content"><form id="remoteUploadForm" enctype="multipart/form-data">
     <div class="modal-header"><h2 class="modal-title fs-5" id="remoteUploadModalTitle">RemoteへUpload</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
-    <div class="modal-body"><label class="form-label" for="remoteUploadFile">ファイル</label><input class="form-control" type="file" id="remoteUploadFile" multiple required><div class="form-text">複数ファイルを選択できます。ファイルごとに順番にUploadし、成功／失敗の結果を表示します。Application上限: <?php echo app_html(user_file_library_format_bytes(APP_REMOTE_TRANSFER_MAX_BYTES)); ?>。PHP / Web Server側のUpload上限がこれより小さい場合は、そちらが優先されます。</div><div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="remoteUploadOverwrite"><label class="form-check-label" for="remoteUploadOverwrite">同名ファイルがある場合に上書きする</label></div></div>
-    <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">キャンセル</button><button type="submit" class="btn btn-primary"><i class="fas fa-upload fa-fw" aria-hidden="true"></i>Upload</button></div>
+    <div class="modal-body">
+      <label class="form-label" for="remoteUploadFile">ファイルを選択</label>
+      <input class="form-control" type="file" id="remoteUploadFile" multiple>
+      <label class="form-label mt-3" for="remoteUploadDirectory">Directoryを選択（階層を維持）</label>
+      <input class="form-control" type="file" id="remoteUploadDirectory" webkitdirectory multiple>
+      <div class="form-text">どちらか一方を選択してください。Directoryは選択したフォルダ名も含めてUploadします。空のDirectoryだけは作成できません。Application上限: <?php echo app_html(user_file_library_format_bytes(APP_REMOTE_TRANSFER_MAX_BYTES)); ?>。PHP / Web Server側の上限が優先されます。</div>
+      <div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="remoteUploadOverwrite"><label class="form-check-label" for="remoteUploadOverwrite">同名ファイルがある場合に上書きする</label></div>
+      <div class="mt-3 d-none" id="remoteUploadProgressWrap" aria-live="polite">
+        <div class="small mb-1" id="remoteUploadProgressText">準備中</div>
+        <div class="progress" role="progressbar" aria-label="Upload進捗" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="remoteUploadProgressBar"><div class="progress-bar" id="remoteUploadProgressFill" style="width:0%">0%</div></div>
+        <div class="small text-muted mt-1" id="remoteUploadProgressCounts">成功 0件 / 失敗 0件 / 未実行 0件</div>
+      </div>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline-warning d-none" id="remoteUploadStop">中断（現在のファイル終了後）</button><button type="button" class="btn btn-outline-secondary" id="remoteUploadClose" data-bs-dismiss="modal">閉じる</button><button type="submit" class="btn btn-primary"><i class="fas fa-upload fa-fw" aria-hidden="true"></i>Upload</button></div>
   </form></div></div>
 </div>
 
@@ -255,6 +321,6 @@ if (!is_string($initialJson)) {
 <script src="<?php echo app_html(app_asset_url('js/bootstrap.bundle-5.3.8.min.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/drawer-categories.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/remote-permissions.js')); ?>"></script>
-<script src="<?php echo app_html(app_asset_url('js/remote-files.js')); ?>"></script>
+<script src="<?php echo app_html(app_asset_url('js/remote-files.js') . (str_contains(app_asset_url('js/remote-files.js'), '?') ? '&' : '?') . 'remote_sort=dev7zip1'); ?>"></script>
 </body>
 </html>

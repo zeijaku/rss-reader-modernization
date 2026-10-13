@@ -115,7 +115,7 @@ const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
 function actionsForRow(index) {
     const row = body.children[index];
-    const actionCell = row.children[3];
+    const actionCell = row.children[4]; // V1.48 adds the selection checkbox column
     return actionCell.children[0].children;
 }
 function titles(actions) { return actions.map(a => a.title); }
