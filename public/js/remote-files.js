@@ -63,6 +63,11 @@
         selectAll: document.getElementById('remoteSelectAll'),
         selectedCount: document.getElementById('remoteSelectedCount'),
         bulkDelete: document.getElementById('remoteBulkDelete'),
+        bulkMove: document.getElementById('remoteBulkMove'),
+        bulkMoveModal: document.getElementById('remoteBulkMoveModal'),
+        bulkMoveForm: document.getElementById('remoteBulkMoveForm'),
+        bulkMoveTarget: document.getElementById('remoteBulkMoveTarget'),
+        bulkMoveCount: document.getElementById('remoteBulkMoveCount'),
         sortOrder: document.getElementById('remoteSortOrder'),
         search: document.getElementById('remoteFileSearch'),
         typeFilter: document.getElementById('remoteTypeFilter'),
@@ -116,7 +121,8 @@
         name: el.nameModal ? new window.bootstrap.Modal(el.nameModal) : null,
         upload: el.uploadModal ? new window.bootstrap.Modal(el.uploadModal) : null,
         library: el.libraryModal ? new window.bootstrap.Modal(el.libraryModal) : null,
-        preview: el.previewModal ? new window.bootstrap.Modal(el.previewModal) : null
+        preview: el.previewModal ? new window.bootstrap.Modal(el.previewModal) : null,
+        bulkMove: el.bulkMoveModal ? new window.bootstrap.Modal(el.bulkMoveModal) : null
     };
     var nameAction = null;
 
@@ -401,6 +407,7 @@
         }
         if (el.selectedCount) { el.selectedCount.textContent = '選択: ' + String(state.selectedPaths.size) + '件'; }
         if (el.bulkDelete) { el.bulkDelete.disabled = state.selectedPaths.size === 0 || state.busy; }
+        if (el.bulkMove) { el.bulkMove.disabled = state.selectedPaths.size === 0 || state.busy; }
     }
 
     function renderEntries() {
@@ -756,6 +763,110 @@
         });
     }
 
+    function selectedEntriesForBatch() {
+        return state.entries.filter(function (entry) {
+            return state.selectedPaths.has(entry.path) && (entry.type === 'file' || entry.type === 'directory');
+        });
+    }
+
+    function bulkMoveDestination(raw) {
+        var path = String(raw || '').trim();
+        if (!path.startsWith('/') || path.indexOf('\\\\') !== -1 || /[\\u0000-\\u001F\\u007F]/.test(path)) {
+            return null;
+        }
+        var segments = path.split('/').filter(function (segment) { return segment !== ''; });
+        if (segments.some(function (segment) { return segment === '.' || segment === '..'; })) {
+            return null;
+        }
+        return segments.length ? '/' + segments.join('/') : '/';
+    }
+
+    function bulkMoveTarget(destination, entry) {
+        var from = String(entry.path || '');
+        if (!from.startsWith('/') || from === '/' || !entry.name || entry.name === '.' || entry.name === '..') {
+            return null;
+        }
+        // Never move a directory into itself or a descendant.
+        if (entry.type === 'directory' && (destination === from || destination.startsWith(from + '/'))) {
+            return null;
+        }
+        var to = destination === '/' ? '/' + entry.name : destination + '/' + entry.name;
+        return to === from ? null : to;
+    }
+
+    function openBulkMove() {
+        if (state.busy || !state.currentConnectionId) { return; }
+        var selected = selectedEntriesForBatch();
+        if (!selected.length || !modals.bulkMove) { return; }
+        el.bulkMoveForm.reset();
+        el.bulkMoveTarget.value = state.currentPath;
+        el.bulkMoveCount.textContent = '選択: ' + String(selected.length) + '件';
+        modals.bulkMove.show();
+    }
+
+    async function submitBulkMove(event) {
+        event.preventDefault();
+        if (state.busy || !state.currentConnectionId) { return; }
+        var selected = selectedEntriesForBatch();
+        var destination = bulkMoveDestination(el.bulkMoveTarget.value);
+        if (!selected.length || destination === null) {
+            showNotice('移動先は/から始まる有効なDirectory Pathで指定してください。', 'warning');
+            return;
+        }
+        if (selected.some(function (entry) { return bulkMoveTarget(destination, entry) === null; })) {
+            showNotice('移動元と同じ場所、またはDirectory自身・子孫への移動はできません。', 'warning');
+            return;
+        }
+        state.busy = true;
+        refreshSelectionControls();
+        var button = el.bulkMoveForm.querySelector('button[type="submit"]');
+        if (button) { button.disabled = true; }
+        var success = 0;
+        var failures = [];
+        try {
+            // Preflight destination existence before moving anything.
+            var listing = await api('remote.file.list', {remote_connection_id: state.currentConnectionId, path: destination});
+            if (listing.path !== destination) {
+                throw new Error('移動先Directoryを確認できませんでした。');
+            }
+            for (var index = 0; index < selected.length; index += 1) {
+                var entry = selected[index];
+                try {
+                    await api('remote.file.move', {
+                        remote_connection_id: state.currentConnectionId,
+                        from_path: entry.path,
+                        to_path: bulkMoveTarget(destination, entry),
+                        overwrite: '0'
+                    });
+                    success += 1;
+                    state.selectedPaths.delete(entry.path);
+                } catch (error) {
+                    failures.push(entry.name + ': ' + (error.message || '移動できませんでした。'));
+                }
+            }
+            modals.bulkMove.hide();
+            await loadDirectoryAfterBulkMove();
+            var message = '一括移動: 成功 ' + String(success) + '件、失敗 ' + String(failures.length) + '件';
+            if (failures.length) {
+                message += '。' + failures.slice(0, 5).join(' / ') + (failures.length > 5 ? ' / ほか' + String(failures.length - 5) + '件' : '');
+            }
+            showNotice(message, failures.length ? 'warning' : 'success');
+        } catch (error) {
+            showNotice(error.message || '移動先Directoryを確認できませんでした。', 'danger');
+        } finally {
+            state.busy = false;
+            if (button) { button.disabled = false; }
+            refreshSelectionControls();
+        }
+    }
+
+    async function loadDirectoryAfterBulkMove() {
+        // loadDirectory owns its own busy guard.
+        state.busy = false;
+        await loadDirectory(state.currentPath);
+        state.busy = true;
+    }
+
     async function deleteSelectedEntries() {
         if (state.busy || !state.currentConnectionId || state.selectedPaths.size === 0) { return; }
         var selected = state.entries.filter(function (entry) {
@@ -1033,6 +1144,8 @@
         });
     }
     if (el.bulkDelete) { el.bulkDelete.addEventListener('click', deleteSelectedEntries); }
+    if (el.bulkMove) { el.bulkMove.addEventListener('click', openBulkMove); }
+    if (el.bulkMoveForm) { el.bulkMoveForm.addEventListener('submit', submitBulkMove); }
     if (el.search) {
         el.search.addEventListener('input', function () {
             state.searchText = el.search.value;
