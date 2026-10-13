@@ -35,6 +35,8 @@
         currentPath: requestedPath,
         entries: [],
         sortOrder: 'default',
+        searchText: '',
+        typeFilter: 'all',
         busy: false,
         privateNetworkServerEnabled: initial.private_network_server_enabled === true
     };
@@ -58,6 +60,8 @@
         loading: document.getElementById('remoteFilesLoading'),
         body: document.getElementById('remoteFilesBody'),
         sortOrder: document.getElementById('remoteSortOrder'),
+        search: document.getElementById('remoteFileSearch'),
+        typeFilter: document.getElementById('remoteTypeFilter'),
         connectionForm: document.getElementById('remoteConnectionForm'),
         connectionModal: document.getElementById('remoteConnectionModal'),
         connectionModalTitle: document.getElementById('remoteConnectionModalTitle'),
@@ -366,23 +370,35 @@
         });
     }
 
+    function visibleEntries() {
+        var query = state.searchText.trim().toLocaleLowerCase();
+        return sortedEntries().filter(function (entry) {
+            var type = String(entry.type || 'other');
+            if (state.typeFilter !== 'all' && type !== state.typeFilter) {
+                return false;
+            }
+            return query === '' || String(entry.name || '').toLocaleLowerCase().includes(query);
+        });
+    }
+
     function renderEntries() {
         if (!el.body) {
             return;
         }
         el.body.replaceChildren();
-        if (state.entries.length === 0) {
+        var entries = visibleEntries();
+        if (entries.length === 0) {
             var emptyRow = document.createElement('tr');
             var emptyCell = document.createElement('td');
             emptyCell.colSpan = 4;
             emptyCell.className = 'remote-files-empty text-muted';
-            emptyCell.textContent = state.currentConnectionId ? 'このDirectoryには項目がありません。' : '接続先を選択してください。';
+            emptyCell.textContent = !state.currentConnectionId ? '接続先を選択してください。' : state.entries.length === 0 ? 'このDirectoryには項目がありません。' : '検索・絞り込みに一致する項目はありません。';
             emptyRow.appendChild(emptyCell);
             el.body.appendChild(emptyRow);
             return;
         }
 
-        sortedEntries().forEach(function (entry) {
+        entries.forEach(function (entry) {
             var type = String(entry.type || 'other');
             var name = String(entry.name || '');
             var path = String(entry.path || '');
@@ -926,6 +942,19 @@
         el.previewModal.addEventListener('hidden.bs.modal', resetPreview);
     }
 
+    if (el.search) {
+        el.search.addEventListener('input', function () {
+            state.searchText = el.search.value;
+            renderEntries();
+        });
+    }
+    if (el.typeFilter) {
+        el.typeFilter.addEventListener('change', function () {
+            var allowed = ['all', 'file', 'directory'];
+            state.typeFilter = allowed.indexOf(el.typeFilter.value) >= 0 ? el.typeFilter.value : 'all';
+            renderEntries();
+        });
+    }
     if (el.sortOrder) {
         el.sortOrder.addEventListener('change', function () {
             var allowed = ['default', 'name_asc', 'name_desc', 'size_asc', 'size_desc', 'date_asc', 'date_desc'];
