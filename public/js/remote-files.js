@@ -985,6 +985,7 @@
         var successCount = 0;
         var failures = [];
         var processed = 0;
+        var closeWhenFinished = false;
         state.uploadRunning = true;
         state.uploadStopRequested = false;
         el.uploadFile.disabled = true;
@@ -1033,7 +1034,7 @@
             if (el.uploadProgressText) { el.uploadProgressText.textContent = summary; }
             if (el.uploadForm) { el.uploadForm.reset(); }
             // Preserve the existing completed-upload flow; keep an interrupted batch visible.
-            if (!stopped) { modals.upload.hide(); }
+            closeWhenFinished = !stopped;
         } finally {
             state.uploadRunning = false;
             state.uploadStopRequested = false;
@@ -1042,6 +1043,7 @@
             if (submitButton) { submitButton.disabled = false; }
             if (el.uploadStop) { el.uploadStop.classList.add('d-none'); el.uploadStop.disabled = false; }
             if (el.uploadClose) { el.uploadClose.disabled = false; }
+            if (closeWhenFinished) { modals.upload.hide(); }
         }
     }
 
