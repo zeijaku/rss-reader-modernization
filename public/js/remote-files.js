@@ -65,6 +65,7 @@
         selectAll: document.getElementById('remoteSelectAll'),
         selectedCount: document.getElementById('remoteSelectedCount'),
         bulkDelete: document.getElementById('remoteBulkDelete'),
+        bulkDownload: document.getElementById('remoteBulkDownload'),
         bulkMove: document.getElementById('remoteBulkMove'),
         bulkMoveModal: document.getElementById('remoteBulkMoveModal'),
         bulkMoveForm: document.getElementById('remoteBulkMoveForm'),
@@ -417,6 +418,7 @@
         }
         if (el.selectedCount) { el.selectedCount.textContent = '選択: ' + String(state.selectedPaths.size) + '件'; }
         if (el.bulkDelete) { el.bulkDelete.disabled = state.selectedPaths.size === 0 || state.busy; }
+        if (el.bulkDownload) { el.bulkDownload.disabled = state.selectedPaths.size === 0 || state.busy; }
         if (el.bulkMove) { el.bulkMove.disabled = state.selectedPaths.size === 0 || state.busy; }
     }
 
@@ -771,6 +773,52 @@
             value: entry.name,
             help: '同じDirectory内のRenameは名前だけ、移動する場合は / から始まるRemote Pathを指定します。Base Pathより上へは移動できません。'
         });
+    }
+
+    async function downloadSelectedZip() {
+        if (state.busy || !state.currentConnectionId || state.selectedPaths.size === 0) { return; }
+        var selected = state.entries.filter(function (entry) {
+            return state.selectedPaths.has(entry.path) && (entry.type === 'file' || entry.type === 'directory');
+        });
+        if (!selected.length) { return; }
+        if (selected.length > 200) {
+            showNotice('ZIP Downloadは選択200項目までです。', 'warning');
+            return;
+        }
+        state.busy = true;
+        refreshSelectionControls();
+        hideNotice();
+        var objectUrl = null;
+        try {
+            var form = new FormData();
+            form.set('csrf_token', csrfToken());
+            form.set('remote_connection_id', String(state.currentConnectionId));
+            form.set('path', state.currentPath);
+            selected.forEach(function (entry) { form.append('names[]', entry.name); });
+            var response = await window.fetch('./remote_file_bulk_zip.php', {
+                method: 'POST', credentials: 'same-origin', body: form
+            });
+            syncCsrf(response);
+            if (!response.ok) {
+                throw new Error((await response.text()).slice(0, 250) || 'ZIPを作成できませんでした。');
+            }
+            var blob = await response.blob();
+            if (!blob.size) { throw new Error('ZIPデータを取得できませんでした。'); }
+            objectUrl = window.URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = 'remote-selection.zip';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            showNotice('選択した' + String(selected.length) + '項目のZIPを作成しました。', 'success');
+        } catch (error) {
+            showNotice(error.message || 'ZIP Downloadに失敗しました。', 'danger');
+        } finally {
+            if (objectUrl) { window.setTimeout(function () { window.URL.revokeObjectURL(objectUrl); }, 30000); }
+            state.busy = false;
+            refreshSelectionControls();
+        }
     }
 
     function selectedEntriesForBatch() {
@@ -1283,6 +1331,7 @@
         });
     }
     if (el.bulkDelete) { el.bulkDelete.addEventListener('click', deleteSelectedEntries); }
+    if (el.bulkDownload) { el.bulkDownload.addEventListener('click', downloadSelectedZip); }
     if (el.bulkMove) { el.bulkMove.addEventListener('click', openBulkMove); }
     if (el.bulkMoveForm) { el.bulkMoveForm.addEventListener('submit', submitBulkMove); }
     if (el.search) {
