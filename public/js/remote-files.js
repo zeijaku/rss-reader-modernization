@@ -978,8 +978,8 @@
             var raw = String(file.webkitRelativePath || '');
             var segments = raw.split('/');
             if (segments.length < 2 || segments.length > 21 || segments.some(function (part) {
-                return !part || part === '.' || part === '..' || part.indexOf('\\\\') >= 0 ||
-                    /[\\u0000-\\u001F\\u007F]/.test(part);
+                return !part || part === '.' || part === '..' || part.includes(String.fromCharCode(92)) ||
+                    Array.from(part).some(function (ch) { return ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127; });
             })) {
                 throw new Error('Directory内のPathが無効か、深さ20階層を超えています。');
             }
