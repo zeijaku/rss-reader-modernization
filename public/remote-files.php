@@ -175,11 +175,18 @@ if (!is_string($initialJson)) {
             <option value="date_asc">更新日時 古い順</option>
           </select>
         </div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2" id="remoteBulkToolbar">
+          <label class="form-check-label d-flex align-items-center gap-2">
+            <input class="form-check-input mt-0" type="checkbox" id="remoteSelectAll" aria-label="表示中の項目を全選択">表示中を全選択
+          </label>
+          <span class="small text-muted" id="remoteSelectedCount" aria-live="polite">選択: 0件</span>
+          <button type="button" class="btn btn-sm btn-outline-danger ms-auto" id="remoteBulkDelete" disabled>選択項目を削除</button>
+        </div>
         <div id="remoteFilesLoading" class="remote-files-loading text-muted d-none" aria-live="polite"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>読み込み中...</span></div>
         <div class="table-responsive remote-files-table-wrap">
           <table class="table table-sm table-hover align-middle mb-0 remote-files-table">
-            <thead><tr><th scope="col">Name</th><th scope="col" class="remote-files-size-column">Size</th><th scope="col" class="remote-files-date-column">Updated</th><th scope="col" class="remote-files-action-column">Action</th></tr></thead>
-            <tbody id="remoteFilesBody"><tr><td colspan="4" class="remote-files-empty text-muted">接続先を選択してください。</td></tr></tbody>
+            <thead><tr><th scope="col" class="remote-files-select-column">選択</th><th scope="col">Name</th><th scope="col" class="remote-files-size-column">Size</th><th scope="col" class="remote-files-date-column">Updated</th><th scope="col" class="remote-files-action-column">Action</th></tr></thead>
+            <tbody id="remoteFilesBody"><tr><td colspan="5" class="remote-files-empty text-muted">接続先を選択してください。</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -281,6 +288,6 @@ if (!is_string($initialJson)) {
 <script src="<?php echo app_html(app_asset_url('js/bootstrap.bundle-5.3.8.min.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/drawer-categories.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/remote-permissions.js')); ?>"></script>
-<script src="<?php echo app_html(app_asset_url('js/remote-files.js') . (str_contains(app_asset_url('js/remote-files.js'), '?') ? '&' : '?') . 'remote_sort=dev2filter1'); ?>"></script>
+<script src="<?php echo app_html(app_asset_url('js/remote-files.js') . (str_contains(app_asset_url('js/remote-files.js'), '?') ? '&' : '?') . 'remote_sort=dev3bulk1'); ?>"></script>
 </body>
 </html>
