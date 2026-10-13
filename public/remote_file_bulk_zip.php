@@ -104,10 +104,14 @@ try {
         } else {
             $fileCount++;
             $size = $item['size'];
-            if ($fileCount > $MAX_FILES || !is_numeric($size) || $size < 0 || $size > APP_REMOTE_TRANSFER_MAX_BYTES) {
-                throw new RuntimeException('ZIP file count or file size limit exceeded.');
+            if ($fileCount > $MAX_FILES) {
+                throw new RuntimeException('ZIP file count limit exceeded.');
             }
-            $estimatedBytes += (int) $size;
+            // Some FTP listings omit file size. Enforce the actual byte limit after download.
+            if ($size !== null && (!is_numeric($size) || (float) $size < 0 || (float) $size > APP_REMOTE_TRANSFER_MAX_BYTES)) {
+                throw new RuntimeException('ZIP file size limit exceeded.');
+            }
+            $estimatedBytes += is_numeric($size) ? (int) $size : 0;
             if ($estimatedBytes > $MAX_BYTES) {
                 throw new RuntimeException('ZIP total file size exceeds 100 MB.');
             }
@@ -115,6 +119,7 @@ try {
         }
     }
 
+    $tempDownloads = [];
     $tempZip = remote_service_temp_path();
     $zip = new ZipArchive();
     if ($zip->open($tempZip, ZipArchive::OVERWRITE) !== true) {
