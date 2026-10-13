@@ -149,6 +149,20 @@ if (!is_string($initialJson)) {
           <button type="button" class="btn btn-outline-primary" id="remoteNewFolder" disabled><i class="fas fa-folder-plus fa-fw" aria-hidden="true"></i>New Folder</button>
           <button type="button" class="btn btn-outline-primary" id="remoteLibraryExport"<?php echo $libraryAvailable ? ' disabled' : ' disabled'; ?>><i class="fas fa-cloud-upload-alt fa-fw" aria-hidden="true"></i>File Library → Remote</button>
         </div>
+        <div class="d-flex flex-wrap align-items-end gap-2 mb-2">
+          <div class="flex-grow-1" style="min-width: 160px">
+            <label class="form-label small mb-1" for="remoteFileSearch">ファイル名検索</label>
+            <input class="form-control form-control-sm" type="search" id="remoteFileSearch" placeholder="名前の一部を入力" autocomplete="off">
+          </div>
+          <div>
+            <label class="form-label small mb-1" for="remoteTypeFilter">種類</label>
+            <select class="form-select form-select-sm" id="remoteTypeFilter">
+              <option value="all">すべて</option>
+              <option value="file">File</option>
+              <option value="directory">Directory</option>
+            </select>
+          </div>
+        </div>
         <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
           <label class="form-label small mb-0" for="remoteSortOrder">並び替え</label>
           <select class="form-select form-select-sm w-auto" id="remoteSortOrder" aria-label="Remote Filesの並び替え">
@@ -267,6 +281,6 @@ if (!is_string($initialJson)) {
 <script src="<?php echo app_html(app_asset_url('js/bootstrap.bundle-5.3.8.min.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/drawer-categories.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/remote-permissions.js')); ?>"></script>
-<script src="<?php echo app_html(app_asset_url('js/remote-files.js') . (str_contains(app_asset_url('js/remote-files.js'), '?') ? '&' : '?') . 'remote_sort=dev1fix1'); ?>"></script>
+<script src="<?php echo app_html(app_asset_url('js/remote-files.js') . (str_contains(app_asset_url('js/remote-files.js'), '?') ? '&' : '?') . 'remote_sort=dev2filter1'); ?>"></script>
 </body>
 </html>
