@@ -1032,7 +1032,8 @@
             showNotice(summary, stopped || failures.length ? 'warning' : 'success');
             if (el.uploadProgressText) { el.uploadProgressText.textContent = summary; }
             if (el.uploadForm) { el.uploadForm.reset(); }
-            // Keep the completed progress visible until the user closes the dialog.
+            // Preserve the existing completed-upload flow; keep an interrupted batch visible.
+            if (!stopped) { modals.upload.hide(); }
         } finally {
             state.uploadRunning = false;
             state.uploadStopRequested = false;
