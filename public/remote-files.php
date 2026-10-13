@@ -72,7 +72,7 @@ if (!is_string($initialJson)) {
     <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/' . resolve_theme_stylesheet($ui['conf_style'] ?? null))); ?>">
     <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/all.css')); ?>">
     <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/dashboard.css')); ?>">
-    <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/remote-files.css')); ?>">
+    <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/remote-files.css') . (str_contains(app_asset_url('css/remote-files.css'), '?') ? '&' : '?') . 'remote_ui=dev9'); ?>">
     <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/remote-permissions.css')); ?>">
 </head>
 <body>
@@ -149,40 +149,46 @@ if (!is_string($initialJson)) {
           <button type="button" class="btn btn-outline-primary" id="remoteNewFolder" disabled><i class="fas fa-folder-plus fa-fw" aria-hidden="true"></i>New Folder</button>
           <button type="button" class="btn btn-outline-primary" id="remoteLibraryExport"<?php echo $libraryAvailable ? ' disabled' : ' disabled'; ?>><i class="fas fa-cloud-upload-alt fa-fw" aria-hidden="true"></i>File Library → Remote</button>
         </div>
-        <div class="d-flex flex-wrap align-items-end gap-2 mb-2">
-          <div class="flex-grow-1" style="min-width: 160px">
-            <label class="form-label small mb-1" for="remoteFileSearch">ファイル名検索</label>
-            <input class="form-control form-control-sm" type="search" id="remoteFileSearch" placeholder="名前の一部を入力" autocomplete="off">
-          </div>
-          <div>
-            <label class="form-label small mb-1" for="remoteTypeFilter">種類</label>
-            <select class="form-select form-select-sm" id="remoteTypeFilter">
-              <option value="all">すべて</option>
-              <option value="file">File</option>
-              <option value="directory">Directory</option>
-            </select>
+        <div class="remote-files-list-controls mb-3">
+          <div class="remote-files-filter-row">
+            <div class="remote-files-search-field">
+              <label class="form-label small mb-1" for="remoteFileSearch">ファイル名検索</label>
+              <input class="form-control form-control-sm" type="search" id="remoteFileSearch" placeholder="名前の一部を入力" autocomplete="off">
+            </div>
+            <div class="remote-files-type-field">
+              <label class="form-label small mb-1" for="remoteTypeFilter">種類</label>
+              <select class="form-select form-select-sm" id="remoteTypeFilter">
+                <option value="all">すべて</option>
+                <option value="file">File</option>
+                <option value="directory">Directory</option>
+              </select>
+            </div>
+            <div class="remote-files-sort-field">
+              <label class="form-label small mb-1" for="remoteSortOrder">並び替え</label>
+              <select class="form-select form-select-sm" id="remoteSortOrder" aria-label="Remote Filesの並び替え">
+                <option value="default">標準（Directory優先・名前順）</option>
+                <option value="name_asc">名前 昇順</option>
+                <option value="name_desc">名前 降順</option>
+                <option value="size_asc">サイズ 小さい順</option>
+                <option value="size_desc">サイズ 大きい順</option>
+                <option value="date_desc">更新日時 新しい順</option>
+                <option value="date_asc">更新日時 古い順</option>
+              </select>
+            </div>
           </div>
         </div>
-        <div class="d-flex justify-content-end align-items-center gap-2 mb-2">
-          <label class="form-label small mb-0" for="remoteSortOrder">並び替え</label>
-          <select class="form-select form-select-sm w-auto" id="remoteSortOrder" aria-label="Remote Filesの並び替え">
-            <option value="default">標準（Directory優先・名前順）</option>
-            <option value="name_asc">名前 昇順</option>
-            <option value="name_desc">名前 降順</option>
-            <option value="size_asc">サイズ 小さい順</option>
-            <option value="size_desc">サイズ 大きい順</option>
-            <option value="date_desc">更新日時 新しい順</option>
-            <option value="date_asc">更新日時 古い順</option>
-          </select>
-        </div>
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-2" id="remoteBulkToolbar">
-          <label class="form-check-label d-flex align-items-center gap-2">
-            <input class="form-check-input mt-0" type="checkbox" id="remoteSelectAll" aria-label="表示中の項目を全選択">表示中を全選択
-          </label>
-          <span class="small text-muted" id="remoteSelectedCount" aria-live="polite">選択: 0件</span>
-          <button type="button" class="btn btn-sm btn-outline-success ms-auto" id="remoteBulkDownload" disabled>選択項目をDownload (ZIP)</button>
-          <button type="button" class="btn btn-sm btn-outline-primary" id="remoteBulkMove" disabled>選択項目を移動</button>
-          <button type="button" class="btn btn-sm btn-outline-danger" id="remoteBulkDelete" disabled>選択項目を削除</button>
+        <div class="remote-files-bulk-panel mb-3" id="remoteBulkToolbar" aria-label="選択項目の一括操作">
+          <div class="remote-files-bulk-selection">
+            <label class="form-check-label d-inline-flex align-items-center gap-2">
+              <input class="form-check-input mt-0" type="checkbox" id="remoteSelectAll" aria-label="表示中の項目を全選択">表示中を全選択
+            </label>
+            <span class="small text-muted" id="remoteSelectedCount" aria-live="polite">選択: 0件</span>
+          </div>
+          <div class="remote-files-bulk-actions">
+            <button type="button" class="btn btn-sm btn-outline-success" id="remoteBulkDownload" disabled><i class="fas fa-file-archive fa-fw" aria-hidden="true"></i> ZIP Download</button>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="remoteBulkMove" disabled><i class="fas fa-arrows-alt fa-fw" aria-hidden="true"></i> 移動</button>
+            <button type="button" class="btn btn-sm btn-outline-danger" id="remoteBulkDelete" disabled><i class="fas fa-trash-alt fa-fw" aria-hidden="true"></i> 削除</button>
+          </div>
         </div>
         <div id="remoteFilesLoading" class="remote-files-loading text-muted d-none" aria-live="polite"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>読み込み中...</span></div>
         <div class="table-responsive remote-files-table-wrap">
