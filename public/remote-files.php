@@ -180,7 +180,8 @@ if (!is_string($initialJson)) {
             <input class="form-check-input mt-0" type="checkbox" id="remoteSelectAll" aria-label="表示中の項目を全選択">表示中を全選択
           </label>
           <span class="small text-muted" id="remoteSelectedCount" aria-live="polite">選択: 0件</span>
-          <button type="button" class="btn btn-sm btn-outline-primary ms-auto" id="remoteBulkMove" disabled>選択項目を移動</button>
+          <button type="button" class="btn btn-sm btn-outline-success ms-auto" id="remoteBulkDownload" disabled>選択項目をDownload (ZIP)</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="remoteBulkMove" disabled>選択項目を移動</button>
           <button type="button" class="btn btn-sm btn-outline-danger" id="remoteBulkDelete" disabled>選択項目を削除</button>
         </div>
         <div id="remoteFilesLoading" class="remote-files-loading text-muted d-none" aria-live="polite"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>読み込み中...</span></div>
@@ -314,6 +315,6 @@ if (!is_string($initialJson)) {
 <script src="<?php echo app_html(app_asset_url('js/bootstrap.bundle-5.3.8.min.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/drawer-categories.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/remote-permissions.js')); ?>"></script>
-<script src="<?php echo app_html(app_asset_url('js/remote-files.js') . (str_contains(app_asset_url('js/remote-files.js'), '?') ? '&' : '?') . 'remote_sort=dev6dir1'); ?>"></script>
+<script src="<?php echo app_html(app_asset_url('js/remote-files.js') . (str_contains(app_asset_url('js/remote-files.js'), '?') ? '&' : '?') . 'remote_sort=dev7zip1'); ?>"></script>
 </body>
 </html>
