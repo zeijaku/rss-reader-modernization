@@ -267,6 +267,6 @@ if (!is_string($initialJson)) {
 <script src="<?php echo app_html(app_asset_url('js/bootstrap.bundle-5.3.8.min.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/drawer-categories.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/remote-permissions.js')); ?>"></script>
-<script src="<?php echo app_html(app_asset_url('js/remote-files.js')); ?>"></script>
+<script src="<?php echo app_html(app_asset_url('js/remote-files.js') . (str_contains(app_asset_url('js/remote-files.js'), '?') ? '&' : '?') . 'remote_sort=dev1fix1'); ?>"></script>
 </body>
 </html>
