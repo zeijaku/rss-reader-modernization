@@ -39,6 +39,21 @@ function remote_upload_content_length(): ?int
     return (int) $raw;
 }
 
+/**
+ * Keep remote server filenames intact, including leading dots.
+ * File Library's filename normalization intentionally remains unchanged.
+ */
+function remote_upload_normalize_remote_name(mixed $value): ?string
+{
+    if (!is_string($value) || $value === '' || strlen($value) > 255 ||
+        $value === '.' || $value === '..' ||
+        str_contains($value, '/') || str_contains($value, '\\') ||
+        !remote_path_is_utf8($value) || remote_path_has_control_characters($value)) {
+        return null;
+    }
+    return remote_path_child('/', $value) !== null ? $value : null;
+}
+
 /** @return array{name:string,tmp_name:string,size:int} */
 function remote_upload_validate_file(array $file): array
 {
@@ -54,7 +69,7 @@ function remote_upload_validate_file(array $file): array
         }
         throw new AppRemoteValidationException('invalid_transfer');
     }
-    $name = user_file_normalize_original_name($file['name']);
+    $name = remote_upload_normalize_remote_name($file['name']);
     $tmp = is_string($file['tmp_name']) ? $file['tmp_name'] : '';
     if ($name === null || $tmp === '' || !is_uploaded_file($tmp) || !is_file($tmp) || !is_readable($tmp)) {
         throw new AppRemoteValidationException('invalid_transfer');
