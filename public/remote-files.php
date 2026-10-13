@@ -180,7 +180,8 @@ if (!is_string($initialJson)) {
             <input class="form-check-input mt-0" type="checkbox" id="remoteSelectAll" aria-label="表示中の項目を全選択">表示中を全選択
           </label>
           <span class="small text-muted" id="remoteSelectedCount" aria-live="polite">選択: 0件</span>
-          <button type="button" class="btn btn-sm btn-outline-danger ms-auto" id="remoteBulkDelete" disabled>選択項目を削除</button>
+          <button type="button" class="btn btn-sm btn-outline-primary ms-auto" id="remoteBulkMove" disabled>選択項目を移動</button>
+          <button type="button" class="btn btn-sm btn-outline-danger" id="remoteBulkDelete" disabled>選択項目を削除</button>
         </div>
         <div id="remoteFilesLoading" class="remote-files-loading text-muted d-none" aria-live="polite"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>読み込み中...</span></div>
         <div class="table-responsive remote-files-table-wrap">
@@ -228,6 +229,19 @@ if (!is_string($initialJson)) {
     <div class="modal-header"><h2 class="modal-title fs-5" id="remoteNameModalTitle">名前</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
     <div class="modal-body"><label class="form-label" for="remoteNameInput" id="remoteNameLabel">名前</label><input class="form-control" id="remoteNameInput" maxlength="255" required><div class="form-text" id="remoteNameHelp"></div></div>
     <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">キャンセル</button><button type="submit" class="btn btn-primary">実行</button></div>
+  </form></div></div>
+</div>
+
+<div class="modal fade" id="remoteBulkMoveModal" tabindex="-1" aria-labelledby="remoteBulkMoveTitle" aria-hidden="true">
+  <div class="modal-dialog"><div class="modal-content"><form id="remoteBulkMoveForm">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="remoteBulkMoveTitle">選択項目を移動</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+    <div class="modal-body">
+      <label class="form-label" for="remoteBulkMoveTarget">移動先Directory（/から始まるPath）</label>
+      <input class="form-control" id="remoteBulkMoveTarget" type="text" required>
+      <div class="form-text">接続先のBase Pathを起点に指定します。存在するDirectoryのみ指定可能です。同名項目は上書きしません。</div>
+      <p class="small text-muted mt-3 mb-0" id="remoteBulkMoveCount"></p>
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">キャンセル</button><button type="submit" class="btn btn-primary">移動開始</button></div>
   </form></div></div>
 </div>
 
@@ -288,6 +302,6 @@ if (!is_string($initialJson)) {
 <script src="<?php echo app_html(app_asset_url('js/bootstrap.bundle-5.3.8.min.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/drawer-categories.js')); ?>"></script>
 <script src="<?php echo app_html(app_asset_url('js/remote-permissions.js')); ?>"></script>
-<script src="<?php echo app_html(app_asset_url('js/remote-files.js') . (str_contains(app_asset_url('js/remote-files.js'), '?') ? '&' : '?') . 'remote_sort=dev3bulk1'); ?>"></script>
+<script src="<?php echo app_html(app_asset_url('js/remote-files.js') . (str_contains(app_asset_url('js/remote-files.js'), '?') ? '&' : '?') . 'remote_sort=dev4move1'); ?>"></script>
 </body>
 </html>
