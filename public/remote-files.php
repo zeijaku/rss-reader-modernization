@@ -256,9 +256,9 @@ if (!is_string($initialJson)) {
   <div class="modal-dialog"><div class="modal-content"><form id="remoteUploadForm" enctype="multipart/form-data">
     <div class="modal-header"><h2 class="modal-title fs-5" id="remoteUploadModalTitle">RemoteへUpload</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
     <div class="modal-body">
-      <label class="form-label" for="remoteUploadFile">ファイルを選択</label>
+      <label class="form-label" for="remoteUploadFile"><i class="fas fa-file fa-fw me-1" aria-hidden="true"></i>ファイルを選択</label>
       <input class="form-control" type="file" id="remoteUploadFile" multiple>
-      <label class="form-label mt-3" for="remoteUploadDirectory">Directoryを選択（階層を維持）</label>
+      <label class="form-label mt-3" for="remoteUploadDirectory"><i class="fas fa-folder fa-fw me-1" aria-hidden="true"></i>フォルダを選択（階層を維持）</label>
       <input class="form-control" type="file" id="remoteUploadDirectory" webkitdirectory multiple>
       <div class="form-text">どちらか一方を選択してください。Directoryは選択したフォルダ名も含めてUploadします。空のDirectoryだけは作成できません。Application上限: <?php echo app_html(user_file_library_format_bytes(APP_REMOTE_TRANSFER_MAX_BYTES)); ?>。PHP / Web Server側の上限が優先されます。</div>
       <div class="form-check mt-3"><input class="form-check-input" type="checkbox" id="remoteUploadOverwrite"><label class="form-check-label" for="remoteUploadOverwrite">同名ファイルがある場合に上書きする</label></div>
