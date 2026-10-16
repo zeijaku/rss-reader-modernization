@@ -55,6 +55,10 @@
     }
 
     function currentDraft($card) {
+        // A previously opened settings form is not an unsaved draft once its modal is closed.
+        if (!$('#changeMemo').hasClass('show')) {
+            return null;
+        }
         var widgetId = positiveId($card.attr('data-dashboard-widget-id'));
         var formWidgetId = positiveId($('.changeMemoWidgetId').val());
         var cardTitle;
@@ -79,6 +83,18 @@
     }
 
     function confirmDraftReplacement($card) {
+        if ($card.attr('data-memo-inline-saving') === 'true') {
+            showNotice('Memoを保存中です。完了後に更新してください。', 'info');
+            return false;
+        }
+        if ($card.attr('data-memo-inline-editing') === 'true') {
+            var inlineText = $card.find('.memo-inline-textarea').first().val();
+            var currentText = $card.find('.memo-body').first().text();
+            if (normalizeNewlines(inlineText) !== normalizeNewlines(currentText)
+                && !window.confirm('保存していない本文の編集内容があります。破棄してサーバーのMemoを取得しますか？')) {
+                return false;
+            }
+        }
         var draft = currentDraft($card);
         if (!draft || draft.dirty !== true) {
             return true;
@@ -124,10 +140,21 @@
     }
 
     function applyMemo($card, memo) {
+        if (window.IGuguruDashboardMemo && typeof window.IGuguruDashboardMemo.cancelInlineEdit === 'function') {
+            window.IGuguruDashboardMemo.cancelInlineEdit($card.get(0));
+        }
         var title = String(memo.title || '');
         var body = String(memo.body || '');
         $card.find('.memo-title').first().text(title).attr('title', title);
         $card.find('.memo-body').first().text(body);
+        if (typeof memo.body_sha256 === 'string' && /^[a-f0-9]{64}$/.test(memo.body_sha256)) {
+            $card.attr('data-memo-sha256', memo.body_sha256);
+        }
+        var $counter = $card.find('.memo-character-count').first();
+        if ($counter.length && window.RssMemoCounter) {
+            $counter.text(window.RssMemoCounter.counterText(body))
+                .toggleClass('is-limit', window.RssMemoCounter.textLength(body) >= 4000);
+        }
         if (typeof memo.updated_at === 'string') {
             $card.attr('data-memo-updated-at', memo.updated_at);
         }

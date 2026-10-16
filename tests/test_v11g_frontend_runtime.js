@@ -32,5 +32,20 @@ check(html.includes('data-dashboard-widget-type="memo"'),'Memo card exposes its 
 check(html.includes('app_html($memoBody)'),'Memo body is escaped before HTML output');
 check(css.includes('.memo-body')&&css.includes('white-space: pre-wrap'),'Memo line breaks are rendered by CSS');
 check(css.includes('.memo-card')&&css.includes('.memo-card-inner'),'Memo participates in Dashboard card layout');
+const list = fs.readFileSync(path.join(root, 'app/dashboard_widget.php'), 'utf8');
+const api = fs.readFileSync(path.join(root, 'app/api/dashboard.php'), 'utf8');
+const refresh = fs.readFileSync(path.join(root, 'public/js/memo-refresh.js'), 'utf8');
+const editorCss = fs.readFileSync(path.join(root, 'public/css/memo-widget.css'), 'utf8');
+check(html.includes('memo-inline-trigger') && html.includes('memo-inline-textarea')
+  && html.includes('memo-inline-save') && html.includes('memo-inline-cancel'), 'Memo body inline editor renders Save and Cancel');
+check(html.includes('data-memo-sha256'), 'Memo cards render the initial body revision token');
+check(js.includes("apiRequestPromise('widget.memo.body.update'"), 'Inline save uses body-only API action');
+check(js.includes("card.setAttribute('data-memo-sha256'"), 'Inline save advances revision after success');
+check(js.includes("nodes.display.textContent = saved.memo_body"), 'Inline save updates visible text without HTML or reload');
+check(js.includes('cancelInlineEdit(card)') && js.includes('data-memo-inline-saving'), 'Inline editor restores view and guards pending saves');
+check(api.includes('api_widget_memo_body_update') && api.includes("'memo_conflict'"), 'Inline API detects body conflicts');
+check(list.includes("'body_sha256' => hash('sha256'"), 'Refresh list returns body revision token');
+check(refresh.includes('memo.body_sha256') && refresh.includes('cancelInlineEdit'), 'Manual refresh re-syncs editor revision and draft state');
+check(editorCss.includes('.memo-inline-textarea') && editorCss.includes('.memo-inline-toolbar'), 'Inline editor fits the bounded memo card');
 if(failures)process.exit(1);
 console.log('All '+checks+' V1.1-G frontend checks passed.');

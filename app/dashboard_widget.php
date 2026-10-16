@@ -349,6 +349,7 @@ function dashboard_widget_public_list(int $ownerId, int $location): array
                 'memo_id' => $row['memo_id'],
                 'title' => $row['memo_title'],
                 'body' => $row['memo_body'],
+                'body_sha256' => hash('sha256', (string) $row['memo_body']),
                 'updated_at' => $row['memo_updated_at'],
             ];
         }

@@ -82,3 +82,66 @@
         min-height: 0;
     }
 }
+
+/* Inline Memo body editing: preserve the existing fixed-height card and scroll area. */
+.memo-card .memo-inline-trigger {
+    flex: 0 0 44px;
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.memo-card .memo-inline-editor:not(.d-none) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 0;
+    height: 100%;
+}
+
+.memo-card .memo-inline-textarea {
+    flex: 1 1 auto;
+    min-height: 100px;
+    resize: none;
+    background-color: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+}
+
+.memo-card .memo-inline-toolbar {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.memo-card .memo-inline-status {
+    flex: 1 1 auto;
+    min-width: 60px;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.memo-card .memo-inline-status.is-error {
+    color: var(--bs-danger, #dc3545);
+}
+
+.memo-card[data-memo-inline-editing="true"] .memo-card-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.memo-card[data-memo-inline-editing="true"] .memo-edit-trigger,
+.memo-card[data-memo-inline-editing="true"] .memo-inline-trigger {
+    opacity: 0.6;
+}
+
+@media (max-width: 767.98px) {
+    .memo-card .memo-inline-textarea {
+        min-height: 100px;
+    }
+}
