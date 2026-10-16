@@ -217,7 +217,8 @@ function dashboard_widget_update_memo(
     int $width,
     string $title,
     string $body,
-    int $height = 1
+    int $height = 1,
+    ?string $expectedSha256 = null
 ): bool {
     $title = dashboard_widget_validate_memo_title($title);
     $body = dashboard_widget_validate_memo_body($body);
@@ -240,11 +241,17 @@ function dashboard_widget_update_memo(
     try {
         $widget = dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'memo');
         $memoId = is_array($widget) ? app_validate_positive_int($widget['widget_reference_id'] ?? null) : null;
-        if ($memoId === null || dashboard_widget_lock_owned_memo($pdo, $ownerId, $memoId) === null) {
+        $memo = $memoId === null ? null : dashboard_widget_lock_owned_memo($pdo, $ownerId, $memoId);
+        if (!is_array($memo)) {
             if ($started) {
                 $pdo->rollBack();
             }
             return false;
+        }
+
+        if ($expectedSha256 !== null
+            && !hash_equals($expectedSha256, hash('sha256', (string) $memo['memo_body']))) {
+            throw new AppMemoBodyConflictException('Memo body has changed.');
         }
 
         $now = app_now();
