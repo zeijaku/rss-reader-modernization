@@ -12,6 +12,7 @@
     const requestEndElement = dashboardCore.requestEndElement;
     const requestFailReason = dashboardCore.requestFailReason;
     const showNotice = dashboardCore.showNotice;
+    const runMutation = dashboardCore.runMutation;
     let eventsBound = false;
 
     function first(selector, scope) {
@@ -54,21 +55,6 @@
             'widget_width': value('.' + prefix + 'MemoWidth'),
             'widget_height': value('.' + prefix + 'MemoHeight')
         };
-    }
-
-    function runMutation(button, action, payload, onSuccess) {
-        if (!requestStartElement(button)) {
-            return;
-        }
-        apiRequestPromise(action, payload, 3000)
-            .then(function (data) {
-                if (apiResponseOk(data)) {
-                    onSuccess(data);
-                }
-            }, requestFailReason)
-            .finally(function () {
-                requestEndElement(button);
-            });
     }
 
     function addMemo(form) {
