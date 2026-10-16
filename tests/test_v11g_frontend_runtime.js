@@ -5,6 +5,7 @@ const js=fs.readFileSync(path.join(root,'public/js/dashboard-memo.js'),'utf8');
 const html=[
   fs.readFileSync(path.join(root,'public/index.php'),'utf8'),
   fs.readFileSync(path.join(root,'app/view/dashboard_widgets.php'),'utf8'),
+  fs.readFileSync(path.join(root,'app/view/widget_memo_card.php'),'utf8'),
   fs.readFileSync(path.join(root,'app/view/dashboard_modals.php'),'utf8')
 ].join('\n');
 const css=fs.readFileSync(path.join(root,'public/css/dashboard.css'),'utf8');
@@ -39,6 +40,9 @@ const editorCss = fs.readFileSync(path.join(root, 'public/css/memo-widget.css'),
 check(html.includes('memo-inline-trigger') && html.includes('memo-inline-textarea')
   && html.includes('memo-inline-save') && html.includes('memo-inline-cancel'), 'Memo body inline editor renders Save and Cancel');
 check(html.includes('data-memo-sha256'), 'Memo cards render the initial body revision token');
+check(html.includes("dashboard_render_memo_widget_card") && html.includes("changeMemoExpectedSha256"), 'Memo shared renderer and settings snapshot field are present');
+check(js.includes("setValue('.changeMemoExpectedSha256'") && js.includes("payload.expected_sha256 = value('.changeMemoExpectedSha256')"), 'Settings mutation includes original Memo body revision');
+
 check(js.includes("apiRequestPromise('widget.memo.body.update'"), 'Inline save uses body-only API action');
 check(js.includes("card.setAttribute('data-memo-sha256'"), 'Inline save advances revision after success');
 check(js.includes("nodes.display.textContent = saved.memo_body"), 'Inline save updates visible text without HTML or reload');
