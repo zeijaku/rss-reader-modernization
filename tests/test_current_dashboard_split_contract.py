@@ -63,9 +63,9 @@ for label, (path, namespace, actions, selectors) in modules.items():
     check('document.addEventListener(' in source, f'{label} uses native delegated events')
     check('.querySelector(' in source, f'{label} uses native querySelector')
     check('.closest(' in source, f'{label} preserves delegated dynamic-element lookup with closest')
-    check('apiRequestPromise(' in source, f'{label} uses the native Promise adapter')
-    check('requestStartElement(' in source and 'requestEndElement(' in source,
-          f'{label} uses native duplicate-submit protection')
+    check('const runMutation = dashboardCore.runMutation;' in source,
+          f'{label} uses the shared native Widget mutation helper')
+    check('runMutation(' in source, f'{label} preserves guarded Widget mutation call sites')
     check('jQuery' not in source and '$(' not in source and '$.' not in source,
           f'{label} has no direct jQuery dependency')
     check('.on(' not in source and '.off(' not in source,
