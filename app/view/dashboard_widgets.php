@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/widget_memo_card.php'; ?>
 <main id="main-content" class="igcontainer container-fluid" tabindex="-1" data-dashboard-current-tab="<?php echo is_int($tabParam) ? (int) $tabParam : ''; ?>" data-dashboard-tab-count="4" data-dashboard-user-id="<?php echo (int) $currentUserId; ?>" data-dashboard-theme="<?php echo app_html((string) ($ui['conf_style'] ?? 'bootstrap')); ?>">
 <h1 class="visually-hidden">iGuguru RSS Reader</h1>
 <p id="widget-sort-help" class="visually-hidden">Widgetのタイトルバーにある並び替えボタンをドラッグして順番を変更出来ます。キーボードでは矢印キー、Home、Endキーを使用します。</p>
@@ -230,39 +231,9 @@ if (is_int($content_location)) {
         }
 
         if ($widgetType === 'memo') {
-            $memoId = (int) ($result_content[$i]['memo_id'] ?? 0);
-            $memoTitle = dashboard_widget_validate_memo_title($result_content[$i]['memo_title'] ?? null) ?? 'Memo';
-            $memoBody = dashboard_widget_validate_memo_body($result_content[$i]['memo_body'] ?? null) ?? '';
-            $memoTitleId = 'memo-title-' . $widgetId;
-
-            echo '
-            <!-- Memo Widget -->
-                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget memo-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="memo" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-memo-id="' . $memoId . '" data-memo-sha256="' . hash('sha256', $memoBody) . '" role="region" aria-labelledby="' . app_html($memoTitleId) . '">
-                    <div class="memo-card-inner">
-                        <div class="text-bg-' . app_html($widgetStyle) . ' memo-card-header">
-                            <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines" aria-hidden="true"></i></button>
-                            <small class="memo-title widget-title-text" id="' . app_html($memoTitleId) . '" title="' . app_html($memoTitle) . '">' . app_html($memoTitle) . '</small>
-                            <button type="button" class="btn btn-link memo-inline-trigger" title="本文を直接編集" aria-label="このMemoの本文を直接編集"><i class="fas fa-pen" aria-hidden="true"></i></button>
-                            <button type="button" class="btn btn-link memo-edit-trigger" data-widget-id="' . $widgetId . '" data-memo-id="' . $memoId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-bs-toggle="modal" data-bs-target="#changeMemo" aria-label="このMemoの設定を変更" title="Memoの設定"><i class="fas fa-cog" aria-hidden="true"></i></button>
-                        </div>
-                        <div class="memo-card-body">
-                            <div class="memo-body">' . app_html($memoBody) . '</div>
-                            <div class="memo-inline-editor d-none">
-                                <label class="visually-hidden" for="memo-inline-text-' . $widgetId . '">Memo本文を編集</label>
-                                <textarea class="form-control memo-inline-textarea" id="memo-inline-text-' . $widgetId . '" maxlength="4000" rows="5" aria-label="Memo本文"></textarea>
-                                <div class="memo-inline-toolbar">
-                                    <span class="memo-inline-status small" role="status" aria-live="polite"></span>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary memo-inline-cancel">キャンセル</button>
-                                    <button type="button" class="btn btn-sm btn-primary memo-inline-save"><i class="fas fa-save" aria-hidden="true"></i> 保存</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            ';
+            echo dashboard_render_memo_widget_card($result_content[$i], (int) $content_location);
             continue;
         }
-
 
         if ($widgetType === 'task') {
             $taskConfig = is_array($result_content[$i]['widget_config_data'] ?? null)
