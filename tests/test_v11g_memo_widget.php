@@ -213,6 +213,29 @@ $invalidSave = api_dispatch('widget.memo.body.update', 7, [
 ]);
 v11g_check($invalidSave['status'] === 422, 'invalid body revision token is rejected');
 
+$currentHash = hash('sha256', $pdo->memos[$memoId]['memo_body']);
+$settingsWithRevision = api_dispatch('widget.memo.update', 7, [
+    'widget_id' => (string)$widgetId, 'widget_style' => 'primary',
+    'widget_width' => '2', 'widget_height' => '1',
+    'memo_title' => '設定変更', 'memo_body' => $pdo->memos[$memoId]['memo_body'],
+    'expected_sha256' => $currentHash,
+]);
+v11g_check($settingsWithRevision['status'] === 200
+    && $pdo->memos[$memoId]['memo_title'] === '設定変更',
+    'settings update accepts fresh Memo body revision');
+$staleSettings = api_dispatch('widget.memo.update', 7, [
+    'widget_id' => (string)$widgetId, 'widget_style' => 'danger',
+    'widget_width' => '4', 'widget_height' => '1',
+    'memo_title' => '意図しない更新', 'memo_body' => '古い本文',
+    'expected_sha256' => $expectedBodyHash,
+]);
+v11g_check($staleSettings['status'] === 409
+    && ($staleSettings['body']['error']['code'] ?? '') === 'memo_conflict',
+    'stale settings form cannot overwrite a Memo body changed in another view');
+v11g_check($pdo->memos[$memoId]['memo_title'] === '設定変更'
+    && $pdo->widgets[$widgetId]['widget_style'] === 'primary',
+    'stale settings conflict also preserves Widget display settings');
+
 $wrongDelete=api_dispatch('widget.memo.delete',8,['widget_id'=>(string)$widgetId]);
 v11g_check($wrongDelete['status']===404 && $pdo->memos[$memoId]['memo_flag']===0, 'another user cannot delete Memo');
 $delete=api_dispatch('widget.memo.delete',7,['widget_id'=>(string)$widgetId]);
