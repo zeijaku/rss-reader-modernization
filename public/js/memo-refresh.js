@@ -110,6 +110,9 @@
         }
         $('.changeMemoTitleValue').val(String(memo.title || ''));
         $('.changeMemoBody').val(String(memo.body || ''));
+        if (typeof memo.body_sha256 === 'string') {
+            $('.changeMemoExpectedSha256').val(memo.body_sha256);
+        }
     }
 
     function findMemo(response, widgetId, memoId) {
