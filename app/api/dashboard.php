@@ -393,7 +393,7 @@ function api_widget_memo_update(int $userId, array $input): array
     }
     if ($title === null || $body === null
         || ($expectedSha256 !== null && (!is_string($expectedSha256)
-            || preg_match('/\\A[a-f0-9]{64}\\z/D', $expectedSha256) !== 1))) {
+            || preg_match('/\A[a-f0-9]{64}\z/D', $expectedSha256) !== 1))) {
         return api_validation_error('Memo title or body is invalid.');
     }
 
