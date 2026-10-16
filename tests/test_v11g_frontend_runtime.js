@@ -14,7 +14,7 @@ function check(cond,msg){checks++;console.log((cond?'PASS':'FAIL')+': '+msg);if(
 check(js.includes("function memoFormPayload(prefix)"),'Memo payload helper exists');
 check(js.includes("'memo_title': value('.' + prefix + 'MemoTitleValue')"),'Memo title is read through native form lookup');
 check(js.includes("'memo_body': value('.' + prefix + 'MemoBody')"),'Memo body is read through native form lookup');
-check(js.includes("apiRequestPromise(action, payload, 3000)"),'Memo mutations use the shared native Promise adapter');
+check(js.includes("const runMutation = dashboardCore.runMutation;"), 'Memo settings use shared Widget mutation lifecycle');
 for(const action of ['widget.memo.create','widget.memo.update','widget.memo.delete']) check(js.includes(action),action+' contract is preserved');
 check(js.includes("payload.widget_location = value('.registerMemoLocation')"),'Memo create sends the current tab location');
 check(js.includes("payload.widget_id = value('.changeMemoWidgetId')"),'Memo update sends the selected Widget ID');
