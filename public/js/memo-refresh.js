@@ -55,6 +55,10 @@
     }
 
     function currentDraft($card) {
+        // A previously opened settings form is not an unsaved draft once its modal is closed.
+        if (!$('#changeMemo').hasClass('show')) {
+            return null;
+        }
         var widgetId = positiveId($card.attr('data-dashboard-widget-id'));
         var formWidgetId = positiveId($('.changeMemoWidgetId').val());
         var cardTitle;
