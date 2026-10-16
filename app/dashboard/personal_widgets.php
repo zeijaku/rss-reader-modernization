@@ -306,7 +306,7 @@ function dashboard_widget_update_memo_body(
 ): ?array {
     $body = dashboard_widget_validate_memo_body($body);
     if ($ownerId <= 0 || $widgetId <= 0 || $body === null
-        || preg_match('/\\A[a-f0-9]{64}\\z/D', $expectedSha256) !== 1) {
+        || preg_match('/\A[a-f0-9]{64}\z/D', $expectedSha256) !== 1) {
         throw new InvalidArgumentException('Memo body update is invalid.');
     }
 
