@@ -44,5 +44,5 @@ function dashboard_render_memo_widget_card(array $row, int $location): string
                         </div>
                     </div>
                 </section>
-            '
+            ';
 }
