@@ -85,6 +85,7 @@
         const body = card ? first('.memo-body', card) : null;
         setValue('.changeMemoWidgetId', attribute(trigger, 'data-widget-id', ''));
         setValue('.changeMemoId', attribute(trigger, 'data-memo-id', ''));
+        setValue('.changeMemoExpectedSha256', card ? (card.getAttribute('data-memo-sha256') || '') : '');
         setValue('.changeMemoTitleValue', title && title.textContent ? title.textContent : 'Memo');
         setValue('.changeMemoBody', body ? body.textContent : '');
         setValue('.changeMemoStyle', attribute(trigger, 'data-widget-style', 'success'));
@@ -95,6 +96,7 @@
     function changeMemo(form) {
         const payload = memoFormPayload('change');
         payload.widget_id = value('.changeMemoWidgetId');
+        payload.expected_sha256 = value('.changeMemoExpectedSha256');
         runMutation(submitButton(form), 'widget.memo.update', payload, function () {
             window.location.reload();
         });
