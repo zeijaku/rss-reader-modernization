@@ -114,6 +114,13 @@ final class V11gMemoStatement extends PDOStatement
             if (is_array($m) && $m['memo_owner']===(int)($params[':owner']??0) && $m['memo_flag']===0) $this->rows=[$m];
             return true;
         }
+        if (str_starts_with($this->sql, 'UPDATE `ig_memo` SET memo_body = ')) {
+            $id=(int)$params[':memo_id']; $m=$this->pdo->memos[$id]??null;
+            if (is_array($m) && $m['memo_owner']===(int)$params[':owner'] && $m['memo_flag']===0) {
+                $this->pdo->memos[$id]['memo_body']=(string)$params[':body'];
+                $this->pdo->memos[$id]['memo_updated_at']=(string)$params[':updated_at']; $this->affected=1;
+            } return true;
+        }
         if (str_starts_with($this->sql, 'UPDATE `ig_memo` SET memo_title')) {
             $id=(int)$params[':memo_id']; $m=$this->pdo->memos[$id]??null;
             if (is_array($m) && $m['memo_owner']===(int)$params[':owner'] && $m['memo_flag']===0) {
@@ -168,6 +175,66 @@ $update=api_dispatch('widget.memo.update',7,['widget_id'=>(string)$widgetId,'wid
 v11g_check($update['status']===200 && $pdo->memos[$memoId]['memo_title']==='更新', 'owner can update Memo content');
 v11g_check($pdo->widgets[$widgetId]['widget_width']===3 && $pdo->widgets[$widgetId]['widget_style']==='success', 'Memo Widget style and width update together');
 v11g_check($pdo->widgets[$widgetId]['widget_location']===1, 'Memo edit does not move it to another tab');
+
+$originalBody = (string)$pdo->memos[$memoId]['memo_body'];
+$originalTitle = (string)$pdo->memos[$memoId]['memo_title'];
+$originalStyle = (string)$pdo->widgets[$widgetId]['widget_style'];
+$originalWidth = (int)$pdo->widgets[$widgetId]['widget_width'];
+$expectedBodyHash = hash('sha256', $originalBody);
+$inlineSave = api_dispatch('widget.memo.body.update', 7, [
+    'widget_id' => (string)$widgetId,
+    'memo_body' => "直接変更\r\n次の行",
+    'expected_sha256' => $expectedBodyHash,
+]);
+v11g_check($inlineSave['status'] === 200
+    && ($pdo->memos[$memoId]['memo_body'] ?? '') === "直接変更\n次の行",
+    'inline Memo update changes only its body and normalizes CRLF');
+v11g_check(($inlineSave['body']['data']['memo_sha256'] ?? '') === hash('sha256', "直接変更\n次の行"),
+    'inline save responds with verified next body snapshot hash');
+v11g_check($pdo->memos[$memoId]['memo_title'] === $originalTitle
+    && $pdo->widgets[$widgetId]['widget_style'] === $originalStyle
+    && $pdo->widgets[$widgetId]['widget_width'] === $originalWidth,
+    'inline edit preserves Memo title and Widget settings');
+$staleSave = api_dispatch('widget.memo.body.update', 7, [
+    'widget_id' => (string)$widgetId, 'memo_body' => '古い内容',
+    'expected_sha256' => $expectedBodyHash,
+]);
+v11g_check($staleSave['status'] === 409
+    && ($staleSave['body']['error']['code'] ?? '') === 'memo_conflict'
+    && $pdo->memos[$memoId]['memo_body'] === "直接変更\n次の行",
+    'stale inline draft is rejected without data loss');
+$foreignSave = api_dispatch('widget.memo.body.update', 8, [
+    'widget_id' => (string)$widgetId, 'memo_body' => '別ユーザー',
+    'expected_sha256' => hash('sha256', $pdo->memos[$memoId]['memo_body']),
+]);
+v11g_check($foreignSave['status'] === 404, 'another user cannot inline edit Memo');
+$invalidSave = api_dispatch('widget.memo.body.update', 7, [
+    'widget_id' => (string)$widgetId, 'memo_body' => 'x', 'expected_sha256' => 'invalid',
+]);
+v11g_check($invalidSave['status'] === 422, 'invalid body revision token is rejected');
+
+$currentHash = hash('sha256', $pdo->memos[$memoId]['memo_body']);
+$settingsWithRevision = api_dispatch('widget.memo.update', 7, [
+    'widget_id' => (string)$widgetId, 'widget_style' => 'primary',
+    'widget_width' => '2', 'widget_height' => '1',
+    'memo_title' => '設定変更', 'memo_body' => $pdo->memos[$memoId]['memo_body'],
+    'expected_sha256' => $currentHash,
+]);
+v11g_check($settingsWithRevision['status'] === 200
+    && $pdo->memos[$memoId]['memo_title'] === '設定変更',
+    'settings update accepts fresh Memo body revision');
+$staleSettings = api_dispatch('widget.memo.update', 7, [
+    'widget_id' => (string)$widgetId, 'widget_style' => 'danger',
+    'widget_width' => '4', 'widget_height' => '1',
+    'memo_title' => '意図しない更新', 'memo_body' => '古い本文',
+    'expected_sha256' => $expectedBodyHash,
+]);
+v11g_check($staleSettings['status'] === 409
+    && ($staleSettings['body']['error']['code'] ?? '') === 'memo_conflict',
+    'stale settings form cannot overwrite a Memo body changed in another view');
+v11g_check($pdo->memos[$memoId]['memo_title'] === '設定変更'
+    && $pdo->widgets[$widgetId]['widget_style'] === 'primary',
+    'stale settings conflict also preserves Widget display settings');
 
 $wrongDelete=api_dispatch('widget.memo.delete',8,['widget_id'=>(string)$widgetId]);
 v11g_check($wrongDelete['status']===404 && $pdo->memos[$memoId]['memo_flag']===0, 'another user cannot delete Memo');

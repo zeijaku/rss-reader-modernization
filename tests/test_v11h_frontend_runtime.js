@@ -30,7 +30,7 @@ for (const selector of ['#registerTaskWidgetForm','.task-widget-edit-trigger','#
 check(js.includes("document.addEventListener('submit', handleSubmit)"), 'Task uses native delegated submit handling');
 check(js.includes("document.addEventListener('click', handleClick)"), 'Task uses native delegated click handling');
 check(js.includes('if (eventsBound)'), 'Task native event binding is idempotent');
-check(js.includes('.finally(function ()'), 'Task mutations always release native pending state');
+check(js.includes('const runMutation = dashboardCore.runMutation;'), 'Task uses shared mutation lifecycle that releases native pending state');
 check(!js.includes('jQuery')&&!js.includes('$(')&&!js.includes('.on(')&&!js.includes('.off('), 'Task controller has no direct jQuery dependency');
 check(!js.includes('.innerHTML')&&!js.includes('.html('), 'Task partial redraw keeps text-only DOM operations');
 check(html.includes('id="registerTaskWidgetForm"')&&html.includes('id="changeTaskWidgetForm"')&&html.includes('id="changeTaskItemForm"'), 'Task forms are present');

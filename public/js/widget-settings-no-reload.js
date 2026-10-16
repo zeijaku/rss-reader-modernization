@@ -164,6 +164,7 @@
                     widget_id: val('.changeMemoWidgetId'),
                     memo_title: val('.changeMemoTitleValue'),
                     memo_body: val('.changeMemoBody'),
+                    expected_sha256: val('.changeMemoExpectedSha256'),
                     widget_style: val('.changeMemoStyle'),
                     widget_width: val('.changeMemoWidth'),
                     widget_height: val('.changeMemoHeight')
