@@ -288,6 +288,71 @@ function dashboard_widget_update_memo(
     }
 }
 
+final class AppMemoBodyConflictException extends RuntimeException
+{
+}
+
+/**
+ * Update only the Memo body. Keep the Widget layout, title, and style unchanged.
+ * Compare against the body snapshot shown in the browser to avoid lost updates.
+ *
+ * @return array{memo_body:string,memo_sha256:string}|null
+ */
+function dashboard_widget_update_memo_body(
+    int $ownerId,
+    int $widgetId,
+    string $body,
+    string $expectedSha256
+): ?array {
+    $body = dashboard_widget_validate_memo_body($body);
+    if ($ownerId <= 0 || $widgetId <= 0 || $body === null
+        || preg_match('/\\A[a-f0-9]{64}\\z/D', $expectedSha256) !== 1) {
+        throw new InvalidArgumentException('Memo body update is invalid.');
+    }
+
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+    try {
+        $widget = dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'memo');
+        $memoId = is_array($widget) ? app_validate_positive_int($widget['widget_reference_id'] ?? null) : null;
+        $memo = $memoId !== null ? dashboard_widget_lock_owned_memo($pdo, $ownerId, $memoId) : null;
+        if (!is_array($memo)) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return null;
+        }
+
+        if (!hash_equals($expectedSha256, hash('sha256', (string) $memo['memo_body']))) {
+            throw new AppMemoBodyConflictException('Memo body has changed.');
+        }
+
+        $stmt = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('memo')
+            . ' SET memo_body = :body, memo_updated_at = :updated_at'
+            . ' WHERE memo_id = :memo_id AND memo_owner = :owner AND memo_flag = 0'
+        );
+        $stmt->execute([
+            ':body' => $body,
+            ':updated_at' => app_now(),
+            ':memo_id' => $memoId,
+            ':owner' => $ownerId,
+        ]);
+        if ($started) {
+            $pdo->commit();
+        }
+        return ['memo_body' => $body, 'memo_sha256' => hash('sha256', $body)];
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
 function dashboard_widget_delete_memo(int $ownerId, int $widgetId): bool
 {
     if ($ownerId <= 0 || $widgetId <= 0) {
