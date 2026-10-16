@@ -417,7 +417,7 @@ function api_widget_memo_body_update(int $userId, array $input): array
     $expectedSha256 = $input['expected_sha256'] ?? null;
     if ($widgetId === null || $body === null
         || !is_string($expectedSha256)
-        || preg_match('/\\A[a-f0-9]{64}\\z/D', $expectedSha256) !== 1) {
+        || preg_match('/\A[a-f0-9]{64}\z/D', $expectedSha256) !== 1) {
         return api_validation_error('Memo body update is invalid.');
     }
 
