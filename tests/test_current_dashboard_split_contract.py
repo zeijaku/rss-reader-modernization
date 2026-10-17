@@ -82,6 +82,18 @@ load_positions.append(index.find(dashboard_tag))
 check(all(pos >= 0 for pos in load_positions), 'all Dashboard scripts are present in the Dashboard entrypoint')
 check(load_positions == sorted(load_positions), 'load order remains core -> split controllers -> dashboard.js')
 
+swipe = text('public/js/dashboard-tab-swipe.js')
+swipe_tag = "app_asset_url('js/dashboard-tab-swipe.js')"
+check(swipe_tag in index and index.index(swipe_tag) < index.index(dashboard_tag),
+      'tab swipe controller loads before the Dashboard initializer')
+check('function dashboardSwipeStart(' in swipe and 'function dashboardSwipeEnd(' in swipe
+      and 'function initTabSwipe(' in swipe, 'tab swipe behavior was extracted intact')
+check('function dashboardSwipeStart(' not in dashboard and 'function dashboardSwipeEnd(' not in dashboard,
+      'dashboard.js delegates rather than duplicating touch navigation')
+check('isDrawerActive: drawerIsActive' in dashboard and 'widgetDragState !== null' in dashboard,
+      'existing Drawer and Widget drag guards are injected into the swipe feature')
+
+
 for helper in ('apiRequestPromise', 'requestStartElement', 'requestEndElement', 'requestFailReason'):
     check(f'function {helper}' in core and f'{helper}: {helper}' in core,
           f'Dashboard core exposes native adapter: {helper}')
