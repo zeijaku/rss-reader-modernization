@@ -63,9 +63,9 @@ for label, (path, namespace, actions, selectors) in modules.items():
     check('document.addEventListener(' in source, f'{label} uses native delegated events')
     check('.querySelector(' in source, f'{label} uses native querySelector')
     check('.closest(' in source, f'{label} preserves delegated dynamic-element lookup with closest')
-    check('apiRequestPromise(' in source, f'{label} uses the native Promise adapter')
-    check('requestStartElement(' in source and 'requestEndElement(' in source,
-          f'{label} uses native duplicate-submit protection')
+    check('const runMutation = dashboardCore.runMutation;' in source,
+          f'{label} uses the shared native Widget mutation helper')
+    check('runMutation(' in source, f'{label} preserves guarded Widget mutation call sites')
     check('jQuery' not in source and '$(' not in source and '$.' not in source,
           f'{label} has no direct jQuery dependency')
     check('.on(' not in source and '.off(' not in source,
@@ -81,6 +81,18 @@ for label, (path, namespace, actions, selectors) in modules.items():
 load_positions.append(index.find(dashboard_tag))
 check(all(pos >= 0 for pos in load_positions), 'all Dashboard scripts are present in the Dashboard entrypoint')
 check(load_positions == sorted(load_positions), 'load order remains core -> split controllers -> dashboard.js')
+
+swipe = text('public/js/dashboard-tab-swipe.js')
+swipe_tag = "app_asset_url('js/dashboard-tab-swipe.js')"
+check(swipe_tag in index and index.index(swipe_tag) < index.index(dashboard_tag),
+      'tab swipe controller loads before the Dashboard initializer')
+check('function dashboardSwipeStart(' in swipe and 'function dashboardSwipeEnd(' in swipe
+      and 'function initTabSwipe(' in swipe, 'tab swipe behavior was extracted intact')
+check('function dashboardSwipeStart(' not in dashboard and 'function dashboardSwipeEnd(' not in dashboard,
+      'dashboard.js delegates rather than duplicating touch navigation')
+check('isDrawerActive: drawerIsActive' in dashboard and 'widgetDragState !== null' in dashboard,
+      'existing Drawer and Widget drag guards are injected into the swipe feature')
+
 
 for helper in ('apiRequestPromise', 'requestStartElement', 'requestEndElement', 'requestFailReason'):
     check(f'function {helper}' in core and f'{helper}: {helper}' in core,
