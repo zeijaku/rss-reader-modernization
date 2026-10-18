@@ -147,8 +147,19 @@ check('function renderFeedItems(' in dashboard and 'return feedRenderer().render
 check('feedRenderer().configure({' in dashboard
       and 'renderFeedKeywordTitle: renderFeedKeywordTitle' in dashboard,
       'Feed renderer receives article-action and keyword highlight hooks')
-check("function fetch_content(" in dashboard and "apiRequest('feed.fetch'" in dashboard,
-      'RSS feed network transport remains in main controller for this phase')
+feed_fetch = text('public/js/dashboard-feed-fetch.js')
+feed_fetch_tag = "app_asset_url('js/dashboard-feed-fetch.js')"
+check(feed_fetch_tag in index
+      and index.index(feed_render_tag) < index.index(feed_fetch_tag) < index.index(dashboard_tag),
+      'RSS Fetch controller loads after renderer and before Dashboard')
+check("function fetch_content(" in dashboard
+      and "IGuguruDashboardFeedFetch.fetch_content($card, options)" in dashboard,
+      'Dashboard delegates existing refresh call sites')
+check("apiRequest('feed.fetch', {'content_id': content_id}, 25000)" in feed_fetch
+      and "feed-request-pending" in feed_fetch,
+      'RSS network request and per-card pending guard are extracted intact')
+check("closeArticleActionsMenu: closeArticleActionsMenu" in dashboard,
+      'Feed fetch uses the original Article Actions close hook')
 
 for test_name in (
     'test_current_dashboard_core_contract.py',
