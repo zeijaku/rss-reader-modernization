@@ -147,6 +147,22 @@ check('function renderFeedItems(' in dashboard and 'return feedRenderer().render
 check('feedRenderer().configure({' in dashboard
       and 'renderFeedKeywordTitle: renderFeedKeywordTitle' in dashboard,
       'Feed renderer receives article-action and keyword highlight hooks')
+feed_title = text('public/js/dashboard-feed-title.js')
+feed_title_tag = "app_asset_url('js/dashboard-feed-title.js')"
+check(feed_title_tag in index
+      and index.index(feed_render_tag) < index.index(feed_title_tag) < index.index(dashboard_tag),
+      'title tooltip module is loaded before Dashboard initialization')
+check('function showFeedTitleTooltip(' in feed_title
+      and 'function scheduleFeedTitleOverflowRefresh(' in feed_title,
+      'title tooltip positioning and overflow checks are isolated')
+check('var feedTitleTooltipTimer' not in dashboard
+      and 'IGuguruDashboardFeedTitle.hideFeedTitleTooltip()' in dashboard
+      and 'IGuguruDashboardFeedTitle.scheduleFeedTitleOverflowRefresh($scope)' in dashboard,
+      'Dashboard retains only the tooltip adapter and no longer owns its state')
+check("feedTitleIsTruncated(this)" in dashboard
+      and "hideFeedTitleTooltip: hideFeedTitleTooltip" in dashboard,
+      'keyword highlighting and Feed renderer keep their existing tooltip hooks')
+
 feed_fetch = text('public/js/dashboard-feed-fetch.js')
 feed_fetch_tag = "app_asset_url('js/dashboard-feed-fetch.js')"
 check(feed_fetch_tag in index
