@@ -359,7 +359,7 @@
             .off('pointercancel' + eventNamespace, '.widget-drag-handle')
             .on('pointercancel' + eventNamespace, '.widget-drag-handle', function () {
                 widgetFinishDrag(true);
-            });;
+            });
     }
 
     window.IGuguruDashboardWidgetOrder = {
