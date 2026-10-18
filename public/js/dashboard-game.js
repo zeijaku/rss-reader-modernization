@@ -6,12 +6,8 @@
         throw new Error('Dashboard core is not available.');
     }
 
-    const apiRequestPromise = dashboardCore.apiRequestPromise;
-    const apiResponseOk = dashboardCore.apiResponseOk;
-    const requestStartElement = dashboardCore.requestStartElement;
-    const requestEndElement = dashboardCore.requestEndElement;
-    const requestFailReason = dashboardCore.requestFailReason;
     const showNotice = dashboardCore.showNotice;
+    const runMutation = dashboardCore.runMutation;
     let eventsBound = false;
 
     function first(selector, scope) {
@@ -80,21 +76,6 @@
         if (currentTitle === '' || currentTitle === previousTitle) {
             title.value = gameDefaultTitle(String(type.value || 'icon_quest'));
         }
-    }
-
-    function runMutation(button, action, payload, onSuccess) {
-        if (!requestStartElement(button)) {
-            return;
-        }
-        apiRequestPromise(action, payload, 3000)
-            .then(function (data) {
-                if (apiResponseOk(data)) {
-                    onSuccess(data);
-                }
-            }, requestFailReason)
-            .finally(function () {
-                requestEndElement(button);
-            });
     }
 
     function addGameWidget(form) {

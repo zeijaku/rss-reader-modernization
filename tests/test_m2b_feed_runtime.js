@@ -7,6 +7,9 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
 const coreSource = fs.readFileSync(path.join(root, 'public/js/dashboard-core.js'), 'utf8');
+const feedRenderSource = fs.readFileSync(path.join(root, 'public/js/dashboard-feed-render.js'), 'utf8');
+const feedFetchSource = fs.readFileSync(path.join(root, 'public/js/dashboard-feed-fetch.js'), 'utf8');
+const searchFeedSource = fs.readFileSync(path.join(root, 'public/js/dashboard-search-feed.js'), 'utf8');
 const ajaxCalls = [];
 const handlers = new Map();
 let failures = 0;
@@ -283,6 +286,9 @@ const context = {
     RegExp
 };
 vm.runInNewContext(coreSource, context, {filename: 'dashboard-core.js'});
+vm.runInNewContext(feedRenderSource, context, {filename: 'dashboard-feed-render.js'});
+vm.runInNewContext(feedFetchSource, context, {filename: 'dashboard-feed-fetch.js'});
+vm.runInNewContext(searchFeedSource, context, {filename: 'dashboard-search-feed.js'});
 vm.runInNewContext(source, context, {filename: 'dashboard.js'});
 
 check(ajaxCalls.length === 8, 'one Feed request starts for each card');

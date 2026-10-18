@@ -84,7 +84,7 @@ for helper in (
 ):
     check(f'function {helper}' in dashboard, f'Dashboard keeps compatibility wrapper: {helper}')
 
-for helper in ('apiRequestPromise', 'requestStartElement', 'requestEndElement', 'requestFailReason'):
+for helper in ('apiRequestPromise', 'requestStartElement', 'requestEndElement', 'requestFailReason', 'runMutation'):
     check(f'{helper}: {helper}' in core, f'Dashboard core exports native adapter: {helper}')
 
 for unsafe in ('.html(', 'innerHTML', 'insertAdjacentHTML', 'document.write(', 'eval(', 'new Function'):
