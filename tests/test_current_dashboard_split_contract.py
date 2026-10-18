@@ -161,6 +161,22 @@ check("apiRequest('feed.fetch', {'content_id': content_id}, 25000)" in feed_fetc
 check("closeArticleActionsMenu: closeArticleActionsMenu" in dashboard,
       'Feed fetch uses the original Article Actions close hook')
 
+search_feed = text('public/js/dashboard-search-feed.js')
+search_tag = "app_asset_url('js/dashboard-search-feed.js')"
+category_tag = "app_asset_url('js/search-feed-owned-category.js')"
+check(search_tag in index and category_tag in index
+      and index.index(feed_fetch_tag) < index.index(search_tag) < index.index(dashboard_tag)
+      < index.index(category_tag),
+      'Search Feed loads after Fetch and before Dashboard and Category bridge')
+check("IGuguruDashboardSearchFeed.fetchSearchFeed($card, preserve)" in dashboard
+      and "IGuguruDashboardSearchFeed.addSearchFeed($form)" in dashboard,
+      'Dashboard delegates Search Feed calls without changing existing event bindings')
+check("widget.search.fetch" in search_feed and "widget.search.create" in search_feed
+      and "widget.search.update" in search_feed and "widget.search.delete" in search_feed,
+      'Search Feed CRUD and fetch API actions remain unchanged')
+check("return core.apiRequest(action, data, timeout)" in search_feed,
+      'Search Feed dynamically calls Core API so Category bridge still injects filter')
+
 for test_name in (
     'test_current_dashboard_core_contract.py',
     'test_current_dashboard_core_runtime.js',
