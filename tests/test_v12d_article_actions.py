@@ -45,8 +45,9 @@ check("$('#main-content .task-card[data-dashboard-widget-id]').first()" in js,
       'Task action targets the first Task Widget in the current tab')
 check("event.key === 'Escape'" in js and "['ArrowDown', 'ArrowUp', 'Home', 'End']" in js,
       'Article Actions supports Escape and menu keyboard navigation')
-check("closeArticleActionsMenu(false);" in js[js.index('function fetch_content'):js.index('function setFeedSummaryExpanded')],
-      'normal Feed refresh closes an open Article Actions menu')
+feed_fetch = (ROOT / 'public/js/dashboard-feed-fetch.js').read_text(encoding='utf-8')
+check("hooks.closeArticleActionsMenu(false);" in feed_fetch[feed_fetch.index('function fetch_content'):],
+      'normal Feed refresh closes Article Actions through the original hook')
 check("closeArticleActionsMenu(false);" in js[js.index('function fetchSearchFeed'):js.index('function bindEvents')],
       'Search Feed refresh closes an open Article Actions menu')
 check('.article-actions-menu {' in css and 'position: fixed;' in css and 'z-index: 1080;' in css,
