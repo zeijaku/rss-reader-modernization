@@ -140,10 +140,10 @@ const windowObject = {IGuguruDashboardCore: {
     requestFail() {failuresApi.push('failed');}
 }};
 vm.runInNewContext(source, {jQuery:$,window:windowObject,document:documentObject,Number,String,JSON,Math,Object,RegExp}, {filename:'dashboard-widget-order.js'});
-const module = windowObject.IGuguruDashboardWidgetOrder;
-check(Boolean(module && module.bindEvents && module.isDragging), 'Widget order controller exports its public methods');
-module.bindEvents();
-module.bindEvents();
+const widgetOrder = windowObject.IGuguruDashboardWidgetOrder;
+check(Boolean(module && widgetOrder.bindEvents && widgetOrder.isDragging), 'Widget order controller exports its public methods');
+widgetOrder.bindEvents();
+widgetOrder.bindEvents();
 check(events.size === 6, 'click, keyboard and four pointer handlers bind idempotently');
 function order() {return grid.children.map(n => n.attrs['data-dashboard-widget-id']).join(',');}
 function fire(name, element, props = {}) {
@@ -176,22 +176,21 @@ check(order() === '2,1,3' && failuresApi.length === 1,
     'API transport failure restores order and reports error');
 
 fire('pointerdown',handle1,{isPrimary:true,pointerType:'mouse',button:0,clientX:120,clientY:30,pointerId:1});
-check(module.isDragging(), 'pointer start sets active drag state');
+check(widgetOrder.isDragging(), 'pointer start sets active drag state');
 pointerTarget = cards[2].card;
 fire('pointermove',handle1,{clientX:280,clientY:40});
 check(cards[2].card.classes.has('widget-drop-target'), 'pointer movement highlights an eligible drop target');
 fire('pointercancel',handle1,{});
-check(!module.isDragging() && order() === '2,1,3' && requests.length === 2,
+check(!widgetOrder.isDragging() && order() === '2,1,3' && requests.length === 2,
     'pointercancel clears drag state without saving');
 
 fire('pointerdown',handle1,{isPrimary:true,pointerType:'mouse',button:0,clientX:120,clientY:30,pointerId:2});
 pointerTarget = cards[2].card;
 fire('pointermove',handle1,{clientX:280,clientY:40});
 fire('pointerup',handle1,{});
-check(!module.isDragging() && order() === '2,3,1' && requests.length === 3,
+check(!widgetOrder.isDragging() && order() === '2,3,1' && requests.length === 3,
     'successful pointer drop moves card and invokes order save');
 requests[2].request.resolve({ok:true,data:{sort_orders:{"2":10,"3":20,"1":30}}});
 check(notices.some(n => n.type === 'success'), 'successful reorder announces completion');
-const count = failures;
-console.log('RESULT: PASS ' + (12-count) + ' / FAIL ' + count);
-process.exit(count ? 1 : 0);
+console.log('RESULT: FAIL ' + failures);
+process.exit(failures ? 1 : 0);
