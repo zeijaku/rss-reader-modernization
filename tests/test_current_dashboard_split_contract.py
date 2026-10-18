@@ -63,9 +63,9 @@ for label, (path, namespace, actions, selectors) in modules.items():
     check('document.addEventListener(' in source, f'{label} uses native delegated events')
     check('.querySelector(' in source, f'{label} uses native querySelector')
     check('.closest(' in source, f'{label} preserves delegated dynamic-element lookup with closest')
-    check('apiRequestPromise(' in source, f'{label} uses the native Promise adapter')
-    check('requestStartElement(' in source and 'requestEndElement(' in source,
-          f'{label} uses native duplicate-submit protection')
+    check('const runMutation = dashboardCore.runMutation;' in source,
+          f'{label} uses the shared native Widget mutation helper')
+    check('runMutation(' in source, f'{label} preserves guarded Widget mutation call sites')
     check('jQuery' not in source and '$(' not in source and '$.' not in source,
           f'{label} has no direct jQuery dependency')
     check('.on(' not in source and '.off(' not in source,
@@ -81,6 +81,19 @@ for label, (path, namespace, actions, selectors) in modules.items():
 load_positions.append(index.find(dashboard_tag))
 check(all(pos >= 0 for pos in load_positions), 'all Dashboard scripts are present in the Dashboard entrypoint')
 check(load_positions == sorted(load_positions), 'load order remains core -> split controllers -> dashboard.js')
+
+swipe = text('public/js/dashboard-tab-swipe.js')
+swipe_tag = "app_asset_url('js/dashboard-tab-swipe.js')"
+check(swipe_tag in index and index.index(swipe_tag) < index.index(dashboard_tag),
+      'tab swipe controller loads before the Dashboard initializer')
+check('function dashboardSwipeStart(' in swipe and 'function dashboardSwipeEnd(' in swipe
+      and 'function initTabSwipe(' in swipe, 'tab swipe behavior was extracted intact')
+check('function dashboardSwipeStart(' not in dashboard and 'function dashboardSwipeEnd(' not in dashboard,
+      'dashboard.js delegates rather than duplicating touch navigation')
+check('isDrawerActive: drawerIsActive' in dashboard
+      and 'IGuguruDashboardWidgetOrder.isDragging()' in dashboard,
+      'swipe controller gets Drawer and extracted Widget dragging state')
+
 
 for helper in ('apiRequestPromise', 'requestStartElement', 'requestEndElement', 'requestFailReason'):
     check(f'function {helper}' in core and f'{helper}: {helper}' in core,
@@ -109,8 +122,19 @@ for namespace in ('IGuguruDashboardTask', 'IGuguruDashboardMemo', 'IGuguruDashbo
 
 check("function renderClock($card, now)" in dashboard,
       'Clock display/timer rendering remains untouched in dashboard.js')
-check("function widgetBeginDrag(" in dashboard and "function widgetFinishDrag(" in dashboard,
-      'Dashboard D&D remains untouched in C')
+order = text('public/js/dashboard-widget-order.js')
+order_tag = "app_asset_url('js/dashboard-widget-order.js')"
+check(order_tag in index and index.index(order_tag) < index.index(dashboard_tag),
+      'Widget order controller loads before Dashboard initializer')
+check("function widgetBeginDrag(" in order and "function widgetFinishDrag(" in order
+      and "function widgetKeyboardMove(" in order and "function widgetSaveOrder(" in order,
+      'Widget D&D, keyboard actions and save/restore are preserved in dedicated module')
+check("function widgetBeginDrag(" not in dashboard and "function widgetFinishDrag(" not in dashboard,
+      'Dashboard main module no longer duplicates Widget ordering')
+check('IGuguruDashboardWidgetOrder.bindEvents();' in dashboard,
+      'Dashboard initializes Widget order handlers')
+check('widget.reorder' in order and 'previous_widget_ids' in order and 'widget_ids' in order,
+      'Widget reorder API and optimistic prior-order payload remain intact')
 check("function fetch_content(" in dashboard,
       'RSS feed rendering/refresh remains untouched in C')
 
