@@ -12,6 +12,7 @@
     const requestEndElement = dashboardCore.requestEndElement;
     const requestFailReason = dashboardCore.requestFailReason;
     const showNotice = dashboardCore.showNotice;
+    const runMutation = dashboardCore.runMutation;
     let eventsBound = false;
 
     function first(selector, scope) {
@@ -61,22 +62,6 @@
             'task_due_date': value('.task-create-due, .changeTaskItemDueDate', scope),
             'task_priority': value('.task-create-priority, .changeTaskItemPriority', scope)
         };
-    }
-
-    function runMutation(button, action, payload, onSuccess) {
-        if (!requestStartElement(button)) {
-            return;
-        }
-        apiRequestPromise(action, payload, 3000)
-            .then(function (data) {
-                if (apiResponseOk(data)) {
-                    return onSuccess(data);
-                }
-                return false;
-            }, requestFailReason)
-            .finally(function () {
-                requestEndElement(button);
-            });
     }
 
     function priorityLabel(priority) {
