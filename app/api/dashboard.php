@@ -377,6 +377,7 @@ function api_widget_memo_update(int $userId, array $input): array
     $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
     $title = dashboard_widget_validate_memo_title($input['memo_title'] ?? null);
     $body = dashboard_widget_validate_memo_body($input['memo_body'] ?? null);
+    $expectedSha256 = $input['expected_sha256'] ?? null;
 
     if ($widgetId === null) {
         return api_validation_error('widget_id must be a positive integer.');
@@ -390,14 +391,18 @@ function api_widget_memo_update(int $userId, array $input): array
     if ($height === null) {
         return api_validation_error('widget_height must be 1 or 2.');
     }
-    if ($title === null || $body === null) {
+    if ($title === null || $body === null
+        || ($expectedSha256 !== null && (!is_string($expectedSha256)
+            || preg_match('/\A[a-f0-9]{64}\z/D', $expectedSha256) !== 1))) {
         return api_validation_error('Memo title or body is invalid.');
     }
 
     try {
-        if (!dashboard_widget_update_memo($userId, $widgetId, $style, $width, $title, $body, $height)) {
+        if (!dashboard_widget_update_memo($userId, $widgetId, $style, $width, $title, $body, $height, $expectedSha256)) {
             return api_error('not_found', 'Memo Widget was not found.', 404);
         }
+    } catch (AppMemoBodyConflictException $exception) {
+        return api_error('memo_conflict', '他の画面でMemo本文が変更されました。最新の本文を確認してください。', 409);
     } catch (InvalidArgumentException $exception) {
         return api_validation_error($exception->getMessage());
     } catch (PDOException $exception) {
@@ -409,6 +414,34 @@ function api_widget_memo_update(int $userId, array $input): array
 }
 
 /** @return array{status:int,body:array<string,mixed>} */
+/** @return array{status:int,body:array<string,mixed>} */
+function api_widget_memo_body_update(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $body = dashboard_widget_validate_memo_body($input['memo_body'] ?? null);
+    $expectedSha256 = $input['expected_sha256'] ?? null;
+    if ($widgetId === null || $body === null
+        || !is_string($expectedSha256)
+        || preg_match('/\A[a-f0-9]{64}\z/D', $expectedSha256) !== 1) {
+        return api_validation_error('Memo body update is invalid.');
+    }
+
+    try {
+        $updated = dashboard_widget_update_memo_body($userId, $widgetId, $body, $expectedSha256);
+        if ($updated === null) {
+            return api_error('not_found', 'Memo Widget was not found.', 404);
+        }
+        return api_success(['widget_id' => $widgetId] + $updated);
+    } catch (AppMemoBodyConflictException $exception) {
+        return api_error('memo_conflict', '他の操作でMemo本文が変更されました。入力内容を控えてから最新のMemoを取得してください。', 409);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException $exception) {
+        error_log('Memo inline body update failed: ' . $exception->getMessage());
+        return api_error('memo_unavailable', 'Memo body could not be updated.', 503);
+    }
+}
+
 function api_widget_memo_delete(int $userId, array $input): array
 {
     $widgetId = api_positive_int($input, 'widget_id');

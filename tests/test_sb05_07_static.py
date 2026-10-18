@@ -9,6 +9,7 @@ api = (ROOT/'app/api.php').read_text(encoding='utf-8') + ''.join(path.read_text(
 index = dashboard_source(ROOT)
 dashboard_core = (ROOT / 'public' / 'js' / 'dashboard-core.js').read_text(encoding='utf-8')
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
+feed_fetch = (ROOT / 'public/js/dashboard-feed-fetch.js').read_text(encoding='utf-8')
 frontend = index + '\n' + dashboard_core + '\n' + dashboard
 db = (ROOT/'app/common/common_db.php').read_text()
 login = (ROOT/'app/common/common_login.php').read_text()
@@ -34,8 +35,8 @@ check('find_owned_active_content($userId, $contentId)' in api, 'resource access 
 check("WHERE content_id = :content_id AND content_owner = :owner" in db, 'content lookup SQL scopes by resource id and owner')
 check("WHERE content_id = :content_id AND content_owner = :owner AND content_flag = 0" in db, 'content update/delete SQL contains owner predicate')
 check("$input['steal_content']" not in api and 'FeedFetchService::fromRuntimeConfiguration()' in api and '->load($source)' in api, 'feed.fetch does not accept a client raw fetch URL')
-check("'feed.fetch'" in dashboard and "'content_id': content_id" in dashboard, 'browser sends only content id for feed.fetch')
-feed_client = dashboard[dashboard.find('function fetch_content'):dashboard.find('function bindEvents')]
+check("'feed.fetch'" in feed_fetch and "'content_id': content_id" in feed_fetch, 'browser sends only content id for feed.fetch')
+feed_client = feed_fetch
 check('$window_load' not in index and 'content_value' not in feed_client and "'content_id': content_id" in feed_client, 'DB feed URL is not embedded into dashboard Feed request')
 check("'content_owner':" not in index and "'save_owner':" not in index and 'name="user_id"' not in index, 'browser no longer submits owner/user target fields')
 check('setting_token' not in index, 'fixed Legacy setting token removed')
