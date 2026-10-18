@@ -6,6 +6,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
 const coreSource = fs.readFileSync(path.join(root, 'public/js/dashboard-core.js'), 'utf8');
+const orderSource = fs.readFileSync(path.join(root, 'public/js/dashboard-widget-order.js'), 'utf8');
 let failures = 0;
 function check(ok, message) { console.log((ok ? 'PASS' : 'FAIL') + ': ' + message); if (!ok) failures++; }
 
@@ -129,6 +130,7 @@ $.ajax=(options)=>{const d=new Deferred();ajaxCalls.push({options,deferred:d});r
 
 const context={jQuery:$,window:windowObject,document:documentObject,console,JSON,Number,Object,Array,String,Math,RegExp,setTimeout:windowObject.setTimeout,clearTimeout:windowObject.clearTimeout};
 vm.runInNewContext(coreSource,context,{filename:'dashboard-core.js'});
+vm.runInNewContext(orderSource,context,{filename:'dashboard-widget-order.js'});
 vm.runInNewContext(source,context,{filename:'dashboard.js'});
 
 const keyHandler=handlers.get('keydown.iguguruDashboard|.widget-drag-handle');
