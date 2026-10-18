@@ -1545,30 +1545,13 @@
         }
     }
 
-    function searchPayload(prefix) {
-        return {search_query: $('.' + prefix + 'SearchQuery').val(), search_scope: $('.' + prefix + 'SearchScope').val(), search_condition: $('.' + prefix + 'SearchCondition').val(), search_limit: $('.' + prefix + 'SearchLimit').val(), search_category: $('.' + prefix + 'SearchCategory').val(), widget_width: $('.' + prefix + 'SearchWidth').val(), widget_height: $('.' + prefix + 'SearchHeight').val(), widget_style: $('.' + prefix + 'SearchStyle').val()};
-    }
-    function addSearchFeed($form) { var $b=$form.find('button[type="submit"]'); if(!requestStart($b))return; var p=searchPayload('register'); p.widget_location=$('.registerSearchLocation').val(); apiRequest('widget.search.create',p,10000).done(function(d){if(apiResponseOk(d))window.location.reload();}).fail(requestFail).always(function(){requestEnd($b);}); }
-    function editSearchFeed($t) { $('.changeSearchId').val($t.attr('data-widget-id')||''); $('.changeSearchQuery').val($t.attr('data-search-query')||''); $('.changeSearchScope').val($t.attr('data-search-scope')||'owned'); $('.changeSearchCondition').val($t.attr('data-search-condition')||'or'); $('.changeSearchLimit').val($t.attr('data-search-limit')||'10'); $('.changeSearchCategory').val($t.attr('data-search-category')||'all'); $('.changeSearchWidth').val($t.attr('data-widget-width')||'1'); $('.changeSearchHeight').val($t.attr('data-widget-height')||'1'); $('.changeSearchStyle').val($t.attr('data-widget-style')||'warning'); }
-    function changeSearchFeed($form) { var $b=$form.find('button[type="submit"]'); if(!requestStart($b))return; var p=searchPayload('change'); p.widget_id=$('.changeSearchId').val(); apiRequest('widget.search.update',p,10000).done(function(d){if(apiResponseOk(d))window.location.reload();}).fail(requestFail).always(function(){requestEnd($b);}); }
-    function deleteSearchFeed($b) { var id=String($('.changeSearchId').val()||''); if(!/^\d+$/.test(id)||!window.confirm('このSearch Feedを削除しますか？'))return; if(!requestStart($b))return; apiRequest('widget.search.delete',{widget_id:id},5000).done(function(d){if(apiResponseOk(d))window.location.reload();}).fail(requestFail).always(function(){requestEnd($b);}); }
-    function renderSearchFeedTitle($card) {
-        var searchQuery = String($card.find('.search-edit-trigger').attr('data-search-query') || '').trim();
-        var viewTitle = searchQuery !== '' ? searchQuery : 'Search Feed';
-        $card.find('.content-title')
-            .empty()
-            .append(
-                $('<span>')
-                    .addClass('feed-title-text')
-                    .attr('title', viewTitle)
-                    .text(viewTitle)
-            );
-    }
-
-    function fetchSearchFeed($card,preserve) {
-        closeArticleActionsMenu(false);
-        var id=String($card.attr('data-dashboard-widget-id')||''),$b=$card.find('.search-feed-refresh'); if(!/^\d+$/.test(id)||$b.data('request-pending')===true)return; $b.data('request-pending',true).prop('disabled',true).addClass('is-refreshing'); $card.attr('aria-busy','true'); if(!preserve)renderFeedLoading($card);
-        apiRequest('widget.search.fetch',{widget_id:id},30000).done(function(d){ var r; if(!apiResponseOk(d)){if(!preserve)renderFeedError($card,'検索結果を取得出来ませんでした');return;} r=d.data&&d.data.search_result; if(!r||!Array.isArray(r.items)){if(!preserve)renderFeedError($card,'検索結果を確認出来ませんでした');return;} $card.attr('data-search-limit',String(r.limit||10)); renderSearchFeedTitle($card); renderFeedItems($card,r.items); if(r.items.length===0)renderFeedBodyMessage($card,'empty','一致する記事はありません'); if(Number(r.failed_count||0)>0)showNotice('一部のRSSを取得出来ませんでした','info',3000); }).fail(function(x,t){ if(!preserve)renderFeedError($card,apiErrorMessage(x,t)); else showNotice(apiErrorMessage(x,t),'danger'); }).always(function(){ $card.attr('aria-busy','false'); $b.data('request-pending',false).prop('disabled',false).removeClass('is-refreshing'); });
+    // Search Feed handlers stay delegated here; implementation lives in dashboard-search-feed.js.
+    function addSearchFeed($form) { return window.IGuguruDashboardSearchFeed.addSearchFeed($form); }
+    function editSearchFeed($trigger) { return window.IGuguruDashboardSearchFeed.editSearchFeed($trigger); }
+    function changeSearchFeed($form) { return window.IGuguruDashboardSearchFeed.changeSearchFeed($form); }
+    function deleteSearchFeed($button) { return window.IGuguruDashboardSearchFeed.deleteSearchFeed($button); }
+    function fetchSearchFeed($card, preserve) {
+        return window.IGuguruDashboardSearchFeed.fetchSearchFeed($card, preserve);
     }
 
     function bindFeatureModule(feature) {
@@ -1996,6 +1979,11 @@
         }
         if (window.IGuguruDashboardFeedFetch) {
             window.IGuguruDashboardFeedFetch.configure({
+                closeArticleActionsMenu: closeArticleActionsMenu
+            });
+        }
+        if (window.IGuguruDashboardSearchFeed) {
+            window.IGuguruDashboardSearchFeed.configure({
                 closeArticleActionsMenu: closeArticleActionsMenu
             });
         }
