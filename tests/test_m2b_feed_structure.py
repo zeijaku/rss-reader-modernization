@@ -6,6 +6,8 @@ from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 index = dashboard_source(ROOT)
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
+feed_render = (ROOT / 'public/js/dashboard-feed-render.js').read_text(encoding='utf-8')
+js += '\n' + feed_render
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 api = (ROOT / 'app/api.php').read_text(encoding='utf-8')
 
@@ -31,9 +33,7 @@ for name in [
 fetch_start = js.find('function fetch_content')
 fetch_end = js.find('function bindEvents', fetch_start)
 fetch = js[fetch_start:fetch_end]
-render_start = js.find('function renderFeedMessage')
-render_end = fetch_start
-render = js[render_start:render_end]
+render = feed_render
 
 check("apiRequest('feed.fetch', {'content_id': content_id}, 25000)" in fetch, 'Feed transport remains one content_id API request')
 check("data('feed-request-pending')" in fetch, 'a card does not start the same Feed request twice while pending')

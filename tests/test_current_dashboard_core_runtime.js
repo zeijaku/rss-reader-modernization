@@ -246,6 +246,27 @@ vm.runInNewContext(source, context, {filename: 'dashboard-core.js'});
     check(nativeButton.getAttribute('data-request-pending') === 'false' && nativeButton.disabled === false,
         'native request completion releases the pending guard');
 
+    const beforeSharedMutation = ajaxCalls.length;
+    let mutationSuccesses = 0;
+    core.runMutation(nativeButton, 'widget.memo.update', {widget_id: '9'}, () => {
+        mutationSuccesses++;
+    });
+    core.runMutation(nativeButton, 'widget.memo.update', {widget_id: '9'}, () => {
+        mutationSuccesses++;
+    });
+    check(ajaxCalls.length === beforeSharedMutation + 1,
+        'shared Widget mutation rejects duplicate submissions while pending');
+    check(nativeButton.disabled === true, 'shared Widget mutation disables its native button');
+    check(ajaxCalls[beforeSharedMutation].options.data.action === 'widget.memo.update'
+        && ajaxCalls[beforeSharedMutation].options.timeout === 3000,
+        'shared Widget mutation keeps API action and default timeout');
+    ajaxCalls[beforeSharedMutation].deferred.resolve({ok: true});
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    check(mutationSuccesses === 1 && nativeButton.disabled === false,
+        'shared Widget mutation calls success once and releases pending guard');
+
     core.requestFailReason({xhr: controlledXhr, textStatus: 'error'});
     check(notice.textValue === 'Controlled failure', 'native Promise rejection is routed through the existing controlled error renderer');
 

@@ -5,6 +5,7 @@ from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 index = dashboard_source(ROOT)
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
+js += '\n' + (ROOT / 'public/js/dashboard-feed-render.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 checks = []
