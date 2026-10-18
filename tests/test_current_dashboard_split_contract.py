@@ -90,8 +90,9 @@ check('function dashboardSwipeStart(' in swipe and 'function dashboardSwipeEnd('
       and 'function initTabSwipe(' in swipe, 'tab swipe behavior was extracted intact')
 check('function dashboardSwipeStart(' not in dashboard and 'function dashboardSwipeEnd(' not in dashboard,
       'dashboard.js delegates rather than duplicating touch navigation')
-check('isDrawerActive: drawerIsActive' in dashboard and 'widgetDragState !== null' in dashboard,
-      'existing Drawer and Widget drag guards are injected into the swipe feature')
+check('isDrawerActive: drawerIsActive' in dashboard
+      and 'IGuguruDashboardWidgetOrder.isDragging()' in dashboard,
+      'swipe controller gets Drawer and extracted Widget dragging state')
 
 
 for helper in ('apiRequestPromise', 'requestStartElement', 'requestEndElement', 'requestFailReason'):
@@ -121,8 +122,19 @@ for namespace in ('IGuguruDashboardTask', 'IGuguruDashboardMemo', 'IGuguruDashbo
 
 check("function renderClock($card, now)" in dashboard,
       'Clock display/timer rendering remains untouched in dashboard.js')
-check("function widgetBeginDrag(" in dashboard and "function widgetFinishDrag(" in dashboard,
-      'Dashboard D&D remains untouched in C')
+order = text('public/js/dashboard-widget-order.js')
+order_tag = "app_asset_url('js/dashboard-widget-order.js')"
+check(order_tag in index and index.index(order_tag) < index.index(dashboard_tag),
+      'Widget order controller loads before Dashboard initializer')
+check("function widgetBeginDrag(" in order and "function widgetFinishDrag(" in order
+      and "function widgetKeyboardMove(" in order and "function widgetSaveOrder(" in order,
+      'Widget D&D, keyboard actions and save/restore are preserved in dedicated module')
+check("function widgetBeginDrag(" not in dashboard and "function widgetFinishDrag(" not in dashboard,
+      'Dashboard main module no longer duplicates Widget ordering')
+check('IGuguruDashboardWidgetOrder.bindEvents();' in dashboard,
+      'Dashboard initializes Widget order handlers')
+check('widget.reorder' in order and 'previous_widget_ids' in order and 'widget_ids' in order,
+      'Widget reorder API and optimistic prior-order payload remain intact')
 check("function fetch_content(" in dashboard,
       'RSS feed rendering/refresh remains untouched in C')
 
