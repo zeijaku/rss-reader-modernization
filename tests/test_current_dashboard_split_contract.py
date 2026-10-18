@@ -135,8 +135,20 @@ check('IGuguruDashboardWidgetOrder.bindEvents();' in dashboard,
       'Dashboard initializes Widget order handlers')
 check('widget.reorder' in order and 'previous_widget_ids' in order and 'widget_ids' in order,
       'Widget reorder API and optimistic prior-order payload remain intact')
-check("function fetch_content(" in dashboard,
-      'RSS feed rendering/refresh remains untouched in C')
+feed_renderer = text('public/js/dashboard-feed-render.js')
+feed_render_tag = "app_asset_url('js/dashboard-feed-render.js')"
+check(feed_render_tag in index and index.index(feed_render_tag) < index.index(dashboard_tag),
+      'Feed renderer loads before Dashboard controller')
+check('function renderFeedItems(' in feed_renderer
+      and 'function renderFeedMessage(' in feed_renderer,
+      'Feed DOM rendering was extracted to dedicated module')
+check('function renderFeedItems(' in dashboard and 'return feedRenderer().renderFeedItems(' in dashboard,
+      'Dashboard keeps compatibility with existing Feed call sites')
+check('feedRenderer().configure({' in dashboard
+      and 'renderFeedKeywordTitle: renderFeedKeywordTitle' in dashboard,
+      'Feed renderer receives article-action and keyword highlight hooks')
+check("function fetch_content(" in dashboard and "apiRequest('feed.fetch'" in dashboard,
+      'RSS feed network transport remains in main controller for this phase')
 
 for test_name in (
     'test_current_dashboard_core_contract.py',
