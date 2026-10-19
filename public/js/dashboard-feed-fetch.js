@@ -129,6 +129,8 @@
                 hooks.closeArticleActionsMenu = deps.closeArticleActionsMenu;
             }
         },
+        // Reader error paths must share the Feed transport diagnostics.
+        feedRequestErrorMessage: feedRequestErrorMessage,
         fetch_content: fetch_content
     };
 })(window);
