@@ -138,6 +138,7 @@ check('widget.reorder' in order and 'previous_widget_ids' in order and 'widget_i
 feed_renderer = text('public/js/dashboard-feed-render.js')
 article_menu_position = text('public/js/dashboard-article-menu-position.js')
 article_menu_state = text('public/js/dashboard-article-menu.js')
+article_share = text('public/js/dashboard-article-share.js')
 
 article_position_tag = "app_asset_url('js/dashboard-article-menu-position.js')"
 article_state_tag = "app_asset_url('js/dashboard-article-menu.js')"
@@ -157,6 +158,15 @@ check('var articleActionsTrigger = null;' in article_menu_state
 check('handleMenuKeydown: handleMenuKeydown' in article_menu_state
       and 'articleMenu().handleMenuKeydown(event, $(this));' in dashboard,
       'Article Actions keyboard handling is delegated without duplicating listeners')
+article_share_tag = "app_asset_url('js/dashboard-article-share.js')"
+check(article_share_tag in index and index.index(article_state_tag) < index.index(article_share_tag) < index.index(dashboard_tag),
+      'Article copy and X sharing module loads after menu state and before Dashboard')
+check('IGuguruDashboardArticleShare.copyArticleUrl($button)' in dashboard
+      and 'IGuguruDashboardArticleShare.openArticleOnX()' in dashboard
+      and 'window.IGuguruDashboardArticleShare' in article_share,
+      'Dashboard action handlers delegate copy and X intent to extracted module')
+check('test_current_article_share_runtime.js' in runner,
+      'Current CI runs copy and X intent runtime regression')
 check('test_current_article_menu_position_runtime.js' in runner
       and 'test_current_article_menu_state_runtime.js' in runner,
       'Current CI gate executes Article Actions geometry regression')
