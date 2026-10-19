@@ -95,7 +95,7 @@
     }
 
     function handleMenuKeydown(event, $menu) {
-        var $items = $(this).find('.article-actions-item:not(:disabled):not([hidden])');
+        var $items = $menu.find('.article-actions-item:not(:disabled):not([hidden])');
         var index = $items.index(document.activeElement);
         if (event.key === 'Escape') {
             event.preventDefault();
