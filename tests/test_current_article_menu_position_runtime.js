@@ -12,7 +12,7 @@ class Element {
         this.width = width;
         this.height = height;
         this.attributes = {};
-        this.properties = {hidden: true};
+        this.properties = {hidden: false};
         this.dataValues = {};
         this.styles = {};
         this.children = new Map();
@@ -60,6 +60,7 @@ const doc = {documentElement: {clientWidth: 375, clientHeight: 700,
 const win = {innerWidth: 375, innerHeight: 700,
     IGuguruDashboardCore: {showNotice() { throw Error('Unexpected notice'); }}};
 const menu = new Element({width: 168, height: 214});
+menu.properties.hidden = true;
 const card = new Element({rect: {left: 12, top: 20, right: 315, bottom: 635, width: 303, height: 615}});
 const trigger = new Element({rect: {left: 270, right: 305, top: 590, bottom: 634}});
 trigger.closestMap.set('.feed-card, .stock-card', [card]);
