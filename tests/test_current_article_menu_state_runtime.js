@@ -56,7 +56,11 @@ stock.near.set('.feed-card, .stock-card', [stockCard]);
 stock.near.set('.stock-card', [stockCard]);
 let positionSucceeds = true, calls = 0;
 const win = {IGuguruDashboardCore: {showNotice(message) {notice.push(message);}},
-    IGuguruDashboardArticleMenuPosition: {positionArticleActionsMenu() {calls++; return positionSucceeds;}}};
+    IGuguruDashboardArticleMenuPosition: {positionArticleActionsMenu($menu) {
+        calls++;
+        if (positionSucceeds) $menu.prop('hidden', false);
+        return positionSucceeds;
+    }}};
 function $(value) {
     if (value === '#articleActionsMenu') return new Query([menu]);
     if (value === '.article-actions-trigger[aria-expanded="true"]')
