@@ -137,17 +137,28 @@ check('widget.reorder' in order and 'previous_widget_ids' in order and 'widget_i
       'Widget reorder API and optimistic prior-order payload remain intact')
 feed_renderer = text('public/js/dashboard-feed-render.js')
 article_menu_position = text('public/js/dashboard-article-menu-position.js')
+article_menu_state = text('public/js/dashboard-article-menu.js')
 
 article_position_tag = "app_asset_url('js/dashboard-article-menu-position.js')"
-check(article_position_tag in index and index.index(article_position_tag) < index.index(dashboard_tag),
+article_state_tag = "app_asset_url('js/dashboard-article-menu.js')"
+check(article_position_tag in index and article_state_tag in index
+      and index.index(article_position_tag) < index.index(article_state_tag) < index.index(dashboard_tag),
       'Article Actions geometry loads before Dashboard controller')
 check('function positionArticleActionsMenu(' in article_menu_position
       and 'window.IGuguruDashboardArticleMenuPosition' in article_menu_position,
       'Article Actions geometry retains a single module-scoped implementation')
-check('return window.IGuguruDashboardArticleMenuPosition.positionArticleActionsMenu($menu, $trigger);' in dashboard
+check('return window.IGuguruDashboardArticleMenuPosition.positionArticleActionsMenu($menu, $trigger);' in article_menu_state
       and 'maxWidth: Math.min(224, availableWidth)' not in dashboard,
       'Dashboard delegates geometry without duplicating layout computation')
-check('test_current_article_menu_position_runtime.js' in runner,
+check('var articleActionsTrigger = null;' in article_menu_state
+      and 'articleActionsTrigger' not in dashboard
+      and 'articleMenu().getTrigger()' in dashboard,
+      'current article selection has a single owner shared with Reader/Stock/Task')
+check('handleMenuKeydown: handleMenuKeydown' in article_menu_state
+      and 'articleMenu().handleMenuKeydown(event, $(this));' in dashboard,
+      'Article Actions keyboard handling is delegated without duplicating listeners')
+check('test_current_article_menu_position_runtime.js' in runner
+      and 'test_current_article_menu_state_runtime.js' in runner,
       'Current CI gate executes Article Actions geometry regression')
 
 feed_render_tag = "app_asset_url('js/dashboard-feed-render.js')"
