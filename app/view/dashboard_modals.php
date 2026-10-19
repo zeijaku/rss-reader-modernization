@@ -413,6 +413,7 @@
             <div class="modal-body">
                 <input type="hidden" class="changeMemoWidgetId">
                 <input type="hidden" class="changeMemoId">
+                <input type="hidden" class="changeMemoExpectedSha256">
                 <div class="mb-3">
                     <label class="form-label" for="changeMemoTitleValue"><small class="text-dark">見出し</small></label>
                     <input type="text" class="form-control changeMemoTitleValue" id="changeMemoTitleValue" maxlength="32" required>

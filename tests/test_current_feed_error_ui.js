@@ -5,7 +5,7 @@ const path = require('path');
 const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
-const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
+const source = fs.readFileSync(path.join(root, 'public/js/dashboard-feed-fetch.js'), 'utf8');
 const start = source.indexOf('function feedRequestErrorMessage');
 const end = source.indexOf('function setFeedRefreshPending', start);
 if (start < 0 || end < 0) {
