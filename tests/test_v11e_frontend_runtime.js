@@ -7,6 +7,8 @@ const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
 const menuPositionSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-menu-position.js'), 'utf8');
 const menuStateSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-menu.js'), 'utf8');
+const articleStockSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-stock.js'), 'utf8');
+const articleTaskSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-task.js'), 'utf8');
 const coreSource = fs.readFileSync(path.join(root, 'public/js/dashboard-core.js'), 'utf8');
 const orderSource = fs.readFileSync(path.join(root, 'public/js/dashboard-widget-order.js'), 'utf8');
 let failures = 0;
@@ -135,6 +137,8 @@ vm.runInNewContext(coreSource,context,{filename:'dashboard-core.js'});
 vm.runInNewContext(orderSource,context,{filename:'dashboard-widget-order.js'});
 vm.runInNewContext(menuPositionSource,context,{filename:'dashboard-article-menu-position.js'});
 vm.runInNewContext(menuStateSource,context,{filename:'dashboard-article-menu.js'});
+vm.runInNewContext(articleStockSource,context,{filename:'dashboard-article-stock.js'});
+vm.runInNewContext(articleTaskSource,context,{filename:'dashboard-article-task.js'});
 vm.runInNewContext(source,context,{filename:'dashboard.js'});
 
 const keyHandler=handlers.get('keydown.iguguruDashboard|.widget-drag-handle');
