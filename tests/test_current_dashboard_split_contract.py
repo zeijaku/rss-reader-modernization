@@ -139,6 +139,8 @@ feed_renderer = text('public/js/dashboard-feed-render.js')
 article_menu_position = text('public/js/dashboard-article-menu-position.js')
 article_menu_state = text('public/js/dashboard-article-menu.js')
 article_share = text('public/js/dashboard-article-share.js')
+article_stock = text('public/js/dashboard-article-stock.js')
+article_task = text('public/js/dashboard-article-task.js')
 
 article_position_tag = "app_asset_url('js/dashboard-article-menu-position.js')"
 article_state_tag = "app_asset_url('js/dashboard-article-menu.js')"
@@ -167,6 +169,25 @@ check('IGuguruDashboardArticleShare.copyArticleUrl($button)' in dashboard
       'Dashboard action handlers delegate copy and X intent to extracted module')
 check('test_current_article_share_runtime.js' in runner,
       'Current CI runs copy and X intent runtime regression')
+article_stock_tag = "app_asset_url('js/dashboard-article-stock.js')"
+article_task_tag = "app_asset_url('js/dashboard-article-task.js')"
+check(article_stock_tag in index and article_task_tag in index
+      and index.index(article_share_tag) < index.index(article_stock_tag) < index.index(article_task_tag) < index.index(dashboard_tag),
+      'Stock and Task modules load after Article menu and share, before Dashboard')
+check('IGuguruDashboardArticleStock.saveStock($button)' in dashboard
+      and 'IGuguruDashboardArticleStock.removeStockFromActions($button)' in dashboard
+      and "apiRequest('stock.delete'" in article_stock
+      and "apiRequest('stock.create'" in article_stock,
+      'Stock create and remove mutations have exactly one extracted implementation')
+check('IGuguruDashboardArticleTask.addArticleToTask($button)' in dashboard
+      and 'IGuguruDashboardArticleTask.addStockArticleToSelectedTask($form)' in dashboard
+      and "apiRequest('task.item.create'" in article_task,
+      'Article Task target and mutation logic have exactly one extracted implementation')
+check('articleMenu().getTrigger()' in article_stock
+      and 'articleMenu().getTrigger()' in article_task,
+      'Stock and Task use the same active Article menu trigger owner')
+check('test_current_article_mutations_runtime.js' in runner,
+      'Stock and Task mutations execute runtime regression in CI')
 check('test_current_article_menu_position_runtime.js' in runner
       and 'test_current_article_menu_state_runtime.js' in runner,
       'Current CI gate executes Article Actions geometry regression')
