@@ -56,7 +56,8 @@ check('.article-actions-menu {' in css and 'position: fixed;' in css and 'z-inde
       'shared menu uses a fixed overlay layer')
 check('.article-actions-item {' in css and 'min-height: 44px;' in css,
       'each Article Actions item keeps a 44px minimum touch target')
-check('maxWidth: Math.min(224, availableWidth)' in js and 'cardRect' in js,
+position_js = (ROOT / 'public/js/dashboard-article-menu-position.js').read_text(encoding='utf-8')
+check('maxWidth: Math.min(224, availableWidth)' in position_js and 'cardRect' in position_js,
       'menu placement is clamped to the current Feed card and viewport')
 check(not any(p.name.startswith('007_v1_2') or p.name.startswith('v1_2_d') for p in (ROOT / 'database').rglob('*.sql')),
       'V1.2-D adds no SQL or migration file')
