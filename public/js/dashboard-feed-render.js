@@ -343,6 +343,7 @@
         feedResultIsValid: feedResultIsValid,
         renderFeed: renderFeed,
         feedSummaryId: feedSummaryId,
+        safeFeedLink: safeFeedLink,
         refreshFeedOverflowState: refreshFeedOverflowState
     };
 })(jQuery, window);
