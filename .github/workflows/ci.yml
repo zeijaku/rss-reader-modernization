@@ -259,14 +259,14 @@ jobs:
           (cd dist && sha256sum -c rss-reader-modernization-${RELEASE_VERSION}-complete.zip.sha256)
 
   reader_fix_package:
-    name: Build Reader Fix full runtime including Mail dependencies
+    name: Build Dev10-B full runtime including Mail dependencies
     needs: [regression, p2b_apache_probe]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'fix/v148-reader-mode-split-scope'
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'refactor/dashboard-article-menu-state-dev10b'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - name: Checkout Reader Fix integration candidate
+      - name: Checkout Dev10-B integration candidate
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -279,12 +279,16 @@ jobs:
           tools: composer:v2
           coverage: none
 
-      - name: Run actual Reader Mode split integration regression
+      - name: Run Reader Mode and Article Actions split regressions
         run: |
           node tests/test_current_reader_split_runtime.js
+          node tests/test_current_article_menu_position_runtime.js
+          node tests/test_current_article_menu_state_runtime.js
           node --check public/js/dashboard.js
           node --check public/js/dashboard-feed-render.js
           node --check public/js/dashboard-feed-fetch.js
+          node --check public/js/dashboard-article-menu-position.js
+          node --check public/js/dashboard-article-menu.js
 
       - name: Build pinned ImapEngine dependency tree outside application
         shell: bash
@@ -295,7 +299,7 @@ jobs:
           {
             "name": "zeijaku/rss-reader-mail-runtime",
             "type": "project",
-            "description": "Reproducible IMAP dependency set for RSS Reader 1.48.0 Dev9 integration",
+            "description": "Reproducible IMAP dependency set for RSS Reader 1.48.0 Dev10-B verification",
             "require": {
               "php": "^8.1",
               "directorytree/imapengine": "1.25.6"
@@ -350,7 +354,7 @@ jobs:
           cp build/composer/composer.json build/runtime/composer.json
           cp build/composer/composer.lock build/runtime/composer.lock
           cat > build/runtime/MAIL_IMAP_DEPENDENCIES_README.txt <<'EOF'
-          RSS Reader 1.48.0 Dev9 Reader Fix 1 - COMPLETE RUNTIME WITH MAIL DEPENDENCIES
+          RSS Reader 1.48.0 Dev10-B - COMPLETE VERIFICATION RUNTIME WITH MAIL DEPENDENCIES
 
           This is a verification build, not an official release.
           The complete application runtime and composer-installed directorytree/imapengine
@@ -358,16 +362,16 @@ jobs:
           vendor/autoload.php is REQUIRED by the Mail IMAP widget.
           Composer files are included to document the exact selected package versions.
 
-          To apply over the existing Dev9 integration deployment:
+          To apply over the existing V1.48.0 integration verification environment:
           1. Back up existing application files and private config/data.
           2. Extract ZIP into your RSS Reader application ROOT (not public/).
           3. Keep config/local.php, runtime DB, uploads, session and var data unchanged.
           4. Do not delete existing files/directories before overlay.
           5. Verify vendor/autoload.php, then refresh the page and test Mail.
-          The release marker is still 1.48.0, with asset revision 1.48.0-dev.10.
+          The release marker is still 1.48.0, with asset revision 1.48.0-dev.11.
           No DB schema migration is required by this packaging fix.
 
-          If only adding Mail dependencies to an already-working Dev9 installation,
+          If only adding Mail dependencies to an already-working integration installation,
           use the corresponding MAIL_VENDOR_ONLY ZIP instead.
           EOF
           test ! -e build/runtime/config/local.php
@@ -375,16 +379,18 @@ jobs:
           test ! -e build/runtime/tests
           test ! -e build/runtime/.github
           test -f build/runtime/public/js/dashboard-feed-title.js
+          test -f build/runtime/public/js/dashboard-article-menu-position.js
+          test -f build/runtime/public/js/dashboard-article-menu.js
           test -f build/runtime/app/view/widget_memo_card.php
-          grep -Fq "const APP_ASSET_REVISION = '1.48.0-dev.10';" build/runtime/app/version.php
+          grep -Fq "const APP_ASSET_REVISION = '1.48.0-dev.11';" build/runtime/app/version.php
           test -f build/runtime/vendor/autoload.php
 
       - name: Produce full and mail-only packages and verify archive integrity
         shell: bash
         run: |
           set -euo pipefail
-          FULL="$GITHUB_WORKSPACE/dist/RSS_Reader_V1.48.0_Dev9_ReaderFix1_FULL_IMAP.zip"
-          MAIL="$GITHUB_WORKSPACE/dist/RSS_Reader_V1.48.0_Dev9_ReaderFix1_MAIL_VENDOR_ONLY.zip"
+          FULL="$GITHUB_WORKSPACE/dist/RSS_Reader_V1.48.0_Dev10B_FULL_IMAP.zip"
+          MAIL="$GITHUB_WORKSPACE/dist/RSS_Reader_V1.48.0_Dev10B_MAIL_VENDOR_ONLY.zip"
           (cd build/runtime && zip -q -r "$FULL" .)
           (cd build/runtime && zip -q -r "$MAIL" vendor composer.json composer.lock MAIL_IMAP_DEPENDENCIES_README.txt)
           unzip -tq "$FULL"
@@ -395,6 +401,8 @@ jobs:
           unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard.js"
           unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-feed-render.js"
           unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-feed-fetch.js"
+          unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-article-menu-position.js"
+          unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-article-menu.js"
           unzip -Z1 "$FULL" | grep -Fxq "composer.lock"
           unzip -Z1 "$FULL" | grep -Fxq "vendor/directorytree/imapengine/composer.json"
           if unzip -Z1 "$FULL" | grep -Eq '(^|/)(local\.php|\.env|\.git)(/|$)|^tests/'; then
@@ -421,10 +429,10 @@ jobs:
       - name: Upload integration ZIPs and hash manifest
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: RSS_Reader_Dev9_READER_FIX1_FULL_IMAP
+          name: RSS_Reader_Dev10B_FULL_IMAP
           path: |
-            dist/RSS_Reader_V1.48.0_Dev9_ReaderFix1_FULL_IMAP.zip
-            dist/RSS_Reader_V1.48.0_Dev9_ReaderFix1_MAIL_VENDOR_ONLY.zip
+            dist/RSS_Reader_V1.48.0_Dev10B_FULL_IMAP.zip
+            dist/RSS_Reader_V1.48.0_Dev10B_MAIL_VENDOR_ONLY.zip
             dist/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 30
