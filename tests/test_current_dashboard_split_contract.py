@@ -147,6 +147,14 @@ check('function renderFeedItems(' in dashboard and 'return feedRenderer().render
 check('feedRenderer().configure({' in dashboard
       and 'renderFeedKeywordTitle: renderFeedKeywordTitle' in dashboard,
       'Feed renderer receives article-action and keyword highlight hooks')
+
+check('safeFeedLink: safeFeedLink' in feed_renderer
+      and 'feedRenderer().safeFeedLink(payload.article_url)' in dashboard,
+      'Reader URL validation explicitly bridges Feed renderer module')
+check('feedRequestErrorMessage: feedRequestErrorMessage' in text('public/js/dashboard-feed-fetch.js')
+      and 'IGuguruDashboardFeedFetch.feedRequestErrorMessage(xhr, textStatus)' in dashboard,
+      'Reader failure explicitly bridges Feed transport diagnostics module')
+
 feed_title = text('public/js/dashboard-feed-title.js')
 feed_title_tag = "app_asset_url('js/dashboard-feed-title.js')"
 check(feed_title_tag in index
