@@ -122,10 +122,12 @@ console.log('PASS: desktop viewport still positions menu within active card');
 
 // Load the real Dashboard controller without starting unrelated widgets. Opening,
 // toggling and focus restoration must still use the delegated geometry function.
+const articleMenuSource = load('dashboard-article-menu.js');
+vm.runInNewContext(articleMenuSource, context, {filename: 'dashboard-article-menu.js'});
 const main = load('dashboard.js');
 const startup = '$(initDashboard);';
 assert.strictEqual(main.split(startup).length, 2, 'Dashboard initialization marker unchanged');
-assert(main.includes('return window.IGuguruDashboardArticleMenuPosition.positionArticleActionsMenu($menu, $trigger);'));
+assert(articleMenuSource.includes('return window.IGuguruDashboardArticleMenuPosition.positionArticleActionsMenu($menu, $trigger);'));
 assert(!main.includes('maxWidth: Math.min(224, availableWidth)'));
 const bridged = main.replace(startup, 'window.__openArticleMenuTest = openArticleActionsMenu;');
 vm.runInNewContext(bridged, context, {filename: 'dashboard.js'});
@@ -144,10 +146,12 @@ assert.strictEqual(trigger.attributes['aria-expanded'], 'true');
 assert.strictEqual(menu.dataValues['article-url'], 'https://example.test/post');
 assert.strictEqual(menuItems['.article-action-reader'][0].properties.hidden, false);
 assert(firstItem.focused);
+assert.strictEqual(win.IGuguruDashboardArticleMenu.getTrigger(), trigger);
 console.log('PASS: real Dashboard entry opens menu through extracted geometry and focuses first action');
 win.__openArticleMenuTest(query, true);
 assert.strictEqual(menu.properties.hidden, true);
 assert.strictEqual(trigger.attributes['aria-expanded'], 'false');
 assert(trigger.focused);
+assert.strictEqual(win.IGuguruDashboardArticleMenu.getTrigger(), null);
 console.log('PASS: second click closes menu and restores focus to trigger');
 console.log('PASS: Dev10-A Article Actions menu positioning regression');
