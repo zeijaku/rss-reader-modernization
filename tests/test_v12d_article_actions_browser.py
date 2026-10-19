@@ -83,6 +83,7 @@ with sync_playwright() as p:
         'dashboard-feed-fetch.js', 'dashboard-search-feed.js',
         'dashboard-widget-order.js', 'dashboard-tab-swipe.js',
         'dashboard-article-menu-position.js', 'dashboard-article-menu.js',
+        'dashboard-article-share.js',
         'dashboard.js',
     ):
         page.add_script_tag(path=str(ROOT / 'public/js' / name))
