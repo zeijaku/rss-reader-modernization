@@ -228,6 +228,18 @@ async function flush() {
         }
     };
 
+    // Runtime fixture models the Dashboard core helper, preserving the proven
+    // Promise/CSRF adapter and duplicate-submit behavior tested below.
+    windowObject.IGuguruDashboardCore.runMutation = function(button, action, payload, onSuccess) {
+        const core = windowObject.IGuguruDashboardCore;
+        if (!core.requestStartElement(button)) { return; }
+        core.apiRequestPromise(action, payload, 3000)
+            .then(function (data) {
+                return core.apiResponseOk(data) ? onSuccess(data) : false;
+            }, core.requestFailReason)
+            .finally(function () { core.requestEndElement(button); });
+    };
+
     const context = {
         window: windowObject,
         document: documentObject,

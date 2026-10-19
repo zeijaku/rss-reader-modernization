@@ -75,7 +75,18 @@ with sync_playwright() as p:
         window.__requests.push(req); return chain;
       };
     }''')
-    page.add_script_tag(path=str(ROOT / 'public/js/dashboard.js'))
+    # Match the current Dashboard script dependency order; the legacy single-file
+    # harness would otherwise miss split controllers whenever Chromium is installed.
+    for name in (
+        'dashboard-core.js',
+        'dashboard-feed-render.js', 'dashboard-feed-title.js',
+        'dashboard-feed-fetch.js', 'dashboard-search-feed.js',
+        'dashboard-widget-order.js', 'dashboard-tab-swipe.js',
+        'dashboard-article-menu-position.js', 'dashboard-article-menu.js',
+        'dashboard-article-share.js',
+        'dashboard.js',
+    ):
+        page.add_script_tag(path=str(ROOT / 'public/js' / name))
     page.wait_for_timeout(120)
 
     requests = page.evaluate('window.__requests.map(r=>r.options.data.action)')

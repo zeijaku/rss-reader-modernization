@@ -179,6 +179,24 @@
         showNotice(apiErrorMessage(xhr, textStatus), 'danger');
     }
 
+    // Shared mutation lifecycle for small native Dashboard Widget controllers.
+    // The API/CSRF adapter, duplicate-submission guard and notices remain centralized.
+    function runMutation(button, action, payload, onSuccess) {
+        if (!requestStartElement(button)) {
+            return;
+        }
+        apiRequestPromise(action, payload, 3000)
+            .then(function (data) {
+                if (apiResponseOk(data)) {
+                    return typeof onSuccess === 'function' ? onSuccess(data) : data;
+                }
+                return false;
+            }, requestFailReason)
+            .finally(function () {
+                requestEndElement(button);
+            });
+    }
+
     window.IGuguruDashboardCore = {
         appCsrfToken: appCsrfToken,
         initCsrfSessionSync: initCsrfSessionSync,
@@ -193,6 +211,7 @@
         requestFail: requestFail,
         requestStartElement: requestStartElement,
         requestEndElement: requestEndElement,
-        requestFailReason: requestFailReason
+        requestFailReason: requestFailReason,
+        runMutation: runMutation
     };
 })(jQuery, window, document);

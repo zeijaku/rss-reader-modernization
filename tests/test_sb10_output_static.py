@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 index = dashboard_source(ROOT)
 stock = (ROOT / 'public/stock.php').read_text()
 dashboard = (ROOT / 'public' / 'js' / 'dashboard.js').read_text(encoding='utf-8')
+dashboard += '\n' + (ROOT / 'public' / 'js' / 'dashboard-feed-render.js').read_text(encoding='utf-8')
 frontend = index + '\n' + dashboard
 api = (ROOT / 'app/api.php').read_text(encoding='utf-8') + ''.join(path.read_text(encoding='utf-8') for path in sorted((ROOT / 'app/api').rglob('*.php')))
 api_content = (ROOT / 'app/api/content.php').read_text(encoding='utf-8') + ''.join(

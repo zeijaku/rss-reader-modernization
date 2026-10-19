@@ -236,6 +236,7 @@ python3 -m py_compile \
     "$SCRIPT_DIR/test_v1_38_d_reader_image_proxy_contract.py"
 
 echo '== Current feature contracts: Reader Mode =='
+node "$SCRIPT_DIR/test_current_reader_split_runtime.js"
 php "$SCRIPT_DIR/test_v1_38_a_reader_mode.php"
 python3 "$SCRIPT_DIR/test_v1_38_a_reader_mode_contract.py"
 node --check "$ROOT/public/js/dashboard.js"

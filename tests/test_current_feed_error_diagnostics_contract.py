@@ -19,7 +19,7 @@ api = "\n".join(read(path) for path in [
 ])
 health = read("app/feed_health.php")
 health_api = read("app/api/feed_health.php")
-dashboard = read("public/js/dashboard.js")
+dashboard = read("public/js/dashboard-feed-fetch.js")
 health_ui = read("public/js/feed-health.js")
 runner = read("tests/run-current-features.sh")
 

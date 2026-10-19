@@ -6,6 +6,8 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
+const menuPositionSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-menu-position.js'), 'utf8');
+const menuStateSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-menu.js'), 'utf8');
 const coreSource = fs.readFileSync(path.join(root, 'public/js/dashboard-core.js'), 'utf8');
 const handlers = new Map();
 const wrappers = new Map();
@@ -115,6 +117,8 @@ getWrapper('.changeContentValue').value = 'https://example.com/updated.xml';
 getWrapper('.changeContentStyle').value = 'info';
 
 vm.runInThisContext(coreSource, {filename: 'dashboard-core.js'});
+vm.runInThisContext(menuPositionSource, {filename: 'dashboard-article-menu-position.js'});
+vm.runInThisContext(menuStateSource, {filename: 'dashboard-article-menu.js'});
 vm.runInThisContext(source, {filename: 'dashboard.js'});
 
 const deleteHandler = handlers.get('click.iguguruDashboard|.delete_content');
