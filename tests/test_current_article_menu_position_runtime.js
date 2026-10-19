@@ -101,7 +101,7 @@ assert(displayed.left >= card.rect.left && displayed.right <= card.rect.right);
 assert(displayed.top >= card.rect.top && displayed.bottom <= card.rect.bottom);
 assert.strictEqual(menu.styles.visibility, 'visible');
 assert.strictEqual(menu.properties.hidden, false);
-assert.strictEqual(menu.styles.maxWidth, 224);
+assert.strictEqual(menu.styles.maxWidth, '224px');
 console.log('PASS: narrow viewport clamps menu inside Feed card, including bottom-right');
 const empty = new Query([]);
 assert.strictEqual(geometry.positionArticleActionsMenu(new Query([menu]), empty), false);
