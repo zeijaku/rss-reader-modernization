@@ -129,6 +129,7 @@
                 hooks.closeArticleActionsMenu = deps.closeArticleActionsMenu;
             }
         },
-        fetch_content: fetch_content
+        fetch_content: fetch_content,
+        feedRequestErrorMessage: feedRequestErrorMessage
     };
 })(window);
