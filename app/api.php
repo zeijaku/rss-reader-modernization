@@ -236,6 +236,7 @@ function api_dispatch(string $action, int $userId, array $input): array
         'blindspot.fetch' => api_blind_spot_fetch($userId, $input),
         'widget.memo.create' => api_widget_memo_create($userId, $input),
         'widget.memo.update' => api_widget_memo_update($userId, $input),
+        'widget.memo.body.update' => api_widget_memo_body_update($userId, $input),
         'widget.memo.delete' => api_widget_memo_delete($userId, $input),
         'widget.task.create' => api_widget_task_create($userId, $input),
         'widget.task.update' => api_widget_task_update($userId, $input),

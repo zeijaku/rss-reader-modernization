@@ -63,9 +63,9 @@ for label, (path, namespace, actions, selectors) in modules.items():
     check('document.addEventListener(' in source, f'{label} uses native delegated events')
     check('.querySelector(' in source, f'{label} uses native querySelector')
     check('.closest(' in source, f'{label} preserves delegated dynamic-element lookup with closest')
-    check('apiRequestPromise(' in source, f'{label} uses the native Promise adapter')
-    check('requestStartElement(' in source and 'requestEndElement(' in source,
-          f'{label} uses native duplicate-submit protection')
+    check('const runMutation = dashboardCore.runMutation;' in source,
+          f'{label} uses the shared native Widget mutation helper')
+    check('runMutation(' in source, f'{label} preserves guarded Widget mutation call sites')
     check('jQuery' not in source and '$(' not in source and '$.' not in source,
           f'{label} has no direct jQuery dependency')
     check('.on(' not in source and '.off(' not in source,
@@ -81,6 +81,19 @@ for label, (path, namespace, actions, selectors) in modules.items():
 load_positions.append(index.find(dashboard_tag))
 check(all(pos >= 0 for pos in load_positions), 'all Dashboard scripts are present in the Dashboard entrypoint')
 check(load_positions == sorted(load_positions), 'load order remains core -> split controllers -> dashboard.js')
+
+swipe = text('public/js/dashboard-tab-swipe.js')
+swipe_tag = "app_asset_url('js/dashboard-tab-swipe.js')"
+check(swipe_tag in index and index.index(swipe_tag) < index.index(dashboard_tag),
+      'tab swipe controller loads before the Dashboard initializer')
+check('function dashboardSwipeStart(' in swipe and 'function dashboardSwipeEnd(' in swipe
+      and 'function initTabSwipe(' in swipe, 'tab swipe behavior was extracted intact')
+check('function dashboardSwipeStart(' not in dashboard and 'function dashboardSwipeEnd(' not in dashboard,
+      'dashboard.js delegates rather than duplicating touch navigation')
+check('isDrawerActive: drawerIsActive' in dashboard
+      and 'IGuguruDashboardWidgetOrder.isDragging()' in dashboard,
+      'swipe controller gets Drawer and extracted Widget dragging state')
+
 
 for helper in ('apiRequestPromise', 'requestStartElement', 'requestEndElement', 'requestFailReason'):
     check(f'function {helper}' in core and f'{helper}: {helper}' in core,
@@ -109,10 +122,90 @@ for namespace in ('IGuguruDashboardTask', 'IGuguruDashboardMemo', 'IGuguruDashbo
 
 check("function renderClock($card, now)" in dashboard,
       'Clock display/timer rendering remains untouched in dashboard.js')
-check("function widgetBeginDrag(" in dashboard and "function widgetFinishDrag(" in dashboard,
-      'Dashboard D&D remains untouched in C')
-check("function fetch_content(" in dashboard,
-      'RSS feed rendering/refresh remains untouched in C')
+order = text('public/js/dashboard-widget-order.js')
+order_tag = "app_asset_url('js/dashboard-widget-order.js')"
+check(order_tag in index and index.index(order_tag) < index.index(dashboard_tag),
+      'Widget order controller loads before Dashboard initializer')
+check("function widgetBeginDrag(" in order and "function widgetFinishDrag(" in order
+      and "function widgetKeyboardMove(" in order and "function widgetSaveOrder(" in order,
+      'Widget D&D, keyboard actions and save/restore are preserved in dedicated module')
+check("function widgetBeginDrag(" not in dashboard and "function widgetFinishDrag(" not in dashboard,
+      'Dashboard main module no longer duplicates Widget ordering')
+check('IGuguruDashboardWidgetOrder.bindEvents();' in dashboard,
+      'Dashboard initializes Widget order handlers')
+check('widget.reorder' in order and 'previous_widget_ids' in order and 'widget_ids' in order,
+      'Widget reorder API and optimistic prior-order payload remain intact')
+feed_renderer = text('public/js/dashboard-feed-render.js')
+article_menu_position = text('public/js/dashboard-article-menu-position.js')
+
+article_position_tag = "app_asset_url('js/dashboard-article-menu-position.js')"
+check(article_position_tag in index and index.index(article_position_tag) < index.index(dashboard_tag),
+      'Article Actions geometry loads before Dashboard controller')
+check('function positionArticleActionsMenu(' in article_menu_position
+      and 'window.IGuguruDashboardArticleMenuPosition' in article_menu_position,
+      'Article Actions geometry retains a single module-scoped implementation')
+check('return window.IGuguruDashboardArticleMenuPosition.positionArticleActionsMenu($menu, $trigger);' in dashboard
+      and 'maxWidth: Math.min(224, availableWidth)' not in dashboard,
+      'Dashboard delegates geometry without duplicating layout computation')
+check('test_current_article_menu_position_runtime.js' in runner,
+      'Current CI gate executes Article Actions geometry regression')
+
+feed_render_tag = "app_asset_url('js/dashboard-feed-render.js')"
+check(feed_render_tag in index and index.index(feed_render_tag) < index.index(dashboard_tag),
+      'Feed renderer loads before Dashboard controller')
+check('function renderFeedItems(' in feed_renderer
+      and 'function renderFeedMessage(' in feed_renderer,
+      'Feed DOM rendering was extracted to dedicated module')
+check('function renderFeedItems(' in dashboard and 'return feedRenderer().renderFeedItems(' in dashboard,
+      'Dashboard keeps compatibility with existing Feed call sites')
+check('feedRenderer().configure({' in dashboard
+      and 'renderFeedKeywordTitle: renderFeedKeywordTitle' in dashboard,
+      'Feed renderer receives article-action and keyword highlight hooks')
+feed_title = text('public/js/dashboard-feed-title.js')
+feed_title_tag = "app_asset_url('js/dashboard-feed-title.js')"
+check(feed_title_tag in index
+      and index.index(feed_render_tag) < index.index(feed_title_tag) < index.index(dashboard_tag),
+      'title tooltip module is loaded before Dashboard initialization')
+check('function showFeedTitleTooltip(' in feed_title
+      and 'function scheduleFeedTitleOverflowRefresh(' in feed_title,
+      'title tooltip positioning and overflow checks are isolated')
+check('var feedTitleTooltipTimer' not in dashboard
+      and 'IGuguruDashboardFeedTitle.hideFeedTitleTooltip()' in dashboard
+      and 'IGuguruDashboardFeedTitle.scheduleFeedTitleOverflowRefresh($scope)' in dashboard,
+      'Dashboard retains only the tooltip adapter and no longer owns its state')
+check("feedTitleIsTruncated(this)" in dashboard
+      and "hideFeedTitleTooltip: hideFeedTitleTooltip" in dashboard,
+      'keyword highlighting and Feed renderer keep their existing tooltip hooks')
+
+feed_fetch = text('public/js/dashboard-feed-fetch.js')
+feed_fetch_tag = "app_asset_url('js/dashboard-feed-fetch.js')"
+check(feed_fetch_tag in index
+      and index.index(feed_render_tag) < index.index(feed_fetch_tag) < index.index(dashboard_tag),
+      'RSS Fetch controller loads after renderer and before Dashboard')
+check("function fetch_content(" in dashboard
+      and "IGuguruDashboardFeedFetch.fetch_content($card, options)" in dashboard,
+      'Dashboard delegates existing refresh call sites')
+check("apiRequest('feed.fetch', {'content_id': content_id}, 25000)" in feed_fetch
+      and "feed-request-pending" in feed_fetch,
+      'RSS network request and per-card pending guard are extracted intact')
+check("closeArticleActionsMenu: closeArticleActionsMenu" in dashboard,
+      'Feed fetch uses the original Article Actions close hook')
+
+search_feed = text('public/js/dashboard-search-feed.js')
+search_tag = "app_asset_url('js/dashboard-search-feed.js')"
+category_tag = "app_asset_url('js/search-feed-owned-category.js')"
+check(search_tag in index and category_tag in index
+      and index.index(feed_fetch_tag) < index.index(search_tag) < index.index(dashboard_tag)
+      < index.index(category_tag),
+      'Search Feed loads after Fetch and before Dashboard and Category bridge')
+check("IGuguruDashboardSearchFeed.fetchSearchFeed($card, preserve)" in dashboard
+      and "IGuguruDashboardSearchFeed.addSearchFeed($form)" in dashboard,
+      'Dashboard delegates Search Feed calls without changing existing event bindings')
+check("widget.search.fetch" in search_feed and "widget.search.create" in search_feed
+      and "widget.search.update" in search_feed and "widget.search.delete" in search_feed,
+      'Search Feed CRUD and fetch API actions remain unchanged')
+check("return core.apiRequest(action, data, timeout)" in search_feed,
+      'Search Feed dynamically calls Core API so Category bridge still injects filter')
 
 for test_name in (
     'test_current_dashboard_core_contract.py',
