@@ -6,7 +6,14 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/js/dashboard.js'), 'utf8');
+const menuPositionSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-menu-position.js'), 'utf8');
+const menuStateSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-menu.js'), 'utf8');
+const articleStockSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-stock.js'), 'utf8');
+const articleTaskSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-task.js'), 'utf8');
 const coreSource = fs.readFileSync(path.join(root, 'public/js/dashboard-core.js'), 'utf8');
+const feedRenderSource = fs.readFileSync(path.join(root, 'public/js/dashboard-feed-render.js'), 'utf8');
+const feedTitleSource = fs.readFileSync(path.join(root, 'public/js/dashboard-feed-title.js'), 'utf8');
+const searchFeedSource = fs.readFileSync(path.join(root, 'public/js/dashboard-search-feed.js'), 'utf8');
 const handlers = new Map();
 let failures = 0;
 let offcanvasCreates = 0;
@@ -193,6 +200,13 @@ const context = {
     JSON
 };
 vm.runInNewContext(coreSource, context, {filename: 'dashboard-core.js'});
+vm.runInNewContext(feedRenderSource, context, {filename: 'dashboard-feed-render.js'});
+vm.runInNewContext(feedTitleSource, context, {filename: 'dashboard-feed-title.js'});
+vm.runInNewContext(searchFeedSource, context, {filename: 'dashboard-search-feed.js'});
+vm.runInNewContext(menuPositionSource, context, {filename: 'dashboard-article-menu-position.js'});
+vm.runInNewContext(menuStateSource, context, {filename: 'dashboard-article-menu.js'});
+vm.runInNewContext(articleStockSource, context, {filename: 'dashboard-article-stock.js'});
+vm.runInNewContext(articleTaskSource, context, {filename: 'dashboard-article-task.js'});
 vm.runInNewContext(source, context, {filename: 'dashboard.js'});
 
 check(offcanvasCreates === 1, 'dashboard initializes Bootstrap Offcanvas exactly once');
