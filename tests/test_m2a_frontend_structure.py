@@ -6,6 +6,9 @@ from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 index = dashboard_source(ROOT)
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
+feed_render = (ROOT / 'public/js/dashboard-feed-render.js').read_text(encoding='utf-8')
+feed_fetch = (ROOT / 'public/js/dashboard-feed-fetch.js').read_text(encoding='utf-8')
+js += '\n' + feed_render + '\n' + feed_fetch
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 api = (ROOT / 'app/api.php').read_text(encoding='utf-8')
 schema = (ROOT / 'database/schema.sql').read_text(encoding='utf-8')
@@ -47,7 +50,7 @@ check("dataType: 'json'" in js and "cache: false" in js, 'API JSON and cache beh
 check("'csrf_token': appCsrfToken()" in js, 'every API request receives the CSRF token')
 for action in ['content.create', 'content.update', 'content.delete', 'stock.create', 'settings.update', 'tabs.update', 'feed.fetch']:
     check(action in js or action in api, f'API action remains represented: {action}')
-feed = js[js.find('function fetch_content'):js.find('function bindEvents')]
+feed = feed_fetch
 check("apiRequest('feed.fetch', {'content_id': content_id}" in feed, 'Feed request sends only Content ID')
 check('content_value' not in feed and 'data-feed-url' not in index, 'Feed fetch does not use a client-supplied URL')
 check("/^\\d+$/.test(content_id)" in feed, 'Feed Content ID is checked before request')

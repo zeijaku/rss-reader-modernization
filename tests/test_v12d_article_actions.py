@@ -5,6 +5,10 @@ from dashboard_source_utils import dashboard_source
 ROOT = Path(__file__).resolve().parents[1]
 index = dashboard_source(ROOT)
 js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
+js += '\n' + (ROOT / 'public/js/dashboard-feed-render.js').read_text(encoding='utf-8')
+search_js = (ROOT / 'public/js/dashboard-search-feed.js').read_text(encoding='utf-8')
+js += '\n' + search_js
+js += '\n' + (ROOT / 'public/js/dashboard-article-menu.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 checks = []
@@ -44,15 +48,17 @@ check("$('#main-content .task-card[data-dashboard-widget-id]').first()" in js,
       'Task action targets the first Task Widget in the current tab')
 check("event.key === 'Escape'" in js and "['ArrowDown', 'ArrowUp', 'Home', 'End']" in js,
       'Article Actions supports Escape and menu keyboard navigation')
-check("closeArticleActionsMenu(false);" in js[js.index('function fetch_content'):js.index('function setFeedSummaryExpanded')],
-      'normal Feed refresh closes an open Article Actions menu')
-check("closeArticleActionsMenu(false);" in js[js.index('function fetchSearchFeed'):js.index('function bindEvents')],
-      'Search Feed refresh closes an open Article Actions menu')
+feed_fetch = (ROOT / 'public/js/dashboard-feed-fetch.js').read_text(encoding='utf-8')
+check("hooks.closeArticleActionsMenu(false);" in feed_fetch[feed_fetch.index('function fetch_content'):],
+      'normal Feed refresh closes Article Actions through the original hook')
+check("hooks.closeArticleActionsMenu(false);" in search_js[search_js.index('function fetchSearchFeed'):],
+      'Search Feed refresh closes an open Article Actions menu through Dashboard hook')
 check('.article-actions-menu {' in css and 'position: fixed;' in css and 'z-index: 1080;' in css,
       'shared menu uses a fixed overlay layer')
 check('.article-actions-item {' in css and 'min-height: 44px;' in css,
       'each Article Actions item keeps a 44px minimum touch target')
-check('maxWidth: Math.min(224, availableWidth)' in js and 'cardRect' in js,
+position_js = (ROOT / 'public/js/dashboard-article-menu-position.js').read_text(encoding='utf-8')
+check('maxWidth: Math.min(224, availableWidth)' in position_js and 'cardRect' in position_js,
       'menu placement is clamped to the current Feed card and viewport')
 check(not any(p.name.startswith('007_v1_2') or p.name.startswith('v1_2_d') for p in (ROOT / 'database').rglob('*.sql')),
       'V1.2-D adds no SQL or migration file')
