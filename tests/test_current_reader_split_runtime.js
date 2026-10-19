@@ -59,13 +59,20 @@ const ctx = {window: windowObject, document: {documentElement: {contains() {retu
     jQuery: $, console, Number, String, Array, Object, Math, JSON, RegExp};
 vm.runInNewContext(read('dashboard-feed-render.js'), ctx, {filename: 'dashboard-feed-render.js'});
 vm.runInNewContext(read('dashboard-feed-fetch.js'), ctx, {filename: 'dashboard-feed-fetch.js'});
+// Test-only setter injected into the actual menu module closure; production does not expose it.
+const articleMenuSource = read('dashboard-article-menu.js');
+const insertionPoint = '    window.IGuguruDashboardArticleMenu = {';
+if (articleMenuSource.split(insertionPoint).length !== 2) throw new Error('Article menu module contract changed');
+vm.runInNewContext(articleMenuSource.replace(insertionPoint,
+    '    window.__readerTestSetTrigger = function (value) { articleActionsTrigger = value; };\\n' + insertionPoint),
+    ctx, {filename: 'dashboard-article-menu.js'});
 const original = read('dashboard.js');
 const entry = '$(initDashboard);';
 if (original.split(entry).length !== 2) throw new Error('Dashboard entrypoint changed');
 const instrumented = original.replace(entry,
     'window.__readerTest = {openReaderMode: openReaderMode, ' +
     'renderReaderModePayload: renderReaderModePayload, fetchReaderFullText: fetchReaderFullText, ' +
-    'setTrigger: function (value) { articleActionsTrigger = value; }};');
+    'setTrigger: window.__readerTestSetTrigger};');
 vm.runInNewContext(instrumented, ctx, {filename: 'dashboard.js'});
 const ui = windowObject.__readerTest;
 const assert = (condition, message) => {if (!condition) throw new Error(message); console.log('PASS: ' + message);};
