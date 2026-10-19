@@ -136,6 +136,20 @@ check('IGuguruDashboardWidgetOrder.bindEvents();' in dashboard,
 check('widget.reorder' in order and 'previous_widget_ids' in order and 'widget_ids' in order,
       'Widget reorder API and optimistic prior-order payload remain intact')
 feed_renderer = text('public/js/dashboard-feed-render.js')
+article_menu_position = text('public/js/dashboard-article-menu-position.js')
+
+article_position_tag = "app_asset_url('js/dashboard-article-menu-position.js')"
+check(article_position_tag in index and index.index(article_position_tag) < index.index(dashboard_tag),
+      'Article Actions geometry loads before Dashboard controller')
+check('function positionArticleActionsMenu(' in article_menu_position
+      and 'window.IGuguruDashboardArticleMenuPosition' in article_menu_position,
+      'Article Actions geometry retains a single module-scoped implementation')
+check('return window.IGuguruDashboardArticleMenuPosition.positionArticleActionsMenu($menu, $trigger);' in dashboard
+      and 'maxWidth: Math.min(224, availableWidth)' not in dashboard,
+      'Dashboard delegates geometry without duplicating layout computation')
+check('test_current_article_menu_position_runtime.js' in runner,
+      'Current CI gate executes Article Actions geometry regression')
+
 feed_render_tag = "app_asset_url('js/dashboard-feed-render.js')"
 check(feed_render_tag in index and index.index(feed_render_tag) < index.index(dashboard_tag),
       'Feed renderer loads before Dashboard controller')
