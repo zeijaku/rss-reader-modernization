@@ -64,7 +64,7 @@ const articleMenuSource = read('dashboard-article-menu.js');
 const insertionPoint = '    window.IGuguruDashboardArticleMenu = {';
 if (articleMenuSource.split(insertionPoint).length !== 2) throw new Error('Article menu module contract changed');
 vm.runInNewContext(articleMenuSource.replace(insertionPoint,
-    '    window.__readerTestSetTrigger = function (value) { articleActionsTrigger = value; };\\n' + insertionPoint),
+    '    window.__readerTestSetTrigger = function (value) { articleActionsTrigger = value; };\n' + insertionPoint),
     ctx, {filename: 'dashboard-article-menu.js'});
 const original = read('dashboard.js');
 const entry = '$(initDashboard);';
