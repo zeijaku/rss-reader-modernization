@@ -10,6 +10,8 @@ search_js = (ROOT / 'public/js/dashboard-search-feed.js').read_text(encoding='ut
 js += '\n' + search_js
 js += '\n' + (ROOT / 'public/js/dashboard-article-menu.js').read_text(encoding='utf-8')
 js += '\n' + (ROOT / 'public/js/dashboard-article-share.js').read_text(encoding='utf-8')
+js += '\n' + (ROOT / 'public/js/dashboard-article-stock.js').read_text(encoding='utf-8')
+js += '\n' + (ROOT / 'public/js/dashboard-article-task.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 checks = []
