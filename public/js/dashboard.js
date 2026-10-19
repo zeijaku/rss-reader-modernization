@@ -568,37 +568,11 @@
             });
     }
 
-    /* Informationモーダルの値書き換え */
     function rewriteInformationModal($trigger) {
-        var stockUrl = String($trigger.attr('data-stock-url') || '');
-        var stockTitle = String($trigger.attr('data-stock-title') || '');
-        $('.information_modal_dbsave')
-            .attr('data-stock-url', stockUrl)
-            .attr('data-stock-title', stockTitle);
+        return window.IGuguruDashboardArticleStock.rewriteInformationModal($trigger);
     }
-
-    /* Stock登録: SB-09では記事URLをserver-side再取得しない */
     function saveStock($button) {
-        if (!requestStart($button)) {
-            return;
-        }
-
-        var stockData = String($button.attr('data-stock-url') || '');
-        var stockTitle = String($button.attr('data-stock-title') || '');
-        apiRequest('stock.create', {
-            'stock_data': stockData,
-            'stock_title': stockTitle
-        }, 3000)
-            .done(function (data) {
-                if (apiResponseOk(data)) {
-                    $('#saveContent').modal('hide');
-                    showNotice('Stockへ保存しました', 'success', 2500);
-                }
-            })
-            .fail(requestFail)
-            .always(function () {
-                requestEnd($button);
-            });
+        return window.IGuguruDashboardArticleStock.saveStock($button);
     }
 
     function stockTagPayload($source) {
@@ -728,48 +702,8 @@
         }
     }
 
-    /* Stock一覧からの解除はstock_flagを論理削除し、対象Itemだけを外す */
     function removeStockFromActions($button) {
-        var $menu = $('#articleActionsMenu');
-        var stockId = String($menu.data('stock-id') || '');
-        var trigger = articleMenu().getTrigger();
-        var $stockCard = trigger ? $(trigger).closest('.stock-card') : $();
-        if (!/^\d+$/.test(stockId) || $stockCard.length === 0) {
-            closeArticleActionsMenu(false);
-            showNotice('解除するStockを確認出来ませんでした', 'danger', 3000);
-            return;
-        }
-        if (!window.confirm('このStockを解除しますか？')) {
-            return;
-        }
-        if (!requestStart($button)) {
-            return;
-        }
-
-        var $stockGrid = $stockCard.closest('.stock-grid');
-        closeArticleActionsMenu(false);
-        apiRequest('stock.delete', {'stock_id': stockId}, 3000)
-            .done(function (data) {
-                if (!apiResponseOk(data)) {
-                    return;
-                }
-
-                $stockCard.remove();
-                if ($('.stock-grid .stock-card').length === 0) {
-                    var emptyRedirect = String($stockGrid.attr('data-stock-empty-redirect') || '');
-                    $('.stock-grid').remove();
-                    if (emptyRedirect !== '') {
-                        window.location.assign(emptyRedirect);
-                        return;
-                    }
-                    $('#stockEmptyState').prop('hidden', false);
-                }
-                showNotice('Stockを解除しました', 'success', 2500);
-            })
-            .fail(requestFail)
-            .always(function () {
-                requestEnd($button);
-            });
+        return window.IGuguruDashboardArticleStock.removeStockFromActions($button);
     }
 
     // Article menu state is owned by dashboard-article-menu.js.
@@ -968,107 +902,11 @@
         return window.IGuguruDashboardArticleShare.openArticleOnX();
     }
 
-    function articleTaskTarget() {
-        var $target = $('#main-content .task-card[data-dashboard-widget-id]').first();
-        if ($target.length === 0) {
-            return null;
-        }
-        var widgetId = String($target.attr('data-dashboard-widget-id') || '');
-        if (!/^\d+$/.test(widgetId)) {
-            return null;
-        }
-        return {
-            widgetId: widgetId,
-            title: String($target.attr('data-task-widget-title') || 'Task')
-        };
-    }
-
-    function articleTaskTitle() {
-        var title = String($('#articleActionsMenu').data('article-title') || '').trim();
-        if (title === '') {
-            title = 'タイトルなし';
-        }
-        return Array.from(title).slice(0, 128).join('').trim();
-    }
-
-    function createArticleTask($button, widgetId, title, reloadOnSuccess) {
-        if (!/^\d+$/.test(String(widgetId || '')) || title === '') {
-            showNotice('Taskへ追加する記事情報を確認出来ませんでした', 'danger');
-            return;
-        }
-        if (!requestStart($button)) {
-            return;
-        }
-        apiRequest('task.item.create', {
-            'widget_id': String(widgetId),
-            'task_title': title,
-            'task_due_date': '',
-            'task_priority': 'normal'
-        }, 3000)
-            .done(function (data) {
-                if (!apiResponseOk(data)) {
-                    return;
-                }
-                if (reloadOnSuccess === true) {
-                    window.location.reload();
-                    return;
-                }
-                $('#stockTaskTargetModal').modal('hide');
-                showNotice('Taskへ追加しました', 'success', 2500);
-            })
-            .fail(requestFail)
-            .always(function () {
-                requestEnd($button);
-            });
-    }
-
     function addArticleToTask($button) {
-        var $menu = $('#articleActionsMenu');
-        var title = articleTaskTitle();
-        if (title === '') {
-            closeArticleActionsMenu(true);
-            showNotice('Taskへ追加する記事タイトルを確認出来ませんでした', 'danger');
-            return;
-        }
-
-        if (String($menu.data('article-context') || '') === 'stock') {
-            var trigger = articleMenu().getTrigger();
-            var singleTargetId = String($('#stockTaskSingleTarget').attr('data-widget-id') || '');
-            var $targetModal = $('#stockTaskTargetModal');
-            if (/^\d+$/.test(singleTargetId)) {
-                closeArticleActionsMenu(false);
-                createArticleTask($button, singleTargetId, title, false);
-                return;
-            }
-            if ($targetModal.length > 0) {
-                closeArticleActionsMenu(false);
-                $targetModal.data('article-title', title);
-                if (trigger) {
-                    $targetModal.data('return-focus', trigger);
-                }
-                $targetModal.modal('show');
-                return;
-            }
-            closeArticleActionsMenu(true);
-            showNotice('Task Widgetがありません', 'danger');
-            return;
-        }
-
-        var target = articleTaskTarget();
-        if (target === null) {
-            closeArticleActionsMenu(true);
-            showNotice('このタブにTask Widgetがありません', 'danger');
-            return;
-        }
-        closeArticleActionsMenu(false);
-        createArticleTask($button, target.widgetId, title, true);
+        return window.IGuguruDashboardArticleTask.addArticleToTask($button);
     }
-
     function addStockArticleToSelectedTask($form) {
-        var $modal = $('#stockTaskTargetModal');
-        var widgetId = String($('#stockTaskTargetSelect').val() || '');
-        var title = String($modal.data('article-title') || '').trim();
-        createArticleTask($form.find('.stock-task-target-submit'), widgetId, title, false);
+        return window.IGuguruDashboardArticleTask.addStockArticleToSelectedTask($form);
     }
 
     /* Content追加 */
