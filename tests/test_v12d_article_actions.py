@@ -8,6 +8,7 @@ js = (ROOT / 'public/js/dashboard.js').read_text(encoding='utf-8')
 js += '\n' + (ROOT / 'public/js/dashboard-feed-render.js').read_text(encoding='utf-8')
 search_js = (ROOT / 'public/js/dashboard-search-feed.js').read_text(encoding='utf-8')
 js += '\n' + search_js
+js += '\n' + (ROOT / 'public/js/dashboard-article-menu.js').read_text(encoding='utf-8')
 css = (ROOT / 'public/css/dashboard.css').read_text(encoding='utf-8')
 version = (ROOT / 'app/version.php').read_text(encoding='utf-8')
 checks = []
