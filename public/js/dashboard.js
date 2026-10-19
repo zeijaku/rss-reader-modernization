@@ -953,7 +953,7 @@
         var source = String(payload.source || '').trim();
         var date = String(payload.date || '').trim();
         var body = String(payload.body || '');
-        var articleUrl = safeFeedLink(payload.article_url);
+        var articleUrl = feedRenderer().safeFeedLink(payload.article_url);
 
         $('#readerModeTitle').text(title);
         $('#readerModeSource').text(source !== '' ? source : 'RSS');
@@ -1086,7 +1086,7 @@
             .fail(function (xhr, textStatus) {
                 $('#readerModeStatus')
                     .prop('hidden', false)
-                    .text(feedRequestErrorMessage(xhr, textStatus));
+                    .text(window.IGuguruDashboardFeedFetch.feedRequestErrorMessage(xhr, textStatus));
             });
     }
 
