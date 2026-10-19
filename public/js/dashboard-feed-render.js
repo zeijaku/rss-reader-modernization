@@ -340,6 +340,8 @@
         renderFeedError: renderFeedError,
         renderFeedBodyMessage: renderFeedBodyMessage,
         renderFeedItems: renderFeedItems,
+        // Shared safe URL policy is also required by Reader Mode.
+        safeFeedLink: safeFeedLink,
         feedResultIsValid: feedResultIsValid,
         renderFeed: renderFeed,
         feedSummaryId: feedSummaryId,
