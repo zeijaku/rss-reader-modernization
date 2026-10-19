@@ -364,7 +364,7 @@ jobs:
           3. Keep config/local.php, runtime DB, uploads, session and var data unchanged.
           4. Do not delete existing files/directories before overlay.
           5. Verify vendor/autoload.php, then refresh the page and test Mail.
-          The release marker is still 1.48.0, with asset revision 1.48.0-dev.9-readerfix1.
+          The release marker is still 1.48.0, with asset revision 1.48.0-dev.10.
           No DB schema migration is required by this packaging fix.
 
           If only adding Mail dependencies to an already-working Dev9 installation,
@@ -376,7 +376,7 @@ jobs:
           test ! -e build/runtime/.github
           test -f build/runtime/public/js/dashboard-feed-title.js
           test -f build/runtime/app/view/widget_memo_card.php
-          grep -Fq "const APP_ASSET_REVISION = '1.48.0-dev.9-readerfix1';" build/runtime/app/version.php
+          grep -Fq "const APP_ASSET_REVISION = '1.48.0-dev.10';" build/runtime/app/version.php
           test -f build/runtime/vendor/autoload.php
 
       - name: Produce full and mail-only packages and verify archive integrity
