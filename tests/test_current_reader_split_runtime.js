@@ -66,15 +66,21 @@ if (articleMenuSource.split(insertionPoint).length !== 2) throw new Error('Artic
 vm.runInNewContext(articleMenuSource.replace(insertionPoint,
     '    window.__readerTestSetTrigger = function (value) { articleActionsTrigger = value; };\n' + insertionPoint),
     ctx, {filename: 'dashboard-article-menu.js'});
+vm.runInNewContext(read('dashboard-article-reader.js'), ctx, {filename: 'dashboard-article-reader.js'});
+const actualReader = windowObject.IGuguruDashboardArticleReader;
+if (!actualReader || typeof actualReader.openReaderMode !== 'function') throw new Error('Reader module is unavailable');
+vm.runInNewContext(read('dashboard-article-reader.js'), ctx, {filename: 'dashboard-article-reader.js repeated'});
+if (windowObject.IGuguruDashboardArticleReader !== actualReader) throw new Error('Reader module duplicate load replaced its state');
 const original = read('dashboard.js');
 const entry = '$(initDashboard);';
 if (original.split(entry).length !== 2) throw new Error('Dashboard entrypoint changed');
 const instrumented = original.replace(entry,
     'window.__readerTest = {openReaderMode: openReaderMode, ' +
-    'renderReaderModePayload: renderReaderModePayload, fetchReaderFullText: fetchReaderFullText, ' +
+    'renderReaderModePayload: window.IGuguruDashboardArticleReader.renderReaderModePayload, fetchReaderFullText: fetchReaderFullText, ' +
     'setTrigger: window.__readerTestSetTrigger};');
 vm.runInNewContext(instrumented, ctx, {filename: 'dashboard.js'});
 const ui = windowObject.__readerTest;
+if (typeof ui.openReaderMode !== 'function' || typeof ui.fetchReaderFullText !== 'function') throw new Error('Reader Dashboard delegates missing');
 const assert = (condition, message) => {if (!condition) throw new Error(message); console.log('PASS: ' + message);};
 const id = 'm1i:v1:' + 'a'.repeat(64);
 const trigger = new Element(), row = new Element(), card = new Element();
