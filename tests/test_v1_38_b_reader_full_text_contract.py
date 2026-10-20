@@ -23,6 +23,8 @@ service = "\n".join((ROOT / path).read_text(encoding="utf-8") for path in [
 ])
 modal = (ROOT / "app/view/dashboard_modals.php").read_text(encoding="utf-8")
 js = (ROOT / "public/js/dashboard.js").read_text(encoding="utf-8")
+# Stage B requests now reside in the dedicated Reader module, with Dashboard click hooks unchanged.
+js += "\n" + (ROOT / "public/js/dashboard-article-reader.js").read_text(encoding="utf-8")
 http_fetch = (ROOT / "app/http_fetch.php").read_text(encoding="utf-8")
 config = (ROOT / "app/common/common_conf.php").read_text(encoding="utf-8")
 feed_fetcher = (ROOT / "app/feed/feed_fetcher.php").read_text(encoding="utf-8")

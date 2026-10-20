@@ -19,6 +19,8 @@ api = "\n".join((ROOT / path).read_text(encoding="utf-8") for path in [
     "app/api/content/reader_actions.php",
 ])
 js = (ROOT / "public/js/dashboard.js").read_text(encoding="utf-8")
+# Rich HTML rendering now lives in the dedicated Reader Mode controller.
+js += "\n" + (ROOT / "public/js/dashboard-article-reader.js").read_text(encoding="utf-8")
 css = (ROOT / "public/css/dashboard.css").read_text(encoding="utf-8")
 
 checks = [

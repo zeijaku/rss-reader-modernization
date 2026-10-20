@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
+require_once dirname(__DIR__) . '/app/view/widget_memo_card.php';
 
 app_session_start();
 app_send_private_no_store_headers();
@@ -435,27 +436,9 @@ if (is_int($content_location)) {
         }
 
         if ($widgetType === 'memo') {
-            $memoId = (int) ($result_content[$i]['memo_id'] ?? 0);
-            $memoTitle = dashboard_widget_validate_memo_title($result_content[$i]['memo_title'] ?? null) ?? 'Memo';
-            $memoBody = dashboard_widget_validate_memo_body($result_content[$i]['memo_body'] ?? null) ?? '';
-            $memoTitleId = 'memo-title-' . $widgetId;
-
-            echo '
-            <!-- Memo Widget -->
-                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget memo-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="memo" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-memo-id="' . $memoId . '" role="region" aria-labelledby="' . app_html($memoTitleId) . '">
-                    <div class="memo-card-inner">
-                        <div class="text-bg-' . app_html($widgetStyle) . ' memo-card-header">
-                            <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines" aria-hidden="true"></i></button>
-                            <small class="memo-title widget-title-text" id="' . app_html($memoTitleId) . '" title="' . app_html($memoTitle) . '">' . app_html($memoTitle) . '</small>
-                            <button type="button" class="btn btn-link memo-edit-trigger" data-widget-id="' . $widgetId . '" data-memo-id="' . $memoId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-bs-toggle="modal" data-bs-target="#changeMemo" aria-label="このMemoを編集"><i class="fas fa-edit" aria-hidden="true"></i></button>
-                        </div>
-                        <div class="memo-card-body"><div class="memo-body">' . app_html($memoBody) . '</div></div>
-                    </div>
-                </section>
-            ';
+            echo dashboard_render_memo_widget_card($result_content[$i], (int) $content_location);
             continue;
         }
-
 
         if ($widgetType === 'task') {
             $taskConfig = is_array($result_content[$i]['widget_config_data'] ?? null)
