@@ -156,7 +156,7 @@ check('return window.IGuguruDashboardArticleMenuPosition.positionArticleActionsM
       'Dashboard delegates geometry without duplicating layout computation')
 check('var articleActionsTrigger = null;' in article_menu_state
       and 'articleActionsTrigger' not in dashboard
-      and 'articleMenu().getTrigger()' in dashboard,
+      and 'articleMenu().getTrigger()' in article_reader,
       'current article selection has a single owner shared with Reader/Stock/Task')
 check('handleMenuKeydown: handleMenuKeydown' in article_menu_state
       and 'articleMenu().handleMenuKeydown(event, $(this));' in dashboard,
