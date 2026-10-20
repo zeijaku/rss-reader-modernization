@@ -85,6 +85,7 @@ with sync_playwright() as p:
         'dashboard-article-menu-position.js', 'dashboard-article-menu.js',
         'dashboard-article-share.js',
         'dashboard-article-stock.js', 'dashboard-article-task.js',
+        'dashboard-article-reader.js',
         'dashboard.js',
     ):
         page.add_script_tag(path=str(ROOT / 'public/js' / name))
