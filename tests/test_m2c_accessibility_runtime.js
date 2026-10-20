@@ -10,6 +10,7 @@ const menuPositionSource = fs.readFileSync(path.join(root, 'public/js/dashboard-
 const menuStateSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-menu.js'), 'utf8');
 const articleStockSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-stock.js'), 'utf8');
 const articleTaskSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-task.js'), 'utf8');
+const articleReaderSource = fs.readFileSync(path.join(root, 'public/js/dashboard-article-reader.js'), 'utf8');
 const coreSource = fs.readFileSync(path.join(root, 'public/js/dashboard-core.js'), 'utf8');
 const feedRenderSource = fs.readFileSync(path.join(root, 'public/js/dashboard-feed-render.js'), 'utf8');
 const feedTitleSource = fs.readFileSync(path.join(root, 'public/js/dashboard-feed-title.js'), 'utf8');
@@ -207,6 +208,7 @@ vm.runInNewContext(menuPositionSource, context, {filename: 'dashboard-article-me
 vm.runInNewContext(menuStateSource, context, {filename: 'dashboard-article-menu.js'});
 vm.runInNewContext(articleStockSource, context, {filename: 'dashboard-article-stock.js'});
 vm.runInNewContext(articleTaskSource, context, {filename: 'dashboard-article-task.js'});
+vm.runInNewContext(articleReaderSource, context, {filename: 'dashboard-article-reader.js'});
 vm.runInNewContext(source, context, {filename: 'dashboard.js'});
 
 check(offcanvasCreates === 1, 'dashboard initializes Bootstrap Offcanvas exactly once');
