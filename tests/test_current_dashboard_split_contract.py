@@ -141,6 +141,7 @@ article_menu_state = text('public/js/dashboard-article-menu.js')
 article_share = text('public/js/dashboard-article-share.js')
 article_stock = text('public/js/dashboard-article-stock.js')
 article_task = text('public/js/dashboard-article-task.js')
+article_reader = text('public/js/dashboard-article-reader.js')
 
 article_position_tag = "app_asset_url('js/dashboard-article-menu-position.js')"
 article_state_tag = "app_asset_url('js/dashboard-article-menu.js')"
@@ -188,6 +189,24 @@ check('articleMenu().getTrigger()' in article_stock
       'Stock and Task use the same active Article menu trigger owner')
 check('test_current_article_mutations_runtime.js' in runner,
       'Stock and Task mutations execute runtime regression in CI')
+article_reader_tag = "app_asset_url('js/dashboard-article-reader.js')"
+check(article_reader_tag in index
+      and index.index(article_task_tag) < index.index(article_reader_tag) < index.index(dashboard_tag),
+      'Reader Mode module loads after dependencies and before Dashboard events')
+check('function readerItemContext(' in article_reader
+      and 'function renderReaderModePayload(' in article_reader
+      and "apiRequest('feed.reader.fulltext', context, 25000)" in article_reader
+      and "apiRequest('feed.reader', context, 25000)" in article_reader
+      and "feed.reader.fulltext" not in dashboard,
+      'one Reader Mode controller owns RSS and full-text processing')
+check('window.IGuguruDashboardArticleReader.openReaderMode()' in dashboard
+      and 'window.IGuguruDashboardArticleReader.fetchReaderFullText($button)' in dashboard
+      and 'window.IGuguruDashboardArticleReader.resetReaderModeModal()' in dashboard,
+      'Dashboard event and modal hooks invoke extracted Reader controller')
+check('feedRenderer().safeFeedLink(payload.article_url)' in article_reader
+      and 'window.IGuguruDashboardFeedFetch.feedRequestErrorMessage(xhr, textStatus)' in article_reader
+      and 'articleMenu().getTrigger()' in article_reader,
+      'Reader retains explicit Feed safe URL, error classifier and Article menu state bridges')
 check('test_current_article_menu_position_runtime.js' in runner
       and 'test_current_article_menu_state_runtime.js' in runner,
       'Current CI gate executes Article Actions geometry regression')
