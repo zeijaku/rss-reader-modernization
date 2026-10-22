@@ -143,7 +143,8 @@ jobs:
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
         with:
           php-version: '8.4'
-          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml, intl, openssl, xml, dom, iconv
+          tools: composer:v2
           coverage: none
 
       - name: Run PHP 8.4 release regression
@@ -164,6 +165,12 @@ jobs:
           test ! -f config/local.php
           echo 'PASS: high-signal source secret scan'
 
+      - name: Install audited pinned Composer Mail dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash tools/build_mail_dependencies.sh build/mail
+
       - name: Build and verify release packages
         shell: bash
         run: |
@@ -172,9 +179,11 @@ jobs:
           python3 tools/build_release_package.py \
             --release "${RELEASE_VERSION}" \
             --mode final \
+            --mail-dependencies-dir build/mail \
             --output-dir dist
           python3 tools/verify_release_package.py \
             --release "${RELEASE_VERSION}" \
+            --require-mail-dependencies \
             "dist/${RUNTIME_STEM}.zip" \
             "dist/${RUNTIME_STEM}.zip.sha256"
           python3 tools/build_complete_package.py \
@@ -199,12 +208,24 @@ jobs:
           test -f "${ROOT_DIR}/app/version.php"
           test -f "${ROOT_DIR}/public/index.php"
           test -f "${ROOT_DIR}/database/schema.sql"
+          test -f "${ROOT_DIR}/vendor/autoload.php"
+          test -f "${ROOT_DIR}/vendor/directorytree/imapengine/composer.json"
           test ! -f "${ROOT_DIR}/config/local.php"
           php -l "${ROOT_DIR}/app/version.php"
           php -l "${ROOT_DIR}/public/index.php"
           node --check "${ROOT_DIR}/public/js/calendar.js"
           grep -Fq "const APP_VERSION = '${RELEASE_VERSION}';" "${ROOT_DIR}/app/version.php"
           grep -Fq "const APP_ASSET_REVISION = '${RELEASE_VERSION}';" "${ROOT_DIR}/app/version.php"
+          php -r '
+            $root = $argv[1];
+            require $root . "/vendor/autoload.php";
+            require $root . "/app/mail/mail_client.php";
+            if (!mail_client_available() || !class_exists("AppMailPinnedImapStream")) {
+              fwrite(STDERR, "Mail IMAP unavailable in the official Runtime ZIP" . PHP_EOL);
+              exit(1);
+            }
+            echo "PASS: official Runtime IMAP autoload" . PHP_EOL;
+          ' "${ROOT_DIR}"
           echo 'PASS: Runtime package clean-room checks'
 
       - name: Complete Source package clean-room checks
