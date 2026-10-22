@@ -214,7 +214,7 @@ jobs:
     needs: [regression, p2b_apache_probe]
     if: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     permissions:
       contents: read
     steps:
@@ -226,6 +226,15 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
+      - name: Set up PHP and Composer for formal Mail runtime
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: '8.1'
+          extensions: curl, mbstring, pdo_sqlite, intl, openssl, xml, dom, iconv
+          tools: composer:v2
+          coverage: none
+      - name: Build and audit Mail runtime dependencies
+        run: bash tools/build_mail_dependencies.sh build/mail
       - name: Resolve final release version from source
         shell: bash
         run: |
@@ -251,202 +260,22 @@ jobs:
           # release ZIP even when this private directory contains live data.
           printf '%s\n' '{"start":123,"count":99}' > var/security/api-throttle/all-999999.json
           trap 'rm -f var/security/api-throttle/all-999999.json' EXIT
-          python3 tools/build_release_package.py --release ${RELEASE_VERSION} --mode final --output-dir dist
-          python3 tools/verify_release_package.py --release ${RELEASE_VERSION} dist/rss-reader-modernization-${RELEASE_VERSION}.zip dist/rss-reader-modernization-${RELEASE_VERSION}.zip.sha256
+          python3 tools/build_release_package.py --release ${RELEASE_VERSION} --mode final --mail-dependencies-dir build/mail --output-dir dist
+          python3 tools/verify_release_package.py --release ${RELEASE_VERSION} --require-mail-dependencies dist/rss-reader-modernization-${RELEASE_VERSION}.zip dist/rss-reader-modernization-${RELEASE_VERSION}.zip.sha256
           python3 tools/build_complete_package.py --release ${RELEASE_VERSION} --output-dir dist
           python3 tools/verify_complete_package.py --release ${RELEASE_VERSION} dist/rss-reader-modernization-${RELEASE_VERSION}-complete.zip dist/rss-reader-modernization-${RELEASE_VERSION}-complete.zip.sha256
           (cd dist && sha256sum -c rss-reader-modernization-${RELEASE_VERSION}.zip.sha256)
           (cd dist && sha256sum -c rss-reader-modernization-${RELEASE_VERSION}-complete.zip.sha256)
-
-  reader_fix_package:
-    name: Build Dev10-D full runtime including Mail dependencies
-    needs: [regression, p2b_apache_probe]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'refactor/dashboard-article-reader-dev10d'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout Dev10-D integration candidate
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Setup PHP 8.1 and Composer
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
-        with:
-          php-version: '8.1'
-          extensions: mbstring, intl, openssl, xml, dom, iconv, pdo_sqlite
-          tools: composer:v2
-          coverage: none
-
-      - name: Run Reader Mode and Article Actions split regressions
-        run: |
-          node tests/test_current_reader_split_runtime.js
-          node tests/test_current_article_menu_position_runtime.js
-          node tests/test_current_article_menu_state_runtime.js
-          node tests/test_current_article_share_runtime.js
-          node tests/test_current_article_mutations_runtime.js
-          node --check public/js/dashboard.js
-          node --check public/js/dashboard-feed-render.js
-          node --check public/js/dashboard-feed-fetch.js
-          node --check public/js/dashboard-article-menu-position.js
-          node --check public/js/dashboard-article-menu.js
-          node --check public/js/dashboard-article-share.js
-          node --check public/js/dashboard-article-stock.js
-          node --check public/js/dashboard-article-task.js
-          node --check public/js/dashboard-article-reader.js
-
-      - name: Build pinned ImapEngine dependency tree outside application
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p build/composer dist
-          cat > build/composer/composer.json <<'JSON'
-          {
-            "name": "zeijaku/rss-reader-mail-runtime",
-            "type": "project",
-            "description": "Reproducible IMAP dependency set for RSS Reader 1.48.0 Dev10-D verification",
-            "require": {
-              "php": "^8.1",
-              "directorytree/imapengine": "1.25.6"
-            },
-            "config": {
-              "sort-packages": true,
-              "allow-plugins": false
-            }
-          }
-          JSON
-          composer --version
-          composer install --working-dir=build/composer --prefer-dist --no-dev --no-interaction --no-progress --no-scripts --no-plugins --optimize-autoloader
-          composer audit --working-dir=build/composer --locked --no-interaction
-          test -f build/composer/vendor/autoload.php
-          test -f build/composer/composer.lock
+          mkdir -p build/runtime-verify
+          unzip -q "dist/rss-reader-modernization-${RELEASE_VERSION}.zip" -d build/runtime-verify
           php -r '
-            require "build/composer/vendor/autoload.php";
-            require "app/mail/mail_client.php";
-            foreach ([
-              DirectoryTree\ImapEngine\Mailbox::class,
-              DirectoryTree\ImapEngine\Connection\ImapConnection::class,
-              DirectoryTree\ImapEngine\Connection\Streams\ImapStream::class,
-            ] as $symbol) {
-              if (!class_exists($symbol)) {
-                fwrite(STDERR, "Missing IMAP class\n");
-                exit(1);
-              }
-            }
+            $root = $argv[1];
+            require $root . "/vendor/autoload.php";
+            require $root . "/app/mail/mail_client.php";
             if (!mail_client_available() || !class_exists("AppMailPinnedImapStream")) {
-              fwrite(STDERR, "Mail client dependency smoke test failed\n");
+              fwrite(STDERR, "Mail IMAP autoload is unavailable in formal Runtime ZIP" . PHP_EOL);
               exit(1);
             }
-            echo "PASS: Mail IMAP dependency smoke check\n";
-          '
+            echo "PASS: formal Runtime ZIP IMAP autoload" . PHP_EOL;
+          ' "build/runtime-verify/rss-reader-modernization-${RELEASE_VERSION}"
 
-      - name: Assemble complete runtime without local secrets
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p build/runtime
-          for path in \
-            .htaccess README.md CHANGELOG.md CONTRIBUTING.md LICENSE \
-            THIRD_PARTY_NOTICES.md RELEASE_NOTES.md SECURITY.md \
-            INTEGRATION_TEST_README.md app public config database docs licenses tools var
-          do
-            cp -a "$path" build/runtime/
-          done
-          # Do not package runtime data even if the CI workspace was populated.
-          find build/runtime/var -type f ! -name '.gitkeep' -delete
-          find build/runtime/var -type l -delete
-          cp -a build/composer/vendor build/runtime/
-          cp build/composer/composer.json build/runtime/composer.json
-          cp build/composer/composer.lock build/runtime/composer.lock
-          cat > build/runtime/MAIL_IMAP_DEPENDENCIES_README.txt <<'EOF'
-          RSS Reader 1.48.0 Dev10-D - COMPLETE VERIFICATION RUNTIME WITH MAIL DEPENDENCIES
-
-          This is a verification build, not an official release.
-          The complete application runtime and composer-installed directorytree/imapengine
-          version 1.25.6, with its compatible transitive dependencies, are included.
-          vendor/autoload.php is REQUIRED by the Mail IMAP widget.
-          Composer files are included to document the exact selected package versions.
-
-          To apply over the existing V1.48.0 integration verification environment:
-          1. Back up existing application files and private config/data.
-          2. Extract ZIP into your RSS Reader application ROOT (not public/).
-          3. Keep config/local.php, runtime DB, uploads, session and var data unchanged.
-          4. Do not delete existing files/directories before overlay.
-          5. Verify vendor/autoload.php, then refresh the page and test Mail.
-          The release marker is still 1.48.0, with asset revision 1.48.0-dev.14.
-          No DB schema migration is required by this packaging fix.
-
-          If only adding Mail dependencies to an already-working integration installation,
-          use the corresponding MAIL_VENDOR_ONLY ZIP instead.
-          EOF
-          test ! -e build/runtime/config/local.php
-          test ! -e build/runtime/.env
-          test ! -e build/runtime/tests
-          test ! -e build/runtime/.github
-          test -f build/runtime/public/js/dashboard-feed-title.js
-          test -f build/runtime/public/js/dashboard-article-menu-position.js
-          test -f build/runtime/public/js/dashboard-article-menu.js
-          test -f build/runtime/public/js/dashboard-article-share.js
-          test -f build/runtime/public/js/dashboard-article-stock.js
-          test -f build/runtime/public/js/dashboard-article-task.js
-          test -f build/runtime/public/js/dashboard-article-reader.js
-          test -f build/runtime/app/view/widget_memo_card.php
-          grep -Fq "const APP_ASSET_REVISION = '1.48.0-dev.14';" build/runtime/app/version.php
-          test -f build/runtime/vendor/autoload.php
-
-      - name: Produce full and mail-only packages and verify archive integrity
-        shell: bash
-        run: |
-          set -euo pipefail
-          FULL="$GITHUB_WORKSPACE/dist/RSS_Reader_V1.48.0_Dev10D_FULL_IMAP.zip"
-          MAIL="$GITHUB_WORKSPACE/dist/RSS_Reader_V1.48.0_Dev10D_MAIL_VENDOR_ONLY.zip"
-          (cd build/runtime && zip -q -r "$FULL" .)
-          (cd build/runtime && zip -q -r "$MAIL" vendor composer.json composer.lock MAIL_IMAP_DEPENDENCIES_README.txt)
-          unzip -tq "$FULL"
-          unzip -tq "$MAIL"
-          unzip -Z1 "$FULL" | grep -Fxq "vendor/autoload.php"
-          unzip -Z1 "$MAIL" | grep -Fxq "vendor/autoload.php"
-          unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-feed-title.js"
-          unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard.js"
-          unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-feed-render.js"
-          unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-feed-fetch.js"
-          unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-article-menu-position.js"
-          unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-article-menu.js"
-          unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-article-share.js"
-          unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-article-stock.js"
-          unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-article-task.js"
-          unzip -Z1 "$FULL" | grep -Fxq "public/js/dashboard-article-reader.js"
-          unzip -Z1 "$FULL" | grep -Fxq "composer.lock"
-          unzip -Z1 "$FULL" | grep -Fxq "vendor/directorytree/imapengine/composer.json"
-          if unzip -Z1 "$FULL" | grep -Eq '(^|/)(local\.php|\.env|\.git)(/|$)|^tests/'; then
-            echo "ERROR: private or test file included"
-            exit 1
-          fi
-          # Recheck dependency autoload after extracting the distributed ZIP.
-          mkdir -p build/package-verify
-          unzip -q "$FULL" -d build/package-verify
-          php -r '
-            require "build/package-verify/vendor/autoload.php";
-            require "build/package-verify/app/mail/mail_client.php";
-            if (!class_exists(DirectoryTree\ImapEngine\Mailbox::class)
-                || !mail_client_available()
-                || !class_exists("AppMailPinnedImapStream")) {
-              fwrite(STDERR, "Packaged IMAP autoload verification failed\\n");
-              exit(1);
-            }
-            echo "PASS: packaged IMAP autoload verified\\n";
-          '
-          (cd dist && sha256sum ./*.zip > SHA256SUMS.txt)
-          ls -lh dist/
-
-      - name: Upload integration ZIPs and hash manifest
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: RSS_Reader_Dev10D_FULL_IMAP
-          path: |
-            dist/RSS_Reader_V1.48.0_Dev10D_FULL_IMAP.zip
-            dist/RSS_Reader_V1.48.0_Dev10D_MAIL_VENDOR_ONLY.zip
-            dist/SHA256SUMS.txt
-          if-no-files-found: error
-          retention-days: 30
