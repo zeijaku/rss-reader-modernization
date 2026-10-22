@@ -18,6 +18,9 @@ sh "$SCRIPT_DIR/test_current_fresh_install_schema_mariadb.sh"
 echo '== Current feature contracts: User-visible version labels =='
 python3 "$SCRIPT_DIR/test_visible_legacy_version_labels.py"
 
+echo '== Current feature contracts: Formal Runtime Mail dependency bundle =='
+python3 "$SCRIPT_DIR/test_current_release_mail_contract.py"
+
 echo '== Current feature contracts: Asset revision propagation =='
 python3 "$SCRIPT_DIR/test_current_asset_revision_contract.py"
 node "$SCRIPT_DIR/test_current_asset_revision_runtime.js"
