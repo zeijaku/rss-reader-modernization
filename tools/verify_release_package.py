@@ -55,6 +55,8 @@ def parse_sidecar(path: Path) -> tuple[str, str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description='Verify RSS Reader release package.')
     parser.add_argument('--release', required=True, help='Expected final version, for example X.Y.Z')
+    parser.add_argument('--require-mail-dependencies', action='store_true',
+                        help='Require pinned Composer IMAP runtime in formal release ZIP')
     parser.add_argument('zip_path', type=Path)
     parser.add_argument('sha256_sidecar', type=Path, nargs='?')
     args = parser.parse_args()
@@ -84,6 +86,14 @@ def main() -> int:
         top_name = next(iter(top))
         relative = {'/'.join(PurePosixPath(name).parts[1:]): name for name in names}
         check(REQUIRED <= set(relative), 'release package contains all required files')
+        if args.require_mail_dependencies:
+            mail_required = {
+                'composer.json', 'composer.lock', 'vendor/autoload.php',
+                'vendor/directorytree/imapengine/composer.json',
+            }
+            check(mail_required <= set(relative), 'formal Runtime includes Composer Mail dependencies and autoload')
+            check(archive.read(relative['composer.json']).decode('utf-8').find('"directorytree/imapengine": "1.25.6"') != -1,
+                  'formal Runtime pins reviewed ImapEngine version')
         check(not any(rel in FORBIDDEN_EXACT for rel in relative), 'release package excludes private and legacy exact files')
         check(not any(rel.lower().endswith(FORBIDDEN_SUFFIXES) for rel in relative), 'release package excludes runtime/database/archive extensions')
         generated = [
@@ -108,6 +118,9 @@ def main() -> int:
         check(metadata.get('publishable') in {'yes', 'no'}, 'release build publishable flag is explicit')
         check(metadata.get('validation_scope') == 'automated-regression-and-package', 'release build validation scope is explicit')
         check(metadata.get('manual_evidence') == 'not-recorded-in-distribution', 'release build manual evidence status is explicit')
+        if args.require_mail_dependencies:
+            check(metadata.get('mail_dependencies') == 'composer-pinned',
+                  'formal Runtime declares Composer Mail dependency inclusion')
 
         status = metadata.get('package_status')
         app_version = metadata.get('application_version', '')
