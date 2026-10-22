@@ -2,10 +2,10 @@
 
 ## Current formal target
 
-- Version: `1.46.0`
-- Tag: `v1.46.0`
+- Version: `1.49.0`
+- Tag: `v1.49.0`
 
-V1.46.0は、Dashboard低coupling controller分割、Task / Memo / Game / ClockのjQuery coupling低減、Task Item部分更新、Clock狭幅表示改善、hls.js 1.7.3 local vendoring、Calendar / Drawer CSS layer統合を正式配布するModernization Releaseです。Tag／GitHub ReleaseはPHP 8.1／8.4、Security、Package、SHA-256、Artifact Attestation、Clean-room Gate完了後にだけ公開します。
+V1.49.0は、Feed描画・通信とArticle Actions／Reader Modeの段階的なモジュール分離とReaderスコープ修正を配布するModernization Releaseです。Tag／GitHub ReleaseはPHP 8.1／8.4、Security、Composer Mail依存のRuntime組込み、Package、SHA-256、Artifact Attestation、Clean-room Gate完了後にだけ公開します。
 
 V1.23-E以降は、VersionごとのRelease workflowや `release/vX.Y.Z-final` branchを標準手順として増やしません。
 
