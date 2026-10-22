@@ -7,7 +7,9 @@
 | `rss-reader-modernization-X.Y.Z.zip` | Server配置・Production Runtime | 含まない |
 | `rss-reader-modernization-X.Y.Z-complete.zip` | Repository / Testsを含む完全Source | 含む |
 
-Runtime ZIPには監査済みのComposer版ImapEngine 1.25.6と依存ライブラリを `vendor/` として同梱します。 `composer.lock` とautoloadも含め、PHPクリーンルームでMailクラスを確認します。Composerの依存解決は `build/mail` の一時ディレクトリで行い、Complete Source ZIPには含みません。\n\n各ZIPにはSHA-256 sidecarを付けます。`config/local.php`、実DB、生成済み`var/` Data、秘密情報、Legacy archiveは含めません。Production RuntimeにはFresh Install後のRead-only確認用 `tools/db_current.php` と、READMEから参照するCurrent / Historical documentation treeを含めます。
+Runtime ZIPには監査済みのComposer版ImapEngine 1.25.6と依存ライブラリを `vendor/` として同梱します。 `composer.lock` とautoloadも含め、PHPクリーンルームでMailクラスを確認します。Composerの依存解決は `build/mail` の一時ディレクトリで行い、Complete Source ZIPには含みません。
+
+各ZIPにはSHA-256 sidecarを付けます。`config/local.php`、実DB、生成済み`var/` Data、秘密情報、Legacy archiveは含めません。Production RuntimeにはFresh Install後のRead-only確認用 `tools/db_current.php` と、READMEから参照するCurrent / Historical documentation treeを含めます。
 
 ## Versionの渡し方
 
