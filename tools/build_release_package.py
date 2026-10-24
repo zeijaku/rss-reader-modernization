@@ -119,7 +119,7 @@ def is_generated_runtime_file(rel: str) -> bool:
     )
 
 
-def collect_source_files() -> dict[str, Path]:
+def collect_source_files(mail_dependencies_dir: Path | None = None) -> dict[str, Path]:
     files: dict[str, Path] = {}
     for rel in ROOT_FILES + DOC_FILES:
         path = ROOT / rel
@@ -140,6 +140,25 @@ def collect_source_files() -> dict[str, Path]:
             if is_generated_runtime_file(rel):
                 continue
             files[rel] = path
+
+    if mail_dependencies_dir is not None:
+        mail_root = mail_dependencies_dir.resolve()
+        if not mail_root.is_dir():
+            fail('Composer Mail dependency directory does not exist')
+        for required in ('composer.json', 'composer.lock', 'vendor/autoload.php',
+                         'vendor/directorytree/imapengine/composer.json'):
+            if not (mail_root / required).is_file():
+                fail(f'Mail dependency tree is incomplete: {required}')
+        for path in sorted(mail_root.rglob('*')):
+            if path.is_symlink():
+                fail('symlink in Mail dependency tree is not allowed')
+            if not path.is_file():
+                continue
+            rel = path.relative_to(mail_root).as_posix()
+            if rel in ('composer.json', 'composer.lock') or rel.startswith('vendor/'):
+                if rel in files:
+                    fail(f'duplicate release dependency path: {rel}')
+                files[rel] = path
 
     docs = ROOT / 'docs'
     if not docs.is_dir():
@@ -181,14 +200,14 @@ def zip_info(name: str) -> zipfile.ZipInfo:
     return info
 
 
-def build(mode: str, release: str, output_dir: Path) -> tuple[Path, Path]:
+def build(mode: str, release: str, output_dir: Path, mail_dependencies_dir: Path | None = None) -> tuple[Path, Path]:
     release = validate_release(release)
     version, label, asset_revision = read_version()
     status, publishable, artifact_stem = validate_mode(
         mode, release, version, label, asset_revision
     )
     intended_tag = f'v{release}'
-    source_files = collect_source_files()
+    source_files = collect_source_files(mail_dependencies_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     zip_path = output_dir / f'{artifact_stem}.zip'
     sidecar_path = output_dir / f'{artifact_stem}.zip.sha256'
@@ -205,6 +224,7 @@ def build(mode: str, release: str, output_dir: Path) -> tuple[Path, Path]:
         'validation_scope=automated-regression-and-package',
         'manual_evidence=not-recorded-in-distribution',
         'runtime_data=excluded',
+        'mail_dependencies=' + ('composer-pinned' if mail_dependencies_dir else 'absent'),
         'manifest=RELEASE_MANIFEST.sha256',
         '',
     ]).encode('utf-8')
@@ -238,8 +258,10 @@ def main() -> int:
     parser.add_argument('--release', required=True, help='Intended final version, for example X.Y.Z')
     parser.add_argument('--mode', choices=('preview', 'rc', 'final'), default='preview')
     parser.add_argument('--output-dir', type=Path, default=ROOT / 'dist')
+    parser.add_argument('--mail-dependencies-dir', type=Path,
+                        help='Composer output directory containing composer.json/lock and vendor/')
     args = parser.parse_args()
-    build(args.mode, args.release, args.output_dir.resolve())
+    build(args.mode, args.release, args.output_dir.resolve(), args.mail_dependencies_dir)
     return 0
 
 

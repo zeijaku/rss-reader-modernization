@@ -18,6 +18,9 @@ sh "$SCRIPT_DIR/test_current_fresh_install_schema_mariadb.sh"
 echo '== Current feature contracts: User-visible version labels =='
 python3 "$SCRIPT_DIR/test_visible_legacy_version_labels.py"
 
+echo '== Current feature contracts: Formal Runtime Mail dependency bundle =='
+python3 "$SCRIPT_DIR/test_current_release_mail_contract.py"
+
 echo '== Current feature contracts: Asset revision propagation =='
 python3 "$SCRIPT_DIR/test_current_asset_revision_contract.py"
 node "$SCRIPT_DIR/test_current_asset_revision_runtime.js"
@@ -236,6 +239,7 @@ python3 -m py_compile \
     "$SCRIPT_DIR/test_v1_38_d_reader_image_proxy_contract.py"
 
 echo '== Current feature contracts: Reader Mode =='
+node "$SCRIPT_DIR/test_current_reader_split_runtime.js"
 php "$SCRIPT_DIR/test_v1_38_a_reader_mode.php"
 python3 "$SCRIPT_DIR/test_v1_38_a_reader_mode_contract.py"
 node --check "$ROOT/public/js/dashboard.js"

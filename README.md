@@ -9,8 +9,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.48.0`
-Release tag: `v1.48.0`
+**Stable release:** `RSS Reader Modernization 1.49.0`
+Release tag: `v1.49.0`
+
+Version 1.49.0は、DashboardのFeed表示・通信とArticle Actions（メニュー、URLコピー・X共有、Stock・Task、Reader Mode）を段階的にモジュール分離し、全文取得のスコープ参照不具合を修正したModernization Releaseです。DB Migration／新規必須Configはありません。 [正式版の更新・確認手順](docs/v1.49.0-release.md)を参照してください。
 
 Version 1.48.0は、Remote FilesのSort・検索・複数選択、一括Move/Delete、Upload進捗・中断、Directory Upload、ZIP一括Download、ドットファイル名保持とUI整理を行う機能拡張Releaseです。DB Migrationはありません。ZIP一括DownloadにはPHP ZIP拡張が必要です。[正式版の更新・確認手順](docs/v1.48.0-release.md)を参照してください。
 

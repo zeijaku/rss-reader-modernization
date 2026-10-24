@@ -1,3 +1,15 @@
+## Version 1.48.0からVersion 1.49.0
+
+V1.49.0はDashboard／Article Actions／Reader Modeのモジュール分割を正式化します。DB Migrationと新規必須設定はありません。
+
+1. アプリケーションコード、`public/.htaccess`、`config/local.php`、DB、アップロード、`var/`をバックアップする。
+2. 正式Runtime ZIPとSHA-256を検証し、アプリケーションルートへ上書きする。既存設定・DB・稼働データを削除しない。
+3. `vendor/autoload.php`、MailのIMAPライブラリ、新規 `public/js/dashboard-article-*.js` の配置を確認する。
+4. フッターが `RSS Reader Modernization 1.49.0`、静的JS URLが `?v=1.49.0` であることを確認する。
+5. Reader RSS本文・全文取得、Article Actions開閉・コピー・X共有、Stock保存／解除、Task追加、Feed更新を確認する。
+6. RSS外部取得の既定サイズ上限は2MiBのまま。上限超過時のエラー表示は従来どおりであり、制限を緩和しない。
+7. 不具合があればコードをV1.48.0に戻す。DB Migrationは不要。
+
 ## Version 1.46.0からVersion 1.47.0
 
 V1.47.0はSecurity Releaseです。DB構造変更とMigration、新規必須Configはありません。APIレート制限（60秒あたり全体600、通信系120の暫定値）、平文FTPの任意禁止設定、ログ情報の最小化、ApacheのPHP PATH_INFO／代替拡張子の拒否を加えます。基本CSPは維持し、厳格CSPとHSTSは追加しません。

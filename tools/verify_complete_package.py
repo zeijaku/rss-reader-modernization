@@ -89,6 +89,8 @@ def main() -> int:
             if rel.startswith(runtime + '/') and PurePosixPath(rel).name != '.gitkeep'
         ]
         check(not generated, 'complete ZIP excludes generated runtime data')
+        check(not any(rel.startswith('build/') for rel in relative),
+              'complete ZIP excludes temporary Composer vendors and build workspaces')
 
         build = archive.read(relative['SOURCE_BUILD.txt']).decode('utf-8')
         metadata = dict(line.split('=', 1) for line in build.splitlines() if '=' in line)

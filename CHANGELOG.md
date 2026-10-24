@@ -1,3 +1,13 @@
+## 1.49.0 - 2026-10-22
+
+- Deliver the staged Dashboard integration and Article Actions modernization verified in Dev4–Dev10-D, preserving existing Feed, Search Feed, Reader Mode, Stock, Task, Clipboard and X interactions.
+- Extract Feed rendering, feed retrieval, title/tooltip behavior, widget-order and tab-swipe ownership into separate browser modules while keeping Dashboard event wiring and shared request/CSRF handling consistent.
+- Split Article Actions into menu geometry, active selection/keyboard navigation, URL copy/X sharing, Stock mutations, Task creation, and Reader Mode controllers with explicit inter-module dependencies and no duplicate article selection state.
+- Fix Reader Mode regressions caused by earlier JavaScript scope separation: reuse Feed safe URL validation and error classification, preserve RSS text safety, full-text extraction and RSS fallback on failure.
+- Extend current Node runtime, PHP contract and browser-harness tests; verify PHP 8.1/8.4 regressions and Apache isolation. Historical browser automation that lacks Playwright remains a verification limitation; staged PC smoke tests were completed by the user.
+- Maintain the existing 2MiB default outbound HTTP response safety limit, including the clear feed-card `response_too_large` error and retry behavior; no special bypass for oversized RSS sources.
+- Preserve database schema, backend API actions and mandatory runtime settings. The complete runtime must also include pinned Composer IMAP dependencies; release package gates verify Mail autoload and archive contents.
+
 ## 1.48.0 - 2026-10-13
 
 - Expand Remote Files with Sort, search, file type filters, multiselection and batch delete/move.

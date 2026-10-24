@@ -214,7 +214,7 @@ jobs:
     needs: [regression, p2b_apache_probe]
     if: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     permissions:
       contents: read
     steps:
@@ -226,6 +226,15 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
+      - name: Set up PHP and Composer for formal Mail runtime
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: '8.1'
+          extensions: curl, mbstring, pdo_sqlite, intl, openssl, xml, dom, iconv
+          tools: composer:v2
+          coverage: none
+      - name: Build and audit Mail runtime dependencies
+        run: bash tools/build_mail_dependencies.sh build/mail
       - name: Resolve final release version from source
         shell: bash
         run: |
@@ -251,10 +260,22 @@ jobs:
           # release ZIP even when this private directory contains live data.
           printf '%s\n' '{"start":123,"count":99}' > var/security/api-throttle/all-999999.json
           trap 'rm -f var/security/api-throttle/all-999999.json' EXIT
-          python3 tools/build_release_package.py --release ${RELEASE_VERSION} --mode final --output-dir dist
-          python3 tools/verify_release_package.py --release ${RELEASE_VERSION} dist/rss-reader-modernization-${RELEASE_VERSION}.zip dist/rss-reader-modernization-${RELEASE_VERSION}.zip.sha256
+          python3 tools/build_release_package.py --release ${RELEASE_VERSION} --mode final --mail-dependencies-dir build/mail --output-dir dist
+          python3 tools/verify_release_package.py --release ${RELEASE_VERSION} --require-mail-dependencies dist/rss-reader-modernization-${RELEASE_VERSION}.zip dist/rss-reader-modernization-${RELEASE_VERSION}.zip.sha256
           python3 tools/build_complete_package.py --release ${RELEASE_VERSION} --output-dir dist
           python3 tools/verify_complete_package.py --release ${RELEASE_VERSION} dist/rss-reader-modernization-${RELEASE_VERSION}-complete.zip dist/rss-reader-modernization-${RELEASE_VERSION}-complete.zip.sha256
           (cd dist && sha256sum -c rss-reader-modernization-${RELEASE_VERSION}.zip.sha256)
           (cd dist && sha256sum -c rss-reader-modernization-${RELEASE_VERSION}-complete.zip.sha256)
+          mkdir -p build/runtime-verify
+          unzip -q "dist/rss-reader-modernization-${RELEASE_VERSION}.zip" -d build/runtime-verify
+          php -r '
+            $root = $argv[1];
+            require $root . "/vendor/autoload.php";
+            require $root . "/app/mail/mail_client.php";
+            if (!mail_client_available() || !class_exists("AppMailPinnedImapStream")) {
+              fwrite(STDERR, "Mail IMAP autoload is unavailable in formal Runtime ZIP" . PHP_EOL);
+              exit(1);
+            }
+            echo "PASS: formal Runtime ZIP IMAP autoload" . PHP_EOL;
+          ' "build/runtime-verify/rss-reader-modernization-${RELEASE_VERSION}"
 
