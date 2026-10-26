@@ -788,6 +788,11 @@
         state.busy = true;
         refreshSelectionControls();
         hideNotice();
+        var originalButtonHtml = el.bulkDownload ? el.bulkDownload.innerHTML : '';
+        if (el.bulkDownload) {
+            el.bulkDownload.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> ZIP作成中...';
+            el.bulkDownload.setAttribute('aria-busy', 'true');
+        }
         var objectUrl = null;
         try {
             var form = new FormData();
@@ -821,6 +826,10 @@
             showNotice(error.message || 'ZIP Downloadに失敗しました。', 'danger');
         } finally {
             if (objectUrl) { window.setTimeout(function () { window.URL.revokeObjectURL(objectUrl); }, 30000); }
+            if (el.bulkDownload) {
+                el.bulkDownload.innerHTML = originalButtonHtml;
+                el.bulkDownload.removeAttribute('aria-busy');
+            }
             state.busy = false;
             refreshSelectionControls();
         }
