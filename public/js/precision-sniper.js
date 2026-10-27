@@ -205,13 +205,14 @@
             ctx.beginPath(); ctx.arc(center.x, center.y, RADIUS, 0, Math.PI * 2); ctx.stroke();
             ctx.lineWidth = 2; ctx.strokeStyle = theme.background;
             ctx.beginPath(); ctx.arc(center.x, center.y, RADIUS - 5, 0, Math.PI * 2); ctx.stroke();
-            ctx.strokeStyle = 'rgba(17,27,34,.9)'; ctx.lineWidth = 1.3;
+            ctx.strokeStyle = theme.background; ctx.lineWidth = 3;
             ctx.beginPath();
             ctx.moveTo(center.x - 69, center.y); ctx.lineTo(center.x - 11, center.y);
             ctx.moveTo(center.x + 11, center.y); ctx.lineTo(center.x + 69, center.y);
             ctx.moveTo(center.x, center.y - 69); ctx.lineTo(center.x, center.y - 11);
             ctx.moveTo(center.x, center.y + 11); ctx.lineTo(center.x, center.y + 69);
             ctx.stroke();
+            ctx.strokeStyle = theme.ink; ctx.lineWidth = 1.2; ctx.stroke();
             circle(center.x, center.y, 2, theme.danger);
             ctx.fillStyle = theme.ink; ctx.font = '11px monospace'; ctx.textAlign = 'left';
             ctx.fillText(zoom + '×', center.x - 66, center.y - 57);
@@ -225,7 +226,7 @@
             var shot = aimWorld(camera, pointer, sway);
             lens(center, shot);
             if (impact && elapsed - impact.time < 1.1) {
-                ctx.fillStyle = impact.score ? '#c0ffce' : '#ffc3b3';
+                ctx.fillStyle = impact.score ? theme.success : theme.danger;
                 ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
                 ctx.fillText(impact.label, clamp(center.x, 55, W - 55), clamp(center.y - RADIUS - 14, 18, H - 12));
             }
