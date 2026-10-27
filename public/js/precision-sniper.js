@@ -1,4 +1,4 @@
-/* Precision Sniper Dev4.1: drifting leaves, varied silhouettes and sizes, and scope reload ring. */
+/* Precision Sniper Dev4.2: pole-free scatter, perspective-accurate shapes, safe respawn geometry. */
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
@@ -14,71 +14,107 @@
         {x: 1190, y: 265, radius: 37, distance: 390, amplitude: 107, rate: 0.78, offset: 1.1},
         {x: 1450, y: 395, radius: 37, distance: 490, amplitude: 67, rate: 1.15, offset: -0.8}
     ];
+    function depthAt(y) {
+        // Visual perspective is intentionally based on vertical placement, not role.
+        var fraction=clamp((y-240)/150,0,1);
+        return {radius:Math.round(24+fraction*20), distance:Math.round(490-fraction*300)};
+    }
+    function footprint(target) {
+        // Actual visible label and silhouettes plus future bob/spawn offsets. No posts
+        // for Stage 3. These conservative dimensions guard the *rendered* targets,
+        // not merely their circular hit regions.
+        var half=100+(target.amplitude||0)+17;
+        return {left:target.x-half,right:target.x+half,
+            top:target.y-target.radius-43,
+            bottom:target.y+Math.max(37,target.radius*1.10)+19};
+    }
+    function targetsSeparated(a,b) {
+        var first=footprint(a),second=footprint(b);
+        return first.right<=second.left || second.right<=first.left ||
+            first.bottom<=second.top || second.bottom<=first.top;
+    }
     function randomStage(random) {
-        // Scatter independent target types and sizes over a two-dimensional field.
-        // Reject collisions including horizontal motion, rather than fixed x-lanes.
-        var rng = typeof random === 'function' ? random : Math.random;
-        var roles = ['round','round','hostile','hostile','civilian','animal'];
-        for (var i=roles.length-1;i>0;i--) {
-            var j=Math.floor(clamp(rng(),0,.999999)*(i+1));
-            var swap=roles[i];roles[i]=roles[j];roles[j]=swap;
+        // Genuine independent X/Y samples: no fixed lanes or golden-ratio base grid.
+        // The near/far sample guarantee provides visual depth; role assignment and
+        // all horizontal locations remain independently shuffled every Restart.
+        var rng=typeof random==='function'?random:Math.random;
+        var roles=['round','round','hostile','hostile','civilian','animal'];
+        for(var i=roles.length-1;i>0;i--){
+            var k=Math.floor(clamp(rng(),0,.999999)*(i+1));
+            var swap=roles[i];roles[i]=roles[k];roles[k]=swap;
         }
-        var sizes=[25,31,37,45,25,37];
-        for (var k=sizes.length-1;k>0;k--) {
-            var z=Math.floor(clamp(rng(),0,.999999)*(k+1));
-            var temp=sizes[k];sizes[k]=sizes[z];sizes[z]=temp;
-        }
-        var targets=[];
-        for(var n=0;n<6;n++) {
-            var type=roles[n], noShoot=type==='civilian'||type==='animal';
-            var radius=sizes[n];
-            var amplitude=rng()<.4 ? 14+Math.round(rng()*20) : 0;
-            var candidate=null;
-            // Fallback quasi-random scatter also terminates for a pathological constant RNG.
-            var saltX=rng(),saltY=rng();
-            for(var attempt=0;attempt<90;attempt++) {
-                var x=275+Math.round(((saltX+n*.61803398875+attempt*.38196601125)%1)*1160);
-                var y=218+Math.round(((saltY+n*.41421356237+attempt*.2718281828)%1)*180);
-                var separated=targets.every(function(existing) {
-                    var xGap=Math.abs(x-existing.x);
-                    var yGap=Math.abs(y-existing.y);
-                    return xGap>radius+existing.radius+amplitude+(existing.amplitude||0)+37 ||
-                        yGap>radius+existing.radius+33;
-                });
-                if(separated) { candidate={x:x,y:y}; break; }
+        var results=[];
+        for(var n=0;n<roles.length;n++){
+            var role=roles[n],moving=rng()<.36;
+            var motion=moving?Math.round(6+rng()*8):0;
+            var chosen=null;
+            for(var attempt=0;attempt<360;attempt++){
+                var unitX=clamp(rng(),0,.999999),unitY=clamp(rng(),0,.999999);
+                // Only a rejection fallback uses low-discrepancy exploration, so
+                // pathological fixed RNG implementations cannot lock the loop.
+                if(attempt>=50) {
+                    unitX=(unitX+attempt*.618033988749895)%1;
+                    unitY=(unitY+attempt*.414213562373095)%1;
+                }
+                var x=Math.round(344+unitX*1068);
+                var top=n===0 ? 242 : n===1 ? 347 : 242;
+                var bottom=n===0 ? 286 : n===1 ? 392 : 392;
+                var y=Math.round(top+unitY*(bottom-top));
+                var perspective=depthAt(y);
+                var candidate={x:x,y:y,radius:perspective.radius,
+                    distance:perspective.distance,amplitude:motion};
+                if(results.every(function(other){return targetsSeparated(candidate,other);})){
+                    chosen=candidate;break;
+                }
             }
-            // A deterministic farthest-open fallback avoids hanging if no sample fits.
-            if(!candidate) {
-                var backup=[{x:320,y:245},{x:570,y:388},{x:815,y:245},
-                    {x:1045,y:385},{x:1260,y:240},{x:1460,y:388}];
-                candidate=backup[n];
-                amplitude=0;
+            if(!chosen){
+                // Deterministic, terminating fallback after rejection exhaustion:
+                // choose the most separated legal spot on a fine 2D scan.
+                for(var fy=245;fy<=390&&!chosen;fy+=13){
+                    for(var fx=347;fx<=1410;fx+=29){
+                        var projected=depthAt(fy);
+                        var possible={x:fx,y:fy,radius:projected.radius,
+                            distance:projected.distance,amplitude:0};
+                        if(results.every(function(other){return targetsSeparated(possible,other);})){
+                            chosen=possible;break;
+                        }
+                    }
+                }
             }
-            targets.push({
-                x:candidate.x,y:candidate.y,radius:radius,kind:type,
-                distance:180+Math.round(rng()*310),amplitude:amplitude,
-                rate:.35+rng()*.85,offset:rng()*Math.PI*2,
-                noShoot:noShoot,
-                appearAt:Math.round(rng()*22)/10,
-                visibleFor:5.6+rng()*4.1,
-                cycle:10+rng()*5.2
-            });
+            if(!chosen) throw new Error('Precision Sniper: no space for random targets');
+            chosen.kind=role;
+            chosen.noShoot=role==='civilian'||role==='animal';
+            chosen.rate=.35+rng()*.8;
+            chosen.offset=rng()*Math.PI*2;
+            chosen.seed=rng()*100000+17*n;
+            chosen.appearAt=.5+rng()*1.9;
+            chosen.visibleFor=5.7+rng()*3.8;
+            chosen.cycle=10.5+rng()*4.4;
+            results.push(chosen);
         }
-        return targets;
+        return results;
     }
     function targetActive(target, time) {
         if (target.appearAt === undefined) return true;
         if (time < target.appearAt) return false;
         return (time - target.appearAt) % target.cycle < target.visibleFor;
     }
+    function positionSeed(seed, cycle, axis) {
+        // Stable on each frame, independent for every reappearance and target.
+        var value=Math.sin((seed||0)*.09317+cycle*17.371+axis*41.173)*43758.5453;
+        return value-Math.floor(value);
+    }
     function targetAt(target, time) {
-        var cycle=target.cycle && time>=target.appearAt ?
-            Math.floor((time-target.appearAt)/target.cycle) : 0;
-        // Returning targets reappear with small position shifts, not an identical loop.
-        var spawnX=cycle ? Math.sin(cycle*2.37+(target.offset||0))*13 : 0;
-        var spawnY=cycle ? Math.sin(cycle*1.89+(target.offset||0))*10 : 0;
-        return {x:target.x+spawnX+(target.amplitude||0)*Math.sin(time*(target.rate||0)+(target.offset||0)),
-            y:target.y+spawnY,radius:target.radius,kind:target.kind};
+        var cycle=target.cycle&&time>=target.appearAt ?
+            Math.max(0,Math.floor((time-target.appearAt)/target.cycle)) : 0;
+        var isRandom=!!target.kind;
+        var spawnX=isRandom&&cycle ? (positionSeed(target.seed,cycle,0)*2-1)*13 : 0;
+        var spawnY=isRandom&&cycle ? (positionSeed(target.seed,cycle,1)*2-1)*10 : 0;
+        var y=target.y+spawnY;
+        var depth=isRandom?depthAt(y):{radius:target.radius,distance:target.distance};
+        return {x:target.x+spawnX+(target.amplitude||0)*
+                Math.sin(time*(target.rate||0)+(target.offset||0)),
+            y:y,radius:depth.radius,distance:depth.distance,kind:target.kind};
     }
     function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
     function aimWorld(camera, pointer, sway) {
@@ -158,7 +194,8 @@
             var squared = Math.pow(point.x - pos.x, 2) + Math.pow(point.y - pos.y, 2);
             if (squared < best) { best = squared; nearest = i; }
         }
-        var range = stageTargets[nearest].distance || 150;
+        var range = targetAt(stageTargets[nearest],time).distance ||
+            stageTargets[nearest].distance || 150;
         var wind = windAt(time, moving), shift = ballisticOffset(range, wind);
         return {index:nearest, range:range, wind:wind, shift:shift,
             impact:{x:point.x + shift.x, y:point.y + shift.y}};
@@ -481,20 +518,25 @@
                 if (!targetActive(target, elapsed)) return;
                 var position = targetAt(target, elapsed);
                 ctx.save(); ctx.translate(position.x - target.x, position.y - target.y);
-                ctx.fillStyle=theme.muted;
-                ctx.fillRect(target.x-3,target.y+target.radius,6,104);
-                ctx.fillStyle=theme.border;
-                ctx.fillRect(target.x-48,target.y+target.radius+101,96,12);
+                // Stage 3 is target-only: poles and bases made adjacent shapes
+                // visually overlap and falsely suggested stationary range props.
+                if(!target.kind) {
+                    ctx.fillStyle=theme.muted;
+                    ctx.fillRect(target.x-3,target.y+target.radius,6,104);
+                    ctx.fillStyle=theme.border;
+                    ctx.fillRect(target.x-48,target.y+target.radius+101,96,12);
+                }
                 ctx.save();ctx.translate(target.x,target.y);
+                var displayedRadius=position.radius;
                 if (!target.kind||target.kind==='round') {
-                    circle(0,0,target.radius+4,theme.targetBorder);
-                    circle(0,0,target.radius,theme.targetPaper);
-                    circle(0,0,target.radius*.79,theme.targetAccent);
-                    circle(0,0,target.radius*.595,theme.targetPaper);
-                    circle(0,0,target.radius*.378,theme.targetAccent);
-                    circle(0,0,target.radius*.216,theme.targetCenter);
+                    circle(0,0,displayedRadius+4,theme.targetBorder);
+                    circle(0,0,displayedRadius,theme.targetPaper);
+                    circle(0,0,displayedRadius*.79,theme.targetAccent);
+                    circle(0,0,displayedRadius*.595,theme.targetPaper);
+                    circle(0,0,displayedRadius*.378,theme.targetAccent);
+                    circle(0,0,displayedRadius*.216,theme.targetCenter);
                 } else {
-                    drawSilhouette(target);
+                    drawSilhouette({kind:target.kind,noShoot:target.noShoot,radius:displayedRadius});
                 }
                 ctx.fillStyle=theme.ink;ctx.font='bold 12px sans-serif';
                 ctx.textAlign='center';
@@ -502,10 +544,10 @@
                     target.kind==='animal'?'NO SHOOT / 動物':
                     target.kind==='hostile'?'人物型 '+(index+1):
                     (target.amplitude?'M':'T')+(index+1);
-                ctx.fillText(title+' '+target.distance+'m',0,-target.radius-16);
+                ctx.fillText(title+' '+position.distance+'m',0,-displayedRadius-16);
                 if (cleared.indexOf(index)!==-1) {
                     ctx.strokeStyle=theme.targetBorder;ctx.globalAlpha=.65;ctx.lineWidth=2;
-                    ctx.beginPath();ctx.arc(0,0,target.radius+7,0,Math.PI*2);ctx.stroke();
+                    ctx.beginPath();ctx.arc(0,0,displayedRadius+7,0,Math.PI*2);ctx.stroke();
                     ctx.globalAlpha=1;
                 }
                 ctx.restore();
@@ -748,7 +790,8 @@
             }
         };
     }
-    window.RssPrecisionSniperCore = {aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,
+    window.RssPrecisionSniperCore = {depthAt:depthAt,footprint:footprint,
+        targetsSeparated:targetsSeparated,positionSeed:positionSeed,aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,
         targetAt:targetAt,targetActive:targetActive,randomStage:randomStage,
         targetContact:targetContact,windAt:windAt,ballisticOffset:ballisticOffset,
         shotSolution:shotSolution,windLeafAt:windLeafAt,windTravel:windTravel,
