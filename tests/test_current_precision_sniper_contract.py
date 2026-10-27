@@ -32,7 +32,7 @@ check('precision-sniper-canvas' in src('public/css/game-widget.css'), 'Canvas si
 check('var(--bs-border-color' in src('public/css/game-widget.css')
       and "token('--bs-primary'" in game, 'Sniper aligns frame and Canvas palette with other Bootstrap Game widgets')
 check('marks.forEach(bulletMark)' in game and 'impactFlash()' in game
-      and "kind = selected !== -1" in game, 'bullet impacts have material-aware permanent marks and a transient effect')
+      and "var kind = contact ? 'target'" in game, 'bullet impacts have material-aware permanent marks and a transient effect')
 check('Math.sin(phase * 1.55)' in game and 'Math.sin(phase * 1.23)' in game,
       'sway returns to neutral along independent horizontal and vertical cycles')
 check('cancelAnimationFrame' in game and 'observer.disconnect()' in game, 'Pause and Destroy clean up scheduled work')
@@ -40,9 +40,10 @@ check("context.on(canvas, 'keydown'" in game and "context.on(canvas, 'blur'" in 
       'keyboard input and held breath remain scope-bound')
 check('clientX - rect.left' in game and 'canvas.width / W' in game,
       'pointer and canvas transformations use CSS coordinates and drawing scale independently')
-check('aimWorld(camera, pointer, sway)' in game and 'scoreHit(at, targetAt(target, elapsed))' in game,
-      'the sway shown in the zoomed lens is used for collision')
-check('1.50.0-dev.2' in src('app/version.php'), 'visible and asset versions mark Dev2 only')
+check('aimWorld(camera, pointer, sway)' in game and 'targetContact(at, targets, elapsed)' in game
+      and 'scoreHit(point, position)' in game,
+      'the sway shown in the zoomed lens is used for repeated physical collision')
+check('1.50.0-dev.3' in src('app/version.php'), 'visible and asset versions mark Dev2 refinement only')
 check('MOVING_TARGETS' in game and 'targetAt(target, elapsed)' in game,
       'second range animates targets and hit tests use displayed center')
 check('mark.targetIndex >= 0' in game and 'impact.targetIndex >= 0' in game,
@@ -52,6 +53,16 @@ check("context.on(stageSelect, 'change'" in game and "stageSelect.value === '2'"
 check('window.AudioContext || window.webkitAudioContext' in game and
       "context.on(soundButton, 'click'" in game and 'audioContext.close()' in game,
       'muffled WebAudio is explicit opt-in, lazy, and cleaned up')
+check('targetContact(point, stageTargets, time)' in game
+      and "var firstHit = !!contact && cleared.indexOf(selected) === -1" in game
+      and "marks.push({x:at.x,y:at.y,kind:kind,targetIndex:selected" in game,
+      'repeat shots independently create visible marks without duplicate score')
+check("'再命中・加点なし'" in game and "'中心から横 '" in game and "' / 縦 '" in game,
+      'first and repeat impacts give player detailed zone and offset feedback')
+check("--sniper-target-accent:#99776b" in src('public/css/game-widget.css')
+      and "circle(0,0,29,theme.targetAccent)" in game
+      and "circle(0,0,14,theme.targetAccent)" in game,
+      'target rings use muted coordinated palette rather than Bootstrap danger red')
 check("source.connect(" not in game and "filter.type='lowpass'" in game
       and "soundOn = false" in game, 'sound remains local, low-pass filtered and OFF initially')
 check(all(s not in game for s in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'https://']),
