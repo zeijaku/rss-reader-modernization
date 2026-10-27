@@ -1,18 +1,18 @@
-/* Precision Sniper Dev2 refinement: repeated impacts and subdued target palette; local WebAudio only. */
+/* Precision Sniper Dev3: stylized distance/drop/wind mechanics; opt-in local audio, no external assets. */
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
     var FIXED_TARGETS = [
-        {x: 435, y: 270, radius: 37},
-        {x: 810, y: 365, radius: 37},
-        {x: 1190, y: 265, radius: 37},
-        {x: 1450, y: 395, radius: 37}
+        {x: 435, y: 270, radius: 37, distance: 150},
+        {x: 810, y: 365, radius: 37, distance: 250},
+        {x: 1190, y: 265, radius: 37, distance: 350},
+        {x: 1450, y: 395, radius: 37, distance: 450}
     ];
     var MOVING_TARGETS = [
-        {x: 435, y: 270, radius: 37},
-        {x: 810, y: 365, radius: 37, amplitude: 82, rate: 0.95},
-        {x: 1190, y: 265, radius: 37, amplitude: 107, rate: 0.78, offset: 1.1},
-        {x: 1450, y: 395, radius: 37, amplitude: 67, rate: 1.15, offset: -0.8}
+        {x: 435, y: 270, radius: 37, distance: 180},
+        {x: 810, y: 365, radius: 37, distance: 280, amplitude: 82, rate: 0.95},
+        {x: 1190, y: 265, radius: 37, distance: 390, amplitude: 107, rate: 0.78, offset: 1.1},
+        {x: 1450, y: 395, radius: 37, distance: 490, amplitude: 67, rate: 1.15, offset: -0.8}
     ];
     function targetAt(target, time) {
         return {x: target.x + (target.amplitude || 0) * Math.sin(time * (target.rate || 0) + (target.offset || 0)),
@@ -36,6 +36,32 @@
                 offsetX:point.x - position.x, offsetY:point.y - position.y};
         }
         return null;
+    }
+    function windAt(time, moving) {
+        // Gentle, deterministic gusts tied to game time; pause freezes the wind.
+        return moving ? 2.0 * Math.sin(time * .38 + .7) + .5 * Math.cos(time * .17)
+            : .45 + .75 * Math.sin(time * .35 + .8);
+    }
+    function ballisticOffset(distance, wind) {
+        // Arcade approximation in world pixels (not real-world firearm ballistics).
+        // The 150 m sight-in distance has zero drop; farther targets require holdover.
+        var range = clamp(distance, 150, 500);
+        var excess = range - 150;
+        return {x: wind * 2.8 * Math.pow(range / 250, 1.5), y: .00018 * excess * excess};
+    }
+    function shotSolution(point, stageTargets, time, moving) {
+        // Choose range by the nearest target to the actual aim point. This allows
+        // the player to hold high/against the wind without switching the range.
+        var nearest = 0, best = Infinity;
+        for (var i = 0; i < stageTargets.length; i++) {
+            var pos = targetAt(stageTargets[i], time);
+            var squared = Math.pow(point.x - pos.x, 2) + Math.pow(point.y - pos.y, 2);
+            if (squared < best) { best = squared; nearest = i; }
+        }
+        var range = stageTargets[nearest].distance || 150;
+        var wind = windAt(time, moving), shift = ballisticOffset(range, wind);
+        return {index:nearest, range:range, wind:wind, shift:shift,
+            impact:{x:point.x + shift.x, y:point.y + shift.y}};
     }
     function breathing(phase, held, stamina, unstable) {
         // Center-seeking, bounded breathing cycles: both axes regularly pass through zero.
@@ -68,6 +94,8 @@
         soundButton.setAttribute('aria-label','射撃音の切り替え');
         var ammunition = element('span', 'precision-sniper-ammo', '弾数 5 / 5');
         var hits = element('span', 'precision-sniper-hits', '標的 0 / 4');
+        var telemetry = element('span', 'precision-sniper-ballistics', '距離 — / 風 — / 着弾ずれ —');
+        telemetry.setAttribute('aria-label', '弾道情報');
         var breathLabel = element('label', 'precision-sniper-breath-label', '呼吸 ');
         var breathGauge = element('progress', 'precision-sniper-breath');
         breathGauge.max = 100; breathGauge.value = 100;
@@ -82,14 +110,14 @@
         zoomSelect.value = '3';
         zoomSelect.setAttribute('aria-label', 'スコープ倍率');
         zoomLabel.appendChild(zoomSelect);
-        toolbar.append(stageLabel, ammunition, hits, breathLabel, zoomLabel, soundButton);
+        toolbar.append(stageLabel, ammunition, hits, breathLabel, zoomLabel, soundButton, telemetry);
         var frame = element('div', 'precision-sniper-frame');
         var canvas = element('canvas', 'precision-sniper-canvas');
         canvas.tabIndex = 0;
         canvas.setAttribute('role', 'application');
         canvas.setAttribute('aria-label', 'Precision Sniper 訓練場。マウスで狙い左クリックで射撃。Spaceで息止め、RまたはZでリロード。');
         frame.appendChild(canvas);
-        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定標的、ステージ2は移動標的。ステージ変更は次のStart / Restartで反映します。マウスで探索・照準、左クリックで射撃。Space長押しで息止め、R / Zでリロード。端にマウスを寄せると視界を移動します。');
+        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定標的、ステージ2は移動標的。遠い標的ほど弾が下に落ち、風下へ流れます。画面上部の着弾ずれを参考に、上・風上へ狙いをずらしてください。ステージ変更は次のStart / Restartで反映。マウスで探索・照準、左クリックで射撃、Space長押しで息止め、R / Zでリロード。');
         var details = element('p', 'precision-sniper-feedback', 'STARTを押して訓練開始。');
         details.setAttribute('role', 'status');
         root.append(toolbar, frame, details, help);
@@ -274,7 +302,7 @@
                 circle(0,0,14,theme.targetAccent);
                 circle(0,0,8,theme.targetCenter);
                 ctx.fillStyle=theme.ink;ctx.font='bold 12px sans-serif';
-                ctx.textAlign='center';ctx.fillText((target.amplitude ? 'M' : 'T')+(index+1),0,-target.radius-14);
+                ctx.textAlign='center';ctx.fillText((target.amplitude ? 'M' : 'T')+(index+1)+' '+target.distance+'m',0,-target.radius-14);
                 if (cleared.indexOf(index)!==-1) {
                     ctx.strokeStyle=theme.targetBorder;ctx.globalAlpha=.65;ctx.lineWidth=2;
                     ctx.beginPath();ctx.arc(0,0,44,0,Math.PI*2);ctx.stroke();
@@ -317,6 +345,11 @@
             ctx.save(); ctx.translate(-camera.x, -camera.y); landscape(); ctx.restore();
             var center = {x: pointer.x, y: pointer.y + recoil};
             var shot = aimWorld(camera, pointer, sway);
+            var solution = shotSolution(shot, targets, elapsed, targets === MOVING_TARGETS);
+            var dx = Math.round(Math.abs(solution.shift.x)), dy = Math.round(solution.shift.y);
+            telemetry.textContent = '距離 ' + solution.range + 'm / 風 ' +
+                (solution.wind >= 0 ? '→ ' : '← ') + Math.abs(solution.wind).toFixed(1) +
+                'm/s / 着弾ずれ ' + (solution.shift.x >= 0 ? '→ ' : '← ') + dx + 'px・↓ ' + dy + 'px';
             lens(center, shot);
             if (impact && elapsed - impact.time < 1.1) {
                 ctx.fillStyle = impact.hit ? theme.success : theme.danger;
@@ -376,18 +409,20 @@
             magazine--; shots++; recoil = 8;
             muffledShot();
             var at = aimWorld(camera, pointer, sway);
-            var contact = targetContact(at, targets, elapsed);
+            var solution = shotSolution(at, targets, elapsed, targets === MOVING_TARGETS);
+            var landed = solution.impact;
+            var contact = targetContact(landed, targets, elapsed);
             var selected = contact ? contact.index : -1;
             var firstHit = !!contact && cleared.indexOf(selected) === -1;
             var awarded = firstHit ? contact.score : 0;
             if (firstHit) { points += awarded; cleared.push(selected); }
-            var kind = contact ? 'target' : at.y >= 462 ? 'ground' : 'none';
+            var kind = contact ? 'target' : landed.y >= 462 ? 'ground' : 'none';
             var offsetX = contact ? contact.offsetX : 0, offsetY = contact ? contact.offsetY : 0;
             if (kind !== 'none') {
-                marks.push({x:at.x,y:at.y,kind:kind,targetIndex:selected,offsetX:offsetX,offsetY:offsetY});
+                marks.push({x:landed.x,y:landed.y,kind:kind,targetIndex:selected,offsetX:offsetX,offsetY:offsetY});
                 if (marks.length > 36) marks.shift();
             }
-            impact = {time:elapsed,score:awarded,hit:!!contact,point:at,kind:kind,targetIndex:selected,
+            impact = {time:elapsed,score:awarded,hit:!!contact,point:landed,kind:kind,targetIndex:selected,
                 offsetX:offsetX,offsetY:offsetY,label:contact
                     ? 'T' + (selected + 1) + ' ' + contact.zone + (firstHit ? ' +' + awarded : ' 再命中')
                     : 'MISS'};
@@ -397,9 +432,13 @@
                 var dx = Math.round(offsetX), dy = Math.round(offsetY);
                 details.textContent = '標的' + (selected + 1) + '・' + contact.zone +
                     '（中心から横 ' + (dx > 0 ? '+' : '') + dx + ' / 縦 ' + (dy > 0 ? '+' : '') + dy +
-                    '）に命中。' + (firstHit ? '+' + awarded + '点' : '再命中・加点なし') + '。';
+                    '）に命中。' + (firstHit ? '+' + awarded + '点' : '再命中・加点なし') +
+                    '。距離' + solution.range + 'm / 風による横ずれ ' +
+                    Math.round(solution.shift.x) + 'px、落下 ' + Math.round(solution.shift.y) + 'px。';
             } else {
-                details.textContent = kind === 'ground' ? 'MISS。地面に着弾しました。' : 'MISS。標的外です。';
+                details.textContent = (kind === 'ground' ? 'MISS。地面に着弾しました。' : 'MISS。標的外です。') +
+                    ' 距離' + solution.range + 'm、風による横ずれ ' +
+                    Math.round(solution.shift.x) + 'px、落下 ' + Math.round(solution.shift.y) + 'px。';
             }
             draw();
         }
@@ -484,6 +523,7 @@
         };
     }
     window.RssPrecisionSniperCore = {aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,
-        targetAt:targetAt,targetContact:targetContact};
+        targetAt:targetAt,targetContact:targetContact,windAt:windAt,ballisticOffset:ballisticOffset,
+        shotSolution:shotSolution};
     window.RssGameWidget.register('precision_sniper', mount);
 })(window, document);
