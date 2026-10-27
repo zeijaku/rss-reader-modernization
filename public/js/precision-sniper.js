@@ -1,4 +1,4 @@
-/* Precision Sniper Dev4: visible wind and random friend-or-foe targets; local audio only. */
+/* Precision Sniper Dev4.1: drifting leaves, varied silhouettes and sizes, and scope reload ring. */
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
@@ -15,31 +15,51 @@
         {x: 1450, y: 395, radius: 37, distance: 490, amplitude: 67, rate: 1.15, offset: -0.8}
     ];
     function randomStage(random) {
-        // Fresh target locations and friend-or-foe order on each Restart. Separate
-        // lanes ensure even moving targets cannot overlap one another.
+        // Scatter independent target types and sizes over a two-dimensional field.
+        // Reject collisions including horizontal motion, rather than fixed x-lanes.
         var rng = typeof random === 'function' ? random : Math.random;
-        var slots = [300, 520, 740, 960, 1180, 1400];
-        var order = [0, 1, 2, 3, 4, 5];
-        for (var i = order.length - 1; i > 0; i--) {
-            var j = Math.floor(clamp(rng(), 0, .999999) * (i + 1));
-            var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+        var roles = ['round','round','hostile','hostile','civilian','animal'];
+        for (var i=roles.length-1;i>0;i--) {
+            var j=Math.floor(clamp(rng(),0,.999999)*(i+1));
+            var swap=roles[i];roles[i]=roles[j];roles[j]=swap;
         }
-        return slots.map(function (x, i) {
-            var bad = order[i] < 2;
-            return {
-                x:x + (rng() - .5) * 36,
-                y:235 + Math.floor(rng() * 4) * 51,
-                radius:37,
-                distance:180 + i * 62,
-                amplitude:i % 2 ? 25 : 0,
-                rate:.45 + i * .09,
-                offset:rng() * Math.PI * 2,
-                noShoot:bad,
-                appearAt:i * .65,
-                visibleFor:6.7 + rng() * 1.7,
-                cycle:11.2 + rng() * 2.3
-            };
-        });
+        var targets=[];
+        for(var n=0;n<6;n++) {
+            var type=roles[n], noShoot=type==='civilian'||type==='animal';
+            var radius=[25,31,37,45][Math.floor(clamp(rng(),0,.999999)*4)];
+            var amplitude=rng()<.4 ? 14+Math.round(rng()*20) : 0;
+            var candidate=null;
+            // Fallback quasi-random scatter also terminates for a pathological constant RNG.
+            var saltX=rng(),saltY=rng();
+            for(var attempt=0;attempt<90;attempt++) {
+                var x=275+Math.round(((saltX+n*.61803398875+attempt*.38196601125)%1)*1160);
+                var y=218+Math.round(((saltY+n*.41421356237+attempt*.2718281828)%1)*180);
+                var separated=targets.every(function(existing) {
+                    var xGap=Math.abs(x-existing.x);
+                    var yGap=Math.abs(y-existing.y);
+                    return xGap>radius+existing.radius+amplitude+(existing.amplitude||0)+37 ||
+                        yGap>radius+existing.radius+33;
+                });
+                if(separated) { candidate={x:x,y:y}; break; }
+            }
+            // A deterministic farthest-open fallback avoids hanging if no sample fits.
+            if(!candidate) {
+                var backup=[{x:320,y:245},{x:570,y:388},{x:815,y:245},
+                    {x:1045,y:385},{x:1260,y:240},{x:1460,y:388}];
+                candidate=backup[n];
+                amplitude=0;
+            }
+            targets.push({
+                x:candidate.x,y:candidate.y,radius:radius,kind:type,
+                distance:180+Math.round(rng()*310),amplitude:amplitude,
+                rate:.35+rng()*.85,offset:rng()*Math.PI*2,
+                noShoot:noShoot,
+                appearAt:Math.round(rng()*22)/10,
+                visibleFor:5.6+rng()*4.1,
+                cycle:10+rng()*5.2
+            });
+        }
+        return targets;
     }
     function targetActive(target, time) {
         if (target.appearAt === undefined) return true;
@@ -54,10 +74,33 @@
     function aimWorld(camera, pointer, sway) {
         return {x: camera.x + pointer.x + sway.x, y: camera.y + pointer.y + sway.y};
     }
+    function silhouetteHit(dx, dy, kind) {
+        function oval(x,y,rx,ry) { return Math.pow((dx-x)/rx,2)+Math.pow((dy-y)/ry,2)<=1; }
+        if (kind==='animal') {
+            return oval(-3,4,23,12) || oval(23,-6,11,11) ||
+                (dx>=-20&&dx<=-11&&dy>=9&&dy<=29) ||
+                (dx>=7&&dx<=17&&dy>=9&&dy<=29) ||
+                (dx>=-32&&dx<=-22&&dy>=-8&&dy<=4);
+        }
+        return oval(0,-23,10,10) ||
+            (Math.abs(dx)<=12&&dy>=-12&&dy<=13) ||
+            (Math.abs(dx)<=25&&dy>=-9&&dy<=1) ||
+            (dx>=-11&&dx<=-2&&dy>=12&&dy<=32) ||
+            (dx>=2&&dx<=11&&dy>=12&&dy<=32);
+    }
     function scoreHit(point, target) {
-        var distance = Math.hypot(point.x - target.x, point.y - target.y);
-        if (distance > target.radius) return 0;
-        return distance <= 10 ? 100 : distance <= 22 ? 75 : 45;
+        var radius=target.radius||37, normalized=37/radius;
+        var dx=(point.x-target.x)*normalized, dy=(point.y-target.y)*normalized;
+        var kind=target.kind||'round';
+        if (kind==='round') {
+            var distance=Math.hypot(dx,dy);
+            if(distance>37)return 0;
+            return distance<=10?100:distance<=22?75:45;
+        }
+        if (!silhouetteHit(dx,dy,kind)) return 0;
+        // Shape-specific hit zone: normalized torso/body center vs limbs.
+        var sweetSpot=kind==='animal' ? Math.hypot(dx+3,dy-4) : Math.hypot(dx,dy);
+        return sweetSpot<=10?100:sweetSpot<=22?75:45;
     }
     function targetContact(point, stageTargets, time) {
         // Every physical impact is detected, even after this target awarded points.
