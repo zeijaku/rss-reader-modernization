@@ -16,13 +16,15 @@ class FakeAudioContext {
  close() { audioClosed++; this.state = 'closed'; return Promise.resolve(); }
 }
 const frames = new Map(), handlers = [], transforms = [], contexts = [], canvasLabels = [], drawnArcs = [];
-let bulletHolePaints = 0, standRectCount = 0;
+let bulletHolePaints = 0, standRectCount = 0, tracerDots = 0, tracerStrokes = 0;
 function canvasContext() {
  const c = {};
  for (const fn of ['beginPath','arc','fill','stroke','fillRect','save','restore','translate','scale','moveTo','lineTo','fillText','clearRect','setTransform','clip','strokeRect']) {
   c[fn] = (...args) => {
    if (fn === 'scale' || fn === 'translate') transforms.push([fn, ...args]);
    if (fn === 'fill' && c.fillStyle === '#212529') bulletHolePaints++;
+   if (fn === 'fill' && c.fillStyle === '#c89e5f') tracerDots++;
+   if (fn === 'stroke' && c.strokeStyle === '#c89e5f') tracerStrokes++;
    if (fn === 'fillText') canvasLabels.push(String(args[0]));
    if (fn === 'arc') drawnArcs.push(args);
    if (fn === 'fillRect' && args[2] === 6 && args[3] === 104) standRectCount++;
@@ -212,6 +214,36 @@ check(oldAim.dueAt>launchAt &&
 check(Math.abs(ledShot.wind-(math.windTravel(ledShot.dueAt,true)-
       math.windTravel(launchAt,true))/ledShot.flight)<1e-8,
       'flight uses average wind across elapsed travel, not just trigger-pull gust');
+check(!!ledShot.launchWorld && ledShot.launchWorld.x === leadAim.x &&
+      ledShot.launchWorld.y === leadAim.y,
+      'launch point stays frozen at the original aim for every projectile');
+const tracerStart=math.projectilePosition(ledShot,ledShot.launchTime);
+const tracerHalf=math.projectilePosition(ledShot,ledShot.launchTime+ledShot.flight*.5);
+const tracerEnd=math.projectilePosition(ledShot,ledShot.dueAt);
+check(Math.abs(tracerEnd.x-ledShot.impact.x)<1e-9 &&
+      Math.abs(tracerEnd.y-ledShot.impact.y)<1e-9,
+      'visible projectile endpoint exactly equals physical hit-test world coordinates');
+check(tracerStart.x===leadAim.x-34 && tracerStart.y===leadAim.y-32 &&
+      tracerHalf.x>tracerStart.x && tracerHalf.y>tracerStart.y,
+      'projected tracer enters from a nearby upstream point and advances over travel time');
+check(Math.abs((tracerHalf.x-(leadAim.x-17))-ledShot.shift.x*.25)<1e-8 &&
+      Math.abs((tracerHalf.y-(leadAim.y-16))-ledShot.shift.y*.25)<1e-8,
+      'at midflight crosswind and gravity independently contribute quadratic deviation');
+const reverseTracer={launchWorld:{x:400,y:280},launchTime:0,
+      flight:.5,dueAt:.5,shift:{x:-32,y:25},impact:{x:368,y:305}};
+const reversedHalf=math.projectilePosition(reverseTracer,.25);
+check(Math.abs(reversedHalf.x-(400-17+(-32)*.25))<1e-8 &&
+      Math.abs(reversedHalf.y-(280-16+25*.25))<1e-8,
+      'leftward wind bends flight left while drop pulls the arc downward');
+check(math.projectileProgress(ledShot,ledShot.launchTime-2)===0 &&
+      math.projectileProgress(ledShot,ledShot.dueAt+2)===1,
+      'projectile progress clamps before launch and after impact');
+const tail=math.projectileTrail(ledShot,ledShot.launchTime+ledShot.flight*.5);
+check(tail.length===6 && tail.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)) &&
+      tail[0].x < tail[5].x &&
+      tail[5].x===tracerHalf.x && tail[5].y===tracerHalf.y,
+      'six trail samples remain strictly behind current shot, never showing its future path');
+
 const flashTarget={x:435,y:270,radius:37,distance:490,appearAt:0,cycle:5,visibleFor:.22};
 const disappearance=math.flightShot({x:435,y:270},[flashTarget],0,false);
 check(math.targetContact({x:435,y:270},[flashTarget],0)!==null &&
@@ -278,11 +310,13 @@ const before = transforms.length;
 zoom.value = '4';send(zoom,'change');
 check(transforms.slice(before).some(t=>t[0] === 'scale' && t[1] === 4), 'zoom updates scope-only magnification');
 send(canvas,'pointermove',{clientX:205,clientY:140});
-const initialHoles=bulletHolePaints;
+const initialHoles=bulletHolePaints,initialTracer=tracerDots;
 send(canvas,'pointerdown',{clientX:205,clientY:140});
 check(views.at(-1).score===0 && feedback.textContent.includes('着弾まで約') &&
       bulletHolePaints===initialHoles,
       'trigger pull is immediate but awards no score or impact mark until arrival');
+check(tracerDots>initialTracer && tracerStrokes>0,
+      'shot instantly draws its small bright dot and trailing strokes in world and scope');
 step(5);check(views.at(-1).score===0,
       'shorter-than-flight frames do not register a hit');
 step(12);
@@ -293,6 +327,15 @@ check(feedback.textContent.includes('風による横ずれ') &&
 check(feedback.textContent.includes('中心から横') && feedback.textContent.includes('に命中'),
       'first impact reports its physical position relative to target center');
 const firstScore=views.at(-1).score;
+const fadeDots=tracerDots,fadeStrokes=tracerStrokes;
+widget.resize();
+check(tracerDots===fadeDots && tracerStrokes>fadeStrokes,
+      'after impact a brief trailing stroke remains but the projectile body has disappeared');
+step(8);
+const fadeGone=tracerStrokes;
+widget.resize();
+check(tracerStrokes===fadeGone,
+      'the impact trail disappears after its 0.12-second game-clock fade');
 const snapshotHoles=()=>{const before=bulletHolePaints;widget.resize();return bulletHolePaints-before;};
 const firstHoleCount=snapshotHoles();
 check(firstHoleCount>0,'first shot paints a bullet hole only upon arrival');
@@ -319,6 +362,10 @@ check(sound['aria-pressed']==='false'&&muffledShots===1,
 const score = views.at(-1).score;
 widget.togglePause();check(views.at(-1).paused && frames.size === 0, 'Pause cancels the animation loop');
 const frozenWind=telemetry.textContent,scoreWhilePaused=views.at(-1).score;
+const pausedPaints=tracerDots;
+widget.resize();
+check(tracerDots>pausedPaints,
+      'paused frame keeps the in-flight projectile visible at its frozen position');
 step(30);check(telemetry.textContent===frozenWind && frames.size===0 &&
       views.at(-1).score===scoreWhilePaused,
       'pause freezes gusts, targets and projectile flight, without asynchronous timers');
@@ -346,6 +393,14 @@ check(views.at(-1).status === 'playing' && choice.value === '2',
       'stage selection is possible during active play without altering the current run');
 widget.restart();check(views.at(-1).score === 0 && views.at(-1).message.includes('移動標的'),
       'Restart clears score and activates stage 2');
+const noOldShot=tracerDots;widget.resize();
+check(tracerDots===noOldShot,
+      'Restart erases active projectiles and residual trails from the previous stage');
+send(canvas,'pointerdown',{clientX:205,clientY:140});
+send(canvas,'pointerdown',{clientX:205,clientY:140});
+check(views.at(-1).score===0 &&
+      tracerDots>noOldShot && views.at(-1).message.includes('飛翔中'),
+      'two projectiles can be rendered simultaneously before either registers an impact');
 step(200);
 check(views.at(-1).status === 'playing', 'moving-target round continues normally over time');
 check(telemetry.textContent.includes('風') && telemetry.textContent.includes('m/s'),
