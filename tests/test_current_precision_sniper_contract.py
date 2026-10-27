@@ -43,7 +43,7 @@ check('clientX - rect.left' in game and 'canvas.width / W' in game,
 check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed,targets,arrivalTime)' in game
       and 'scoreHit(point, position)' in game,
       'the sway shown in the zoomed lens is used for repeated physical collision')
-check('1.50.0-dev.9' in src('app/version.php'), 'visible and asset versions mark Dev5.1 tracer preview only')
+check('1.50.0-dev.10' in src('app/version.php'), 'visible and asset versions mark Dev5.1.1 tracer origin fix preview only')
 check('MOVING_TARGETS' in game and 'targetAt(target, elapsed)' in game,
       'second range animates targets and hit tests use displayed center')
 check('mark.targetIndex >= 0' in game and 'impact.targetIndex >= 0' in game,
@@ -142,11 +142,15 @@ check('function projectileProgress(shot, time)' in game
       and 'function projectileTrail(shot, time)' in game
       and 'launchWorld:{x:aim.x,y:aim.y}' in game,
       'projectile visualization reads launch geometry and uses testable progress/position/trail helpers')
-check('shot.launchWorld.x-34*(1-progress)' in game
-      and 'shot.launchWorld.y-32*(1-progress)' in game
-      and 'shot.shift.x*progress*progress' in game
-      and 'shot.shift.y*progress*progress' in game,
-      'projected 2D arc bends due to wind and gravity while ending at launch-derived impact')
+check('x:shot.launchWorld.x+shot.shift.x*progress*progress' in game
+      and 'y:shot.launchWorld.y+shot.shift.y*progress*progress' in game
+      and 'shot.launchWorld.x-34' not in game
+      and 'shot.launchWorld.y-32' not in game,
+      'tracer begins at crosshair with no artificial left/up offset; drift is wind/drop only')
+check('function projectileRadius(shot, time)' in game
+      and '2.8-1.45*projectileProgress(shot,time)' in game
+      and 'var radius=projectileRadius(shot,time);' in game,
+      'bullet shrinks toward the target as a forward-depth visual cue')
 check('function drawProjectiles()' in game
       and 'pendingShots.forEach(function(shot)' in game
       and 'drawProjectiles();' in game
@@ -160,6 +164,7 @@ check('fadingTrails.push({shot:projectile,at:projectile.dueAt})' in game
       'temporary post-impact trail fade is tied to frozen game clock and is reset on lifecycle changes')
 check('projectileProgress:projectileProgress' in game
       and 'projectilePosition:projectilePosition' in game
+      and 'projectileRadius:projectileRadius' in game
       and 'projectileTrail:projectileTrail' in game,
       'new render geometry is unit-testable without timers or external assets')
 
