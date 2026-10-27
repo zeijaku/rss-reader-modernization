@@ -40,9 +40,20 @@ check("context.on(canvas, 'keydown'" in game and "context.on(canvas, 'blur'" in 
       'keyboard input and held breath remain scope-bound')
 check('clientX - rect.left' in game and 'canvas.width / W' in game,
       'pointer and canvas transformations use CSS coordinates and drawing scale independently')
-check('aimWorld(camera, pointer, sway)' in game and 'scoreHit(at, target)' in game,
+check('aimWorld(camera, pointer, sway)' in game and 'scoreHit(at, targetAt(target, elapsed))' in game,
       'the sway shown in the zoomed lens is used for collision')
-check('1.50.0-dev.1' in src('app/version.php'), 'visible and asset versions mark development only')
+check('1.50.0-dev.2' in src('app/version.php'), 'visible and asset versions mark Dev2 only')
+check('MOVING_TARGETS' in game and 'targetAt(target, elapsed)' in game,
+      'second range animates targets and hit tests use displayed center')
+check('mark.targetIndex >= 0' in game and 'impact.targetIndex >= 0' in game,
+      'holes and flash stay attached to moving targets')
+check("context.on(stageSelect, 'change'" in game and "stageSelect.value === '2'" in game,
+      'moving stage is explicitly selectable without changing current round')
+check('window.AudioContext || window.webkitAudioContext' in game and
+      "context.on(soundButton, 'click'" in game and 'audioContext.close()' in game,
+      'muffled WebAudio is explicit opt-in, lazy, and cleaned up')
+check("source.connect(" not in game and "filter.type='lowpass'" in game
+      and "soundOn = false" in game, 'sound remains local, low-pass filtered and OFF initially')
 check(all(s not in game for s in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'https://']),
       'original Canvas graphics and no new network boundary')
 print(f'RESULT: PASS {checks} / FAIL 0 / SKIP 0')
