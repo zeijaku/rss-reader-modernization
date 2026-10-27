@@ -646,7 +646,8 @@
                 catalogButton('#registerGameWidget', 'Falling Blocks', 'fas fa-cubes').attr('data-game-preset', 'falling_blocks'),
                 catalogButton('#registerGameWidget', 'Word Tiles', 'fas fa-font').attr('data-game-preset', 'word_tiles'),
                 catalogButton('#registerGameWidget', 'Word Tiles 日本語', 'fas fa-language').attr('data-game-preset', 'word_tiles_ja'),
-                catalogButton('#registerGameWidget', 'Tower Defense', 'fas fa-chess-rook').attr('data-game-preset', 'tower_defense')
+                catalogButton('#registerGameWidget', 'Tower Defense', 'fas fa-chess-rook').attr('data-game-preset', 'tower_defense'),
+                catalogButton('#registerGameWidget', 'Precision Sniper', 'fas fa-crosshairs').attr('data-game-preset', 'precision_sniper')
             ])
         ];
 

@@ -285,7 +285,7 @@
         if (oldType === nextType) { return; }
         // Language changes keep both independent Word Tiles snapshots and Best.
         if (['word_tiles', 'word_tiles_ja'].indexOf(oldType) !== -1 && ['word_tiles', 'word_tiles_ja'].indexOf(nextType) !== -1) { return; }
-        if ((oldType === 'maze_chase' || oldType === 'falling_blocks' || oldType === 'word_tiles' || oldType === 'word_tiles_ja') && window.RssGameWidget) { window.RssGameWidget.removeWidgetState(spec.id); }
+        if ((oldType === 'maze_chase' || oldType === 'falling_blocks' || oldType === 'word_tiles' || oldType === 'word_tiles_ja' || oldType === 'precision_sniper') && window.RssGameWidget) { window.RssGameWidget.removeWidgetState(spec.id, oldType === 'precision_sniper' ? oldType : undefined); }
         if (oldType === 'icon_quest' && window.RssMiniGame && typeof window.RssMiniGame.removeWidgetState === 'function') {
             window.RssMiniGame.removeWidgetState(spec.id);
         }
