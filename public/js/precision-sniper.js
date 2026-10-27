@@ -378,7 +378,7 @@
             }
             impact = {time:elapsed,score:score,point:at,kind:kind,targetIndex:selected,
                 offsetX:offsetX,offsetY:offsetY,label:score ? '+' + score + ' HIT' : 'MISS'};
-            if (cleared.length === TARGETS.length) { phase = 'won'; stop(); }
+            if (cleared.length === targets.length) { phase = 'won'; stop(); }
             update();
             details.textContent = score ? '命中！標的' + (selected + 1) + '：+' + score + '点' : 'MISS。弾痕と十字線の位置を確認してください。';
             draw();
