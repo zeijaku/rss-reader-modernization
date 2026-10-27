@@ -813,6 +813,9 @@
             var aim=aimWorld(camera,pointer,sway);
             var projectile=flightShot(aim,targets,elapsed,targets!==FIXED_TARGETS);
             pendingShots.push(projectile);
+            // A later near-range shot may overtake an earlier long-range shot.
+            // Keep arrivals sorted instead of delaying the faster projectile.
+            pendingShots.sort(function(a,b){return a.dueAt-b.dueAt;});
             update('発砲。着弾まで約'+projectile.flight.toFixed(2)+'秒（飛翔中 '+pendingShots.length+'発）');
             draw();
         }
