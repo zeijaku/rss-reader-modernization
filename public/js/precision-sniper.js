@@ -23,10 +23,15 @@
             var j=Math.floor(clamp(rng(),0,.999999)*(i+1));
             var swap=roles[i];roles[i]=roles[j];roles[j]=swap;
         }
+        var sizes=[25,31,37,45,25,37];
+        for (var k=sizes.length-1;k>0;k--) {
+            var z=Math.floor(clamp(rng(),0,.999999)*(k+1));
+            var temp=sizes[k];sizes[k]=sizes[z];sizes[z]=temp;
+        }
         var targets=[];
         for(var n=0;n<6;n++) {
             var type=roles[n], noShoot=type==='civilian'||type==='animal';
-            var radius=[25,31,37,45][Math.floor(clamp(rng(),0,.999999)*4)];
+            var radius=sizes[n];
             var amplitude=rng()<.4 ? 14+Math.round(rng()*20) : 0;
             var candidate=null;
             // Fallback quasi-random scatter also terminates for a pathological constant RNG.
