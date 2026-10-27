@@ -1,4 +1,4 @@
-/* Precision Sniper Dev5.1: flight-time projectile tracer with exact terminal impact and short-lived trail. */
+/* Precision Sniper Dev5.1.1: reticle-origin forward tracer with wind/drop deflection and perspective shrink. */
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
@@ -227,15 +227,20 @@
     }
     function projectilePosition(shot, time) {
         var progress=projectileProgress(shot,time);
-        // Stylized 2-D depth projection, NOT a real camera-side ballistic arc:
-        // the tracer enters from an upwind/up-range point then bends toward the
-        // exact world-space impact. Gravity/drop accelerate quadratically.
-        // The x/y drift uses the same launch solution as collision; no preview
-        // or prediction marker is drawn until the user fires.
+        // First-person projection: the shot begins at the *reticle*, not from
+        // a constant left/up offset that looked like a falling projectile.
+        // Forward depth is conveyed by a shrinking dot; only actual wind and
+        // gravity offsets move the screen-space center, increasing with time.
+        // p=1 is precisely the landing point used by hit detection.
         return {
-            x:shot.launchWorld.x-34*(1-progress)+shot.shift.x*progress*progress,
-            y:shot.launchWorld.y-32*(1-progress)+shot.shift.y*progress*progress
+            x:shot.launchWorld.x+shot.shift.x*progress*progress,
+            y:shot.launchWorld.y+shot.shift.y*progress*progress
         };
+    }
+    function projectileRadius(shot, time) {
+        // Perspective cue for travel away from the camera. World-space pixels;
+        // zooming magnifies the same shape without changing its path.
+        return 2.8-1.45*projectileProgress(shot,time);
     }
     function projectileTrail(shot, time) {
         // Keep only a short history BEHIND the tracer, never a future aim line.
@@ -475,12 +480,13 @@
             }
             if(showBody) {
                 var position=points[points.length-1];
-                ctx.globalAlpha=opacity*.16;
-                circle(position.x,position.y,5,theme.tracer);
-                ctx.globalAlpha=opacity;
-                circle(position.x,position.y,2.15,theme.tracer);
-                ctx.globalAlpha=opacity*.95;
-                circle(position.x,position.y,1.05,theme.tracerCore);
+                var radius=projectileRadius(shot,time);
+                ctx.globalAlpha=opacity*.14;
+                circle(position.x,position.y,radius*2.15,theme.tracer);
+                ctx.globalAlpha=opacity*.88;
+                circle(position.x,position.y,radius,theme.tracer);
+                ctx.globalAlpha=opacity*.92;
+                circle(position.x,position.y,radius*.47,theme.tracerCore);
             }
             ctx.restore();
         }
@@ -908,7 +914,7 @@
         targetContact:targetContact,windAt:windAt,ballisticOffset:ballisticOffset,
         shotSolution:shotSolution,flightTime:flightTime,flightShot:flightShot,
         projectileProgress:projectileProgress,projectilePosition:projectilePosition,
-        projectileTrail:projectileTrail,
+        projectileRadius:projectileRadius,projectileTrail:projectileTrail,
         windLeafAt:windLeafAt,windTravel:windTravel,
         reloadProgress:reloadProgress,silhouetteHit:silhouetteHit};
     window.RssGameWidget.register('precision_sniper', mount);
