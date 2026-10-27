@@ -15,7 +15,7 @@ class FakeAudioContext {
  createOscillator() {return {type:'',frequency:{setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){},start(){},stop(){}};}
  close() { audioClosed++; this.state = 'closed'; return Promise.resolve(); }
 }
-const frames = new Map(), handlers = [], transforms = [], contexts = [];
+const frames = new Map(), handlers = [], transforms = [], contexts = [], canvasLabels = [];
 let bulletHolePaints = 0;
 function canvasContext() {
  const c = {};
@@ -23,6 +23,7 @@ function canvasContext() {
   c[fn] = (...args) => {
    if (fn === 'scale' || fn === 'translate') transforms.push([fn, ...args]);
    if (fn === 'fill' && c.fillStyle === '#212529') bulletHolePaints++;
+   if (fn === 'fillText') canvasLabels.push(String(args[0]));
   };
  }
  c.createLinearGradient = () => ({addColorStop() {}});
@@ -45,7 +46,9 @@ const fakeWindow = {
 };
 fakeWindow.RssGameWidget = {register(name, fn) {check(name === 'precision_sniper', 'registered allowlisted subtype'); mount = fn;}};
 const fakeDocument = {createElement: node};
-vm.runInNewContext(source, {window:fakeWindow, document:fakeDocument, Math, Number});
+const fakeMath = Object.create(Math);
+fakeMath.random = () => .5; // Predictable stage layout; do not change global Math.
+vm.runInNewContext(source, {window:fakeWindow, document:fakeDocument, Math:fakeMath, Number});
 const math = fakeWindow.RssPrecisionSniperCore;
 check(math.aimWorld({x:230,y:130},{x:205,y:140},{x:0,y:0}).x === 435, 'camera and cursor map to world target');
 check(math.aimWorld({x:230,y:130},{x:205,y:140},{x:6,y:-3}).y === 267, 'sway affects the actual shot point');
@@ -93,6 +96,32 @@ check(Number.isFinite(windStart) && windStart !== windLater,
       'time-varying wind is deterministic and changes during active gameplay');
 check(math.windAt(0,true) !== windStart && math.windAt(14,true) < 0,
       'moving stage gusts can reverse from rightward to leftward');
+check(windStart > 1.0 && math.windAt(1,true) > 3,
+      'crosswind strength is increased over Dev3 baseline and reversible');
+const randomTargets = math.randomStage(() => .5);
+check(randomTargets.length === 6 && randomTargets.filter(t => t.noShoot).length === 2 &&
+      randomTargets.filter(t => !t.noShoot).length === 4,
+      'stage 3 generates four shoot and two forbidden targets');
+check(randomTargets.every((t,i) => t.distance >= 180 && t.distance <= 500 &&
+      t.radius === 37 && t.appearAt >= 0 && t.cycle > t.visibleFor),
+      'random targets have bounded range and finite pop-in/out windows');
+check(randomTargets.every((t,i) => !randomTargets.slice(i+1).some(u =>
+      Math.abs(t.x-u.x) < 130)),
+      'random lanes cannot visually overlap, even while moving');
+const different = math.randomStage(() => 0);
+check(different.some((t,i) => t.x !== randomTargets[i].x ||
+      t.y !== randomTargets[i].y || t.noShoot !== randomTargets[i].noShoot),
+      'random target arrangement changes with RNG');
+check(math.targetActive(randomTargets[0],0) &&
+      !math.targetActive(randomTargets[1],0) &&
+      math.targetActive(randomTargets[1],randomTargets[1].appearAt+1) &&
+      !math.targetActive(randomTargets[1],randomTargets[1].appearAt+randomTargets[1].visibleFor+.1) &&
+      math.targetActive(randomTargets[1],randomTargets[1].appearAt+randomTargets[1].cycle+1),
+      'random target appears, hides, then reappears over game time');
+const safeSample = randomTargets.find(t => !t.noShoot);
+check(math.targetContact({x:safeSample.x,y:safeSample.y},[safeSample],0) === null &&
+      math.targetContact({x:safeSample.x,y:safeSample.y},[safeSample],safeSample.appearAt+1) !== null,
+      'hidden targets cannot be hit even at their future center');
 check(math.ballisticOffset(150,0).y === 0 &&
       math.ballisticOffset(250,0).y > 0 &&
       math.ballisticOffset(450,0).y > math.ballisticOffset(250,0).y,
@@ -145,6 +174,8 @@ check(canvas !== null && zoom !== null && gauge !== null && choice !== null && s
       'scope, zoom, stage selection, sound control, trajectory telemetry and breath gauge mounted');
 check(telemetry.textContent.includes('距離') && telemetry.textContent.includes('風') &&
       telemetry.textContent.includes('着弾ずれ'), 'initial trajectory indicator clearly explains range, wind, and drop');
+check(canvasLabels.some(x => x.startsWith('WIND  ')),
+      'animated wind sock prints wind direction and strength directly on canvas');
 check(sound.textContent === '音 OFF' && sound['aria-pressed'] === 'false' && audioCreated === 0,
       'sound defaults to OFF and no AudioContext is created without a gesture');
 check(views.at(-1).status === 'ready' && frames.size === 0, 'ready state has no running frames');
@@ -204,6 +235,37 @@ step(200);
 check(views.at(-1).status === 'playing', 'moving-target round continues normally over time');
 check(telemetry.textContent.includes('風') && telemetry.textContent.includes('m/s'),
       'wind direction and strength remain visible on moving-target stage');
+check(source.includes('function windGrass()') && source.includes('function windSock()') &&
+      source.includes('windGrass();') && source.includes('windSock();'),
+      'background grass and scope-layer wind sock visibly react to live gusts');
+choice.value = '3'; send(choice,'change'); widget.restart();
+check(views.at(-1).message.includes('NO SHOOT') &&
+      views.at(-1).status === 'playing',
+      'Stage 3 starts with random appearance and friend-or-foe identification');
+step(60);
+check(canvasLabels.some(x=>x.startsWith('NO SHOOT')),
+      'forbidden target is explicitly labeled, not identified by color alone');
+send(canvas,'pointerdown',{clientX:290,clientY:207});
+check(views.at(-1).score > 0,
+      'Stage 3 valid target scores normally after its appearance time');
+const beforeViolation = views.at(-1).score;
+send(canvas,'pointerdown',{clientX:70,clientY:207});
+check(feedback.textContent.includes('NO SHOOTを誤射') &&
+      feedback.textContent.includes('誤射 1/3') &&
+      views.at(-1).score <= beforeViolation,
+      'forbidden target collision warns and penalizes score without a clear');
+send(canvas,'pointerdown',{clientX:70,clientY:207});
+check(views.at(-1).status === 'playing' &&
+      feedback.textContent.includes('誤射 2/3'),
+      'second forbidden hit keeps the round active');
+send(canvas,'pointerdown',{clientX:70,clientY:207});
+check(views.at(-1).status === 'lost' &&
+      views.at(-1).message.includes('誤射3回') && frames.size === 0,
+      'third forbidden hit ends the round and stops animation');
+widget.restart();
+check(views.at(-1).status === 'playing' && views.at(-1).score === 0 &&
+      views.at(-1).message.includes('NO SHOOT'),
+      'Restart resets Stage 3 violations, progress and randomized round');
 check(source.includes('var contact = targetContact(landed, targets, elapsed)') &&
       source.includes('marks.push({x:landed.x,y:landed.y') &&
       source.includes("var kind = contact ? 'target' : landed.y >= 462"),
