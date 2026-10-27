@@ -194,7 +194,7 @@
         canvas.setAttribute('role', 'application');
         canvas.setAttribute('aria-label', 'Precision Sniper 訓練場。マウスで狙い左クリックで射撃。Spaceで息止め、RまたはZでリロード。');
         frame.appendChild(canvas);
-        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定、2は移動、3はランダムに出現する標的を識別する訓練です。「NO SHOOT」は撃たないでください（3回誤射で失敗）。風向計と草の揺れで風を読み、遠方は上・風上へ狙いをずらします。ステージ変更は次のStart / Restartで反映。射撃はクリック、息止めはSpace、装填はR / Z。');
+        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定、2は移動、3は大小の円形・人物型と「NO SHOOT / 市民・動物」を見分けるランダム訓練です（誤射3回で失敗）。風向旗・草・飛ぶ葉で風を読み、遠方は上・風上を狙います。リロード中はスコープ外周が一周します。ステージ変更は次のStart / Restart。クリックで射撃、Spaceで息止め、R / Zで装填。');
         var details = element('p', 'precision-sniper-feedback', 'STARTを押して訓練開始。');
         details.setAttribute('role', 'status');
         root.append(toolbar, frame, details, help);
@@ -365,6 +365,55 @@
             }
             ctx.restore();
         }
+        function windLeaves() {
+            // Decorative leaves share exactly the wind used by the ballistic model.
+            // No RAF/DOM objects are allocated: game time pauses all leaves and gusts.
+            var wind=windAt(elapsed,targets!==FIXED_TARGETS), drift=wind*34;
+            ctx.save();ctx.globalAlpha=.55;
+            for(var i=0;i<28;i++) {
+                var loop=WORLD_W+70;
+                var raw=i*107.7+elapsed*drift+25*Math.sin(elapsed*.8+i*2.7);
+                var x=((raw%loop)+loop)%loop-35;
+                var y=165+(i*43%276)+15*Math.sin(elapsed*1.2+i*.63);
+                var lean=(wind>=0?1:-1)*(.6+Math.min(1.3,Math.abs(wind)*.28));
+                ctx.fillStyle=i%3===0?theme.targetAccent:theme.muted;
+                ctx.beginPath();
+                ctx.moveTo(x,y);
+                ctx.lineTo(x-lean*5,y-4);
+                ctx.lineTo(x-lean*2,y-10);
+                ctx.lineTo(x+lean*7,y-4);
+                ctx.lineTo(x,y);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+        function drawSilhouette(target) {
+            var animal=target.kind==='animal';
+            var color=target.noShoot?theme.targetCenter:theme.targetAccent;
+            ctx.save();ctx.scale(target.radius/37,target.radius/37);
+            ctx.fillStyle=color;ctx.strokeStyle=color;
+            if (animal) {
+                // Humane flat wildlife symbol, not a realistic/graphic depiction.
+                ctx.save();ctx.translate(-3,4);ctx.scale(23,12);
+                ctx.beginPath();ctx.arc(0,0,1,0,Math.PI*2);ctx.fill();ctx.restore();
+                circle(23,-6,11,color);
+                ctx.fillRect(-20,10,9,19);ctx.fillRect(7,10,10,19);
+                ctx.beginPath();ctx.moveTo(-32,0);ctx.lineTo(-22,-8);
+                ctx.lineTo(-22,4);ctx.fill();
+                ctx.beginPath();ctx.moveTo(18,-15);ctx.lineTo(23,-23);
+                ctx.lineTo(27,-15);ctx.fill();
+            } else {
+                circle(0,-23,10,color);
+                ctx.fillRect(-12,-12,24,25);
+                ctx.fillRect(-25,-9,50,10);
+                ctx.fillRect(-11,12,9,20);ctx.fillRect(2,12,9,20);
+                if(target.kind==='civilian') {
+                    ctx.strokeStyle=theme.targetPaper;ctx.lineWidth=3;
+                    ctx.beginPath();ctx.moveTo(-4,-7);ctx.lineTo(4,-7);ctx.stroke();
+                }
+            }
+            ctx.restore();
+        }
         function windSock() {
             // Fixed HUD wind vane: pennant direction and extension follow wind.
             var wind = windAt(elapsed, targets !== FIXED_TARGETS);
@@ -406,37 +455,36 @@
                 ctx.beginPath();ctx.moveTo(0,line);ctx.lineTo(WORLD_W,line);ctx.stroke();
             }
             windGrass();
+            windLeaves();
             targets.forEach(function (target, index) {
                 if (!targetActive(target, elapsed)) return;
                 var position = targetAt(target, elapsed);
                 ctx.save(); ctx.translate(position.x - target.x, position.y - target.y);
                 ctx.fillStyle=theme.muted;
-                ctx.fillRect(target.x-3,target.y+30,6,105);
+                ctx.fillRect(target.x-3,target.y+target.radius,6,104);
                 ctx.fillStyle=theme.border;
-                ctx.fillRect(target.x-48,target.y+131,96,12);
+                ctx.fillRect(target.x-48,target.y+target.radius+101,96,12);
                 ctx.save();ctx.translate(target.x,target.y);
-                if (target.noShoot) {
-                    // Shape + text identify forbidden targets even with impaired color vision.
-                    circle(0,0,target.radius+5,theme.targetBorder);
+                if (!target.kind||target.kind==='round') {
+                    circle(0,0,target.radius+4,theme.targetBorder);
                     circle(0,0,target.radius,theme.targetPaper);
-                    ctx.strokeStyle=theme.targetCenter;ctx.lineWidth=5;
-                    ctx.beginPath();ctx.moveTo(-18,-18);ctx.lineTo(18,18);
-                    ctx.moveTo(18,-18);ctx.lineTo(-18,18);ctx.stroke();
-                    ctx.fillStyle=theme.targetCenter;ctx.font='bold 12px sans-serif';
-                    ctx.textAlign='center';ctx.fillText('NO',0,-26);
+                    circle(0,0,target.radius*.79,theme.targetAccent);
+                    circle(0,0,target.radius*.595,theme.targetPaper);
+                    circle(0,0,target.radius*.378,theme.targetAccent);
+                    circle(0,0,target.radius*.216,theme.targetCenter);
                 } else {
-                    circle(0,0,target.radius+5,theme.targetBorder);
-                    circle(0,0,target.radius,theme.targetPaper);
-                    circle(0,0,29,theme.targetAccent);
-                    circle(0,0,22,theme.targetPaper);
-                    circle(0,0,14,theme.targetAccent);
-                    circle(0,0,8,theme.targetCenter);
+                    drawSilhouette(target);
                 }
                 ctx.fillStyle=theme.ink;ctx.font='bold 12px sans-serif';
-                ctx.textAlign='center';ctx.fillText((target.noShoot ? 'NO SHOOT' : (target.amplitude ? 'M' : 'T')+(index+1))+' '+target.distance+'m',0,-target.radius-14);
+                ctx.textAlign='center';
+                var title=target.kind==='civilian'?'NO SHOOT / 市民':
+                    target.kind==='animal'?'NO SHOOT / 動物':
+                    target.kind==='hostile'?'人物型 '+(index+1):
+                    (target.amplitude?'M':'T')+(index+1);
+                ctx.fillText(title+' '+target.distance+'m',0,-target.radius-16);
                 if (cleared.indexOf(index)!==-1) {
                     ctx.strokeStyle=theme.targetBorder;ctx.globalAlpha=.65;ctx.lineWidth=2;
-                    ctx.beginPath();ctx.arc(0,0,44,0,Math.PI*2);ctx.stroke();
+                    ctx.beginPath();ctx.arc(0,0,target.radius+7,0,Math.PI*2);ctx.stroke();
                     ctx.globalAlpha=1;
                 }
                 ctx.restore();
