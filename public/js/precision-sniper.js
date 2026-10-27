@@ -763,7 +763,8 @@
                 phase = 'playing';paused = false;elapsed = 0;phaseTime = 0;points = 0;shots = 0;violations = 0;
                 magazine = 5;reloadLeft = 0;stamina = 100;instability = 0;exhaustionLock = false;
                 sway = {x:0,y:0};recoil = 0;marks = [];cleared = [];impact = null;
-                camera = {x:230,y:130};pointer = {x:W/2,y:H/2};edge = {x:0,y:0};
+                camera = {x:230,y:targets === FIXED_TARGETS || targets === MOVING_TARGETS ? 130 : 95};
+                pointer = {x:W/2,y:H/2};edge = {x:0,y:0};
                 update('訓練開始');draw();canvas.focus({preventScroll:true});schedule();
             },
             togglePause: function () {
