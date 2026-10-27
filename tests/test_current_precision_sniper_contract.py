@@ -43,7 +43,7 @@ check('clientX - rect.left' in game and 'canvas.width / W' in game,
 check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed,targets,arrivalTime)' in game
       and 'scoreHit(point, position)' in game,
       'the sway shown in the zoomed lens is used for repeated physical collision')
-check('1.50.0-dev.8' in src('app/version.php'), 'visible and asset versions mark Dev5 flight preview only')
+check('1.50.0-dev.9' in src('app/version.php'), 'visible and asset versions mark Dev5.1 tracer preview only')
 check('MOVING_TARGETS' in game and 'targetAt(target, elapsed)' in game,
       'second range animates targets and hit tests use displayed center')
 check('mark.targetIndex >= 0' in game and 'impact.targetIndex >= 0' in game,
@@ -137,6 +137,30 @@ check('impact = null; violations = 0; pendingShots = [];' in game
       'stage change, Restart and Destroy clear all in-flight projectiles')
 check('flightShot:flightShot' in game and 'flightTime:flightTime' in game,
       'flight time and launch geometry are exposed as testable pure functions')
+check('function projectileProgress(shot, time)' in game
+      and 'function projectilePosition(shot, time)' in game
+      and 'function projectileTrail(shot, time)' in game
+      and 'launchWorld:{x:aim.x,y:aim.y}' in game,
+      'projectile visualization reads launch geometry and uses testable progress/position/trail helpers')
+check('shot.launchWorld.x-34*(1-progress)' in game
+      and 'shot.launchWorld.y-32*(1-progress)' in game
+      and 'shot.shift.x*progress*progress' in game
+      and 'shot.shift.y*progress*progress' in game,
+      'projected 2D arc bends due to wind and gravity while ending at launch-derived impact')
+check('function drawProjectiles()' in game
+      and 'pendingShots.forEach(function(shot)' in game
+      and 'drawProjectiles();' in game
+      and 'function paintProjectile(shot, time, opacity, showBody)' in game,
+      'one projectile renderer paints concurrent shot dots and short tails in landscape and zoomed scope')
+check('fadingTrails.push({shot:projectile,at:projectile.dueAt})' in game
+      and 'elapsed-trace.at<.12' in game
+      and 'fadingTrails = [];' in game,
+      'temporary post-impact trail fade is tied to frozen game clock and is reset on lifecycle changes')
+check('projectileProgress:projectileProgress' in game
+      and 'projectilePosition:projectilePosition' in game
+      and 'projectileTrail:projectileTrail' in game,
+      'new render geometry is unit-testable without timers or external assets')
+
 check("source.connect(" not in game and "filter.type='lowpass'" in game
       and "soundOn = false" in game, 'sound remains local, low-pass filtered and OFF initially')
 check(all(s not in game for s in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'https://']),
