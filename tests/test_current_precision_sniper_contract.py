@@ -43,7 +43,7 @@ check('clientX - rect.left' in game and 'canvas.width / W' in game,
 check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed, targets, elapsed)' in game
       and 'scoreHit(point, position)' in game,
       'the sway shown in the zoomed lens is used for repeated physical collision')
-check('1.50.0-dev.6' in src('app/version.php'), 'visible and asset versions mark Dev4.1 preview only')
+check('1.50.0-dev.7' in src('app/version.php'), 'visible and asset versions mark Dev4.2 preview only')
 check('MOVING_TARGETS' in game and 'targetAt(target, elapsed)' in game,
       'second range animates targets and hit tests use displayed center')
 check('mark.targetIndex >= 0' in game and 'impact.targetIndex >= 0' in game,
@@ -60,8 +60,8 @@ check('targetContact(point, stageTargets, time)' in game
 check("'再命中・加点なし'" in game and "'（中心から横 '" in game and "' / 縦 '" in game,
       'first and repeat impacts give player detailed zone and offset feedback')
 check("--sniper-target-accent:#99776b" in src('public/css/game-widget.css')
-      and "circle(0,0,target.radius*.79,theme.targetAccent)" in game
-      and "circle(0,0,target.radius*.378,theme.targetAccent)" in game,
+      and "circle(0,0,displayedRadius*.79,theme.targetAccent)" in game
+      and "circle(0,0,displayedRadius*.378,theme.targetAccent)" in game,
       'multiple-size target rings keep subdued colors')
 check('windAt(time, moving)' in game and 'ballisticOffset(distance, wind)' in game
       and 'shotSolution(point, stageTargets, time, moving)' in game,
@@ -76,7 +76,7 @@ check('precision-sniper-ballistics' in game and '着弾ずれ' in game
       and '--bs-secondary-bg' in src('public/css/game-widget.css'),
       'range/wind/drop telemetry follows the existing Game theme')
 check('distance: 150' in game and 'distance: 490' in game
-      and "' '+target.distance+'m'" in game, 'each stage includes graded target distances')
+      and "' '+position.distance+'m'" in game, 'each stage includes graded target distances')
 check('randomStage(random)' in game and 'targetActive(target, time)' in game and
       "stageSelect.value === '3' ? randomStage()" in game,
       'Dev4 randomized timed target visibility remains scoped to stage 3')
@@ -94,14 +94,22 @@ check('function windGrass()' in game and 'function windSock()' in game and
       'windGrass();' in game and 'windSock();' in game and
       '1.55 * (moving ?' in game,
       'wind is stronger and visible in both landscape and overlay instrument')
-check("var sizes=[25,31,37,45,25,37]" in game and 'var roles = ' in game
-      and "'civilian','animal'" in game and 'silhouetteHit(dx, dy, kind)' in game,
-      'Stage 3 always contains mixed sizes and shape-accurate human/wildlife/circular targets')
-check('for(var attempt=0;attempt<90;attempt++)' in game and
-      'var separated=targets.every' in game and 'var saltX=rng(),saltY=rng()' in game,
-      'random placement uses bounded two-dimensional rejection sampling rather than fixed lanes')
+check('function depthAt(y)' in game and 'var roles=[' in game
+      and "'civilian','animal'" in game and 'silhouetteHit(dx, dy, kind)' in game
+      and 'sizeScale:scale' in game,
+      'Stage 3 couples silhouette sizes and hit regions to vertical depth')
+check('for(var layout=0;layout<12;layout++)' in game
+      and 'for(var attempt=0;attempt<175;attempt++)' in game
+      and 'trial.every(function(other){return targetsSeparated(candidate,other);})' in game,
+      'stage 3 resamples full independent XY layouts with rendered-label collision boxes')
 check("Math.floor((time-target.appearAt)/target.cycle)" in game,
       'reappearing targets shift locations between cycles')
+check('if(!target.kind) {' in game and 'function footprint(target)' in game
+      and 'function targetsSeparated(a,b)' in game,
+      'Stage 3 has no poles or bases and reserves sufficient display space')
+check("var range = targetAt(stageTargets[nearest],time).distance" in game
+      and "var displayedRadius=position.radius" in game,
+      'ballistic range and rendered size both reflect dynamic perspective')
 check("NO SHOOT / 市民" in game and "NO SHOOT / 動物" in game
       and "target.kind==='civilian'" in game and "target.kind==='animal'" in game,
       'civilian and wildlife are distinguishable forbidden shapes, not color-only marks')
