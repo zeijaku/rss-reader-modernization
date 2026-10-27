@@ -1,4 +1,4 @@
-/* Precision Sniper Dev2: original Canvas range with optional locally synthesized audio; no network or external assets. */
+/* Precision Sniper Dev2 refinement: repeated impacts and subdued target palette; local WebAudio only. */
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
@@ -26,6 +26,16 @@
         var distance = Math.hypot(point.x - target.x, point.y - target.y);
         if (distance > target.radius) return 0;
         return distance <= 10 ? 100 : distance <= 22 ? 75 : 45;
+    }
+    function targetContact(point, stageTargets, time) {
+        // Every physical impact is detected, even after this target awarded points.
+        for (var i = 0; i < stageTargets.length; i++) {
+            var position = targetAt(stageTargets[i], time);
+            var score = scoreHit(point, position);
+            if (score) return {index:i, score:score, zone:score === 100 ? '中心' : score === 75 ? '中間' : '外周',
+                offsetX:point.x - position.x, offsetY:point.y - position.y};
+        }
+        return null;
     }
     function breathing(phase, held, stamina, unstable) {
         // Center-seeking, bounded breathing cycles: both axes regularly pass through zero.
@@ -99,7 +109,11 @@
             muted:token('--bs-secondary-color','#6c757d'),
             danger:token('--bs-danger','#dc3545'),
             success:token('--bs-success','#198754'),
-            primary:token('--bs-primary','#0d6efd')
+            primary:token('--bs-primary','#0d6efd'),
+            targetPaper:token('--sniper-target-paper','#eae5da'),
+            targetAccent:token('--sniper-target-accent','#9c7b6f'),
+            targetCenter:token('--sniper-target-center','#4e5b63'),
+            targetBorder:token('--sniper-target-border','#57616b')
         };
         var pointer = {x: W / 2, y: H / 2}, edge = {x: 0, y: 0}, camera = {x: 230, y: 130};
         var phase = 'ready', paused = false, suspended = false, destroyed = false;
@@ -253,17 +267,18 @@
                 ctx.fillStyle=theme.border;
                 ctx.fillRect(target.x-48,target.y+131,96,12);
                 ctx.save();ctx.translate(target.x,target.y);
-                circle(0,0,target.radius+5,theme.ink);
-                circle(0,0,target.radius,theme.background);
-                circle(0,0,29,theme.danger);
-                circle(0,0,22,theme.background);
-                circle(0,0,14,theme.danger);
-                circle(0,0,8,theme.ink);
+                circle(0,0,target.radius+5,theme.targetBorder);
+                circle(0,0,target.radius,theme.targetPaper);
+                circle(0,0,29,theme.targetAccent);
+                circle(0,0,22,theme.targetPaper);
+                circle(0,0,14,theme.targetAccent);
+                circle(0,0,8,theme.targetCenter);
                 ctx.fillStyle=theme.ink;ctx.font='bold 12px sans-serif';
                 ctx.textAlign='center';ctx.fillText((target.amplitude ? 'M' : 'T')+(index+1),0,-target.radius-14);
                 if (cleared.indexOf(index)!==-1) {
-                    ctx.strokeStyle=theme.success;ctx.lineWidth=3;
+                    ctx.strokeStyle=theme.targetBorder;ctx.globalAlpha=.65;ctx.lineWidth=2;
                     ctx.beginPath();ctx.arc(0,0,44,0,Math.PI*2);ctx.stroke();
+                    ctx.globalAlpha=1;
                 }
                 ctx.restore();
                 ctx.restore();
@@ -304,7 +319,7 @@
             var shot = aimWorld(camera, pointer, sway);
             lens(center, shot);
             if (impact && elapsed - impact.time < 1.1) {
-                ctx.fillStyle = impact.score ? theme.success : theme.danger;
+                ctx.fillStyle = impact.hit ? theme.success : theme.danger;
                 ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
                 ctx.fillText(impact.label, clamp(center.x, 55, W - 55), clamp(center.y - RADIUS - 14, 18, H - 12));
             }
@@ -361,26 +376,31 @@
             magazine--; shots++; recoil = 8;
             muffledShot();
             var at = aimWorld(camera, pointer, sway);
-            var score = 0, selected = -1;
-            targets.forEach(function (target, index) {
-                if (selected === -1 && cleared.indexOf(index) === -1) {
-                    var hit = scoreHit(at, targetAt(target, elapsed));
-                    if (hit) { score = hit; selected = index; }
-                }
-            });
-            if (selected !== -1) { points += score; cleared.push(selected); }
-            var kind = selected !== -1 ? 'target' : at.y >= 462 ? 'ground' : 'none';
-            var hitPosition = selected >= 0 ? targetAt(targets[selected], elapsed) : at;
-            var offsetX = at.x - hitPosition.x, offsetY = at.y - hitPosition.y;
+            var contact = targetContact(at, targets, elapsed);
+            var selected = contact ? contact.index : -1;
+            var firstHit = !!contact && cleared.indexOf(selected) === -1;
+            var awarded = firstHit ? contact.score : 0;
+            if (firstHit) { points += awarded; cleared.push(selected); }
+            var kind = contact ? 'target' : at.y >= 462 ? 'ground' : 'none';
+            var offsetX = contact ? contact.offsetX : 0, offsetY = contact ? contact.offsetY : 0;
             if (kind !== 'none') {
                 marks.push({x:at.x,y:at.y,kind:kind,targetIndex:selected,offsetX:offsetX,offsetY:offsetY});
                 if (marks.length > 36) marks.shift();
             }
-            impact = {time:elapsed,score:score,point:at,kind:kind,targetIndex:selected,
-                offsetX:offsetX,offsetY:offsetY,label:score ? '+' + score + ' HIT' : 'MISS'};
+            impact = {time:elapsed,score:awarded,hit:!!contact,point:at,kind:kind,targetIndex:selected,
+                offsetX:offsetX,offsetY:offsetY,label:contact
+                    ? 'T' + (selected + 1) + ' ' + contact.zone + (firstHit ? ' +' + awarded : ' 再命中')
+                    : 'MISS'};
             if (cleared.length === targets.length) { phase = 'won'; stop(); }
             update();
-            details.textContent = score ? '命中！標的' + (selected + 1) + '：+' + score + '点' : 'MISS。弾痕と十字線の位置を確認してください。';
+            if (contact) {
+                var dx = Math.round(offsetX), dy = Math.round(offsetY);
+                details.textContent = '標的' + (selected + 1) + '・' + contact.zone +
+                    '（中心から横 ' + (dx > 0 ? '+' : '') + dx + ' / 縦 ' + (dy > 0 ? '+' : '') + dy +
+                    '）に命中。' + (firstHit ? '+' + awarded + '点' : '再命中・加点なし') + '。';
+            } else {
+                details.textContent = kind === 'ground' ? 'MISS。地面に着弾しました。' : 'MISS。標的外です。';
+            }
             draw();
         }
         function pointerPosition(event) {
@@ -463,6 +483,7 @@
             }
         };
     }
-    window.RssPrecisionSniperCore = {aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,targetAt:targetAt};
+    window.RssPrecisionSniperCore = {aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,
+        targetAt:targetAt,targetContact:targetContact};
     window.RssGameWidget.register('precision_sniper', mount);
 })(window, document);
