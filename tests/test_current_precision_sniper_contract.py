@@ -40,10 +40,10 @@ check("context.on(canvas, 'keydown'" in game and "context.on(canvas, 'blur'" in 
       'keyboard input and held breath remain scope-bound')
 check('clientX - rect.left' in game and 'canvas.width / W' in game,
       'pointer and canvas transformations use CSS coordinates and drawing scale independently')
-check('aimWorld(camera, pointer, sway)' in game and 'targetContact(at, targets, elapsed)' in game
+check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed, targets, elapsed)' in game
       and 'scoreHit(point, position)' in game,
       'the sway shown in the zoomed lens is used for repeated physical collision')
-check('1.50.0-dev.3' in src('app/version.php'), 'visible and asset versions mark Dev2 refinement only')
+check('1.50.0-dev.4' in src('app/version.php'), 'visible and asset versions mark Dev3 preview only')
 check('MOVING_TARGETS' in game and 'targetAt(target, elapsed)' in game,
       'second range animates targets and hit tests use displayed center')
 check('mark.targetIndex >= 0' in game and 'impact.targetIndex >= 0' in game,
@@ -55,7 +55,7 @@ check('window.AudioContext || window.webkitAudioContext' in game and
       'muffled WebAudio is explicit opt-in, lazy, and cleaned up')
 check('targetContact(point, stageTargets, time)' in game
       and "var firstHit = !!contact && cleared.indexOf(selected) === -1" in game
-      and "marks.push({x:at.x,y:at.y,kind:kind,targetIndex:selected" in game,
+      and "marks.push({x:landed.x,y:landed.y,kind:kind,targetIndex:selected" in game,
       'repeat shots independently create visible marks without duplicate score')
 check("'再命中・加点なし'" in game and "'（中心から横 '" in game and "' / 縦 '" in game,
       'first and repeat impacts give player detailed zone and offset feedback')
@@ -63,6 +63,20 @@ check("--sniper-target-accent:#99776b" in src('public/css/game-widget.css')
       and "circle(0,0,29,theme.targetAccent)" in game
       and "circle(0,0,14,theme.targetAccent)" in game,
       'target rings use muted coordinated palette rather than Bootstrap danger red')
+check('windAt(time, moving)' in game and 'ballisticOffset(distance, wind)' in game
+      and 'shotSolution(point, stageTargets, time, moving)' in game,
+      'Dev3 introduces testable deterministic range, wind and bullet-drop mechanics')
+check('targetContact(landed, targets, elapsed)' in game and
+      "var kind = contact ? 'target' : landed.y >= 462" in game,
+      'impact surfaces and hit scoring use physical ballistic landing, not scope center')
+check("var solution = shotSolution(shot, targets, elapsed, targets === MOVING_TARGETS)" in game and
+      "var solution = shotSolution(at, targets, elapsed, targets === MOVING_TARGETS)" in game,
+      'drawn telemetry and click shot derive the same correction model')
+check('precision-sniper-ballistics' in game and '着弾ずれ' in game
+      and '--bs-secondary-bg' in src('public/css/game-widget.css'),
+      'range/wind/drop telemetry follows the existing Game theme')
+check('distance: 150' in game and 'distance: 490' in game
+      and "' '+target.distance+'m'" in game, 'each stage includes graded target distances')
 check("source.connect(" not in game and "filter.type='lowpass'" in game
       and "soundOn = false" in game, 'sound remains local, low-pass filtered and OFF initially')
 check(all(s not in game for s in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'https://']),
