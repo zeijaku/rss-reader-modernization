@@ -29,6 +29,12 @@ check("oldType === 'precision_sniper'" in src('public/js/widget-settings-no-relo
       'partial card update clears the old Sniper state')
 check('onlyGame' in common and '[onlyGame]' in common, 'Sniper state can be removed without clearing other game types')
 check('precision-sniper-canvas' in src('public/css/game-widget.css'), 'Canvas size follows responsive Widget width')
+check('var(--bs-border-color' in src('public/css/game-widget.css')
+      and "token('--bs-primary'" in game, 'Sniper aligns frame and Canvas palette with other Bootstrap Game widgets')
+check('marks.forEach(bulletMark)' in game and 'impactFlash()' in game
+      and "kind = selected !== -1" in game, 'bullet impacts have material-aware permanent marks and a transient effect')
+check('Math.sin(phase * 1.55)' in game and 'Math.sin(phase * 1.23)' in game,
+      'sway returns to neutral along independent horizontal and vertical cycles')
 check('cancelAnimationFrame' in game and 'observer.disconnect()' in game, 'Pause and Destroy clean up scheduled work')
 check("context.on(canvas, 'keydown'" in game and "context.on(canvas, 'blur'" in game,
       'keyboard input and held breath remain scope-bound')
