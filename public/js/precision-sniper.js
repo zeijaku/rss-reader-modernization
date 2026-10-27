@@ -16,7 +16,7 @@
     ];
     function depthAt(y) {
         // Visual perspective is intentionally based on vertical placement, not role.
-        var fraction=clamp((y-240)/150,0,1);
+        var fraction=clamp((y-230)/170,0,1);
         return {radius:Math.round(24+fraction*20), distance:Math.round(490-fraction*300)};
     }
     function footprint(target) {
@@ -34,65 +34,59 @@
             first.bottom<=second.top || second.bottom<=first.top;
     }
     function randomStage(random) {
-        // Genuine independent X/Y samples: no fixed lanes or golden-ratio base grid.
-        // The near/far sample guarantee provides visual depth; role assignment and
-        // all horizontal locations remain independently shuffled every Restart.
+        // Every placement is sampled with independent, continuous X and Y random
+        // values. Retry the WHOLE layout if any item cannot fit with labels.
+        // A six-position fallback is strictly for exhausted/pathological RNGs.
         var rng=typeof random==='function'?random:Math.random;
         var roles=['round','round','hostile','hostile','civilian','animal'];
         for(var i=roles.length-1;i>0;i--){
             var k=Math.floor(clamp(rng(),0,.999999)*(i+1));
             var swap=roles[i];roles[i]=roles[k];roles[k]=swap;
         }
-        var results=[];
-        for(var n=0;n<roles.length;n++){
-            var role=roles[n],moving=rng()<.36;
-            var motion=moving?Math.round(6+rng()*8):0;
-            var chosen=null;
-            for(var attempt=0;attempt<360;attempt++){
-                var unitX=clamp(rng(),0,.999999),unitY=clamp(rng(),0,.999999);
-                // Only a rejection fallback uses low-discrepancy exploration, so
-                // pathological fixed RNG implementations cannot lock the loop.
-                if(attempt>=50) {
-                    unitX=(unitX+attempt*.618033988749895)%1;
-                    unitY=(unitY+attempt*.414213562373095)%1;
-                }
-                var x=Math.round(344+unitX*1068);
-                var top=n===0 ? 242 : n===1 ? 347 : 242;
-                var bottom=n===0 ? 286 : n===1 ? 392 : 392;
-                var y=Math.round(top+unitY*(bottom-top));
-                var perspective=depthAt(y);
-                var candidate={x:x,y:y,radius:perspective.radius,
-                    distance:perspective.distance,amplitude:motion};
-                if(results.every(function(other){return targetsSeparated(candidate,other);})){
-                    chosen=candidate;break;
-                }
-            }
-            if(!chosen){
-                // Deterministic, terminating fallback after rejection exhaustion:
-                // choose the most separated legal spot on a fine 2D scan.
-                for(var fy=245;fy<=390&&!chosen;fy+=13){
-                    for(var fx=347;fx<=1410;fx+=29){
-                        var projected=depthAt(fy);
-                        var possible={x:fx,y:fy,radius:projected.radius,
-                            distance:projected.distance,amplitude:0};
-                        if(results.every(function(other){return targetsSeparated(possible,other);})){
-                            chosen=possible;break;
-                        }
+        function createTarget(pos,role) {
+            pos.kind=role;
+            pos.noShoot=role==='civilian'||role==='animal';
+            pos.rate=.35+rng()*.8;
+            pos.offset=rng()*Math.PI*2;
+            pos.seed=rng()*100000;
+            pos.appearAt=.5+rng()*1.9;
+            pos.visibleFor=5.7+rng()*3.8;
+            pos.cycle=10.5+rng()*4.4;
+            return pos;
+        }
+        for(var layout=0;layout<12;layout++){
+            var trial=[],valid=true;
+            for(var n=0;n<roles.length;n++){
+                var moving=rng()<.36, motion=moving?Math.round(6+rng()*8):0;
+                var chosen=null;
+                for(var attempt=0;attempt<175;attempt++){
+                    var x=Math.round(344+clamp(rng(),0,.999999)*1068);
+                    var y=Math.round(n===0?237+rng()*39:
+                        n===1?362+rng()*41:229+rng()*174);
+                    var depth=depthAt(y);
+                    var candidate={x:x,y:y,radius:depth.radius,
+                        distance:depth.distance,amplitude:motion};
+                    if(trial.every(function(other){return targetsSeparated(candidate,other);})){
+                        chosen=candidate;break;
                     }
                 }
+                if(!chosen){valid=false;break;}
+                trial.push(createTarget(chosen,roles[n]));
             }
-            if(!chosen) throw new Error('Precision Sniper: no space for random targets');
-            chosen.kind=role;
-            chosen.noShoot=role==='civilian'||role==='animal';
-            chosen.rate=.35+rng()*.8;
-            chosen.offset=rng()*Math.PI*2;
-            chosen.seed=rng()*100000+17*n;
-            chosen.appearAt=.5+rng()*1.9;
-            chosen.visibleFor=5.7+rng()*3.8;
-            chosen.cycle=10.5+rng()*4.4;
-            results.push(chosen);
+            if(valid)return trial;
         }
-        return results;
+        // The fallback cannot overlap: the two rows are separated by >150 world
+        // pixels, and three columns by >400. Slight jitter keeps role assignment
+        // and image positions from becoming a perfectly identical repeat.
+        var backup=[],columns=[392,838,1284],rows=[230,400];
+        for(var p=0;p<roles.length;p++){
+            var x0=columns[p%3]+(rng()-.5)*40;
+            var y0=rows[Math.floor(p/3)]+(rng()-.5)*8;
+            var perspective=depthAt(y0);
+            backup.push(createTarget({x:x0,y:y0,radius:perspective.radius,
+                distance:perspective.distance,amplitude:0},roles[p]));
+        }
+        return backup;
     }
     function targetActive(target, time) {
         if (target.appearAt === undefined) return true;
