@@ -67,8 +67,13 @@
         return (time - target.appearAt) % target.cycle < target.visibleFor;
     }
     function targetAt(target, time) {
-        return {x: target.x + (target.amplitude || 0) * Math.sin(time * (target.rate || 0) + (target.offset || 0)),
-            y: target.y, radius: target.radius};
+        var cycle=target.cycle && time>=target.appearAt ?
+            Math.floor((time-target.appearAt)/target.cycle) : 0;
+        // Returning targets reappear with small position shifts, not an identical loop.
+        var spawnX=cycle ? Math.sin(cycle*2.37+(target.offset||0))*13 : 0;
+        var spawnY=cycle ? Math.sin(cycle*1.89+(target.offset||0))*10 : 0;
+        return {x:target.x+spawnX+(target.amplitude||0)*Math.sin(time*(target.rate||0)+(target.offset||0)),
+            y:target.y+spawnY,radius:target.radius,kind:target.kind};
     }
     function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
     function aimWorld(camera, pointer, sway) {
