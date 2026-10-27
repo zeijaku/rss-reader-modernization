@@ -1,9 +1,9 @@
-# RSS Reader Modernization 1.50.0-dev.1 — Precision Sniper Dev1 visual/aim refinement (Preview refresh 1)
+# RSS Reader Modernization 1.50.0-dev.2 — Precision Sniper Dev2 (Preview)
 
 **この検証用ビルドは正式Releaseではありません。** V1.49.0正式版を置き換える正式リリースではなく、操作感を確認するための開発プレビューです。GitHubのmain、正式タグ、Releaseは変更していません。
 
 - Game WidgetにオリジナルのCanvas狙撃訓練「Precision Sniper」を追加。通常背景＋円形拡大スコープ、手ブレ、Space息止め、固定標的、射撃、R/Zリロード、倍率変更に対応します。Dev1.1で他ゲームと同じBootstrap系の落ち着いた配色と単純な背景表現に変更しました。照準の揺れを中心へ戻る穏やかな往復運動に調整し、弾痕は不規則な貫通穴・紙の欠け・短い着弾エフェクトへ変更しました。空中へのMISSは不自然な弾痕を残しません。
-- Stage 1相当の4枚の固定標的のみ。移動標的、弾速、風、弾道落下、4難易度、能力強化、進捗保存は今後のDev工程の対象です。
+- Dev2でStage 1の固定4標的とStage 2の移動標的（1枚固定＋3枚往復）を追加。ステージ変更は次のStart/Restartで反映し、Pause中は標的も停止。表示・着弾判定と弾痕は同一のゲーム内時刻に同期します。音は初期OFF、明示的なON操作後だけWebAudioで低域寄りのこもった射撃音を短く合成し、OFFでミュート、Destroyでリソースを閉じます。外部音源の取得はありません。弾速、風、弾道落下、4難易度、能力強化、進捗保存および本格的なリロード演出は今後のDev工程の対象です。
 - 共通Game WidgetのStart / Restart / Pause / 拡大 / Destroy、保存スコープと現行セキュリティ境界を利用します。DB Migrationはありません。
 - PHP 8.1 / 8.4 CIおよびSniper Focused Testを実行。実端末での照準操作感とPC/スマホ表示はユーザー確認前です。
 - 検証用Runtime ZIPは既存パッケージ生成器で作り、Mail用のComposer IMAP依存ファイルを含めます。設定・既存ユーザーデータを上書きしないよう、検証環境で使用してください。
