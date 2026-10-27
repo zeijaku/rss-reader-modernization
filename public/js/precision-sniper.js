@@ -433,7 +433,7 @@
             ctx.save(); ctx.translate(-camera.x, -camera.y); landscape(); ctx.restore();
             var center = {x: pointer.x, y: pointer.y + recoil};
             var shot = aimWorld(camera, pointer, sway);
-            var solution = shotSolution(shot, targets, elapsed, targets === MOVING_TARGETS);
+            var solution = shotSolution(shot, targets, elapsed, targets !== FIXED_TARGETS);
             var dx = Math.round(Math.abs(solution.shift.x)), dy = Math.round(solution.shift.y);
             telemetry.textContent = '距離 ' + solution.range + 'm / 風 ' +
                 (solution.wind >= 0 ? '→ ' : '← ') + Math.abs(solution.wind).toFixed(1) +
@@ -498,7 +498,7 @@
             magazine--; shots++; recoil = 8;
             muffledShot();
             var at = aimWorld(camera, pointer, sway);
-            var solution = shotSolution(at, targets, elapsed, targets === MOVING_TARGETS);
+            var solution = shotSolution(at, targets, elapsed, targets !== FIXED_TARGETS);
             var landed = solution.impact;
             var contact = targetContact(landed, targets, elapsed);
             var selected = contact ? contact.index : -1;
