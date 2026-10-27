@@ -324,10 +324,12 @@ const normal=stageTargets.find(t=>!t.noShoot && t.x>=330 && t.x<=820);
 const forbidden=stageTargets.find(t=>t.noShoot && t.x>=330 && t.x<=850);
 check(!!normal && !!forbidden, 'seeded randomized stage provides visible valid and forbidden targets');
 function shootAt(t) {
- // Initial camera is x=230/y=130. All targets in this deterministic case are stationary.
- const corrected=math.shotSolution({x:t.x,y:t.y},stageTargets,1.8,true);
- const x=Math.max(94,Math.min(626,t.x-230-corrected.shift.x));
- const y=Math.max(94,Math.min(311,t.y-130-corrected.shift.y));
+ // Stage 3 starts with a higher camera (x=230,y=95) so distant
+ // silhouettes can be aimed above the center for ballistic drop.
+ const current=math.targetAt(t,1.8);
+ const corrected=math.shotSolution({x:current.x,y:current.y},stageTargets,1.8,true);
+ const x=Math.max(94,Math.min(626,current.x-230-corrected.shift.x));
+ const y=Math.max(94,Math.min(311,current.y-95-corrected.shift.y));
  send(canvas,'pointermove',{clientX:x,clientY:y});
  send(canvas,'pointerdown',{clientX:x,clientY:y});
 }
