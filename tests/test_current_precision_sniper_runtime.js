@@ -7,7 +7,7 @@ let mount = null, disconnected = false, now = 0, nextFrame = 1;
 const frames = new Map(), handlers = [], transforms = [], contexts = [];
 function canvasContext() {
  const c = {};
- for (const fn of ['beginPath','arc','fill','stroke','fillRect','save','restore','translate','scale','moveTo','lineTo','fillText','clearRect','setTransform','clip']) {
+ for (const fn of ['beginPath','arc','fill','stroke','fillRect','save','restore','translate','scale','moveTo','lineTo','fillText','clearRect','setTransform','clip','strokeRect']) {
   c[fn] = (...args) => { if (fn === 'scale' || fn === 'translate') transforms.push([fn, ...args]); };
  }
  c.createLinearGradient = () => ({addColorStop() {}});
@@ -41,6 +41,14 @@ check(math.scoreHit({x:465,y:270}, target) === 45, 'outer ring scores 45');
 check(math.scoreHit({x:473,y:270}, target) === 0, 'outside target is a miss');
 check(Math.abs(math.breathing(2,true,50,false).x) < Math.abs(math.breathing(2,false,50,false).x), 'breath holding reduces visible and physical sway');
 check(Math.abs(math.breathing(2,false,0,true).y) > Math.abs(math.breathing(2,false,0,false).y), 'exhaustion amplifies sway');
+check(Math.abs(math.breathing(0,false,100,false).x) < .001 &&
+      Math.abs(math.breathing(0,false,100,false).y) < .001, 'breathing starts at neutral sightline');
+const trace = Array.from({length:480}, (_, i) => math.breathing(i / 60,false,100,false));
+check(trace.every(p=>Math.abs(p.x) < 6 && Math.abs(p.y) < 6), 'natural sway remains bounded around center');
+check(trace.some(p=>p.x > 3) && trace.some(p=>p.x < -3) &&
+      trace.some(p=>p.y > 3) && trace.some(p=>p.y < -3), 'sway slowly crosses left/right and up/down');
+check(source.includes("marks.forEach(bulletMark)") && source.includes("impactFlash()") &&
+      !source.includes("ctx.moveTo(mark.x - 5, mark.y - 5)"), 'impact uses ragged penetration and brief flash, not circle/slash');
 
 const views = [], stage = node('section');
 const widget = mount({stage, stateKey:null, on(el,type,handler) { handlers.push({el,type,handler}); }, update(view) {views.push(view);} });
