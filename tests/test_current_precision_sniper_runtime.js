@@ -4,6 +4,17 @@ const source = fs.readFileSync(path.join(__dirname, '../public/js/precision-snip
 let checks = 0;
 function check(value, text) { assert.ok(value, text); checks++; console.log('PASS: ' + text); }
 let mount = null, disconnected = false, now = 0, nextFrame = 1;
+let audioCreated = 0, audioClosed = 0, muffledShots = 0;
+class FakeAudioContext {
+ constructor() { audioCreated++; this.state = 'suspended'; this.currentTime = 0; this.sampleRate = 8000; this.destination = {}; }
+ resume() { this.state = 'running'; return Promise.resolve(); }
+ createBuffer(channels,count) {return {getChannelData() {return new Float32Array(count);}};}
+ createBufferSource() {return {connect() {},start() {muffledShots++;},stop() {}};}
+ createBiquadFilter() {return {type:'',frequency:{value:0},connect() {}};}
+ createGain() {return {gain:{setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}},connect() {}};}
+ createOscillator() {return {type:'',frequency:{setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){},start(){},stop(){}};}
+ close() { audioClosed++; this.state = 'closed'; return Promise.resolve(); }
+}
 const frames = new Map(), handlers = [], transforms = [], contexts = [];
 function canvasContext() {
  const c = {};
@@ -23,7 +34,7 @@ function node(tag) {
  return el;
 }
 const fakeWindow = {
- devicePixelRatio: 2,
+ devicePixelRatio: 2, AudioContext: FakeAudioContext,
  requestAnimationFrame(fn) {const id = nextFrame++; frames.set(id, fn); return id;},
  cancelAnimationFrame(id) {frames.delete(id);},
  ResizeObserver: class {observe() {} disconnect() {disconnected = true;}}
@@ -49,11 +60,22 @@ check(trace.some(p=>p.x > 3) && trace.some(p=>p.x < -3) &&
       trace.some(p=>p.y > 3) && trace.some(p=>p.y < -3), 'sway slowly crosses left/right and up/down');
 check(source.includes("marks.forEach(bulletMark)") && source.includes("impactFlash()") &&
       !source.includes("ctx.moveTo(mark.x - 5, mark.y - 5)"), 'impact uses ragged penetration and brief flash, not circle/slash');
+const runner = {x:810,y:365,radius:37,amplitude:82,rate:.95};
+check(math.targetAt(runner,0).x === 810, 'moving target begins at base X');
+check(math.targetAt(runner,1).x > 840 && math.targetAt(runner,1).x < 893, 'moving target shifts laterally at known time');
+check(Math.abs(math.targetAt(runner,2).x-810) <= 82, 'moving target stays inside bounded track');
+check(math.scoreHit({x:810,y:365},math.targetAt(runner,1)) === 0 &&
+      math.scoreHit({x:math.targetAt(runner,1).x,y:365},math.targetAt(runner,1)) === 100,
+      'hit tests use moving position, not stale base position');
 
 const views = [], stage = node('section');
 const widget = mount({stage, stateKey:null, on(el,type,handler) { handlers.push({el,type,handler}); }, update(view) {views.push(view);} });
 function find(el, tag) { if (el.tag === tag) return el; for (const c of el.children) {const found = find(c,tag);if (found) return found;} return null; }
-const canvas = find(stage,'canvas'), zoom = find(stage,'select'), gauge = find(stage,'progress');
+function findClass(el,cls) {if (el.className.split(' ').includes(cls)) return el;
+ for (const c of el.children) {const found = findClass(c,cls);if(found)return found;} return null;}
+const canvas = find(stage,'canvas'), zoom = findClass(stage,'precision-sniper-zoom');
+const choice = findClass(stage,'precision-sniper-stage'), sound = findClass(stage,'precision-sniper-sound');
+const gauge = find(stage,'progress');
 function send(el,type,options={}) {
  const record = handlers.find(e=>e.el === el && e.type === type);
  assert.ok(record, 'event exists ' + type);
@@ -67,7 +89,10 @@ function step(n) {
   frames.delete(work[0]); now += 16; work[1](now);
  }
 }
-check(canvas !== null && zoom !== null && gauge !== null, 'scope canvas, zoom selector, breath gauge mounted');
+check(canvas !== null && zoom !== null && gauge !== null && choice !== null && sound !== null,
+      'scope, zoom, stage selection, sound control and breath gauge mounted');
+check(sound.textContent === '音 OFF' && sound['aria-pressed'] === 'false' && audioCreated === 0,
+      'sound defaults to OFF and no AudioContext is created without a gesture');
 check(views.at(-1).status === 'ready' && frames.size === 0, 'ready state has no running frames');
 widget.restart();check(views.at(-1).status === 'playing' && frames.size === 1, 'Start schedules animation');
 check(canvas.focused === true, 'Start focuses scoped aiming surface');
@@ -81,6 +106,14 @@ check(transforms.slice(before).some(t=>t[0] === 'scale' && t[1] === 4), 'zoom up
 send(canvas,'pointermove',{clientX:205,clientY:140});
 send(canvas,'pointerdown',{clientX:205,clientY:140});
 check(views.at(-1).score > 0, 'fixed target shot uses current world-coordinate crosshair');
+check(audioCreated === 0 && muffledShots === 0,'sound OFF remains completely silent');
+send(sound,'click');
+check(sound['aria-pressed'] === 'true' && audioCreated === 1,'explicit ON toggle creates WebAudio and updates accessibility state');
+send(canvas,'pointerdown',{clientX:205,clientY:140});
+check(muffledShots === 1, 'enabled suppressor sound is synthesized on each valid shot');
+send(sound,'click');
+send(canvas,'pointerdown',{clientX:205,clientY:140});
+check(sound['aria-pressed'] === 'false' && muffledShots === 1,'OFF toggle immediately silences later shots');
 const score = views.at(-1).score;
 widget.togglePause();check(views.at(-1).paused && frames.size === 0, 'Pause cancels the animation loop');
 send(canvas,'pointerdown',{clientX:205,clientY:140});
@@ -91,8 +124,15 @@ send(canvas,'keydown',{key:'r'});check(frames.size === 1, 'reload leaves one ani
 step(110);check(views.at(-1).status === 'playing', 'reload timing preserves playing state');
 widget.setSuspended(true);check(frames.size === 0 && views.at(-1).paused, 'page/modal suspension stops frame work');
 widget.setSuspended(false);check(frames.size === 1, 'visibility restoration resumes gameplay');
-widget.restart();check(views.at(-1).score === 0, 'Restart clears training score');
+choice.value = '2'; send(choice,'change');
+check(views.at(-1).status === 'playing' && choice.value === '2',
+      'stage selection is possible during active play without altering the current run');
+widget.restart();check(views.at(-1).score === 0 && views.at(-1).message.includes('移動標的'),
+      'Restart clears score and activates stage 2');
+step(200);
+check(views.at(-1).status === 'playing', 'moving-target round continues normally over time');
 check(handlers.every(e=>e.type !== 'keydown' || e.el === canvas), 'no global keyboard capture');
 widget.destroy();check(frames.size === 0 && disconnected, 'Destroy stops animation and detaches ResizeObserver');
+check(audioClosed === 1,'Destroy closes opt-in AudioContext and releases audio resources');
 check(!/fetch\s*\(|XMLHttpRequest|innerHTML|https?:\/\//.test(source), 'no network, unsafe HTML or external assets');
 console.log('RESULT: PASS ' + checks + ' / FAIL 0 / SKIP 0');
