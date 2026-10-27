@@ -1,4 +1,4 @@
-/* Precision Sniper Dev5: delayed flight-time impacts, moving target lead, three discrete depth planes. */
+/* Precision Sniper Dev5.1: flight-time projectile tracer with exact terminal impact and short-lived trail. */
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
@@ -219,7 +219,33 @@
         var wind=(windTravel(time+flight,moving)-windTravel(time,moving))/flight;
         var shift=ballisticOffset(solution.range,wind);
         return {launchTime:time,dueAt:time+flight,flight:flight,range:solution.range,
-            wind:wind,shift:shift,impact:{x:aim.x+shift.x,y:aim.y+shift.y}};
+            wind:wind,shift:shift,launchWorld:{x:aim.x,y:aim.y},
+            impact:{x:aim.x+shift.x,y:aim.y+shift.y}};
+    }
+    function projectileProgress(shot, time) {
+        return clamp((time-shot.launchTime)/shot.flight,0,1);
+    }
+    function projectilePosition(shot, time) {
+        var progress=projectileProgress(shot,time);
+        // Stylized 2-D depth projection, NOT a real camera-side ballistic arc:
+        // the tracer enters from an upwind/up-range point then bends toward the
+        // exact world-space impact. Gravity/drop accelerate quadratically.
+        // The x/y drift uses the same launch solution as collision; no preview
+        // or prediction marker is drawn until the user fires.
+        return {
+            x:shot.launchWorld.x-76*(1-progress)+shot.shift.x*progress*progress,
+            y:shot.launchWorld.y-82*(1-progress)+shot.shift.y*progress*progress
+        };
+    }
+    function projectileTrail(shot, time) {
+        // Keep only a short history BEHIND the tracer, never a future aim line.
+        var progress=projectileProgress(shot,time),tail=Math.min(.15,progress);
+        var points=[];
+        for(var k=0;k<=5;k++){
+            var sample=progress-tail*(1-k/5);
+            points.push(projectilePosition(shot,shot.launchTime+sample*shot.flight));
+        }
+        return points;
     }
     function breathing(phase, held, stamina, unstable) {
         // Center-seeking, bounded breathing cycles: both axes regularly pass through zero.
@@ -299,14 +325,16 @@
             targetPaper:token('--sniper-target-paper','#eae5da'),
             targetAccent:token('--sniper-target-accent','#9c7b6f'),
             targetCenter:token('--sniper-target-center','#4e5b63'),
-            targetBorder:token('--sniper-target-border','#57616b')
+            targetBorder:token('--sniper-target-border','#57616b'),
+            tracer:token('--sniper-projectile','#c89e5f'),
+            tracerCore:token('--sniper-projectile-core','#fff1bd')
         };
         var pointer = {x: W / 2, y: H / 2}, edge = {x: 0, y: 0}, camera = {x: 230, y: 130};
         var phase = 'ready', paused = false, suspended = false, destroyed = false;
         var held = false, stamina = 100, instability = 0, exhaustionLock = false;
         var sway = {x: 0, y: 0}, phaseTime = 0, elapsed = 0, magazine = 5, reloadLeft = 0, recoil = 0;
         var points = 0, shots = 0, impact = null, marks = [], cleared = [], violations = 0;
-        var pendingShots = [];
+        var pendingShots = [], fadingTrails = [];
         var targets = FIXED_TARGETS, soundOn = false, audioContext = null;
         var frameId = 0, lastTime = 0;
         function soundStatus() {
@@ -433,6 +461,39 @@
                     impact.kind === 'target' ? '#fff3d8' : '#ab9274');
             }
             ctx.restore();
+        }
+        function paintProjectile(shot, time, opacity, showBody) {
+            var points=projectileTrail(shot,time);
+            ctx.save();
+            ctx.lineCap='round';ctx.lineWidth=1.6;
+            ctx.strokeStyle=theme.tracer;
+            // Gradually build the current short trail from transparent to visible.
+            for(var k=1;k<points.length;k++){
+                ctx.globalAlpha=opacity*(.10+.26*k/points.length);
+                ctx.beginPath();ctx.moveTo(points[k-1].x,points[k-1].y);
+                ctx.lineTo(points[k].x,points[k].y);ctx.stroke();
+            }
+            if(showBody) {
+                var position=points[points.length-1];
+                ctx.globalAlpha=opacity*.16;
+                circle(position.x,position.y,5,theme.tracer);
+                ctx.globalAlpha=opacity;
+                circle(position.x,position.y,2.15,theme.tracer);
+                ctx.globalAlpha=opacity*.95;
+                circle(position.x,position.y,1.05,theme.tracerCore);
+            }
+            ctx.restore();
+        }
+        function drawProjectiles() {
+            // Called under both the landscape and zoomed lens world transforms.
+            // This is a genuine 0.x-second animation, driven solely by elapsed.
+            pendingShots.forEach(function(shot){
+                paintProjectile(shot,elapsed,1,true);
+            });
+            fadingTrails.forEach(function(trace){
+                var fade=clamp(1-(elapsed-trace.at)/.12,0,1);
+                if(fade>0)paintProjectile(trace.shot,trace.shot.dueAt,fade,false);
+            });
         }
         function windGrass() {
             // Small grass tufts react to the SAME windAt() used for shot deviation.
@@ -578,6 +639,7 @@
             });
             marks.forEach(bulletMark);
             impactFlash();
+            drawProjectiles();
         }
         function lens(center, targetWorld) {
             ctx.save();
@@ -679,9 +741,15 @@
                 if (!reloadLeft) { magazine = 5; update('装填完了'); }
             }
             recoil *= Math.max(0, 1 - delta * 9);
+            // Trail fade is game-clock based, so Pause and Suspended freeze it.
+            fadingTrails=fadingTrails.filter(function(trace){
+                return elapsed-trace.at<.12;
+            });
             // Shot order is preserved. Game-clock time freezes on pause/suspend.
             while(active() && pendingShots.length && pendingShots[0].dueAt<=elapsed+1e-8){
                 var projectile=pendingShots.shift();
+                fadingTrails.push({shot:projectile,at:projectile.dueAt});
+                if(fadingTrails.length>6)fadingTrails.shift();
                 resolveImpact(projectile,projectile.dueAt);
             }
             update(); draw(); schedule();
@@ -713,9 +781,9 @@
                 offsetX:offsetX,offsetY:offsetY,label:prohibited?'NO SHOOT  -75'
                     :contact?'T'+(selected+1)+' '+contact.zone+
                         (firstHit?' +'+awarded:' 再命中'):'MISS'};
-            if(prohibited&&violations>=3){phase='lost';pendingShots=[];stop();}
+            if(prohibited&&violations>=3){phase='lost';pendingShots=[];fadingTrails=[];stop();}
             else if(cleared.length===targets.filter(function(t){return !t.noShoot;}).length){
-                phase='won';pendingShots=[];stop();
+                phase='won';pendingShots=[];fadingTrails=[];stop();
             }
             update();
             if(prohibited){
@@ -787,7 +855,7 @@
             }
             targets = stageSelect.value === '3' ? randomStage() :
                 stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
-            marks = []; cleared = []; impact = null; violations = 0; pendingShots = [];
+            marks = []; cleared = []; impact = null; violations = 0; pendingShots = []; fadingTrails = [];
             update(); draw();
         });
         context.on(soundButton, 'click', function () {
@@ -805,7 +873,7 @@
                     stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
                 phase = 'playing';paused = false;elapsed = 0;phaseTime = 0;points = 0;shots = 0;violations = 0;
                 magazine = 5;reloadLeft = 0;stamina = 100;instability = 0;exhaustionLock = false;
-                sway = {x:0,y:0};recoil = 0;marks = [];cleared = [];impact = null;pendingShots = [];
+                sway = {x:0,y:0};recoil = 0;marks = [];cleared = [];impact = null;pendingShots = [];fadingTrails = [];
                 camera = {x:230,y:targets === FIXED_TARGETS || targets === MOVING_TARGETS ? 130 : 95};
                 pointer = {x:W/2,y:H/2};edge = {x:0,y:0};
                 update('訓練開始');draw();canvas.focus({preventScroll:true});schedule();
@@ -820,7 +888,7 @@
             },
             resize: resize,
             destroy: function () {
-                destroyed = true; stop(); soundOn = false; pendingShots = [];
+                destroyed = true; stop(); soundOn = false; pendingShots = []; fadingTrails = [];
                 if (observer) observer.disconnect();
                 if (audioContext) {
                     try { var closing = audioContext.close();
@@ -836,6 +904,8 @@
         targetAt:targetAt,targetActive:targetActive,randomStage:randomStage,
         targetContact:targetContact,windAt:windAt,ballisticOffset:ballisticOffset,
         shotSolution:shotSolution,flightTime:flightTime,flightShot:flightShot,
+        projectileProgress:projectileProgress,projectilePosition:projectilePosition,
+        projectileTrail:projectileTrail,
         windLeafAt:windLeafAt,windTravel:windTravel,
         reloadProgress:reloadProgress,silhouetteHit:silhouetteHit};
     window.RssGameWidget.register('precision_sniper', mount);
