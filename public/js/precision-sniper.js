@@ -233,8 +233,8 @@
         // The x/y drift uses the same launch solution as collision; no preview
         // or prediction marker is drawn until the user fires.
         return {
-            x:shot.launchWorld.x-76*(1-progress)+shot.shift.x*progress*progress,
-            y:shot.launchWorld.y-82*(1-progress)+shot.shift.y*progress*progress
+            x:shot.launchWorld.x-34*(1-progress)+shot.shift.x*progress*progress,
+            y:shot.launchWorld.y-32*(1-progress)+shot.shift.y*progress*progress
         };
     }
     function projectileTrail(shot, time) {
