@@ -1,3 +1,17 @@
+# RSS Reader Modernization 1.50.0-dev.1 — Precision Sniper Dev1 (Preview)
+
+**この検証用ビルドは正式Releaseではありません。** V1.49.0正式版を置き換える正式リリースではなく、操作感を確認するための開発プレビューです。GitHubのmain、正式タグ、Releaseは変更していません。
+
+- Game WidgetにオリジナルのCanvas狙撃訓練「Precision Sniper」を追加。通常背景＋円形拡大スコープ、手ブレ、Space息止め、固定標的、射撃、R/Zリロード、倍率変更に対応します。
+- Stage 1相当の4枚の固定標的のみ。移動標的、弾速、風、弾道落下、4難易度、能力強化、進捗保存は今後のDev工程の対象です。
+- 共通Game WidgetのStart / Restart / Pause / 拡大 / Destroy、保存スコープと現行セキュリティ境界を利用します。DB Migrationはありません。
+- PHP 8.1 / 8.4 CIおよびSniper Focused Testを実行。実端末での照準操作感とPC/スマホ表示はユーザー確認前です。
+- 検証用Runtime ZIPは既存パッケージ生成器で作り、Mail用のComposer IMAP依存ファイルを含めます。設定・既存ユーザーデータを上書きしないよう、検証環境で使用してください。
+
+---
+
+## Previous formal release notes (V1.49.0)
+
 # RSS Reader Modernization 1.49.0
 
 V1.49.0は、既存のDashboardとArticle Actionsの動作を維持しながら、Feed表示・通信・Reader Modeと記事操作を分割して保守性を改善するModernization Releaseです。Application VersionとAsset Revisionは`1.49.0`。Database Migrationと新規必須Config変更はありません。
