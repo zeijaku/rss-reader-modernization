@@ -399,7 +399,8 @@ check(tracerDots===noOldShot,
 send(canvas,'pointerdown',{clientX:205,clientY:140});
 send(canvas,'pointerdown',{clientX:205,clientY:140});
 check(views.at(-1).score===0 &&
-      tracerDots>noOldShot && views.at(-1).message.includes('飛翔中'),
+      tracerDots>noOldShot &&
+      findClass(stage,'precision-sniper-hits').textContent.includes('飛翔中 2'),
       'two projectiles can be rendered simultaneously before either registers an impact');
 step(200);
 check(views.at(-1).status === 'playing', 'moving-target round continues normally over time');
