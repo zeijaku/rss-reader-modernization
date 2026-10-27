@@ -1,8 +1,8 @@
-# RSS Reader Modernization 1.50.0-dev.1 — Precision Sniper Dev1 (Preview)
+# RSS Reader Modernization 1.50.0-dev.1.1 — Precision Sniper Dev1 refinement (Preview)
 
 **この検証用ビルドは正式Releaseではありません。** V1.49.0正式版を置き換える正式リリースではなく、操作感を確認するための開発プレビューです。GitHubのmain、正式タグ、Releaseは変更していません。
 
-- Game WidgetにオリジナルのCanvas狙撃訓練「Precision Sniper」を追加。通常背景＋円形拡大スコープ、手ブレ、Space息止め、固定標的、射撃、R/Zリロード、倍率変更に対応します。
+- Game WidgetにオリジナルのCanvas狙撃訓練「Precision Sniper」を追加。通常背景＋円形拡大スコープ、手ブレ、Space息止め、固定標的、射撃、R/Zリロード、倍率変更に対応します。Dev1.1で他ゲームと同じBootstrap系の落ち着いた配色と単純な背景表現に変更しました。照準の揺れを中心へ戻る穏やかな往復運動に調整し、弾痕は不規則な貫通穴・紙の欠け・短い着弾エフェクトへ変更しました。空中へのMISSは不自然な弾痕を残しません。
 - Stage 1相当の4枚の固定標的のみ。移動標的、弾速、風、弾道落下、4難易度、能力強化、進捗保存は今後のDev工程の対象です。
 - 共通Game WidgetのStart / Restart / Pause / 拡大 / Destroy、保存スコープと現行セキュリティ境界を利用します。DB Migrationはありません。
 - PHP 8.1 / 8.4 CIおよびSniper Focused Testを実行。実端末での照準操作感とPC/スマホ表示はユーザー確認前です。
