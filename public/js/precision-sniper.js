@@ -1,4 +1,4 @@
-/* Precision Sniper Dev4.2: pole-free scatter, perspective-accurate shapes, safe respawn geometry. */
+/* Precision Sniper Dev5: delayed flight-time impacts, moving target lead, three discrete depth planes. */
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
@@ -14,10 +14,17 @@
         {x: 1190, y: 265, radius: 37, distance: 390, amplitude: 107, rate: 0.78, offset: 1.1},
         {x: 1450, y: 395, radius: 37, distance: 490, amplitude: 67, rate: 1.15, offset: -0.8}
     ];
+    var DEPTH_LAYERS = [
+        {name:'far', label:'後景', top:237, bottom:275, radius:24, near:390, far:490},
+        {name:'middle', label:'中景', top:301, bottom:329, radius:33, near:270, far:360},
+        {name:'near', label:'前景', top:369, bottom:402, radius:44, near:180, far:250}
+    ];
     function depthAt(y) {
-        // Visual perspective is intentionally based on vertical placement, not role.
-        var fraction=clamp((y-230)/170,0,1);
-        return {radius:Math.round(24+fraction*20), distance:Math.round(490-fraction*300)};
+        // Three discrete, intentionally legible target sizes; no intermediate radii.
+        var layer=y<289?DEPTH_LAYERS[0]:y<349?DEPTH_LAYERS[1]:DEPTH_LAYERS[2];
+        var progress=clamp((y-layer.top)/(layer.bottom-layer.top),0,1);
+        return {layer:layer.name,radius:layer.radius,
+            distance:Math.round(layer.far-(layer.far-layer.near)*progress)};
     }
     function footprint(target) {
         // Actual visible label and silhouettes plus future bob/spawn offsets. No posts
@@ -34,16 +41,16 @@
             first.bottom<=second.top || second.bottom<=first.top;
     }
     function randomStage(random) {
-        // Every placement is sampled with independent, continuous X and Y random
-        // values. Retry the WHOLE layout if any item cannot fit with labels.
-        // A six-position fallback is strictly for exhausted/pathological RNGs.
+        // Exactly two targets in each perspective plane. Continuous random XY
+        // per plane; no hard-coded X slots. Conservative label/motion envelopes
+        // prevent overlaid silhouettes even after their return to the scene.
         var rng=typeof random==='function'?random:Math.random;
         var roles=['round','round','hostile','hostile','civilian','animal'];
         for(var i=roles.length-1;i>0;i--){
             var k=Math.floor(clamp(rng(),0,.999999)*(i+1));
             var swap=roles[i];roles[i]=roles[k];roles[k]=swap;
         }
-        function createTarget(pos,role) {
+        function decorate(pos,role){
             pos.kind=role;
             pos.noShoot=role==='civilian'||role==='animal';
             pos.rate=.35+rng()*.8;
@@ -54,39 +61,35 @@
             pos.cycle=10.5+rng()*4.4;
             return pos;
         }
-        for(var layout=0;layout<12;layout++){
+        for(var layout=0;layout<14;layout++){
             var trial=[],valid=true;
             for(var n=0;n<roles.length;n++){
+                var layer=DEPTH_LAYERS[Math.floor(n/2)];
                 var moving=rng()<.36, motion=moving?Math.round(6+rng()*8):0;
                 var chosen=null;
-                for(var attempt=0;attempt<175;attempt++){
+                for(var attempt=0;attempt<190;attempt++){
                     var x=Math.round(344+clamp(rng(),0,.999999)*1068);
-                    var y=Math.round(n===0?237+rng()*39:
-                        n===1?362+rng()*41:229+rng()*174);
-                    var depth=depthAt(y),scale=.91+rng()*.18;
-                    var candidate={x:x,y:y,radius:Math.round(depth.radius*scale),
-                        sizeScale:scale,distance:depth.distance,amplitude:motion};
+                    var y=Math.round(layer.top+clamp(rng(),0,.999999)*(layer.bottom-layer.top));
+                    var depth=depthAt(y);
+                    var candidate={x:x,y:y,layer:layer.name,radius:layer.radius,
+                        distance:depth.distance,amplitude:motion};
                     if(trial.every(function(other){return targetsSeparated(candidate,other);})){
                         chosen=candidate;break;
                     }
                 }
                 if(!chosen){valid=false;break;}
-                trial.push(createTarget(chosen,roles[n]));
+                trial.push(decorate(chosen,roles[n]));
             }
             if(valid)return trial;
         }
-        // The fallback cannot overlap: the two rows are separated by >150 world
-        // pixels, and three columns by >400. Slight jitter keeps role assignment
-        // and image positions from becoming a perfectly identical repeat.
-        var backup=[],columns=[392,838,1284],rows=[230,400];
+        // Exhausted RNG safety: two columns per layer with generous gaps.
+        var backup=[],columns=[445,1220];
         for(var p=0;p<roles.length;p++){
-            var x0=columns[p%3]+(rng()-.5)*40;
-            var y0=rows[Math.floor(p/3)]+(rng()-.5)*8;
-            var perspective=depthAt(y0);
-            var scale=[.90,1,1.09][p%3];
-            backup.push(createTarget({x:x0,y:y0,
-                radius:Math.round(perspective.radius*scale),sizeScale:scale,
-                distance:perspective.distance,amplitude:0},roles[p]));
+            var plane=DEPTH_LAYERS[Math.floor(p/2)];
+            var x0=columns[p%2]+(rng()-.5)*24;
+            var y0=(plane.top+plane.bottom)/2+(rng()-.5)*8;
+            backup.push(decorate({x:x0,y:y0,layer:plane.name,radius:plane.radius,
+                distance:depthAt(y0).distance,amplitude:0},roles[p]));
         }
         return backup;
     }
@@ -107,11 +110,16 @@
         var spawnX=isRandom&&cycle ? (positionSeed(target.seed,cycle,0)*2-1)*13 : 0;
         var spawnY=isRandom&&cycle ? (positionSeed(target.seed,cycle,1)*2-1)*10 : 0;
         var y=target.y+spawnY;
+        // A returning target stays within its original depth plane and physical
+        // size; distance follows the current vertical position inside that plane.
+        if(isRandom){
+            var plane=DEPTH_LAYERS.filter(function(part){return part.name===target.layer;})[0];
+            if(plane) y=clamp(y,plane.top,plane.bottom);
+        }
         var depth=isRandom?depthAt(y):{radius:target.radius,distance:target.distance};
-        if(isRandom) depth.radius=Math.round(depth.radius*(target.sizeScale||1));
         return {x:target.x+spawnX+(target.amplitude||0)*
                 Math.sin(time*(target.rate||0)+(target.offset||0)),
-            y:y,radius:depth.radius,distance:depth.distance,kind:target.kind};
+            y:y,radius:depth.radius,distance:depth.distance,kind:target.kind,layer:target.layer};
     }
     function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
     function aimWorld(camera, pointer, sway) {
