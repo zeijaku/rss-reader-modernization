@@ -82,6 +82,43 @@ check(math.targetContact({x:810,y:365},[runner],1) === null &&
       math.targetContact({x:math.targetAt(runner,1).x+11,y:365},[runner],1).index === 0,
       'repeated contact uses current moving target geometry and relative position');
 
+const rangeTargets = [
+ {x:435,y:270,radius:37,distance:150},
+ {x:810,y:365,radius:37,distance:250},
+ {x:1190,y:265,radius:37,distance:350},
+ {x:1450,y:395,radius:37,distance:450}
+];
+const windStart = math.windAt(0,false), windLater = math.windAt(7,false);
+check(Number.isFinite(windStart) && windStart !== windLater,
+      'time-varying wind is deterministic and changes during active gameplay');
+check(math.windAt(0,true) !== windStart && math.windAt(14,true) < 0,
+      'moving stage gusts can reverse from rightward to leftward');
+check(math.ballisticOffset(150,0).y === 0 &&
+      math.ballisticOffset(250,0).y > 0 &&
+      math.ballisticOffset(450,0).y > math.ballisticOffset(250,0).y,
+      'distance-based bullet drop increases while 150m sight-in is zero');
+check(math.ballisticOffset(450,-2).x < 0 && math.ballisticOffset(450,2).x > 0 &&
+      Math.abs(math.ballisticOffset(450,2).x) > Math.abs(math.ballisticOffset(150,2).x),
+      'wind causes left/right deflection, stronger at long range');
+const nearSol = math.shotSolution({x:435,y:270},rangeTargets,0,false);
+const farSol = math.shotSolution({x:1450,y:395},rangeTargets,0,false);
+check(nearSol.range === 150 && farSol.range === 450 &&
+      nearSol.index === 0 && farSol.index === 3,
+      'range estimate follows the nearest target at the actual aim position');
+check(Math.abs(farSol.impact.x-1450-farSol.shift.x) < .000001 &&
+      Math.abs(farSol.impact.y-395-farSol.shift.y) < .000001,
+      'physical strike includes both wind and drop offsets');
+const farTarget = {x:1450,y:395,radius:37,distance:490};
+const farCenter = {x:1450,y:395};
+const directFar = math.shotSolution(farCenter,[farTarget],0,true);
+const compensated = {x:farCenter.x-directFar.shift.x,y:farCenter.y-directFar.shift.y};
+const correctedFar = math.shotSolution(compensated,[farTarget],0,true);
+check(math.scoreHit(directFar.impact, farTarget) < 100 &&
+      math.scoreHit(correctedFar.impact, farTarget) === 100,
+      'holding into wind and above distant target restores bullseye');
+check(math.shotSolution(farCenter,[farTarget],0,true).impact.y === directFar.impact.y,
+      'ballistic prediction is deterministic, not randomly different at the instant of shooting');
+
 const views = [], stage = node('section');
 const widget = mount({stage, stateKey:null, on(el,type,handler) { handlers.push({el,type,handler}); }, update(view) {views.push(view);} });
 function find(el, tag) { if (el.tag === tag) return el; for (const c of el.children) {const found = find(c,tag);if (found) return found;} return null; }
@@ -90,6 +127,7 @@ function findClass(el,cls) {if (el.className.split(' ').includes(cls)) return el
 const canvas = find(stage,'canvas'), zoom = findClass(stage,'precision-sniper-zoom');
 const choice = findClass(stage,'precision-sniper-stage'), sound = findClass(stage,'precision-sniper-sound');
 const gauge = find(stage,'progress'), feedback = findClass(stage,'precision-sniper-feedback');
+const telemetry = findClass(stage,'precision-sniper-ballistics');
 function send(el,type,options={}) {
  const record = handlers.find(e=>e.el === el && e.type === type);
  assert.ok(record, 'event exists ' + type);
@@ -103,8 +141,10 @@ function step(n) {
   frames.delete(work[0]); now += 16; work[1](now);
  }
 }
-check(canvas !== null && zoom !== null && gauge !== null && choice !== null && sound !== null,
-      'scope, zoom, stage selection, sound control and breath gauge mounted');
+check(canvas !== null && zoom !== null && gauge !== null && choice !== null && sound !== null && telemetry !== null,
+      'scope, zoom, stage selection, sound control, trajectory telemetry and breath gauge mounted');
+check(telemetry.textContent.includes('距離') && telemetry.textContent.includes('風') &&
+      telemetry.textContent.includes('着弾ずれ'), 'initial trajectory indicator clearly explains range, wind, and drop');
 check(sound.textContent === '音 OFF' && sound['aria-pressed'] === 'false' && audioCreated === 0,
       'sound defaults to OFF and no AudioContext is created without a gesture');
 check(views.at(-1).status === 'ready' && frames.size === 0, 'ready state has no running frames');
@@ -119,7 +159,9 @@ zoom.value = '4';send(zoom,'change');
 check(transforms.slice(before).some(t=>t[0] === 'scale' && t[1] === 4), 'zoom updates scope-only magnification');
 send(canvas,'pointermove',{clientX:205,clientY:140});
 send(canvas,'pointerdown',{clientX:205,clientY:140});
-check(views.at(-1).score > 0, 'fixed target shot uses current world-coordinate crosshair');
+check(views.at(-1).score > 0, 'near target remains hittable despite small bullet deviation');
+check(feedback.textContent.includes('風による横ずれ') && feedback.textContent.includes('落下'),
+      'hit feedback identifies actual ballistic correction');
 check(feedback.textContent.includes('中心から横') && feedback.textContent.includes('に命中'),
       'first impact reports its physical position relative to the target center');
 const firstScore = views.at(-1).score;
@@ -142,6 +184,9 @@ send(canvas,'pointerdown',{clientX:205,clientY:140});
 check(sound['aria-pressed'] === 'false' && muffledShots === 1,'OFF toggle immediately silences later shots');
 const score = views.at(-1).score;
 widget.togglePause();check(views.at(-1).paused && frames.size === 0, 'Pause cancels the animation loop');
+const frozenWind = telemetry.textContent;
+step(30);check(telemetry.textContent === frozenWind && frames.size === 0,
+      'pause freezes telemetry, gusts, target positions and animation work');
 send(canvas,'pointerdown',{clientX:205,clientY:140});
 check(views.at(-1).score === score, 'paused shot cannot change score');
 widget.togglePause();check(!views.at(-1).paused && frames.size === 1, 'Resume restores animation');
@@ -157,6 +202,12 @@ widget.restart();check(views.at(-1).score === 0 && views.at(-1).message.includes
       'Restart clears score and activates stage 2');
 step(200);
 check(views.at(-1).status === 'playing', 'moving-target round continues normally over time');
+check(telemetry.textContent.includes('風') && telemetry.textContent.includes('m/s'),
+      'wind direction and strength remain visible on moving-target stage');
+check(source.includes('var contact = targetContact(landed, targets, elapsed)') &&
+      source.includes('marks.push({x:landed.x,y:landed.y') &&
+      source.includes("var kind = contact ? 'target' : landed.y >= 462"),
+      'score, grounded impact marks and physical collision all use post-ballistics point');
 check(handlers.every(e=>e.type !== 'keydown' || e.el === canvas), 'no global keyboard capture');
 widget.destroy();check(frames.size === 0 && disconnected, 'Destroy stops animation and detaches ResizeObserver');
 check(audioClosed === 1,'Destroy closes opt-in AudioContext and releases audio resources');
