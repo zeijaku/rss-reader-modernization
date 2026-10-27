@@ -130,8 +130,8 @@ check('pendingShots.push(projectile)' in game and 'pendingShots[0].dueAt<=elapse
 check('targetContact(landed,targets,arrivalTime)' in game and
       'windTravel(time+flight,moving)-windTravel(time,moving)' in game,
       'arrival-time hit positions and integrated crosswind are physically consistent')
-check('pendingShots=[];stop();' in game and 'pendingShots = [];' in game,
-      'completed or failed rounds discard remaining projectiles')
+check('pendingShots=[];fadingTrails=[];stop();' in game and 'pendingShots = [];' in game,
+      'completed or failed rounds discard all outstanding projectiles and tracers')
 check('impact = null; violations = 0; pendingShots = [];' in game
       and 'destroyed = true; stop(); soundOn = false; pendingShots = [];' in game,
       'stage change, Restart and Destroy clear all in-flight projectiles')
