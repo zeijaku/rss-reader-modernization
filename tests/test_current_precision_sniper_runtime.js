@@ -16,7 +16,7 @@ class FakeAudioContext {
  close() { audioClosed++; this.state = 'closed'; return Promise.resolve(); }
 }
 const frames = new Map(), handlers = [], transforms = [], contexts = [], canvasLabels = [], drawnArcs = [];
-let bulletHolePaints = 0;
+let bulletHolePaints = 0, standRectCount = 0;
 function canvasContext() {
  const c = {};
  for (const fn of ['beginPath','arc','fill','stroke','fillRect','save','restore','translate','scale','moveTo','lineTo','fillText','clearRect','setTransform','clip','strokeRect']) {
@@ -25,6 +25,7 @@ function canvasContext() {
    if (fn === 'fill' && c.fillStyle === '#212529') bulletHolePaints++;
    if (fn === 'fillText') canvasLabels.push(String(args[0]));
    if (fn === 'arc') drawnArcs.push(args);
+   if (fn === 'fillRect' && args[2] === 6 && args[3] === 104) standRectCount++;
   };
  }
  c.createLinearGradient = () => ({addColorStop() {}});
@@ -108,15 +109,20 @@ check(['round','hostile','civilian','animal'].every(k=>randomTargets.some(t=>t.k
       randomTargets.find(t=>t.kind==='civilian').noShoot,
       'mixed paper circles, human silhouettes, forbidden civilians and wildlife are present');
 check(new Set(randomTargets.map(t=>t.radius)).size >= 3 &&
-      randomTargets.every(t=>[25,31,37,45].includes(t.radius)),
-      'every round has varied small, medium and large target sizes');
+      randomTargets.every(t=>t.radius>=20 && t.radius<=49),
+      'each randomized round contains multiple perspective-adjusted target sizes');
+check(math.depthAt(230).distance > math.depthAt(390).distance &&
+      math.depthAt(230).radius < math.depthAt(390).radius,
+      'vertical location controls both depth distance and displayed radius');
+check(randomTargets.filter(t=>t.y<270).every(t=>t.distance>=390) &&
+      randomTargets.filter(t=>t.y>375).every(t=>t.distance<=240),
+      'far upper targets are smaller and farther than near lower targets');
 check(randomTargets.every(t => t.distance >= 180 && t.distance <= 490 &&
       t.appearAt >= 0 && t.cycle > t.visibleFor),
       'random targets have bounded distance and independent visibility windows');
 const gapsOk = randomTargets.every((t,i)=>randomTargets.slice(i+1).every(u=>
-      Math.abs(t.x-u.x) > t.radius+u.radius+t.amplitude+u.amplitude+36 ||
-      Math.abs(t.y-u.y) > t.radius+u.radius+32));
-check(gapsOk, '2D random placement avoids overlap even with target movement');
+      math.targetsSeparated(t,u)));
+check(gapsOk, 'spawn footprints including labels, sway and silhouette radii never overlap');
 const different = math.randomStage(() => 0);
 check(different.some((t,i) => t.x !== randomTargets[i].x ||
       t.y !== randomTargets[i].y || t.kind !== randomTargets[i].kind),
@@ -124,13 +130,22 @@ check(different.some((t,i) => t.x !== randomTargets[i].x ||
 const seeded = (seed) => {
  let state=seed>>>0;return ()=>{state=(1664525*state+1013904223)>>>0;return state/4294967296;};
 };
-check(Array.from({length:64},(_,i)=>math.randomStage(seeded(i+1))).every(ts =>
-      ts.length===6 && ts.filter(t=>t.noShoot).length===2 &&
+const sampledLayouts=Array.from({length:128},(_,i)=>math.randomStage(seeded(i+1)));
+check(sampledLayouts.every(ts=>ts.length===6 &&
+      ts.filter(t=>t.noShoot).length===2 &&
       new Set(ts.map(t=>t.radius)).size>=3 &&
-      ts.every((t,j)=>ts.slice(j+1).every(u =>
-      Math.abs(t.x-u.x)>t.radius+u.radius+t.amplitude+u.amplitude+36 ||
-      Math.abs(t.y-u.y)>t.radius+u.radius+32))),
-      '64 independent random rounds have six safely separated, varied-size targets');
+      ts.every((t,j)=>ts.slice(j+1).every(u=>math.targetsSeparated(t,u)))),
+      '128 independent random rounds keep six non-overlapping shapes and mixed sizes');
+check(new Set(sampledLayouts.map(ts=>ts.map(t=>Math.round(t.x)+'/'+Math.round(t.y)).join(','))).size > 100,
+      'free X and Y placement produces substantially different spatial layouts on Restart');
+check(sampledLayouts.every(ts=>ts.some(t=>t.y<280) && ts.some(t=>t.y>352)),
+      'every stage includes near and far subjects without a fixed X lane');
+check(sampledLayouts.every(ts=>ts.every(t=>{
+      const p=math.targetAt(t,t.appearAt+t.cycle+1);
+      return p.radius>=20 && p.radius<=49 &&
+        Math.abs(p.x-t.x)<=29 && Math.abs(p.y-t.y)<=11;
+      })),
+      'reappearing subjects stay inside pre-reserved non-overlapping movement bounds');
 const sample=randomTargets[0], appear=sample.appearAt+1;
 check(!math.targetActive(sample,0) && math.targetActive(sample,appear) &&
       !math.targetActive(sample,sample.appearAt+sample.visibleFor+.1) &&
@@ -139,6 +154,10 @@ check(!math.targetActive(sample,0) && math.targetActive(sample,appear) &&
 check(math.targetAt(sample,appear).x !== math.targetAt(sample,appear+sample.cycle).x ||
       math.targetAt(sample,appear).y !== math.targetAt(sample,appear+sample.cycle).y,
       'reappearing targets do not return to identical placement');
+const shifted=math.targetAt(sample,appear+sample.cycle);
+check(shifted.distance===math.depthAt(shifted.y).distance &&
+      shifted.radius===Math.round(math.depthAt(shifted.y).radius*sample.sizeScale),
+      'reappearing target size and displayed range remain synchronized with new position');
 const safeSample=randomTargets.find(t=>t.kind==='round');
 check(math.targetContact({x:safeSample.x,y:safeSample.y},[safeSample],0)===null &&
       math.targetContact({x:safeSample.x,y:safeSample.y},[safeSample],safeSample.appearAt+1)!==null,
@@ -288,17 +307,21 @@ check(telemetry.textContent.includes('風') && telemetry.textContent.includes('m
 check(source.includes('function windGrass()') && source.includes('function windSock()') &&
       source.includes('windGrass();') && source.includes('windSock();'),
       'background grass and scope-layer wind sock visibly react to live gusts');
+const standsBeforeStage3=standRectCount;
 choice.value = '3'; send(choice,'change'); widget.restart();
 check(views.at(-1).message.includes('NO SHOOT') &&
       views.at(-1).status === 'playing',
       'Stage 3 starts with random appearance and friend-or-foe identification');
 step(115);
+const standsAtStage3=standRectCount;widget.resize();
+check(standRectCount===standsAtStage3 && standsBeforeStage3>0,
+      'Stage 3 renders only target shapes and labels, with no support posts or bases');
 check(canvasLabels.some(x=>x.includes('NO SHOOT / 動物')) &&
       canvasLabels.some(x=>x.includes('NO SHOOT / 市民')),
       'protected civilian and wildlife shapes are both clearly labeled');
 const stageTargets=math.randomStage(()=>.5);
-const normal=stageTargets.find(t=>!t.noShoot && t.x<=870);
-const forbidden=stageTargets.find(t=>t.noShoot && t.x>=325 && t.x<=850);
+const normal=stageTargets.find(t=>!t.noShoot && t.x>=330 && t.x<=820);
+const forbidden=stageTargets.find(t=>t.noShoot && t.x>=330 && t.x<=850);
 check(!!normal && !!forbidden, 'seeded randomized stage provides visible valid and forbidden targets');
 function shootAt(t) {
  // Initial camera is x=230/y=130. All targets in this deterministic case are stationary.
