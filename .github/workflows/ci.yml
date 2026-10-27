@@ -68,6 +68,46 @@ jobs:
         run: bash tests/run-ci.sh
 
 
+  sniper_preview:
+    name: Precision Sniper Dev1 preview runtime ZIP
+    needs: regression
+    if: github.event_name == 'pull_request' && github.head_ref == 'feature/v1.50-dev1-precision-sniper'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout tested PR source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up PHP and Composer
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: '8.1'
+          extensions: curl, mbstring, pdo_sqlite, intl, openssl, xml, dom, iconv
+          tools: composer:v2
+          coverage: none
+      - name: Build and audit pinned Mail IMAP dependencies
+        run: bash tools/build_mail_dependencies.sh build/mail
+      - name: Build and verify non-publishable preview package
+        run: |
+          set -euo pipefail
+          node tests/test_current_precision_sniper_runtime.js
+          python3 tests/test_current_precision_sniper_contract.py
+          python3 tools/build_release_package.py --release 1.50.0 --mode preview --mail-dependencies-dir build/mail --output-dir dist
+          python3 tools/verify_release_package.py --release 1.50.0 --require-mail-dependencies dist/rss-reader-modernization-1.50.0-preview.zip dist/rss-reader-modernization-1.50.0-preview.zip.sha256
+          unzip -tq dist/rss-reader-modernization-1.50.0-preview.zip
+      - name: Upload preview runtime ZIP and SHA-256
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: RSS_Reader_V1.50.0_Dev1_Preview
+          path: |
+            dist/rss-reader-modernization-1.50.0-preview.zip
+            dist/rss-reader-modernization-1.50.0-preview.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+
   p2b_apache_probe:
     name: P2-B Apache isolation probe
     runs-on: ubuntu-latest
