@@ -43,7 +43,7 @@ check('clientX - rect.left' in game and 'canvas.width / W' in game,
 check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed, targets, elapsed)' in game
       and 'scoreHit(point, position)' in game,
       'the sway shown in the zoomed lens is used for repeated physical collision')
-check('1.50.0-dev.4' in src('app/version.php'), 'visible and asset versions mark Dev3 preview only')
+check('1.50.0-dev.5' in src('app/version.php'), 'visible and asset versions mark Dev4 preview only')
 check('MOVING_TARGETS' in game and 'targetAt(target, elapsed)' in game,
       'second range animates targets and hit tests use displayed center')
 check('mark.targetIndex >= 0' in game and 'impact.targetIndex >= 0' in game,
@@ -69,14 +69,30 @@ check('windAt(time, moving)' in game and 'ballisticOffset(distance, wind)' in ga
 check('targetContact(landed, targets, elapsed)' in game and
       "var kind = contact ? 'target' : landed.y >= 462" in game,
       'impact surfaces and hit scoring use physical ballistic landing, not scope center')
-check("var solution = shotSolution(shot, targets, elapsed, targets === MOVING_TARGETS)" in game and
-      "var solution = shotSolution(at, targets, elapsed, targets === MOVING_TARGETS)" in game,
+check("var solution = shotSolution(shot, targets, elapsed, targets !== FIXED_TARGETS)" in game and
+      "var solution = shotSolution(at, targets, elapsed, targets !== FIXED_TARGETS)" in game,
       'drawn telemetry and click shot derive the same correction model')
 check('precision-sniper-ballistics' in game and '着弾ずれ' in game
       and '--bs-secondary-bg' in src('public/css/game-widget.css'),
       'range/wind/drop telemetry follows the existing Game theme')
 check('distance: 150' in game and 'distance: 490' in game
       and "' '+target.distance+'m'" in game, 'each stage includes graded target distances')
+check('randomStage(random)' in game and 'targetActive(target, time)' in game and
+      "stageSelect.value === '3' ? randomStage()" in game,
+      'Dev4 randomized timed target visibility remains scoped to stage 3')
+check('if (!targetActive(stageTargets[i], time)) continue;' in game and
+      'if (!targetActive(target, elapsed)) return;' in game and
+      'if (mark.targetIndex >= 0 && !targetActive' in game,
+      'invisible targets have no hit collisions, rendered targets or visible ghost marks')
+check('target.noShoot' in game and "'NO SHOOT'" in game and "'NO SHOOT  -75'" in game
+      and 'phase = \'lost\'' in game and 'violations >= 3' in game,
+      'forbidden targets have shape/text distinction, penalty and third-hit fail')
+check("targets.filter(function (target) { return !target.noShoot; }).length" in game,
+      'stage clear and progress count only shootable targets')
+check('function windGrass()' in game and 'function windSock()' in game and
+      'windGrass();' in game and 'windSock();' in game and
+      '1.55 * (moving ?' in game,
+      'wind is stronger and visible in both landscape and overlay instrument')
 check("source.connect(" not in game and "filter.type='lowpass'" in game
       and "soundOn = false" in game, 'sound remains local, low-pass filtered and OFF initially')
 check(all(s not in game for s in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'https://']),
