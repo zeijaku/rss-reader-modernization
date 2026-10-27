@@ -16,10 +16,14 @@ class FakeAudioContext {
  close() { audioClosed++; this.state = 'closed'; return Promise.resolve(); }
 }
 const frames = new Map(), handlers = [], transforms = [], contexts = [];
+let bulletHolePaints = 0;
 function canvasContext() {
  const c = {};
  for (const fn of ['beginPath','arc','fill','stroke','fillRect','save','restore','translate','scale','moveTo','lineTo','fillText','clearRect','setTransform','clip','strokeRect']) {
-  c[fn] = (...args) => { if (fn === 'scale' || fn === 'translate') transforms.push([fn, ...args]); };
+  c[fn] = (...args) => {
+   if (fn === 'scale' || fn === 'translate') transforms.push([fn, ...args]);
+   if (fn === 'fill' && c.fillStyle === '#212529') bulletHolePaints++;
+  };
  }
  c.createLinearGradient = () => ({addColorStop() {}});
  contexts.push(c); return c;
@@ -50,6 +54,13 @@ check(math.scoreHit({x:435,y:270}, target) === 100, 'bullseye scores 100');
 check(math.scoreHit({x:450,y:270}, target) === 75, 'middle ring scores 75');
 check(math.scoreHit({x:465,y:270}, target) === 45, 'outer ring scores 45');
 check(math.scoreHit({x:473,y:270}, target) === 0, 'outside target is a miss');
+check(math.targetContact({x:435,y:270},[target],0).zone === '中心',
+      'target contact reports bullseye independent of score history');
+check(math.targetContact({x:455,y:270},[target],0).zone === '中間' &&
+      math.targetContact({x:470,y:270},[target],0).zone === '外周',
+      'target contact differentiates middle and outer impact rings');
+check(math.targetContact({x:474,y:270},[target],0) === null,
+      'contact correctly excludes points beyond target surface');
 check(Math.abs(math.breathing(2,true,50,false).x) < Math.abs(math.breathing(2,false,50,false).x), 'breath holding reduces visible and physical sway');
 check(Math.abs(math.breathing(2,false,0,true).y) > Math.abs(math.breathing(2,false,0,false).y), 'exhaustion amplifies sway');
 check(Math.abs(math.breathing(0,false,100,false).x) < .001 &&
@@ -67,6 +78,9 @@ check(Math.abs(math.targetAt(runner,2).x-810) <= 82, 'moving target stays inside
 check(math.scoreHit({x:810,y:365},math.targetAt(runner,1)) === 0 &&
       math.scoreHit({x:math.targetAt(runner,1).x,y:365},math.targetAt(runner,1)) === 100,
       'hit tests use moving position, not stale base position');
+check(math.targetContact({x:810,y:365},[runner],1) === null &&
+      math.targetContact({x:math.targetAt(runner,1).x+11,y:365},[runner],1).index === 0,
+      'repeated contact uses current moving target geometry and relative position');
 
 const views = [], stage = node('section');
 const widget = mount({stage, stateKey:null, on(el,type,handler) { handlers.push({el,type,handler}); }, update(view) {views.push(view);} });
@@ -75,7 +89,7 @@ function findClass(el,cls) {if (el.className.split(' ').includes(cls)) return el
  for (const c of el.children) {const found = findClass(c,cls);if(found)return found;} return null;}
 const canvas = find(stage,'canvas'), zoom = findClass(stage,'precision-sniper-zoom');
 const choice = findClass(stage,'precision-sniper-stage'), sound = findClass(stage,'precision-sniper-sound');
-const gauge = find(stage,'progress');
+const gauge = find(stage,'progress'), feedback = findClass(stage,'precision-sniper-feedback');
 function send(el,type,options={}) {
  const record = handlers.find(e=>e.el === el && e.type === type);
  assert.ok(record, 'event exists ' + type);
@@ -106,6 +120,18 @@ check(transforms.slice(before).some(t=>t[0] === 'scale' && t[1] === 4), 'zoom up
 send(canvas,'pointermove',{clientX:205,clientY:140});
 send(canvas,'pointerdown',{clientX:205,clientY:140});
 check(views.at(-1).score > 0, 'fixed target shot uses current world-coordinate crosshair');
+check(feedback.textContent.includes('中心から横') && feedback.textContent.includes('に命中'),
+      'first impact reports its physical position relative to the target center');
+const firstScore = views.at(-1).score;
+const snapshotHoles = () => {const before = bulletHolePaints;widget.resize();return bulletHolePaints-before;};
+const firstHoleCount = snapshotHoles();
+check(firstHoleCount > 0,'first target impact visibly paints a hole');
+send(canvas,'pointerdown',{clientX:220,clientY:140});
+check(views.at(-1).score === firstScore && feedback.textContent.includes('再命中・加点なし'),
+      'second hit on cleared target is identified and does not double-award points');
+check(snapshotHoles() > firstHoleCount,'second hit visibly adds a second bullet hole');
+check(feedback.textContent.includes('中間') || feedback.textContent.includes('外周'),
+      'second impact reports which scoring ring was contacted');
 check(audioCreated === 0 && muffledShots === 0,'sound OFF remains completely silent');
 send(sound,'click');
 check(sound['aria-pressed'] === 'true' && audioCreated === 1,'explicit ON toggle creates WebAudio and updates accessibility state');
