@@ -223,26 +223,43 @@ const tracerEnd=math.projectilePosition(ledShot,ledShot.dueAt);
 check(Math.abs(tracerEnd.x-ledShot.impact.x)<1e-9 &&
       Math.abs(tracerEnd.y-ledShot.impact.y)<1e-9,
       'visible projectile endpoint exactly equals physical hit-test world coordinates');
-check(tracerStart.x===leadAim.x-34 && tracerStart.y===leadAim.y-32 &&
-      tracerHalf.x>tracerStart.x && tracerHalf.y>tracerStart.y,
-      'projected tracer enters from a nearby upstream point and advances over travel time');
-check(Math.abs((tracerHalf.x-(leadAim.x-17))-ledShot.shift.x*.25)<1e-8 &&
-      Math.abs((tracerHalf.y-(leadAim.y-16))-ledShot.shift.y*.25)<1e-8,
-      'at midflight crosswind and gravity independently contribute quadratic deviation');
+check(tracerStart.x===leadAim.x && tracerStart.y===leadAim.y &&
+      tracerHalf.x===leadAim.x+ledShot.shift.x*.25 &&
+      tracerHalf.y===leadAim.y+ledShot.shift.y*.25,
+      'tracer starts exactly at firing reticle and deflects only by actual wind/drop');
+check(math.projectileRadius(ledShot,ledShot.launchTime)>
+      math.projectileRadius(ledShot,ledShot.launchTime+ledShot.flight*.5) &&
+      math.projectileRadius(ledShot,ledShot.launchTime+ledShot.flight*.5)>
+      math.projectileRadius(ledShot,ledShot.dueAt),
+      'projectile gets smaller during forward travel rather than flying in from the left');
+check(Math.abs(tracerHalf.x-leadAim.x-ledShot.shift.x*.25)<1e-8 &&
+      Math.abs(tracerHalf.y-leadAim.y-ledShot.shift.y*.25)<1e-8,
+      'wind and gravity are the sole causes of quadratic deviation at midflight');
 const reverseTracer={launchWorld:{x:400,y:280},launchTime:0,
       flight:.5,dueAt:.5,shift:{x:-32,y:25},impact:{x:368,y:305}};
 const reversedHalf=math.projectilePosition(reverseTracer,.25);
-check(Math.abs(reversedHalf.x-(400-17+(-32)*.25))<1e-8 &&
-      Math.abs(reversedHalf.y-(280-16+25*.25))<1e-8,
-      'leftward wind bends flight left while drop pulls the arc downward');
+check(Math.abs(reversedHalf.x-(400-32*.25))<1e-8 &&
+      Math.abs(reversedHalf.y-(280+25*.25))<1e-8,
+      'negative crosswind moves tracer left only when wind actually pushes left');
+const rightWindTracer={...reverseTracer,shift:{x:32,y:25},impact:{x:432,y:305}};
+const rightAtHalf=math.projectilePosition(rightWindTracer,.25);
+check(Math.abs(rightAtHalf.x-(400+32*.25))<1e-8 &&
+      rightAtHalf.x>400 && reversedHalf.x<400,
+      'positive crosswind moves tracer right with no fixed initial-left bias');
+const zeroWindTracer={...reverseTracer,shift:{x:0,y:0},impact:{x:400,y:280}};
+check(math.projectilePosition(zeroWindTracer,0).x===400 &&
+      math.projectilePosition(zeroWindTracer,.25).x===400 &&
+      math.projectilePosition(zeroWindTracer,.25).y===280,
+      'zero drift means no artificial diagonal movement at any point in flight');
 check(math.projectileProgress(ledShot,ledShot.launchTime-2)===0 &&
       math.projectileProgress(ledShot,ledShot.dueAt+2)===1,
       'projectile progress clamps before launch and after impact');
 const tail=math.projectileTrail(ledShot,ledShot.launchTime+ledShot.flight*.5);
 check(tail.length===6 && tail.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)) &&
-      tail[0].x < tail[5].x &&
-      tail[5].x===tracerHalf.x && tail[5].y===tracerHalf.y,
-      'six trail samples remain strictly behind current shot, never showing its future path');
+      tail[5].x===tracerHalf.x && tail[5].y===tracerHalf.y &&
+      Math.hypot(tail[0].x-tracerStart.x,tail[0].y-tracerStart.y) <=
+      Math.hypot(tail[5].x-tracerStart.x,tail[5].y-tracerStart.y),
+      'six trail samples remain behind shot along actual wind and gravity, never ahead');
 
 const flashTarget={x:435,y:270,radius:37,distance:490,appearAt:0,cycle:5,visibleFor:.22};
 const disappearance=math.flightShot({x:435,y:270},[flashTarget],0,false);
