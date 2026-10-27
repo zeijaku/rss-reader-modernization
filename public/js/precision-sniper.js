@@ -63,9 +63,9 @@
                     var x=Math.round(344+clamp(rng(),0,.999999)*1068);
                     var y=Math.round(n===0?237+rng()*39:
                         n===1?362+rng()*41:229+rng()*174);
-                    var depth=depthAt(y);
-                    var candidate={x:x,y:y,radius:depth.radius,
-                        distance:depth.distance,amplitude:motion};
+                    var depth=depthAt(y),scale=.91+rng()*.18;
+                    var candidate={x:x,y:y,radius:Math.round(depth.radius*scale),
+                        sizeScale:scale,distance:depth.distance,amplitude:motion};
                     if(trial.every(function(other){return targetsSeparated(candidate,other);})){
                         chosen=candidate;break;
                     }
@@ -83,7 +83,9 @@
             var x0=columns[p%3]+(rng()-.5)*40;
             var y0=rows[Math.floor(p/3)]+(rng()-.5)*8;
             var perspective=depthAt(y0);
-            backup.push(createTarget({x:x0,y:y0,radius:perspective.radius,
+            var scale=[.90,1,1.09][p%3];
+            backup.push(createTarget({x:x0,y:y0,
+                radius:Math.round(perspective.radius*scale),sizeScale:scale,
                 distance:perspective.distance,amplitude:0},roles[p]));
         }
         return backup;
@@ -106,6 +108,7 @@
         var spawnY=isRandom&&cycle ? (positionSeed(target.seed,cycle,1)*2-1)*10 : 0;
         var y=target.y+spawnY;
         var depth=isRandom?depthAt(y):{radius:target.radius,distance:target.distance};
+        if(isRandom) depth.radius=Math.round(depth.radius*(target.sizeScale||1));
         return {x:target.x+spawnX+(target.amplitude||0)*
                 Math.sin(time*(target.rate||0)+(target.offset||0)),
             y:y,radius:depth.radius,distance:depth.distance,kind:target.kind};
