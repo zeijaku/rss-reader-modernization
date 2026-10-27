@@ -57,7 +57,7 @@ check('targetContact(point, stageTargets, time)' in game
       and "var firstHit = !!contact && cleared.indexOf(selected) === -1" in game
       and "marks.push({x:at.x,y:at.y,kind:kind,targetIndex:selected" in game,
       'repeat shots independently create visible marks without duplicate score')
-check("'再命中・加点なし'" in game and "'中心から横 '" in game and "' / 縦 '" in game,
+check("'再命中・加点なし'" in game and "'（中心から横 '" in game and "' / 縦 '" in game,
       'first and repeat impacts give player detailed zone and offset feedback')
 check("--sniper-target-accent:#99776b" in src('public/css/game-widget.css')
       and "circle(0,0,29,theme.targetAccent)" in game
