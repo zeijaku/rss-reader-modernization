@@ -86,7 +86,7 @@ check('if (!targetActive(stageTargets[i], time)) continue;' in game and
       'invisible targets have no hit collisions, rendered targets or visible ghost marks')
 check('target.noShoot' in game and "NO SHOOT / 市民" in game and
       "NO SHOOT / 動物" in game and "'NO SHOOT  -75'" in game
-      and "phase='lost'" in game and 'violations >= 3' in game,
+      and "phase='lost'" in game and 'violations>=3' in game,
       'forbidden targets have shape/text distinction, penalty and third-hit fail')
 check("targets.filter(function (target) { return !target.noShoot; }).length" in game,
       'stage clear and progress count only shootable targets')
