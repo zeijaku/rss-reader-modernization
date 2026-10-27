@@ -2,12 +2,22 @@
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
-    var TARGETS = [
+    var FIXED_TARGETS = [
         {x: 435, y: 270, radius: 37},
         {x: 810, y: 365, radius: 37},
         {x: 1190, y: 265, radius: 37},
         {x: 1450, y: 395, radius: 37}
     ];
+    var MOVING_TARGETS = [
+        {x: 435, y: 270, radius: 37},
+        {x: 810, y: 365, radius: 37, amplitude: 82, rate: 0.95},
+        {x: 1190, y: 265, radius: 37, amplitude: 107, rate: 0.78, offset: 1.1},
+        {x: 1450, y: 395, radius: 37, amplitude: 67, rate: 1.15, offset: -0.8}
+    ];
+    function targetAt(target, time) {
+        return {x: target.x + (target.amplitude || 0) * Math.sin(time * (target.rate || 0) + (target.offset || 0)),
+            y: target.y, radius: target.radius};
+    }
     function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
     function aimWorld(camera, pointer, sway) {
         return {x: camera.x + pointer.x + sway.x, y: camera.y + pointer.y + sway.y};
@@ -33,6 +43,15 @@
     function mount(context) {
         var root = element('div', 'precision-sniper');
         var toolbar = element('div', 'precision-sniper-toolbar');
+        var stageLabel = element('label', 'precision-sniper-stage-label', 'ステージ ');
+        var stageSelect = element('select', 'form-select form-select-sm precision-sniper-stage');
+        [['1', '1 固定標的'], ['2', '2 移動標的']].forEach(function (option) {
+            var node = element('option', '', option[1]); node.value = option[0];
+            stageSelect.appendChild(node);
+        });
+        stageSelect.value = '1';
+        stageSelect.setAttribute('aria-label','スナイパーステージ');
+        stageLabel.appendChild(stageSelect);
         var ammunition = element('span', 'precision-sniper-ammo', '弾数 5 / 5');
         var hits = element('span', 'precision-sniper-hits', '標的 0 / 4');
         var breathLabel = element('label', 'precision-sniper-breath-label', '呼吸 ');
@@ -49,14 +68,14 @@
         zoomSelect.value = '3';
         zoomSelect.setAttribute('aria-label', 'スコープ倍率');
         zoomLabel.appendChild(zoomSelect);
-        toolbar.append(ammunition, hits, breathLabel, zoomLabel);
+        toolbar.append(stageLabel, ammunition, hits, breathLabel, zoomLabel);
         var frame = element('div', 'precision-sniper-frame');
         var canvas = element('canvas', 'precision-sniper-canvas');
         canvas.tabIndex = 0;
         canvas.setAttribute('role', 'application');
         canvas.setAttribute('aria-label', 'Precision Sniper 訓練場。マウスで狙い左クリックで射撃。Spaceで息止め、RまたはZでリロード。');
         frame.appendChild(canvas);
-        var help = element('p', 'game-widget-help text-muted', 'マウスで探索・照準、左クリックで射撃。照準を落ち着けるにはSpace長押し、R / Zでリロード。端にマウスを寄せると視界を移動します。標的4枚を狙ってください。');
+        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定標的、ステージ2は移動標的。Startで選択ステージを開始します。マウスで探索・照準、左クリックで射撃。Space長押しで息止め、R / Zでリロード。端にマウスを寄せると視界を移動します。');
         var details = element('p', 'precision-sniper-feedback', 'STARTを押して訓練開始。');
         details.setAttribute('role', 'status');
         root.append(toolbar, frame, details, help);
@@ -83,18 +102,20 @@
         var held = false, stamina = 100, instability = 0, exhaustionLock = false;
         var sway = {x: 0, y: 0}, phaseTime = 0, elapsed = 0, magazine = 5, reloadLeft = 0, recoil = 0;
         var points = 0, shots = 0, impact = null, marks = [], cleared = [];
+        var targets = FIXED_TARGETS;
         var frameId = 0, lastTime = 0;
         function active() { return !destroyed && !suspended && !paused && phase === 'playing'; }
         function update(message) {
             ammunition.textContent = reloadLeft > 0 ? '装填中 ' + reloadLeft.toFixed(1) + 's' : '弾数 ' + magazine + ' / 5';
-            hits.textContent = '標的 ' + cleared.length + ' / ' + TARGETS.length;
+            hits.textContent = '標的 ' + cleared.length + ' / ' + targets.length;
+            stageSelect.disabled = phase === 'playing';
             breathGauge.value = Math.round(stamina);
             if (message) details.textContent = message;
             context.update({score: points, started: phase !== 'ready', playing: phase === 'playing',
                 paused: paused || suspended, status: phase,
                 message: phase === 'won' ? 'Training CLEAR! 合計 ' + points + ' 点 / ' + shots + ' 発。Restartで再挑戦。'
                     : phase === 'ready' ? 'Startで訓練開始。'
-                    : paused || suspended ? '一時停止中' : '固定標的を4枚命中させてください。'});
+                    : paused || suspended ? '一時停止中' : (targets === MOVING_TARGETS ? '移動標的を含む4枚を狙ってください。' : '固定標的を4枚命中させてください。')});
         }
         function circle(x, y, r, color) {
             ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -102,7 +123,10 @@
         }
         function bulletMark(mark) {
             if (mark.kind === 'none') return; // Open sky has no surface to retain a hole.
-            ctx.save(); ctx.translate(mark.x, mark.y);
+            var position = mark.targetIndex >= 0 ? targetAt(targets[mark.targetIndex], elapsed) : null;
+            ctx.save();
+            ctx.translate(position ? position.x + mark.offsetX : mark.x,
+                position ? position.y + mark.offsetY : mark.y);
             var r = mark.kind === 'target' ? 6 : 4;
             // Ragged paper/ground edge around a dark irregular penetration, not an O or slash.
             ctx.fillStyle = mark.kind === 'target' ? '#e8d9bb' : '#ab9274';
@@ -137,7 +161,9 @@
             var age = elapsed - impact.time;
             if (age < 0 || age > .35) return;
             ctx.save(); ctx.globalAlpha = Math.max(0, 1 - age / .35) * .75;
-            var x = impact.point.x, y = impact.point.y;
+            var moving = impact.targetIndex >= 0 ? targetAt(targets[impact.targetIndex], elapsed) : null;
+            var x = moving ? moving.x + impact.offsetX : impact.point.x;
+            var y = moving ? moving.y + impact.offsetY : impact.point.y;
             var spread = 8 + age * 32;
             ctx.strokeStyle = impact.kind === 'target' ? '#f4e3c6' : '#b39a76';
             ctx.lineWidth = 1.5;
@@ -170,7 +196,9 @@
             for (var line=520;line<=WORLD_H;line+=60) {
                 ctx.beginPath();ctx.moveTo(0,line);ctx.lineTo(WORLD_W,line);ctx.stroke();
             }
-            TARGETS.forEach(function (target, index) {
+            targets.forEach(function (target, index) {
+                var position = targetAt(target, elapsed);
+                ctx.save(); ctx.translate(position.x - target.x, position.y - target.y);
                 ctx.fillStyle=theme.muted;
                 ctx.fillRect(target.x-3,target.y+30,6,105);
                 ctx.fillStyle=theme.border;
@@ -183,11 +211,12 @@
                 circle(0,0,14,theme.danger);
                 circle(0,0,8,theme.ink);
                 ctx.fillStyle=theme.ink;ctx.font='bold 12px sans-serif';
-                ctx.textAlign='center';ctx.fillText('T'+(index+1),0,-target.radius-14);
+                ctx.textAlign='center';ctx.fillText((target.amplitude ? 'M' : 'T')+(index+1),0,-target.radius-14);
                 if (cleared.indexOf(index)!==-1) {
                     ctx.strokeStyle=theme.success;ctx.lineWidth=3;
                     ctx.beginPath();ctx.arc(0,0,44,0,Math.PI*2);ctx.stroke();
                 }
+                ctx.restore();
                 ctx.restore();
             });
             marks.forEach(bulletMark);
@@ -233,7 +262,7 @@
             ctx.fillStyle = theme.secondary; ctx.fillRect(12, 12, 153, 44);
             ctx.strokeStyle = theme.border; ctx.lineWidth = 1; ctx.strokeRect(12.5,12.5,152,43);
             ctx.font = '12px sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = theme.ink;
-            ctx.fillText('TRAINING / 4 TARGETS', 22, 30);
+            ctx.fillText((targets === MOVING_TARGETS ? 'MOVING' : 'TRAINING') + ' / 4 TARGETS', 22, 30);
             ctx.fillText('SHOT ' + shots + '  •  ' + elapsed.toFixed(1) + 's', 22, 47);
             if (paused || suspended) {
                 ctx.fillStyle = 'rgba(0,0,0,.48)'; ctx.fillRect(0, 0, W, H);
@@ -283,19 +312,22 @@
             magazine--; shots++; recoil = 8;
             var at = aimWorld(camera, pointer, sway);
             var score = 0, selected = -1;
-            TARGETS.forEach(function (target, index) {
+            targets.forEach(function (target, index) {
                 if (selected === -1 && cleared.indexOf(index) === -1) {
-                    var hit = scoreHit(at, target);
+                    var hit = scoreHit(at, targetAt(target, elapsed));
                     if (hit) { score = hit; selected = index; }
                 }
             });
             if (selected !== -1) { points += score; cleared.push(selected); }
             var kind = selected !== -1 ? 'target' : at.y >= 462 ? 'ground' : 'none';
+            var hitPosition = selected >= 0 ? targetAt(targets[selected], elapsed) : at;
+            var offsetX = at.x - hitPosition.x, offsetY = at.y - hitPosition.y;
             if (kind !== 'none') {
-                marks.push({x:at.x,y:at.y,kind:kind});
+                marks.push({x:at.x,y:at.y,kind:kind,targetIndex:selected,offsetX:offsetX,offsetY:offsetY});
                 if (marks.length > 36) marks.shift();
             }
-            impact = {time:elapsed,score:score,point:at,kind:kind,label:score ? '+' + score + ' HIT' : 'MISS'};
+            impact = {time:elapsed,score:score,point:at,kind:kind,targetIndex:selected,
+                offsetX:offsetX,offsetY:offsetY,label:score ? '+' + score + ' HIT' : 'MISS'};
             if (cleared.length === TARGETS.length) { phase = 'won'; stop(); }
             update();
             details.textContent = score ? '命中！標的' + (selected + 1) + '：+' + score + '点' : 'MISS。弾痕と十字線の位置を確認してください。';
@@ -333,13 +365,20 @@
         });
         context.on(canvas, 'blur', function () { held = false; exhaustionLock = false; });
         context.on(zoomSelect, 'change', draw);
+        context.on(stageSelect, 'change', function () {
+            if (phase === 'playing') return;
+            targets = stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
+            marks = []; cleared = []; impact = null;
+            update(); draw();
+        });
         context.on(window, 'resize', resize);
         var observer = window.ResizeObserver ? new window.ResizeObserver(resize) : null;
         if (observer) observer.observe(frame);
         resize(); update(); draw();
         return {
             restart: function () {
-                stop();phase = 'playing';paused = false;elapsed = 0;phaseTime = 0;points = 0;shots = 0;
+                stop();targets = stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
+                phase = 'playing';paused = false;elapsed = 0;phaseTime = 0;points = 0;shots = 0;
                 magazine = 5;reloadLeft = 0;stamina = 100;instability = 0;exhaustionLock = false;
                 sway = {x:0,y:0};recoil = 0;marks = [];cleared = [];impact = null;
                 camera = {x:230,y:130};pointer = {x:W/2,y:H/2};edge = {x:0,y:0};
@@ -357,6 +396,6 @@
             destroy: function () { destroyed = true;stop();if (observer) observer.disconnect(); }
         };
     }
-    window.RssPrecisionSniperCore = {aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing};
+    window.RssPrecisionSniperCore = {aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,targetAt:targetAt};
     window.RssGameWidget.register('precision_sniper', mount);
 })(window, document);
