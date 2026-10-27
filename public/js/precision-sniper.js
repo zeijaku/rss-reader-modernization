@@ -1,4 +1,4 @@
-/* Precision Sniper Dev1: original Canvas training range; no network or external assets. */
+/* Precision Sniper Dev2: original Canvas range with optional locally synthesized audio; no network or external assets. */
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
@@ -52,6 +52,10 @@
         stageSelect.value = '1';
         stageSelect.setAttribute('aria-label','スナイパーステージ');
         stageLabel.appendChild(stageSelect);
+        var soundButton = element('button','btn btn-sm btn-outline-secondary precision-sniper-sound','音 OFF');
+        soundButton.type = 'button';
+        soundButton.setAttribute('aria-pressed','false');
+        soundButton.setAttribute('aria-label','射撃音の切り替え');
         var ammunition = element('span', 'precision-sniper-ammo', '弾数 5 / 5');
         var hits = element('span', 'precision-sniper-hits', '標的 0 / 4');
         var breathLabel = element('label', 'precision-sniper-breath-label', '呼吸 ');
@@ -68,7 +72,7 @@
         zoomSelect.value = '3';
         zoomSelect.setAttribute('aria-label', 'スコープ倍率');
         zoomLabel.appendChild(zoomSelect);
-        toolbar.append(stageLabel, ammunition, hits, breathLabel, zoomLabel);
+        toolbar.append(stageLabel, ammunition, hits, breathLabel, zoomLabel, soundButton);
         var frame = element('div', 'precision-sniper-frame');
         var canvas = element('canvas', 'precision-sniper-canvas');
         canvas.tabIndex = 0;
@@ -102,16 +106,61 @@
         var held = false, stamina = 100, instability = 0, exhaustionLock = false;
         var sway = {x: 0, y: 0}, phaseTime = 0, elapsed = 0, magazine = 5, reloadLeft = 0, recoil = 0;
         var points = 0, shots = 0, impact = null, marks = [], cleared = [];
-        var targets = FIXED_TARGETS;
+        var targets = FIXED_TARGETS, soundOn = false, audioContext = null;
         var frameId = 0, lastTime = 0;
+        function soundStatus() {
+            soundButton.textContent = '音 ' + (soundOn ? 'ON' : 'OFF');
+            soundButton.setAttribute('aria-pressed', soundOn ? 'true' : 'false');
+        }
+        function turnOnSound() {
+            var Audio = window.AudioContext || window.webkitAudioContext;
+            if (!Audio) { details.textContent = 'このブラウザは効果音に対応していません。'; return false; }
+            try {
+                if (!audioContext) audioContext = new Audio();
+                var promise = audioContext.resume && audioContext.resume();
+                if (promise && promise.catch) promise.catch(function () {
+                    soundOn = false; soundStatus(); details.textContent = '音声を有効にできませんでした。';
+                });
+                return true;
+            } catch (error) {
+                soundOn = false; details.textContent = '音声を有効にできませんでした。'; return false;
+            }
+        }
+        function muffledShot() {
+            if (!soundOn || !audioContext || audioContext.state !== 'running') return;
+            try {
+                var a = audioContext, now = a.currentTime;
+                // Subdued and low-passed "thup": deliberately no sharp report.
+                var duration = .13, count = Math.floor(a.sampleRate * duration);
+                var buffer = a.createBuffer(1, count, a.sampleRate), data = buffer.getChannelData(0);
+                for (var i=0;i<count;i++) data[i] = Math.random()*2-1;
+                var noise = a.createBufferSource(), filter = a.createBiquadFilter(), envelope = a.createGain();
+                noise.buffer = buffer; filter.type='lowpass'; filter.frequency.value=510;
+                envelope.gain.setValueAtTime(.001, now);
+                envelope.gain.linearRampToValueAtTime(.09, now+.006);
+                envelope.gain.exponentialRampToValueAtTime(.001, now+duration);
+                noise.connect(filter); filter.connect(envelope); envelope.connect(a.destination);
+                noise.start(now); noise.stop(now+duration);
+                var bass = a.createOscillator(), bassGain = a.createGain();
+                bass.type='sine'; bass.frequency.setValueAtTime(115,now);
+                bass.frequency.exponentialRampToValueAtTime(70,now+.11);
+                bassGain.gain.setValueAtTime(.001,now);
+                bassGain.gain.linearRampToValueAtTime(.12,now+.004);
+                bassGain.gain.exponentialRampToValueAtTime(.001,now+.13);
+                bass.connect(bassGain); bassGain.connect(a.destination);
+                bass.start(now); bass.stop(now+.13);
+            } catch (error) { /* Optional sound never interrupts shooting. */ }
+        }
         function active() { return !destroyed && !suspended && !paused && phase === 'playing'; }
         function update(message) {
             ammunition.textContent = reloadLeft > 0 ? '装填中 ' + reloadLeft.toFixed(1) + 's' : '弾数 ' + magazine + ' / 5';
             hits.textContent = '標的 ' + cleared.length + ' / ' + targets.length;
             stageSelect.disabled = phase === 'playing';
+            soundStatus();
             breathGauge.value = Math.round(stamina);
             if (message) details.textContent = message;
             context.update({score: points, started: phase !== 'ready', playing: phase === 'playing',
+                storageNote: 'Bestはこの端末に保存します（可能な場合）。効果音は ' + (soundOn ? 'ON' : 'OFF') + '。',
                 paused: paused || suspended, status: phase,
                 message: phase === 'won' ? 'Training CLEAR! 合計 ' + points + ' 点 / ' + shots + ' 発。Restartで再挑戦。'
                     : phase === 'ready' ? 'Startで訓練開始。'
@@ -310,6 +359,7 @@
             if (reloadLeft > 0) { details.textContent = 'リロード中です'; return; }
             if (!magazine) { details.textContent = '弾切れ。R / Zでリロード'; return; }
             magazine--; shots++; recoil = 8;
+            muffledShot();
             var at = aimWorld(camera, pointer, sway);
             var score = 0, selected = -1;
             targets.forEach(function (target, index) {
@@ -371,6 +421,11 @@
             marks = []; cleared = []; impact = null;
             update(); draw();
         });
+        context.on(soundButton, 'click', function () {
+            if (soundOn) soundOn = false;
+            else soundOn = turnOnSound();
+            update(); // WebAudio unlock is initiated only from an explicit click.
+        });
         context.on(window, 'resize', resize);
         var observer = window.ResizeObserver ? new window.ResizeObserver(resize) : null;
         if (observer) observer.observe(frame);
@@ -393,7 +448,16 @@
                 suspended = !!value;stop();update();draw();schedule();
             },
             resize: resize,
-            destroy: function () { destroyed = true;stop();if (observer) observer.disconnect(); }
+            destroy: function () {
+                destroyed = true; stop(); soundOn = false;
+                if (observer) observer.disconnect();
+                if (audioContext) {
+                    try { var closing = audioContext.close();
+                        if (closing && closing.catch) closing.catch(function () {});
+                    } catch (error) {}
+                    audioContext = null;
+                }
+            }
         };
     }
     window.RssPrecisionSniperCore = {aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,targetAt:targetAt};
