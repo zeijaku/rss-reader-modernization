@@ -1,4 +1,4 @@
-# RSS Reader Modernization 1.50.0-dev.1.1 — Precision Sniper Dev1 refinement (Preview)
+# RSS Reader Modernization 1.50.0-dev.1 — Precision Sniper Dev1 visual/aim refinement (Preview refresh 1)
 
 **この検証用ビルドは正式Releaseではありません。** V1.49.0正式版を置き換える正式リリースではなく、操作感を確認するための開発プレビューです。GitHubのmain、正式タグ、Releaseは変更していません。
 
