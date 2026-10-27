@@ -43,7 +43,7 @@ check('clientX - rect.left' in game and 'canvas.width / W' in game,
 check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed, targets, elapsed)' in game
       and 'scoreHit(point, position)' in game,
       'the sway shown in the zoomed lens is used for repeated physical collision')
-check('1.50.0-dev.7' in src('app/version.php'), 'visible and asset versions mark Dev4.2 preview only')
+check('1.50.0-dev.8' in src('app/version.php'), 'visible and asset versions mark Dev5 flight preview only')
 check('MOVING_TARGETS' in game and 'targetAt(target, elapsed)' in game,
       'second range animates targets and hit tests use displayed center')
 check('mark.targetIndex >= 0' in game and 'impact.targetIndex >= 0' in game,
@@ -96,12 +96,14 @@ check('function windGrass()' in game and 'function windSock()' in game and
       'wind is stronger and visible in both landscape and overlay instrument')
 check('function depthAt(y)' in game and 'var roles=[' in game
       and "'civilian','animal'" in game and 'silhouetteHit(dx, dy, kind)' in game
-      and 'sizeScale:scale' in game,
-      'Stage 3 couples silhouette sizes and hit regions to vertical depth')
-check('for(var layout=0;layout<12;layout++)' in game
-      and 'for(var attempt=0;attempt<175;attempt++)' in game
-      and 'trial.every(function(other){return targetsSeparated(candidate,other);})' in game,
-      'stage 3 resamples full independent XY layouts with rendered-label collision boxes')
+      and "name:'far'" in game and "name:'middle'" in game and "name:'near'" in game
+      and 'radius:24' in game and 'radius:33' in game and 'radius:44' in game,
+      'Stage 3 has exact far/middle/near planes with three discrete collision and draw sizes')
+check('for(var layout=0;layout<14;layout++)' in game
+      and 'for(var attempt=0;attempt<190;attempt++)' in game
+      and 'trial.every(function(other){return targetsSeparated(candidate,other);})' in game
+      and 'DEPTH_LAYERS[Math.floor(n/2)]' in game,
+      'stage 3 resamples independent XY placements with two per depth plane and non-overlap')
 check("Math.floor((time-target.appearAt)/target.cycle)" in game,
       'reappearing targets shift locations between cycles')
 check('if(!target.kind) {' in game and 'function footprint(target)' in game
@@ -109,7 +111,7 @@ check('if(!target.kind) {' in game and 'function footprint(target)' in game
       'Stage 3 has no poles or bases and reserves sufficient display space')
 check("var range = targetAt(stageTargets[nearest],time).distance" in game
       and "var displayedRadius=position.radius" in game,
-      'ballistic range and rendered size both reflect dynamic perspective')
+      'ballistic range and rendered size both reflect three-layer perspective')
 check("NO SHOOT / 市民" in game and "NO SHOOT / 動物" in game
       and "target.kind==='civilian'" in game and "target.kind==='animal'" in game,
       'civilian and wildlife are distinguishable forbidden shapes, not color-only marks')
@@ -119,6 +121,22 @@ check('function windLeaves()' in game and 'windLeafAt(i,elapsed' in game
 check('function drawReloadArc(center)' in game and 'reloadProgress(reloadLeft)' in game
       and "ctx.fillText('RELOAD '" in game and 'drawReloadArc(center);' in game,
       'scope reload ring advances full circle and shows progress percentage')
+check('function flightTime(distance)' in game and '/800' in game
+      and 'function flightShot(aim, stageTargets, time, moving)' in game,
+      'Dev5 computes distance-specific bullet travel time at trigger pull')
+check('pendingShots.push(projectile)' in game and 'pendingShots[0].dueAt<=elapsed' in game
+      and 'function resolveImpact(projectile,arrivalTime)' in game,
+      'Dev5 resolves queued projectiles on animation game clock, not immediately or by setTimeout')
+check('targetContact(landed,targets,arrivalTime)' in game and
+      'windTravel(time+flight,moving)-windTravel(time,moving)' in game,
+      'arrival-time hit positions and integrated crosswind are physically consistent')
+check('pendingShots=[];stop();' in game and 'pendingShots = [];' in game,
+      'completed or failed rounds discard remaining projectiles')
+check('impact = null; violations = 0; pendingShots = [];' in game
+      and 'destroyed = true; stop(); soundOn = false; pendingShots = [];' in game,
+      'stage change, Restart and Destroy clear all in-flight projectiles')
+check('flightShot:flightShot' in game and 'flightTime:flightTime' in game,
+      'flight time and launch geometry are exposed as testable pure functions')
 check("source.connect(" not in game and "filter.type='lowpass'" in game
       and "soundOn = false" in game, 'sound remains local, low-pass filtered and OFF initially')
 check(all(s not in game for s in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'https://']),
