@@ -32,7 +32,7 @@ check('precision-sniper-canvas' in src('public/css/game-widget.css'), 'Canvas si
 check('var(--bs-border-color' in src('public/css/game-widget.css')
       and "token('--bs-primary'" in game, 'Sniper aligns frame and Canvas palette with other Bootstrap Game widgets')
 check('marks.forEach(bulletMark)' in game and 'impactFlash()' in game
-      and "var kind = contact ? 'target'" in game, 'bullet impacts have material-aware permanent marks and a transient effect')
+      and "var kind=contact?'target'" in game, 'bullet impacts have material-aware permanent marks and a transient effect')
 check('Math.sin(phase * 1.55)' in game and 'Math.sin(phase * 1.23)' in game,
       'sway returns to neutral along independent horizontal and vertical cycles')
 check('cancelAnimationFrame' in game and 'observer.disconnect()' in game, 'Pause and Destroy clean up scheduled work')
@@ -40,7 +40,7 @@ check("context.on(canvas, 'keydown'" in game and "context.on(canvas, 'blur'" in 
       'keyboard input and held breath remain scope-bound')
 check('clientX - rect.left' in game and 'canvas.width / W' in game,
       'pointer and canvas transformations use CSS coordinates and drawing scale independently')
-check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed, targets, elapsed)' in game
+check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed,targets,arrivalTime)' in game
       and 'scoreHit(point, position)' in game,
       'the sway shown in the zoomed lens is used for repeated physical collision')
 check('1.50.0-dev.8' in src('app/version.php'), 'visible and asset versions mark Dev5 flight preview only')
@@ -54,7 +54,7 @@ check('window.AudioContext || window.webkitAudioContext' in game and
       "context.on(soundButton, 'click'" in game and 'audioContext.close()' in game,
       'muffled WebAudio is explicit opt-in, lazy, and cleaned up')
 check('targetContact(point, stageTargets, time)' in game
-      and "var firstHit = !!contact && !prohibited && cleared.indexOf(selected) === -1" in game
+      and "var firstHit=!!contact&&!prohibited&&cleared.indexOf(selected)===-1" in game
       and "marks.push({x:landed.x,y:landed.y,kind:kind,targetIndex:selected" in game,
       'repeat shots independently create visible marks without duplicate score')
 check("'再命中・加点なし'" in game and "'（中心から横 '" in game and "' / 縦 '" in game,
@@ -66,11 +66,11 @@ check("--sniper-target-accent:#99776b" in src('public/css/game-widget.css')
 check('windAt(time, moving)' in game and 'ballisticOffset(distance, wind)' in game
       and 'shotSolution(point, stageTargets, time, moving)' in game,
       'Dev3 introduces testable deterministic range, wind and bullet-drop mechanics')
-check('targetContact(landed, targets, elapsed)' in game and
-      "var kind = contact ? 'target' : landed.y >= 462" in game,
+check('targetContact(landed,targets,arrivalTime)' in game and
+      "var kind=contact?'target':landed.y>=462?'ground':'none'" in game,
       'impact surfaces and hit scoring use physical ballistic landing, not scope center')
 check("var solution = shotSolution(shot, targets, elapsed, targets !== FIXED_TARGETS)" in game and
-      "var solution = shotSolution(at, targets, elapsed, targets !== FIXED_TARGETS)" in game,
+      "var projectile=flightShot(aim,targets,elapsed,targets!==FIXED_TARGETS)" in game,
       'drawn telemetry and click shot derive the same correction model')
 check('precision-sniper-ballistics' in game and '着弾ずれ' in game
       and '--bs-secondary-bg' in src('public/css/game-widget.css'),
@@ -86,7 +86,7 @@ check('if (!targetActive(stageTargets[i], time)) continue;' in game and
       'invisible targets have no hit collisions, rendered targets or visible ghost marks')
 check('target.noShoot' in game and "NO SHOOT / 市民" in game and
       "NO SHOOT / 動物" in game and "'NO SHOOT  -75'" in game
-      and 'phase = \'lost\'' in game and 'violations >= 3' in game,
+      and "phase='lost'" in game and 'violations >= 3' in game,
       'forbidden targets have shape/text distinction, penalty and third-hit fail')
 check("targets.filter(function (target) { return !target.noShoot; }).length" in game,
       'stage clear and progress count only shootable targets')
