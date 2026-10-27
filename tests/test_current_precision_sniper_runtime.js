@@ -15,7 +15,7 @@ class FakeAudioContext {
  createOscillator() {return {type:'',frequency:{setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){},start(){},stop(){}};}
  close() { audioClosed++; this.state = 'closed'; return Promise.resolve(); }
 }
-const frames = new Map(), handlers = [], transforms = [], contexts = [], canvasLabels = [];
+const frames = new Map(), handlers = [], transforms = [], contexts = [], canvasLabels = [], drawnArcs = [];
 let bulletHolePaints = 0;
 function canvasContext() {
  const c = {};
@@ -24,6 +24,7 @@ function canvasContext() {
    if (fn === 'scale' || fn === 'translate') transforms.push([fn, ...args]);
    if (fn === 'fill' && c.fillStyle === '#212529') bulletHolePaints++;
    if (fn === 'fillText') canvasLabels.push(String(args[0]));
+   if (fn === 'arc') drawnArcs.push(args);
   };
  }
  c.createLinearGradient = () => ({addColorStop() {}});
@@ -101,27 +102,67 @@ check(windStart > 1.0 && math.windAt(1,true) > 3,
 const randomTargets = math.randomStage(() => .5);
 check(randomTargets.length === 6 && randomTargets.filter(t => t.noShoot).length === 2 &&
       randomTargets.filter(t => !t.noShoot).length === 4,
-      'stage 3 generates four shoot and two forbidden targets');
-check(randomTargets.every((t,i) => t.distance >= 180 && t.distance <= 500 &&
-      t.radius === 37 && t.appearAt >= 0 && t.cycle > t.visibleFor),
-      'random targets have bounded range and finite pop-in/out windows');
-check(randomTargets.every((t,i) => !randomTargets.slice(i+1).some(u =>
-      Math.abs(t.x-u.x) < 130)),
-      'random lanes cannot visually overlap, even while moving');
+      'stage 3 keeps four valid and two forbidden targets');
+check(['round','hostile','civilian','animal'].every(k=>randomTargets.some(t=>t.kind===k)) &&
+      randomTargets.find(t=>t.kind==='animal').noShoot &&
+      randomTargets.find(t=>t.kind==='civilian').noShoot,
+      'mixed paper circles, human silhouettes, forbidden civilians and wildlife are present');
+check(new Set(randomTargets.map(t=>t.radius)).size >= 3 &&
+      randomTargets.every(t=>[25,31,37,45].includes(t.radius)),
+      'every round has varied small, medium and large target sizes');
+check(randomTargets.every(t => t.distance >= 180 && t.distance <= 490 &&
+      t.appearAt >= 0 && t.cycle > t.visibleFor),
+      'random targets have bounded distance and independent visibility windows');
+const gapsOk = randomTargets.every((t,i)=>randomTargets.slice(i+1).every(u=>
+      Math.abs(t.x-u.x) > t.radius+u.radius+t.amplitude+u.amplitude+36 ||
+      Math.abs(t.y-u.y) > t.radius+u.radius+32));
+check(gapsOk, '2D random placement avoids overlap even with target movement');
 const different = math.randomStage(() => 0);
 check(different.some((t,i) => t.x !== randomTargets[i].x ||
-      t.y !== randomTargets[i].y || t.noShoot !== randomTargets[i].noShoot),
-      'random target arrangement changes with RNG');
-check(math.targetActive(randomTargets[0],0) &&
-      !math.targetActive(randomTargets[1],0) &&
-      math.targetActive(randomTargets[1],randomTargets[1].appearAt+1) &&
-      !math.targetActive(randomTargets[1],randomTargets[1].appearAt+randomTargets[1].visibleFor+.1) &&
-      math.targetActive(randomTargets[1],randomTargets[1].appearAt+randomTargets[1].cycle+1),
-      'random target appears, hides, then reappears over game time');
-const safeSample = randomTargets.find(t => !t.noShoot);
-check(math.targetContact({x:safeSample.x,y:safeSample.y},[safeSample],0) === null &&
-      math.targetContact({x:safeSample.x,y:safeSample.y},[safeSample],safeSample.appearAt+1) !== null,
-      'hidden targets cannot be hit even at their future center');
+      t.y !== randomTargets[i].y || t.kind !== randomTargets[i].kind),
+      'layout, shape assignment and size vary with different RNG values');
+const seeded = (seed) => {
+ let state=seed>>>0;return ()=>{state=(1664525*state+1013904223)>>>0;return state/4294967296;};
+};
+check(Array.from({length:64},(_,i)=>math.randomStage(seeded(i+1))).every(ts =>
+      ts.length===6 && ts.filter(t=>t.noShoot).length===2 &&
+      new Set(ts.map(t=>t.radius)).size>=3 &&
+      ts.every((t,j)=>ts.slice(j+1).every(u =>
+      Math.abs(t.x-u.x)>t.radius+u.radius+t.amplitude+u.amplitude+36 ||
+      Math.abs(t.y-u.y)>t.radius+u.radius+32))),
+      '64 independent random rounds have six safely separated, varied-size targets');
+const sample=randomTargets[0], appear=sample.appearAt+1;
+check(!math.targetActive(sample,0) && math.targetActive(sample,appear) &&
+      !math.targetActive(sample,sample.appearAt+sample.visibleFor+.1) &&
+      math.targetActive(sample,sample.appearAt+sample.cycle+1),
+      'each target hides, emerges and reappears on its own schedule');
+check(math.targetAt(sample,appear).x !== math.targetAt(sample,appear+sample.cycle).x ||
+      math.targetAt(sample,appear).y !== math.targetAt(sample,appear+sample.cycle).y,
+      'reappearing targets do not return to identical placement');
+const safeSample=randomTargets.find(t=>t.kind==='round');
+check(math.targetContact({x:safeSample.x,y:safeSample.y},[safeSample],0)===null &&
+      math.targetContact({x:safeSample.x,y:safeSample.y},[safeSample],safeSample.appearAt+1)!==null,
+      'hidden target cannot be shot, but becomes hittable when displayed');
+const head = {x:500,y:300,radius:37,kind:'hostile'};
+check(math.scoreHit({x:500,y:277},head)>0 && math.scoreHit({x:500,y:300},head)>0 &&
+      math.scoreHit({x:535,y:300},head)===0,
+      'human silhouette uses its head and torso outline, not an invisible circular hit box');
+const animal={x:500,y:300,radius:37,kind:'animal'};
+check(math.scoreHit({x:497,y:304},animal)>0 &&
+      math.scoreHit({x:535,y:300},animal)===0,
+      'animal silhouette has body-shaped collision with empty areas excluded');
+const scaled={x:500,y:300,radius:25,kind:'hostile'};
+check(math.scoreHit({x:500,y:300},scaled)>0 &&
+      math.scoreHit({x:500+35,y:300},scaled)===0,
+      'hit shapes scale proportionally with small target size');
+check(math.reloadProgress(1.6)===0 && math.reloadProgress(.8)===.5 &&
+      math.reloadProgress(0)===1, 'scope reload indicator progresses 0 to 100 percent');
+const rightLeaf=math.windLeafAt(3,2,true), nextLeaf=math.windLeafAt(3,2.01,true);
+check(nextLeaf.x>rightLeaf.x && math.windAt(2,true)>0,
+      'leaves travel downwind as positive gust pushes to the right');
+const leftLeaf=math.windLeafAt(3,14,true), following=math.windLeafAt(3,14.01,true);
+check(following.x<leftLeaf.x && math.windAt(14,true)<0,
+      'leaves reverse downwind motion when wind changes direction');
 check(math.ballisticOffset(150,0).y === 0 &&
       math.ballisticOffset(250,0).y > 0 &&
       math.ballisticOffset(450,0).y > math.ballisticOffset(250,0).y,
@@ -223,7 +264,16 @@ check(views.at(-1).score === score, 'paused shot cannot change score');
 widget.togglePause();check(!views.at(-1).paused && frames.size === 1, 'Resume restores animation');
 send(canvas,'keyup',{key:' '});step(4);
 send(canvas,'keydown',{key:'r'});check(frames.size === 1, 'reload leaves one animation loop');
-step(110);check(views.at(-1).status === 'playing', 'reload timing preserves playing state');
+check(canvasLabels.some(t=>t==='RELOAD 0%') &&
+      drawnArcs.some(a=>Math.abs(a[2]-75)<.001),
+      'starting reload draws an outer scope ring at zero progress');
+step(50);
+check(canvasLabels.some(t=>t.startsWith('RELOAD ') && t!=='RELOAD 0%'),
+      'reload arc visibly advances while ammunition is unavailable');
+step(60);check(views.at(-1).status === 'playing', 'reload timing preserves playing state');
+const afterReload=canvasLabels.length;widget.resize();
+check(!canvasLabels.slice(afterReload).some(t=>t.startsWith('RELOAD ')),
+      'completed reload removes its scope progress ring');
 widget.setSuspended(true);check(frames.size === 0 && views.at(-1).paused, 'page/modal suspension stops frame work');
 widget.setSuspended(false);check(frames.size === 1, 'visibility restoration resumes gameplay');
 choice.value = '2'; send(choice,'change');
@@ -242,30 +292,43 @@ choice.value = '3'; send(choice,'change'); widget.restart();
 check(views.at(-1).message.includes('NO SHOOT') &&
       views.at(-1).status === 'playing',
       'Stage 3 starts with random appearance and friend-or-foe identification');
-step(60);
-check(canvasLabels.some(x=>x.startsWith('NO SHOOT')),
-      'forbidden target is explicitly labeled, not identified by color alone');
-send(canvas,'pointerdown',{clientX:290,clientY:207});
-check(views.at(-1).score > 0,
-      'Stage 3 valid target scores normally after its appearance time');
-const beforeViolation = views.at(-1).score;
-send(canvas,'pointerdown',{clientX:70,clientY:207});
+step(115);
+check(canvasLabels.some(x=>x.includes('NO SHOOT / 動物')) &&
+      canvasLabels.some(x=>x.includes('NO SHOOT / 市民')),
+      'protected civilian and wildlife shapes are both clearly labeled');
+const stageTargets=math.randomStage(()=>.5);
+const normal=stageTargets.find(t=>!t.noShoot && t.x<=870);
+const forbidden=stageTargets.find(t=>t.noShoot && t.x>=325 && t.x<=850);
+check(!!normal && !!forbidden, 'seeded randomized stage provides visible valid and forbidden targets');
+function shootAt(t) {
+ // Initial camera is x=230/y=130. All targets in this deterministic case are stationary.
+ const corrected=math.shotSolution({x:t.x,y:t.y},stageTargets,1.8,true);
+ const x=Math.max(94,Math.min(626,t.x-230-corrected.shift.x));
+ const y=Math.max(94,Math.min(311,t.y-130-corrected.shift.y));
+ send(canvas,'pointermove',{clientX:x,clientY:y});
+ send(canvas,'pointerdown',{clientX:x,clientY:y});
+}
+shootAt(normal);
+check(views.at(-1).score>0,
+      'Stage 3 valid target score uses ballistic-corrected aim');
+const beforeViolation=views.at(-1).score;
+shootAt(forbidden);
 check(feedback.textContent.includes('NO SHOOTを誤射') &&
       feedback.textContent.includes('誤射 1/3') &&
-      views.at(-1).score <= beforeViolation,
-      'forbidden target collision warns and penalizes score without a clear');
-send(canvas,'pointerdown',{clientX:70,clientY:207});
-check(views.at(-1).status === 'playing' &&
+      views.at(-1).score<=beforeViolation,
+      'wildlife/civilian impact is a visible penalty, never a score');
+shootAt(forbidden);
+check(views.at(-1).status==='playing' &&
       feedback.textContent.includes('誤射 2/3'),
-      'second forbidden hit keeps the round active');
-send(canvas,'pointerdown',{clientX:70,clientY:207});
-check(views.at(-1).status === 'lost' &&
-      views.at(-1).message.includes('誤射3回') && frames.size === 0,
-      'third forbidden hit ends the round and stops animation');
+      'second protected target hit keeps stage active');
+shootAt(forbidden);
+check(views.at(-1).status==='lost' &&
+      views.at(-1).message.includes('誤射3回') && frames.size===0,
+      'third forbidden hit stops stage and animation');
 widget.restart();
-check(views.at(-1).status === 'playing' && views.at(-1).score === 0 &&
+check(views.at(-1).status==='playing' && views.at(-1).score===0 &&
       views.at(-1).message.includes('NO SHOOT'),
-      'Restart resets Stage 3 violations, progress and randomized round');
+      'Stage 3 restart resets violation and random target progress');
 check(source.includes('var contact = targetContact(landed, targets, elapsed)') &&
       source.includes('marks.push({x:landed.x,y:landed.y') &&
       source.includes("var kind = contact ? 'target' : landed.y >= 462"),
