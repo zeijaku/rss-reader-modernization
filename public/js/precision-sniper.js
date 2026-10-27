@@ -1,4 +1,4 @@
-/* Precision Sniper Dev3: stylized distance/drop/wind mechanics; opt-in local audio, no external assets. */
+/* Precision Sniper Dev4: visible wind and random friend-or-foe targets; local audio only. */
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
@@ -14,6 +14,38 @@
         {x: 1190, y: 265, radius: 37, distance: 390, amplitude: 107, rate: 0.78, offset: 1.1},
         {x: 1450, y: 395, radius: 37, distance: 490, amplitude: 67, rate: 1.15, offset: -0.8}
     ];
+    function randomStage(random) {
+        // Fresh target locations and friend-or-foe order on each Restart. Separate
+        // lanes ensure even moving targets cannot overlap one another.
+        var rng = typeof random === 'function' ? random : Math.random;
+        var slots = [300, 520, 740, 960, 1180, 1400];
+        var order = [0, 1, 2, 3, 4, 5];
+        for (var i = order.length - 1; i > 0; i--) {
+            var j = Math.floor(clamp(rng(), 0, .999999) * (i + 1));
+            var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+        }
+        return slots.map(function (x, i) {
+            var bad = order[i] < 2;
+            return {
+                x:x + (rng() - .5) * 36,
+                y:235 + Math.floor(rng() * 4) * 51,
+                radius:37,
+                distance:180 + i * 62,
+                amplitude:i % 2 ? 25 : 0,
+                rate:.45 + i * .09,
+                offset:rng() * Math.PI * 2,
+                noShoot:bad,
+                appearAt:i * .65,
+                visibleFor:6.7 + rng() * 1.7,
+                cycle:11.2 + rng() * 2.3
+            };
+        });
+    }
+    function targetActive(target, time) {
+        if (target.appearAt === undefined) return true;
+        if (time < target.appearAt) return false;
+        return (time - target.appearAt) % target.cycle < target.visibleFor;
+    }
     function targetAt(target, time) {
         return {x: target.x + (target.amplitude || 0) * Math.sin(time * (target.rate || 0) + (target.offset || 0)),
             y: target.y, radius: target.radius};
@@ -30,6 +62,7 @@
     function targetContact(point, stageTargets, time) {
         // Every physical impact is detected, even after this target awarded points.
         for (var i = 0; i < stageTargets.length; i++) {
+            if (!targetActive(stageTargets[i], time)) continue;
             var position = targetAt(stageTargets[i], time);
             var score = scoreHit(point, position);
             if (score) return {index:i, score:score, zone:score === 100 ? '中心' : score === 75 ? '中間' : '外周',
@@ -39,8 +72,8 @@
     }
     function windAt(time, moving) {
         // Gentle, deterministic gusts tied to game time; pause freezes the wind.
-        return moving ? 2.0 * Math.sin(time * .38 + .7) + .5 * Math.cos(time * .17)
-            : .45 + .75 * Math.sin(time * .35 + .8);
+        return 1.55 * (moving ? 2.0 * Math.sin(time * .38 + .7) + .5 * Math.cos(time * .17)
+            : .45 + .75 * Math.sin(time * .35 + .8));
     }
     function ballisticOffset(distance, wind) {
         // Arcade approximation in world pixels (not real-world firearm ballistics).
@@ -54,6 +87,7 @@
         // the player to hold high/against the wind without switching the range.
         var nearest = 0, best = Infinity;
         for (var i = 0; i < stageTargets.length; i++) {
+            if (!targetActive(stageTargets[i], time)) continue;
             var pos = targetAt(stageTargets[i], time);
             var squared = Math.pow(point.x - pos.x, 2) + Math.pow(point.y - pos.y, 2);
             if (squared < best) { best = squared; nearest = i; }
@@ -81,7 +115,7 @@
         var toolbar = element('div', 'precision-sniper-toolbar');
         var stageLabel = element('label', 'precision-sniper-stage-label', 'ステージ ');
         var stageSelect = element('select', 'form-select form-select-sm precision-sniper-stage');
-        [['1', '1 固定標的'], ['2', '2 移動標的']].forEach(function (option) {
+        [['1', '1 固定標的'], ['2', '2 移動標的'], ['3', '3 ランダム・識別']].forEach(function (option) {
             var node = element('option', '', option[1]); node.value = option[0];
             stageSelect.appendChild(node);
         });
@@ -117,7 +151,7 @@
         canvas.setAttribute('role', 'application');
         canvas.setAttribute('aria-label', 'Precision Sniper 訓練場。マウスで狙い左クリックで射撃。Spaceで息止め、RまたはZでリロード。');
         frame.appendChild(canvas);
-        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定標的、ステージ2は移動標的。遠い標的ほど弾が下に落ち、風下へ流れます。画面上部の着弾ずれを参考に、上・風上へ狙いをずらしてください。ステージ変更は次のStart / Restartで反映。マウスで探索・照準、左クリックで射撃、Space長押しで息止め、R / Zでリロード。');
+        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定、2は移動、3はランダムに出現する標的を識別する訓練です。「NO SHOOT」は撃たないでください（3回誤射で失敗）。風向計と草の揺れで風を読み、遠方は上・風上へ狙いをずらします。ステージ変更は次のStart / Restartで反映。射撃はクリック、息止めはSpace、装填はR / Z。');
         var details = element('p', 'precision-sniper-feedback', 'STARTを押して訓練開始。');
         details.setAttribute('role', 'status');
         root.append(toolbar, frame, details, help);
@@ -147,7 +181,7 @@
         var phase = 'ready', paused = false, suspended = false, destroyed = false;
         var held = false, stamina = 100, instability = 0, exhaustionLock = false;
         var sway = {x: 0, y: 0}, phaseTime = 0, elapsed = 0, magazine = 5, reloadLeft = 0, recoil = 0;
-        var points = 0, shots = 0, impact = null, marks = [], cleared = [];
+        var points = 0, shots = 0, impact = null, marks = [], cleared = [], violations = 0;
         var targets = FIXED_TARGETS, soundOn = false, audioContext = null;
         var frameId = 0, lastTime = 0;
         function soundStatus() {
@@ -196,7 +230,9 @@
         function active() { return !destroyed && !suspended && !paused && phase === 'playing'; }
         function update(message) {
             ammunition.textContent = reloadLeft > 0 ? '装填中 ' + reloadLeft.toFixed(1) + 's' : '弾数 ' + magazine + ' / 5';
-            hits.textContent = '標的 ' + cleared.length + ' / ' + targets.length;
+            var required = targets.filter(function (target) { return !target.noShoot; }).length;
+            hits.textContent = '標的 ' + cleared.length + ' / ' + required +
+                (stageSelect.value === '3' && targets !== FIXED_TARGETS && targets !== MOVING_TARGETS ? '  誤射 ' + violations + ' / 3' : '');
             // A newly selected stage is applied on the next Restart, never mid-shot.
             soundStatus();
             breathGauge.value = Math.round(stamina);
@@ -205,8 +241,12 @@
                 storageNote: 'Bestはこの端末に保存します（可能な場合）。効果音は ' + (soundOn ? 'ON' : 'OFF') + '。',
                 paused: paused || suspended, status: phase,
                 message: phase === 'won' ? 'Training CLEAR! 合計 ' + points + ' 点 / ' + shots + ' 発。Restartで再挑戦。'
+                    : phase === 'lost' ? '誤射3回で訓練失敗。Restartで再挑戦。'
                     : phase === 'ready' ? 'Startで訓練開始。'
-                    : paused || suspended ? '一時停止中' : (targets === MOVING_TARGETS ? '移動標的を含む4枚を狙ってください。' : '固定標的を4枚命中させてください。')});
+                    : paused || suspended ? '一時停止中'
+                    : targets !== FIXED_TARGETS && targets !== MOVING_TARGETS
+                        ? 'ランダム標的4枚を命中。NO SHOOTは撃たないでください。'
+                        : targets === MOVING_TARGETS ? '移動標的を含む4枚を狙ってください。' : '固定標的を4枚命中させてください。'});
         }
         function circle(x, y, r, color) {
             ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
@@ -214,6 +254,7 @@
         }
         function bulletMark(mark) {
             if (mark.kind === 'none') return; // Open sky has no surface to retain a hole.
+            if (mark.targetIndex >= 0 && !targetActive(targets[mark.targetIndex], elapsed)) return;
             var position = mark.targetIndex >= 0 ? targetAt(targets[mark.targetIndex], elapsed) : null;
             ctx.save();
             ctx.translate(position ? position.x + mark.offsetX : mark.x,
@@ -249,6 +290,7 @@
         }
         function impactFlash() {
             if (!impact || impact.kind === 'none') return;
+            if (impact.targetIndex >= 0 && !targetActive(targets[impact.targetIndex], elapsed)) return;
             var age = elapsed - impact.time;
             if (age < 0 || age > .35) return;
             ctx.save(); ctx.globalAlpha = Math.max(0, 1 - age / .35) * .75;
@@ -264,6 +306,39 @@
                 circle(x + Math.cos(a)*spread, y + Math.sin(a)*spread, 1.2,
                     impact.kind === 'target' ? '#fff3d8' : '#ab9274');
             }
+            ctx.restore();
+        }
+        function windGrass() {
+            // Small grass tufts react to the SAME windAt() used for shot deviation.
+            var wind = windAt(elapsed, targets !== FIXED_TARGETS);
+            ctx.save(); ctx.strokeStyle = theme.muted; ctx.globalAlpha = .38;
+            ctx.lineWidth = 1.5;
+            for (var g = 125; g < WORLD_W; g += 115) {
+                var len = 11 + (g % 17);
+                var y = 474 + (g % 4) * 12;
+                ctx.beginPath(); ctx.moveTo(g, y);
+                ctx.lineTo(g + wind * 4.4 + Math.sin(elapsed * 1.3 + g) * 3, y - len);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+        function windSock() {
+            // Fixed HUD wind vane: pennant direction and extension follow wind.
+            var wind = windAt(elapsed, targets !== FIXED_TARGETS);
+            var direction = wind >= 0 ? 1 : -1, stretch = 19 + Math.min(29, Math.abs(wind) * 9);
+            var x = 630, y = 26;
+            ctx.save();
+            ctx.fillStyle = theme.secondary; ctx.fillRect(556,9,152,67);
+            ctx.strokeStyle = theme.border; ctx.lineWidth = 1; ctx.strokeRect(556.5,9.5,151,66);
+            ctx.fillStyle = theme.ink; ctx.font='11px sans-serif';ctx.textAlign='center';
+            ctx.fillText('WIND  ' + (direction > 0 ? '→' : '←') + ' ' + Math.abs(wind).toFixed(1) + 'm/s',630,63);
+            ctx.strokeStyle=theme.ink;ctx.lineWidth=2;
+            ctx.beginPath();ctx.moveTo(x,y-7);ctx.lineTo(x,y+21);ctx.stroke();
+            ctx.fillStyle=theme.targetAccent;
+            ctx.beginPath();ctx.moveTo(x,y-7);
+            ctx.lineTo(x+direction*stretch,y-3+Math.sin(elapsed*1.9)*2);
+            ctx.lineTo(x+direction*stretch,y+6+Math.sin(elapsed*1.9)*2);
+            ctx.lineTo(x,y+6);ctx.fill();
             ctx.restore();
         }
         function landscape() {
@@ -287,7 +362,9 @@
             for (var line=520;line<=WORLD_H;line+=60) {
                 ctx.beginPath();ctx.moveTo(0,line);ctx.lineTo(WORLD_W,line);ctx.stroke();
             }
+            windGrass();
             targets.forEach(function (target, index) {
+                if (!targetActive(target, elapsed)) return;
                 var position = targetAt(target, elapsed);
                 ctx.save(); ctx.translate(position.x - target.x, position.y - target.y);
                 ctx.fillStyle=theme.muted;
@@ -295,14 +372,25 @@
                 ctx.fillStyle=theme.border;
                 ctx.fillRect(target.x-48,target.y+131,96,12);
                 ctx.save();ctx.translate(target.x,target.y);
-                circle(0,0,target.radius+5,theme.targetBorder);
-                circle(0,0,target.radius,theme.targetPaper);
-                circle(0,0,29,theme.targetAccent);
-                circle(0,0,22,theme.targetPaper);
-                circle(0,0,14,theme.targetAccent);
-                circle(0,0,8,theme.targetCenter);
+                if (target.noShoot) {
+                    // Shape + text identify forbidden targets even with impaired color vision.
+                    circle(0,0,target.radius+5,theme.targetBorder);
+                    circle(0,0,target.radius,theme.targetPaper);
+                    ctx.strokeStyle=theme.targetCenter;ctx.lineWidth=5;
+                    ctx.beginPath();ctx.moveTo(-18,-18);ctx.lineTo(18,18);
+                    ctx.moveTo(18,-18);ctx.lineTo(-18,18);ctx.stroke();
+                    ctx.fillStyle=theme.targetCenter;ctx.font='bold 12px sans-serif';
+                    ctx.textAlign='center';ctx.fillText('NO',0,-26);
+                } else {
+                    circle(0,0,target.radius+5,theme.targetBorder);
+                    circle(0,0,target.radius,theme.targetPaper);
+                    circle(0,0,29,theme.targetAccent);
+                    circle(0,0,22,theme.targetPaper);
+                    circle(0,0,14,theme.targetAccent);
+                    circle(0,0,8,theme.targetCenter);
+                }
                 ctx.fillStyle=theme.ink;ctx.font='bold 12px sans-serif';
-                ctx.textAlign='center';ctx.fillText((target.amplitude ? 'M' : 'T')+(index+1)+' '+target.distance+'m',0,-target.radius-14);
+                ctx.textAlign='center';ctx.fillText((target.noShoot ? 'NO SHOOT' : (target.amplitude ? 'M' : 'T')+(index+1))+' '+target.distance+'m',0,-target.radius-14);
                 if (cleared.indexOf(index)!==-1) {
                     ctx.strokeStyle=theme.targetBorder;ctx.globalAlpha=.65;ctx.lineWidth=2;
                     ctx.beginPath();ctx.arc(0,0,44,0,Math.PI*2);ctx.stroke();
@@ -351,6 +439,7 @@
                 (solution.wind >= 0 ? '→ ' : '← ') + Math.abs(solution.wind).toFixed(1) +
                 'm/s / 着弾ずれ ' + (solution.shift.x >= 0 ? '→ ' : '← ') + dx + 'px・↓ ' + dy + 'px';
             lens(center, shot);
+            windSock();
             if (impact && elapsed - impact.time < 1.1) {
                 ctx.fillStyle = impact.hit ? theme.success : theme.danger;
                 ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
@@ -359,7 +448,7 @@
             ctx.fillStyle = theme.secondary; ctx.fillRect(12, 12, 153, 44);
             ctx.strokeStyle = theme.border; ctx.lineWidth = 1; ctx.strokeRect(12.5,12.5,152,43);
             ctx.font = '12px sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = theme.ink;
-            ctx.fillText((targets === MOVING_TARGETS ? 'MOVING' : 'TRAINING') + ' / 4 TARGETS', 22, 30);
+            ctx.fillText((targets === MOVING_TARGETS ? 'MOVING' : targets === FIXED_TARGETS ? 'TRAINING' : 'IDENTIFY') + ' / 4 TARGETS', 22, 30);
             ctx.fillText('SHOT ' + shots + '  •  ' + elapsed.toFixed(1) + 's', 22, 47);
             if (paused || suspended) {
                 ctx.fillStyle = 'rgba(0,0,0,.48)'; ctx.fillRect(0, 0, W, H);
@@ -413,22 +502,28 @@
             var landed = solution.impact;
             var contact = targetContact(landed, targets, elapsed);
             var selected = contact ? contact.index : -1;
-            var firstHit = !!contact && cleared.indexOf(selected) === -1;
+            var prohibited = !!contact && !!targets[selected].noShoot;
+            var firstHit = !!contact && !prohibited && cleared.indexOf(selected) === -1;
             var awarded = firstHit ? contact.score : 0;
             if (firstHit) { points += awarded; cleared.push(selected); }
+            if (prohibited) { violations++; points = Math.max(0, points - 75); }
             var kind = contact ? 'target' : landed.y >= 462 ? 'ground' : 'none';
             var offsetX = contact ? contact.offsetX : 0, offsetY = contact ? contact.offsetY : 0;
             if (kind !== 'none') {
                 marks.push({x:landed.x,y:landed.y,kind:kind,targetIndex:selected,offsetX:offsetX,offsetY:offsetY});
                 if (marks.length > 36) marks.shift();
             }
-            impact = {time:elapsed,score:awarded,hit:!!contact,point:landed,kind:kind,targetIndex:selected,
-                offsetX:offsetX,offsetY:offsetY,label:contact
-                    ? 'T' + (selected + 1) + ' ' + contact.zone + (firstHit ? ' +' + awarded : ' 再命中')
+            impact = {time:elapsed,score:awarded,hit:!!contact && !prohibited,point:landed,kind:kind,targetIndex:selected,
+                offsetX:offsetX,offsetY:offsetY,label:prohibited ? 'NO SHOOT  -75'
+                    : contact ? 'T' + (selected + 1) + ' ' + contact.zone + (firstHit ? ' +' + awarded : ' 再命中')
                     : 'MISS'};
-            if (cleared.length === targets.length) { phase = 'won'; stop(); }
+            if (prohibited && violations >= 3) { phase = 'lost'; stop(); }
+            else if (cleared.length === targets.filter(function (target) { return !target.noShoot; }).length) { phase = 'won'; stop(); }
             update();
-            if (contact) {
+            if (prohibited) {
+                details.textContent = 'NO SHOOTを誤射！ -75点・誤射 ' + violations +
+                    '/3。' + (phase === 'lost' ? '訓練失敗。Restartで再挑戦。' : 'この標的は撃たないでください。');
+            } else if (contact) {
                 var dx = Math.round(offsetX), dy = Math.round(offsetY);
                 details.textContent = '標的' + (selected + 1) + '・' + contact.zone +
                     '（中心から横 ' + (dx > 0 ? '+' : '') + dx + ' / 縦 ' + (dy > 0 ? '+' : '') + dy +
@@ -479,8 +574,9 @@
                 details.textContent = 'ステージ変更は次のRestartで反映します。';
                 return;
             }
-            targets = stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
-            marks = []; cleared = []; impact = null;
+            targets = stageSelect.value === '3' ? randomStage() :
+                stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
+            marks = []; cleared = []; impact = null; violations = 0;
             update(); draw();
         });
         context.on(soundButton, 'click', function () {
@@ -494,8 +590,9 @@
         resize(); update(); draw();
         return {
             restart: function () {
-                stop();targets = stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
-                phase = 'playing';paused = false;elapsed = 0;phaseTime = 0;points = 0;shots = 0;
+                stop();targets = stageSelect.value === '3' ? randomStage() :
+                    stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
+                phase = 'playing';paused = false;elapsed = 0;phaseTime = 0;points = 0;shots = 0;violations = 0;
                 magazine = 5;reloadLeft = 0;stamina = 100;instability = 0;exhaustionLock = false;
                 sway = {x:0,y:0};recoil = 0;marks = [];cleared = [];impact = null;
                 camera = {x:230,y:130};pointer = {x:W/2,y:H/2};edge = {x:0,y:0};
@@ -523,7 +620,8 @@
         };
     }
     window.RssPrecisionSniperCore = {aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,
-        targetAt:targetAt,targetContact:targetContact,windAt:windAt,ballisticOffset:ballisticOffset,
+        targetAt:targetAt,targetActive:targetActive,randomStage:randomStage,
+        targetContact:targetContact,windAt:windAt,ballisticOffset:ballisticOffset,
         shotSolution:shotSolution};
     window.RssGameWidget.register('precision_sniper', mount);
 })(window, document);
