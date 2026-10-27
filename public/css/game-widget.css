@@ -80,6 +80,8 @@
 .precision-sniper-toolbar label{display:flex;align-items:center;gap:5px;margin:0}
 .precision-sniper-breath{width:92px;height:12px;accent-color:var(--bs-primary,#0d6efd)}
 .precision-sniper-zoom{width:80px;min-height:36px}
+.precision-sniper-stage{width:124px;min-height:36px}
+.precision-sniper-sound{min-width:64px;min-height:36px;touch-action:manipulation}
 .precision-sniper-frame{width:100%;overflow:hidden;background:var(--bs-secondary-bg,#e9ecef);border:1px solid var(--bs-border-color,#dee2e6);border-radius:.25rem}
 .precision-sniper-canvas{display:block;width:100%;height:auto;aspect-ratio:720 / 405;touch-action:manipulation;cursor:crosshair}
 .precision-sniper-canvas:focus-visible{outline:3px solid var(--bs-primary,#0d6efd);outline-offset:-3px}
