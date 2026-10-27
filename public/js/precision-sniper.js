@@ -18,9 +18,11 @@
         return distance <= 10 ? 100 : distance <= 22 ? 75 : 45;
     }
     function breathing(phase, held, stamina, unstable) {
+        // Center-seeking, bounded breathing cycles: both axes regularly pass through zero.
+        // Separate slow periods keep the motion organic without sustained one-way drift.
         var strength = (held && stamina > 0 ? 0.18 : 1) * (unstable ? 1.85 : 1);
-        return {x: (Math.sin(phase * 1.45) * 8 + Math.sin(phase * 3.4) * 3) * strength,
-            y: (Math.cos(phase * 1.2) * 7 + Math.sin(phase * 2.6) * 3) * strength};
+        return {x: (Math.sin(phase * 1.55) * 4.8 + Math.sin(phase * 3.1) * 1.1) * strength,
+            y: (Math.sin(phase * 1.23) * 4.5 + Math.sin(phase * 2.46) * 1.0) * strength};
     }
     function element(tag, cls, label) {
         var node = document.createElement(tag);
@@ -60,6 +62,22 @@
         root.append(toolbar, frame, details, help);
         context.stage.appendChild(root);
         var ctx = canvas.getContext('2d');
+        // Reuse the same Bootstrap colors and simple geometry as other Game widgets.
+        var computed = window.getComputedStyle ? window.getComputedStyle(root) : null;
+        function token(name, fallback) {
+            var value = computed && computed.getPropertyValue(name);
+            return value && value.trim() || fallback;
+        }
+        var theme = {
+            background:token('--bs-body-bg','#fff'),
+            secondary:token('--bs-secondary-bg','#e9ecef'),
+            border:token('--bs-border-color','#ced4da'),
+            ink:token('--bs-body-color','#212529'),
+            muted:token('--bs-secondary-color','#6c757d'),
+            danger:token('--bs-danger','#dc3545'),
+            success:token('--bs-success','#198754'),
+            primary:token('--bs-primary','#0d6efd')
+        };
         var pointer = {x: W / 2, y: H / 2}, edge = {x: 0, y: 0}, camera = {x: 230, y: 130};
         var phase = 'ready', paused = false, suspended = false, destroyed = false;
         var held = false, stamina = 100, instability = 0, exhaustionLock = false;
@@ -82,44 +100,98 @@
             ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
             if (color) { ctx.fillStyle = color; ctx.fill(); }
         }
+        function bulletMark(mark) {
+            if (mark.kind === 'none') return; // Open sky has no surface to retain a hole.
+            ctx.save(); ctx.translate(mark.x, mark.y);
+            var r = mark.kind === 'target' ? 6 : 4;
+            // Ragged paper/ground edge around a dark irregular penetration, not an O or slash.
+            ctx.fillStyle = mark.kind === 'target' ? '#e8d9bb' : '#ab9274';
+            ctx.beginPath();
+            for (var i = 0; i < 11; i++) {
+                var angle = i * Math.PI * 2 / 11, distance = r + ((i * 7 + 3) % 5 - 2) * .7;
+                var px = Math.cos(angle) * distance, py = Math.sin(angle) * distance;
+                if (!i) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+            }
+            ctx.fill();
+            ctx.fillStyle = '#212529';
+            ctx.beginPath();
+            for (var j = 0; j < 9; j++) {
+                var a = j * Math.PI * 2 / 9, d = (r * .57) + ((j * 5 + 1) % 4) * .38;
+                var x = Math.cos(a) * d, y = Math.sin(a) * d;
+                if (!j) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+            }
+            ctx.fill();
+            ctx.strokeStyle = mark.kind === 'target' ? '#987d62' : '#725e4a';
+            ctx.lineWidth = .75;
+            for (var k = 0; k < 6; k++) {
+                var direction = k * Math.PI / 3 + .2;
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(direction)*r*.75,Math.sin(direction)*r*.75);
+                ctx.lineTo(Math.cos(direction)*r*(1.2+(k%3)*.12),Math.sin(direction)*r*(1.2+(k%3)*.12));
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+        function impactFlash() {
+            if (!impact || impact.kind === 'none') return;
+            var age = elapsed - impact.time;
+            if (age < 0 || age > .35) return;
+            ctx.save(); ctx.globalAlpha = Math.max(0, 1 - age / .35) * .75;
+            var x = impact.point.x, y = impact.point.y;
+            var spread = 8 + age * 32;
+            ctx.strokeStyle = impact.kind === 'target' ? '#f4e3c6' : '#b39a76';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(x,y,spread,0,Math.PI*2); ctx.stroke();
+            for (var i=0;i<7;i++) {
+                var a = i * Math.PI * 2 / 7 + .3;
+                circle(x + Math.cos(a)*spread, y + Math.sin(a)*spread, 1.2,
+                    impact.kind === 'target' ? '#fff3d8' : '#ab9274');
+            }
+            ctx.restore();
+        }
         function landscape() {
-            var sky = ctx.createLinearGradient(0, 0, 0, WORLD_H);
-            sky.addColorStop(0, '#17364b'); sky.addColorStop(.54, '#7296a0'); sky.addColorStop(1, '#d6c6a0');
-            ctx.fillStyle = sky; ctx.fillRect(0, 0, WORLD_W, WORLD_H);
-            ctx.fillStyle = '#385d63';
-            ctx.beginPath(); ctx.moveTo(0, 315);
-            for (var x = 0; x <= WORLD_W; x += 40) ctx.lineTo(x, 300 + 32 * Math.sin(x / 144) + 16 * Math.sin(x / 51));
-            ctx.lineTo(WORLD_W, WORLD_H); ctx.lineTo(0, WORLD_H); ctx.fill();
-            ctx.fillStyle = '#657b67';
-            ctx.beginPath(); ctx.moveTo(0, 380);
-            for (var a = 0; a <= WORLD_W; a += 28) ctx.lineTo(a, 365 + Math.sin(a / 98) * 18);
-            ctx.lineTo(WORLD_W, WORLD_H); ctx.lineTo(0, WORLD_H); ctx.fill();
-            ctx.fillStyle = '#99896c'; ctx.fillRect(0, 462, WORLD_W, WORLD_H - 462);
-            ctx.strokeStyle = 'rgba(18,36,37,.3)'; ctx.lineWidth = 2;
-            for (var p = 0; p <= WORLD_W; p += 60) {
-                ctx.beginPath(); ctx.moveTo(p, 480); ctx.lineTo(p - 60, WORLD_H); ctx.stroke();
+            ctx.fillStyle = theme.secondary; ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+            // Flat low-contrast landscape layers instead of the former cinematic gradient.
+            ctx.fillStyle = theme.border;
+            ctx.globalAlpha = .6;
+            ctx.beginPath(); ctx.moveTo(0,320);
+            for (var x=0;x<=WORLD_W;x+=52) ctx.lineTo(x,310+20*Math.sin(x/155));
+            ctx.lineTo(WORLD_W,462);ctx.lineTo(0,462);ctx.fill();
+            ctx.fillStyle = theme.muted; ctx.globalAlpha = .16;
+            ctx.beginPath();ctx.moveTo(0,377);
+            for (var a=0;a<=WORLD_W;a+=48) ctx.lineTo(a,373+12*Math.sin(a/112));
+            ctx.lineTo(WORLD_W,462);ctx.lineTo(0,462);ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = theme.background; ctx.fillRect(0,462,WORLD_W,WORLD_H-462);
+            ctx.strokeStyle = theme.border; ctx.lineWidth = 1;
+            for (var p=0;p<=WORLD_W;p+=100) {
+                ctx.beginPath();ctx.moveTo(p,462);ctx.lineTo(p-48,WORLD_H);ctx.stroke();
+            }
+            for (var line=520;line<=WORLD_H;line+=60) {
+                ctx.beginPath();ctx.moveTo(0,line);ctx.lineTo(WORLD_W,line);ctx.stroke();
             }
             TARGETS.forEach(function (target, index) {
-                ctx.fillStyle = '#28363d'; ctx.fillRect(target.x - 3, target.y + 30, 6, 105);
-                ctx.fillStyle = '#344c4c'; ctx.fillRect(target.x - 48, target.y + 131, 96, 12);
-                ctx.save(); ctx.translate(target.x, target.y);
-                circle(0, 0, target.radius + 5, '#26383f');
-                circle(0, 0, target.radius, '#e5e2cf');
-                circle(0, 0, 29, '#b75c53'); circle(0, 0, 22, '#e8dfb6');
-                circle(0, 0, 14, '#ad544b'); circle(0, 0, 8, '#293e45');
-                ctx.fillStyle = '#f0e4cb'; ctx.font = 'bold 12px sans-serif';
-                ctx.textAlign = 'center'; ctx.fillText('T' + (index + 1), 0, -target.radius - 14);
-                if (cleared.indexOf(index) !== -1) {
-                    ctx.strokeStyle = '#7be0b6'; ctx.lineWidth = 3;
-                    ctx.beginPath(); ctx.arc(0, 0, 44, 0, Math.PI * 2); ctx.stroke();
+                ctx.fillStyle=theme.muted;
+                ctx.fillRect(target.x-3,target.y+30,6,105);
+                ctx.fillStyle=theme.border;
+                ctx.fillRect(target.x-48,target.y+131,96,12);
+                ctx.save();ctx.translate(target.x,target.y);
+                circle(0,0,target.radius+5,theme.ink);
+                circle(0,0,target.radius,theme.background);
+                circle(0,0,29,theme.danger);
+                circle(0,0,22,theme.background);
+                circle(0,0,14,theme.danger);
+                circle(0,0,8,theme.ink);
+                ctx.fillStyle=theme.ink;ctx.font='bold 12px sans-serif';
+                ctx.textAlign='center';ctx.fillText('T'+(index+1),0,-target.radius-14);
+                if (cleared.indexOf(index)!==-1) {
+                    ctx.strokeStyle=theme.success;ctx.lineWidth=3;
+                    ctx.beginPath();ctx.arc(0,0,44,0,Math.PI*2);ctx.stroke();
                 }
                 ctx.restore();
             });
-            marks.forEach(function (mark) {
-                circle(mark.x, mark.y, 3, '#1e2931');
-                ctx.strokeStyle = '#d9d5c7'; ctx.lineWidth = 1;
-                ctx.beginPath();ctx.moveTo(mark.x - 5, mark.y - 5);ctx.lineTo(mark.x + 5, mark.y + 5);ctx.stroke();
-            });
+            marks.forEach(bulletMark);
+            impactFlash();
         }
         function lens(center, targetWorld) {
             ctx.save();
@@ -128,20 +200,20 @@
             var zoom = Number(zoomSelect.value) || 3;
             ctx.scale(zoom, zoom); ctx.translate(-targetWorld.x, -targetWorld.y);
             landscape(); ctx.restore();
-            circle(center.x, center.y, RADIUS, 'rgba(13,30,33,.12)');
-            ctx.lineWidth = 8; ctx.strokeStyle = '#15252d';
+            circle(center.x, center.y, RADIUS, 'rgba(0,0,0,.035)');
+            ctx.lineWidth = 7; ctx.strokeStyle = theme.ink;
             ctx.beginPath(); ctx.arc(center.x, center.y, RADIUS, 0, Math.PI * 2); ctx.stroke();
-            ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(228,244,238,.9)';
+            ctx.lineWidth = 2; ctx.strokeStyle = theme.background;
             ctx.beginPath(); ctx.arc(center.x, center.y, RADIUS - 5, 0, Math.PI * 2); ctx.stroke();
-            ctx.strokeStyle = '#e5f3ec'; ctx.lineWidth = 1.2;
+            ctx.strokeStyle = 'rgba(17,27,34,.9)'; ctx.lineWidth = 1.3;
             ctx.beginPath();
             ctx.moveTo(center.x - 69, center.y); ctx.lineTo(center.x - 11, center.y);
             ctx.moveTo(center.x + 11, center.y); ctx.lineTo(center.x + 69, center.y);
             ctx.moveTo(center.x, center.y - 69); ctx.lineTo(center.x, center.y - 11);
             ctx.moveTo(center.x, center.y + 11); ctx.lineTo(center.x, center.y + 69);
             ctx.stroke();
-            circle(center.x, center.y, 2, '#f5ecd9');
-            ctx.fillStyle = '#cfe4df'; ctx.font = '11px monospace'; ctx.textAlign = 'left';
+            circle(center.x, center.y, 2, theme.danger);
+            ctx.fillStyle = theme.ink; ctx.font = '11px monospace'; ctx.textAlign = 'left';
             ctx.fillText(zoom + '×', center.x - 66, center.y - 57);
         }
         function draw() {
@@ -157,8 +229,9 @@
                 ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
                 ctx.fillText(impact.label, clamp(center.x, 55, W - 55), clamp(center.y - RADIUS - 14, 18, H - 12));
             }
-            ctx.fillStyle = 'rgba(9,25,32,.75)'; ctx.fillRect(12, 12, 153, 44);
-            ctx.font = '12px sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#e7f3ef';
+            ctx.fillStyle = theme.secondary; ctx.fillRect(12, 12, 153, 44);
+            ctx.strokeStyle = theme.border; ctx.lineWidth = 1; ctx.strokeRect(12.5,12.5,152,43);
+            ctx.font = '12px sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = theme.ink;
             ctx.fillText('TRAINING / 4 TARGETS', 22, 30);
             ctx.fillText('SHOT ' + shots + '  •  ' + elapsed.toFixed(1) + 's', 22, 47);
             if (paused || suspended) {
@@ -216,9 +289,12 @@
                 }
             });
             if (selected !== -1) { points += score; cleared.push(selected); }
-            marks.push({x: at.x, y: at.y});
-            if (marks.length > 36) marks.shift();
-            impact = {time:elapsed,score:score,label:score ? '+' + score + ' HIT' : 'MISS'};
+            var kind = selected !== -1 ? 'target' : at.y >= 462 ? 'ground' : 'none';
+            if (kind !== 'none') {
+                marks.push({x:at.x,y:at.y,kind:kind});
+                if (marks.length > 36) marks.shift();
+            }
+            impact = {time:elapsed,score:score,point:at,kind:kind,label:score ? '+' + score + ' HIT' : 'MISS'};
             if (cleared.length === TARGETS.length) { phase = 'won'; stop(); }
             update();
             details.textContent = score ? '命中！標的' + (selected + 1) + '：+' + score + '点' : 'MISS。弾痕と十字線の位置を確認してください。';
