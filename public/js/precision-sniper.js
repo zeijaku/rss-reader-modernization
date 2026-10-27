@@ -79,7 +79,7 @@
         canvas.setAttribute('role', 'application');
         canvas.setAttribute('aria-label', 'Precision Sniper 訓練場。マウスで狙い左クリックで射撃。Spaceで息止め、RまたはZでリロード。');
         frame.appendChild(canvas);
-        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定標的、ステージ2は移動標的。Startで選択ステージを開始します。マウスで探索・照準、左クリックで射撃。Space長押しで息止め、R / Zでリロード。端にマウスを寄せると視界を移動します。');
+        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定標的、ステージ2は移動標的。ステージ変更は次のStart / Restartで反映します。マウスで探索・照準、左クリックで射撃。Space長押しで息止め、R / Zでリロード。端にマウスを寄せると視界を移動します。');
         var details = element('p', 'precision-sniper-feedback', 'STARTを押して訓練開始。');
         details.setAttribute('role', 'status');
         root.append(toolbar, frame, details, help);
@@ -155,7 +155,7 @@
         function update(message) {
             ammunition.textContent = reloadLeft > 0 ? '装填中 ' + reloadLeft.toFixed(1) + 's' : '弾数 ' + magazine + ' / 5';
             hits.textContent = '標的 ' + cleared.length + ' / ' + targets.length;
-            stageSelect.disabled = phase === 'playing';
+            // A newly selected stage is applied on the next Restart, never mid-shot.
             soundStatus();
             breathGauge.value = Math.round(stamina);
             if (message) details.textContent = message;
@@ -416,7 +416,10 @@
         context.on(canvas, 'blur', function () { held = false; exhaustionLock = false; });
         context.on(zoomSelect, 'change', draw);
         context.on(stageSelect, 'change', function () {
-            if (phase === 'playing') return;
+            if (phase === 'playing') {
+                details.textContent = 'ステージ変更は次のRestartで反映します。';
+                return;
+            }
             targets = stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
             marks = []; cleared = []; impact = null;
             update(); draw();
