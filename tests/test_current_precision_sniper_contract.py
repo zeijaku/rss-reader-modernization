@@ -152,6 +152,8 @@ check('function drawProjectiles()' in game
       and 'drawProjectiles();' in game
       and 'function paintProjectile(shot, time, opacity, showBody)' in game,
       'one projectile renderer paints concurrent shot dots and short tails in landscape and zoomed scope')
+check('pendingShots.sort(function(a,b){return a.dueAt-b.dueAt;});' in game,
+      'concurrent bullets are scored by arrival time even if a later close-range shot overtakes')
 check('fadingTrails.push({shot:projectile,at:projectile.dueAt})' in game
       and 'elapsed-trace.at<.12' in game
       and 'fadingTrails = [];' in game,
