@@ -83,11 +83,13 @@
             if(valid)return trial;
         }
         // Exhausted RNG safety: two columns per layer with generous gaps.
-        var backup=[],columns=[445,1220];
+        var backupX=[450,1220,720,970,450,1220];
+        var backupY=[237,237,320,320,402,402],backup=[];
         for(var p=0;p<roles.length;p++){
             var plane=DEPTH_LAYERS[Math.floor(p/2)];
-            var x0=columns[p%2]+(rng()-.5)*24;
-            var y0=(plane.top+plane.bottom)/2+(rng()-.5)*8;
+            var x0=backupX[p]+(rng()-.5)*10;
+            var y0=backupY[p]+(rng()-.5)*4;
+            y0=clamp(y0,plane.top,plane.bottom);
             backup.push(decorate({x:x0,y:y0,layer:plane.name,radius:plane.radius,
                 distance:depthAt(y0).distance,amplitude:0},roles[p]));
         }
@@ -205,6 +207,20 @@
         return {index:nearest, range:range, wind:wind, shift:shift,
             impact:{x:point.x + shift.x, y:point.y + shift.y}};
     }
+    function flightTime(distance) {
+        // Constant, game-oriented 800 m/s. A shot travels after recoil/sound.
+        return clamp(distance,150,500)/800;
+    }
+    function flightShot(aim, stageTargets, time, moving) {
+        var solution=shotSolution(aim,stageTargets,time,moving);
+        var flight=flightTime(solution.range);
+        // Average wind over the travel interval, rather than sampling gusts only
+        // at trigger pull. Coordinates are frozen at launch; the target is not.
+        var wind=(windTravel(time+flight,moving)-windTravel(time,moving))/flight;
+        var shift=ballisticOffset(solution.range,wind);
+        return {launchTime:time,dueAt:time+flight,flight:flight,range:solution.range,
+            wind:wind,shift:shift,impact:{x:aim.x+shift.x,y:aim.y+shift.y}};
+    }
     function breathing(phase, held, stamina, unstable) {
         // Center-seeking, bounded breathing cycles: both axes regularly pass through zero.
         // Separate slow periods keep the motion organic without sustained one-way drift.
@@ -290,6 +306,7 @@
         var held = false, stamina = 100, instability = 0, exhaustionLock = false;
         var sway = {x: 0, y: 0}, phaseTime = 0, elapsed = 0, magazine = 5, reloadLeft = 0, recoil = 0;
         var points = 0, shots = 0, impact = null, marks = [], cleared = [], violations = 0;
+        var pendingShots = [];
         var targets = FIXED_TARGETS, soundOn = false, audioContext = null;
         var frameId = 0, lastTime = 0;
         function soundStatus() {
@@ -340,7 +357,8 @@
             ammunition.textContent = reloadLeft > 0 ? '装填中 ' + reloadLeft.toFixed(1) + 's' : '弾数 ' + magazine + ' / 5';
             var required = targets.filter(function (target) { return !target.noShoot; }).length;
             hits.textContent = '標的 ' + cleared.length + ' / ' + required +
-                (stageSelect.value === '3' && targets !== FIXED_TARGETS && targets !== MOVING_TARGETS ? '  誤射 ' + violations + ' / 3' : '');
+                (stageSelect.value === '3' && targets !== FIXED_TARGETS && targets !== MOVING_TARGETS ? '  誤射 ' + violations + ' / 3' : '') +
+                (pendingShots.length ? '  飛翔中 ' + pendingShots.length : '');
             // A newly selected stage is applied on the next Restart, never mid-shot.
             soundStatus();
             breathGauge.value = Math.round(stamina);
@@ -661,56 +679,73 @@
                 if (!reloadLeft) { magazine = 5; update('装填完了'); }
             }
             recoil *= Math.max(0, 1 - delta * 9);
+            // Shot order is preserved. Game-clock time freezes on pause/suspend.
+            while(active() && pendingShots.length && pendingShots[0].dueAt<=elapsed+1e-8){
+                var projectile=pendingShots.shift();
+                resolveImpact(projectile,projectile.dueAt);
+            }
             update(); draw(); schedule();
         }
         function startReload() {
             if (!active() || reloadLeft > 0 || magazine === 5) return;
             reloadLeft = 1.6; held = false; update('リロード中'); draw();
         }
-        function fire() {
-            if (!active()) return;
-            if (reloadLeft > 0) { details.textContent = 'リロード中です'; return; }
-            if (!magazine) { details.textContent = '弾切れ。R / Zでリロード'; return; }
-            magazine--; shots++; recoil = 8;
-            muffledShot();
-            var at = aimWorld(camera, pointer, sway);
-            var solution = shotSolution(at, targets, elapsed, targets !== FIXED_TARGETS);
-            var landed = solution.impact;
-            var contact = targetContact(landed, targets, elapsed);
-            var selected = contact ? contact.index : -1;
-            var prohibited = !!contact && !!targets[selected].noShoot;
-            var firstHit = !!contact && !prohibited && cleared.indexOf(selected) === -1;
-            var awarded = firstHit ? contact.score : 0;
-            if (firstHit) { points += awarded; cleared.push(selected); }
-            if (prohibited) { violations++; points = Math.max(0, points - 75); }
-            var kind = contact ? 'target' : landed.y >= 462 ? 'ground' : 'none';
-            var offsetX = contact ? contact.offsetX : 0, offsetY = contact ? contact.offsetY : 0;
-            if (kind !== 'none') {
-                marks.push({x:landed.x,y:landed.y,kind:kind,targetIndex:selected,offsetX:offsetX,offsetY:offsetY});
-                if (marks.length > 36) marks.shift();
+        function resolveImpact(projectile,arrivalTime) {
+            // Arrival-time collision makes lateral lead and vanishing Stage3 targets
+            // meaningful. Each projectile scores only once, but leaves its own mark.
+            var landed=projectile.impact;
+            var contact=targetContact(landed,targets,arrivalTime);
+            var selected=contact?contact.index:-1;
+            var prohibited=!!contact&&!!targets[selected].noShoot;
+            var firstHit=!!contact&&!prohibited&&cleared.indexOf(selected)===-1;
+            var awarded=firstHit?contact.score:0;
+            if(firstHit){points+=awarded;cleared.push(selected);}
+            if(prohibited){violations++;points=Math.max(0,points-75);}
+            var kind=contact?'target':landed.y>=462?'ground':'none';
+            var offsetX=contact?contact.offsetX:0,offsetY=contact?contact.offsetY:0;
+            if(kind!=='none'){
+                marks.push({x:landed.x,y:landed.y,kind:kind,targetIndex:selected,
+                    offsetX:offsetX,offsetY:offsetY});
+                if(marks.length>36)marks.shift();
             }
-            impact = {time:elapsed,score:awarded,hit:!!contact && !prohibited,point:landed,kind:kind,targetIndex:selected,
-                offsetX:offsetX,offsetY:offsetY,label:prohibited ? 'NO SHOOT  -75'
-                    : contact ? 'T' + (selected + 1) + ' ' + contact.zone + (firstHit ? ' +' + awarded : ' 再命中')
-                    : 'MISS'};
-            if (prohibited && violations >= 3) { phase = 'lost'; stop(); }
-            else if (cleared.length === targets.filter(function (target) { return !target.noShoot; }).length) { phase = 'won'; stop(); }
+            impact={time:elapsed,score:awarded,hit:!!contact&&!prohibited,
+                point:landed,kind:kind,targetIndex:selected,
+                offsetX:offsetX,offsetY:offsetY,label:prohibited?'NO SHOOT  -75'
+                    :contact?'T'+(selected+1)+' '+contact.zone+
+                        (firstHit?' +'+awarded:' 再命中'):'MISS'};
+            if(prohibited&&violations>=3){phase='lost';pendingShots=[];stop();}
+            else if(cleared.length===targets.filter(function(t){return !t.noShoot;}).length){
+                phase='won';pendingShots=[];stop();
+            }
             update();
-            if (prohibited) {
-                details.textContent = 'NO SHOOTを誤射！ -75点・誤射 ' + violations +
-                    '/3。' + (phase === 'lost' ? '訓練失敗。Restartで再挑戦。' : 'この標的は撃たないでください。');
-            } else if (contact) {
-                var dx = Math.round(offsetX), dy = Math.round(offsetY);
-                details.textContent = '標的' + (selected + 1) + '・' + contact.zone +
-                    '（中心から横 ' + (dx > 0 ? '+' : '') + dx + ' / 縦 ' + (dy > 0 ? '+' : '') + dy +
-                    '）に命中。' + (firstHit ? '+' + awarded + '点' : '再命中・加点なし') +
-                    '。距離' + solution.range + 'm / 風による横ずれ ' +
-                    Math.round(solution.shift.x) + 'px、落下 ' + Math.round(solution.shift.y) + 'px。';
-            } else {
-                details.textContent = (kind === 'ground' ? 'MISS。地面に着弾しました。' : 'MISS。標的外です。') +
-                    ' 距離' + solution.range + 'm、風による横ずれ ' +
-                    Math.round(solution.shift.x) + 'px、落下 ' + Math.round(solution.shift.y) + 'px。';
+            if(prohibited){
+                details.textContent='NO SHOOTを誤射！ -75点・誤射 '+violations+
+                    '/3。'+(phase==='lost'?'訓練失敗。Restartで再挑戦。':'この標的は撃たないでください。');
+            }else if(contact){
+                var dx=Math.round(offsetX),dy=Math.round(offsetY);
+                details.textContent='標的'+(selected+1)+'・'+contact.zone+
+                    '（中心から横 '+(dx>0?'+':'')+dx+' / 縦 '+(dy>0?'+':'')+dy+
+                    '）に命中。'+(firstHit?'+'+awarded+'点':'再命中・加点なし')+
+                    '。飛翔 '+projectile.flight.toFixed(2)+'秒・距離'+projectile.range+
+                    'm / 風による横ずれ '+Math.round(projectile.shift.x)+
+                    'px、落下 '+Math.round(projectile.shift.y)+'px。';
+            }else{
+                details.textContent=(kind==='ground'?'MISS。地面に着弾しました。':
+                    'MISS。標的外です。')+' 飛翔 '+projectile.flight.toFixed(2)+
+                    '秒・距離'+projectile.range+'m、風による横ずれ '+
+                    Math.round(projectile.shift.x)+'px、落下 '+
+                    Math.round(projectile.shift.y)+'px。';
             }
+        }
+        function fire() {
+            if(!active())return;
+            if(reloadLeft>0){details.textContent='リロード中です';return;}
+            if(!magazine){details.textContent='弾切れ。R / Zでリロード';return;}
+            magazine--;shots++;recoil=8;muffledShot();
+            var aim=aimWorld(camera,pointer,sway);
+            var projectile=flightShot(aim,targets,elapsed,targets!==FIXED_TARGETS);
+            pendingShots.push(projectile);
+            update('発砲。着弾まで約'+projectile.flight.toFixed(2)+'秒（飛翔中 '+pendingShots.length+'発）');
             draw();
         }
         function pointerPosition(event) {
@@ -752,7 +787,7 @@
             }
             targets = stageSelect.value === '3' ? randomStage() :
                 stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
-            marks = []; cleared = []; impact = null; violations = 0;
+            marks = []; cleared = []; impact = null; violations = 0; pendingShots = [];
             update(); draw();
         });
         context.on(soundButton, 'click', function () {
@@ -770,7 +805,7 @@
                     stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
                 phase = 'playing';paused = false;elapsed = 0;phaseTime = 0;points = 0;shots = 0;violations = 0;
                 magazine = 5;reloadLeft = 0;stamina = 100;instability = 0;exhaustionLock = false;
-                sway = {x:0,y:0};recoil = 0;marks = [];cleared = [];impact = null;
+                sway = {x:0,y:0};recoil = 0;marks = [];cleared = [];impact = null;pendingShots = [];
                 camera = {x:230,y:targets === FIXED_TARGETS || targets === MOVING_TARGETS ? 130 : 95};
                 pointer = {x:W/2,y:H/2};edge = {x:0,y:0};
                 update('訓練開始');draw();canvas.focus({preventScroll:true});schedule();
@@ -785,7 +820,7 @@
             },
             resize: resize,
             destroy: function () {
-                destroyed = true; stop(); soundOn = false;
+                destroyed = true; stop(); soundOn = false; pendingShots = [];
                 if (observer) observer.disconnect();
                 if (audioContext) {
                     try { var closing = audioContext.close();
@@ -800,7 +835,8 @@
         targetsSeparated:targetsSeparated,positionSeed:positionSeed,aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,
         targetAt:targetAt,targetActive:targetActive,randomStage:randomStage,
         targetContact:targetContact,windAt:windAt,ballisticOffset:ballisticOffset,
-        shotSolution:shotSolution,windLeafAt:windLeafAt,windTravel:windTravel,
+        shotSolution:shotSolution,flightTime:flightTime,flightShot:flightShot,
+        windLeafAt:windLeafAt,windTravel:windTravel,
         reloadProgress:reloadProgress,silhouetteHit:silhouetteHit};
     window.RssGameWidget.register('precision_sniper', mount);
 })(window, document);
