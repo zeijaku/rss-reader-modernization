@@ -54,7 +54,7 @@ check('window.AudioContext || window.webkitAudioContext' in game and
       "context.on(soundButton, 'click'" in game and 'audioContext.close()' in game,
       'muffled WebAudio is explicit opt-in, lazy, and cleaned up')
 check('targetContact(point, stageTargets, time)' in game
-      and "var firstHit = !!contact && cleared.indexOf(selected) === -1" in game
+      and "var firstHit = !!contact && !prohibited && cleared.indexOf(selected) === -1" in game
       and "marks.push({x:landed.x,y:landed.y,kind:kind,targetIndex:selected" in game,
       'repeat shots independently create visible marks without duplicate score')
 check("'再命中・加点なし'" in game and "'（中心から横 '" in game and "' / 縦 '" in game,
