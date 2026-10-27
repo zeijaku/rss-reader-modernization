@@ -43,7 +43,7 @@ check('clientX - rect.left' in game and 'canvas.width / W' in game,
 check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed, targets, elapsed)' in game
       and 'scoreHit(point, position)' in game,
       'the sway shown in the zoomed lens is used for repeated physical collision')
-check('1.50.0-dev.5' in src('app/version.php'), 'visible and asset versions mark Dev4 preview only')
+check('1.50.0-dev.6' in src('app/version.php'), 'visible and asset versions mark Dev4.1 preview only')
 check('MOVING_TARGETS' in game and 'targetAt(target, elapsed)' in game,
       'second range animates targets and hit tests use displayed center')
 check('mark.targetIndex >= 0' in game and 'impact.targetIndex >= 0' in game,
@@ -60,9 +60,9 @@ check('targetContact(point, stageTargets, time)' in game
 check("'再命中・加点なし'" in game and "'（中心から横 '" in game and "' / 縦 '" in game,
       'first and repeat impacts give player detailed zone and offset feedback')
 check("--sniper-target-accent:#99776b" in src('public/css/game-widget.css')
-      and "circle(0,0,29,theme.targetAccent)" in game
-      and "circle(0,0,14,theme.targetAccent)" in game,
-      'target rings use muted coordinated palette rather than Bootstrap danger red')
+      and "circle(0,0,target.radius*.79,theme.targetAccent)" in game
+      and "circle(0,0,target.radius*.378,theme.targetAccent)" in game,
+      'multiple-size target rings keep subdued colors')
 check('windAt(time, moving)' in game and 'ballisticOffset(distance, wind)' in game
       and 'shotSolution(point, stageTargets, time, moving)' in game,
       'Dev3 introduces testable deterministic range, wind and bullet-drop mechanics')
@@ -93,6 +93,23 @@ check('function windGrass()' in game and 'function windSock()' in game and
       'windGrass();' in game and 'windSock();' in game and
       '1.55 * (moving ?' in game,
       'wind is stronger and visible in both landscape and overlay instrument')
+check("var sizes=[25,31,37,45,25,37]" in game and 'var roles = ' in game
+      and "'civilian','animal'" in game and 'silhouetteHit(dx, dy, kind)' in game,
+      'Stage 3 always contains mixed sizes and shape-accurate human/wildlife/circular targets')
+check('for(var attempt=0;attempt<90;attempt++)' in game and
+      'var separated=targets.every' in game and 'var saltX=rng(),saltY=rng()' in game,
+      'random placement uses bounded two-dimensional rejection sampling rather than fixed lanes')
+check("Math.floor((time-target.appearAt)/target.cycle)" in game,
+      'reappearing targets shift locations between cycles')
+check("NO SHOOT / 市民" in game and "NO SHOOT / 動物" in game
+      and "target.kind==='civilian'" in game and "target.kind==='animal'" in game,
+      'civilian and wildlife are distinguishable forbidden shapes, not color-only marks')
+check('function windLeaves()' in game and 'windLeafAt(i,elapsed' in game
+      and 'windTravel(time, moving)' in game,
+      'flying leaves follow integrated wind gusts and pause with game time')
+check('function drawReloadArc(center)' in game and 'reloadProgress(reloadLeft)' in game
+      and "ctx.fillText('RELOAD '" in game and 'drawReloadArc(center);' in game,
+      'scope reload ring advances full circle and shows progress percentage')
 check("source.connect(" not in game and "filter.type='lowpass'" in game
       and "soundOn = false" in game, 'sound remains local, low-pass filtered and OFF initially')
 check(all(s not in game for s in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'https://']),
