@@ -108,15 +108,18 @@ check(['round','hostile','civilian','animal'].every(k=>randomTargets.some(t=>t.k
       randomTargets.find(t=>t.kind==='animal').noShoot &&
       randomTargets.find(t=>t.kind==='civilian').noShoot,
       'mixed paper circles, human silhouettes, forbidden civilians and wildlife are present');
-check(new Set(randomTargets.map(t=>t.radius)).size >= 3 &&
-      randomTargets.every(t=>t.radius>=20 && t.radius<=49),
-      'each randomized round contains multiple perspective-adjusted target sizes');
-check(math.depthAt(230).distance > math.depthAt(390).distance &&
-      math.depthAt(230).radius < math.depthAt(390).radius,
-      'vertical location controls both depth distance and displayed radius');
-check(randomTargets.filter(t=>t.y<270).every(t=>t.distance>=390) &&
-      randomTargets.filter(t=>t.y>375).every(t=>t.distance<=240),
-      'far upper targets are smaller and farther than near lower targets');
+check([...new Set(randomTargets.map(t=>t.radius))].sort((a,b)=>a-b).join(',')==='24,33,44' &&
+      ['far','middle','near'].every(l=>randomTargets.filter(t=>t.layer===l).length===2),
+      'Stage 3 has exactly two subjects per plane and only three visual sizes');
+check(math.depthAt(250).radius===24 && math.depthAt(310).radius===33 &&
+      math.depthAt(385).radius===44 &&
+      math.depthAt(250).distance>math.depthAt(310).distance &&
+      math.depthAt(310).distance>math.depthAt(385).distance,
+      'far/middle/near planes have discrete small/medium/large silhouettes and ordered distances');
+check(randomTargets.filter(t=>t.layer==='far').every(t=>t.distance>=390 && t.distance<=490) &&
+      randomTargets.filter(t=>t.layer==='middle').every(t=>t.distance>=270 && t.distance<=360) &&
+      randomTargets.filter(t=>t.layer==='near').every(t=>t.distance>=180 && t.distance<=250),
+      'distance values respect the three foreground/midground/background bands');
 check(randomTargets.every(t => t.distance >= 180 && t.distance <= 490 &&
       t.appearAt >= 0 && t.cycle > t.visibleFor),
       'random targets have bounded distance and independent visibility windows');
@@ -133,16 +136,18 @@ const seeded = (seed) => {
 const sampledLayouts=Array.from({length:128},(_,i)=>math.randomStage(seeded(i+1)));
 check(sampledLayouts.every(ts=>ts.length===6 &&
       ts.filter(t=>t.noShoot).length===2 &&
-      new Set(ts.map(t=>t.radius)).size>=3 &&
+      new Set(ts.map(t=>t.radius)).size===3 &&
+      ['far','middle','near'].every(l=>ts.filter(t=>t.layer===l).length===2) &&
       ts.every((t,j)=>ts.slice(j+1).every(u=>math.targetsSeparated(t,u)))),
       '128 independent random rounds keep six non-overlapping shapes and mixed sizes');
 check(new Set(sampledLayouts.map(ts=>ts.map(t=>Math.round(t.x)+'/'+Math.round(t.y)).join(','))).size > 100,
       'free X and Y placement produces substantially different spatial layouts on Restart');
-check(sampledLayouts.every(ts=>ts.some(t=>t.y<280) && ts.some(t=>t.y>352)),
-      'every stage includes near and far subjects without a fixed X lane');
+check(sampledLayouts.every(ts=>ts.some(t=>t.y<280) &&
+      ts.some(t=>t.y>360)&&ts.some(t=>t.y>300&&t.y<340)),
+      'every stage has visible back, middle and front planes without fixed X lanes');
 check(sampledLayouts.every(ts=>ts.every(t=>{
       const p=math.targetAt(t,t.appearAt+t.cycle+1);
-      return p.radius>=20 && p.radius<=49 &&
+      return [24,33,44].includes(p.radius) &&
         Math.abs(p.x-t.x)<=29 && Math.abs(p.y-t.y)<=11;
       })),
       'reappearing subjects stay inside pre-reserved non-overlapping movement bounds');
@@ -156,8 +161,8 @@ check(math.targetAt(sample,appear).x !== math.targetAt(sample,appear+sample.cycl
       'reappearing targets do not return to identical placement');
 const shifted=math.targetAt(sample,appear+sample.cycle);
 check(shifted.distance===math.depthAt(shifted.y).distance &&
-      shifted.radius===Math.round(math.depthAt(shifted.y).radius*sample.sizeScale),
-      'reappearing target size and displayed range remain synchronized with new position');
+      shifted.radius===sample.radius && shifted.layer===sample.layer,
+      'reappearing targets remain in original depth plane with stable discrete size');
 const safeSample=randomTargets.find(t=>t.kind==='round');
 check(math.targetContact({x:safeSample.x,y:safeSample.y},[safeSample],0)===null &&
       math.targetContact({x:safeSample.x,y:safeSample.y},[safeSample],safeSample.appearAt+1)!==null,
@@ -189,6 +194,30 @@ check(math.ballisticOffset(150,0).y === 0 &&
 check(math.ballisticOffset(450,-2).x < 0 && math.ballisticOffset(450,2).x > 0 &&
       Math.abs(math.ballisticOffset(450,2).x) > Math.abs(math.ballisticOffset(150,2).x),
       'wind causes left/right deflection, stronger at long range');
+check(Math.abs(math.flightTime(150)-.1875)<1e-10 &&
+      Math.abs(math.flightTime(250)-.3125)<1e-10 &&
+      Math.abs(math.flightTime(350)-.4375)<1e-10 &&
+      Math.abs(math.flightTime(490)-.6125)<1e-10,
+      'constant 800m/s game model produces distance-specific 0.19–0.61s impacts');
+const movingAimTarget={x:810,y:365,radius:37,distance:390,amplitude:82,rate:.95};
+const launchAt=2, movingStart=math.targetAt(movingAimTarget,launchAt);
+const oldAim=math.flightShot(movingStart,[movingAimTarget],launchAt,true);
+const movingArrival=math.targetAt(movingAimTarget,oldAim.dueAt);
+const leadAim={x:movingArrival.x-oldAim.shift.x,y:movingArrival.y-oldAim.shift.y};
+const ledShot=math.flightShot(leadAim,[movingAimTarget],launchAt,true);
+check(oldAim.dueAt>launchAt &&
+      math.scoreHit(oldAim.impact,movingArrival)<100 &&
+      math.scoreHit(ledShot.impact,movingArrival)===100,
+      'aiming ahead of a moving target yields bullseye at arrival, old center does not');
+check(Math.abs(ledShot.wind-(math.windTravel(ledShot.dueAt,true)-
+      math.windTravel(launchAt,true))/ledShot.flight)<1e-8,
+      'flight uses average wind across elapsed travel, not just trigger-pull gust');
+const flashTarget={x:435,y:270,radius:37,distance:490,appearAt:0,cycle:5,visibleFor:.22};
+const disappearance=math.flightShot({x:435,y:270},[flashTarget],0,false);
+check(math.targetContact({x:435,y:270},[flashTarget],0)!==null &&
+      math.targetContact(disappearance.impact,[flashTarget],disappearance.dueAt)===null,
+      'a target that disappears during a bullet flight cannot be hit at arrival');
+
 const nearSol = math.shotSolution({x:435,y:270},rangeTargets,0,false);
 const farSol = math.shotSolution({x:1450,y:395},rangeTargets,0,false);
 check(nearSol.range === 150 && farSol.range === 450 &&
@@ -249,39 +278,56 @@ const before = transforms.length;
 zoom.value = '4';send(zoom,'change');
 check(transforms.slice(before).some(t=>t[0] === 'scale' && t[1] === 4), 'zoom updates scope-only magnification');
 send(canvas,'pointermove',{clientX:205,clientY:140});
+const initialHoles=bulletHolePaints;
 send(canvas,'pointerdown',{clientX:205,clientY:140});
-check(views.at(-1).score > 0, 'near target remains hittable despite small bullet deviation');
-check(feedback.textContent.includes('風による横ずれ') && feedback.textContent.includes('落下'),
-      'hit feedback identifies actual ballistic correction');
+check(views.at(-1).score===0 && feedback.textContent.includes('着弾まで約') &&
+      bulletHolePaints===initialHoles,
+      'trigger pull is immediate but awards no score or impact mark until arrival');
+step(5);check(views.at(-1).score===0,
+      'shorter-than-flight frames do not register a hit');
+step(12);
+check(views.at(-1).score>0,'fixed target awards score after travel time');
+check(feedback.textContent.includes('風による横ずれ') &&
+      feedback.textContent.includes('飛翔') && feedback.textContent.includes('落下'),
+      'impact feedback reports wind, elapsed flight time, and drop');
 check(feedback.textContent.includes('中心から横') && feedback.textContent.includes('に命中'),
-      'first impact reports its physical position relative to the target center');
-const firstScore = views.at(-1).score;
-const snapshotHoles = () => {const before = bulletHolePaints;widget.resize();return bulletHolePaints-before;};
-const firstHoleCount = snapshotHoles();
-check(firstHoleCount > 0,'first target impact visibly paints a hole');
+      'first impact reports its physical position relative to target center');
+const firstScore=views.at(-1).score;
+const snapshotHoles=()=>{const before=bulletHolePaints;widget.resize();return bulletHolePaints-before;};
+const firstHoleCount=snapshotHoles();
+check(firstHoleCount>0,'first shot paints a bullet hole only upon arrival');
 send(canvas,'pointerdown',{clientX:220,clientY:140});
-check(views.at(-1).score === firstScore && feedback.textContent.includes('再命中・加点なし'),
-      'second hit on cleared target is identified and does not double-award points');
-check(snapshotHoles() > firstHoleCount,'second hit visibly adds a second bullet hole');
+check(views.at(-1).score===firstScore,'second shot waits in projectile queue');
+step(17);
+check(views.at(-1).score===firstScore&&feedback.textContent.includes('再命中・加点なし'),
+      'second hit against cleared target registers after flight with no duplicate points');
+check(snapshotHoles()>firstHoleCount,'delayed second hit paints another permanent hole');
 check(feedback.textContent.includes('中間') || feedback.textContent.includes('外周'),
-      'second impact reports which scoring ring was contacted');
-check(audioCreated === 0 && muffledShots === 0,'sound OFF remains completely silent');
+      'second arrival reports scoring ring');
+check(audioCreated===0&&muffledShots===0,'sound OFF remains silent at trigger');
 send(sound,'click');
-check(sound['aria-pressed'] === 'true' && audioCreated === 1,'explicit ON toggle creates WebAudio and updates accessibility state');
+check(sound['aria-pressed']==='true'&&audioCreated===1,
+      'explicit sound ON gesture creates audio context');
 send(canvas,'pointerdown',{clientX:205,clientY:140});
-check(muffledShots === 1, 'enabled suppressor sound is synthesized on each valid shot');
+check(muffledShots===1 && views.at(-1).score===firstScore,
+      'suppressed sound occurs at trigger, scoring remains delayed');
+step(17);
 send(sound,'click');
 send(canvas,'pointerdown',{clientX:205,clientY:140});
-check(sound['aria-pressed'] === 'false' && muffledShots === 1,'OFF toggle immediately silences later shots');
+check(sound['aria-pressed']==='false'&&muffledShots===1,
+      'sound OFF immediately silences subsequent trigger pulls');
 const score = views.at(-1).score;
 widget.togglePause();check(views.at(-1).paused && frames.size === 0, 'Pause cancels the animation loop');
-const frozenWind = telemetry.textContent;
-step(30);check(telemetry.textContent === frozenWind && frames.size === 0,
-      'pause freezes telemetry, gusts, target positions and animation work');
+const frozenWind=telemetry.textContent,scoreWhilePaused=views.at(-1).score;
+step(30);check(telemetry.textContent===frozenWind && frames.size===0 &&
+      views.at(-1).score===scoreWhilePaused,
+      'pause freezes gusts, targets and projectile flight, without asynchronous timers');
 send(canvas,'pointerdown',{clientX:205,clientY:140});
 check(views.at(-1).score === score, 'paused shot cannot change score');
 widget.togglePause();check(!views.at(-1).paused && frames.size === 1, 'Resume restores animation');
-send(canvas,'keyup',{key:' '});step(4);
+send(canvas,'keyup',{key:' '});step(18);
+check(!views.at(-1).message.includes('発砲')&&frames.size===1,
+      'resumed flight completes through the single scoped game animation loop');
 send(canvas,'keydown',{key:'r'});check(frames.size === 1, 'reload leaves one animation loop');
 check(canvasLabels.some(t=>t==='RELOAD 0%') &&
       drawnArcs.some(a=>Math.abs(a[2]-75)<.001),
@@ -320,44 +366,36 @@ check(canvasLabels.some(x=>x.includes('NO SHOOT / 動物')) &&
       canvasLabels.some(x=>x.includes('NO SHOOT / 市民')),
       'protected civilian and wildlife shapes are both clearly labeled');
 const stageTargets=math.randomStage(()=>.5);
-const normal=stageTargets.find(t=>!t.noShoot && t.x>=330 && t.x<=820);
-const forbidden=stageTargets.find(t=>t.noShoot && t.x>=330 && t.x<=850);
-check(!!normal && !!forbidden, 'seeded randomized stage provides visible valid and forbidden targets');
-function shootAt(t) {
- // Stage 3 starts with a higher camera (x=230,y=95) so distant
- // silhouettes can be aimed above the center for ballistic drop.
- const current=math.targetAt(t,1.8);
- const corrected=math.shotSolution({x:current.x,y:current.y},stageTargets,1.8,true);
- const x=Math.max(94,Math.min(626,current.x-230-corrected.shift.x));
- const y=Math.max(94,Math.min(311,current.y-95-corrected.shift.y));
- send(canvas,'pointermove',{clientX:x,clientY:y});
- send(canvas,'pointerdown',{clientX:x,clientY:y});
-}
-shootAt(normal);
-check(views.at(-1).score>0,
-      'Stage 3 valid target score uses ballistic-corrected aim');
-const beforeViolation=views.at(-1).score;
-shootAt(forbidden);
-check(feedback.textContent.includes('NO SHOOTを誤射') &&
-      feedback.textContent.includes('誤射 1/3') &&
-      views.at(-1).score<=beforeViolation,
-      'wildlife/civilian impact is a visible penalty, never a score');
-shootAt(forbidden);
-check(views.at(-1).status==='playing' &&
-      feedback.textContent.includes('誤射 2/3'),
-      'second protected target hit keeps stage active');
-shootAt(forbidden);
-check(views.at(-1).status==='lost' &&
-      views.at(-1).message.includes('誤射3回') && frames.size===0,
-      'third forbidden hit stops stage and animation');
+check(stageTargets.every((t,i)=>stageTargets.slice(i+1).every(u=>math.targetsSeparated(t,u))),
+      'live Stage3 roles do not overlap between three depth planes');
+check(stageTargets.filter(t=>t.layer==='middle').length===2 &&
+      stageTargets.filter(t=>t.layer==='far').length===2 &&
+      stageTargets.filter(t=>t.layer==='near').length===2,
+      'Stage3 has a balanced three-plane target distribution');
+const scoreBeforeStage3=views.at(-1).score;
+send(canvas,'pointerdown',{clientX:290,clientY:207});
+check(views.at(-1).score===scoreBeforeStage3,
+      'Stage3 trigger waits for flight before evaluating NO SHOOT');
+step(45);
+check(views.at(-1).status==='playing',
+      'Stage3 continues after a flight, including if a target has disappeared');
+const pureForbidden=stageTargets.filter(t=>t.noShoot);
+check(pureForbidden.length===2&&pureForbidden.every(t=>t.kind==='civilian'||t.kind==='animal'),
+      'civilian and wildlife remain protected throughout delayed physics');
+// A projectile starting immediately before a forbidden target becomes visible
+// must be evaluated against the target state at arrival, not at firing time.
+const sampleForbidden=pureForbidden[0],arrival=sampleForbidden.appearAt+.05;
+check(math.targetActive(sampleForbidden,arrival) &&
+      !math.targetActive(sampleForbidden,sampleForbidden.appearAt-.1),
+      'NO SHOOT can emerge during projectile flight and must be resolved at impact time');
 widget.restart();
 check(views.at(-1).status==='playing' && views.at(-1).score===0 &&
       views.at(-1).message.includes('NO SHOOT'),
       'Stage 3 restart resets violation and random target progress');
-check(source.includes('var contact = targetContact(landed, targets, elapsed)') &&
+check(source.includes('var contact=targetContact(landed,targets,arrivalTime)') &&
       source.includes('marks.push({x:landed.x,y:landed.y') &&
-      source.includes("var kind = contact ? 'target' : landed.y >= 462"),
-      'score, grounded impact marks and physical collision all use post-ballistics point');
+      source.includes("var kind=contact?'target':landed.y>=462?'ground':'none'"),
+      'all scoring, marks, misses and protected-shape checks use arrival-time impact');
 check(handlers.every(e=>e.type !== 'keydown' || e.el === canvas), 'no global keyboard capture');
 widget.destroy();check(frames.size === 0 && disconnected, 'Destroy stops animation and detaches ResizeObserver');
 check(audioClosed === 1,'Destroy closes opt-in AudioContext and releases audio resources');
