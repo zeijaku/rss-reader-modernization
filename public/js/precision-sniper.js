@@ -275,7 +275,7 @@
         canvas.setAttribute('role', 'application');
         canvas.setAttribute('aria-label', 'Precision Sniper 訓練場。マウスで狙い左クリックで射撃。Spaceで息止め、RまたはZでリロード。');
         frame.appendChild(canvas);
-        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定、2は移動、3は大小の円形・人物型と「NO SHOOT / 市民・動物」を見分けるランダム訓練です（誤射3回で失敗）。風向旗・草・飛ぶ葉で風を読み、遠方は上・風上を狙います。リロード中はスコープ外周が一周します。ステージ変更は次のStart / Restart。クリックで射撃、Spaceで息止め、R / Zで装填。');
+        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定、2は移動、3は前景・中景・後景の3層（大・中・小）で円形・人物型と「NO SHOOT / 市民・動物」を識別するランダム訓練です（誤射3回で失敗）。発砲後は距離に応じて約0.19〜0.61秒で着弾し、その瞬間に動いた標的へ命中します。移動方向の先を狙ってください。風向旗・草・葉っぱで横風を読み、遠方は上・風上へ補正します。リロード中はスコープ外周が一周します。ステージ変更は次のStart / Restart。クリックで射撃、Spaceで息止め、R / Zで装填。');
         var details = element('p', 'precision-sniper-feedback', 'STARTを押して訓練開始。');
         details.setAttribute('role', 'status');
         root.append(toolbar, frame, details, help);
