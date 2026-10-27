@@ -74,6 +74,7 @@
     function aimWorld(camera, pointer, sway) {
         return {x: camera.x + pointer.x + sway.x, y: camera.y + pointer.y + sway.y};
     }
+    function reloadProgress(secondsLeft) { return clamp(1-secondsLeft/1.6,0,1); }
     function silhouetteHit(dx, dy, kind) {
         function oval(x,y,rx,ry) { return Math.pow((dx-x)/rx,2)+Math.pow((dy-y)/ry,2)<=1; }
         if (kind==='animal') {
@@ -517,6 +518,22 @@
             ctx.fillStyle = theme.ink; ctx.font = '11px monospace'; ctx.textAlign = 'left';
             ctx.fillText(zoom + '×', center.x - 66, center.y - 57);
         }
+        function drawReloadArc(center) {
+            if (reloadLeft<=0) return;
+            var portion=reloadProgress(reloadLeft);
+            ctx.save();
+            ctx.lineWidth=7;ctx.strokeStyle=theme.border;ctx.globalAlpha=.86;
+            ctx.beginPath();ctx.arc(center.x,center.y,RADIUS-11,0,Math.PI*2);ctx.stroke();
+            ctx.globalAlpha=1;ctx.strokeStyle=theme.primary;
+            ctx.beginPath();ctx.arc(center.x,center.y,RADIUS-11,-Math.PI/2,
+                -Math.PI/2+Math.PI*2*portion);ctx.stroke();
+            ctx.fillStyle=theme.background;ctx.globalAlpha=.90;
+            ctx.fillRect(center.x-56,center.y+46,112,23);
+            ctx.globalAlpha=1;ctx.textAlign='center';ctx.fillStyle=theme.ink;
+            ctx.font='bold 12px sans-serif';
+            ctx.fillText('RELOAD '+Math.round(portion*100)+'%',center.x,center.y+62);
+            ctx.restore();
+        }
         function draw() {
             if (destroyed || !ctx) return;
             ctx.setTransform(canvas.width / W, 0, 0, canvas.height / H, 0, 0);
@@ -530,6 +547,7 @@
                 (solution.wind >= 0 ? '→ ' : '← ') + Math.abs(solution.wind).toFixed(1) +
                 'm/s / 着弾ずれ ' + (solution.shift.x >= 0 ? '→ ' : '← ') + dx + 'px・↓ ' + dy + 'px';
             lens(center, shot);
+            drawReloadArc(center);
             windSock();
             if (impact && elapsed - impact.time < 1.1) {
                 ctx.fillStyle = impact.hit ? theme.success : theme.danger;
@@ -713,6 +731,6 @@
     window.RssPrecisionSniperCore = {aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,
         targetAt:targetAt,targetActive:targetActive,randomStage:randomStage,
         targetContact:targetContact,windAt:windAt,ballisticOffset:ballisticOffset,
-        shotSolution:shotSolution};
+        shotSolution:shotSolution,reloadProgress:reloadProgress,silhouetteHit:silhouetteHit};
     window.RssGameWidget.register('precision_sniper', mount);
 })(window, document);
