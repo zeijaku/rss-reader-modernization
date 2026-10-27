@@ -129,6 +129,18 @@
         return 1.55 * (moving ? 2.0 * Math.sin(time * .38 + .7) + .5 * Math.cos(time * .17)
             : .45 + .75 * Math.sin(time * .35 + .8));
     }
+    function windTravel(time, moving) {
+        // Analytic integral of windAt, so leaves really move downwind and reverse
+        // when the gust changes direction; speed follows the game's wind value.
+        return moving ? 1.55 * (2/.38 * (Math.cos(.7)-Math.cos(time*.38+.7)) +
+            .5/.17*Math.sin(time*.17)) :
+            1.55 * (.45*time + .75/.35*(Math.cos(.8)-Math.cos(time*.35+.8)));
+    }
+    function windLeafAt(index, time, moving) {
+        var loop=WORLD_W+70, raw=index*107.7+34*windTravel(time,moving);
+        return {x:((raw%loop)+loop)%loop-35,
+            y:165+(index*43%276)+15*Math.sin(time*1.2+index*.63)};
+    }
     function ballisticOffset(distance, wind) {
         // Arcade approximation in world pixels (not real-world firearm ballistics).
         // The 150 m sight-in distance has zero drop; farther targets require holdover.
@@ -379,13 +391,11 @@
         function windLeaves() {
             // Decorative leaves share exactly the wind used by the ballistic model.
             // No RAF/DOM objects are allocated: game time pauses all leaves and gusts.
-            var wind=windAt(elapsed,targets!==FIXED_TARGETS), drift=wind*34;
+            var wind=windAt(elapsed,targets!==FIXED_TARGETS);
             ctx.save();ctx.globalAlpha=.55;
             for(var i=0;i<28;i++) {
-                var loop=WORLD_W+70;
-                var raw=i*107.7+elapsed*drift+25*Math.sin(elapsed*.8+i*2.7);
-                var x=((raw%loop)+loop)%loop-35;
-                var y=165+(i*43%276)+15*Math.sin(elapsed*1.2+i*.63);
+                var position=windLeafAt(i,elapsed,targets!==FIXED_TARGETS);
+                var x=position.x,y=position.y;
                 var lean=(wind>=0?1:-1)*(.6+Math.min(1.3,Math.abs(wind)*.28));
                 ctx.fillStyle=i%3===0?theme.targetAccent:theme.muted;
                 ctx.beginPath();
@@ -741,6 +751,7 @@
     window.RssPrecisionSniperCore = {aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,
         targetAt:targetAt,targetActive:targetActive,randomStage:randomStage,
         targetContact:targetContact,windAt:windAt,ballisticOffset:ballisticOffset,
-        shotSolution:shotSolution,reloadProgress:reloadProgress,silhouetteHit:silhouetteHit};
+        shotSolution:shotSolution,windLeafAt:windLeafAt,windTravel:windTravel,
+        reloadProgress:reloadProgress,silhouetteHit:silhouetteHit};
     window.RssGameWidget.register('precision_sniper', mount);
 })(window, document);
