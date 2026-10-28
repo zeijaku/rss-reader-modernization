@@ -68,7 +68,7 @@
             // Exactly two fragile and two reinforced shootable targets in Stage3.
             pos.requiredHits=pos.noShoot?0:((shootableCount++%2)+1);
             pos.damage=0;pos.destroyed=false;
-            pos.spawnedCycle=-1;pos.expiredCycle=-1;
+            pos.spawnedCycle=-1;pos.expiredCycle=-1;pos.suppressed=false;
             pos.rate=.35+rng()*.8;
             pos.offset=rng()*Math.PI*2;
             pos.seed=rng()*100000;
@@ -116,7 +116,7 @@
         return backup;
     }
     function targetActive(target, time) {
-        if(target.destroyed)return false;
+        if(target.destroyed || target.suppressed)return false;
         if (target.appearAt === undefined) return true;
         if (time < target.appearAt) return false;
         return (time - target.appearAt) % target.cycle < target.visibleFor;
@@ -151,9 +151,9 @@
                 radius:layer.radius,amplitude:target.amplitude||0};
             if(fits(alternate))return alternate;
         }
-        // Never overlap if no legal non-repeating placement exists; retain
-        // previous safe coordinates instead of placing a target atop another.
-        return {x:target.x,y:target.y};
+        // If all currently available space is occupied, delay this spawn.
+        // Reusing the previous spot was the bug reported by the player.
+        return null;
     }
     function stage3Missed(target, time) {
         return !target.noShoot && !target.destroyed && target.damage===0 &&
@@ -845,11 +845,18 @@
             targets.forEach(function(target,index){
                 if(target.destroyed || time<target.appearAt)return;
                 var cycle=Math.floor((time-target.appearAt)/target.cycle);
-                if(target.spawnedCycle===cycle || !targetActive(target,time))return;
+                var withinWindow=(time-target.appearAt)%target.cycle<target.visibleFor;
+                if(target.spawnedCycle===cycle || !withinWindow)return;
+                // The initial layout was already randomly generated and
+                // separated on Restart; relocate only on later appearances.
+                if(cycle===0){
+                    target.spawnedCycle=0;target.suppressed=false;return;
+                }
                 var position=freshStage3Position(target,targets,index,time);
+                if(!position){target.suppressed=true;return;}
                 target.x=position.x;target.y=position.y;
                 target.distance=depthAt(position.y).distance;
-                target.spawnedCycle=cycle;
+                target.spawnedCycle=cycle;target.suppressed=false;
             });
         }
         function tick(timestamp) {
