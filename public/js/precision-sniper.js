@@ -1,4 +1,4 @@
-/* Precision Sniper Dev6: four difficulty presets with Normal-identical physics and locked per-round settings. */
+/* Precision Sniper Dev6.1: canvas-scoped right-click reload and guarded mouse wheel zoom. */
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
@@ -339,7 +339,7 @@
         canvas.setAttribute('role', 'application');
         canvas.setAttribute('aria-label', 'Precision Sniper 訓練場。マウスで狙い左クリックで射撃。Spaceで息止め、RまたはZでリロード。');
         frame.appendChild(canvas);
-        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定、2は移動、3は前景・中景・後景の3層（大・中・小）で円形・人物型と「NO SHOOT / 市民・動物」を識別するランダム訓練です（誤射3回で失敗）。発砲後は距離に応じて約0.19〜0.61秒で着弾し、その瞬間に動いた標的へ命中します。移動方向の先を狙ってください。風向旗・草・葉っぱで横風を読み、遠方は上・風上へ補正します。リロード中はスコープ外周が一周します。難易度はEasy／Normal／Hard／Nightmareから選択できます。Normalは従来の挙動で、難易度変更は次のStart / Restartから反映します。クリックで射撃、Spaceで息止め、R / Zで装填。');
+        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定、2は移動、3は前景・中景・後景の3層（大・中・小）で円形・人物型と「NO SHOOT / 市民・動物」を識別するランダム訓練です（誤射3回で失敗）。発砲後は距離に応じて約0.19〜0.61秒で着弾し、その瞬間に動いた標的へ命中します。移動方向の先を狙ってください。風向旗・草・葉っぱで横風を読み、遠方は上・風上へ補正します。リロード中はスコープ外周が一周します。難易度はEasy／Normal／Hard／Nightmareから選択できます。Normalは従来の挙動で、難易度変更は次のStart / Restartから反映します。左クリックで射撃、右クリックまたはR / Zで装填。プレイ中はスコープ上のホイール上下で2×／3×／4×の倍率変更（Ctrl等の修飾キーは除外）。Spaceで息止め。');
         var details = element('p', 'precision-sniper-feedback', 'STARTを押して訓練開始。');
         details.setAttribute('role', 'status');
         root.append(toolbar, frame, details, help);
@@ -874,11 +874,43 @@
         context.on(canvas, 'pointermove', pointerPosition);
         context.on(canvas, 'pointerleave', function () { edge.x = 0; edge.y = 0; });
         context.on(canvas, 'pointerdown', function (event) {
-            if (event.button !== 0) return;
+            if(event.button===2){
+                // Only this active game owns right-click; no global listeners.
+                if(!active())return;
+                event.preventDefault();event.stopPropagation();
+                canvas.focus({preventScroll:true});
+                startReload(); // Exactly the same guard as R / Z.
+                return;
+            }
+            if(event.button!==0)return;
             pointerPosition(event);
             canvas.focus({preventScroll:true});
             fire();
         });
+        context.on(canvas, 'contextmenu', function(event){
+            // Restore the browser menu while paused/suspended/finished.
+            if(!active())return;
+            event.preventDefault();event.stopPropagation();
+        });
+        var wheelDelta=0;
+        context.on(canvas, 'wheel', function(event){
+            // Do not hijack page scrolling outside an actively playable canvas,
+            // nor browser/page zoom and other modifier-based wheel gestures.
+            if(!active() || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey ||
+                !Number.isFinite(event.deltaY) || event.deltaY===0)return;
+            event.preventDefault();event.stopPropagation();
+            var pixels=event.deltaY*(event.deltaMode===1?16:event.deltaMode===2?H:1);
+            wheelDelta+=pixels;
+            // A physical wheel notch changes ONE zoom level; small trackpad
+            // deltas accumulate instead of skipping 2x directly to 4x.
+            if(Math.abs(wheelDelta)<40)return;
+            var next=clamp(Number(zoomSelect.value)+(wheelDelta<0?1:-1),2,4);
+            wheelDelta=0;
+            if(next!==Number(zoomSelect.value)){
+                zoomSelect.value=String(next);
+                draw();
+            }
+        }, {passive:false});
         context.on(canvas, 'keydown', function (event) {
             if (event.key !== ' ' && !/^[rRzZ]$/.test(event.key)) return;
             if (!active()) return;
@@ -923,6 +955,7 @@
         return {
             restart: function () {
                 stop();
+                wheelDelta=0;
                 activeDifficulty=difficultySelect.value;
                 targets = stageSelect.value === '3' ? randomStage(null,activeDifficulty) :
                     stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
