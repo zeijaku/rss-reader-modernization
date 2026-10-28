@@ -241,6 +241,10 @@
             impact:{x:aim.x+shift.x,y:aim.y+shift.y}};
     }
     function projectileProgress(shot, time) {
+        // Exact terminal clamp avoids floating-point drift when the dueAt sum
+        // cannot be recovered bit-for-bit by subtracting launchTime.
+        if(time>=shot.dueAt)return 1;
+        if(time<=shot.launchTime)return 0;
         return clamp((time-shot.launchTime)/shot.flight,0,1);
     }
     function projectilePosition(shot, time) {
