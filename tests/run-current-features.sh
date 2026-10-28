@@ -424,6 +424,10 @@ python3 "$SCRIPT_DIR/test_current_game_widget_contract.py"
 node "$SCRIPT_DIR/test_current_maze_chase_runtime.js"
 node --check "$ROOT/public/js/game-widget.js"
 node --check "$ROOT/public/js/maze-chase.js"
+# Precision Sniper Dev1 focused tests remain part of the Current regression.
+python3 "$SCRIPT_DIR/test_current_precision_sniper_contract.py"
+node "$SCRIPT_DIR/test_current_precision_sniper_runtime.js"
+node --check "$ROOT/public/js/precision-sniper.js"
 
 # Falling Blocks uses the same current Game Widget contract.
 node "$SCRIPT_DIR/test_current_falling_blocks_runtime.js"

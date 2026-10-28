@@ -4,8 +4,8 @@
     var source = document.currentScript;
     var revisionMatch = source && /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(source.src || '');
     var revision = revisionMatch ? revisionMatch[1] : '';
-    var catalog = Object.assign(Object.create(null), {tower_defense: {title:'Tower Defense',script:'./js/tower-defense.js',core:'./js/tower-defense-core.js'}, maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js', dictionary: './js/word-tiles-words-en.js'}, word_tiles_ja: {title: 'Word Tiles 日本語', script: './js/word-tiles-ja.js', dictionary: './js/word-tiles-words-ja.js', core: './js/word-tiles.js'}});
-    var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks', word_tiles:'Word Tiles', word_tiles_ja:'Word Tiles 日本語', tower_defense:'Tower Defense'};
+    var catalog = Object.assign(Object.create(null), {tower_defense: {title:'Tower Defense',script:'./js/tower-defense.js',core:'./js/tower-defense-core.js'}, precision_sniper: {title:'Precision Sniper',script:'./js/precision-sniper.js'}, maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js', dictionary: './js/word-tiles-words-en.js'}, word_tiles_ja: {title: 'Word Tiles 日本語', script: './js/word-tiles-ja.js', dictionary: './js/word-tiles-words-ja.js', core: './js/word-tiles.js'}});
+    var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks', word_tiles:'Word Tiles', word_tiles_ja:'Word Tiles 日本語', tower_defense:'Tower Defense', precision_sniper:'Precision Sniper'};
     var factories = Object.create(null), loads = Object.create(null), records = new Map();
     var expanded = null, previousOverflow = '', observer = null;
     function assetUrl(path) { return revision ? path + '?v=' + encodeURIComponent(revision) : path; }
@@ -37,9 +37,9 @@
         try { window.sessionStorage.setItem(record.key, value); record.storage = 'sessionStorage'; return; } catch (error) {}
         record.storage = 'memory';
     }
-    function removeWidgetState(widgetId) {
+    function removeWidgetState(widgetId, onlyGame) {
         var main = document.getElementById('main-content'), user = main && main.getAttribute('data-dashboard-user-id');
-        Object.keys(catalog).forEach(function (game) {
+        (onlyGame && Object.prototype.hasOwnProperty.call(catalog, onlyGame) ? [onlyGame] : Object.keys(catalog)).forEach(function (game) {
             var key = storageKey(user, widgetId, game);
             if (!key) return;
             ['localStorage','sessionStorage'].forEach(function (name) { try { window[name].removeItem(key); if (game === 'word_tiles' || game === 'word_tiles_ja' || game === 'tower_defense') window[name].removeItem(key + '.state'); if (game === 'tower_defense') window[name].removeItem(key + '.state.v2'); } catch (error) {} });
