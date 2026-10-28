@@ -106,6 +106,46 @@ const randomTargets = math.randomStage(() => .5);
 check(randomTargets.length === 6 && randomTargets.filter(t => t.noShoot).length === 2 &&
       randomTargets.filter(t => !t.noShoot).length === 4,
       'stage 3 keeps four valid and two forbidden targets');
+check(randomTargets.filter(t=>!t.noShoot&&t.requiredHits===1).length===2 &&
+      randomTargets.filter(t=>!t.noShoot&&t.requiredHits===2).length===2,
+      'Stage3 contains exactly two one-shot and two two-shot destructible subjects');
+const fragile={...randomTargets.find(t=>t.requiredHits===1)},reinforced={
+      ...randomTargets.find(t=>t.requiredHits===2)};
+check(math.recordStage3Hit(fragile) && fragile.destroyed && fragile.damage===1,
+      'one-shot type breaks immediately after first valid impact');
+check(!math.recordStage3Hit(reinforced) && !reinforced.destroyed &&
+      reinforced.damage===1 && math.recordStage3Hit(reinforced) &&
+      reinforced.destroyed && reinforced.damage===2,
+      'reinforced type visibly takes two valid hits to destroy');
+check(!math.recordStage3Hit(reinforced) && reinforced.damage===2 &&
+      !math.recordStage3Hit({...randomTargets.find(t=>t.noShoot)}),
+      'destroyed and NO SHOOT subjects never award extra stage damage');
+const missSubject={...randomTargets.find(t=>t.requiredHits===1),
+      spawnedCycle:0,expiredCycle:-1,damage:0};
+const expiry=missSubject.appearAt+missSubject.visibleFor;
+check(!math.stage3Missed(missSubject,expiry-.001) &&
+      math.stage3Missed(missSubject,expiry) &&
+      !math.stage3Missed({...missSubject,expiredCycle:0},expiry+.01) &&
+      !math.stage3Missed({...missSubject,damage:1},expiry+.01) &&
+      !math.stage3Missed({...missSubject,noShoot:true},expiry+.01),
+      'timeout penalizes each untouched shootable exposure exactly once, never NO SHOOT or partially hit');
+const placeSubject=randomTargets.find(t=>!t.noShoot),placeIndex=randomTargets.indexOf(placeSubject);
+const nextAppear=placeSubject.appearAt+placeSubject.cycle+.1;
+const reposition=math.freshStage3Position(placeSubject,randomTargets,placeIndex,nextAppear,
+      (()=>{let i=0;return ()=>[.06,.34,.77,.88,.52][i++%5];})());
+check(Math.abs(reposition.x-placeSubject.x)>=220 &&
+      reposition.x>=344 && reposition.x<=1412 &&
+      reposition.y>=237 && reposition.y<=402 &&
+      randomTargets.every((t,i)=>i===placeIndex ||
+        !math.targetActive(t,nextAppear) ||
+        math.targetsSeparated({...reposition,radius:placeSubject.radius,
+            amplitude:placeSubject.amplitude},t)),
+      'each return samples a broad new horizontal location, remains within its depth layer and avoids visible neighbors');
+const fallbackReposition=math.freshStage3Position(placeSubject,randomTargets,
+      placeIndex,nextAppear,()=>.5);
+check(Math.abs(fallbackReposition.x-placeSubject.x)>=220 &&
+      fallbackReposition.x>=344 && fallbackReposition.x<=1412,
+      'even a degenerate RNG does not force a target to repeat the same location');
 check(['round','hostile','civilian','animal'].every(k=>randomTargets.some(t=>t.kind===k)) &&
       randomTargets.find(t=>t.kind==='animal').noShoot &&
       randomTargets.find(t=>t.kind==='civilian').noShoot,
@@ -599,6 +639,17 @@ widget.restart();
 check(views.at(-1).status==='playing' && views.at(-1).score===0 &&
       views.at(-1).message.includes('NO SHOOT'),
       'Stage 3 restart resets violation and random target progress');
+step(690);
+check(views.at(-1).score===-120 &&
+      findClass(stage,'precision-sniper-hits').textContent.includes('見逃し 4') &&
+      views.at(-1).status==='playing',
+      'four untouched shootable Stage3 targets hide after their time limit and apply -30 each; NO SHOOT escapes for free');
+step(15);
+check(views.at(-1).score===-120,
+      'missed-target penalty is applied only once per expired appearance, not every frame');
+check(canvasLabels.some(x=>x.includes('発型・残り')) &&
+      canvasLabels.some(x=>x.includes('s')),
+      'on-screen Stage3 targets label durability remaining and countdown time');
 check(source.includes('var contact=targetContact(landed,targets,arrivalTime,activeDifficulty)') &&
       source.includes('marks.push({x:landed.x,y:landed.y') &&
       source.includes("var kind=contact?'target':landed.y>=462?'ground':'none'"),
