@@ -161,6 +161,12 @@
             time>=target.appearAt+target.spawnedCycle*target.cycle+target.visibleFor &&
             target.expiredCycle!==target.spawnedCycle;
     }
+    function recordStage3Hit(target) {
+        if(target.noShoot || target.destroyed)return false;
+        target.damage=Math.min(target.requiredHits,target.damage+1);
+        target.destroyed=target.damage>=target.requiredHits;
+        return target.destroyed;
+    }
     function positionSeed(seed, cycle, axis) {
         // Stable on each frame, independent for every reappearance and target.
         var value=Math.sin((seed||0)*.09317+cycle*17.371+axis*41.173)*43758.5453;
@@ -898,8 +904,7 @@
             var awarded=0;
             if(firstHit){
                 if(randomRound){
-                    item.damage++;
-                    destroyedTarget=item.damage>=item.requiredHits;
+                    destroyedTarget=recordStage3Hit(item);
                     if(destroyedTarget){
                         awarded=contact.score+(item.requiredHits===2?30:0);
                         points+=awarded;cleared.push(selected);
@@ -1098,6 +1103,7 @@
         difficultyProfile:difficultyProfile,
         targetAt:targetAt,targetActive:targetActive,randomStage:randomStage,
         freshStage3Position:freshStage3Position,stage3Missed:stage3Missed,
+        recordStage3Hit:recordStage3Hit,
         targetContact:targetContact,windAt:windAt,ballisticOffset:ballisticOffset,
         shotSolution:shotSolution,flightTime:flightTime,flightShot:flightShot,
         projectileProgress:projectileProgress,projectilePosition:projectilePosition,
