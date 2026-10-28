@@ -132,7 +132,7 @@ check('targetContact(landed,targets,arrivalTime,activeDifficulty)' in game and
       'arrival-time hit positions and integrated crosswind are physically consistent')
 check('pendingShots=[];fadingTrails=[];stop();' in game and 'pendingShots = [];' in game,
       'completed or failed rounds discard all outstanding projectiles and tracers')
-check('impact = null; violations = 0; pendingShots = [];' in game
+check('impact = null; violations = 0; missed = 0; pendingShots = [];' in game
       and 'destroyed = true; stop(); soundOn = false; pendingShots = [];' in game,
       'stage change, Restart and Destroy clear all in-flight projectiles')
 check('flightShot:flightShot' in game and 'flightTime:flightTime' in game,
