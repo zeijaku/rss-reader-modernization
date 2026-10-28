@@ -718,16 +718,17 @@
                     target.kind==='animal'?'NO SHOOT / 動物':
                     target.kind==='hostile'?'人物型 '+(index+1):
                     (target.amplitude?'M':'T')+(index+1);
-                if(target.kind && !target.noShoot){
-                    var remaining=target.requiredHits-target.damage;
-                    title+=' ['+target.requiredHits+'発型 残'+remaining+']';
-                }
+                ctx.fillText(title+' '+position.distance+'m',0,-displayedRadius-16);
                 if(target.kind){
+                    // Keep the damage/time label on a separate short line.
+                    // Otherwise long labels collide even when target shapes do not.
                     var timeLeft=Math.max(0,target.visibleFor-
                         ((elapsed-target.appearAt)%target.cycle));
-                    title+=' '+timeLeft.toFixed(1)+'s';
+                    var durability=target.noShoot?'安全標的':
+                        target.requiredHits+'発型・残り'+(target.requiredHits-target.damage)+'発';
+                    ctx.font='bold 11px sans-serif';
+                    ctx.fillText(durability+' / '+timeLeft.toFixed(1)+'s',0,-displayedRadius-31);
                 }
-                ctx.fillText(title+' '+position.distance+'m',0,-displayedRadius-16);
                 if (cleared.indexOf(index)!==-1) {
                     ctx.strokeStyle=theme.targetBorder;ctx.globalAlpha=.65;ctx.lineWidth=2;
                     ctx.beginPath();ctx.arc(0,0,displayedRadius+7,0,Math.PI*2);ctx.stroke();
