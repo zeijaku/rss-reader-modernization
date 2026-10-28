@@ -1,4 +1,4 @@
-/* Precision Sniper Dev5.1.1: reticle-origin forward tracer with wind/drop deflection and perspective shrink. */
+/* Precision Sniper Dev6: four difficulty presets with Normal-identical physics and locked per-round settings. */
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
@@ -14,6 +14,17 @@
         {x: 1190, y: 265, radius: 37, distance: 390, amplitude: 107, rate: 0.78, offset: 1.1},
         {x: 1450, y: 395, radius: 37, distance: 490, amplitude: 67, rate: 1.15, offset: -0.8}
     ];
+    // Every multiplier is neutral in Normal. Bullet speed, gravity, magazine,
+    // collision geometry and Stage3 depth-plane sizes intentionally never vary.
+    var DIFFICULTIES = {
+        easy:{name:'Easy',wind:.60,motion:.70,sway:.65,visibility:1.35},
+        normal:{name:'Normal',wind:1,motion:1,sway:1,visibility:1},
+        hard:{name:'Hard',wind:1.45,motion:1.30,sway:1.35,visibility:.72},
+        nightmare:{name:'Nightmare',wind:1.90,motion:1.70,sway:1.65,visibility:.50}
+    };
+    function difficultyProfile(level) {
+        return DIFFICULTIES[level] || DIFFICULTIES.normal;
+    }
     var DEPTH_LAYERS = [
         {name:'far', label:'後景', top:237, bottom:275, radius:24, near:390, far:490},
         {name:'middle', label:'中景', top:301, bottom:329, radius:33, near:270, far:360},
@@ -40,7 +51,7 @@
         return first.right<=second.left || second.right<=first.left ||
             first.bottom<=second.top || second.bottom<=first.top;
     }
-    function randomStage(random) {
+    function randomStage(random, difficulty) {
         // Exactly two targets in each perspective plane. Continuous random XY
         // per plane; no hard-coded X slots. Conservative label/motion envelopes
         // prevent overlaid silhouettes even after their return to the scene.
@@ -59,6 +70,10 @@
             pos.appearAt=.5+rng()*1.9;
             pos.visibleFor=5.7+rng()*3.8;
             pos.cycle=10.5+rng()*4.4;
+            // Stage3 keeps its existing independent timing on Normal. Longer
+            // Easy / shorter Hard windows always remain shorter than a cycle.
+            pos.visibleFor=clamp(pos.visibleFor*difficultyProfile(difficulty).visibility,
+                1.8,pos.cycle-.25);
             return pos;
         }
         for(var layout=0;layout<14;layout++){
@@ -105,7 +120,7 @@
         var value=Math.sin((seed||0)*.09317+cycle*17.371+axis*41.173)*43758.5453;
         return value-Math.floor(value);
     }
-    function targetAt(target, time) {
+    function targetAt(target, time, difficulty) {
         var cycle=target.cycle&&time>=target.appearAt ?
             Math.max(0,Math.floor((time-target.appearAt)/target.cycle)) : 0;
         var isRandom=!!target.kind;
@@ -120,7 +135,7 @@
         }
         var depth=isRandom?depthAt(y):{radius:target.radius,distance:target.distance};
         return {x:target.x+spawnX+(target.amplitude||0)*
-                Math.sin(time*(target.rate||0)+(target.offset||0)),
+                Math.sin(time*difficultyProfile(difficulty).motion*(target.rate||0)+(target.offset||0)),
             y:y,radius:depth.radius,distance:depth.distance,kind:target.kind,layer:target.layer};
     }
     function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
@@ -156,31 +171,32 @@
         var sweetSpot=kind==='animal' ? Math.hypot(dx+3,dy-4) : Math.hypot(dx,dy);
         return sweetSpot<=10?100:sweetSpot<=22?75:45;
     }
-    function targetContact(point, stageTargets, time) {
+    function targetContact(point, stageTargets, time, difficulty) {
         // Every physical impact is detected, even after this target awarded points.
         for (var i = 0; i < stageTargets.length; i++) {
             if (!targetActive(stageTargets[i], time)) continue;
-            var position = targetAt(stageTargets[i], time);
+            var position = targetAt(stageTargets[i], time, difficulty);
             var score = scoreHit(point, position);
             if (score) return {index:i, score:score, zone:score === 100 ? '中心' : score === 75 ? '中間' : '外周',
                 offsetX:point.x - position.x, offsetY:point.y - position.y};
         }
         return null;
     }
-    function windAt(time, moving) {
+    function windAt(time, moving, difficulty) {
         // Gentle, deterministic gusts tied to game time; pause freezes the wind.
         return 1.55 * (moving ? 2.0 * Math.sin(time * .38 + .7) + .5 * Math.cos(time * .17)
-            : .45 + .75 * Math.sin(time * .35 + .8));
+            : .45 + .75 * Math.sin(time * .35 + .8)) * difficultyProfile(difficulty).wind;
     }
-    function windTravel(time, moving) {
+    function windTravel(time, moving, difficulty) {
         // Analytic integral of windAt, so leaves really move downwind and reverse
         // when the gust changes direction; speed follows the game's wind value.
         return moving ? 1.55 * (2/.38 * (Math.cos(.7)-Math.cos(time*.38+.7)) +
             .5/.17*Math.sin(time*.17)) :
-            1.55 * (.45*time + .75/.35*(Math.cos(.8)-Math.cos(time*.35+.8)));
+            1.55 * (.45*time + .75/.35*(Math.cos(.8)-Math.cos(time*.35+.8))) *
+            difficultyProfile(difficulty).wind;
     }
-    function windLeafAt(index, time, moving) {
-        var loop=WORLD_W+70, raw=index*107.7+34*windTravel(time,moving);
+    function windLeafAt(index, time, moving, difficulty) {
+        var loop=WORLD_W+70, raw=index*107.7+34*windTravel(time,moving,difficulty);
         return {x:((raw%loop)+loop)%loop-35,
             y:165+(index*43%276)+15*Math.sin(time*1.2+index*.63)};
     }
@@ -191,19 +207,19 @@
         var excess = range - 150;
         return {x: wind * 2.8 * Math.pow(range / 250, 1.5), y: .00018 * excess * excess};
     }
-    function shotSolution(point, stageTargets, time, moving) {
+    function shotSolution(point, stageTargets, time, moving, difficulty) {
         // Choose range by the nearest target to the actual aim point. This allows
         // the player to hold high/against the wind without switching the range.
         var nearest = 0, best = Infinity;
         for (var i = 0; i < stageTargets.length; i++) {
             if (!targetActive(stageTargets[i], time)) continue;
-            var pos = targetAt(stageTargets[i], time);
+            var pos = targetAt(stageTargets[i], time, difficulty);
             var squared = Math.pow(point.x - pos.x, 2) + Math.pow(point.y - pos.y, 2);
             if (squared < best) { best = squared; nearest = i; }
         }
-        var range = targetAt(stageTargets[nearest],time).distance ||
+        var range = targetAt(stageTargets[nearest],time,difficulty).distance ||
             stageTargets[nearest].distance || 150;
-        var wind = windAt(time, moving), shift = ballisticOffset(range, wind);
+        var wind = windAt(time, moving, difficulty), shift = ballisticOffset(range, wind);
         return {index:nearest, range:range, wind:wind, shift:shift,
             impact:{x:point.x + shift.x, y:point.y + shift.y}};
     }
@@ -211,12 +227,12 @@
         // Constant, game-oriented 800 m/s. A shot travels after recoil/sound.
         return clamp(distance,150,500)/800;
     }
-    function flightShot(aim, stageTargets, time, moving) {
-        var solution=shotSolution(aim,stageTargets,time,moving);
+    function flightShot(aim, stageTargets, time, moving, difficulty) {
+        var solution=shotSolution(aim,stageTargets,time,moving,difficulty);
         var flight=flightTime(solution.range);
         // Average wind over the travel interval, rather than sampling gusts only
         // at trigger pull. Coordinates are frozen at launch; the target is not.
-        var wind=(windTravel(time+flight,moving)-windTravel(time,moving))/flight;
+        var wind=(windTravel(time+flight,moving,difficulty)-windTravel(time,moving,difficulty))/flight;
         var shift=ballisticOffset(solution.range,wind);
         return {launchTime:time,dueAt:time+flight,flight:flight,range:solution.range,
             wind:wind,shift:shift,launchWorld:{x:aim.x,y:aim.y},
@@ -252,10 +268,11 @@
         }
         return points;
     }
-    function breathing(phase, held, stamina, unstable) {
+    function breathing(phase, held, stamina, unstable, difficulty) {
         // Center-seeking, bounded breathing cycles: both axes regularly pass through zero.
         // Separate slow periods keep the motion organic without sustained one-way drift.
-        var strength = (held && stamina > 0 ? 0.18 : 1) * (unstable ? 1.85 : 1);
+        var strength = (held && stamina > 0 ? 0.18 : 1) * (unstable ? 1.85 : 1) *
+            difficultyProfile(difficulty).sway;
         return {x: (Math.sin(phase * 1.55) * 4.8 + Math.sin(phase * 3.1) * 1.1) * strength,
             y: (Math.sin(phase * 1.23) * 4.5 + Math.sin(phase * 2.46) * 1.0) * strength};
     }
@@ -910,6 +927,7 @@
     }
     window.RssPrecisionSniperCore = {depthAt:depthAt,footprint:footprint,
         targetsSeparated:targetsSeparated,positionSeed:positionSeed,aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,
+        difficultyProfile:difficultyProfile,
         targetAt:targetAt,targetActive:targetActive,randomStage:randomStage,
         targetContact:targetContact,windAt:windAt,ballisticOffset:ballisticOffset,
         shotSolution:shotSolution,flightTime:flightTime,flightShot:flightShot,
