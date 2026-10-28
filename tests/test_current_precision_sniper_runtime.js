@@ -404,9 +404,8 @@ check(menuActive.prevented&&menuActive.stopped,
 const fullAmmoRight=send(canvas,'pointerdown',{button:2});
 check(fullAmmoRight.prevented && fullAmmoRight.stopped && !feedback.textContent.includes('リロード中'),
       'right-click is handled but full magazine reloading remains guarded');
-const wheelOut=send(zoom,'wheel',{deltaY:-120});
-check(!wheelOut.prevented && zoom.value==='3',
-      'wheel over zoom dropdown is not intercepted by Sniper Canvas');
+check(!handlers.some(e=>e.el===zoom && e.type==='wheel') && zoom.value==='3',
+      'wheel over zoom dropdown has no Sniper handler and keeps native scrolling');
 const ctrlWheel=send(canvas,'wheel',{deltaY:-120,ctrlKey:true});
 const metaWheel=send(canvas,'wheel',{deltaY:-120,metaKey:true});
 const shiftWheel=send(canvas,'wheel',{deltaY:-120,shiftKey:true});
