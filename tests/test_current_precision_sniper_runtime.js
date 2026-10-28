@@ -350,7 +350,7 @@ check(math.shotSolution(farCenter,[farTarget],0,true).impact.y === directFar.imp
       'ballistic prediction is deterministic, not randomly different at the instant of shooting');
 
 const views = [], stage = node('section');
-const widget = mount({stage, stateKey:null, on(el,type,handler) { handlers.push({el,type,handler}); }, update(view) {views.push(view);} });
+const widget = mount({stage, stateKey:null, on(el,type,handler,options) { handlers.push({el,type,handler,options}); }, update(view) {views.push(view);} });
 function find(el, tag) { if (el.tag === tag) return el; for (const c of el.children) {const found = find(c,tag);if (found) return found;} return null; }
 function findClass(el,cls) {if (el.className.split(' ').includes(cls)) return el;
  for (const c of el.children) {const found = findClass(c,cls);if(found)return found;} return null;}
@@ -385,8 +385,52 @@ check(canvasLabels.some(x => x.startsWith('WIND  ')),
 check(sound.textContent === '音 OFF' && sound['aria-pressed'] === 'false' && audioCreated === 0,
       'sound defaults to OFF and no AudioContext is created without a gesture');
 check(views.at(-1).status === 'ready' && frames.size === 0, 'ready state has no running frames');
+check(handlers.filter(e=>e.type==='wheel'||e.type==='contextmenu').length===2 &&
+      handlers.filter(e=>e.type==='wheel'||e.type==='contextmenu').every(e=>e.el===canvas) &&
+      handlers.find(e=>e.el===canvas&&e.type==='wheel').options.passive===false,
+      'wheel and contextmenu listeners attach only to Sniper canvas, with non-passive wheel handler');
+const idleWheel=send(canvas,'wheel',{deltaY:-120,deltaMode:0});
+const idleMenu=send(canvas,'contextmenu');
+const idleRight=send(canvas,'pointerdown',{button:2});
+check(!idleWheel.prevented && !idleMenu.prevented && !idleRight.prevented &&
+      zoom.value==='3' && frames.size===0,
+      'ready Sniper does not hijack wheel scrolling, browser right menu or reload');
 widget.restart();check(views.at(-1).status === 'playing' && frames.size === 1, 'Start schedules animation');
 check(canvas.focused === true, 'Start focuses scoped aiming surface');
+// Only actively playing Sniper can capture right-click or unmodified wheel.
+const menuActive=send(canvas,'contextmenu');
+check(menuActive.prevented&&menuActive.stopped,
+      'browser context menu suppressed only over active Sniper canvas');
+const fullAmmoRight=send(canvas,'pointerdown',{button:2});
+check(fullAmmoRight.prevented && fullAmmoRight.stopped && !feedback.textContent.includes('リロード中'),
+      'right-click is handled but full magazine reloading remains guarded');
+const wheelOut=send(zoom,'wheel',{deltaY:-120});
+check(!wheelOut.prevented && zoom.value==='3',
+      'wheel over zoom dropdown is not intercepted by Sniper Canvas');
+const ctrlWheel=send(canvas,'wheel',{deltaY:-120,ctrlKey:true});
+const metaWheel=send(canvas,'wheel',{deltaY:-120,metaKey:true});
+const shiftWheel=send(canvas,'wheel',{deltaY:-120,shiftKey:true});
+const altWheel=send(canvas,'wheel',{deltaY:-120,altKey:true});
+check([ctrlWheel,metaWheel,shiftWheel,altWheel].every(e=>!e.prevented) &&
+      zoom.value==='3','modified wheel gestures remain browser-owned, without changing scope');
+const tiny1=send(canvas,'wheel',{deltaY:-15,deltaMode:0});
+const tiny2=send(canvas,'wheel',{deltaY:-25,deltaMode:0});
+check(tiny1.prevented && tiny1.stopped && tiny2.prevented &&
+      zoom.value==='4','trackpad wheel pixels accumulate to one controlled zoom-in step');
+const maxWheel=send(canvas,'wheel',{deltaY:-120,deltaMode:0});
+check(maxWheel.prevented && zoom.value==='4',
+      'zoom stops at 4x without allowing page jump while actively scrolling Sniper');
+const oneDown=send(canvas,'wheel',{deltaY:3,deltaMode:1});
+const twoDown=send(canvas,'wheel',{deltaY:100,deltaMode:0});
+check(oneDown.prevented && zoom.value==='2' && twoDown.prevented,
+      'line and pixel wheel modes each step scope back toward 2x, with no skip');
+const minWheel=send(canvas,'wheel',{deltaY:1,deltaMode:2});
+check(minWheel.prevented && zoom.value==='2',
+      'scope cannot zoom below 2x and active wheel remains canvas-owned');
+const zeroWheel=send(canvas,'wheel',{deltaY:0});
+const invalidWheel=send(canvas,'wheel',{deltaY:NaN});
+check(!zeroWheel.prevented && !invalidWheel.prevented &&
+      zoom.value==='2','zero and nonfinite wheel deltas do not suppress page scroll');
 const space = send(canvas,'keydown',{key:' '});
 check(space.prevented && space.stopped, 'focused Space does not scroll or escape widget');
 step(100);
@@ -446,6 +490,12 @@ check(sound['aria-pressed']==='false'&&muffledShots===1,
       'sound OFF immediately silences subsequent trigger pulls');
 const score = views.at(-1).score;
 widget.togglePause();check(views.at(-1).paused && frames.size === 0, 'Pause cancels the animation loop');
+const pausedWheel=send(canvas,'wheel',{deltaY:-100});
+const pausedMenu=send(canvas,'contextmenu');
+const pausedRight=send(canvas,'pointerdown',{button:2});
+check(!pausedWheel.prevented && !pausedMenu.prevented && !pausedRight.prevented &&
+      zoom.value==='4' && !feedback.textContent.includes('リロード中'),
+      'paused Sniper leaves wheel and browser right-click menu alone');
 const frozenWind=telemetry.textContent,scoreWhilePaused=views.at(-1).score;
 const pausedPaints=tracerDots;
 widget.resize();
@@ -471,7 +521,24 @@ step(60);check(views.at(-1).status === 'playing', 'reload timing preserves playi
 const afterReload=canvasLabels.length;widget.resize();
 check(!canvasLabels.slice(afterReload).some(t=>t.startsWith('RELOAD ')),
       'completed reload removes its scope progress ring');
+send(canvas,'pointerdown',{button:0});
+const ammoBeforeRight=findClass(stage,'precision-sniper-ammo').textContent;
+const realRight=send(canvas,'pointerdown',{button:2});
+const reloadByRight=findClass(stage,'precision-sniper-ammo').textContent;
+const rightMenu=send(canvas,'contextmenu');
+check(realRight.prevented && realRight.stopped && rightMenu.prevented &&
+      ammoBeforeRight.includes('弾数 4 / 5') && reloadByRight.includes('装填中') &&
+      canvasLabels.some(t=>t==='RELOAD 0%'),
+      'right-click uses existing real reload path when magazine is not full');
+const repeatRight=send(canvas,'pointerdown',{button:2});
+check(repeatRight.prevented && findClass(stage,'precision-sniper-ammo').textContent===reloadByRight,
+      'second right-click during reload does not restart the reload timer');
 widget.setSuspended(true);check(frames.size === 0 && views.at(-1).paused, 'page/modal suspension stops frame work');
+const suspendedWheel=send(canvas,'wheel',{deltaY:-100});
+const suspendedMenu=send(canvas,'contextmenu');
+const suspendedRight=send(canvas,'pointerdown',{button:2});
+check(!suspendedWheel.prevented && !suspendedMenu.prevented && !suspendedRight.prevented,
+      'suspended/hidden Sniper gives page and browser normal mouse controls');
 widget.setSuspended(false);check(frames.size === 1, 'visibility restoration resumes gameplay');
 choice.value = '2'; send(choice,'change');
 check(views.at(-1).status === 'playing' && choice.value === '2',
@@ -570,7 +637,8 @@ difficulty.value='normal';send(difficulty,'change');widget.restart();
 check(activeReadout.textContent.includes('[Normal]') &&
       views.at(-1).status==='playing' && frames.size===1,
       'returning to Normal reuses unchanged stage physics and exactly one animation loop');
-check(handlers.every(e=>e.type !== 'keydown' || e.el === canvas), 'no global keyboard capture');
+check(handlers.every(e=>!['keydown','wheel','contextmenu','pointerdown'].includes(e.type) || e.el===canvas),
+      'mouse shortcuts and keyboard remain strictly canvas-scoped, never document or window-wide');
 widget.destroy();check(frames.size === 0 && disconnected, 'Destroy stops animation and detaches ResizeObserver');
 check(audioClosed === 1,'Destroy closes opt-in AudioContext and releases audio resources');
 check(!/fetch\s*\(|XMLHttpRequest|innerHTML|https?:\/\//.test(source), 'no network, unsafe HTML or external assets');
