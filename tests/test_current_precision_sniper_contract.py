@@ -43,7 +43,7 @@ check('clientX - rect.left' in game and 'canvas.width / W' in game,
 check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed,targets,arrivalTime,activeDifficulty)' in game
       and 'scoreHit(point, position)' in game,
       'the sway shown in the zoomed lens is used for repeated physical collision')
-check('1.50.0-dev.11' in src('app/version.php'), 'visible and asset versions mark Dev6 difficulty preview only')
+check('1.50.0-dev.12' in src('app/version.php'), 'visible and asset versions mark Dev6.1 mouse controls preview only')
 check('MOVING_TARGETS' in game and 'targetAt(target, elapsed, activeDifficulty)' in game,
       'second range animates targets and hit tests use displayed center')
 check('mark.targetIndex >= 0' in game and 'impact.targetIndex >= 0' in game,
@@ -197,6 +197,31 @@ check('windLeafAt(i,elapsed,targets!==FIXED_TARGETS,activeDifficulty)' in game a
 check('var range = targetAt(stageTargets[nearest],time,difficulty).distance' in game and
       'function flightTime(distance)' in game and '/800' in game,
       'all difficulties retain existing target distances and 800 m/s bullet flight')
+check("context.on(canvas, 'pointerdown'" in game
+      and "if(event.button===2)" in game
+      and 'startReload(); // Exactly the same guard as R / Z.' in game
+      and "if(event.button!==0)return;" in game,
+      'right-click reload is canvas-scoped and reuses the original guarded R/Z reload routine')
+check("context.on(canvas, 'contextmenu'" in game
+      and "if(!active())return;" in game
+      and 'event.preventDefault();event.stopPropagation();' in game,
+      'native browser right menu is suppressed only during active scoped gameplay')
+check("context.on(canvas, 'wheel'" in game and
+      '}, {passive:false});' in game and
+      'event.ctrlKey || event.metaKey || event.altKey || event.shiftKey' in game,
+      'canvas wheel listener is explicitly nonpassive and leaves browser shortcuts intact')
+check("var next=clamp(Number(zoomSelect.value)+(wheelDelta<0?1:-1),2,4);" in game
+      and 'zoomSelect.value=String(next);' in game
+      and 'Math.abs(wheelDelta)<40' in game,
+      'wheel magnification changes one step at a time within existing 2x/3x/4x control')
+check("wheelDelta=0;" in game
+      and "context.on(canvas, 'pointerleave'" in game
+      and "if(!active() || event.ctrlKey" in game,
+      'new controls do not register on window/document or hijack inactive page scrolling')
+check('function on(record, target, type, callback, options)' in common
+      and 'target.addEventListener(type, callback, options);' in common
+      and 'target.removeEventListener(type, callback, options);' in common,
+      'existing Game Widget listener manager cleans up canvas mouse events with matching passive options')
 check("source.connect(" not in game and "filter.type='lowpass'" in game
       and "soundOn = false" in game, 'sound remains local, low-pass filtered and OFF initially')
 check(all(s not in game for s in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'https://']),
