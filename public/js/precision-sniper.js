@@ -190,9 +190,11 @@
     function windTravel(time, moving, difficulty) {
         // Analytic integral of windAt, so leaves really move downwind and reverse
         // when the gust changes direction; speed follows the game's wind value.
-        return moving ? 1.55 * (2/.38 * (Math.cos(.7)-Math.cos(time*.38+.7)) +
+        // Parenthesize the whole conditional: the selected difficulty must scale
+        // BOTH fixed and moving stage wind integrals, not only the latter arm.
+        return 1.55 * (moving ? (2/.38 * (Math.cos(.7)-Math.cos(time*.38+.7)) +
             .5/.17*Math.sin(time*.17)) :
-            1.55 * (.45*time + .75/.35*(Math.cos(.8)-Math.cos(time*.35+.8))) *
+            (.45*time + .75/.35*(Math.cos(.8)-Math.cos(time*.35+.8)))) *
             difficultyProfile(difficulty).wind;
     }
     function windLeafAt(index, time, moving, difficulty) {
