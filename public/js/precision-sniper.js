@@ -294,6 +294,16 @@
         stageSelect.value = '1';
         stageSelect.setAttribute('aria-label','スナイパーステージ');
         stageLabel.appendChild(stageSelect);
+        var difficultyLabel = element('label', 'precision-sniper-difficulty-label', '難易度 ');
+        var difficultySelect = element('select', 'form-select form-select-sm precision-sniper-difficulty');
+        [['easy','Easy'],['normal','Normal'],['hard','Hard'],['nightmare','Nightmare']]
+            .forEach(function(option){
+                var node=element('option','',option[1]);node.value=option[0];
+                difficultySelect.appendChild(node);
+            });
+        difficultySelect.value='normal';
+        difficultySelect.setAttribute('aria-label','スナイパー難易度');
+        difficultyLabel.appendChild(difficultySelect);
         var soundButton = element('button','btn btn-sm btn-outline-secondary precision-sniper-sound','音 OFF');
         soundButton.type = 'button';
         soundButton.setAttribute('aria-pressed','false');
@@ -316,14 +326,14 @@
         zoomSelect.value = '3';
         zoomSelect.setAttribute('aria-label', 'スコープ倍率');
         zoomLabel.appendChild(zoomSelect);
-        toolbar.append(stageLabel, ammunition, hits, breathLabel, zoomLabel, soundButton, telemetry);
+        toolbar.append(stageLabel, difficultyLabel, ammunition, hits, breathLabel, zoomLabel, soundButton, telemetry);
         var frame = element('div', 'precision-sniper-frame');
         var canvas = element('canvas', 'precision-sniper-canvas');
         canvas.tabIndex = 0;
         canvas.setAttribute('role', 'application');
         canvas.setAttribute('aria-label', 'Precision Sniper 訓練場。マウスで狙い左クリックで射撃。Spaceで息止め、RまたはZでリロード。');
         frame.appendChild(canvas);
-        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定、2は移動、3は前景・中景・後景の3層（大・中・小）で円形・人物型と「NO SHOOT / 市民・動物」を識別するランダム訓練です（誤射3回で失敗）。発砲後は距離に応じて約0.19〜0.61秒で着弾し、その瞬間に動いた標的へ命中します。移動方向の先を狙ってください。風向旗・草・葉っぱで横風を読み、遠方は上・風上へ補正します。リロード中はスコープ外周が一周します。ステージ変更は次のStart / Restart。クリックで射撃、Spaceで息止め、R / Zで装填。');
+        var help = element('p', 'game-widget-help text-muted', 'ステージ1は固定、2は移動、3は前景・中景・後景の3層（大・中・小）で円形・人物型と「NO SHOOT / 市民・動物」を識別するランダム訓練です（誤射3回で失敗）。発砲後は距離に応じて約0.19〜0.61秒で着弾し、その瞬間に動いた標的へ命中します。移動方向の先を狙ってください。風向旗・草・葉っぱで横風を読み、遠方は上・風上へ補正します。リロード中はスコープ外周が一周します。難易度はEasy／Normal／Hard／Nightmareから選択できます。Normalは従来の挙動で、難易度変更は次のStart / Restartから反映します。クリックで射撃、Spaceで息止め、R / Zで装填。');
         var details = element('p', 'precision-sniper-feedback', 'STARTを押して訓練開始。');
         details.setAttribute('role', 'status');
         root.append(toolbar, frame, details, help);
@@ -357,7 +367,8 @@
         var sway = {x: 0, y: 0}, phaseTime = 0, elapsed = 0, magazine = 5, reloadLeft = 0, recoil = 0;
         var points = 0, shots = 0, impact = null, marks = [], cleared = [], violations = 0;
         var pendingShots = [], fadingTrails = [];
-        var targets = FIXED_TARGETS, soundOn = false, audioContext = null;
+        var targets = FIXED_TARGETS, activeDifficulty = 'normal';
+        var soundOn = false, audioContext = null;
         var frameId = 0, lastTime = 0;
         function soundStatus() {
             soundButton.textContent = '音 ' + (soundOn ? 'ON' : 'OFF');
@@ -407,8 +418,9 @@
             ammunition.textContent = reloadLeft > 0 ? '装填中 ' + reloadLeft.toFixed(1) + 's' : '弾数 ' + magazine + ' / 5';
             var required = targets.filter(function (target) { return !target.noShoot; }).length;
             hits.textContent = '標的 ' + cleared.length + ' / ' + required +
-                (stageSelect.value === '3' && targets !== FIXED_TARGETS && targets !== MOVING_TARGETS ? '  誤射 ' + violations + ' / 3' : '') +
-                (pendingShots.length ? '  飛翔中 ' + pendingShots.length : '');
+                (targets !== FIXED_TARGETS && targets !== MOVING_TARGETS ? '  誤射 ' + violations + ' / 3' : '') +
+                (pendingShots.length ? '  飛翔中 ' + pendingShots.length : '') +
+                '  [' + difficultyProfile(activeDifficulty).name + ']';
             // A newly selected stage is applied on the next Restart, never mid-shot.
             soundStatus();
             breathGauge.value = Math.round(stamina);
@@ -431,7 +443,7 @@
         function bulletMark(mark) {
             if (mark.kind === 'none') return; // Open sky has no surface to retain a hole.
             if (mark.targetIndex >= 0 && !targetActive(targets[mark.targetIndex], elapsed)) return;
-            var position = mark.targetIndex >= 0 ? targetAt(targets[mark.targetIndex], elapsed) : null;
+            var position = mark.targetIndex >= 0 ? targetAt(targets[mark.targetIndex], elapsed, activeDifficulty) : null;
             ctx.save();
             ctx.translate(position ? position.x + mark.offsetX : mark.x,
                 position ? position.y + mark.offsetY : mark.y);
@@ -520,7 +532,7 @@
         }
         function windGrass() {
             // Small grass tufts react to the SAME windAt() used for shot deviation.
-            var wind = windAt(elapsed, targets !== FIXED_TARGETS);
+            var wind = windAt(elapsed, targets !== FIXED_TARGETS, activeDifficulty);
             ctx.save(); ctx.strokeStyle = theme.muted; ctx.globalAlpha = .38;
             ctx.lineWidth = 1.5;
             for (var g = 125; g < WORLD_W; g += 115) {
@@ -535,10 +547,10 @@
         function windLeaves() {
             // Decorative leaves share exactly the wind used by the ballistic model.
             // No RAF/DOM objects are allocated: game time pauses all leaves and gusts.
-            var wind=windAt(elapsed,targets!==FIXED_TARGETS);
+            var wind=windAt(elapsed,targets!==FIXED_TARGETS,activeDifficulty);
             ctx.save();ctx.globalAlpha=.55;
             for(var i=0;i<28;i++) {
-                var position=windLeafAt(i,elapsed,targets!==FIXED_TARGETS);
+                var position=windLeafAt(i,elapsed,targets!==FIXED_TARGETS,activeDifficulty);
                 var x=position.x,y=position.y;
                 var lean=(wind>=0?1:-1)*(.6+Math.min(1.3,Math.abs(wind)*.28));
                 ctx.fillStyle=i%3===0?theme.targetAccent:theme.muted;
@@ -581,7 +593,7 @@
         }
         function windSock() {
             // Fixed HUD wind vane: pennant direction and extension follow wind.
-            var wind = windAt(elapsed, targets !== FIXED_TARGETS);
+            var wind = windAt(elapsed, targets !== FIXED_TARGETS, activeDifficulty);
             var direction = wind >= 0 ? 1 : -1, stretch = 19 + Math.min(29, Math.abs(wind) * 9);
             var x = 630, y = 26;
             ctx.save();
@@ -623,7 +635,7 @@
             windLeaves();
             targets.forEach(function (target, index) {
                 if (!targetActive(target, elapsed)) return;
-                var position = targetAt(target, elapsed);
+                var position = targetAt(target, elapsed, activeDifficulty);
                 ctx.save(); ctx.translate(position.x - target.x, position.y - target.y);
                 // Stage 3 is target-only: poles and bases made adjacent shapes
                 // visually overlap and falsely suggested stationary range props.
@@ -711,7 +723,7 @@
             ctx.save(); ctx.translate(-camera.x, -camera.y); landscape(); ctx.restore();
             var center = {x: pointer.x, y: pointer.y + recoil};
             var shot = aimWorld(camera, pointer, sway);
-            var solution = shotSolution(shot, targets, elapsed, targets !== FIXED_TARGETS);
+            var solution = shotSolution(shot, targets, elapsed, targets !== FIXED_TARGETS, activeDifficulty);
             var dx = Math.round(Math.abs(solution.shift.x)), dy = Math.round(solution.shift.y);
             telemetry.textContent = '距離 ' + solution.range + 'm / 風 ' +
                 (solution.wind >= 0 ? '→ ' : '← ') + Math.abs(solution.wind).toFixed(1) +
@@ -758,7 +770,7 @@
                 if (stamina === 0) { held = false; exhaustionLock = true; instability = 2.2; }
             } else stamina = Math.min(100, stamina + delta * 22);
             if (instability > 0) instability = Math.max(0, instability - delta);
-            sway = breathing(phaseTime, held && !exhaustionLock, stamina, instability > 0);
+            sway = breathing(phaseTime, held && !exhaustionLock, stamina, instability > 0, activeDifficulty);
             if (reloadLeft > 0) {
                 reloadLeft = Math.max(0, reloadLeft - delta);
                 if (!reloadLeft) { magazine = 5; update('装填完了'); }
@@ -785,7 +797,7 @@
             // Arrival-time collision makes lateral lead and vanishing Stage3 targets
             // meaningful. Each projectile scores only once, but leaves its own mark.
             var landed=projectile.impact;
-            var contact=targetContact(landed,targets,arrivalTime);
+            var contact=targetContact(landed,targets,arrivalTime,activeDifficulty);
             var selected=contact?contact.index:-1;
             var prohibited=!!contact&&!!targets[selected].noShoot;
             var firstHit=!!contact&&!prohibited&&cleared.indexOf(selected)===-1;
@@ -834,7 +846,7 @@
             if(!magazine){details.textContent='弾切れ。R / Zでリロード';return;}
             magazine--;shots++;recoil=8;muffledShot();
             var aim=aimWorld(camera,pointer,sway);
-            var projectile=flightShot(aim,targets,elapsed,targets!==FIXED_TARGETS);
+            var projectile=flightShot(aim,targets,elapsed,targets!==FIXED_TARGETS,activeDifficulty);
             pendingShots.push(projectile);
             // A later near-range shot may overtake an earlier long-range shot.
             // Keep arrivals sorted instead of delaying the faster projectile.
@@ -879,10 +891,19 @@
                 details.textContent = 'ステージ変更は次のRestartで反映します。';
                 return;
             }
-            targets = stageSelect.value === '3' ? randomStage() :
+            targets = stageSelect.value === '3' ? randomStage(null,difficultySelect.value) :
                 stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
             marks = []; cleared = []; impact = null; violations = 0; pendingShots = []; fadingTrails = [];
             update(); draw();
+        });
+        context.on(difficultySelect, 'change', function(){
+            if(phase==='playing'){
+                details.textContent='難易度 '+difficultyProfile(difficultySelect.value).name+
+                    ' は次のRestartで適用します（現在は'+difficultyProfile(activeDifficulty).name+'）。';
+            } else {
+                details.textContent='難易度 '+difficultyProfile(difficultySelect.value).name+
+                    ' を次のStart / Restartで適用します。';
+            }
         });
         context.on(soundButton, 'click', function () {
             if (soundOn) soundOn = false;
@@ -895,7 +916,9 @@
         resize(); update(); draw();
         return {
             restart: function () {
-                stop();targets = stageSelect.value === '3' ? randomStage() :
+                stop();
+                activeDifficulty=difficultySelect.value;
+                targets = stageSelect.value === '3' ? randomStage(null,activeDifficulty) :
                     stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
                 phase = 'playing';paused = false;elapsed = 0;phaseTime = 0;points = 0;shots = 0;violations = 0;
                 magazine = 5;reloadLeft = 0;stamina = 100;instability = 0;exhaustionLock = false;
