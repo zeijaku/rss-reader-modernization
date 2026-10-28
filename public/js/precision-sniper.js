@@ -1,4 +1,4 @@
-/* Precision Sniper Dev6.1: canvas-scoped right-click reload and guarded mouse wheel zoom. */
+/* Precision Sniper Dev6.2: fresh scatter on every Stage3 appearance, 1/2-hit targets and timeout misses. */
 (function (window, document) {
     'use strict';
     var W = 720, H = 405, WORLD_W = 1560, WORLD_H = 690, RADIUS = 86;
@@ -61,9 +61,14 @@
             var k=Math.floor(clamp(rng(),0,.999999)*(i+1));
             var swap=roles[i];roles[i]=roles[k];roles[k]=swap;
         }
+        var shootableCount=0;
         function decorate(pos,role){
             pos.kind=role;
             pos.noShoot=role==='civilian'||role==='animal';
+            // Exactly two fragile and two reinforced shootable targets in Stage3.
+            pos.requiredHits=pos.noShoot?0:((shootableCount++%2)+1);
+            pos.damage=0;pos.destroyed=false;
+            pos.spawnedCycle=-1;pos.expiredCycle=-1;
             pos.rate=.35+rng()*.8;
             pos.offset=rng()*Math.PI*2;
             pos.seed=rng()*100000;
@@ -111,9 +116,50 @@
         return backup;
     }
     function targetActive(target, time) {
+        if(target.destroyed)return false;
         if (target.appearAt === undefined) return true;
         if (time < target.appearAt) return false;
         return (time - target.appearAt) % target.cycle < target.visibleFor;
+    }
+    function freshStage3Position(target, stageTargets, index, time, random) {
+        // Re-sample across the ENTIRE horizontal range on *every* appearance.
+        // A recent location is deliberately excluded; otherwise random chance
+        // could repeatedly choose the same visible spot. Nearby visible shapes
+        // keep their non-overlapping label, movement and silhouette envelopes.
+        var rng=typeof random==='function'?random:Math.random;
+        var layer=DEPTH_LAYERS.filter(function(p){return p.name===target.layer;})[0];
+        var others=stageTargets.filter(function(other,i){
+            return i!==index && targetActive(other,time);
+        });
+        function fits(pos){
+            return Math.abs(pos.x-target.x)>=220 &&
+                others.every(function(other){return targetsSeparated(pos,other);});
+        }
+        for(var attempt=0;attempt<260;attempt++){
+            var x=Math.round(344+clamp(rng(),0,.999999)*1068);
+            var y=Math.round(layer.top+clamp(rng(),0,.999999)*(layer.bottom-layer.top));
+            var candidate={x:x,y:y,radius:layer.radius,amplitude:target.amplitude||0};
+            if(fits(candidate))return candidate;
+        }
+        // Degenerate random input still produces a safe, changing position.
+        // This fallback is for exhaustion only; ordinary play uses fresh RNG.
+        for(var k=0;k<180;k++){
+            var phase=(index*41+(target.spawnedCycle+2)*59+k*71)%181;
+            var fx=344+phase*1068/180;
+            var fy=layer.top+((index*13+k*29)%31)/30*(layer.bottom-layer.top);
+            var alternate={x:Math.round(fx),y:Math.round(fy),
+                radius:layer.radius,amplitude:target.amplitude||0};
+            if(fits(alternate))return alternate;
+        }
+        // Never overlap if no legal non-repeating placement exists; retain
+        // previous safe coordinates instead of placing a target atop another.
+        return {x:target.x,y:target.y};
+    }
+    function stage3Missed(target, time) {
+        return !target.noShoot && !target.destroyed && target.damage===0 &&
+            target.spawnedCycle>=0 &&
+            time>=target.appearAt+target.spawnedCycle*target.cycle+target.visibleFor &&
+            target.expiredCycle!==target.spawnedCycle;
     }
     function positionSeed(seed, cycle, axis) {
         // Stable on each frame, independent for every reappearance and target.
@@ -371,7 +417,7 @@
         var phase = 'ready', paused = false, suspended = false, destroyed = false;
         var held = false, stamina = 100, instability = 0, exhaustionLock = false;
         var sway = {x: 0, y: 0}, phaseTime = 0, elapsed = 0, magazine = 5, reloadLeft = 0, recoil = 0;
-        var points = 0, shots = 0, impact = null, marks = [], cleared = [], violations = 0;
+        var points = 0, shots = 0, impact = null, marks = [], cleared = [], violations = 0, missed = 0;
         var pendingShots = [], fadingTrails = [];
         var targets = FIXED_TARGETS, activeDifficulty = 'normal';
         var soundOn = false, audioContext = null;
@@ -424,7 +470,8 @@
             ammunition.textContent = reloadLeft > 0 ? '装填中 ' + reloadLeft.toFixed(1) + 's' : '弾数 ' + magazine + ' / 5';
             var required = targets.filter(function (target) { return !target.noShoot; }).length;
             hits.textContent = '標的 ' + cleared.length + ' / ' + required +
-                (targets !== FIXED_TARGETS && targets !== MOVING_TARGETS ? '  誤射 ' + violations + ' / 3' : '') +
+                (targets !== FIXED_TARGETS && targets !== MOVING_TARGETS ?
+                    '  誤射 ' + violations + ' / 3  見逃し ' + missed + ' (-30点/回)' : '') +
                 (pendingShots.length ? '  飛翔中 ' + pendingShots.length : '') +
                 '  [' + difficultyProfile(activeDifficulty).name + ']';
             // A newly selected stage is applied on the next Restart, never mid-shot.
@@ -439,7 +486,7 @@
                     : phase === 'ready' ? 'Startで訓練開始。'
                     : paused || suspended ? '一時停止中'
                     : targets !== FIXED_TARGETS && targets !== MOVING_TARGETS
-                        ? 'ランダム標的4枚を命中。NO SHOOTは撃たないでください。'
+                        ? '1発型・2発型の標的4枚を撃破。見逃し-30点、NO SHOOTは撃たないでください。'
                         : targets === MOVING_TARGETS ? '移動標的を含む4枚を狙ってください。' : '固定標的を4枚命中させてください。'});
         }
         function circle(x, y, r, color) {
@@ -448,7 +495,8 @@
         }
         function bulletMark(mark) {
             if (mark.kind === 'none') return; // Open sky has no surface to retain a hole.
-            if (mark.targetIndex >= 0 && !targetActive(targets[mark.targetIndex], elapsed)) return;
+            if (mark.targetIndex >= 0 && (!targetActive(targets[mark.targetIndex], elapsed) ||
+                targets[mark.targetIndex].spawnedCycle!==mark.spawnedCycle)) return;
             var position = mark.targetIndex >= 0 ? targetAt(targets[mark.targetIndex], elapsed, activeDifficulty) : null;
             ctx.save();
             ctx.translate(position ? position.x + mark.offsetX : mark.x,
@@ -484,11 +532,12 @@
         }
         function impactFlash() {
             if (!impact || impact.kind === 'none') return;
-            if (impact.targetIndex >= 0 && !targetActive(targets[impact.targetIndex], elapsed)) return;
+            if (impact.targetIndex >= 0 && (!targetActive(targets[impact.targetIndex], elapsed) ||
+                targets[impact.targetIndex].spawnedCycle!==impact.spawnedCycle)) return;
             var age = elapsed - impact.time;
             if (age < 0 || age > .35) return;
             ctx.save(); ctx.globalAlpha = Math.max(0, 1 - age / .35) * .75;
-            var moving = impact.targetIndex >= 0 ? targetAt(targets[impact.targetIndex], elapsed) : null;
+            var moving = impact.targetIndex >= 0 ? targetAt(targets[impact.targetIndex], elapsed, activeDifficulty) : null;
             var x = moving ? moving.x + impact.offsetX : impact.point.x;
             var y = moving ? moving.y + impact.offsetY : impact.point.y;
             var spread = 8 + age * 32;
@@ -669,6 +718,15 @@
                     target.kind==='animal'?'NO SHOOT / 動物':
                     target.kind==='hostile'?'人物型 '+(index+1):
                     (target.amplitude?'M':'T')+(index+1);
+                if(target.kind && !target.noShoot){
+                    var remaining=target.requiredHits-target.damage;
+                    title+=' ['+target.requiredHits+'発型 残'+remaining+']';
+                }
+                if(target.kind){
+                    var timeLeft=Math.max(0,target.visibleFor-
+                        ((elapsed-target.appearAt)%target.cycle));
+                    title+=' '+timeLeft.toFixed(1)+'s';
+                }
                 ctx.fillText(title+' '+position.distance+'m',0,-displayedRadius-16);
                 if (cleared.indexOf(index)!==-1) {
                     ctx.strokeStyle=theme.targetBorder;ctx.globalAlpha=.65;ctx.lineWidth=2;
@@ -763,6 +821,30 @@
         }
         function stop() { if (frameId) window.cancelAnimationFrame(frameId); frameId = 0; lastTime = 0; held = false; }
         function schedule() { if (active() && !frameId) frameId = window.requestAnimationFrame(tick); }
+        function updateStage3(time) {
+            if(targets===FIXED_TARGETS || targets===MOVING_TARGETS)return;
+            // Expire first, then spawn. The caller invokes this before every
+            // projectile arrival, ensuring timeouts and collisions share time.
+            targets.forEach(function(target,index){
+                if(target.spawnedCycle<0 || target.expiredCycle===target.spawnedCycle)return;
+                var end=target.appearAt+target.spawnedCycle*target.cycle+target.visibleFor;
+                if(time<end)return;
+                if(stage3Missed(target,time)){
+                    points-=30;missed++;
+                    details.textContent='標的'+(index+1)+'を撃てずに見逃し -30点（合計'+missed+'回）';
+                }
+                target.expiredCycle=target.spawnedCycle;
+            });
+            targets.forEach(function(target,index){
+                if(target.destroyed || time<target.appearAt)return;
+                var cycle=Math.floor((time-target.appearAt)/target.cycle);
+                if(target.spawnedCycle===cycle || !targetActive(target,time))return;
+                var position=freshStage3Position(target,targets,index,time);
+                target.x=position.x;target.y=position.y;
+                target.distance=depthAt(position.y).distance;
+                target.spawnedCycle=cycle;
+            });
+        }
         function tick(timestamp) {
             frameId = 0;
             if (!active()) return;
@@ -789,10 +871,12 @@
             // Shot order is preserved. Game-clock time freezes on pause/suspend.
             while(active() && pendingShots.length && pendingShots[0].dueAt<=elapsed+1e-8){
                 var projectile=pendingShots.shift();
+                updateStage3(projectile.dueAt);
                 fadingTrails.push({shot:projectile,at:projectile.dueAt});
                 if(fadingTrails.length>6)fadingTrails.shift();
                 resolveImpact(projectile,projectile.dueAt);
             }
+            updateStage3(elapsed);
             update(); draw(); schedule();
         }
         function startReload() {
@@ -806,22 +890,41 @@
             var contact=targetContact(landed,targets,arrivalTime,activeDifficulty);
             var selected=contact?contact.index:-1;
             var prohibited=!!contact&&!!targets[selected].noShoot;
+            var item=contact?targets[selected]:null;
+            var randomRound=targets!==FIXED_TARGETS && targets!==MOVING_TARGETS;
+            var destroyedTarget=false;
             var firstHit=!!contact&&!prohibited&&cleared.indexOf(selected)===-1;
-            var awarded=firstHit?contact.score:0;
-            if(firstHit){points+=awarded;cleared.push(selected);}
+            var awarded=0;
+            if(firstHit){
+                if(randomRound){
+                    item.damage++;
+                    destroyedTarget=item.damage>=item.requiredHits;
+                    if(destroyedTarget){
+                        awarded=contact.score+(item.requiredHits===2?30:0);
+                        points+=awarded;cleared.push(selected);
+                        item.destroyed=true;
+                    }
+                }else{
+                    awarded=contact.score;points+=awarded;cleared.push(selected);
+                    destroyedTarget=true;
+                }
+            }
             if(prohibited){violations++;points=Math.max(0,points-75);}
             var kind=contact?'target':landed.y>=462?'ground':'none';
             var offsetX=contact?contact.offsetX:0,offsetY=contact?contact.offsetY:0;
             if(kind!=='none'){
                 marks.push({x:landed.x,y:landed.y,kind:kind,targetIndex:selected,
-                    offsetX:offsetX,offsetY:offsetY});
+                    offsetX:offsetX,offsetY:offsetY,
+                    spawnedCycle:item?item.spawnedCycle:-1});
                 if(marks.length>36)marks.shift();
             }
             impact={time:elapsed,score:awarded,hit:!!contact&&!prohibited,
                 point:landed,kind:kind,targetIndex:selected,
+                spawnedCycle:item?item.spawnedCycle:-1,
                 offsetX:offsetX,offsetY:offsetY,label:prohibited?'NO SHOOT  -75'
                     :contact?'T'+(selected+1)+' '+contact.zone+
-                        (firstHit?' +'+awarded:' 再命中'):'MISS'};
+                        (firstHit?(destroyedTarget?' 撃破 +'+awarded:
+                            ' 命中 '+item.damage+'/'+item.requiredHits):' 再命中'):'MISS'};
             if(prohibited&&violations>=3){phase='lost';pendingShots=[];fadingTrails=[];stop();}
             else if(cleared.length===targets.filter(function(t){return !t.noShoot;}).length){
                 phase='won';pendingShots=[];fadingTrails=[];stop();
@@ -834,7 +937,9 @@
                 var dx=Math.round(offsetX),dy=Math.round(offsetY);
                 details.textContent='標的'+(selected+1)+'・'+contact.zone+
                     '（中心から横 '+(dx>0?'+':'')+dx+' / 縦 '+(dy>0?'+':'')+dy+
-                    '）に命中。'+(firstHit?'+'+awarded+'点':'再命中・加点なし')+
+                    '）に命中。'+(firstHit?(destroyedTarget?'撃破 +'+awarded+'点':
+                        '耐久 '+item.damage+'/'+item.requiredHits+'、あと'+
+                        (item.requiredHits-item.damage)+'発で撃破'):'再命中・加点なし')+
                     '。飛翔 '+projectile.flight.toFixed(2)+'秒・距離'+projectile.range+
                     'm / 風による横ずれ '+Math.round(projectile.shift.x)+
                     'px、落下 '+Math.round(projectile.shift.y)+'px。';
@@ -931,7 +1036,7 @@
             }
             targets = stageSelect.value === '3' ? randomStage(null,difficultySelect.value) :
                 stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
-            marks = []; cleared = []; impact = null; violations = 0; pendingShots = []; fadingTrails = [];
+            marks = []; cleared = []; impact = null; violations = 0; missed = 0; pendingShots = []; fadingTrails = [];
             update(); draw();
         });
         context.on(difficultySelect, 'change', function(){
@@ -959,7 +1064,7 @@
                 activeDifficulty=difficultySelect.value;
                 targets = stageSelect.value === '3' ? randomStage(null,activeDifficulty) :
                     stageSelect.value === '2' ? MOVING_TARGETS : FIXED_TARGETS;
-                phase = 'playing';paused = false;elapsed = 0;phaseTime = 0;points = 0;shots = 0;violations = 0;
+                phase = 'playing';paused = false;elapsed = 0;phaseTime = 0;points = 0;shots = 0;violations = 0;missed = 0;
                 magazine = 5;reloadLeft = 0;stamina = 100;instability = 0;exhaustionLock = false;
                 sway = {x:0,y:0};recoil = 0;marks = [];cleared = [];impact = null;pendingShots = [];fadingTrails = [];
                 camera = {x:230,y:targets === FIXED_TARGETS || targets === MOVING_TARGETS ? 130 : 95};
@@ -991,6 +1096,7 @@
         targetsSeparated:targetsSeparated,positionSeed:positionSeed,aimWorld:aimWorld,scoreHit:scoreHit,breathing:breathing,
         difficultyProfile:difficultyProfile,
         targetAt:targetAt,targetActive:targetActive,randomStage:randomStage,
+        freshStage3Position:freshStage3Position,stage3Missed:stage3Missed,
         targetContact:targetContact,windAt:windAt,ballisticOffset:ballisticOffset,
         shotSolution:shotSolution,flightTime:flightTime,flightShot:flightShot,
         projectileProgress:projectileProgress,projectilePosition:projectilePosition,
