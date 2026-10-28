@@ -135,6 +135,69 @@ check(different.some((t,i) => t.x !== randomTargets[i].x ||
 const seeded = (seed) => {
  let state=seed>>>0;return ()=>{state=(1664525*state+1013904223)>>>0;return state/4294967296;};
 };
+// Dev6 must preserve exact old behavior on Normal; all alternate levels share
+// the same randomness, target roles, distances, three-size geometry and safety.
+const levels=['easy','normal','hard','nightmare'];
+const preset=Object.fromEntries(levels.map(key=>[key,math.difficultyProfile(key)]));
+check(levels.every(k=>preset[k].name.toLowerCase()===k) &&
+      ['wind','motion','sway'].every(k=>preset.easy[k]<preset.normal[k] &&
+        preset.normal[k]<preset.hard[k] && preset.hard[k]<preset.nightmare[k]) &&
+      preset.easy.visibility>preset.normal.visibility &&
+      preset.hard.visibility>preset.nightmare.visibility,
+      'difficulty profiles scale wind, target movement, sway and visibility in predictable order');
+check(math.difficultyProfile('invalid').name==='Normal' &&
+      ['wind','motion','sway','visibility'].every(k=>preset.normal[k]===1),
+      'Normal is default fallback with exact neutral multipliers');
+const neutralA=math.randomStage(seeded(23));
+const neutralB=math.randomStage(seeded(23),'normal');
+check(JSON.stringify(neutralA)===JSON.stringify(neutralB),
+      'identical seeded Normal layouts preserve all original positions, target roles and timers');
+const levelStages=Object.fromEntries(levels.map(k=>[k,math.randomStage(seeded(45),k)]));
+check(levels.every(k=>levelStages[k].length===6 &&
+      levelStages[k].every((t,i)=>levelStages.normal[i].kind===t.kind &&
+        t.x===levelStages.normal[i].x && t.y===levelStages.normal[i].y &&
+        t.layer===levelStages.normal[i].layer && t.radius===levelStages.normal[i].radius &&
+        t.distance===levelStages.normal[i].distance &&
+        t.cycle===levelStages.normal[i].cycle &&
+        t.visibleFor<t.cycle && t.visibleFor>=1.8 &&
+        levelStages[k].every((u,j)=>j===i||math.targetsSeparated(t,u)))),
+      'four levels preserve six safe Stage3 targets and the original three depth layers');
+check(levelStages.easy.every((t,i)=>t.visibleFor>=levelStages.normal[i].visibleFor) &&
+      levelStages.hard.every((t,i)=>t.visibleFor<levelStages.normal[i].visibleFor) &&
+      levelStages.nightmare.every((t,i)=>t.visibleFor<levelStages.hard[i].visibleFor),
+      'Stage3 subjects stay longer on Easy and disappear progressively faster on Hard/Nightmare');
+check([0,.1,2,7,15].every(t=>
+      math.windAt(t,true,'normal')===math.windAt(t,true) &&
+      math.windTravel(t,false,'normal')===math.windTravel(t,false)) &&
+      math.windAt(3,true,'nightmare')===
+        math.windAt(3,true)*preset.nightmare.wind,
+      'Normal gusts and wind integrals are unchanged, Nightmare increases actual crosswind');
+check(Math.abs(math.windAt(3,false,'easy'))<
+      Math.abs(math.windAt(3,false,'normal')) &&
+      Math.abs(math.windAt(3,false,'normal'))<
+      Math.abs(math.windAt(3,false,'hard')),
+      'stationary Stage1 also responds to selected wind difficulty');
+const motionTarget={x:810,y:365,radius:37,distance:280,rate:.95,amplitude:82,offset:0};
+check(levels.every(k=>Math.abs(math.targetAt(motionTarget,2,k).x-
+      (810+82*Math.sin(2*preset[k].motion*.95)))<1e-8) &&
+      math.targetAt(motionTarget,2,'normal').x===math.targetAt(motionTarget,2).x,
+      'Stage2 movement speed changes by difficulty while Normal matches the old target path');
+check(levels.every(k=>
+      Math.abs(math.breathing(2,false,100,false,k).x-
+        math.breathing(2,false,100,false).x*preset[k].sway)<1e-8),
+      'breathing scale changes in each preset while Normal sway is exactly preserved');
+const speedTarget={x:435,y:270,radius:37,distance:490};
+const flightAcrossLevels=levels.map(k=>math.flightShot({x:435,y:270},[speedTarget],2,true,k));
+check(flightAcrossLevels.every(shot=>shot.flight===math.flightTime(490) &&
+      shot.dueAt===2+490/800 && shot.impact.y===flightAcrossLevels[0].impact.y) &&
+      Math.abs(flightAcrossLevels[0].shift.x)<Math.abs(flightAcrossLevels[3].shift.x),
+      'all difficulties use original 800m/s travel and bullet drop; only wind drift changes');
+for(const k of levels){
+ const a=math.flightShot({x:435,y:270},[speedTarget],2,true,k);
+ const visual=math.projectilePosition(a,a.dueAt);
+ check(visual.x===a.impact.x && visual.y===a.impact.y,
+      k+' projectile visualization remains exactly aligned with delayed impact');
+}
 const sampledLayouts=Array.from({length:128},(_,i)=>math.randomStage(seeded(i+1)));
 check(sampledLayouts.every(ts=>ts.length===6 &&
       ts.filter(t=>t.noShoot).length===2 &&
@@ -292,7 +355,8 @@ function find(el, tag) { if (el.tag === tag) return el; for (const c of el.child
 function findClass(el,cls) {if (el.className.split(' ').includes(cls)) return el;
  for (const c of el.children) {const found = findClass(c,cls);if(found)return found;} return null;}
 const canvas = find(stage,'canvas'), zoom = findClass(stage,'precision-sniper-zoom');
-const choice = findClass(stage,'precision-sniper-stage'), sound = findClass(stage,'precision-sniper-sound');
+const choice = findClass(stage,'precision-sniper-stage'), difficulty = findClass(stage,'precision-sniper-difficulty');
+const sound = findClass(stage,'precision-sniper-sound');
 const gauge = find(stage,'progress'), feedback = findClass(stage,'precision-sniper-feedback');
 const telemetry = findClass(stage,'precision-sniper-ballistics');
 function send(el,type,options={}) {
@@ -308,8 +372,12 @@ function step(n) {
   frames.delete(work[0]); now += 16; work[1](now);
  }
 }
-check(canvas !== null && zoom !== null && gauge !== null && choice !== null && sound !== null && telemetry !== null,
-      'scope, zoom, stage selection, sound control, trajectory telemetry and breath gauge mounted');
+check(canvas !== null && zoom !== null && gauge !== null && choice !== null &&
+      difficulty !== null && sound !== null && telemetry !== null,
+      'scope, zoom, stage, difficulty, sound, ballistics and breath gauge mounted');
+check(difficulty.value==='normal' && difficulty.children.length===4 &&
+      difficulty.children.map(n=>n.value).join(',')==='easy,normal,hard,nightmare',
+      'difficulty selector defaults Normal and has four independently selectable levels');
 check(telemetry.textContent.includes('距離') && telemetry.textContent.includes('風') &&
       telemetry.textContent.includes('着弾ずれ'), 'initial trajectory indicator clearly explains range, wind, and drop');
 check(canvasLabels.some(x => x.startsWith('WIND  ')),
@@ -465,10 +533,43 @@ widget.restart();
 check(views.at(-1).status==='playing' && views.at(-1).score===0 &&
       views.at(-1).message.includes('NO SHOOT'),
       'Stage 3 restart resets violation and random target progress');
-check(source.includes('var contact=targetContact(landed,targets,arrivalTime)') &&
+check(source.includes('var contact=targetContact(landed,targets,arrivalTime,activeDifficulty)') &&
       source.includes('marks.push({x:landed.x,y:landed.y') &&
       source.includes("var kind=contact?'target':landed.y>=462?'ground':'none'"),
       'all scoring, marks, misses and protected-shape checks use arrival-time impact');
+const activeReadout=findClass(stage,'precision-sniper-hits');
+check(activeReadout.textContent.includes('[Normal]'),
+      'existing Stage3 run remains on Normal until restarted');
+const normalWindAtRest=telemetry.textContent;
+difficulty.value='hard';send(difficulty,'change');widget.resize();
+check(activeReadout.textContent.includes('[Normal]') &&
+      feedback.textContent.includes('次のRestart') &&
+      telemetry.textContent===normalWindAtRest,
+      'changing difficulty during active gameplay does not change current wind or round physics');
+widget.restart();
+check(activeReadout.textContent.includes('[Hard]') &&
+      !activeReadout.textContent.includes('[Normal]'),
+      'Restart latches chosen Hard preset and updates the active difficulty indicator');
+const hardWindAtRest=telemetry.textContent;
+const windMeasure=text=>Number((text.match(/風\s*[→←]\s*([0-9.]+)/)||[])[1]);
+check(windMeasure(hardWindAtRest)>windMeasure(normalWindAtRest),
+      'Hard start displays stronger actual crosswind than the Normal start');
+difficulty.value='nightmare';send(difficulty,'change');widget.restart();
+check(activeReadout.textContent.includes('[Nightmare]') &&
+      windMeasure(telemetry.textContent)>windMeasure(hardWindAtRest),
+      'Nightmare increases displayed and physically active wind beyond Hard');
+difficulty.value='easy';send(difficulty,'change');widget.restart();
+check(activeReadout.textContent.includes('[Easy]') &&
+      windMeasure(telemetry.textContent)<windMeasure(normalWindAtRest),
+      'Easy reduces displayed wind relative to Normal on the same Stage3');
+choice.value='2';send(choice,'change');widget.restart();
+check(activeReadout.textContent.includes('[Easy]') &&
+      views.at(-1).message.includes('移動標的'),
+      'difficulty persists across Stage3 to Stage2 and applies at Restart');
+difficulty.value='normal';send(difficulty,'change');widget.restart();
+check(activeReadout.textContent.includes('[Normal]') &&
+      views.at(-1).status==='playing' && frames.size===1,
+      'returning to Normal reuses unchanged stage physics and exactly one animation loop');
 check(handlers.every(e=>e.type !== 'keydown' || e.el === canvas), 'no global keyboard capture');
 widget.destroy();check(frames.size === 0 && disconnected, 'Destroy stops animation and detaches ResizeObserver');
 check(audioClosed === 1,'Destroy closes opt-in AudioContext and releases audio resources');
