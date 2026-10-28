@@ -43,7 +43,7 @@ check('clientX - rect.left' in game and 'canvas.width / W' in game,
 check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed,targets,arrivalTime,activeDifficulty)' in game
       and 'scoreHit(point, position)' in game,
       'the sway shown in the zoomed lens is used for repeated physical collision')
-check('1.50.0-dev.12' in src('app/version.php'), 'visible and asset versions mark Dev6.1 mouse controls preview only')
+check('1.50.0-dev.13' in src('app/version.php'), 'visible and asset versions mark Dev6.2 scatter and durability preview only')
 check('MOVING_TARGETS' in game and 'targetAt(target, elapsed, activeDifficulty)' in game,
       'second range animates targets and hit tests use displayed center')
 check('mark.targetIndex >= 0' in game and 'impact.targetIndex >= 0' in game,
@@ -222,6 +222,29 @@ check('function on(record, target, type, callback, options)' in common
       and 'target.addEventListener(type, callback, options);' in common
       and 'target.removeEventListener(type, callback, options);' in common,
       'existing Game Widget listener manager cleans up canvas mouse events with matching passive options')
+check('function freshStage3Position(target, stageTargets, index, time, random)' in game
+      and 'Math.abs(pos.x-target.x)>=220' in game
+      and 'for(var attempt=0;attempt<260;attempt++)' in game
+      and 'targetsSeparated(pos,other)' in game,
+      'Stage3 rerolls coordinates across full world width while rejecting stale and overlapping positions')
+check('function updateStage3(time)' in game and 'updateStage3(projectile.dueAt)' in game
+      and 'updateStage3(elapsed)' in game,
+      'Stage3 reappearance, deadline and arrival-time collisions share the game clock')
+check('function recordStage3Hit(target)' in game and
+      'target.damage=Math.min(target.requiredHits,target.damage+1)' in game
+      and 'destroyedTarget=recordStage3Hit(item)' in game,
+      'separate one/two-shot durability is enforced on actual bullet arrival')
+check('pos.requiredHits=pos.noShoot?0:((shootableCount++%2)+1)' in game
+      and "var durability=target.noShoot?'安全標的':" in game
+      and "target.requiredHits+'発型・残り'" in game,
+      'Stage3 displays both new durability types and their remaining hits')
+check('function stage3Missed(target, time)' in game and 'points-=30;missed++' in game
+      and 'target.expiredCycle=target.spawnedCycle' in game
+      and "target.damage===0" in game,
+      'each untouched shootable exposure incurs -30 once on time-out and NO SHOOT is exempt')
+check('spawnedCycle:item?item.spawnedCycle:-1' in game
+      and 'targets[mark.targetIndex].spawnedCycle!==mark.spawnedCycle' in game,
+      'marks cannot follow a target that teleports to a new spawn generation')
 check("source.connect(" not in game and "filter.type='lowpass'" in game
       and "soundOn = false" in game, 'sound remains local, low-pass filtered and OFF initially')
 check(all(s not in game for s in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'https://']),
