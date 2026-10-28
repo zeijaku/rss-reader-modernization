@@ -40,11 +40,11 @@ check("context.on(canvas, 'keydown'" in game and "context.on(canvas, 'blur'" in 
       'keyboard input and held breath remain scope-bound')
 check('clientX - rect.left' in game and 'canvas.width / W' in game,
       'pointer and canvas transformations use CSS coordinates and drawing scale independently')
-check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed,targets,arrivalTime)' in game
+check('aimWorld(camera, pointer, sway)' in game and 'targetContact(landed,targets,arrivalTime,activeDifficulty)' in game
       and 'scoreHit(point, position)' in game,
       'the sway shown in the zoomed lens is used for repeated physical collision')
-check('1.50.0-dev.10' in src('app/version.php'), 'visible and asset versions mark Dev5.1.1 tracer origin fix preview only')
-check('MOVING_TARGETS' in game and 'targetAt(target, elapsed)' in game,
+check('1.50.0-dev.11' in src('app/version.php'), 'visible and asset versions mark Dev6 difficulty preview only')
+check('MOVING_TARGETS' in game and 'targetAt(target, elapsed, activeDifficulty)' in game,
       'second range animates targets and hit tests use displayed center')
 check('mark.targetIndex >= 0' in game and 'impact.targetIndex >= 0' in game,
       'holes and flash stay attached to moving targets')
@@ -53,7 +53,7 @@ check("context.on(stageSelect, 'change'" in game and "stageSelect.value === '2'"
 check('window.AudioContext || window.webkitAudioContext' in game and
       "context.on(soundButton, 'click'" in game and 'audioContext.close()' in game,
       'muffled WebAudio is explicit opt-in, lazy, and cleaned up')
-check('targetContact(point, stageTargets, time)' in game
+check('targetContact(point, stageTargets, time, difficulty)' in game
       and "var firstHit=!!contact&&!prohibited&&cleared.indexOf(selected)===-1" in game
       and "marks.push({x:landed.x,y:landed.y,kind:kind,targetIndex:selected" in game,
       'repeat shots independently create visible marks without duplicate score')
@@ -63,22 +63,22 @@ check("--sniper-target-accent:#99776b" in src('public/css/game-widget.css')
       and "circle(0,0,displayedRadius*.79,theme.targetAccent)" in game
       and "circle(0,0,displayedRadius*.378,theme.targetAccent)" in game,
       'multiple-size target rings keep subdued colors')
-check('windAt(time, moving)' in game and 'ballisticOffset(distance, wind)' in game
-      and 'shotSolution(point, stageTargets, time, moving)' in game,
+check('windAt(time, moving, difficulty)' in game and 'ballisticOffset(distance, wind)' in game
+      and 'shotSolution(point, stageTargets, time, moving, difficulty)' in game,
       'Dev3 introduces testable deterministic range, wind and bullet-drop mechanics')
-check('targetContact(landed,targets,arrivalTime)' in game and
+check('targetContact(landed,targets,arrivalTime,activeDifficulty)' in game and
       "var kind=contact?'target':landed.y>=462?'ground':'none'" in game,
       'impact surfaces and hit scoring use physical ballistic landing, not scope center')
-check("var solution = shotSolution(shot, targets, elapsed, targets !== FIXED_TARGETS)" in game and
-      "var projectile=flightShot(aim,targets,elapsed,targets!==FIXED_TARGETS)" in game,
+check("var solution = shotSolution(shot, targets, elapsed, targets !== FIXED_TARGETS, activeDifficulty)" in game and
+      "var projectile=flightShot(aim,targets,elapsed,targets!==FIXED_TARGETS,activeDifficulty)" in game,
       'drawn telemetry and click shot derive the same correction model')
 check('precision-sniper-ballistics' in game and '着弾ずれ' in game
       and '--bs-secondary-bg' in src('public/css/game-widget.css'),
       'range/wind/drop telemetry follows the existing Game theme')
 check('distance: 150' in game and 'distance: 490' in game
       and "' '+position.distance+'m'" in game, 'each stage includes graded target distances')
-check('randomStage(random)' in game and 'targetActive(target, time)' in game and
-      "stageSelect.value === '3' ? randomStage()" in game,
+check('randomStage(random, difficulty)' in game and 'targetActive(target, time)' in game and
+      "stageSelect.value === '3' ? randomStage(null,activeDifficulty)" in game,
       'Dev4 randomized timed target visibility remains scoped to stage 3')
 check('if (!targetActive(stageTargets[i], time)) continue;' in game and
       'if (!targetActive(target, elapsed)) return;' in game and
@@ -109,26 +109,26 @@ check("Math.floor((time-target.appearAt)/target.cycle)" in game,
 check('if(!target.kind) {' in game and 'function footprint(target)' in game
       and 'function targetsSeparated(a,b)' in game,
       'Stage 3 has no poles or bases and reserves sufficient display space')
-check("var range = targetAt(stageTargets[nearest],time).distance" in game
+check("var range = targetAt(stageTargets[nearest],time,difficulty).distance" in game
       and "var displayedRadius=position.radius" in game,
       'ballistic range and rendered size both reflect three-layer perspective')
 check("NO SHOOT / 市民" in game and "NO SHOOT / 動物" in game
       and "target.kind==='civilian'" in game and "target.kind==='animal'" in game,
       'civilian and wildlife are distinguishable forbidden shapes, not color-only marks')
 check('function windLeaves()' in game and 'windLeafAt(i,elapsed' in game
-      and 'windTravel(time, moving)' in game,
+      and 'windTravel(time, moving, difficulty)' in game,
       'flying leaves follow integrated wind gusts and pause with game time')
 check('function drawReloadArc(center)' in game and 'reloadProgress(reloadLeft)' in game
       and "ctx.fillText('RELOAD '" in game and 'drawReloadArc(center);' in game,
       'scope reload ring advances full circle and shows progress percentage')
 check('function flightTime(distance)' in game and '/800' in game
-      and 'function flightShot(aim, stageTargets, time, moving)' in game,
+      and 'function flightShot(aim, stageTargets, time, moving, difficulty)' in game,
       'Dev5 computes distance-specific bullet travel time at trigger pull')
 check('pendingShots.push(projectile)' in game and 'pendingShots[0].dueAt<=elapsed' in game
       and 'function resolveImpact(projectile,arrivalTime)' in game,
       'Dev5 resolves queued projectiles on animation game clock, not immediately or by setTimeout')
-check('targetContact(landed,targets,arrivalTime)' in game and
-      'windTravel(time+flight,moving)-windTravel(time,moving)' in game,
+check('targetContact(landed,targets,arrivalTime,activeDifficulty)' in game and
+      'windTravel(time+flight,moving,difficulty)-windTravel(time,moving,difficulty)' in game,
       'arrival-time hit positions and integrated crosswind are physically consistent')
 check('pendingShots=[];fadingTrails=[];stop();' in game and 'pendingShots = [];' in game,
       'completed or failed rounds discard all outstanding projectiles and tracers')
@@ -168,6 +168,35 @@ check('projectileProgress:projectileProgress' in game
       and 'projectileTrail:projectileTrail' in game,
       'new render geometry is unit-testable without timers or external assets')
 
+check("precision-sniper-difficulty" in game and
+      ".precision-sniper-difficulty{width:110px;min-height:36px}" in src('public/css/game-widget.css')
+      and "difficultySelect.value='normal'" in game,
+      'Dev6 dropdown is responsive and defaults to current Normal difficulty')
+check('function difficultyProfile(level)' in game and
+      "easy:{name:'Easy'" in game and "nightmare:{name:'Nightmare'" in game,
+      'four difficulty presets are defined centrally')
+check('wind:1,motion:1,sway:1,visibility:1' in game and
+      'difficultyProfile(difficulty).wind' in game and
+      'difficultyProfile(difficulty).motion' in game and
+      'difficultyProfile(difficulty).sway' in game,
+      'Normal is a strict neutral profile for wind, movement and breathing')
+check('pos.visibleFor*difficultyProfile(difficulty).visibility' in game
+      and 'pos.cycle-.25' in game,
+      'Stage3 dynamic visibility remains finite and shorter than respawn cycle')
+check("activeDifficulty=difficultySelect.value;" in game and
+      "context.on(difficultySelect, 'change'" in game and
+      'difficultyProfile(activeDifficulty).name' in game,
+      'difficulty is latched per round and active level remains visible after changing next-round selection')
+check('targetAt(target, elapsed, activeDifficulty)' in game and
+      'targetContact(landed,targets,arrivalTime,activeDifficulty)' in game and
+      'flightShot(aim,targets,elapsed,targets!==FIXED_TARGETS,activeDifficulty)' in game,
+      'on-screen targets, impact collision and delayed flight all reference active round difficulty')
+check('windLeafAt(i,elapsed,targets!==FIXED_TARGETS,activeDifficulty)' in game and
+      'windAt(elapsed, targets !== FIXED_TARGETS, activeDifficulty)' in game,
+      'wind pennant, grass and windblown leaves share the scoring crosswind multiplier')
+check('var range = targetAt(stageTargets[nearest],time,difficulty).distance' in game and
+      'function flightTime(distance)' in game and '/800' in game,
+      'all difficulties retain existing target distances and 800 m/s bullet flight')
 check("source.connect(" not in game and "filter.type='lowpass'" in game
       and "soundOn = false" in game, 'sound remains local, low-pass filtered and OFF initially')
 check(all(s not in game for s in ['fetch(', 'XMLHttpRequest', 'innerHTML', 'https://']),
