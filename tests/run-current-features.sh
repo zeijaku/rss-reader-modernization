@@ -45,6 +45,7 @@ python3 "$SCRIPT_DIR/test_current_api_rate_limit_concurrency.py"
 python3 "$SCRIPT_DIR/test_current_public_endpoint_contract.py"
 python3 "$SCRIPT_DIR/test_current_public_endpoint_docs.py"
 php "$SCRIPT_DIR/test_current_ftp_policy.php"
+php "$SCRIPT_DIR/test_current_remote_curl_diagnostics.php"
 python3 "$SCRIPT_DIR/test_current_v147b_security_hardening.py"
 
 echo '== Current feature contracts: Widget header presentation =='
