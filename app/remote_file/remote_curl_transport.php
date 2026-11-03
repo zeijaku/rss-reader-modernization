@@ -80,6 +80,18 @@ function remote_curl_known_hosts_file(): string
 }
 
 /**
+ * Return a bounded diagnostic identifier, never libcurl's raw error text,
+ * which could contain server-provided URLs or other sensitive details.
+ */
+function remote_curl_diagnostic_code(int $errno): string
+{
+    if ($errno === 28) {
+        return 'timeout';
+    }
+    return $errno >= 1 && $errno <= 999 ? 'curl_' . $errno : 'transport_error';
+}
+
+/**
  * Execute one already validated and DNS-pinned request.
  * Request/exception text deliberately avoids including credentials.
  *
@@ -266,7 +278,7 @@ function remote_curl_execute_request(array $request): array
             return ['ok' => false, 'status' => $status, 'body' => '', 'headers' => $headers, 'bytes' => $bytes, 'truncated' => true, 'error_code' => 'transfer_too_large'];
         }
         if ($executed === false || $errno !== 0) {
-            $code = defined('CURLE_OPERATION_TIMEDOUT') && $errno === CURLE_OPERATION_TIMEDOUT ? 'timeout' : 'transport_error';
+            $code = remote_curl_diagnostic_code($errno);
             return ['ok' => false, 'status' => $status, 'body' => '', 'headers' => $headers, 'bytes' => $bytes, 'truncated' => false, 'error_code' => $code];
         }
         return ['ok' => true, 'status' => $status, 'body' => $body, 'headers' => $headers, 'bytes' => $bytes, 'truncated' => false, 'error_code' => ''];

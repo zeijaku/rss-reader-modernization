@@ -25,6 +25,28 @@ function remote_api_validation_message(string $reason): string
     };
 }
 
+/**
+ * Public, actionable cURL diagnostics. Do not include curl_error() or
+ * remote server response bodies: either may contain sensitive information.
+ */
+function remote_api_curl_failure_message(int $errno): string
+{
+    $detail = match ($errno) {
+        6 => 'The remote hostname could not be resolved.',
+        7 => 'The remote server could not be reached. Check outbound network access.',
+        9 => 'The remote server denied access to the requested path.',
+        10, 12, 13, 14, 15 => 'The FTP data connection failed. Check FTP passive-mode and firewall settings.',
+        19 => 'The FTP server did not complete the requested file or directory operation.',
+        35 => 'The TLS handshake failed. Check the server TLS configuration.',
+        51, 60, 83 => 'TLS certificate verification failed. Check certificate trust and server name.',
+        64 => 'The server did not accept the required FTPS TLS negotiation.',
+        67 => 'Remote login was rejected. Check username and password.',
+        77 => 'TLS CA certificates could not be loaded on this server.',
+        default => 'The remote connection or transfer failed.',
+    };
+    return $detail . ' (cURL error ' . $errno . ').';
+}
+
 /** @return array{status:int,body:array<string,mixed>} */
 function remote_api_failure(string $operation, int $userId, Throwable $exception): array
 {
@@ -44,6 +66,11 @@ function remote_api_failure(string $operation, int $userId, Throwable $exception
         return api_error('remote_connection_unavailable', 'Remote connection migration is required.', 503);
     }
     if ($exception instanceof AppRemoteTransportException) {
+        // Accept only a short, numeric cURL code; never forward exception messages.
+        if (preg_match('/\Acurl_([1-9][0-9]{0,2})\z/D', $exception->errorCode, $matches) === 1) {
+            $errno = (int) $matches[1];
+            return api_error('remote_curl_' . $errno, remote_api_curl_failure_message($errno), 502);
+        }
         return match ($exception->errorCode) {
             'not_found' => api_error('not_found', 'Remote connection was not found.', 404),
             'file_not_found' => api_error('not_found', 'File was not found.', 404),
