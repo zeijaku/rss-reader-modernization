@@ -5,6 +5,7 @@ declare(strict_types=1);
 define('APP_RESPONSE_FORMAT', 'json');
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
+require_once dirname(__DIR__) . '/app/calendar_ics.php';
 
 /** @param array<string,mixed> $body */
 function calendar_source_emit(int $status, array $body): never
@@ -78,6 +79,11 @@ if (!in_array($action, [
     'calendar.source.create',
     'calendar.source.update',
     'calendar.source.delete',
+    'calendar.ics.list',
+    'calendar.ics.create',
+    'calendar.ics.update',
+    'calendar.ics.delete',
+    'calendar.ics.refresh',
 ], true)) {
     calendar_source_error('unknown_action', 'Unknown API action.', 400);
 }
@@ -85,6 +91,57 @@ if (!in_array($action, [
 app_session_release();
 
 try {
+    // ICS subscriptions share this existing authenticated, CSRF-gated endpoint.
+    // No raw ICS text or private URL is ever included in API responses.
+    if (str_starts_with($action, 'calendar.ics.')) {
+        if (!calendar_ics_schema_ready(conn_db())) {
+            calendar_source_error('ics_unavailable', 'ICS購読用のDB Migration 035が必要です。', 503);
+        }
+        if ($action === 'calendar.ics.list') {
+            calendar_source_success(['subscriptions' => calendar_ics_list($userId)]);
+        }
+        if ($action === 'calendar.ics.create') {
+            $settings = calendar_ics_validate_settings(
+                $_POST['ics_name'] ?? null,
+                $_POST['ics_color'] ?? null,
+                $_POST['ics_url'] ?? null
+            );
+            if ($settings === null) {
+                calendar_source_error('validation_error', '名前・色・HTTPSのICS URLを確認してください。', 422);
+            }
+            $id = calendar_ics_create($userId, $settings);
+            calendar_source_success(['ics_id' => $id, 'subscriptions' => calendar_ics_list($userId)], 201);
+        }
+        $id = app_validate_positive_int($_POST['ics_id'] ?? null);
+        if ($id === null) {
+            calendar_source_error('validation_error', 'ICS購読IDが不正です。', 422);
+        }
+        if ($action === 'calendar.ics.update') {
+            $name = calendar_source_validate_name($_POST['ics_name'] ?? null);
+            $color = calendar_source_validate_color($_POST['ics_color'] ?? null);
+            $inputUrl = isset($_POST['ics_url']) && is_string($_POST['ics_url'])
+                ? trim($_POST['ics_url']) : '';
+            $url = $inputUrl !== '' ? calendar_ics_validate_url($inputUrl) : null;
+            if ($name === null || $color === null || ($inputUrl !== '' && $url === null)) {
+                calendar_source_error('validation_error', 'ICS設定が不正です。', 422);
+            }
+            if (!calendar_ics_update($userId, $id, $name, $color, $url)) {
+                calendar_source_error('not_found', 'ICS購読が見つかりません。', 404);
+            }
+            calendar_source_success(['subscriptions' => calendar_ics_list($userId)]);
+        }
+        if ($action === 'calendar.ics.refresh') {
+            if (!calendar_ics_refresh($userId, $id)) {
+                calendar_source_error('not_found', 'ICS購読が見つかりません。', 404);
+            }
+            calendar_source_success(['subscriptions' => calendar_ics_list($userId)]);
+        }
+        if (!calendar_ics_delete($userId, $id)) {
+            calendar_source_error('not_found', 'ICS購読が見つかりません。', 404);
+        }
+        calendar_source_success(['subscriptions' => calendar_ics_list($userId)]);
+    }
+
     if (!calendar_source_schema_ready(conn_db())) {
         calendar_source_error('calendar_source_unavailable', 'Calendar source migration is required.', 503);
     }

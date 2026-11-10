@@ -2,7 +2,7 @@
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
 -- Fresh installs use this file only; historical migrations remain upgrade-only for existing databases.
--- The schema includes all current tables and columns introduced through migrations 001-034.
+-- The schema includes all current tables and columns introduced through migrations 001-035.
 -- See docs/installation.md and docs/update-history.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
@@ -20,6 +20,7 @@ SET @t_feed_item_state = CONCAT('`', @table_prefix, 'feed_item_state`');
 SET @t_memo = CONCAT('`', @table_prefix, 'memo`');
 SET @t_task = CONCAT('`', @table_prefix, 'task`');
 SET @t_calendar_source = CONCAT('`', @table_prefix, 'calendar_source`');
+SET @t_calendar_ics = CONCAT('`', @table_prefix, 'calendar_ics_subscription`');
 SET @t_calendar_event = CONCAT('`', @table_prefix, 'calendar_event`');
 SET @t_calendar_event_exception = CONCAT('`', @table_prefix, 'calendar_event_exception`');
 SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
@@ -184,6 +185,30 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Calendar source'''
 );
 PREPARE v144a_schema_stmt FROM @sql; EXECUTE v144a_schema_stmt; DEALLOCATE PREPARE v144a_schema_stmt;
+
+-- Dev1 ICS subscription metadata and private unparsed cache (035).
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_calendar_ics, ' (',
+  '`ics_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
+  '`ics_owner` INT UNSIGNED NOT NULL,',
+  '`ics_name` VARCHAR(40) NOT NULL,',
+  '`ics_color` VARCHAR(16) NOT NULL DEFAULT ''blue'',',
+  '`ics_url` VARCHAR(2048) NOT NULL,',
+  '`ics_raw` MEDIUMTEXT NULL,',
+  '`ics_status` VARCHAR(12) NOT NULL DEFAULT ''pending'',',
+  '`ics_error_code` VARCHAR(40) NOT NULL DEFAULT '''',',
+  '`ics_last_checked_at` DATETIME NULL DEFAULT NULL,',
+  '`ics_last_success_at` DATETIME NULL DEFAULT NULL,',
+  '`ics_created_at` DATETIME NOT NULL,',
+  '`ics_updated_at` DATETIME NOT NULL,',
+  'PRIMARY KEY (`ics_id`),',
+  'KEY `idx_ics_owner` (`ics_owner`,`ics_id`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ',
+  'COMMENT=''Private ICS subscriptions (read-only)'''
+);
+PREPARE v151_ics_schema_stmt FROM @sql;
+EXECUTE v151_ics_schema_stmt;
+DEALLOCATE PREPARE v151_ics_schema_stmt;
 
 -- V1.25 Calendar recurrence (019) is integrated in the fresh-install calendar_event table.
 SET @sql = CONCAT(

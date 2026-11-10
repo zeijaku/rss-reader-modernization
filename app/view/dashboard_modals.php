@@ -767,6 +767,31 @@
             <hr>
             <div class="calendar-source-manager-list" aria-live="polite"><span class="text-muted small">Calendarを読み込んでいます</span></div>
             <small class="form-text text-muted d-block mt-2">既定Calendarは削除出来ません。ほかのCalendarを削除すると、その予定は既定Calendarへ移動します。</small>
+            <hr>
+            <section class="calendar-ics-manager" aria-label="外部ICS購読">
+                <h6><i class="fas fa-link me-2" aria-hidden="true"></i>外部Calendar（ICS購読）</h6>
+                <p class="small text-muted">GoogleやOutlookの非公開ICS URLを登録できます。Dev1では取得確認まで。予定の表示はDev2で対応します。</p>
+                <form id="calendarIcsCreateForm" autocomplete="off">
+                    <div class="row g-2">
+                        <div class="col-sm-7">
+                            <label class="form-label" for="calendarIcsCreateName">表示名</label>
+                            <input type="text" id="calendarIcsCreateName" class="form-control calendarIcsCreateName" maxlength="40" required>
+                        </div>
+                        <div class="col-sm-5">
+                            <label class="form-label" for="calendarIcsCreateColor">識別色</label>
+                            <select id="calendarIcsCreateColor" class="form-select calendarIcsCreateColor"><option value="blue">青</option><option value="green">緑</option><option value="purple">紫</option><option value="yellow">黄</option><option value="red">赤</option></select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="calendarIcsCreateUrl">ICS URL（HTTPSのみ）</label>
+                            <input type="url" id="calendarIcsCreateUrl" class="form-control calendarIcsCreateUrl" maxlength="2048" placeholder="https://..." autocomplete="off" spellcheck="false" required>
+                            <div class="form-text">非公開URLには閲覧用トークンが含まれます。第三者へ共有しないでください。</div>
+                        </div>
+                    </div>
+                    <div class="text-end mt-2"><button type="submit" class="btn btn-primary btn-sm">ICS購読を追加</button></div>
+                </form>
+                <div class="calendar-ics-message small mt-2" role="status" aria-live="polite" hidden></div>
+                <div class="calendar-ics-manager-list mt-3" aria-live="polite"><span class="small text-muted">ICS購読を読み込んでいます</span></div>
+            </section>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button></div>
     </div></div>
