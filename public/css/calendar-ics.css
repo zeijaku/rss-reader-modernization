@@ -1,18 +1,187 @@
-/* Dev1 ICS registration and connection diagnostics within Calendar management. */
-.calendar-ics-manager-list { display: grid; gap: .6rem; }
-.calendar-ics-row {
-    padding: .75rem;
-    border: 1px solid var(--bs-border-color, #dee2e6);
-    border-radius: var(--bs-border-radius, .375rem);
-    background: rgba(var(--bs-secondary-rgb, 108, 117, 125), .035);
+/* Dev1.1 Calendar management UI: Bootstrap-aware and consistent with event entry modals.
+ * Scope all overrides to this modal; do not alter Calendar widget filtering or API.
+ */
+.calendar-manager-modal .modal-header.bg-primary {
+    border-bottom: 0;
+}
+.calendar-manager-modal .modal-header .modal-title {
+    font-weight: 600;
+    letter-spacing: .01em;
+}
+.calendar-manager-modal .modal-body {
+    padding: 1rem 1.1rem 1.2rem;
+}
+.calendar-manager-modal .calendar-manager-tabs .nav-item {
     min-width: 0;
 }
-.calendar-ics-row-head { display: flex; align-items: center; min-width: 0; }
-.calendar-ics-row-head strong { overflow-wrap: anywhere; }
-.calendar-ics-controls { display: grid; grid-template-columns: minmax(0, 1fr) 5.5rem; gap: .5rem; margin-top: .5rem; }
-.calendar-ics-edit-url { margin-top: .5rem; }
-.calendar-ics-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; margin-top: .5rem; }
-.calendar-ics-message { overflow-wrap: anywhere; }
+.calendar-manager-modal .calendar-manager-tabs .nav-link {
+    width: 100%;
+    min-height: 42px;
+    padding: .55rem .6rem;
+    color: var(--bs-body-color, #212529);
+    background: rgba(var(--bs-secondary-rgb, 108, 117, 125), .06);
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    font-size: .9rem;
+    font-weight: 600;
+}
+.calendar-manager-modal .calendar-manager-tabs .nav-link:hover {
+    background: rgba(var(--bs-primary-rgb, 13, 110, 253), .08);
+    border-color: rgba(var(--bs-primary-rgb, 13, 110, 253), .35);
+}
+.calendar-manager-modal .calendar-manager-tabs .nav-link.active {
+    background: var(--bs-primary, #0d6efd);
+    border-color: var(--bs-primary, #0d6efd);
+    color: #fff;
+}
+.calendar-manager-modal .calendar-manager-tabs .nav-link:focus-visible {
+    outline: 2px solid var(--bs-primary, #0d6efd);
+    outline-offset: 2px;
+}
+.calendar-manager-modal .calendar-manager-section-title {
+    color: var(--bs-primary-text-emphasis, var(--bs-primary, #0d6efd));
+    font-size: .9rem;
+    font-weight: 700;
+    margin-bottom: .65rem;
+}
+.calendar-manager-modal .calendar-manager-panel {
+    background: rgba(var(--bs-primary-rgb, 13, 110, 253), .045);
+    border: 1px solid rgba(var(--bs-primary-rgb, 13, 110, 253), .24);
+    border-left: 3px solid var(--bs-primary, #0d6efd);
+    border-radius: var(--bs-border-radius-lg, .5rem);
+    padding: .9rem;
+}
+.calendar-manager-modal .calendar-manager-panel .form-label,
+.calendar-manager-modal .calendar-ics-field .form-label {
+    font-size: .85rem;
+    font-weight: 600;
+    margin-bottom: .25rem;
+}
+.calendar-manager-modal .form-control,
+.calendar-manager-modal .form-select {
+    min-width: 0;
+}
+.calendar-manager-modal .calendar-source-manager-list,
+.calendar-manager-modal .calendar-ics-manager-list {
+    display: grid;
+    gap: .6rem;
+}
+.calendar-manager-modal .calendar-source-manager-row,
+.calendar-manager-modal .calendar-ics-row {
+    padding: .75rem .8rem;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: var(--bs-border-radius, .375rem);
+    background: rgba(var(--bs-secondary-rgb, 108, 117, 125), .04);
+    min-width: 0;
+}
+.calendar-manager-modal .calendar-source-manager-row {
+    margin: 0;
+}
+.calendar-manager-modal .calendar-source-manager-row .calendar-source-manager-name-wrap {
+    min-width: 0;
+}
+.calendar-manager-modal .calendar-source-manager-actions,
+.calendar-manager-modal .calendar-ics-actions {
+    gap: .4rem;
+}
+.calendar-manager-modal .calendar-source-manager-actions .btn,
+.calendar-manager-modal .calendar-ics-actions .btn {
+    white-space: nowrap;
+}
+.calendar-manager-modal .calendar-ics-row-head {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    min-width: 0;
+}
+.calendar-manager-modal .calendar-ics-entry-title {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.calendar-manager-modal .calendar-ics-status {
+    flex-shrink: 0;
+    margin-left: auto;
+    font-size: .73rem;
+    font-weight: 600;
+}
+.calendar-manager-modal .calendar-ics-row-meta {
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.calendar-manager-modal .calendar-ics-swatch {
+    display: inline-block;
+    flex: 0 0 15px;
+    width: 15px;
+    height: 15px;
+    border: 1px solid rgba(0, 0, 0, .2);
+    border-radius: 2px;
+    background: #6f8eac;
+}
+.calendar-manager-modal .calendar-ics-swatch[data-color="red"] { background: #ba777b; }
+.calendar-manager-modal .calendar-ics-swatch[data-color="green"] { background: #779887; }
+.calendar-manager-modal .calendar-ics-swatch[data-color="yellow"] { background: #c0a469; }
+.calendar-manager-modal .calendar-ics-swatch[data-color="purple"] { background: #9b86ad; }
+.calendar-manager-modal .calendar-ics-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(6rem, 9rem);
+    gap: .65rem;
+    margin-top: .65rem;
+}
+.calendar-manager-modal .calendar-ics-field {
+    min-width: 0;
+}
+.calendar-manager-modal .calendar-ics-url-field {
+    margin-top: .6rem;
+}
+.calendar-manager-modal .calendar-ics-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    margin-top: .8rem;
+}
+.calendar-manager-modal .calendar-ics-refresh {
+    color: var(--bs-primary, #0d6efd);
+    border-color: var(--bs-primary, #0d6efd);
+}
+.calendar-manager-modal .calendar-ics-refresh:hover,
+.calendar-manager-modal .calendar-ics-refresh:focus-visible {
+    background: var(--bs-primary, #0d6efd);
+    border-color: var(--bs-primary, #0d6efd);
+    color: #fff;
+}
+/* Disabled and loading states are distinct from the usual enabled outline. */
+.calendar-manager-modal .calendar-ics-refresh:disabled {
+    opacity: .65;
+    cursor: progress;
+}
+.calendar-manager-modal .calendar-ics-message {
+    overflow-wrap: anywhere;
+    font-size: .85rem;
+    padding: .65rem .75rem;
+}
+.calendar-manager-modal .calendar-ics-message[hidden] {
+    display: none !important;
+}
+@media (max-width: 575.98px) {
+    .calendar-manager-modal .modal-body {
+        padding: .75rem;
+    }
+    .calendar-manager-modal .calendar-manager-tabs .nav-link {
+        font-size: .82rem;
+        padding: .5rem .25rem;
+    }
+    .calendar-manager-modal .calendar-manager-panel {
+        padding: .75rem;
+    }
+}
 @media (max-width: 420px) {
-    .calendar-ics-controls { grid-template-columns: minmax(0, 1fr); }
+    .calendar-manager-modal .calendar-ics-controls {
+        grid-template-columns: minmax(0, 1fr);
+        gap: .4rem;
+    }
+    .calendar-manager-modal .calendar-ics-actions {
+        justify-content: flex-start;
+    }
+    .calendar-manager-modal .calendar-source-manager-row {
+        grid-template-columns: minmax(0, 1fr) 6rem;
+    }
 }
