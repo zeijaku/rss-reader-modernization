@@ -25,8 +25,9 @@
 
     function notice(text, error) {
         var $target = $('.calendar-ics-message');
-        $target.removeClass('text-success text-danger')
-            .addClass(error ? 'text-danger' : 'text-success')
+        $target.removeClass('alert-success alert-danger')
+            .addClass(error ? 'alert-danger' : 'alert-success')
+            .attr('role', error ? 'alert' : 'status')
             .text(String(text || '')).prop('hidden', false);
     }
 
@@ -46,7 +47,17 @@
 
     function statusLabel(item) {
         if (item.status === 'ok') {
-            return '取得済み (' + String(item.cached_bytes || 0) + ' bytes)';
+            return '取得成功';
+        }
+        if (item.status === 'error') {
+            return '取得失敗';
+        }
+        return '未取得';
+    }
+
+    function statusDetail(item) {
+        if (item.status === 'ok') {
+            return '取得済み ' + String(item.cached_bytes || 0) + ' bytes';
         }
         if (item.status === 'error') {
             var errorNames = {
@@ -59,40 +70,70 @@
                 insecure_redirect: '安全でない転送先',
                 empty_response: '空の応答'
             };
-            return '取得失敗: ' + (errorNames[item.error_code] || '接続・取得エラー');
+            return errorNames[item.error_code] || '接続・取得エラー';
         }
-        return '未取得';
+        return 'まだデータを取得していません';
     }
 
+    function statusColor(item) {
+        if (item.status === 'ok') { return 'text-bg-success'; }
+        if (item.status === 'error') { return 'text-bg-danger'; }
+        return 'text-bg-secondary';
+    }
+
+    // All untrusted values are inserted with text() or val(), never HTML.
     function render(items) {
         var $list = $('.calendar-ics-manager-list').empty();
         if (!Array.isArray(items) || !items.length) {
-            $('<p>').addClass('small text-muted mb-0').text('登録されたICS購読はありません。').appendTo($list);
+            $('<p>').addClass('small text-body-secondary mb-0').text('登録されたICS購読はありません。').appendTo($list);
             return;
         }
         items.forEach(function (item) {
             var id = String(item.ics_id || '');
             if (!/^[1-9][0-9]*$/.test(id)) { return; }
-            var $row = $('<div>').addClass('calendar-ics-row').attr('data-ics-id', id);
-            var $name = $('<input>').attr({type:'text',maxlength:'40'})
+            var color = colors.indexOf(item.color) >= 0 ? item.color : 'blue';
+            var idPrefix = 'calendarIcsEntry' + id;
+            var $row = $('<div>').addClass('calendar-ics-row')
+                .attr('data-ics-id', id)
+                .attr('data-last-checked', String(item.last_checked_at || ''));
+            var $head = $('<div>').addClass('calendar-ics-row-head')
+                .append($('<span>').addClass('calendar-ics-swatch').attr({'data-color':color,'aria-hidden':'true'}))
+                .append($('<strong>').addClass('calendar-ics-entry-title').text(String(item.name || 'ICS')))
+                .append($('<span>').addClass('badge rounded-pill calendar-ics-status ' + statusColor(item))
+                    .text(statusLabel(item)));
+            var $state = $('<div>').addClass('calendar-ics-row-meta small text-body-secondary mt-1')
+                .append($('<span>').text(String(item.host || '')))
+                .append($('<span>').addClass('calendar-ics-meta-sep').attr('aria-hidden','true').text(' · '))
+                .append($('<span>').text(statusDetail(item)));
+            if (item.last_checked_at) {
+                $state.append($('<span>').addClass('calendar-ics-meta-sep').attr('aria-hidden','true').text(' · '))
+                    .append($('<span>').text('最終確認 ' + String(item.last_checked_at)));
+            }
+            var $name = $('<input>').attr({type:'text',maxlength:'40',id:idPrefix+'Name'})
                 .addClass('form-control form-control-sm calendar-ics-edit-name').val(String(item.name || ''));
+            var $color = colorSelector(color).attr('id',idPrefix+'Color');
             var $url = $('<input>').attr({
                 type:'url',maxlength:'2048',autocomplete:'off',
-                placeholder:'URL変更時のみ入力（現在のURLは非表示）'
+                id:idPrefix+'Url',spellcheck:'false',
+                placeholder:'現在のURLは非表示・変更時のみ入力'
             }).addClass('form-control form-control-sm calendar-ics-edit-url');
-            var $head = $('<div>').addClass('calendar-ics-row-head')
-                .append($('<i>').addClass('fas fa-link me-2').attr('aria-hidden','true'))
-                .append($('<strong>').text(String(item.name || 'ICS')));
-            var $state = $('<div>').addClass('small text-muted mt-1')
-                .text(String(item.host || '') + ' · ' + statusLabel(item)
-                    + (item.last_checked_at ? ' · 最終確認 ' + String(item.last_checked_at) : ''));
             var $controls = $('<div>').addClass('calendar-ics-controls')
-                .append($name, colorSelector(String(item.color || 'blue')));
+                .append($('<div>').addClass('calendar-ics-field')
+                    .append($('<label>').addClass('form-label').attr('for',idPrefix+'Name').text('表示名'),$name))
+                .append($('<div>').addClass('calendar-ics-field')
+                    .append($('<label>').addClass('form-label').attr('for',idPrefix+'Color').text('識別色'),$color));
+            var $urlWrap = $('<div>').addClass('calendar-ics-field calendar-ics-url-field')
+                .append($('<label>').addClass('form-label').attr('for',idPrefix+'Url').text('ICS URLを変更'))
+                .append($url);
+            var $refresh = $('<button>').attr({type:'button'})
+                .addClass('btn btn-sm btn-outline-primary calendar-ics-refresh')
+                .append($('<i>').addClass('fas fa-sync-alt me-1').attr('aria-hidden','true'))
+                .append(document.createTextNode('今すぐ取得'));
             var $buttons = $('<div>').addClass('calendar-ics-actions')
-                .append($('<button>').attr('type','button').addClass('btn btn-sm btn-outline-primary calendar-ics-update').text('変更'))
-                .append($('<button>').attr('type','button').addClass('btn btn-sm btn-outline-secondary calendar-ics-refresh').text('今すぐ取得'))
+                .append($('<button>').attr('type','button').addClass('btn btn-sm btn-outline-secondary calendar-ics-update').text('変更'))
+                .append($refresh)
                 .append($('<button>').attr('type','button').addClass('btn btn-sm btn-outline-danger calendar-ics-delete').text('削除'));
-            $row.append($head, $state, $controls, $url, $buttons);
+            $row.append($head, $state, $controls, $urlWrap, $buttons);
             $list.append($row);
         });
     }
@@ -108,16 +149,50 @@
     }
 
     function mutate(button, action, fields, message) {
-        var $button = $(button).prop('disabled', true);
+        var $button = $(button);
+        var isRefresh = action === 'calendar.ics.refresh';
+        var previousChecked = isRefresh
+            ? String($button.closest('.calendar-ics-row').attr('data-last-checked') || '') : '';
+        var originalChildren = $button.contents().detach();
+        $button.prop('disabled', true).attr('aria-busy', 'true');
+        if (isRefresh) {
+            $button.append($('<span>').addClass('spinner-border spinner-border-sm me-1')
+                .attr({'role':'status','aria-hidden':'true'}))
+                .append(document.createTextNode('取得中…'));
+        } else {
+            $button.append(originalChildren);
+        }
         request(action, fields)
             .done(function (response) {
                 if (response && response.ok && response.data) {
-                    render(response.data.subscriptions);
+                    var results = response.data.subscriptions;
+                    render(results);
+                    if (isRefresh && Array.isArray(results)) {
+                        var item = results.find(function (entry) { return String(entry.ics_id) === String(fields.ics_id); });
+                        if (item && previousChecked && String(item.last_checked_at || '') === previousChecked) {
+                            notice('直近の取得結果を表示しています（1分以内の再取得は省略します）。', false);
+                            return;
+                        }
+                        if (item && item.status === 'error') {
+                            notice('ICS取得に失敗しました：' + statusDetail(item), true);
+                            return;
+                        }
+                        if (item && item.status === 'ok') {
+                            notice('ICSを取得しました。' + statusDetail(item), false);
+                            return;
+                        }
+                    }
                     notice(message, false);
                 }
             })
             .fail(function (xhr) { notice(errorMessage(xhr), true); })
-            .always(function () { $button.prop('disabled', false); });
+            .always(function () {
+                // On success render() has replaced the button; on failure restore it.
+                if (isRefresh) {
+                    $button.empty().append(originalChildren);
+                }
+                $button.prop('disabled', false).removeAttr('aria-busy');
+            });
     }
 
     $(document)
