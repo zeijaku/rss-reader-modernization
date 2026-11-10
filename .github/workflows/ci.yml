@@ -279,3 +279,49 @@ jobs:
             echo "PASS: formal Runtime ZIP IMAP autoload" . PHP_EOL;
           ' "build/runtime-verify/rss-reader-modernization-${RELEASE_VERSION}"
 
+
+
+  ics_dev1_overlay:
+    name: Dev1 ICS subscription overlay ZIP
+    needs: [regression, p2b_apache_probe]
+    if: ${{ github.event_name == 'pull_request' && github.head_ref == 'feature/v1.51-dev1-ics-subscription' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout tested ICS branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build dev1 overlay only after both regressions and Apache checks pass
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fxq "const APP_VERSION = '1.51.0-dev.1';" app/version.php
+          mkdir -p dist
+          files=(
+            app/version.php
+            app/common/common_conf.php
+            app/calendar_ics.php
+            app/view/dashboard_modals.php
+            public/calendar_source_api.php
+            public/js/calendar.js
+            public/js/calendar-ics.js
+            public/css/calendar-ics.css
+            database/schema.sql
+            database/migrations/035_v1_51_calendar_ics_subscription.sql
+            docs/v1.51-dev1-ics-subscription.md
+          )
+          sha256sum "${files[@]}" > dist/SHA256SUMS.txt
+          zip -q dist/RSS_Reader_V1.51_Dev1_ICS_Subscription_Update.zip "${files[@]}"
+          (cd dist && zip -q RSS_Reader_V1.51_Dev1_ICS_Subscription_Update.zip SHA256SUMS.txt)
+          unzip -tq dist/RSS_Reader_V1.51_Dev1_ICS_Subscription_Update.zip
+          sha256sum -c dist/SHA256SUMS.txt
+      - name: Publish Dev1 update ZIP artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: RSS_Reader_V1.51_Dev1_ICS_Subscription_Update
+          path: dist/RSS_Reader_V1.51_Dev1_ICS_Subscription_Update.zip
+          if-no-files-found: error
+          retention-days: 30

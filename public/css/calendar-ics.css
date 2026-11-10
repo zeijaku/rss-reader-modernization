@@ -1,0 +1,18 @@
+/* Dev1 ICS registration and connection diagnostics within Calendar management. */
+.calendar-ics-manager-list { display: grid; gap: .6rem; }
+.calendar-ics-row {
+    padding: .75rem;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: var(--bs-border-radius, .375rem);
+    background: rgba(var(--bs-secondary-rgb, 108, 117, 125), .035);
+    min-width: 0;
+}
+.calendar-ics-row-head { display: flex; align-items: center; min-width: 0; }
+.calendar-ics-row-head strong { overflow-wrap: anywhere; }
+.calendar-ics-controls { display: grid; grid-template-columns: minmax(0, 1fr) 5.5rem; gap: .5rem; margin-top: .5rem; }
+.calendar-ics-edit-url { margin-top: .5rem; }
+.calendar-ics-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; margin-top: .5rem; }
+.calendar-ics-message { overflow-wrap: anywhere; }
+@media (max-width: 420px) {
+    .calendar-ics-controls { grid-template-columns: minmax(0, 1fr); }
+}
