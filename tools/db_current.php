@@ -21,6 +21,7 @@ function current_schema_tables(): array
         'memo',
         'task',
         'calendar_source',
+        'calendar_ics_subscription',
         'calendar_event',
         'calendar_event_exception',
         'dashboard_widget',
@@ -48,6 +49,9 @@ function current_schema_tables(): array
 function current_schema_required_columns(): array
 {
     return [
+        'calendar_ics_subscription' => [
+            'ics_owner', 'ics_url', 'ics_raw', 'ics_status',
+        ],
         'calendar_source' => [
             'calendar_source_owner',
             'calendar_source_name',
@@ -121,6 +125,7 @@ function current_schema_required_indexes(): array
         'content' => ['PRIMARY', 'idx_content_owner_location_flag_id'],
         'content_stock' => ['PRIMARY', 'idx_stock_owner_flag_archived_id'],
         'calendar_source' => ['PRIMARY', 'idx_calendar_source_owner'],
+        'calendar_ics_subscription' => ['PRIMARY', 'idx_ics_owner'],
         'calendar_event' => ['PRIMARY', 'idx_calendar_event_owner_range', 'idx_calendar_event_source'],
         'calendar_event_exception' => ['PRIMARY', 'uq_cal_exception_owner_event_original'],
         'notification' => ['PRIMARY', 'uq_notification_owner_source'],

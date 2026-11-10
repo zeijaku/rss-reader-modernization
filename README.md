@@ -9,8 +9,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.49.1`
-Release tag: `v1.49.1`
+**Stable release:** `RSS Reader Modernization 1.51.0`
+Release tag: `v1.51.0`
+
+Version 1.51.0は、Google Calendar／OutlookなどのHTTPS ICS購読、外部予定の読み取り専用表示（月・週・日）、Calendarごとの表示切替、繰り返し予定の主要規則・個別取消、および30分期限のアクセス連動型自動更新を追加するFeature Releaseです。既存の通常Calendar予定は変更せず、DB Migration 035で購読用テーブルだけを追加します。Dev1〜Dev4で導入済みの環境では035の再実行は不要です。[正式版の更新・確認手順](docs/v1.51.0-release.md)を参照してください。
 
 Version 1.49.1は、Calendar予定追加・変更の入力画面をBootstrap 5に合わせて整理し、所要時間指定とマットな四角い色マーカーを追加した小規模UI改善版です。DB・保存APIは変更していません。 [正式版の更新・確認手順](docs/v1.49.1-release.md)を参照してください。
 
@@ -69,6 +71,8 @@ Application Versionの正本は `app/version.php`、Versionごとの変更履歴
 - Calendarの日／週／月表示
 - Calendarの終日／時刻／URL／場所／5色予定
 - 複数Calendarの作成／名称・識別色変更／表示Filter
+- 外部Google／Outlook等のICS購読（HTTPSのみ）・Calendarへの読み取り専用表示・主要な繰り返し規則／例外の解析
+- ICSごとの表示切替・取得状況管理・30分間隔のアクセス連動型更新・手動取得（最短60秒間隔）
 - 予定のCalendar選択／移動
 - 場所からGoogle Maps検索を開くリンク（API Key不要）
 - 複数日予定

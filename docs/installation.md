@@ -106,7 +106,7 @@ Prefix:   rss_
 
 Fresh Installでは `database/schema.sql` だけを1回実行します。
 
-Current `schema.sql` は、過去Migration 001〜031で追加された現在必要なTable / Column / IndexをFresh Install用の完成形として統合しています。Fresh InstallではMigrationを追加実行しません。
+Current `schema.sql` は、過去Migration 001〜035で追加された現在必要なTable / Column / IndexをFresh Install用の完成形として統合しています。Fresh InstallではMigrationを追加実行しません。
 
 まず `database/schema.sql` 冒頭の値を、`DB_TABLE_PREFIX` と同じにします。
 
@@ -122,7 +122,7 @@ mysql -h <db-host> -P 3306 -u <db-user> -p <db-name> < .\database\schema.sql
 
 phpMyAdminを使用する場合も、空Databaseへ `database/schema.sql` を1回Importします。
 
-Prefixが `rss_` の場合、Current Fresh Installでは最終的に次の27 tableが存在します。
+Prefixが `rss_` の場合、Current Fresh Installでは最終的に次の29 tableが存在します。
 
 ```text
 rss_user_info
@@ -132,6 +132,8 @@ rss_content_stock
 rss_feed_item_state
 rss_memo
 rss_task
+rss_calendar_source
+rss_calendar_ics_subscription
 rss_calendar_event
 rss_calendar_event_exception
 rss_dashboard_widget
@@ -186,7 +188,7 @@ php tools/healthcheck.php
 php tools/db_current.php verify
 ```
 
-`tools/healthcheck.php` はPHP拡張、設定、Runtime directory、Public Assetを確認しますが、DatabaseへLoginしません。Fresh Install後のDatabase接続とCurrent Schemaは、Read-onlyの `php tools/db_current.php verify` で27 Tableと重要Column / Indexを確認します。`tools/db_sb13.php` はLegacy DBのSB-13 audit / migration確認用であり、Fresh InstallのCurrent Schema verifierではありません。
+`tools/healthcheck.php` はPHP拡張、設定、Runtime directory、Public Assetを確認しますが、DatabaseへLoginしません。Fresh Install後のDatabase接続とCurrent Schemaは、Read-onlyの `php tools/db_current.php verify` で29 Tableと重要Column / Indexを確認します。`tools/db_sb13.php` はLegacy DBのSB-13 audit / migration確認用であり、Fresh InstallのCurrent Schema verifierではありません。
 
 Repository cloneまたはComplete Source Packageを使用していて `tests/` が存在する場合は、追加でCurrent Gateを実行できます。
 
