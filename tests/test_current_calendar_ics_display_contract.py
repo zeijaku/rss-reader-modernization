@@ -57,7 +57,7 @@ checks={
         and ".calendar-ics-event-details-modal" in css
         and "var(--bs-" in css,
     "Version aligns with JS/CSS cache busting":
-        "1.51.0-dev.3" in version
+        re.search(r"APP_VERSION = '1\.51\.0-dev\.([3-9]|[1-9][0-9]+)'", version) is not None
         and bool(re.search(r"APP_VERSION = '([^']+)'",version))
         and re.search(r"APP_VERSION = '([^']+)'",version).group(1)
         == re.search(r"APP_ASSET_REVISION = '([^']+)'",version).group(1),

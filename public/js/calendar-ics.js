@@ -8,6 +8,7 @@
     var names = {blue:'青', green:'緑', purple:'紫', yellow:'黄', red:'赤'};
     var AUTO_CHECK_MS = 180000; // check server every 3 minutes; server TTL is 30 minutes
     var syncInFlight = null;
+    var syncModeManual = false;
     var lastAutoAttempt = 0;
     var syncTimer = null;
 
@@ -37,10 +38,20 @@
     function syncDue(manual) {
         manual = manual === true;
         if (syncInFlight) {
+            // A manual Calendar refresh must not be lost behind an ongoing
+            // automatic "not due yet" check; run it after the active sync.
+            if (manual && !syncModeManual) {
+                return syncInFlight.then(
+                    function () { return syncDue(true); },
+                    function () { return syncDue(true); }
+                );
+            }
             return syncInFlight;
         }
         var deferred = $.Deferred();
-        syncInFlight = deferred.promise();
+        var promise = deferred.promise();
+        syncInFlight = promise;
+        syncModeManual = manual;
         var summary = {attempted:0, changed:0, failed:0, remaining:0, interval_minutes:30};
         var cycles = 0;
         function run() {
@@ -78,9 +89,9 @@
                 $(document).trigger('calendar:icsCacheChanged');
             }
         });
-        deferred.always(function () { syncInFlight = null; });
+        deferred.always(function () { syncInFlight = null; syncModeManual = false; });
         run();
-        return syncInFlight;
+        return promise;
     }
 
     function checkDue() {
