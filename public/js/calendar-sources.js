@@ -61,7 +61,7 @@
 
     function normalizeSource(item) {
         var id = String(item && item.source_id !== undefined ? item.source_id : '');
-        if (!/^(?:0|[1-9][0-9]*)$/.test(id)) {
+        if (!/^(?:0|[1-9][0-9]*|ics:[1-9][0-9]*)$/.test(id)) {
             return null;
         }
         var name = String(item && item.name || '').trim();
@@ -90,7 +90,8 @@
     }
 
     function setSourceCache(items) {
-        var next = normalizeSources(items);
+        // Only editable local sources may populate event create/edit selects.
+        var next = normalizeSources(items).filter(function (item) { return item.source_type !== 'ics'; });
         if (next.length) {
             sourceCache = next;
         }
@@ -164,7 +165,8 @@
                 icon.setAttribute('aria-hidden', 'true');
                 entry.insertBefore(icon, entry.firstChild);
             }
-            icon.className = 'fas fa-layer-group calendar-source-icon calendar-source-icon-' + color;
+            icon.className = 'fas ' + (entry.getAttribute('data-calendar-source-type') === 'ics' ? 'fa-link' : 'fa-layer-group')
+                + ' calendar-source-icon calendar-source-icon-' + color;
             if (name) {
                 entry.setAttribute('data-calendar-source-display-name', name);
             }
@@ -221,7 +223,8 @@
                 .attr('data-calendar-source-id', source.source_id)
                 .prop('checked', hidden.indexOf(source.source_id) === -1)
                 .appendTo($row);
-            $('<i>').addClass('fas fa-layer-group calendar-source-icon calendar-source-icon-' + source.color).attr('aria-hidden', 'true').appendTo($row);
+            $('<i>').addClass('fas ' + (source.source_type === 'ics' ? 'fa-link' : 'fa-layer-group')
+                + ' calendar-source-icon calendar-source-icon-' + source.color).attr('aria-hidden', 'true').appendTo($row);
             $('<span>').addClass('calendar-source-filter-name').text(source.name).appendTo($row);
             $menu.append($row);
         });
@@ -262,7 +265,7 @@
 
     function sourcesFromCard($card) {
         var data = $card.data('calendar-range-data');
-        return setSourceCache(data && Array.isArray(data.sources) ? data.sources : sourceCache);
+        return normalizeSources(data && Array.isArray(data.sources) ? data.sources : sourceCache);
     }
 
     function preferredAddSource($card) {
@@ -335,7 +338,11 @@
                 populateEventSelects();
                 renderManager(sources);
                 $('[data-dashboard-widget-type="calendar"]').each(function () {
-                    renderFilter($(this), sources);
+                    var $card = $(this);
+                    var loaded = $card.data('calendar-range-data');
+                    var allSources = normalizeSources(loaded && Array.isArray(loaded.sources)
+                        ? loaded.sources : sources);
+                    renderFilter($card, allSources.length ? allSources : sources);
                 });
                 if (typeof callback === 'function') {
                     callback(sources);
@@ -360,7 +367,8 @@
     $(document)
         .on('calendar:rangeLoaded.iguguruCalendarSources', '[data-dashboard-widget-type="calendar"]', function (event, data) {
             var $card = $(this);
-            var sources = setSourceCache(data && data.sources ? data.sources : []);
+            var sources = normalizeSources(data && data.sources ? data.sources : []);
+            setSourceCache(sources);
             renderFilter($card, sources);
             populateEventSelects();
         })
