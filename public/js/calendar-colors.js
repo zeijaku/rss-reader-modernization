@@ -64,6 +64,91 @@
         return colorValues.indexOf(color) !== -1 ? color : 'blue';
     }
 
+    // These controls are only a presentation layer. The original select and its
+    // blue/red/green/yellow/purple values remain the single source of truth.
+    function colorLabel(value) {
+        var names = {
+            blue: '青 - 通常', red: '赤 - 重要', green: '緑 - その他',
+            yellow: '黄 - 注意', purple: '紫 - 特別'
+        };
+        return names[validColor(value)];
+    }
+
+    function syncColorPicker(select) {
+        if (!select) { return; }
+        var group = select.closest('.calendar-event-color-field');
+        var picker = group ? group.querySelector('.calendar-color-picker') : null;
+        if (!picker) { return; }
+        var color = validColor(select.value);
+        var swatch = picker.querySelector('.calendar-color-picker-toggle .calendar-color-swatch');
+        var text = picker.querySelector('.calendar-color-picker-current');
+        var toggle = picker.querySelector('.calendar-color-picker-toggle');
+        if (swatch) { swatch.setAttribute('data-color', color); }
+        if (text) { text.textContent = colorLabel(color); }
+        if (toggle) { toggle.setAttribute('aria-label', '予定の色: ' + colorLabel(color)); }
+        picker.querySelectorAll('.calendar-color-choice').forEach(function (choice) {
+            var selected = choice.getAttribute('data-color-choice') === color;
+            choice.classList.toggle('is-selected', selected);
+            choice.setAttribute('aria-pressed', selected ? 'true' : 'false');
+            var check = choice.querySelector('.calendar-color-choice-check');
+            if (check) { check.hidden = !selected; }
+        });
+    }
+
+    function createColorPicker(select, formId) {
+        // Keep the plain native dropdown as fallback if Bootstrap Dropdown is unavailable.
+        if (!window.bootstrap || !window.bootstrap.Dropdown) { return; }
+        var picker = document.createElement('div');
+        picker.className = 'dropdown calendar-color-picker';
+        var toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.id = formId + 'ColorPicker';
+        toggle.className = 'form-select calendar-color-picker-toggle';
+        toggle.setAttribute('data-bs-toggle', 'dropdown');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', '予定の色');
+        var preview = document.createElement('span');
+        preview.className = 'calendar-color-swatch';
+        preview.setAttribute('aria-hidden', 'true');
+        var current = document.createElement('span');
+        current.className = 'calendar-color-picker-current';
+        toggle.appendChild(preview);
+        toggle.appendChild(current);
+
+        var menu = document.createElement('div');
+        menu.className = 'dropdown-menu calendar-color-picker-menu';
+        menu.setAttribute('aria-labelledby', toggle.id);
+        [
+            ['blue', '青 - 通常'], ['red', '赤 - 重要'],
+            ['green', '緑 - その他'], ['yellow', '黄 - 注意'],
+            ['purple', '紫 - 特別']
+        ].forEach(function (option) {
+            var item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'dropdown-item calendar-color-choice';
+            item.setAttribute('data-color-choice', option[0]);
+            var square = document.createElement('span');
+            square.className = 'calendar-color-swatch';
+            square.setAttribute('data-color', option[0]);
+            square.setAttribute('aria-hidden', 'true');
+            var name = document.createElement('span');
+            name.textContent = option[1];
+            var check = document.createElement('span');
+            check.className = 'calendar-color-choice-check';
+            check.textContent = '✓';
+            check.setAttribute('aria-hidden', 'true');
+            item.appendChild(square);
+            item.appendChild(name);
+            item.appendChild(check);
+            menu.appendChild(item);
+        });
+        picker.appendChild(toggle);
+        picker.appendChild(menu);
+        select.after(picker);
+        select.hidden = true;
+        syncColorPicker(select);
+    }
+
     function createColorField(formId, selectClass) {
         var form = document.getElementById(formId);
         if (!form || form.querySelector('.calendar-event-color-field')) {
@@ -80,6 +165,8 @@
         var select = document.createElement('select');
         select.className = 'form-select ' + selectClass;
         select.setAttribute('aria-label', '予定の色');
+        // Native option rendering is OS-dependent; keep this select for API/fallback,
+        // and render CSS square swatches in the Bootstrap dropdown when available.
         [
             ['blue', '青 - 通常'],
             ['red', '赤 - 重要'],
@@ -101,6 +188,7 @@
         group.appendChild(label);
         group.appendChild(select);
         group.appendChild(help);
+        createColorPicker(select, formId);
 
         var note = body.querySelector('textarea');
         var noteGroup = note ? note.closest('.mb-3') : null;
@@ -188,12 +276,14 @@
         if (addTrigger) {
             ensureFields();
             $('.registerCalendarEventColor').val('blue');
+            syncColorPicker(document.querySelector('.registerCalendarEventColor'));
             return;
         }
         var editTrigger = target.closest('.calendar-event-edit-trigger');
         if (editTrigger) {
             ensureFields();
             $('.changeCalendarEventColor').val(validColor(editTrigger.getAttribute('data-calendar-event-color')));
+            syncColorPicker(document.querySelector('.changeCalendarEventColor'));
         }
     }
 
@@ -264,6 +354,26 @@
                 loadColorsForCard(widgetId, year, month);
             });
     }
+
+    // Use Bootstrap's keyboard-aware dropdown; synchronize each choice with
+    // the existing select so create/edit/copy/repeating events use unchanged APIs.
+    $(document)
+        .on('click' + namespace, '.calendar-color-choice', function () {
+            var group = this.closest('.calendar-event-color-field');
+            var select = group ? group.querySelector('select') : null;
+            var value = this.getAttribute('data-color-choice');
+            if (!select || colorValues.indexOf(value) === -1) { return; }
+            select.value = value;
+            syncColorPicker(select);
+            select.dispatchEvent(new window.Event('change', {bubbles: true}));
+        })
+        .on('change' + namespace, '.calendar-event-color-field select', function () {
+            syncColorPicker(this);
+        })
+        .on('shown.bs.modal' + namespace, '#registerCalendarEvent, #changeCalendarEvent', function () {
+            var select = this.querySelector('.calendar-event-color-field select');
+            syncColorPicker(select);
+        });
 
     document.addEventListener('submit', captureSubmit, true);
     document.addEventListener('click', captureClick, true);
