@@ -149,24 +149,19 @@ function calendar_ics_update(int $ownerId, int $id, string $name, string $color,
         throw new InvalidArgumentException('ICS設定が不正です。');
     }
     $urlChanged = !hash_equals((string) $owned['ics_url'], $newUrl);
-    $stmt = $pdo->prepare(
-        'UPDATE ' . db_table_identifier('calendar_ics_subscription')
-        . ' SET ics_name = :name, ics_color = :color, ics_url = :url, ics_updated_at = :now,'
-        . ' ics_raw = CASE WHEN :changed_a = 1 THEN NULL ELSE ics_raw END,'
-        . " ics_status = CASE WHEN :changed_b = 1 THEN 'pending' ELSE ics_status END,"
-        . " ics_error_code = CASE WHEN :changed_c = 1 THEN '' ELSE ics_error_code END,"
-        . ' ics_last_checked_at = CASE WHEN :changed_d = 1 THEN NULL ELSE ics_last_checked_at END,'
-        . ' ics_last_success_at = CASE WHEN :changed_e = 1 THEN NULL ELSE ics_last_success_at END'
-        . ' WHERE ics_id = :id AND ics_owner = :owner'
-    );
-    $params = [
+    $sql = 'UPDATE ' . db_table_identifier('calendar_ics_subscription')
+        . ' SET ics_name = :name, ics_color = :color, ics_url = :url, ics_updated_at = :now';
+    if ($urlChanged) {
+        // Never leave the previous URL's data visible after replacing a feed.
+        $sql .= ", ics_raw = NULL, ics_status = 'pending', ics_error_code = '',"
+            . ' ics_last_checked_at = NULL, ics_last_success_at = NULL';
+    }
+    $sql .= ' WHERE ics_id = :id AND ics_owner = :owner';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([
         ':name' => $name, ':color' => $color, ':url' => $newUrl, ':now' => app_now(),
         ':id' => $id, ':owner' => $ownerId,
-    ];
-    foreach (['a','b','c','d','e'] as $key) {
-        $params[':changed_' . $key] = $urlChanged ? 1 : 0;
-    }
-    $stmt->execute($params);
+    ]);
     return true;
 }
 
@@ -251,20 +246,33 @@ function calendar_ics_refresh(int $ownerId, int $id): bool
         return true; // Already checked recently; preserve previous status/cache.
     }
     $result = calendar_ics_fetch((string) $owned['ics_url']);
-    $update = $pdo->prepare(
-        'UPDATE ' . db_table_identifier('calendar_ics_subscription')
-        . ' SET ics_raw = CASE WHEN :success_a = 1 THEN :body ELSE ics_raw END,'
-        . " ics_status = CASE WHEN :success_b = 1 THEN 'ok' ELSE 'error' END,"
-        . ' ics_error_code = :error_code,'
-        . ' ics_last_success_at = CASE WHEN :success_c = 1 THEN :now ELSE ics_last_success_at END,'
-        . ' ics_updated_at = :updated_at'
-        . ' WHERE ics_id = :id AND ics_owner = :owner AND ics_url = :url AND ics_last_checked_at = :checked'
-    );
     $ok = $result['ok'] === true;
-    $update->execute([
-        ':success_a' => $ok ? 1 : 0, ':success_b' => $ok ? 1 : 0, ':success_c' => $ok ? 1 : 0,
-        ':body' => $ok ? $result['body'] : null,
-        ':error_code' => $result['error_code'], ':now' => $now, ':updated_at' => $now,
+    if ($ok) {
+        $update = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('calendar_ics_subscription')
+            . " SET ics_raw = :body, ics_status = 'ok', ics_error_code = '',"
+            . ' ics_last_success_at = :now, ics_updated_at = :updated_at'
+            . ' WHERE ics_id = :id AND ics_owner = :owner AND ics_url = :url AND ics_last_checked_at = :checked'
+        );
+        $params = [
+            ':body' => $result['body'],
+            ':now' => $now,
+            ':updated_at' => $now,
+        ];
+    } else {
+        // Retain the last successfully fetched raw ICS when a refresh fails.
+        $update = $pdo->prepare(
+            'UPDATE ' . db_table_identifier('calendar_ics_subscription')
+            . " SET ics_status = 'error', ics_error_code = :error_code,"
+            . ' ics_updated_at = :updated_at'
+            . ' WHERE ics_id = :id AND ics_owner = :owner AND ics_url = :url AND ics_last_checked_at = :checked'
+        );
+        $params = [
+            ':error_code' => $result['error_code'],
+            ':updated_at' => $now,
+        ];
+    }
+    $update->execute($params + [
         ':id' => $id, ':owner' => $ownerId, ':url' => $owned['ics_url'], ':checked' => $now,
     ]);
     return true;
