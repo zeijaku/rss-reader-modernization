@@ -9,8 +9,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.49.0`
-Release tag: `v1.49.0`
+**Stable release:** `RSS Reader Modernization 1.49.1`
+Release tag: `v1.49.1`
+
+Version 1.49.1は、Calendar予定追加・変更の入力画面をBootstrap 5に合わせて整理し、所要時間指定とマットな四角い色マーカーを追加した小規模UI改善版です。DB・保存APIは変更していません。 [正式版の更新・確認手順](docs/v1.49.1-release.md)を参照してください。
 
 Version 1.49.0は、DashboardのFeed表示・通信とArticle Actions（メニュー、URLコピー・X共有、Stock・Task、Reader Mode）を段階的にモジュール分離し、全文取得のスコープ参照不具合を修正したModernization Releaseです。DB Migration／新規必須Configはありません。 [正式版の更新・確認手順](docs/v1.49.0-release.md)を参照してください。
 

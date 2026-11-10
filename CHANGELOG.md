@@ -1,3 +1,11 @@
+## 1.49.1 - 2026-11-10
+
+- Refine Calendar create/edit modals with Bootstrap theme-aligned layout, grouped source Calendar and event color, highlighted date/time panel, and existing collapsible details. Preserve recurrence, reminders, deadline highlighting, and occurrence-level edit controls.
+- Add 30-minute, 1-hour and 2-hour time-duration shortcuts, preserving date rollover and existing end-time shift. Keep all-day and manually adjusted times.
+- Show matte square color swatches for all five event colors in a Bootstrap dropdown, preserving the original select and blue/red/green/yellow/purple backend values; fall back to native select when the Bootstrap dropdown is unavailable.
+- Backport ONLY Calendar UI improvements user-tested in v1.50.0-dev.16, excluding in-development Precision Sniper. No schema migration, server API changes or mandatory new configuration.
+- User confirmed Dev16 visually/functionally without observed issue; CI and Release Workflow handle broader regression, package and security checks. This does not establish complete cross-browser coverage.
+
 ## 1.49.0 - 2026-10-22
 
 - Deliver the staged Dashboard integration and Article Actions modernization verified in Dev4–Dev10-D, preserving existing Feed, Search Feed, Reader Mode, Stock, Task, Clipboard and X interactions.

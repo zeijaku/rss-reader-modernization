@@ -1,23 +1,21 @@
-# RSS Reader Modernization 1.49.0
+# RSS Reader Modernization 1.49.1
 
-V1.49.0は、既存のDashboardとArticle Actionsの動作を維持しながら、Feed表示・通信・Reader Modeと記事操作を分割して保守性を改善するModernization Releaseです。Application VersionとAsset Revisionは`1.49.0`。Database Migrationと新規必須Config変更はありません。
+V1.49.1は、既存の正式版V1.49.0へCalendarの予定追加・変更UIだけを統合する小規模改善版です。ユーザーが確認したv1.50.0-dev.16を元に、Calendar関連の変更だけをmainへ移植しました。未正式化のPrecision Sniperや他のv1.50開発機能は含みません。APP_VERSIONとAPP_ASSET_REVISIONはともに`1.49.1`です。DB Migration、既存API変更、新規必須設定はありません。
 
 ## Changes
 
-- DashboardのFeed描画・取得・見出し、Search Feed、Widget順序、タブスワイプを独立したモジュールへ整理。従来のイベントと共通API／CSRF処理を保持します。
-- Article Actionsをメニュー配置・開閉／キーボード操作・URLコピー／X共有・Stock保存／解除・Task追加・Reader Modeに分離。現在の操作対象記事の状態は1か所で管理します。
-- Reader ModeのFeed共通関数参照を明確化し、RSS本文と全文取得が読み込み中のまま停止するスコープ参照不具合を修正。失敗時はRSS本文を維持し、外部URLの安全性検証と安全化済みHTMLのみによる全文表示を保持します。
-- RSS取得のサイズ上限は変更しません。既定2MiBを超えるFeedは意図されたHTTP 422と画面内エラー表示、再試行で扱います。
-- 新しいブラウザモジュールの読込順・実行型回帰テストを強化し、既存のMail・Calendar・Games・Remote Files機能を継続利用できる構成にします。
-- MailのComposer依存ライブラリ（ImapEngine 1.25.6と必要な依存）を正式Runtimeパッケージで検証します。
+- 予定追加／変更モーダルにBootstrapテーマに沿うヘッダー、Calendar選択と色のグループ、日時の明確な区切り、場所・URL・メモの詳細表示を用意。
+- 時刻指定の所要時間30分／1時間／2時間のショートカット。終了日が翌日に跨る場合も対応。終日・手動設定と既存の終了時刻連動を保持。
+- 予定色の5選択肢に落ち着いた15pxの四角い色マーカー。Bootstrap Dropdownで表示し、元のselectと保存値を維持。Dropdown非対応時はnative selectへフォールバック。
+- 繰り返し・Occurrence単位の変更、通知、締切強調、Calendarの所属、場所／URL／メモ、日／週／月、既存のドラッグ・コピーなどのAPI／DBは変更していません。
+- v1.49.0で提供済みのFeed・Reader Mode、Remote Files、Mail、Game、認証・Security境界は維持。
 
 ## Verification limits
 
-- Dev10-A〜DはユーザーによるPC中心の実画面確認済み。Reader Mode、Stock、Task、コピー・X投稿に問題報告はありません。ただし全OS／ブラウザ／エラー経路の網羅確認を意味しません。
-- GitHub ActionsでPHP 8.1／8.4回帰テスト、Apache隔離、Node実行型Reader・Article Actions回帰を確認します。Python版Playwrightのブラウザテストは未導入のCIではスキップされます。
-- CNET Japan RSS（計測時約2.98MiB）は2MiB上限を超えます。この仕様上の取得拒否は不具合とは判定せず、既存のセキュリティ上限は維持します。
-- インターネット上のRSS形式や記事抽出結果、すべてのIMAP環境での動作を保証するものではありません。
+- Dev16に対してユーザーから画面・動作に問題なしとの報告があります。全OS／ブラウザ／テーマ／操作経路を網羅した検証ではありません。
+- GitHub ActionsのPHP 8.1／8.4回帰、Apache隔離、release-ready・secret scan、Runtime／Complete Source ZIP・SHA-256・clean-roomチェックが正式Releaseのゲートです。
+- 色マーカーの表示はブラウザのCSSサポートの範囲で保証されます。Bootstrap Dropdownがない場合は標準selectを使用します。
 
 ## Deployment and rollback
 
-[正式版の更新・確認・復旧手順](docs/v1.49.0-release.md)を参照してください。コード・隠しファイル・設定・DB・稼働データをバックアップし、正式Runtime ZIPをアプリケーションルートへ配置してください。 `vendor/autoload.php` を含むMail依存ライブラリとJavaScriptファイルが揃っていることを確認します。DB Migrationはありません。不具合時はコードを旧版へ戻し、既存の秘密設定と保存データを保持してください。
+[正式版の更新・確認・復旧手順](docs/v1.49.1-release.md)を参照してください。リリースZIPを使用する際、既存のコード／vendor／隠しファイル／設定／DB／稼働データをバックアップしてください。config/local.phpやvar/、アップロード済みデータを上書き・削除しないでください。DB Migrationはありません。問題が発生した場合はv1.49.0のコード一式を戻します。
