@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/calendar_exception.php';
+require_once __DIR__ . '/calendar_ics.php';
+require_once __DIR__ . '/calendar_ics_parser.php';
 
 const CALENDAR_RANGE_MAX_DAYS = 42;
 const CALENDAR_RANGE_MAX_SOURCE_EVENTS = 500;
@@ -250,12 +252,20 @@ function calendar_range_data(int $ownerId, int $widgetId, string $rangeStart, st
     $cancelledSourceState = function_exists('calendar_source_attach_to_events')
         ? calendar_source_attach_to_events($ownerId, $eventState['cancelled_occurrences'])
         : ['events' => $eventState['cancelled_occurrences'], 'sources' => $sourceState['sources']];
+    // Read-only ICS events are never inserted into local event tables.
+    // An unavailable external subscription must not prevent local Calendar loading.
+    try {
+        $icsState = calendar_ics_range($ownerId, $range['start'], $range['end']);
+    } catch (Throwable $exception) {
+        error_log('Calendar ICS range unavailable: ' . $exception::class);
+        $icsState = ['events' => [], 'sources' => []];
+    }
     return [
         'range_start' => $range['start'],
         'range_end' => $range['end'],
         'range_days' => $range['days'],
-        'events' => $sourceState['events'],
-        'sources' => $sourceState['sources'],
+        'events' => array_merge($sourceState['events'], $icsState['events']),
+        'sources' => array_merge($sourceState['sources'], $icsState['sources']),
         'cancelled_occurrences' => $cancelledSourceState['events'],
         'tasks' => calendar_range_task_list(
             $ownerId,

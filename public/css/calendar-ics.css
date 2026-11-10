@@ -185,3 +185,42 @@
         grid-template-columns: minmax(0, 1fr) 6rem;
     }
 }
+
+
+/* Dev3: external subscribed events share Calendar's layout but remain immutable. */
+#main-content .calendar-ics-event-entry {
+    cursor: pointer;
+    border-left-style: dashed;
+    border-left-width: 3px;
+    outline-offset: 2px;
+}
+#main-content .calendar-ics-event-entry:focus-visible {
+    outline: 2px solid var(--bs-primary, #0d6efd);
+}
+#main-content .calendar-ics-event-entry .calendar-source-icon {
+    flex-shrink: 0;
+}
+.calendar-ics-event-details-modal .modal-title { font-weight: 600; }
+.calendar-ics-event-details-modal .calendar-ics-detail-title {
+    overflow-wrap: anywhere;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+.calendar-ics-event-details-modal .calendar-ics-detail-list {
+    display: grid;
+    grid-template-columns: minmax(4rem, 5rem) minmax(0, 1fr);
+    column-gap: .75rem;
+    row-gap: .65rem;
+    align-items: start;
+}
+.calendar-ics-event-details-modal .calendar-ics-detail-list dt {
+    color: var(--bs-secondary-color, #6c757d);
+    font-weight: 600;
+    font-size: .85rem;
+}
+.calendar-ics-event-details-modal .calendar-ics-detail-list dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+.calendar-ics-event-details-modal .calendar-ics-detail-url[hidden] { display: none !important; }

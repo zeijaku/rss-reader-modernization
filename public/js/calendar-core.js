@@ -442,6 +442,44 @@
                 + (item._calendar_span_continues_before === true ? ' calendar-event-span-continued-before' : '')
                 + (item._calendar_span_continues_after === true ? ' calendar-event-span-continued-after' : '')
             : '';
+        // External ICS entries are display-only. They deliberately omit the
+        // editable event trigger, numeric event ID, drag handles and local modal.
+        if (item.external_read_only === true && item.source_type === 'ics') {
+            var icsSourceId = String(item.calendar_source_id || '');
+            if (!/^ics:[1-9][0-9]*$/.test(icsSourceId)) {
+                return $('<span>').addClass('calendar-entry').text(item.title || '外部予定');
+            }
+            var $icsButton = $('<button>')
+                .attr('type', 'button')
+                .addClass('calendar-entry calendar-event-entry calendar-ics-event-entry calendar-event-color-'
+                    + color + spanClasses)
+                .attr('data-calendar-source-id', icsSourceId)
+                .attr('data-calendar-source-type', 'ics')
+                .attr('data-calendar-source-name', String(item.calendar_source_name || '外部ICS'))
+                .attr('data-calendar-source-label-color', validEventColor(item.calendar_source_color || 'blue'))
+                .attr('data-calendar-lane', Number.isInteger(item._calendar_lane) ? String(item._calendar_lane) : null)
+                .attr('data-calendar-span-position', multiDay ? spanPosition : 'single')
+                .attr('data-ics-title', String(item.title || ''))
+                .attr('data-ics-note', String(item.note || ''))
+                .attr('data-ics-location', String(item.location || ''))
+                .attr('data-ics-url', String(item.url || ''))
+                .attr('data-ics-start-date', String(item.occurrence_start_date || ''))
+                .attr('data-ics-end-date', String(item.occurrence_end_date || ''))
+                .attr('data-ics-start-time', publicTime(item.start_time))
+                .attr('data-ics-end-time', publicTime(item.end_time))
+                .attr('data-ics-all-day', item.all_day === true ? '1' : '0')
+                .attr('aria-label', '外部ICS（読み取り専用）: ' + String(item.title || ''))
+                .attr('title', '外部ICS（読み取り専用）: ' + String(item.title || ''))
+                .append($('<i>').addClass('fas fa-link calendar-source-icon calendar-source-icon-' + color)
+                    .attr('aria-hidden', 'true'));
+            var icsTime = eventTimeLabel(item, date);
+            if (icsTime !== '') {
+                $icsButton.append($('<span>').addClass('calendar-event-time-label').text(icsTime));
+            }
+            $icsButton.append($('<span>').addClass('calendar-entry-title').text(item.title || ''));
+            return $icsButton;
+        }
+
         var $button = $('<button>')
             .attr('type', 'button')
             .addClass('calendar-entry calendar-event-entry calendar-event-edit-trigger calendar-event-color-' + color
@@ -1094,6 +1132,32 @@
             .off('click' + eventNamespace, '.calendar-event-edit-trigger')
             .on('click' + eventNamespace, '.calendar-event-edit-trigger', function () {
                 editCalendarEvent($(this));
+            })
+            .off('click' + eventNamespace, '.calendar-ics-event-entry')
+            .on('click' + eventNamespace, '.calendar-ics-event-entry', function () {
+                var modal = document.getElementById('calendarIcsEventDetails');
+                if (!modal || !window.bootstrap || !window.bootstrap.Modal) return;
+                var get = function (name) { return String(this.getAttribute(name) || ''); }.bind(this);
+                var title = get('data-ics-title');
+                var start = get('data-ics-start-date');
+                var end = get('data-ics-end-date');
+                var allDay = get('data-ics-all-day') === '1';
+                var time = allDay ? '終日' : get('data-ics-start-time')
+                    + (get('data-ics-end-time') ? ' 〜 ' + get('data-ics-end-time') : '');
+                var when = start + (end && end !== start ? ' 〜 ' + end : '') + '　' + time;
+                $(modal).find('.calendar-ics-detail-title').text(title || '（無題）');
+                $(modal).find('.calendar-ics-detail-source').text(get('data-calendar-source-name'));
+                $(modal).find('.calendar-ics-detail-when').text(when);
+                $(modal).find('.calendar-ics-detail-location').text(get('data-ics-location') || '—');
+                $(modal).find('.calendar-ics-detail-description').text(get('data-ics-note') || '—');
+                var url = get('data-ics-url');
+                var $link = $(modal).find('.calendar-ics-detail-url');
+                if (/^https:\/\/[^/\s?#]+/i.test(url) && !/[\u0000-\u0020]/.test(url)) {
+                    $link.attr('href', url).prop('hidden', false);
+                } else {
+                    $link.removeAttr('href').prop('hidden', true);
+                }
+                window.bootstrap.Modal.getOrCreateInstance(modal).show();
             })
             .off('submit' + eventNamespace, '#changeCalendarEventForm')
             .on('submit' + eventNamespace, '#changeCalendarEventForm', function (event) {
