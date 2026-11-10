@@ -712,7 +712,7 @@
 <div class="modal fade calendar-event-modal" id="registerCalendarEvent" tabindex="-1" role="dialog" aria-labelledby="registerCalendarEventTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg calendar-event-modal-dialog" role="document"><div class="modal-content">
         <form id="registerCalendarEventForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerCalendarEventTitle"><i class="fas fa-calendar-plus" aria-hidden="true"></i> 予定を追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+        <div class="modal-header bg-primary text-white"><h5 class="modal-title" id="registerCalendarEventTitle"><i class="fas fa-calendar-plus" aria-hidden="true"></i> 予定を追加</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <div class="mb-3"><label class="form-label" for="registerCalendarEventTitleValue"><small class="text-dark">予定</small></label><input type="text" class="form-control registerCalendarEventTitleValue" id="registerCalendarEventTitleValue" maxlength="128" required></div>
             <div class="mb-3 calendar-event-source-field"><label class="form-label" for="registerCalendarEventSource"><small class="text-dark">Calendar</small></label><select class="form-select registerCalendarEventSource" id="registerCalendarEventSource" required><option value="">読み込み中...</option></select></div>
@@ -728,7 +728,7 @@
 <div class="modal fade calendar-event-modal" id="changeCalendarEvent" tabindex="-1" role="dialog" aria-labelledby="changeCalendarEventTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg calendar-event-modal-dialog" role="document"><div class="modal-content">
         <form id="changeCalendarEventForm" method="post" action="./">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="changeCalendarEventTitle"><i class="far fa-calendar-check" aria-hidden="true"></i> 予定を変更</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+        <div class="modal-header bg-primary text-white"><h5 class="modal-title" id="changeCalendarEventTitle"><i class="far fa-calendar-check" aria-hidden="true"></i> 予定を変更</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <input type="hidden" class="changeCalendarEventId">
             <input type="hidden" class="changeCalendarOccurrenceOriginalStartDate">
