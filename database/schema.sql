@@ -20,7 +20,7 @@ SET @t_feed_item_state = CONCAT('`', @table_prefix, 'feed_item_state`');
 SET @t_memo = CONCAT('`', @table_prefix, 'memo`');
 SET @t_task = CONCAT('`', @table_prefix, 'task`');
 SET @t_calendar_source = CONCAT('`', @table_prefix, 'calendar_source`');
-SET @t_calendar_ics = CONCAT('`', @table_prefix, 'calendar_ics_subscription`');
+SET @t_calendar_ics_subscription = CONCAT('`', @table_prefix, 'calendar_ics_subscription`');
 SET @t_calendar_event = CONCAT('`', @table_prefix, 'calendar_event`');
 SET @t_calendar_event_exception = CONCAT('`', @table_prefix, 'calendar_event_exception`');
 SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
@@ -188,7 +188,7 @@ PREPARE v144a_schema_stmt FROM @sql; EXECUTE v144a_schema_stmt; DEALLOCATE PREPA
 
 -- Dev1 ICS subscription metadata and private unparsed cache (035).
 SET @sql = CONCAT(
-  'CREATE TABLE ', @t_calendar_ics, ' (',
+  'CREATE TABLE ', @t_calendar_ics_subscription, ' (',
   '`ics_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
   '`ics_owner` INT UNSIGNED NOT NULL,',
   '`ics_name` VARCHAR(40) NOT NULL,',

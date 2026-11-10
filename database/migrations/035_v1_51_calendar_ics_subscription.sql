@@ -4,9 +4,9 @@
 -- Additive: existing calendar_source and calendar_event remain untouched.
 SET NAMES utf8mb4;
 SET @table_prefix = 'ig_';
-SET @t_calendar_ics = CONCAT('`', @table_prefix, 'calendar_ics_subscription`');
+SET @t_calendar_ics_subscription = CONCAT('`', @table_prefix, 'calendar_ics_subscription`');
 SET @sql = CONCAT(
-  'CREATE TABLE IF NOT EXISTS ', @t_calendar_ics, ' (',
+  'CREATE TABLE IF NOT EXISTS ', @t_calendar_ics_subscription, ' (',
   '`ics_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,',
   '`ics_owner` INT UNSIGNED NOT NULL,',
   '`ics_name` VARCHAR(40) NOT NULL,',
