@@ -62,6 +62,7 @@
         if (gameType === 'maze_chase') return 'Maze Chase';
         if (gameType === 'falling_blocks') return 'Falling Blocks';
         if (gameType === 'word_tiles') return 'Word Tiles';
+        if (gameType === 'precision_sniper') return 'Precision Sniper';
         return gameType === 'lights_out' ? 'Lights Out' : 'Icon Quest';
     }
 
@@ -103,7 +104,7 @@
 
     function removeGameWidgetBrowserState(widgetId, gameType, nextGameType) {
         if (['word_tiles', 'word_tiles_ja'].indexOf(gameType) !== -1 && ['word_tiles', 'word_tiles_ja'].indexOf(nextGameType) !== -1) return;
-        if ((!gameType || gameType === 'maze_chase' || gameType === 'falling_blocks' || gameType === 'word_tiles' || gameType === 'word_tiles_ja') && window.RssGameWidget) window.RssGameWidget.removeWidgetState(widgetId);
+        if ((!gameType || gameType === 'maze_chase' || gameType === 'falling_blocks' || gameType === 'word_tiles' || gameType === 'word_tiles_ja' || gameType === 'precision_sniper') && window.RssGameWidget) window.RssGameWidget.removeWidgetState(widgetId, gameType === 'precision_sniper' ? gameType : undefined);
         if ((!gameType || gameType === 'icon_quest') && window.RssMiniGame && typeof window.RssMiniGame.removeWidgetState === 'function') {
             window.RssMiniGame.removeWidgetState(widgetId);
         }
