@@ -344,7 +344,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          grep -Fxq "const APP_VERSION = '1.51.0-dev.1.1';" app/version.php
+          grep -Fxq "const APP_VERSION = '1.51.0-dev.2';" app/version.php
           mkdir -p dist
           files=(
             app/version.php
