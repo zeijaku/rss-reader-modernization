@@ -752,24 +752,96 @@
     </div></div>
 </div>
 
-<!-- Calendar管理モーダル -->
-<div class="modal fade" id="calendarSourceManager" tabindex="-1" role="dialog" aria-labelledby="calendarSourceManagerTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document"><div class="modal-content">
-        <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="calendarSourceManagerTitle"><i class="fas fa-layer-group" aria-hidden="true"></i> Calendar管理</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
+<!-- Calendar管理モーダル：通常Calendar / 外部ICS購読 -->
+<div class="modal fade calendar-manager-modal" id="calendarSourceManager" tabindex="-1" role="dialog" aria-labelledby="calendarSourceManagerTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg" role="document"><div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="calendarSourceManagerTitle"><i class="fas fa-layer-group me-2" aria-hidden="true"></i>Calendar管理</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+        </div>
         <div class="modal-body">
-            <form id="calendarSourceCreateForm" class="calendar-source-create-form">
-                <div class="row g-2 align-items-end">
-                    <div class="col-sm-7"><label class="form-label" for="calendarSourceCreateName"><small class="text-dark">新しいCalendar名</small></label><input type="text" class="form-control calendarSourceCreateName" id="calendarSourceCreateName" maxlength="40" required></div>
-                    <div class="col-sm-3"><label class="form-label" for="calendarSourceCreateColor"><small class="text-dark">識別色</small></label><select class="form-select calendarSourceCreateColor" id="calendarSourceCreateColor"><option value="blue">青</option><option value="green">緑</option><option value="purple">紫</option><option value="yellow">黄</option><option value="red">赤</option></select></div>
-                    <div class="col-sm-2 d-grid"><button type="submit" class="btn btn-primary">追加</button></div>
-                </div>
-            </form>
-            <hr>
-            <div class="calendar-source-manager-list" aria-live="polite"><span class="text-muted small">Calendarを読み込んでいます</span></div>
-            <small class="form-text text-muted d-block mt-2">既定Calendarは削除出来ません。ほかのCalendarを削除すると、その予定は既定Calendarへ移動します。</small>
+            <ul class="nav nav-pills nav-fill gap-2 calendar-manager-tabs mb-3" id="calendarManagerTabs" role="tablist" aria-label="カレンダーの管理対象">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="calendarManagerLocalTab" data-bs-toggle="tab" data-bs-target="#calendarManagerLocalPane" type="button" role="tab" aria-controls="calendarManagerLocalPane" aria-selected="true"><i class="fas fa-layer-group me-1" aria-hidden="true"></i>通常Calendar</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="calendarManagerIcsTab" data-bs-toggle="tab" data-bs-target="#calendarManagerIcsPane" type="button" role="tab" aria-controls="calendarManagerIcsPane" aria-selected="false" tabindex="-1"><i class="fas fa-link me-1" aria-hidden="true"></i>外部ICS購読</button>
+                </li>
+            </ul>
+            <div class="tab-content calendar-manager-content" id="calendarManagerTabContent">
+                <section class="tab-pane fade show active" id="calendarManagerLocalPane" role="tabpanel" aria-labelledby="calendarManagerLocalTab" tabindex="0">
+                    <div class="calendar-manager-panel">
+                        <h6 class="calendar-manager-section-title">通常Calendarを追加</h6>
+                        <form id="calendarSourceCreateForm" class="calendar-source-create-form">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-sm-7"><label class="form-label" for="calendarSourceCreateName">Calendar名</label><input type="text" class="form-control calendarSourceCreateName" id="calendarSourceCreateName" maxlength="40" required></div>
+                                <div class="col-sm-3"><label class="form-label" for="calendarSourceCreateColor">識別色</label><select class="form-select calendarSourceCreateColor" id="calendarSourceCreateColor"><option value="blue">青</option><option value="green">緑</option><option value="purple">紫</option><option value="yellow">黄</option><option value="red">赤</option></select></div>
+                                <div class="col-sm-2 d-grid"><button type="submit" class="btn btn-primary">追加</button></div>
+                            </div>
+                        </form>
+                    </div>
+                    <h6 class="calendar-manager-section-title mt-3">登録済みCalendar</h6>
+                    <div class="calendar-source-manager-list" aria-live="polite"><span class="text-body-secondary small">Calendarを読み込んでいます</span></div>
+                    <p class="form-text mt-2 mb-0">既定Calendarは削除できません。ほかのCalendarの削除時は、その予定を既定Calendarへ移動します。</p>
+                </section>
+
+                <section class="tab-pane fade calendar-ics-manager" id="calendarManagerIcsPane" role="tabpanel" aria-labelledby="calendarManagerIcsTab" tabindex="0" aria-label="外部ICS購読">
+                    <div class="calendar-manager-panel">
+                        <h6 class="calendar-manager-section-title">ICS購読を追加</h6>
+                        <p class="small text-body-secondary mb-3">GoogleやOutlookの非公開ICSを購読します。RSS Readerの表示中は30分間隔で期限確認し、Calendarの更新ボタンでは手動取得を試みます（同一購読の取得は最短60秒間隔）。</p>
+                        <form id="calendarIcsCreateForm" autocomplete="off">
+                            <div class="row g-2">
+                                <div class="col-sm-7">
+                                    <label class="form-label" for="calendarIcsCreateName">表示名</label>
+                                    <input type="text" id="calendarIcsCreateName" class="form-control calendarIcsCreateName" maxlength="40" required>
+                                </div>
+                                <div class="col-sm-5">
+                                    <label class="form-label" for="calendarIcsCreateColor">識別色</label>
+                                    <select id="calendarIcsCreateColor" class="form-select calendarIcsCreateColor"><option value="blue">青</option><option value="green">緑</option><option value="purple">紫</option><option value="yellow">黄</option><option value="red">赤</option></select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="calendarIcsCreateUrl">ICS URL（HTTPSのみ）</label>
+                                    <input type="url" id="calendarIcsCreateUrl" class="form-control calendarIcsCreateUrl" maxlength="2048" placeholder="https://..." autocomplete="off" spellcheck="false" required>
+                                    <div class="form-text">非公開URLには閲覧用トークンが含まれます。第三者へ共有しないでください。</div>
+                                </div>
+                            </div>
+                            <div class="text-end mt-3"><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1" aria-hidden="true"></i>ICS購読を追加</button></div>
+                        </form>
+                    </div>
+                    <div class="calendar-ics-message alert mt-3 mb-0" role="status" aria-live="polite" hidden></div>
+                    <h6 class="calendar-manager-section-title mt-3">登録済みICS購読</h6>
+                    <div class="calendar-ics-manager-list" aria-live="polite"><span class="small text-body-secondary">ICS購読を読み込んでいます</span></div>
+                </section>
+            </div>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button></div>
     </div></div>
+</div>
+
+
+<!-- ICS読み取り専用イベント詳細：編集・削除は元カレンダーで行う -->
+<div class="modal fade calendar-ics-event-details-modal" id="calendarIcsEventDetails" tabindex="-1"
+     role="dialog" aria-labelledby="calendarIcsEventDetailsTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="calendarIcsEventDetailsTitle"><i class="fas fa-link me-2" aria-hidden="true"></i>外部ICSの予定</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-body-secondary mb-3"><i class="fas fa-lock me-1" aria-hidden="true"></i>読み取り専用です。予定の変更は元のカレンダーで行ってください。</p>
+                <h6 class="calendar-ics-detail-title mb-3"></h6>
+                <dl class="calendar-ics-detail-list mb-0">
+                    <dt>Calendar</dt><dd class="calendar-ics-detail-source"></dd>
+                    <dt>日時</dt><dd class="calendar-ics-detail-when"></dd>
+                    <dt>場所</dt><dd class="calendar-ics-detail-location"></dd>
+                    <dt>詳細</dt><dd class="calendar-ics-detail-description"></dd>
+                    <dt>リンク</dt><dd><a class="calendar-ics-detail-url" href="#" target="_blank" rel="noopener noreferrer" hidden>元のリンクを開く</a></dd>
+                </dl>
+            </div>
+            <div class="modal-footer"><button class="btn btn-secondary" type="button" data-bs-dismiss="modal">閉じる</button></div>
+        </div>
+    </div>
 </div>
 
 <?php

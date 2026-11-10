@@ -31,6 +31,12 @@ php tools/healthcheck.php
 
 Production serverでLocal変更がある場合は、その内容を確認するまで更新を進めません。
 
+## V1.51.0 正式版へ更新
+
+ICS購読を初めて導入する既存v1.49.1環境では、コード更新前に `database/migrations/035_v1_51_calendar_ics_subscription.sql` を、`@table_prefix`を実環境の`DB_TABLE_PREFIX`に合わせて**1回だけ**適用してください。v1.51.0-dev.1〜dev.4で既に035適用済みなら再実行しません。新規DBは`database/schema.sql`のみで構築します。
+
+正式版v1.51.0はGoogle／Outlook等のICS購読、Calendarへの読み取り専用表示、30分期限のアクセス連動型更新を統合します（開発中のPrecision Sniperは含みません）。更新後の確認とロールバックは [v1.51.0正式版](v1.51.0-release.md) を参照してください。
+
 ## V1.41.0 正式版の更新
 
 dev.7適用済みなら正式化差分の `app/version.php` だけを上書きします。追加SQLは不要です。旧TD素材の `public/assets/td/` と `licenses/kenney-td/` は削除できます（正式配布から除外済み）。TDの既存保存・星を維持します。詳しい適用手順は [V1.41.0 Release](v1.41.0-release.md) を参照してください。

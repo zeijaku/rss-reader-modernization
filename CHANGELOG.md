@@ -1,3 +1,14 @@
+## 1.51.0 - 2026-11-10
+
+- Integrate the user-verified ICS subscription work from development checkpoints v1.51.0-dev.1 through dev.4 as a dedicated Calendar feature release, based only on stable v1.49.1. Do **not** include the in-progress v1.50 Precision Sniper or unrelated game code.
+- Add owner-scoped subscription management with HTTPS-only private ICS URLs, per-calendar name/color, authenticated/CSRF-protected actions, and bounded SSRF-safe retrieval. Do not expose private subscription URL tokens or raw ICS via API.
+- Parse cached iCalendar VEVENTs into read-only Calendar display events (month/week/day) without writing to local Calendar event tables. Cover dates, all-day semantics, common TZID/time zones, and typical RRULE/EXDATE/RDATE/RECURRENCE-ID recurrence and exceptions. Keep complex unsupported RFC 5545 variants explicitly out of scope.
+- Add a dedicated Calendar management tab for ICS sources, distinguish status, and allow source visibility filters. Keep local Calendar create/edit/delete, occurrence changes, task integration, drag/drop and existing event UI separate from external read-only entries.
+- Refresh due subscriptions using a 30-minute owner/feed TTL while Calendar is visible; browser checks approximately every three minutes or after reopening/returning. Manual Calendar refresh also checks subscriptions but respects a minimum 60-second interval. Each API request fetches at most one remote source, and the normal Calendar range endpoint never makes external requests.
+- On successful ICS changes (including deletions yielding a valid empty calendar), replace the cached body and refresh the visible Calendar. On HTTP/validation failure, retain the last successfully cached body, expose a safe status indicator and back off until the next due check. Actual third-party ICS publication may lag.
+- Add additive database migration `035_v1_51_calendar_ics_subscription.sql` and update the fresh-install schema/verifier; existing users who installed Dev1 migration 035 must not reapply it. No mandatory new private settings or public PHP endpoints.
+- Extend ICS parser, isolation, auto-refresh, database contract and UI tests; verify PHP 8.1/8.4, Apache isolation, release-ready checks, secret scan, Runtime and Complete Source packages, manifests and checksums. User confirmed the latest Dev4 update; full browser and all external provider variants remain unverified.
+
 ## 1.49.1 - 2026-11-10
 
 - Refine Calendar create/edit modals with Bootstrap theme-aligned layout, grouped source Calendar and event color, highlighted date/time panel, and existing collapsible details. Preserve recurrence, reminders, deadline highlighting, and occurrence-level edit controls.

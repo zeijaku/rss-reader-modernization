@@ -1,3 +1,18 @@
+## Version 1.49.1からVersion 1.51.0（ICS購読）
+
+v1.51.0は、Google／OutlookなどのICS購読、読み取り専用Calendar表示、30分期限のアクセス連動自動更新を正式化します。開発中のPrecision Sniperなどv1.50系の機能は含まれません。
+
+1. アプリケーションのコード、`vendor/`、`.htaccess`、秘密設定`config/local.php`、DB、`var/`、利用者ファイルをバックアップする。
+2. ICSをまだ導入していない環境では `database/migrations/035_v1_51_calendar_ics_subscription.sql` の`@table_prefix`を`DB_TABLE_PREFIX`に合わせ、既存DBへ**1回だけ**適用。dev.1以降で035適用済みなら再実行しない。
+3. 正式版のRuntime ZIPのSHA-256を検証し、アプリケーションルートへコードを更新する。既存DBへ`database/schema.sql`を再実行しない。
+4. フッターが`1.51.0`、JS/CSSが`?v=1.51.0`になったことを確認する。
+5. Calendar管理のICSタブ、既存購読・秘密URLの非表示・取得状況、月／週／日表示、フィルター、読み取り専用詳細、通常予定のCRUDを確認する。
+6. 取得から60秒以上後にGoogle側で予定を追加／削除し、Calendar更新によって配信済みのICS差分が反映されることを確認。開いたままなら30分期限で自動更新対象になることを確認する。
+7. 復旧時はバックアップした旧アプリコードへ戻し、通常予定を保全する。035で作った独立テーブルを不用意に削除しない。
+
+`DB Migration: 035（ICS未導入時のみ）`、`新規必須設定: なし`、`公開PHPエンドポイント: 追加なし`。
+詳細は [V1.51.0正式版](v1.51.0-release.md) を参照してください。
+
 ## Version 1.48.0からVersion 1.49.0
 
 V1.49.0はDashboard／Article Actions／Reader Modeのモジュール分割を正式化します。DB Migrationと新規必須設定はありません。
