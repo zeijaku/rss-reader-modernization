@@ -408,3 +408,45 @@ jobs:
           path: dist/RSS_Reader_V1.51_Dev3_ICS_Display_Update.zip
           if-no-files-found: error
           retention-days: 30
+
+
+  ics_dev4_auto_refresh_overlay:
+    name: Dev4 ICS auto-refresh overlay ZIP
+    needs: [regression, p2b_apache_probe]
+    if: ${{ github.event_name == 'pull_request' && github.head_ref == 'feature/v1.51-dev4-ics-auto-sync' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout tested Dev4 branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build Dev4 auto-refresh update ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fxq "const APP_VERSION = '1.51.0-dev.4';" app/version.php
+          mkdir -p dist
+          files=(
+            app/version.php
+            app/calendar_ics.php
+            app/view/dashboard_modals.php
+            public/calendar_source_api.php
+            public/js/calendar-ics.js
+            public/js/calendar-core.js
+            docs/v1.51-dev4-ics-auto-refresh.md
+          )
+          sha256sum "${files[@]}" > dist/SHA256SUMS.txt
+          zip -q dist/RSS_Reader_V1.51_Dev4_ICS_Auto_Refresh_Update.zip "${files[@]}"
+          (cd dist && zip -q RSS_Reader_V1.51_Dev4_ICS_Auto_Refresh_Update.zip SHA256SUMS.txt)
+          unzip -tq dist/RSS_Reader_V1.51_Dev4_ICS_Auto_Refresh_Update.zip
+          sha256sum -c dist/SHA256SUMS.txt
+      - name: Publish verified Dev4 ICS ZIP
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: RSS_Reader_V1.51_Dev4_ICS_Auto_Refresh_Update
+          path: dist/RSS_Reader_V1.51_Dev4_ICS_Auto_Refresh_Update.zip
+          if-no-files-found: error
+          retention-days: 30

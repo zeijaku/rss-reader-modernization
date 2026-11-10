@@ -84,6 +84,7 @@ if (!in_array($action, [
     'calendar.ics.update',
     'calendar.ics.delete',
     'calendar.ics.refresh',
+    'calendar.ics.sync_due',
 ], true)) {
     calendar_source_error('unknown_action', 'Unknown API action.', 400);
 }
@@ -112,6 +113,13 @@ try {
             $id = calendar_ics_create($userId, $settings);
             calendar_source_success(['ics_id' => $id, 'subscriptions' => calendar_ics_list($userId)], 201);
         }
+        if ($action === 'calendar.ics.sync_due') {
+            $manual = $_POST['manual'] ?? '0';
+            if ($manual !== '0' && $manual !== '1') {
+                calendar_source_error('validation_error', 'Invalid ICS refresh mode.', 422);
+            }
+            calendar_source_success(['sync' => calendar_ics_sync_due($userId, $manual === '1')]);
+        }
         $id = app_validate_positive_int($_POST['ics_id'] ?? null);
         if ($id === null) {
             calendar_source_error('validation_error', 'ICS購読IDが不正です。', 422);
@@ -131,10 +139,14 @@ try {
             calendar_source_success(['subscriptions' => calendar_ics_list($userId)]);
         }
         if ($action === 'calendar.ics.refresh') {
-            if (!calendar_ics_refresh($userId, $id)) {
+            $refresh = null;
+            if (!calendar_ics_refresh($userId, $id, $refresh)) {
                 calendar_source_error('not_found', 'ICS購読が見つかりません。', 404);
             }
-            calendar_source_success(['subscriptions' => calendar_ics_list($userId)]);
+            calendar_source_success([
+                'subscriptions' => calendar_ics_list($userId),
+                'refresh' => $refresh,
+            ]);
         }
         if (!calendar_ics_delete($userId, $id)) {
             calendar_source_error('not_found', 'ICS購読が見つかりません。', 404);
