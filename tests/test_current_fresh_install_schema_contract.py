@@ -16,7 +16,7 @@ def check(condition: bool, message: str) -> None:
 
 expected_tables = {
     'user_info', 'user_conf', 'content', 'content_stock', 'feed_item_state',
-    'memo', 'task', 'calendar_source', 'calendar_event', 'calendar_event_exception',
+    'memo', 'task', 'calendar_source', 'calendar_ics_subscription', 'calendar_event', 'calendar_event_exception',
     'dashboard_widget', 'notification', 'remember_token', 'user_file',
     'remote_connection', 'auth_totp', 'auth_recovery_code', 'auth_session',
     'auth_audit_log', 'mail_account', 'link_item', 'stock_tag',
@@ -25,8 +25,8 @@ expected_tables = {
 }
 declared = set(re.findall(r"SET @t_([a-z0-9_]+) =", SCHEMA))
 created = set(re.findall(r"CREATE TABLE ', @t_([a-z0-9_]+)", SCHEMA))
-check(declared == expected_tables, 'fresh schema declares exactly the 28 current tables')
-check(created == expected_tables, 'fresh schema creates exactly the 28 current tables')
+check(declared == expected_tables, 'fresh schema declares exactly the 29 current tables')
+check(created == expected_tables, 'fresh schema creates exactly the 29 current tables')
 
 upgrade_migrations = [
     '009_v1_9_mail_account.sql',
@@ -42,6 +42,7 @@ upgrade_migrations = [
     '029_v1_35_remember_2fa_trust.sql',
     '033_v1_44_calendar_source.sql',
     '034_v1_44_calendar_location.sql',
+    '035_v1_51_calendar_ics_subscription.sql',
 ]
 
 for migration in upgrade_migrations:
