@@ -9,6 +9,8 @@ declare(strict_types=1);
 const CALENDAR_ICS_MAX_ACTIVE = 10;
 const CALENDAR_ICS_MAX_BYTES = 1048576;
 const CALENDAR_ICS_MIN_REFRESH_SECONDS = 60;
+const CALENDAR_ICS_AUTO_REFRESH_SECONDS = 1800; // 30 minutes per feed
+const CALENDAR_ICS_SYNC_BATCH_SIZE = 1; // Bound each HTTP request to one remote feed
 
 function calendar_ics_validate_url(mixed $value): ?string
 {
@@ -223,9 +225,15 @@ function calendar_ics_fetch(string $url, ?callable $resolver = null, ?callable $
     return ['ok' => true, 'body' => $body, 'error_code' => ''];
 }
 
-/** Fetch-on-request, rate-limited per subscription; Dev3 adds scheduled refresh. */
-function calendar_ics_refresh(int $ownerId, int $id): bool
+/**
+ * Fetch one owner-scoped subscription, with a 60-second lower bound for manual
+ * and automatic requests. A successful zero-VEVENT calendar replaces old data,
+ * so deletions propagate. Failure preserves last successful raw body.
+ * @param array<string,bool>|null $state Optional safe result metadata, never ICS content.
+ */
+function calendar_ics_refresh(int $ownerId, int $id, ?array &$state = null): bool
 {
+    $state = ['attempted' => false, 'changed' => false, 'failed' => false];
     $pdo = conn_db();
     $owned = calendar_ics_owned($pdo, $ownerId, $id);
     if ($owned === null) {
@@ -247,6 +255,9 @@ function calendar_ics_refresh(int $ownerId, int $id): bool
     }
     $result = calendar_ics_fetch((string) $owned['ics_url']);
     $ok = $result['ok'] === true;
+    $state['attempted'] = true;
+    $state['failed'] = !$ok;
+    $state['changed'] = $ok && (string) $result['body'] !== (string) ($owned['ics_raw'] ?? '');
     if ($ok) {
         $update = $pdo->prepare(
             'UPDATE ' . db_table_identifier('calendar_ics_subscription')
@@ -276,4 +287,60 @@ function calendar_ics_refresh(int $ownerId, int $id): bool
         ':id' => $id, ':owner' => $ownerId, ':url' => $owned['ics_url'], ':checked' => $now,
     ]);
     return true;
+}
+
+
+/** Returns the owner-specific feeds past a 30-minute TTL, or 60 seconds when forced. */
+function calendar_ics_due_count(int $ownerId, bool $manual = false): int
+{
+    $pdo = conn_db();
+    if ($ownerId <= 0 || !calendar_ics_schema_ready($pdo)) {
+        throw new RuntimeException('ICS subscription migration is required.');
+    }
+    $interval = $manual ? CALENDAR_ICS_MIN_REFRESH_SECONDS : CALENDAR_ICS_AUTO_REFRESH_SECONDS;
+    $cutoff = (new DateTimeImmutable('now', new DateTimeZone('Asia/Tokyo')))
+        ->modify('-' . $interval . ' seconds')->format('Y-m-d H:i:s');
+    $stmt = $pdo->prepare(
+        'SELECT COUNT(*) FROM ' . db_table_identifier('calendar_ics_subscription')
+        . ' WHERE ics_owner = :owner'
+        . ' AND (ics_last_checked_at IS NULL OR ics_last_checked_at < :cutoff)'
+    );
+    $stmt->execute([':owner'=>$ownerId, ':cutoff'=>$cutoff]);
+    return (int) $stmt->fetchColumn();
+}
+
+/**
+ * Lightweight user-initiated/lazy on-demand auto refresh. Never make external
+ * network requests from the Calendar range endpoint: this action is separate
+ * and capped to one URL per request (other feeds are processed in later calls).
+ * @return array{attempted:int,changed:int,failed:int,remaining:int,interval_minutes:int}
+ */
+function calendar_ics_sync_due(int $ownerId, bool $manual = false): array
+{
+    $pdo = conn_db();
+    if ($ownerId <= 0 || !calendar_ics_schema_ready($pdo)) {
+        throw new RuntimeException('ICS subscription migration is required.');
+    }
+    $interval = $manual ? CALENDAR_ICS_MIN_REFRESH_SECONDS : CALENDAR_ICS_AUTO_REFRESH_SECONDS;
+    $cutoff = (new DateTimeImmutable('now', new DateTimeZone('Asia/Tokyo')))
+        ->modify('-' . $interval . ' seconds')->format('Y-m-d H:i:s');
+    $stmt = $pdo->prepare(
+        'SELECT ics_id FROM ' . db_table_identifier('calendar_ics_subscription')
+        . ' WHERE ics_owner = :owner'
+        . ' AND (ics_last_checked_at IS NULL OR ics_last_checked_at < :cutoff)'
+        . ' ORDER BY ics_last_checked_at ASC, ics_id ASC LIMIT ' . CALENDAR_ICS_SYNC_BATCH_SIZE
+    );
+    $stmt->execute([':owner'=>$ownerId, ':cutoff'=>$cutoff]);
+    $summary = ['attempted'=>0, 'changed'=>0, 'failed'=>0, 'remaining'=>0,
+        'interval_minutes'=>intdiv(CALENDAR_ICS_AUTO_REFRESH_SECONDS, 60)];
+    foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $id) {
+        $state = null;
+        if (calendar_ics_refresh($ownerId, (int)$id, $state) && is_array($state)) {
+            $summary['attempted'] += $state['attempted'] ? 1 : 0;
+            $summary['changed'] += $state['changed'] ? 1 : 0;
+            $summary['failed'] += $state['failed'] ? 1 : 0;
+        }
+    }
+    $summary['remaining'] = calendar_ics_due_count($ownerId, $manual);
+    return $summary;
 }

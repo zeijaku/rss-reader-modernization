@@ -1177,7 +1177,23 @@
                 moveCalendarMonth($(this).closest('[data-dashboard-widget-type="calendar"]'), 1);
             })
             .off('click' + eventNamespace, '.calendar-refresh')
-            .on('click' + eventNamespace, '.calendar-refresh', function () { refreshCalendarsQuietly($(this).closest('[data-dashboard-widget-type="calendar"]')); })
+            .on('click' + eventNamespace, '.calendar-refresh', function () {
+                var $button = $(this);
+                var $card = $button.closest('[data-dashboard-widget-type="calendar"]');
+                var ics = window.iGuguruCalendarIcs;
+                if (!ics || typeof ics.syncDue !== 'function') {
+                    refreshCalendarsQuietly($card);
+                    return;
+                }
+                // A user-initiated Calendar refresh also checks Google/Outlook ICS.
+                // Keep remote HTTP off the normal range endpoint and never block
+                // existing Calendar data if an external subscription fails.
+                $button.prop('disabled', true).attr('aria-busy', 'true');
+                ics.syncDue(true).always(function () {
+                    $button.prop('disabled', false).removeAttr('aria-busy');
+                    refreshCalendarsQuietly($card);
+                });
+            })
             .off('click' + eventNamespace, '.calendar-today')
             .on('click' + eventNamespace, '.calendar-today', function () {
                 var $card = $(this).closest('[data-dashboard-widget-type="calendar"]');
@@ -1202,7 +1218,17 @@
                 );
             })
             .off('calendar:occurrenceChanged' + eventNamespace)
-            .on('calendar:occurrenceChanged' + eventNamespace, refreshVisibleCalendars);
+            .on('calendar:occurrenceChanged' + eventNamespace, refreshVisibleCalendars)
+            .off('calendar:icsCacheChanged' + eventNamespace)
+            .on('calendar:icsCacheChanged' + eventNamespace, function () {
+                // Data arrives asynchronously. Defer visual refresh while a modal
+                // is open; the existing hidden.bs.modal handler picks it up.
+                if (document.hidden || calendarBusy()) {
+                    $('[data-dashboard-widget-type="calendar"]').data('calendar-refresh-deferred', true);
+                    return;
+                }
+                refreshVisibleCalendars();
+            });
     }
 
     function init() {

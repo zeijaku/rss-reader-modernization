@@ -788,7 +788,7 @@
                 <section class="tab-pane fade calendar-ics-manager" id="calendarManagerIcsPane" role="tabpanel" aria-labelledby="calendarManagerIcsTab" tabindex="0" aria-label="外部ICS購読">
                     <div class="calendar-manager-panel">
                         <h6 class="calendar-manager-section-title">ICS購読を追加</h6>
-                        <p class="small text-body-secondary mb-3">GoogleやOutlookの非公開ICS URLを登録します。Dev1では取得確認まで対応し、予定の表示はDev2で対応します。</p>
+                        <p class="small text-body-secondary mb-3">GoogleやOutlookの非公開ICSを購読します。RSS Readerの表示中は30分間隔で期限確認し、Calendarの更新ボタンでは手動取得を試みます（同一購読の取得は最短60秒間隔）。</p>
                         <form id="calendarIcsCreateForm" autocomplete="off">
                             <div class="row g-2">
                                 <div class="col-sm-7">

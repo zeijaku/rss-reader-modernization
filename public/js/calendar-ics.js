@@ -1,15 +1,20 @@
 (function ($, window, document) {
     'use strict';
 
-    // Dev1: ICS subscription management only. Event parsing/display is Dev2.
+    // Dev4: ICS subscriptions, on-demand stale cache refresh and manual sync.
     var endpoint = './calendar_source_api.php';
     var namespace = '.iguguruCalendarIcs';
     var colors = ['blue', 'green', 'purple', 'yellow', 'red'];
     var names = {blue:'青', green:'緑', purple:'紫', yellow:'黄', red:'赤'};
+    var AUTO_CHECK_MS = 180000; // check server every 3 minutes; server TTL is 30 minutes
+    var syncInFlight = null;
+    var syncModeManual = false;
+    var lastAutoAttempt = 0;
+    var syncTimer = null;
 
-    function request(action, data) {
+    function request(action, data, timeoutMs) {
         return $.ajax({
-            url: endpoint, method: 'POST', dataType: 'json', timeout: 19000,
+            url: endpoint, method: 'POST', dataType: 'json', timeout: timeoutMs || 19000,
             data: $.extend({
                 action: action,
                 csrf_token: $('meta[name="csrf-token"]').attr('content') || ''
@@ -22,6 +27,89 @@
             }
         });
     }
+
+
+    /**
+     * Lazy, non-blocking refresh. The server checks each owner's subscriptions,
+     * claims only due feeds (30 min, or 60s for manual), and returns safe counts.
+     * Process up to 10 feeds in independent AJAX requests, never fetching remote
+     * ICS synchronously in the normal Calendar range.list endpoint.
+     */
+    function syncDue(manual) {
+        manual = manual === true;
+        if (syncInFlight) {
+            // A manual Calendar refresh must not be lost behind an ongoing
+            // automatic "not due yet" check; run it after the active sync.
+            if (manual && !syncModeManual) {
+                return syncInFlight.then(
+                    function () { return syncDue(true); },
+                    function () { return syncDue(true); }
+                );
+            }
+            return syncInFlight;
+        }
+        var deferred = $.Deferred();
+        var promise = deferred.promise();
+        syncInFlight = promise;
+        syncModeManual = manual;
+        var summary = {attempted:0, changed:0, failed:0, remaining:0, interval_minutes:30};
+        var cycles = 0;
+        function run() {
+            cycles += 1;
+            request('calendar.ics.sync_due', {manual: manual ? '1' : '0'}, 40000)
+                .done(function (response) {
+                    var state = response && response.ok === true && response.data && response.data.sync;
+                    if (!state) {
+                        deferred.reject({responseJSON:{error:{message:'ICSの更新結果を確認できませんでした。'}}});
+                        return;
+                    }
+                    summary.attempted += Number(state.attempted || 0);
+                    summary.changed += Number(state.changed || 0);
+                    summary.failed += Number(state.failed || 0);
+                    summary.remaining = Number(state.remaining || 0);
+                    if (summary.remaining > 0 && cycles < 10 && Number(state.attempted || 0) > 0) {
+                        run();
+                    } else {
+                        deferred.resolve(summary);
+                    }
+                })
+                .fail(function (xhr) {
+                    deferred.reject(xhr);
+                });
+        }
+        // Notify only after a complete (or failed) run, and avoid recursive syncs
+        // when Calendar re-renders after new external data is available.
+        deferred.done(function (result) {
+            if (result.changed > 0) {
+                $(document).trigger('calendar:icsCacheChanged');
+            }
+        });
+        deferred.fail(function () {
+            if (summary.changed > 0) {
+                $(document).trigger('calendar:icsCacheChanged');
+            }
+        });
+        deferred.always(function () { syncInFlight = null; syncModeManual = false; });
+        run();
+        return promise;
+    }
+
+    function checkDue() {
+        if (document.hidden || !$('[data-dashboard-widget-type="calendar"]').length) {
+            return;
+        }
+        if (syncInFlight || Date.now() - lastAutoAttempt < AUTO_CHECK_MS) {
+            return;
+        }
+        lastAutoAttempt = Date.now();
+        syncDue(false).fail(function () {
+            // Transient errors must never disrupt normal Calendar rendering.
+        });
+    }
+
+    // Core uses this when the user explicitly presses Calendar's refresh button.
+    // That path bypasses the 30-minute TTL but still respects the per-feed 60s cap.
+    window.iGuguruCalendarIcs = {syncDue:syncDue, checkDue:checkDue};
 
     function notice(text, error) {
         var $target = $('.calendar-ics-message');
@@ -70,7 +158,8 @@
                 insecure_redirect: '安全でない転送先',
                 empty_response: '空の応答'
             };
-            return errorNames[item.error_code] || '接続・取得エラー';
+            var reason = errorNames[item.error_code] || '接続・取得エラー';
+            return reason + (Number(item.cached_bytes || 0) > 0 ? '（前回の予定を表示中）' : '');
         }
         return 'まだデータを取得していません';
     }
@@ -173,6 +262,9 @@
                             notice('直近の取得結果を表示しています（1分以内の再取得は省略します）。', false);
                             return;
                         }
+                        if (response.data.refresh && response.data.refresh.changed === true) {
+                            $(document).trigger('calendar:icsCacheChanged');
+                        }
                         if (item && item.status === 'error') {
                             notice('ICS取得に失敗しました：' + statusDetail(item), true);
                             return;
@@ -213,7 +305,9 @@
                     if (response && response.ok && response.data) {
                         render(response.data.subscriptions);
                         $form.find('.calendarIcsCreateName, .calendarIcsCreateUrl').val('');
-                        notice('ICS購読を登録しました。「今すぐ取得」で接続を確認できます。', false);
+                        notice('ICS購読を登録しました。自動更新または「今すぐ取得」で接続を確認できます。', false);
+                        lastAutoAttempt = 0;
+                        checkDue();
                     }
                 })
                 .fail(function (xhr) { notice(errorMessage(xhr), true); })
@@ -240,4 +334,22 @@
             }
             mutate(this, 'calendar.ics.delete', {ics_id:$row.attr('data-ics-id')}, 'ICS購読を削除しました。');
         });
+
+    // First Calendar data load, periodic visible-page checks, and tab resume.
+    $(document)
+        .on('calendar:rangeLoaded' + namespace, '[data-dashboard-widget-type="calendar"]', checkDue)
+        .on('visibilitychange' + namespace, function () {
+            if (!document.hidden) checkDue();
+        });
+    $(window).on('focus' + namespace, checkDue);
+    syncTimer = window.setInterval(checkDue, AUTO_CHECK_MS);
+    $(window).on('pagehide' + namespace, function () {
+        if (syncTimer !== null) {
+            window.clearInterval(syncTimer);
+            syncTimer = null;
+        }
+    }).on('pageshow' + namespace, function () {
+        if (syncTimer === null) syncTimer = window.setInterval(checkDue, AUTO_CHECK_MS);
+        checkDue();
+    });
 }(window.jQuery, window, document));
