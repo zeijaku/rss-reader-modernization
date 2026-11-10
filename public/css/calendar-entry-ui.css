@@ -125,3 +125,74 @@
         flex: 0 0 100%;
     }
 }
+
+
+/* V1.50 Dev16: muted, square swatches instead of platform-colored emoji.
+ * Bootstrap Dropdown handles popup positioning and keyboard interactions;
+ * original select remains the value source and no Calendar API is changed. */
+.calendar-event-modal .calendar-color-picker {
+    --calendar-matte-blue: #6f8eac;
+    --calendar-matte-red: #ba777b;
+    --calendar-matte-green: #779887;
+    --calendar-matte-yellow: #c0a469;
+    --calendar-matte-purple: #9b86ad;
+    width: 100%;
+}
+.calendar-event-modal .calendar-event-color-field select[hidden] {
+    display: none !important;
+}
+.calendar-event-modal .calendar-color-swatch {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    min-width: 15px;
+    border: 1px solid rgba(0, 0, 0, .20);
+    border-radius: 2px;
+    background: var(--calendar-matte-blue);
+    vertical-align: middle;
+}
+.calendar-event-modal .calendar-color-swatch[data-color="red"] { background: var(--calendar-matte-red); }
+.calendar-event-modal .calendar-color-swatch[data-color="green"] { background: var(--calendar-matte-green); }
+.calendar-event-modal .calendar-color-swatch[data-color="yellow"] { background: var(--calendar-matte-yellow); }
+.calendar-event-modal .calendar-color-swatch[data-color="purple"] { background: var(--calendar-matte-purple); }
+.calendar-event-modal .calendar-color-picker-toggle {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    width: 100%;
+    min-height: 38px;
+    padding-left: .75rem;
+    text-align: left;
+    color: var(--bs-body-color, #212529);
+    cursor: pointer;
+}
+.calendar-event-modal .calendar-color-picker-current {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.calendar-event-modal .calendar-color-picker-menu {
+    width: 100%;
+    max-height: min(300px, 55vh);
+    overflow-y: auto;
+    padding: .3rem;
+}
+.calendar-event-modal .calendar-color-choice {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    min-height: 40px;
+    padding: .45rem .65rem;
+    border-radius: var(--bs-border-radius-sm, .25rem);
+    color: var(--bs-dropdown-link-color, var(--bs-body-color, #212529));
+}
+.calendar-event-modal .calendar-color-choice.is-selected {
+    background: rgba(var(--bs-primary-rgb, 13, 110, 253), .075);
+}
+.calendar-event-modal .calendar-color-choice-check {
+    margin-left: auto;
+    font-weight: 700;
+    color: var(--bs-primary, #0d6efd);
+}
+.calendar-event-modal .calendar-color-choice-check[hidden] { display: none !important; }
