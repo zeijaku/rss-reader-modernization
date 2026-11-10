@@ -93,7 +93,9 @@
             if (!/^[1-9][0-9]*$/.test(id)) { return; }
             var color = colors.indexOf(item.color) >= 0 ? item.color : 'blue';
             var idPrefix = 'calendarIcsEntry' + id;
-            var $row = $('<div>').addClass('calendar-ics-row').attr('data-ics-id', id);
+            var $row = $('<div>').addClass('calendar-ics-row')
+                .attr('data-ics-id', id)
+                .attr('data-last-checked', String(item.last_checked_at || ''));
             var $head = $('<div>').addClass('calendar-ics-row-head')
                 .append($('<span>').addClass('calendar-ics-swatch').attr({'data-color':color,'aria-hidden':'true'}))
                 .append($('<strong>').addClass('calendar-ics-entry-title').text(String(item.name || 'ICS')))
@@ -149,6 +151,8 @@
     function mutate(button, action, fields, message) {
         var $button = $(button);
         var isRefresh = action === 'calendar.ics.refresh';
+        var previousChecked = isRefresh
+            ? String($button.closest('.calendar-ics-row').attr('data-last-checked') || '') : '';
         var originalChildren = $button.contents().detach();
         $button.prop('disabled', true).attr('aria-busy', 'true');
         if (isRefresh) {
@@ -165,6 +169,10 @@
                     render(results);
                     if (isRefresh && Array.isArray(results)) {
                         var item = results.find(function (entry) { return String(entry.ics_id) === String(fields.ics_id); });
+                        if (item && previousChecked && String(item.last_checked_at || '') === previousChecked) {
+                            notice('直近の取得結果を表示しています（1分以内の再取得は省略します）。', false);
+                            return;
+                        }
                         if (item && item.status === 'error') {
                             notice('ICS取得に失敗しました：' + statusDetail(item), true);
                             return;
