@@ -80,12 +80,15 @@
         var select = document.createElement('select');
         select.className = 'form-select ' + selectClass;
         select.setAttribute('aria-label', '予定の色');
+        // Native Bootstrap select/option coloring differs by browser and OS.
+        // Colored-circle glyphs keep the label legible in all themes without a custom menu.
+        // Values (blue/red/green/yellow/purple) are unchanged for API compatibility.
         [
-            ['blue', '青 - 通常'],
-            ['red', '赤 - 重要'],
-            ['green', '緑 - その他'],
-            ['yellow', '黄 - 注意'],
-            ['purple', '紫 - 特別']
+            ['blue', '🔵 青 - 通常'],
+            ['red', '🔴 赤 - 重要'],
+            ['green', '🟢 緑 - その他'],
+            ['yellow', '🟡 黄 - 注意'],
+            ['purple', '🟣 紫 - 特別']
         ].forEach(function (optionData) {
             var option = document.createElement('option');
             option.value = optionData[0];
