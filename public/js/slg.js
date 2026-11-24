@@ -142,10 +142,9 @@
         const selectStationed = actionButton('outline-primary', 'users', '部隊');
         labelAction(selectStationed, '駐留部隊を選ぶ');
         recruitmentBar.append(typeLabel, placeUnit, selectStationed, stopRecruiting);
-        const dock = element('div', 'slg-action-dock');
         const notice = element('p', 'slg-action-notice');
         notice.setAttribute('role', 'status');
-        notice.hidden = true;
+        notice.classList.add('invisible');
         const viewport = element('div', 'slg-map-viewport');
         const grid = element('div', 'slg-map');
         grid.setAttribute('role', 'group');
@@ -168,7 +167,7 @@
         });
         const marks = tiles.map(tile => tile.appendChild(element('span', 'slg-tile-mark')));
         viewport.appendChild(grid);
-        panel.append(matchInfo, instruction, notice, dock, viewport, actionBar, recruitmentBar, turnBar, createLegend());
+        panel.append(matchInfo, instruction, notice, viewport, actionBar, recruitmentBar, turnBar, createLegend());
 
         let state;
         let draft = null;
@@ -202,59 +201,53 @@
             }));
         }
 
-        function markFocus(index, focus) {
+        function markFocus(index, focus, preventScroll = false) {
             tiles[currentIndex].tabIndex = -1;
             currentIndex = index;
             tiles[index].tabIndex = 0;
-            if (focus) tiles[index].focus();
+            if (focus) tiles[index].focus({preventScroll});
         }
 
         function positionActions() {
-            if (!visible) return;
             const menu = production ? recruitmentBar : actionBar;
-            if (menu.hidden) {
-                dock.style.minHeight = '';
-                return;
-            }
+            if (!visible || menu.hidden || !actionAnchor) return;
             const gap = 6;
             const origin = panel.getBoundingClientRect();
             const view = viewport.getBoundingClientRect();
             const frame = dialog.getBoundingClientRect();
-            const dockTop = dock.getBoundingClientRect().top;
+            const tile = actionAnchor.getBoundingClientRect();
             const {width, height} = menu.getBoundingClientRect();
             const minX = view.left + gap;
-            const maxX = view.left + viewport.clientWidth - width - gap;
-            let x = minX;
-            let y = dockTop;
-            let docked = true;
-            if (actionAnchor) {
-                const tile = actionAnchor.getBoundingClientRect();
-                const minY = Math.max(dockTop, frame.top + dialog.clientTop, 0) + gap;
-                const maxY = Math.min(view.top + viewport.clientHeight, frame.top + dialog.clientTop + dialog.clientHeight, window.innerHeight) - height - gap;
-                const protectedCells = production?.options.find(option => option.type === production.type)?.cells ?? [];
-                const rectangles = [tile, ...protectedCells.map(index => tiles[index].getBoundingClientRect())];
-                const above = Math.min(...rectangles.map(rect => rect.top)) - height - gap;
-                const below = Math.max(...rectangles.map(rect => rect.bottom)) + gap;
-                const right = Math.max(...rectangles.map(rect => rect.right)) + gap;
-                const left = Math.min(...rectangles.map(rect => rect.left)) - width - gap;
-                x = tile.right + gap > maxX && tile.left - width - gap >= minX ? tile.left - width - gap : tile.right + gap;
-                if (above >= minY && above <= maxY) {
-                    y = above;
-                    docked = false;
-                } else if (below >= minY && below <= maxY) {
-                    y = below;
-                    docked = false;
-                } else if (maxY >= minY && (right <= maxX || left >= minX)) {
-                    x = right <= maxX ? right : left;
-                    y = Math.max(minY, Math.min(tile.top, maxY));
-                    docked = false;
-                }
-            }
-            const hadDock = !!dock.style.minHeight;
-            dock.style.minHeight = docked ? height + gap + 'px' : '';
-            // Releasing dock space can move the anchor as the map grows.
-            if (hadDock && !docked) return positionActions();
-            menu.style.left = (Math.max(minX, Math.min(x, maxX)) - origin.left) + 'px';
+            const maxX = Math.max(minX, view.left + viewport.clientWidth - width - gap);
+            const frameTop = Math.max(frame.top + dialog.clientTop, 0);
+            const frameBottom = Math.min(frameTop + dialog.clientHeight, window.innerHeight);
+            const minY = Math.min(frameBottom - height - gap, Math.max(view.top, frameTop) + gap);
+            const maxY = Math.max(minY, Math.min(view.top + viewport.clientHeight, frameBottom) - height - gap);
+            const keepInside = (value, min, max) => Math.max(min, Math.min(value, max));
+            const spawnCells = production?.options.find(option => option.type === production.type)?.cells ?? [];
+            const attackTargets = command === 'attack' && targetId === null ? plan.targets : [];
+            const protectedTiles = [...spawnCells.map(index => tiles[index]), ...attackTargets.map(unit =>
+                tiles[rules.tileIndex(board, unit.x, unit.y)])];
+            const protectedRects = [tile, ...protectedTiles.map(cell => cell.getBoundingClientRect())];
+            const right = tile.right + gap;
+            const left = tile.left - width - gap;
+            const nearX = right > maxX && left >= minX ? left : right;
+            const above = tile.top - height - gap;
+            const below = tile.bottom + gap;
+            const positions = [
+                [nearX, above], [nearX, below], [right, tile.top], [left, tile.top],
+                [nearX, Math.min(...protectedRects.map(rect => rect.top)) - height - gap],
+                [nearX, Math.max(...protectedRects.map(rect => rect.bottom)) + gap],
+                [Math.max(...protectedRects.map(rect => rect.right)) + gap, tile.top],
+                [Math.min(...protectedRects.map(rect => rect.left)) - width - gap, tile.top]
+            ];
+            // A short window can leave space beside the map within the dialog.
+            const candidates = [[minY, maxY], [frameTop + gap, frameBottom - height - gap]].flatMap(([top, bottom]) =>
+                positions.map(([x, y]) => [keepInside(x, minX, maxX), keepInside(y, top, bottom)]));
+            const fits = ([x, y], rect) => x >= rect.right || x + width <= rect.left || y >= rect.bottom || y + height <= rect.top;
+            const [x, y] = candidates.find(candidate => protectedRects.every(rect => fits(candidate, rect)))
+                ?? candidates.find(candidate => fits(candidate, tile)) ?? candidates[0];
+            menu.style.left = (x - origin.left) + 'px';
             menu.style.top = (y - origin.top) + 'px';
         }
 
@@ -378,7 +371,7 @@
                 else if (marks[index].childElementCount) marks[index].replaceChildren();
             }
             actionBar.hidden = !playerTurn || !draft;
-            turnBar.hidden = !playerTurn || !!draft || !!production || !!motion;
+            end.hidden = resign.hidden = !playerTurn || !!draft || !!production || !!motion;
             recruitmentBar.hidden = !playerTurn || !production;
             placeUnit.disabled = !production || production.index === null;
             selectStationed.hidden = !production?.selection;
@@ -391,7 +384,7 @@
             labelAction(confirm, command ? choices[command].textContent + 'を確定' : '行動を確定');
             labelAction(cancel, target?.cost ? '移動を取り消す' : '選択を取り消す');
             notice.textContent = message;
-            notice.hidden = !message || (!!motion && !motion.preview);
+            notice.classList.toggle('invisible', !message || (!!motion && !motion.preview));
             if (motion?.preview) {
                 info.textContent = '移動中…';
             } else if (finished) {
@@ -423,7 +416,7 @@
                 else if (roster.every(unit => unit.actedPly === state.ply)) info.textContent = 'すべてのユニットが行動済みです。';
                 else info.textContent = '青軍の部隊を選択。本陣・工場を選ぶと生産できます。';
             }
-            const anchor = defender || (command !== 'attack' && target);
+            const anchor = defender || target || selected;
             actionAnchor = production ? tiles[production.index ?? production.origin]
                 : anchor ? tiles[rules.tileIndex(board, anchor.x, anchor.y)] : null;
             positionActions();
@@ -441,7 +434,7 @@
             const index = Number(tile.dataset.tile);
             const x = index % board.width;
             const y = Math.floor(index / board.width);
-            markFocus(index, true);
+            markFocus(index, true, event.detail !== 0);
             if (motion || state.phase !== 'acting' || rules.turnSide(state) !== 'player') return;
             if (production) {
                 if (tile.hasAttribute('data-spawn-cell')) production.index = index;
@@ -595,7 +588,7 @@
                 return;
             }
             playAction(resolved, input, 'player');
-            if (nextMission.hidden) markFocus(rules.tileIndex(board, x, y), true);
+            if (nextMission.hidden) markFocus(rules.tileIndex(board, x, y), true, true);
             else nextMission.focus();
         });
         context.on(typeSelect, 'change', function () {
@@ -611,14 +604,14 @@
             const next = battleRules.produceUnit(board, stage.sites, stage.unitLimit, state, {facilityId: site.id, type, at});
             if (!next) return;
             advance(next, rules.unitTypes[type].name + 'を生産しました。次の自軍ターンから行動できます。');
-            markFocus(index, true);
+            markFocus(index, true, true);
         });
         context.on(stopRecruiting, 'click', function () {
             if (!production) return;
             const {origin} = production;
             clearDraft();
             paint();
-            markFocus(origin, true);
+            markFocus(origin, true, true);
         });
         context.on(selectStationed, 'click', function () {
             if (!production?.selection) return;
@@ -626,14 +619,14 @@
             clearDraft();
             draft = selection;
             paint();
-            markFocus(origin, true);
+            markFocus(origin, true, true);
         });
         context.on(end, 'click', function () {
             if (motion || draft || production || rules.turnSide(state) !== 'player') return;
             const next = battleRules.endTurn(state);
             if (!next) return;
             advance(battleRules.startTurn(stage.sites, next), '');
-            tiles[currentIndex].focus();
+            tiles[currentIndex].focus({preventScroll: true});
             syncCpu();
         });
         context.on(resign, 'click', function () {
@@ -651,7 +644,7 @@
             stopMotion();
             clearDraft();
             paint();
-            markFocus(rules.tileIndex(board, unit.x, unit.y), true);
+            markFocus(rules.tileIndex(board, unit.x, unit.y), true, true);
         });
         return {
             panel,

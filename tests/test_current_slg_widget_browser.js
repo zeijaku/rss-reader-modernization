@@ -200,6 +200,11 @@ async function run(browser, width) {
         assert.equal(initialPositions.length,6);
         const unitActions = briefing.getByRole('group',{name:'部隊の行動'});
         const visibleActions = () => unitActions.getByRole('button').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-label')));
+        const layout = () => briefing.evaluate(dialog => {
+            const map = dialog.querySelector('.slg-map-viewport');
+            const legend = dialog.querySelector('.slg-legend');
+            return [map.getBoundingClientRect().top, map.clientHeight, legend.getBoundingClientRect().top, dialog.scrollTop, map.scrollTop];
+        });
         async function verifyPopover(x,y, preferRight, group = unitActions) {
             const boxes = await group.evaluate((menu, index) => {
                 const board = menu.parentElement;
@@ -220,8 +225,12 @@ async function run(browser, width) {
         assert.match(await tile(2,5).getAttribute('aria-label'),/青軍歩兵 HP 3\/3/);
         assert.equal(await hpText(2,5),'3/3');
         assert.equal(await hpText(13,5),'3/3');
+        await tile(2,5).scrollIntoViewIfNeeded();
+        const unselectedLayout = await layout();
         await press(tile(2,5));
+        assert.deepEqual(await layout(),unselectedLayout);
         assert.deepEqual(await visibleActions(),['選択を取り消す']);
+        await verifyPopover(2,5,!touch);
         assert.equal(await briefing.getByRole('button',{name:'手番終了'}).count(),0);
         assert.equal(await briefing.getByRole('button',{name:'投了'}).count(),0);
         assert.equal(await tile(4,4).getAttribute('data-reachable'),'');
@@ -388,7 +397,13 @@ async function run(browser, width) {
         await press(tile(1,5));
         assert.equal(await tile(1,5).getAttribute('data-reachable'),null);
 
-        await act([2,5],[5,5],'待機');
+        await chooseAction([2,5],[5,5],'待機');
+        const beforeWait = await layout();
+        await press(control('待機を確定'));
+        assert.equal(await tile(5,5).getAttribute('data-acted'),'');
+        assert(await control('手番終了').isEnabled());
+        assert(await control('投了').isEnabled());
+        assert.deepEqual(await layout(),beforeWait);
         await press(tile(5,5));
         assert.equal(await tile(5,5).getAttribute('data-reachable'),null);
 

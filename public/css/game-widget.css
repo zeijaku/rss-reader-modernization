@@ -119,11 +119,15 @@
     border-radius:.35rem; background:#24394c; color:#f4f8fb; font-size:.83rem; font-variant-numeric:tabular-nums;
 }
 .slg-hud-item i { color:#f5d991; }
-.slg-instruction { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.45rem; padding:.35rem .6rem; }
+.slg-instruction {
+    display:flex; align-items:center; justify-content:space-between; gap:.45rem; padding:.35rem .6rem;
+    height:3.5rem; font-size:.9rem;
+}
+.slg-move-status { min-width:0; max-height:100%; overflow:auto; }
 .slg-board-panel[data-phase="finished"] .slg-instruction { border-radius:.4rem; background:#28384a; color:#f4f8fb; font-weight:700; }
 .slg-board-panel[data-outcome="player"] .slg-instruction { background:#243d48; color:#fae4a9; }
 .slg-move-status i, .slg-next-stage i { margin-inline:.3em; }
-.slg-next-stage { font-weight:700; }
+.slg-next-stage { flex:none; font-weight:700; }
 .slg-next-stage[hidden] { display:none; }
 .slg-map-viewport {
     overflow:auto; max-width:100%; min-height:min(10rem,40dvh); max-height:640px; overscroll-behavior-x:contain;
@@ -199,11 +203,12 @@
     #main-content .mini-game-card[data-mini-game-type="slg"].game-widget-expanded .mini-game-card-inner { scrollbar-gutter:stable; }
     .slg-briefing-header { gap:.35rem; padding-inline:.55rem; }
     .slg-stage-title { gap:.45rem; }
+    .slg-instruction { height:4.5rem; }
     .slg-hud, .slg-legend { grid-template-columns:repeat(2,minmax(0,1fr)); }
     .slg-legend-group:nth-child(3) { grid-column:1/-1; }
 }
 
-.slg-turn-actions { display:flex; justify-content:flex-end; gap:.4rem; margin:.5rem 0 0; }
+.slg-turn-actions { display:flex; justify-content:flex-end; gap:.4rem; min-height:44px; margin:.5rem 0 0; }
 .slg-turn-actions .btn { padding-inline:.8rem; }
 .slg-turn-actions i { margin-inline-end:.3em; }
 .slg-context-actions {
@@ -216,11 +221,12 @@
     padding:2px; font-size:.72rem; line-height:1;
 }
 .slg-context-actions i { font-size:1rem; }
-.slg-turn-actions[hidden], .slg-context-actions[hidden], .slg-context-actions > button[hidden] { display:none; }
+.slg-context-actions[hidden], .slg-context-actions > button[hidden] { display:none; }
 .slg-unit-actions button[aria-pressed="true"] {
     background:var(--bs-primary,#0d6efd); border-color:var(--bs-primary,#0d6efd); color:#fff;
 }
-.slg-action-notice { margin:.5rem 0; }
+.slg-action-notice { height:1.5em; margin:0 .6rem .35rem; overflow:auto; font-size:.85rem; line-height:1.5; }
+@media(max-width:560px) { .slg-action-notice { height:3em; } }
 .slg-tile[data-acted] { box-shadow:inset 0 0 0 3px #b9c2c7; }
 .slg-tile[data-attackable]::after {
     content:""; position:absolute; inset:2px; border:2px dashed #7e2922; box-shadow:0 0 0 1px #ffd4ba; pointer-events:none;
