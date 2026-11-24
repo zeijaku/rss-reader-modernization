@@ -86,7 +86,7 @@
         }
         const colors = element('div', 'slg-legend-key');
         colors.append(element('span', 'slg-army-key slg-army-blue', '青軍'), element('span', 'slg-army-key slg-army-red', '赤軍'),
-            '数値は残りHP / 最大HP。移動コストは平地・道路・施設が1、森林・丘陵が2。水域・山岳は通行不可。');
+            element('p', '', '数値は残りHP / 最大HP。移動コストは平地・道路・施設が1、森林・丘陵が2。水域・山岳は通行不可。'));
         legend.appendChild(colors);
         return legend;
     }
@@ -111,7 +111,7 @@
         if (nextStage) nextMission.append('Stage ' + nextStage.id + ' へ進む', icon('arrow-right'));
         instruction.append(info, nextMission);
         const cancel = actionButton('outline-secondary', 'xmark', '取消');
-        const actionBar = element('div', 'slg-unit-actions');
+        const actionBar = element('div', 'slg-context-actions slg-unit-actions');
         actionBar.hidden = true;
         actionBar.setAttribute('role', 'group');
         actionBar.setAttribute('aria-label', '部隊の行動');
@@ -121,26 +121,28 @@
             wait: actionButton('outline-secondary', 'hourglass-half', '待機')
         };
         const confirm = actionButton('primary', 'check', '確定');
-        const recruit = button('btn btn-sm btn-outline-primary', '生産');
-        const end = button('btn btn-sm btn-outline-primary', '手番終了');
-        const resign = button('btn btn-sm btn-outline-danger', '投了');
+        const end = button('btn btn-sm btn-primary');
+        end.append(icon('forward-step'), '手番終了');
+        const resign = button('btn btn-sm btn-outline-danger');
+        resign.append(icon('flag'), '投了');
         actionBar.append(...Object.values(choices), confirm, cancel);
-        const turnBar = element('div', 'slg-action-buttons');
-        turnBar.append(recruit, end, resign);
-        const recruitmentBar = element('div', 'slg-action-buttons');
+        const turnBar = element('div', 'slg-turn-actions');
+        turnBar.append(resign, end);
+        const recruitmentBar = element('div', 'slg-context-actions slg-production');
+        recruitmentBar.hidden = true;
         recruitmentBar.setAttribute('role', 'group');
         recruitmentBar.setAttribute('aria-label', '生産');
-        const siteLabel = element('label', 'slg-production-label', '生産施設');
-        const siteSelect = element('select', 'form-select form-select-sm');
-        siteLabel.appendChild(siteSelect);
         const typeLabel = element('label', 'slg-production-label', '兵種');
         const typeSelect = element('select', 'form-select form-select-sm');
         typeLabel.appendChild(typeSelect);
-        const placeUnit = button('btn btn-sm btn-primary', '生産を確定');
-        const stopRecruiting = button('btn btn-sm btn-outline-secondary', '生産を取り消す');
-        recruitmentBar.append(siteLabel, typeLabel, placeUnit, stopRecruiting);
+        const placeUnit = actionButton('primary', 'check', '生産');
+        labelAction(placeUnit, '生産を確定');
+        const stopRecruiting = actionButton('outline-secondary', 'xmark', '取消');
+        labelAction(stopRecruiting, '生産を取り消す');
+        const selectStationed = actionButton('outline-primary', 'users', '部隊');
+        labelAction(selectStationed, '駐留部隊を選ぶ');
+        recruitmentBar.append(typeLabel, placeUnit, selectStationed, stopRecruiting);
         const dock = element('div', 'slg-action-dock');
-        dock.append(turnBar, recruitmentBar);
         const notice = element('p', 'slg-action-notice');
         notice.setAttribute('role', 'status');
         notice.hidden = true;
@@ -166,7 +168,7 @@
         });
         const marks = tiles.map(tile => tile.appendChild(element('span', 'slg-tile-mark')));
         viewport.appendChild(grid);
-        panel.append(matchInfo, instruction, dock, notice, viewport, actionBar, createLegend());
+        panel.append(matchInfo, instruction, notice, dock, viewport, actionBar, recruitmentBar, turnBar, createLegend());
 
         let state;
         let draft = null;
@@ -190,25 +192,14 @@
             production = null;
         }
 
-        function availableProductionSites() {
-            return stage.sites.map(site => ({
-                site, options: battleRules.productionOptions(board, stage.sites, stage.unitLimit, state, site.id)
-            })).filter(facility => facility.options.length);
-        }
-
-        function fillSelect(select, items, value) {
-            select.replaceChildren(...items.map(([id, label]) => {
-                const option = element('option', '', label);
-                option.value = id;
+        function openProduction(site, origin, options, selection) {
+            clearDraft();
+            production = {site, origin, options, selection, type: options[0].type, index: null};
+            typeSelect.replaceChildren(...options.map(({type, cost}) => {
+                const option = element('option', '', rules.unitTypes[type].name + ' · ' + cost);
+                option.value = type;
                 return option;
             }));
-            select.value = value;
-        }
-
-        function paintProduction() {
-            const facility = production.sites.find(entry => entry.site.id === production.facilityId);
-            fillSelect(siteSelect, production.sites.map(({site}) => [site.id, site.type === 'hq' ? '自軍本陣' : '工場（' + (site.x + 1) + '列 ' + (site.y + 1) + '行）']), production.facilityId);
-            fillSelect(typeSelect, facility.options.map(option => [option.type, rules.unitTypes[option.type].name + ' · ' + option.cost]), production.type);
         }
 
         function markFocus(index, focus) {
@@ -219,28 +210,52 @@
         }
 
         function positionActions() {
-            if (!visible || actionBar.hidden) return;
+            if (!visible) return;
+            const menu = production ? recruitmentBar : actionBar;
+            if (menu.hidden) {
+                dock.style.minHeight = '';
+                return;
+            }
             const gap = 6;
             const origin = panel.getBoundingClientRect();
             const view = viewport.getBoundingClientRect();
             const frame = dialog.getBoundingClientRect();
-            const {width, height} = actionBar.getBoundingClientRect();
+            const dockTop = dock.getBoundingClientRect().top;
+            const {width, height} = menu.getBoundingClientRect();
             const minX = view.left + gap;
             const maxX = view.left + viewport.clientWidth - width - gap;
             let x = minX;
-            let y = dock.getBoundingClientRect().top;
+            let y = dockTop;
+            let docked = true;
             if (actionAnchor) {
                 const tile = actionAnchor.getBoundingClientRect();
-                const minY = Math.max(0, frame.top + dialog.clientTop) + gap;
-                const maxY = Math.min(window.innerHeight, frame.top + dialog.clientTop + dialog.clientHeight) - height - gap;
-                x = tile.right + gap;
-                if (x > maxX && tile.left - width - gap >= minX) x = tile.left - width - gap;
-                y = tile.top - height - gap;
-                if (y < minY) y = tile.bottom + gap;
-                y = Math.max(minY, Math.min(y, maxY));
+                const minY = Math.max(dockTop, frame.top + dialog.clientTop, 0) + gap;
+                const maxY = Math.min(view.top + viewport.clientHeight, frame.top + dialog.clientTop + dialog.clientHeight, window.innerHeight) - height - gap;
+                const protectedCells = production?.options.find(option => option.type === production.type)?.cells ?? [];
+                const rectangles = [tile, ...protectedCells.map(index => tiles[index].getBoundingClientRect())];
+                const above = Math.min(...rectangles.map(rect => rect.top)) - height - gap;
+                const below = Math.max(...rectangles.map(rect => rect.bottom)) + gap;
+                const right = Math.max(...rectangles.map(rect => rect.right)) + gap;
+                const left = Math.min(...rectangles.map(rect => rect.left)) - width - gap;
+                x = tile.right + gap > maxX && tile.left - width - gap >= minX ? tile.left - width - gap : tile.right + gap;
+                if (above >= minY && above <= maxY) {
+                    y = above;
+                    docked = false;
+                } else if (below >= minY && below <= maxY) {
+                    y = below;
+                    docked = false;
+                } else if (maxY >= minY && (right <= maxX || left >= minX)) {
+                    x = right <= maxX ? right : left;
+                    y = Math.max(minY, Math.min(tile.top, maxY));
+                    docked = false;
+                }
             }
-            actionBar.style.left = (Math.max(minX, Math.min(x, maxX)) - origin.left) + 'px';
-            actionBar.style.top = (y - origin.top) + 'px';
+            const hadDock = !!dock.style.minHeight;
+            dock.style.minHeight = docked ? height + gap + 'px' : '';
+            // Releasing dock space can move the anchor as the map grows.
+            if (hadDock && !docked) return positionActions();
+            menu.style.left = (Math.max(minX, Math.min(x, maxX)) - origin.left) + 'px';
+            menu.style.top = (y - origin.top) + 'px';
         }
 
         function stopMotion() {
@@ -303,8 +318,14 @@
             metrics.funds.textContent = '自軍資金 ' + state.funds.player;
             metrics.units.textContent = '部隊 ' + roster.length + '/' + stage.unitLimit;
             nextMission.hidden = !nextStage || state.result?.winner !== 'player';
-            const available = production?.sites.find(facility => facility.site.id === production.facilityId);
-            const spawnCells = available?.options.find(option => option.type === production.type)?.cells ?? [];
+            const spawnCells = production?.options.find(option => option.type === production.type)?.cells ?? [];
+            const recruitable = new Map();
+            if (playerTurn) {
+                for (const [index, site] of facilities) {
+                    const options = battleRules.productionOptions(board, stage.sites, stage.unitLimit, state, site.id);
+                    if (options.length) recruitable.set(index, options);
+                }
+            }
             const occupants = new Map(units.map(unit => [rules.tileIndex(board, unit.x, unit.y), unit]));
             const holdings = new Map(state.facilities.map(site => [site.id, site]));
             const attackIds = new Set(command === 'attack' ? plan.targets.map(unit => unit.id) : []);
@@ -342,6 +363,7 @@
                 tile.toggleAttribute('data-capture-pending', !!holding?.capture);
                 tile.toggleAttribute('data-spawn-cell', spawnCells.includes(index));
                 tile.toggleAttribute('data-spawn-selected', production?.index === index);
+                tile.toggleAttribute('data-recruitable', recruitable.has(index));
 
                 const position = (x + 1) + '列 ' + (y + 1) + '行';
                 const site = facility?.type === 'hq' ? armyName(facility.owner) + '本陣' : facility ? siteNames[facility.type] : ground.name;
@@ -349,17 +371,18 @@
                 const cost = option ? '移動コスト ' + option.cost : ground.cost === null ? '通行不可' : '';
                 const possession = holding?.capture ? '占領進捗 50%' : holding?.owner ? '所有 ' + armyName(owner) : '';
                 tile.setAttribute('aria-label', [position, site, possession, force, cost, acted ? '行動済み' : '',
-                    destination && target.cost ? '行動未確定' : '', spawnCells.includes(index) ? '生産候補' : '', canTarget ? (unit.id === targetId ? '攻撃対象' : '攻撃可能') : ''].filter(Boolean).join('、'));
+                    destination && target.cost ? '行動未確定' : '', spawnCells.includes(index) ? '生産候補' : '', recruitable.has(index) ? '生産可能' : '',
+                    canTarget ? (unit.id === targetId ? '攻撃対象' : '攻撃可能') : ''].filter(Boolean).join('、'));
                 tile.title = tile.getAttribute('aria-label');
                 if (unit) marks[index].replaceChildren(unitPiece(unit));
                 else if (marks[index].childElementCount) marks[index].replaceChildren();
             }
             actionBar.hidden = !playerTurn || !draft;
-            dock.toggleAttribute('data-draft', !actionBar.hidden);
             turnBar.hidden = !playerTurn || !!draft || !!production || !!motion;
             recruitmentBar.hidden = !playerTurn || !production;
             placeUnit.disabled = !production || production.index === null;
-            recruit.disabled = !playerTurn || !availableProductionSites().length;
+            selectStationed.hidden = !production?.selection;
+            if (production) recruitmentBar.dataset.facility = production.site.id;
             choices.attack.hidden = !!motion || !plan?.targets.length;
             choices.capture.hidden = !!motion || !plan?.capture;
             choices.wait.hidden = !!motion || !plan;
@@ -396,12 +419,13 @@
                 info.textContent = rules.unitTypes[selected.type].name + ' · 移動力 ' + rules.unitTypes[selected.type].movement
                     + ' · 移動先を選んでください。その場で行動するには、現在地をもう一度選びます。';
             } else {
-                if (!roster.length) info.textContent = '自軍のユニットがありません。生産、手番終了または投了を選べます。';
+                if (!roster.length) info.textContent = '自軍のユニットがありません。本陣・工場を選ぶと生産できます。';
                 else if (roster.every(unit => unit.actedPly === state.ply)) info.textContent = 'すべてのユニットが行動済みです。';
-                else info.textContent = '青軍の部隊を選んでください。';
+                else info.textContent = '青軍の部隊を選択。本陣・工場を選ぶと生産できます。';
             }
             const anchor = defender || (command !== 'attack' && target);
-            actionAnchor = anchor ? tiles[rules.tileIndex(board, anchor.x, anchor.y)] : null;
+            actionAnchor = production ? tiles[production.index ?? production.origin]
+                : anchor ? tiles[rules.tileIndex(board, anchor.x, anchor.y)] : null;
             positionActions();
         }
 
@@ -443,8 +467,18 @@
                     if (!await animateMove(active, unit, next.destination.path)) return;
                     motion = null;
                 }
-            } else if (unit) {
-                const selection = rules.selectUnit(board, state, unit.id);
+            } else {
+                const selection = unit && rules.selectUnit(board, state, unit.id);
+                if (tile.hasAttribute('data-recruitable')) {
+                    const site = facilities.get(index);
+                    const options = battleRules.productionOptions(board, stage.sites, stage.unitLimit, state, site.id);
+                    if (options.length) {
+                        openProduction(site, index, options, selection);
+                        paint();
+                        if (event.detail === 0) typeSelect.focus({preventScroll: true});
+                        return;
+                    }
+                }
                 if (selection) {
                     clearDraft();
                     draft = selection;
@@ -564,42 +598,35 @@
             if (nextMission.hidden) markFocus(rules.tileIndex(board, x, y), true);
             else nextMission.focus();
         });
-        context.on(recruit, 'click', function () {
-            if (motion || draft || production || recruit.disabled) return;
-            const sites = availableProductionSites();
-            const first = sites[0];
-            clearDraft();
-            production = {sites, facilityId: first.site.id, type: first.options[0].type, index: null};
-            paintProduction();
-            paint();
-            typeSelect.focus();
-        });
-        context.on(siteSelect, 'change', function () {
-            const facility = production.sites.find(entry => entry.site.id === siteSelect.value);
-            production.facilityId = facility.site.id;
-            production.type = facility.options[0].type;
-            production.index = null;
-            paintProduction();
-            paint();
-        });
         context.on(typeSelect, 'change', function () {
+            if (!production) return;
             production.type = typeSelect.value;
             production.index = null;
             paint();
         });
         context.on(placeUnit, 'click', function () {
             if (placeUnit.disabled || !production || rules.turnSide(state) !== 'player') return;
-            const {facilityId, type, index} = production;
+            const {site, type, index} = production;
             const at = [index % board.width, Math.floor(index / board.width)];
-            const next = battleRules.produceUnit(board, stage.sites, stage.unitLimit, state, {facilityId, type, at});
+            const next = battleRules.produceUnit(board, stage.sites, stage.unitLimit, state, {facilityId: site.id, type, at});
             if (!next) return;
             advance(next, rules.unitTypes[type].name + 'を生産しました。次の自軍ターンから行動できます。');
             markFocus(index, true);
         });
         context.on(stopRecruiting, 'click', function () {
+            if (!production) return;
+            const {origin} = production;
             clearDraft();
             paint();
-            recruit.focus();
+            markFocus(origin, true);
+        });
+        context.on(selectStationed, 'click', function () {
+            if (!production?.selection) return;
+            const {origin, selection} = production;
+            clearDraft();
+            draft = selection;
+            paint();
+            markFocus(origin, true);
         });
         context.on(end, 'click', function () {
             if (motion || draft || production || rules.turnSide(state) !== 'player') return;
@@ -721,7 +748,7 @@
             status.textContent = session.difficulty ? stageTitle(session.stage) + ' · ' + session.difficulty + ' · ' + progress : '未開始';
             stageNumber.textContent = 'Stage ' + session.stage.id;
             stageName.textContent = session.stage.name;
-            briefing.style.setProperty('--slg-board-width', session.stage.board.width * 48 + 'px');
+            stageName.title = session.stage.name;
             stageSelect.value = session.stage.id;
             select.value = session.difficulty || 'Normal';
             setup.hidden = !!session.battle;

@@ -91,6 +91,22 @@ async function run(browser, width) {
         const stageSelect = briefing.getByLabel('ステージ');
         const select = briefing.getByLabel('CPU難易度');
         assert.deepEqual(await stageSelect.locator('option').allTextContents(),['Stage 1　前線突破','Stage 2　資源争奪戦']);
+        const header = briefing.locator('.slg-briefing-header');
+        const firstHeader = await header.boundingBox();
+        await stageSelect.selectOption('2');
+        assert.deepEqual(await header.boundingBox(), firstHeader);
+        assert(await briefing.locator('.slg-stage-name').evaluate(name => name.scrollWidth <= name.clientWidth));
+        assert(await briefing.locator('.slg-stage-name').evaluate(name => {
+            const original = name.textContent;
+            const header = name.closest('.slg-briefing-header');
+            const before = header.getBoundingClientRect();
+            name.textContent = '長いステージ名を表示するテスト'.repeat(30);
+            const after = header.getBoundingClientRect();
+            const fits = before.width === after.width && before.height === after.height && name.scrollWidth > name.clientWidth;
+            name.textContent = original;
+            return fits;
+        }));
+        await stageSelect.selectOption('1');
         await select.selectOption(difficulty);
         assert.equal(await page.evaluate(()=>document.body.style.overflow),'hidden');
         assert(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth));
@@ -143,7 +159,22 @@ async function run(browser, width) {
         assert(requests.includes('/webfonts/fa-solid-900.woff2'));
         assert.equal(await briefing.locator('.slg-stage-number').textContent(),'Stage 1');
         assert.equal(await briefing.locator('.slg-hud-item').count(),4);
-        assert.equal(await briefing.getByRole('region',{name:'盤面の凡例'}).locator('.slg-legend-group').count(),3);
+        const legend = briefing.getByRole('region',{name:'盤面の凡例'});
+        assert.equal(await legend.locator('.slg-legend-group').count(),3);
+        async function verifyLegend() {
+            await legend.scrollIntoViewIfNeeded();
+            assert(await legend.evaluate(el => {
+                const [blue, red, description] = el.querySelector('.slg-legend-key').children;
+                const rect = el.getBoundingClientRect();
+                const dialog = el.closest('[role="dialog"]').getBoundingClientRect();
+                const fits = rect.top >= dialog.top && rect.bottom <= dialog.bottom && rect.bottom <= innerHeight;
+                const visible = [blue, red, description].every(node => {
+                    const box = node.getBoundingClientRect();
+                    return node.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2));
+                });
+                return fits && visible;
+            }));
+        }
         assert.equal(await tile(1,6).locator('.slg-site-icon.fa-chess-rook').count(),1);
         assert.equal(await tile(2,5).locator('.slg-unit .fa-person-rifle').count(),1);
         assert.equal(await tile(3,6).locator('.slg-unit .fa-binoculars').count(),1);
@@ -163,8 +194,8 @@ async function run(browser, width) {
         assert.equal(initialPositions.length,6);
         const unitActions = briefing.getByRole('group',{name:'部隊の行動'});
         const visibleActions = () => unitActions.getByRole('button').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-label')));
-        async function verifyPopover(x,y, preferRight) {
-            const boxes = await unitActions.evaluate((menu, index) => {
+        async function verifyPopover(x,y, preferRight, group = unitActions) {
+            const boxes = await group.evaluate((menu, index) => {
                 const board = menu.parentElement;
                 const viewport = board.querySelector('.slg-map-viewport');
                 const {left} = viewport.getBoundingClientRect();
@@ -173,7 +204,8 @@ async function run(browser, width) {
             },y * 16 + x);
             assert(boxes.menu.left >= boxes.left && boxes.menu.right <= boxes.right + 1);
             assert(boxes.menu.top >= 0 && boxes.menu.bottom <= boxes.height + 1);
-            assert(boxes.menu.bottom <= boxes.cell.top || boxes.menu.top >= boxes.cell.bottom);
+            assert(boxes.menu.bottom <= boxes.cell.top || boxes.menu.top >= boxes.cell.bottom ||
+                boxes.menu.right <= boxes.cell.left || boxes.menu.left >= boxes.cell.right);
             if (preferRight) assert(boxes.menu.left >= boxes.cell.right && boxes.menu.bottom < boxes.cell.top);
             return boxes;
         }
@@ -235,7 +267,9 @@ async function run(browser, width) {
             assert(rotated.y >= 0 && rotated.y + rotated.height <= 321);
             assert.equal(await tile(4,4).getAttribute('data-destination'),'');
             await verifyPopover(4,4,false);
+            await verifyLegend();
             await page.setViewportSize({width,height:640});
+            await tile(4,4).scrollIntoViewIfNeeded();
         }
         await press(tile(5,4));
         assert.equal(await tile(4,4).getAttribute('data-destination'),'');
@@ -306,8 +340,29 @@ async function run(browser, width) {
 
         const panel = briefing.locator('.slg-board-panel');
         const balance = () => panel.locator('.slg-hud').textContent();
-        await press(control('生産'));
-        assert.equal(await briefing.getByLabel('生産施設').inputValue(),'pHQ');
+        assert.equal(await control('生産').count(),0);
+        assert(await control('手番終了').evaluate(el => el.getBoundingClientRect().top >=
+            el.closest('.slg-board-panel').querySelector('.slg-map-viewport').getBoundingClientRect().bottom));
+        if (!touch) {
+            await page.setViewportSize({width:495,height:400});
+            await verifyLegend();
+            const resized = await briefing.boundingBox();
+            assert(resized.x >= 0 && resized.x + resized.width <= 495 && resized.y + resized.height <= 400);
+            await page.setViewportSize({width,height:900});
+        }
+        const production = briefing.getByRole('group',{name:'生産',exact:true});
+        await press(tile(14,6));
+        assert.equal(await production.count(),0);
+        await press(tile(1,6));
+        assert.equal(await production.getAttribute('data-facility'),'pHQ');
+        await verifyPopover(1,6,false,production);
+        assert(await production.evaluate(menu => {
+            const popup = menu.getBoundingClientRect();
+            return [...menu.parentElement.querySelectorAll('[data-spawn-cell]')].every(tile => {
+                const cell = tile.getBoundingClientRect();
+                return popup.right <= cell.left || popup.left >= cell.right || popup.bottom <= cell.top || popup.top >= cell.bottom;
+            });
+        }));
         assert.equal(await briefing.getByLabel('兵種').inputValue(),'infantry');
         assert.equal(await briefing.getByLabel('兵種').locator('option').count(),1);
         await press(tile(2,5)); // This cell is occupied and cannot be selected.
@@ -317,12 +372,13 @@ async function run(browser, width) {
         assert.match(await balance(),/自軍資金 8.*部隊 3\/6/);
         await press(control('生産を取り消す'));
         assert.deepEqual(await unitsOnBoard(),initialPositions);
-        await press(control('生産'));
+        await press(tile(1,6));
         await press(tile(1,5));
         await press(control('生産を確定'));
         assert.match(await balance(),/自軍資金 4.*部隊 4\/6/);
         assert.equal(await tile(1,5).getAttribute('data-acted'),'');
-        assert(await control('生産').isDisabled());
+        assert.equal(await tile(1,6).getAttribute('data-recruitable'),null);
+        assert.equal(await production.count(),0);
         await press(tile(1,5));
         assert.equal(await tile(1,5).getAttribute('data-reachable'),null);
 
@@ -399,7 +455,7 @@ async function run(browser, width) {
             // A reproducible player victory against the real Normal CPU on Stage 1.
             await act([3,6],[7,4],'占領');
             await act([2,5],[5,5],'待機');
-            await press(control('生産'));
+            await press(tile(1,6));
             await press(tile(2,6));
             await press(control('生産を確定'));
             await finishCpuRound();
@@ -429,8 +485,17 @@ async function run(browser, width) {
             await press(control('占領'));
             await press(control('占領を確定'));
             assert.match(await tile(6,4,20).getAttribute('aria-label'),/資源施設.*所有 青軍/);
+            await press(tile(2,5,20));
+            await press(tile(1,6,20));
+            await press(control('待機'));
+            await press(control('待機を確定'));
             await finishCpuRound();
             assert.match(await balance(),/自軍資金 13/);
+            await press(tile(1,6,20));
+            assert.equal(await production.getAttribute('data-facility'),'pHQ');
+            await press(control('駐留部隊を選ぶ'));
+            assert.equal(await tile(1,6,20).getAttribute('data-selected'),'');
+            await press(control('選択を取り消す'));
             await press(control('閉じる'));
             await press(another.getByRole('button',{name:'続きから'}));
             assert.equal(await another.locator('[data-tile]').count(),280);
@@ -442,6 +507,19 @@ async function run(browser, width) {
             await stageSelect.selectOption('2');
             await press(control('盤面を開く'));
             assert.equal(await tiles.count(),280);
+            for (const [from,to,command] of [[[3,7],[8,9],'待機'],[[8,9],[10,9],'占領']]) {
+                await press(tile(...from,20));
+                await press(tile(...to,20));
+                await press(control(command));
+                await press(control(command + 'を確定'));
+                await finishCpuRound();
+            }
+            await press(tile(10,9,20));
+            assert.equal(await production.getAttribute('data-facility'),'f1');
+            await briefing.getByLabel('兵種').selectOption('heavy');
+            await press(tile(11,9,20));
+            await press(control('生産を確定'));
+            assert.equal(await tile(11,9,20).locator('.fa-shield-halved').count(),1);
             page.once('dialog', dialog => dialog.dismiss());
             await press(control('投了'));
             assert(await control('手番終了').isEnabled());
