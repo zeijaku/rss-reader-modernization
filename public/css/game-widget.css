@@ -221,6 +221,7 @@
     padding:2px; font-size:.72rem; line-height:1;
 }
 .slg-context-actions i { font-size:1rem; }
+.slg-unit-actions[data-selecting] { padding:0; }
 .slg-context-actions[hidden], .slg-context-actions > button[hidden] { display:none; }
 .slg-unit-actions button[aria-pressed="true"] {
     background:var(--bs-primary,#0d6efd); border-color:var(--bs-primary,#0d6efd); color:#fff;

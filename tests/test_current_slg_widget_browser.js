@@ -230,7 +230,16 @@ async function run(browser, width) {
         await press(tile(2,5));
         assert.deepEqual(await layout(),unselectedLayout);
         assert.deepEqual(await visibleActions(),['選択を取り消す']);
-        await verifyPopover(2,5,!touch);
+        await verifyPopover(2,5,false);
+        assert(await unitActions.evaluate(menu => {
+            const popup = menu.getBoundingClientRect();
+            return [...menu.parentElement.querySelectorAll('[data-reachable]')].every(cell => {
+                const tile = cell.getBoundingClientRect();
+                const x = tile.left + tile.width / 2;
+                const y = tile.top + tile.height / 2;
+                return x <= popup.left || x >= popup.right || y <= popup.top || y >= popup.bottom;
+            });
+        }));
         assert.equal(await briefing.getByRole('button',{name:'手番終了'}).count(),0);
         assert.equal(await briefing.getByRole('button',{name:'投了'}).count(),0);
         assert.equal(await tile(4,4).getAttribute('data-reachable'),'');

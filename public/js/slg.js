@@ -229,11 +229,21 @@
             const protectedTiles = [...spawnCells.map(index => tiles[index]), ...attackTargets.map(unit =>
                 tiles[rules.tileIndex(board, unit.x, unit.y)])];
             const protectedRects = [tile, ...protectedTiles.map(cell => cell.getBoundingClientRect())];
+            const selecting = draft && !draft.destination;
+            if (selecting) {
+                // Keep the centers of reachable tiles clickable while the compact cancel button is open.
+                for (const index of draft.options.keys()) {
+                    const cell = tiles[index].getBoundingClientRect();
+                    const x = cell.left + cell.width / 2;
+                    const y = cell.top + cell.height / 2;
+                    protectedRects.push({left:x, right:x, top:y, bottom:y});
+                }
+            }
             const right = tile.right + gap;
             const left = tile.left - width - gap;
-            const nearX = right > maxX && left >= minX ? left : right;
             const above = tile.top - height - gap;
             const below = tile.bottom + gap;
+            const nearX = right > maxX && left >= minX ? left : right;
             const positions = [
                 [nearX, above], [nearX, below], [right, tile.top], [left, tile.top],
                 [nearX, Math.min(...protectedRects.map(rect => rect.top)) - height - gap],
@@ -241,6 +251,11 @@
                 [Math.max(...protectedRects.map(rect => rect.right)) + gap, tile.top],
                 [Math.min(...protectedRects.map(rect => rect.left)) - width - gap, tile.top]
             ];
+            if (selecting) {
+                const rightEdge = tile.right - width / 2;
+                const leftEdge = tile.left - width / 2;
+                positions.unshift([rightEdge, above], [leftEdge, above], [rightEdge, below], [leftEdge, below]);
+            }
             // A short window can leave space beside the map within the dialog.
             const candidates = [[minY, maxY], [frameTop + gap, frameBottom - height - gap]].flatMap(([top, bottom]) =>
                 positions.map(([x, y]) => [keepInside(x, minX, maxX), keepInside(y, top, bottom)]));
@@ -371,6 +386,7 @@
                 else if (marks[index].childElementCount) marks[index].replaceChildren();
             }
             actionBar.hidden = !playerTurn || !draft;
+            actionBar.toggleAttribute('data-selecting', !!draft && !target);
             end.hidden = resign.hidden = !playerTurn || !!draft || !!production || !!motion;
             recruitmentBar.hidden = !playerTurn || !production;
             placeUnit.disabled = !production || production.index === null;
