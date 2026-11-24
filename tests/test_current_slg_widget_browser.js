@@ -21,7 +21,7 @@ function html(rows) {
         'game-2048.js','clock-timer.js',...modules,'utility-widgets.js'];
     const cards = execFileSync('php',[path.join(__dirname,'fixtures/widget_header_page.php'),JSON.stringify(rows)],{encoding:'utf8'});
     return '<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
-        ['bootstrap-5.3.8.min','mini-game','game-widget','dashboard'].map(name => '<link rel="stylesheet" href="/css/'+name+'.css">').join('')+
+        ['bootstrap-5.3.8.min','all','mini-game','game-widget','dashboard'].map(name => '<link rel="stylesheet" href="/css/'+name+'.css">').join('')+
         '</head><body><button data-bs-toggle="offcanvas" data-bs-target="#drawerMenu">メニュー</button>'+
         '<nav id="drawerMenu" class="offcanvas offcanvas-end drawer-nav" tabindex="-1"><ul class="drawer-menu">'+menu+'</ul></nav>'+cards+
         scripts.map(name => '<script src="/js/'+name+'?v=slg-test"></script>').join('')+'</body></html>';
@@ -63,7 +63,7 @@ async function run(browser, width) {
         }
         const file = path.join(root,'public',url.pathname);
         return fs.existsSync(file) && fs.statSync(file).isFile()
-            ? route.fulfill({body:fs.readFileSync(file),contentType:url.pathname.endsWith('.js')?'text/javascript':'text/css'})
+            ? route.fulfill({path:file})
             : route.fulfill({status:404,body:''});
     });
     try {
@@ -129,6 +129,16 @@ async function run(browser, width) {
         const tiles = briefing.locator('[data-tile]');
         const tile = (x,y) => tiles.nth(y * 16 + x);
         assert.equal(await tiles.count(),192);
+        await page.evaluate(() => document.fonts.ready);
+        for (const [terrain, definition] of Object.entries({w:'water',f:'tree',m:'mountain',h:'hill-rockslide'})) {
+            const graphic = briefing.locator('[data-terrain="' + terrain + '"] > .fa-' + definition).first();
+            assert.equal(await graphic.getAttribute('aria-hidden'),'true');
+            assert(await graphic.evaluate(el => {
+                const style = getComputedStyle(el,'::before');
+                return style.content !== 'none' && style.content !== 'normal' && style.fontFamily.includes('Font Awesome');
+            }));
+        }
+        assert(requests.includes('/webfonts/fa-solid-900.woff2'));
         const viewport = briefing.locator('.slg-map-viewport');
         const margins = await viewport.evaluate(el => {
             const map = el.firstElementChild;
@@ -144,7 +154,21 @@ async function run(browser, width) {
         const initialPositions = await unitsOnBoard();
         assert.equal(initialPositions.length,6);
         const unitActions = briefing.getByRole('group',{name:'部隊の行動'});
-        const visibleActions = () => unitActions.getByRole('button').allTextContents();
+        const visibleActions = () => unitActions.getByRole('button').evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-label')));
+        async function verifyPopover(x,y, preferRight) {
+            const boxes = await unitActions.evaluate((menu, index) => {
+                const board = menu.parentElement;
+                const viewport = board.querySelector('.slg-map-viewport');
+                const {left} = viewport.getBoundingClientRect();
+                return {menu:menu.getBoundingClientRect().toJSON(), cell:board.querySelector('[data-tile="' + index + '"]').getBoundingClientRect().toJSON(),
+                    left, right:left + viewport.clientWidth, height:innerHeight};
+            },y * 16 + x);
+            assert(boxes.menu.left >= boxes.left && boxes.menu.right <= boxes.right + 1);
+            assert(boxes.menu.top >= 0 && boxes.menu.bottom <= boxes.height + 1);
+            assert(boxes.menu.bottom <= boxes.cell.top || boxes.menu.top >= boxes.cell.bottom);
+            if (preferRight) assert(boxes.menu.left >= boxes.cell.right && boxes.menu.bottom < boxes.cell.top);
+            return boxes;
+        }
         assert.equal(await unitActions.count(),0);
         const hpText = (x,y) => tile(x,y).locator('.slg-unit-hp').textContent();
         assert.match(await tile(2,5).getAttribute('aria-label'),/青軍歩兵 HP 3\/3/);
@@ -193,11 +217,15 @@ async function run(browser, width) {
         assert.match(await tile(4,4).getAttribute('aria-label'),/青軍歩兵 HP 3.*行動未確定/);
         assert.equal(await tile(4,4).getAttribute('data-acted'),null);
         assert.deepEqual(await visibleActions(),['待機','移動を取り消す']);
+        await verifyPopover(4,4,!touch);
+        assert(await unitActions.getByRole('button',{name:'待機'}).locator('.fa-hourglass-half').count());
+        assert(await unitActions.getByRole('button',{name:'待機'}).evaluate(el => el.offsetWidth >= 44 && el.offsetHeight >= 44));
         if (touch) {
             await page.setViewportSize({width:640,height:320});
             const rotated = await briefing.boundingBox();
             assert(rotated.y >= 0 && rotated.y + rotated.height <= 321);
             assert.equal(await tile(4,4).getAttribute('data-destination'),'');
+            await verifyPopover(4,4,false);
             await page.setViewportSize({width,height:640});
         }
         await press(tile(5,4));
@@ -219,7 +247,17 @@ async function run(browser, width) {
         await press(tile(3,6));
         await press(tile(10,6));
         assert.equal(await tile(10,6).getAttribute('data-destination'),'');
-        if (touch) assert(await briefing.locator('.slg-map-viewport').evaluate(el=>el.scrollLeft > 0));
+        if (touch) {
+            await unitActions.getByRole('button',{name:'待機',exact:true}).waitFor();
+            await viewport.evaluate(el => new Promise(resolve => {
+                const destination = el.querySelector('[data-destination]');
+                el.scrollLeft = destination.offsetLeft + destination.offsetWidth - el.clientWidth;
+                requestAnimationFrame(() => requestAnimationFrame(resolve));
+            }));
+            assert(await viewport.evaluate(el=>el.scrollLeft > 0));
+            const {menu,cell} = await verifyPopover(10,6,false);
+            assert(menu.right < cell.left);
+        }
         await press(briefing.getByRole('button',{name:'閉じる'}));
         await press(another.getByRole('button',{name:'続きから'}));
         assert.equal(await another.locator('[data-tile]').count(),192);
@@ -246,6 +284,7 @@ async function run(browser, width) {
                 assert.equal(await control('攻撃を確定').count(),0);
                 assert.equal(await tile(...target).getAttribute('data-attackable'),'');
                 await press(tile(...target));
+                await verifyPopover(...target,false);
             }
             assert(await control(name + 'を確定').isEnabled());
         }

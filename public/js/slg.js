@@ -9,6 +9,7 @@
     const sessions = new Map();
     const cpuDelay = 160;
     const arrows = {ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]};
+    const terrainIcons = {w: 'water', f: 'tree', m: 'mountain', h: 'hill-rockslide'};
 
     function element(tag, className, text) {
         const result = document.createElement(tag);
@@ -21,6 +22,24 @@
         const result = element('button', className, text);
         result.type = 'button';
         return result;
+    }
+
+    function icon(name, className = '') {
+        const image = element('i', 'fas fa-' + name + (className ? ' ' + className : ''));
+        image.setAttribute('aria-hidden', 'true');
+        return image;
+    }
+
+    function actionButton(style, symbol, label) {
+        const control = button('btn btn-sm btn-' + style);
+        control.append(icon(symbol), element('span', '', label));
+        labelAction(control, label);
+        return control;
+    }
+
+    function labelAction(control, label) {
+        control.setAttribute('aria-label', label);
+        control.title = label;
     }
 
     function armyName(side) {
@@ -48,16 +67,17 @@
         const matchInfo = element('p', 'slg-map-legend');
         const info = element('p', 'slg-move-status');
         info.setAttribute('role', 'status');
-        const cancel = button('btn btn-sm btn-outline-secondary', '取り消す');
-        const actionBar = element('div', 'slg-action-buttons');
+        const cancel = actionButton('outline-secondary', 'xmark', '取消');
+        const actionBar = element('div', 'slg-unit-actions');
+        actionBar.hidden = true;
         actionBar.setAttribute('role', 'group');
         actionBar.setAttribute('aria-label', '部隊の行動');
         const choices = {
-            attack: button('btn btn-sm btn-outline-danger', '攻撃'),
-            capture: button('btn btn-sm btn-outline-primary', '占領'),
-            wait: button('btn btn-sm btn-outline-secondary', '待機')
+            attack: actionButton('outline-danger', 'crosshairs', '攻撃'),
+            capture: actionButton('outline-primary', 'flag', '占領'),
+            wait: actionButton('outline-secondary', 'hourglass-half', '待機')
         };
-        const confirm = button('btn btn-sm btn-primary', '行動を確定');
+        const confirm = actionButton('primary', 'check', '確定');
         const recruit = button('btn btn-sm btn-outline-primary', '生産');
         const end = button('btn btn-sm btn-outline-primary', '手番終了');
         const resign = button('btn btn-sm btn-outline-danger', '投了');
@@ -76,6 +96,8 @@
         const placeUnit = button('btn btn-sm btn-primary', '生産を確定');
         const stopRecruiting = button('btn btn-sm btn-outline-secondary', '生産を取り消す');
         recruitmentBar.append(siteLabel, typeLabel, placeUnit, stopRecruiting);
+        const dock = element('div', 'slg-action-dock');
+        dock.append(turnBar, recruitmentBar);
         const notice = element('p', 'slg-action-notice');
         notice.setAttribute('role', 'status');
         notice.hidden = true;
@@ -89,12 +111,17 @@
             tile.dataset.tile = index;
             tile.dataset.terrain = code;
             tile.tabIndex = -1;
+            if (terrainIcons[code]) tile.appendChild(icon(terrainIcons[code], 'slg-terrain-icon'));
             grid.appendChild(tile);
             return tile;
         });
+        const marks = tiles.map(tile => tile.appendChild(element('span', 'slg-tile-mark')));
         viewport.appendChild(grid);
-        const legend = element('p', 'slg-map-legend', '青：青軍　赤：赤軍　数値：残りHP / 最大HP　◆：資源施設　移動コスト：森林・丘陵 2、平地・道路・施設 1');
-        panel.append(matchInfo, info, actionBar, turnBar, recruitmentBar, notice, viewport, legend);
+        const legend = element('p', 'slg-map-legend');
+        legend.append('青：青軍　赤：赤軍　数値：残りHP / 最大HP　◆：資源施設　移動コスト：',
+            icon('tree'), ' 森林・', icon('hill-rockslide'), ' 丘陵 2、平地・道路・施設 1　',
+            icon('water'), ' 水域・', icon('mountain'), ' 山岳は通行不可');
+        panel.append(matchInfo, info, dock, notice, viewport, actionBar, legend);
 
         const facilities = new Map(stage.sites.map(site => [rules.tileIndex(board, site.x, site.y), site]));
         let state;
@@ -107,6 +134,8 @@
         let visible = false, suspended = false, timer = null;
         let currentIndex = 0;
         let motion = null;
+        let actionAnchor = null;
+        const dialog = context.closeButton.closest('.mini-game-card-inner');
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
         function clearDraft() {
@@ -143,6 +172,31 @@
             currentIndex = index;
             tiles[index].tabIndex = 0;
             if (focus) tiles[index].focus();
+        }
+
+        function positionActions() {
+            if (!visible || actionBar.hidden) return;
+            const gap = 6;
+            const origin = panel.getBoundingClientRect();
+            const view = viewport.getBoundingClientRect();
+            const frame = dialog.getBoundingClientRect();
+            const {width, height} = actionBar.getBoundingClientRect();
+            const minX = view.left + gap;
+            const maxX = view.left + viewport.clientWidth - width - gap;
+            let x = minX;
+            let y = dock.getBoundingClientRect().top;
+            if (actionAnchor) {
+                const tile = actionAnchor.getBoundingClientRect();
+                const minY = Math.max(0, frame.top + dialog.clientTop) + gap;
+                const maxY = Math.min(window.innerHeight, frame.top + dialog.clientTop + dialog.clientHeight) - height - gap;
+                x = tile.right + gap;
+                if (x > maxX && tile.left - width - gap >= minX) x = tile.left - width - gap;
+                y = tile.top - height - gap;
+                if (y < minY) y = tile.bottom + gap;
+                y = Math.max(minY, Math.min(y, maxY));
+            }
+            actionBar.style.left = (Math.max(minX, Math.min(x, maxX)) - origin.left) + 'px';
+            actionBar.style.top = (y - origin.top) + 'px';
         }
 
         function stopMotion() {
@@ -211,6 +265,7 @@
             const path = new Set(draft?.destination?.path);
             const target = draft?.destination;
             const selected = state.units.find(unit => unit.id === draft?.unitId);
+            const defender = command === 'attack' && plan.targets.find(unit => unit.id === targetId);
             // Preview the piece at its destination. The battle state changes only on action confirmation.
             if (target && selected) {
                 occupants.delete(rules.tileIndex(board, selected.x, selected.y));
@@ -249,10 +304,11 @@
                 tile.setAttribute('aria-label', [position, site, possession, force, cost, acted ? '行動済み' : '',
                     destination && target.cost ? '行動未確定' : '', spawnCells.includes(index) ? '生産候補' : '', canTarget ? (unit.id === targetId ? '攻撃対象' : '攻撃可能') : ''].filter(Boolean).join('、'));
                 tile.title = tile.getAttribute('aria-label');
-                if (unit) tile.replaceChildren(unitPiece(unit));
-                else tile.textContent = facility?.type === 'hq' ? '本' : facility ? '◆' : '';
+                if (unit) marks[index].replaceChildren(unitPiece(unit));
+                else marks[index].textContent = facility?.type === 'hq' ? '本' : facility ? '◆' : '';
             }
             actionBar.hidden = !playerTurn || !draft;
+            dock.toggleAttribute('data-draft', !actionBar.hidden);
             turnBar.hidden = !playerTurn || !!draft || !!production || !!motion;
             recruitmentBar.hidden = !playerTurn || !production;
             placeUnit.disabled = !production || production.index === null;
@@ -262,8 +318,8 @@
             choices.wait.hidden = !!motion || !plan;
             for (const [name, choice] of Object.entries(choices)) choice.setAttribute('aria-pressed', String(name === command));
             confirm.hidden = !command || (command === 'attack' && targetId === null);
-            confirm.textContent = command ? choices[command].textContent + 'を確定' : '行動を確定';
-            cancel.textContent = target?.cost ? '移動を取り消す' : '選択を取り消す';
+            labelAction(confirm, command ? choices[command].textContent + 'を確定' : '行動を確定');
+            labelAction(cancel, target?.cost ? '移動を取り消す' : '選択を取り消す');
             notice.textContent = message;
             notice.hidden = !message || (!!motion && !motion.preview);
             if (motion?.preview) {
@@ -284,7 +340,6 @@
             } else if (target) {
                 const unitName = rules.unitTypes[selected.type].name;
                 const position = (target.x + 1) + '列 ' + (target.y + 1) + '行';
-                const defender = plan.targets.find(unit => unit.id === targetId);
                 const instruction = !command ? '行動を選んでください。'
                     : command === 'attack' && targetId === null ? '枠で示した敵部隊を選んでください。'
                     : defender ? '敵' + rules.unitTypes[defender.type].name + ' HP ' + defender.hp + '/' + rules.unitTypes[defender.type].hp + ' · 攻撃を確定してください。'
@@ -298,8 +353,14 @@
                 else if (roster.every(unit => unit.actedPly === state.ply)) info.textContent = 'すべてのユニットが行動済みです。';
                 else info.textContent = '青軍の部隊を選んでください。';
             }
+            const anchor = defender || (command !== 'attack' && target);
+            actionAnchor = anchor ? tiles[rules.tileIndex(board, anchor.x, anchor.y)] : null;
+            positionActions();
         }
 
+        context.on(viewport, 'scroll', positionActions);
+        context.on(dialog, 'scroll', positionActions);
+        context.on(window, 'resize', positionActions);
         context.on(grid, 'click', async function (event) {
             const tile = event.target.closest('[data-tile]');
             if (!tile) return;
@@ -317,6 +378,7 @@
             if (command === 'attack' && plan.targets.some(target => target.id === unit?.id)) {
                 targetId = unit.id;
                 paint();
+                if (event.detail === 0) confirm.focus({preventScroll: true});
                 return;
             }
             if (draft?.destination) return;
@@ -340,7 +402,7 @@
             }
             paint();
             if (next && event.detail === 0 && tiles[index] === document.activeElement) {
-                Object.values(choices).find(choice => !choice.hidden)?.focus();
+                Object.values(choices).find(choice => !choice.hidden)?.focus({preventScroll: true});
             }
         });
         context.on(grid, 'keydown', function (event) {
@@ -360,6 +422,7 @@
                     markFocus(rules.tileIndex(board, target.x, target.y), event.detail === 0);
                 }
                 paint();
+                if (event.detail === 0 && name !== 'attack') confirm.focus({preventScroll: true});
             });
         }
         function advance(next, summary, units) {

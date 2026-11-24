@@ -92,6 +92,7 @@
 }
 .slg-briefing-header h2, .slg-move-status { margin:0; }
 .slg-setup { max-width:42rem; }
+.slg-board-panel { position:relative; }
 .slg-map-viewport { overflow:auto; max-width:100%; max-height:min(58dvh,580px); overscroll-behavior:contain; }
 .slg-map { position:relative; display:grid; width:max-content; margin-inline:auto; grid-template-columns:repeat(var(--slg-columns),48px); }
 .slg-tile {
@@ -106,6 +107,8 @@
 .slg-tile[data-terrain="s"] { background:#eacb7b; }
 .slg-tile[data-owner="player"] { background:#235c92; color:#fff; }
 .slg-tile[data-owner="cpu"] { background:#963b36; color:#fff; }
+.slg-terrain-icon { position:absolute; font-size:1rem; line-height:1; opacity:.62; pointer-events:none; }
+.slg-tile-mark { position:relative; pointer-events:none; }
 .slg-unit {
     position:relative; display:grid; place-content:center; width:34px; height:36px;
     border:1px solid #fff; border-radius:5px; box-shadow:0 1px 2px #0008;
@@ -135,8 +138,20 @@
 .slg-board-panel > .slg-map-legend:first-child { margin:0 0 .5rem; }
 
 .slg-action-buttons { display:flex; flex-wrap:wrap; gap:.4rem; margin:.5rem 0; }
-.slg-action-buttons[hidden], .slg-action-buttons > button[hidden] { display:none; }
-.slg-action-buttons button[aria-pressed="true"] {
+.slg-action-dock[data-draft] { min-height:3.5rem; }
+.slg-unit-actions {
+    position:absolute; z-index:3; display:flex; flex-wrap:wrap; gap:4px; width:max-content;
+    max-width:calc(100% - 12px); padding:4px; border:1px solid var(--bs-border-color,#c8cabc);
+    border-radius:.5rem; background:var(--bs-body-bg,#fff); box-shadow:0 3px 12px rgba(0,0,0,.28);
+}
+.slg-unit-actions button {
+    display:grid; place-content:center; gap:3px; min-width:44px; min-height:44px;
+    padding:2px; font-size:.72rem; line-height:1;
+}
+.slg-unit-actions i { font-size:1rem; }
+.slg-action-buttons[hidden], .slg-action-buttons > button[hidden],
+.slg-unit-actions[hidden], .slg-unit-actions > button[hidden] { display:none; }
+.slg-unit-actions button[aria-pressed="true"] {
     background:var(--bs-primary,#0d6efd); border-color:var(--bs-primary,#0d6efd); color:#fff;
 }
 .slg-action-notice { margin:.5rem 0; }
