@@ -23,7 +23,7 @@ function html(rows) {
     return '<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
         ['bootstrap-5.3.8.min','mini-game','game-widget','dashboard'].map(name => '<link rel="stylesheet" href="/css/'+name+'.css">').join('')+
         '</head><body><button data-bs-toggle="offcanvas" data-bs-target="#drawerMenu">メニュー</button>'+
-        '<nav id="drawerMenu" class="offcanvas offcanvas-end"><ul class="drawer-menu">'+menu+'</ul></nav>'+cards+
+        '<nav id="drawerMenu" class="offcanvas offcanvas-end drawer-nav" tabindex="-1"><ul class="drawer-menu">'+menu+'</ul></nav>'+cards+
         scripts.map(name => '<script src="/js/'+name+'?v=slg-test"></script>').join('')+'</body></html>';
 }
 
@@ -70,7 +70,9 @@ async function run(browser, width) {
         await page.evaluate(key => localStorage.setItem(key,'keep existing save'),sharedKey);
         await press(page.getByRole('button',{name:'メニュー',exact:true}));
         await press(page.locator('[data-bs-target="#widgetCatalog-game"]'));
-        await press(page.locator('#widgetCatalog-game [data-game-preset="slg"]'));
+        const gameCatalog = page.locator('#widgetCatalog-game.show');
+        await gameCatalog.waitFor();
+        await press(gameCatalog.locator('[data-game-preset="slg"]'));
         const add = page.locator('#registerGameWidget.show');
         await add.waitFor();
         assert.equal(await add.locator('.registerGameType').inputValue(),'slg');
