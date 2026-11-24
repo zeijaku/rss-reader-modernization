@@ -37,7 +37,7 @@
         const matchInfo = element('p', 'slg-map-legend');
         const info = element('p', 'slg-move-status');
         info.setAttribute('role', 'status');
-        const cancel = button('btn btn-sm btn-outline-secondary', '仮移動を取り消す');
+        const cancel = button('btn btn-sm btn-outline-secondary', '取り消す');
         const actionBar = element('div', 'slg-action-buttons');
         actionBar.setAttribute('role', 'group');
         actionBar.setAttribute('aria-label', '部隊の行動');
@@ -151,6 +151,11 @@
             const path = new Set(draft?.destination?.path);
             const target = draft?.destination;
             const selected = state.units.find(unit => unit.id === draft?.unitId);
+            // Preview the piece at its destination. The battle state changes only on action confirmation.
+            if (target && selected) {
+                occupants.delete(rules.tileIndex(board, selected.x, selected.y));
+                occupants.set(rules.tileIndex(board, target.x, target.y), selected);
+            }
             for (const [index, tile] of tiles.entries()) {
                 const x = index % board.width;
                 const y = Math.floor(index / board.width);
@@ -164,7 +169,7 @@
                 const option = draft?.options.get(index);
                 const destination = target?.x === x && target?.y === y;
                 tile.dataset.side = unit?.side ?? owner ?? '';
-                tile.toggleAttribute('data-reachable', !!option);
+                tile.toggleAttribute('data-reachable', !target && !!option);
                 tile.toggleAttribute('data-selected', !!selected && unit === selected);
                 tile.toggleAttribute('data-route', path.has(index));
                 tile.toggleAttribute('data-destination', destination);
@@ -181,22 +186,23 @@
                 const cost = option ? '移動コスト ' + option.cost : ground.cost === null ? '通行不可' : '';
                 const possession = holding?.capture ? '占領進捗 50%' : holding?.owner ? '所有 ' + armyName(owner) : '';
                 tile.setAttribute('aria-label', [position, site, possession, force, cost, acted ? '行動済み' : '',
-                    destination ? '仮移動先' : '', spawnCells.includes(index) ? '生産候補' : '', canTarget ? (unit.id === targetId ? '攻撃対象' : '攻撃可能') : ''].filter(Boolean).join('、'));
+                    destination && target.cost ? '行動未確定' : '', spawnCells.includes(index) ? '生産候補' : '', canTarget ? (unit.id === targetId ? '攻撃対象' : '攻撃可能') : ''].filter(Boolean).join('、'));
                 tile.title = tile.getAttribute('aria-label');
                 tile.textContent = unit ? rules.unitTypes[unit.type].mark
                     : facility?.type === 'hq' ? '本' : facility ? '◆' : '';
             }
-            actionBar.hidden = !playerTurn || !!production;
-            turnBar.hidden = !playerTurn || !!production;
+            actionBar.hidden = !playerTurn || !draft;
+            turnBar.hidden = !playerTurn || !!draft || !!production;
             recruitmentBar.hidden = !playerTurn || !production;
             placeUnit.disabled = !production || production.index === null;
             recruit.disabled = !playerTurn || !availableProductionSites().length;
-            choices.attack.disabled = !plan?.targets.length;
-            choices.capture.disabled = !plan?.capture;
-            choices.wait.disabled = !plan;
+            choices.attack.hidden = !plan?.targets.length;
+            choices.capture.hidden = !plan?.capture;
+            choices.wait.hidden = !plan;
             for (const [name, choice] of Object.entries(choices)) choice.setAttribute('aria-pressed', String(name === command));
-            confirm.disabled = !command || (command === 'attack' && targetId === null);
-            cancel.disabled = !draft;
+            confirm.hidden = !command || (command === 'attack' && targetId === null);
+            confirm.textContent = command ? choices[command].textContent + 'を確定' : '行動を確定';
+            cancel.textContent = target?.cost ? '移動を取り消す' : '選択を取り消す';
             notice.textContent = message;
             notice.hidden = !message;
             if (finished) {
@@ -211,16 +217,19 @@
                     info.textContent = '生産先 ' + (x + 1) + '列 ' + (y + 1) + '行';
                 }
             } else if (target) {
-                const position = '仮移動先 ' + (target.x + 1) + '列 ' + (target.y + 1) + '行 · 移動コスト ' + target.cost;
-                const instruction = !command ? '行動を選択'
-                    : command === 'attack' && targetId === null ? '攻撃対象を選択' : choices[command].textContent + 'を確定できます';
-                info.textContent = position + ' · ' + instruction;
+                const unitName = rules.unitTypes[selected.type].name;
+                const position = (target.x + 1) + '列 ' + (target.y + 1) + '行';
+                const instruction = !command ? '行動を選んでください。'
+                    : command === 'attack' && targetId === null ? '枠で示した敵部隊を選んでください。'
+                    : choices[command].textContent + 'を確定してください。';
+                info.textContent = unitName + ' · ' + position + ' · ' + instruction;
             } else if (selected) {
-                info.textContent = rules.unitTypes[selected.type].name + 'の移動先を選んでください。移動力 ' + rules.unitTypes[selected.type].movement;
+                info.textContent = rules.unitTypes[selected.type].name + ' · 移動力 ' + rules.unitTypes[selected.type].movement
+                    + ' · 移動先を選んでください。その場で行動するには、現在地をもう一度選びます。';
             } else {
                 if (!roster.length) info.textContent = '自軍のユニットがありません。生産、手番終了または投了を選べます。';
                 else if (roster.every(unit => unit.actedPly === state.ply)) info.textContent = 'すべてのユニットが行動済みです。';
-                else info.textContent = armyName(activeSide) + 'のユニットを選んでください。現在地を選ぶと移動せず行動できます。';
+                else info.textContent = '青軍の部隊を選んでください。';
             }
         }
 
@@ -243,10 +252,9 @@
                 paint();
                 return;
             }
+            if (draft?.destination) return;
             const next = draft && rules.previewMove(board, draft, x, y);
             if (next) {
-                command = null;
-                targetId = null;
                 draft = next;
                 plan = battleRules.planAction(board, stage.sites, state, draft.unitId, [x, y]);
             } else if (unit) {
@@ -257,6 +265,7 @@
                 }
             }
             paint();
+            if (next && event.detail === 0) Object.values(choices).find(choice => !choice.hidden)?.focus();
         });
         context.on(grid, 'keydown', function (event) {
             const direction = Object.hasOwn(arrows, event.key) ? arrows[event.key] : null;
@@ -318,7 +327,7 @@
         }
 
         context.on(confirm, 'click', function () {
-            if (state.phase !== 'acting' || rules.turnSide(state) !== 'player' || !draft?.destination || confirm.disabled) return;
+            if (state.phase !== 'acting' || rules.turnSide(state) !== 'player' || !draft?.destination || confirm.hidden) return;
             const {x, y} = draft.destination;
             const input = {unitId: draft.unitId, to: [x, y], command};
             if (command === 'attack') input.targetId = targetId;
@@ -333,7 +342,7 @@
             markFocus(rules.tileIndex(board, x, y), true);
         });
         context.on(recruit, 'click', function () {
-            if (recruit.disabled) return;
+            if (draft || production || recruit.disabled) return;
             const sites = availableProductionSites();
             const first = sites[0];
             clearDraft();
@@ -370,7 +379,7 @@
             recruit.focus();
         });
         context.on(end, 'click', function () {
-            if (rules.turnSide(state) !== 'player') return;
+            if (draft || production || rules.turnSide(state) !== 'player') return;
             const next = battleRules.endTurn(state);
             if (!next) return;
             advance(battleRules.startTurn(stage.sites, next), '');
@@ -378,7 +387,7 @@
             syncCpu();
         });
         context.on(resign, 'click', function () {
-            if (rules.turnSide(state) !== 'player' || state.phase !== 'acting') return;
+            if (draft || production || rules.turnSide(state) !== 'player' || state.phase !== 'acting') return;
             if (!window.confirm(armyName(rules.turnSide(state)) + 'は投了しますか？')) return;
             const next = battleRules.resign(state);
             if (next) {

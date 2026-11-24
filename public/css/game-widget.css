@@ -109,14 +109,17 @@
 .slg-tile[data-reachable]::after {
     content:""; position:absolute; inset:3px; border:2px solid #1c5e93; pointer-events:none;
 }
-.slg-tile[data-route]::after { border-color:#613b00; background:rgba(234,187,91,.25); }
+.slg-tile[data-route]::after {
+    content:""; position:absolute; inset:3px; border:2px solid #613b00;
+    background:rgba(234,187,91,.25); pointer-events:none;
+}
 .slg-tile:is([data-selected],[data-destination])::after { border:3px solid #f5cb58; box-shadow:0 0 0 1px #523700; }
 .slg-tile:focus-visible { outline:3px dashed #112334; outline-offset:-5px; z-index:1; }
 .slg-map-legend { margin:.5rem 0 0; font-size:.85rem; }
 .slg-board-panel > .slg-map-legend:first-child { margin:0 0 .5rem; }
 
 .slg-action-buttons { display:flex; flex-wrap:wrap; gap:.4rem; margin:.5rem 0; }
-.slg-action-buttons[hidden] { display:none; }
+.slg-action-buttons[hidden], .slg-action-buttons > button[hidden] { display:none; }
 .slg-action-buttons button[aria-pressed="true"] {
     background:var(--bs-primary,#0d6efd); border-color:var(--bs-primary,#0d6efd); color:#fff;
 }

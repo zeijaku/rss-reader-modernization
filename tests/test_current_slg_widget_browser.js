@@ -133,8 +133,14 @@ async function run(browser, width) {
             .evaluateAll(units => units.map(el => [el.dataset.tile, el.textContent]));
         const initialPositions = await unitsOnBoard();
         assert.equal(initialPositions.length,6);
-        assert((await tile(2,5).getAttribute('aria-label')).includes('HP 3'));
+        const unitActions = briefing.getByRole('group',{name:'部隊の行動'});
+        const visibleActions = () => unitActions.getByRole('button').allTextContents();
+        assert.equal(await unitActions.count(),0);
+        assert.match(await tile(2,5).getAttribute('aria-label'),/青軍歩兵 HP 3/);
         await press(tile(2,5));
+        assert.deepEqual(await visibleActions(),['選択を取り消す']);
+        assert.equal(await briefing.getByRole('button',{name:'手番終了'}).count(),0);
+        assert.equal(await briefing.getByRole('button',{name:'投了'}).count(),0);
         assert.equal(await tile(4,4).getAttribute('data-reachable'),'');
         assert.equal(await tile(5,4).getAttribute('data-reachable'),null);
         assert.match(await tile(4,4).getAttribute('aria-label'),/5列 5行.*森林.*移動コスト 4/);
@@ -148,6 +154,12 @@ async function run(browser, width) {
         }
         assert.equal(await tile(4,4).getAttribute('data-destination'),'');
         assert.equal(await briefing.locator('[data-route]').count(),4);
+        assert.equal(await briefing.locator('[data-reachable]').count(),0);
+        assert.equal(await tile(2,5).textContent(),'');
+        assert.equal(await tile(4,4).textContent(),'歩');
+        assert.match(await tile(4,4).getAttribute('aria-label'),/青軍歩兵 HP 3.*行動未確定/);
+        assert.equal(await tile(4,4).getAttribute('data-acted'),null);
+        assert.deepEqual(await visibleActions(),['待機','移動を取り消す']);
         if (touch) {
             await page.setViewportSize({width:640,height:320});
             const rotated = await briefing.boundingBox();
@@ -157,10 +169,12 @@ async function run(browser, width) {
         }
         await press(tile(5,4));
         assert.equal(await tile(4,4).getAttribute('data-destination'),'');
-        assert.deepEqual(await unitsOnBoard(),initialPositions);
         assert.match(await briefing.locator('.slg-board-panel > p').first().textContent(),/自軍資金 8/);
-        await press(briefing.getByRole('button',{name:'仮移動を取り消す'}));
+        await press(unitActions.getByRole('button',{name:'待機',exact:true}));
+        assert.deepEqual(await visibleActions(),['待機','待機を確定','移動を取り消す']);
+        await press(unitActions.getByRole('button',{name:'移動を取り消す'}));
         assert.equal(await briefing.locator('[data-route],[data-reachable]').count(),0);
+        assert.deepEqual(await unitsOnBoard(),initialPositions);
         await press(tile(3,6));
         await press(tile(10,6));
         assert.equal(await tile(10,6).getAttribute('data-destination'),'');
@@ -182,17 +196,18 @@ async function run(browser, width) {
             await press(tile(...from));
             await press(tile(...to));
             assert(await control(name).isEnabled());
+            assert.equal(await control(name + 'を確定').count(),0);
             await press(control(name));
             if (target) {
-                assert(await control('行動を確定').isDisabled());
+                assert.equal(await control('攻撃を確定').count(),0);
                 assert.equal(await tile(...target).getAttribute('data-attackable'),'');
                 await press(tile(...target));
             }
-            assert(await control('行動を確定').isEnabled());
+            assert(await control(name + 'を確定').isEnabled());
         }
         async function act(from, to, name, target) {
             await chooseAction(from, to, name, target);
-            await press(control('行動を確定'));
+            await press(control(name + 'を確定'));
             assert.equal(await tile(...to).getAttribute('data-acted'),'');
         }
 
@@ -242,7 +257,7 @@ async function run(browser, width) {
             await verifyHP([5,5],2);
             await verifyHP([5,6],1);
             await chooseAction([5,5],[5,5],'攻撃',[5,6]);
-            await press(control('仮移動を取り消す'));
+            await press(control('選択を取り消す'));
             await verifyHP([5,6],1);
             await act([5,5],[5,5],'攻撃',[5,6]);
             assert.match(await briefing.locator('.slg-action-notice').textContent(), /攻撃 1ダメージ · 撃破/);
