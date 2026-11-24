@@ -12,10 +12,10 @@
         s: {name: '施設', cost: 1}
     });
     const unitTypes = Object.freeze({
-        infantry: {name: '歩兵', mark: '歩', hp: 3, movement: 4},
-        scout: {name: '偵察兵', mark: '偵', hp: 2, movement: 7},
-        ranged: {name: '射撃兵', mark: '射', hp: 2, movement: 3},
-        heavy: {name: '重装兵', mark: '重', hp: 5, movement: 3}
+        infantry: {name: '歩兵', mark: '歩', hp: 3, movement: 4, minRange: 1, maxRange: 1, damage: 1},
+        scout: {name: '偵察兵', mark: '偵', hp: 2, movement: 7, minRange: 1, maxRange: 1, damage: 1},
+        ranged: {name: '射撃兵', mark: '射', hp: 2, movement: 3, minRange: 2, maxRange: 3, damage: 1},
+        heavy: {name: '重装兵', mark: '重', hp: 5, movement: 3, minRange: 1, maxRange: 1, damage: 2}
     });
 
     function makeBoard(rows, facilities = []) {
@@ -116,10 +116,13 @@
         return options;
     }
 
+    function turnSide(state) {
+        return state.ply % 2 ? 'player' : 'cpu';
+    }
+
     function selectUnit(map, state, id) {
         const unit = state.units.find(candidate => candidate.id === id);
-        const side = state.ply % 2 ? 'player' : 'cpu';
-        if (!unit || unit.hp <= 0 || state.phase !== 'acting' || unit.side !== side || unit.actedPly === state.ply) return null;
+        if (!unit || unit.hp <= 0 || state.phase !== 'acting' || unit.side !== turnSide(state) || unit.actedPly === state.ply) return null;
         return {unitId: id, options: movementOptions(map, state.units, unit), destination: null};
     }
 
@@ -130,7 +133,7 @@
     }
 
     const stageOne = {name: '前線突破', unitLimit: 6, board, sites, initialState};
-    const api = {terrain, unitTypes, stageOne, makeBoard, tileIndex, movementOptions, selectUnit, previewMove};
+    const api = {terrain, unitTypes, stageOne, makeBoard, tileIndex, movementOptions, turnSide, selectUnit, previewMove};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.RssSlgMap = api;
 })(globalThis);

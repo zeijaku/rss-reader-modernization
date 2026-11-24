@@ -86,7 +86,7 @@
 #main-content .mini-game-card[data-mini-game-type="slg"].game-widget-expanded .mini-game-card-header { display:none !important; }
 
 .slg-briefing { width:100%; }
-.slg-briefing-header, .slg-board-toolbar {
+.slg-briefing-header {
     display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.5rem;
     margin-bottom:.75rem;
 }
@@ -114,3 +114,19 @@
 .slg-tile:focus-visible { outline:3px dashed #112334; outline-offset:-5px; z-index:1; }
 .slg-map-legend { margin:.5rem 0 0; font-size:.85rem; }
 .slg-board-panel > .slg-map-legend:first-child { margin:0 0 .5rem; }
+
+.slg-action-buttons { display:flex; flex-wrap:wrap; gap:.4rem; margin:.5rem 0; }
+.slg-action-buttons[hidden] { display:none; }
+.slg-action-buttons button[aria-pressed="true"] {
+    background:var(--bs-primary,#0d6efd); border-color:var(--bs-primary,#0d6efd); color:#fff;
+}
+.slg-action-notice { margin:.5rem 0; }
+.slg-tile[data-acted] { box-shadow:inset 0 0 0 3px #b9c2c7; }
+.slg-tile[data-attackable]::after {
+    content:""; position:absolute; inset:3px; border:2px dashed #ffd4ba; pointer-events:none;
+}
+.slg-tile[data-attack-target]::after { border:3px solid #ffd4ba; box-shadow:0 0 0 1px #411708; }
+.slg-tile[data-capture-pending]::before {
+    content:"½"; position:absolute; inset:auto 1px 0 auto; padding-inline:2px;
+    background:#f5cb58; color:#162329; font-size:.75rem;
+}

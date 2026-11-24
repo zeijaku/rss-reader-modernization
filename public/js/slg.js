@@ -2,6 +2,7 @@
 (function (window, document) {
     'use strict';
     const rules = window.RssSlgMap;
+    const battleRules = window.RssSlgBattle;
     const stage = rules.stageOne;
     const title = 'Stage 1　' + stage.name;
     const sessions = new Map();
@@ -20,15 +21,38 @@
         return result;
     }
 
-    function createMapView(context) {
+    function armyName(side) {
+        return side === 'player' ? '青軍' : '赤軍';
+    }
+
+    function resultLabel(result) {
+        return armyName(result.winner) + 'の勝利（' + (result.reason === 'hq' ? '本陣占領' : '相手の投了') + '）';
+    }
+
+    function createMapView(context, publish) {
         const board = stage.board;
         const panel = element('section', 'slg-board-panel');
         const matchInfo = element('p', 'slg-map-legend');
         const info = element('p', 'slg-move-status');
         info.setAttribute('role', 'status');
         const cancel = button('btn btn-sm btn-outline-secondary', '仮移動を取り消す');
-        const toolbar = element('div', 'slg-board-toolbar');
-        toolbar.append(info, cancel);
+        const actionBar = element('div', 'slg-action-buttons');
+        actionBar.setAttribute('role', 'group');
+        actionBar.setAttribute('aria-label', '部隊の行動');
+        const choices = {
+            attack: button('btn btn-sm btn-outline-danger', '攻撃'),
+            capture: button('btn btn-sm btn-outline-primary', '占領'),
+            wait: button('btn btn-sm btn-outline-secondary', '待機')
+        };
+        const confirm = button('btn btn-sm btn-primary', '行動を確定');
+        const end = button('btn btn-sm btn-outline-primary', '手番終了');
+        const resign = button('btn btn-sm btn-outline-danger', '投了');
+        actionBar.append(...Object.values(choices), confirm, cancel);
+        const turnBar = element('div', 'slg-action-buttons');
+        turnBar.append(end, resign);
+        const notice = element('p', 'slg-action-notice');
+        notice.setAttribute('role', 'status');
+        notice.hidden = true;
         const viewport = element('div', 'slg-map-viewport');
         const grid = element('div', 'slg-map');
         grid.setAttribute('role', 'group');
@@ -43,13 +67,24 @@
             return tile;
         });
         viewport.appendChild(grid);
-        const legend = element('p', 'slg-map-legend', '青：自軍　赤：敵軍　◆：中立資源　移動コスト：森林・丘陵 2、平地・道路・施設 1');
-        panel.append(matchInfo, toolbar, viewport, legend);
+        const legend = element('p', 'slg-map-legend', '青：青軍　赤：赤軍　◆：資源施設　移動コスト：森林・丘陵 2、平地・道路・施設 1');
+        panel.append(matchInfo, info, actionBar, turnBar, notice, viewport, legend);
 
         const facilities = new Map(stage.sites.map(site => [rules.tileIndex(board, site.x, site.y), site]));
         let state;
         let draft = null;
+        let plan = null;
+        let command = null;
+        let targetId = null;
+        let message = '';
         let currentIndex = 0;
+
+        function clearDraft() {
+            draft = null;
+            plan = null;
+            command = null;
+            targetId = null;
+        }
 
         function markFocus(index, focus) {
             tiles[currentIndex].tabIndex = -1;
@@ -59,9 +94,14 @@
         }
 
         function paint() {
-            matchInfo.textContent = '第' + Math.ceil(state.ply / 2) + 'ターン · 自軍資金 ' + state.funds.player;
+            const activeSide = rules.turnSide(state);
+            const finished = state.phase === 'finished';
+            const fundsLabel = activeSide === 'player' ? '自軍資金 ' : '赤軍資金 ';
+            const round = '第' + Math.ceil(state.ply / 2) + 'ターン';
+            matchInfo.textContent = finished ? round : round + ' · ' + armyName(activeSide) + 'の手番 · ' + fundsLabel + state.funds[activeSide];
             const occupants = new Map(state.units.map(unit => [rules.tileIndex(board, unit.x, unit.y), unit]));
-            const owners = new Map(state.facilities.map(site => [site.id, site.owner]));
+            const holdings = new Map(state.facilities.map(site => [site.id, site]));
+            const attackIds = new Set(command === 'attack' ? plan.targets.map(unit => unit.id) : []);
             const path = new Set(draft?.destination?.path);
             const target = draft?.destination;
             const selected = state.units.find(unit => unit.id === draft?.unitId);
@@ -71,7 +111,10 @@
                 const ground = rules.terrain[board.tiles[index]];
                 const facility = facilities.get(index);
                 const unit = occupants.get(index);
-                const owner = facility ? owners.get(facility.id) : null;
+                const holding = facility && holdings.get(facility.id);
+                const owner = holding?.owner;
+                const canTarget = unit && attackIds.has(unit.id);
+                const acted = unit && unit.side === activeSide && unit.actedPly === state.ply;
                 const option = draft?.options.get(index);
                 const destination = target?.x === x && target?.y === y;
                 tile.dataset.side = unit?.side ?? owner ?? '';
@@ -79,23 +122,46 @@
                 tile.toggleAttribute('data-selected', !!selected && unit === selected);
                 tile.toggleAttribute('data-route', path.has(index));
                 tile.toggleAttribute('data-destination', destination);
+                tile.toggleAttribute('data-attackable', !!canTarget);
+                tile.toggleAttribute('data-attack-target', !!canTarget && unit.id === targetId);
+                tile.toggleAttribute('data-acted', !!acted);
+                tile.toggleAttribute('data-capture-pending', !!holding?.capture);
 
                 const position = (x + 1) + '列 ' + (y + 1) + '行';
-                const site = facility?.type === 'hq' ? (owner === 'player' ? '自軍本陣' : '敵軍本陣') : facility ? '資源施設' : ground.name;
-                const force = unit ? (unit.side === 'player' ? '自軍' : '敵軍') + rules.unitTypes[unit.type].name + ' HP ' + unit.hp : '';
+                const site = facility?.type === 'hq' ? armyName(facility.owner) + '本陣' : facility ? '資源施設' : ground.name;
+                const force = unit ? armyName(unit.side) + rules.unitTypes[unit.type].name + ' HP ' + unit.hp : '';
                 const cost = option ? '移動コスト ' + option.cost : ground.cost === null ? '通行不可' : '';
-                tile.setAttribute('aria-label', [position, site, force, cost, destination ? '仮移動先' : ''].filter(Boolean).join('、'));
+                const possession = holding?.capture ? '占領進捗 50%' : holding?.owner ? '所有 ' + armyName(owner) : '';
+                tile.setAttribute('aria-label', [position, site, possession, force, cost, acted ? '行動済み' : '',
+                    destination ? '仮移動先' : '', canTarget ? (unit.id === targetId ? '攻撃対象' : '攻撃可能') : ''].filter(Boolean).join('、'));
                 tile.title = tile.getAttribute('aria-label');
                 tile.textContent = unit ? rules.unitTypes[unit.type].mark
                     : facility?.type === 'hq' ? '本' : facility ? '◆' : '';
             }
+            actionBar.hidden = finished;
+            turnBar.hidden = finished;
+            choices.attack.disabled = !plan?.targets.length;
+            choices.capture.disabled = !plan?.capture;
+            choices.wait.disabled = !plan;
+            for (const [name, choice] of Object.entries(choices)) choice.setAttribute('aria-pressed', String(name === command));
+            confirm.disabled = !command || (command === 'attack' && targetId === null);
             cancel.disabled = !draft;
-            if (target) {
-                info.textContent = '仮移動先 ' + (target.x + 1) + '列 ' + (target.y + 1) + '行 · 移動コスト ' + target.cost;
+            notice.textContent = message;
+            notice.hidden = !message;
+            if (finished) {
+                info.textContent = resultLabel(state.result);
+            } else if (target) {
+                const position = '仮移動先 ' + (target.x + 1) + '列 ' + (target.y + 1) + '行 · 移動コスト ' + target.cost;
+                const instruction = !command ? '行動を選択'
+                    : command === 'attack' && targetId === null ? '攻撃対象を選択' : choices[command].textContent + 'を確定できます';
+                info.textContent = position + ' · ' + instruction;
             } else if (selected) {
                 info.textContent = rules.unitTypes[selected.type].name + 'の移動先を選んでください。移動力 ' + rules.unitTypes[selected.type].movement;
             } else {
-                info.textContent = '自軍ユニットを選ぶと、移動できるマスが表示されます。';
+                const activeUnits = state.units.filter(unit => unit.side === activeSide);
+                if (!activeUnits.length) info.textContent = 'この陣営のユニットがありません。手番終了または投了を選べます。';
+                else if (activeUnits.every(unit => unit.actedPly === state.ply)) info.textContent = 'すべてのユニットが行動済みです。';
+                else info.textContent = armyName(activeSide) + 'のユニットを選んでください。現在地を選ぶと移動せず行動できます。';
             }
         }
 
@@ -106,13 +172,25 @@
             const x = index % board.width;
             const y = Math.floor(index / board.width);
             markFocus(index, true);
+            if (state.phase !== 'acting') return;
             const unit = state.units.find(unit => unit.x === x && unit.y === y);
+            if (command === 'attack' && plan.targets.some(target => target.id === unit?.id)) {
+                targetId = unit.id;
+                paint();
+                return;
+            }
             const next = draft && rules.previewMove(board, draft, x, y);
             if (next) {
+                command = null;
+                targetId = null;
                 draft = next;
+                plan = battleRules.planAction(board, stage.sites, state, draft.unitId, [x, y]);
             } else if (unit) {
                 const selection = rules.selectUnit(board, state, unit.id);
-                if (selection) draft = selection;
+                if (selection) {
+                    clearDraft();
+                    draft = selection;
+                }
             }
             paint();
         });
@@ -124,9 +202,64 @@
                 Math.floor(currentIndex / board.width) + direction[1]);
             if (index >= 0) markFocus(index, true);
         });
+        for (const [name, choice] of Object.entries(choices)) {
+            context.on(choice, 'click', function (event) {
+                command = name;
+                targetId = null;
+                if (name === 'attack') {
+                    const target = plan.targets[0];
+                    markFocus(rules.tileIndex(board, target.x, target.y), event.detail === 0);
+                }
+                paint();
+            });
+        }
+        function advance(next, summary) {
+            state = next;
+            message = summary;
+            clearDraft();
+            publish(next);
+            paint();
+        }
+        context.on(confirm, 'click', function () {
+            const {x, y} = draft.destination;
+            const input = {unitId: draft.unitId, to: [x, y], command};
+            if (command === 'attack') input.targetId = targetId;
+            const resolved = battleRules.commitAction(board, stage.sites, state, input);
+            if (!resolved) {
+                message = '行動を確定できません。もう一度指定してください。';
+                clearDraft();
+                paint();
+                return;
+            }
+            const {hits, removed, capture} = resolved;
+            let summary = '待機を確定しました。';
+            if (capture) summary = capture.progress === 50 ? '本陣の占領進捗 50%' : '施設を占領しました。';
+            if (hits.length) {
+                summary = '攻撃 ' + hits[0][2] + 'ダメージ';
+                if (hits[1]) summary += ' · 反撃 ' + hits[1][2] + 'ダメージ';
+                if (removed.length) summary += ' · 撃破';
+            }
+            advance(resolved.state, summary);
+            markFocus(rules.tileIndex(board, x, y), true);
+        });
+        context.on(end, 'click', function () {
+            const next = battleRules.endTurn(state);
+            if (!next) return;
+            advance(battleRules.startManualTurn(next), '');
+            const unit = state.units.find(unit => unit.side === rules.turnSide(state));
+            if (unit) markFocus(rules.tileIndex(board, unit.x, unit.y), true);
+        });
+        context.on(resign, 'click', function () {
+            if (!window.confirm(armyName(rules.turnSide(state)) + 'は投了しますか？')) return;
+            const next = battleRules.resign(state);
+            if (next) {
+                advance(next, '');
+                context.closeButton.focus();
+            }
+        });
         context.on(cancel, 'click', function () {
             const unit = state.units.find(unit => unit.id === draft.unitId);
-            draft = null;
+            clearDraft();
             paint();
             markFocus(rules.tileIndex(board, unit.x, unit.y), true);
         });
@@ -135,14 +268,15 @@
             show: function (battle) {
                 if (state !== battle) {
                     state = battle;
-                    draft = null;
-                    const unit = state.units[0];
-                    markFocus(rules.tileIndex(board, unit.x, unit.y), false);
+                    clearDraft();
+                    message = '';
+                    const unit = state.units.find(unit => unit.side === rules.turnSide(state));
+                    markFocus(unit ? rules.tileIndex(board, unit.x, unit.y) : 0, false);
                 }
                 paint();
                 tiles[currentIndex].focus();
             },
-            clearDraft: function () { draft = null; }
+            clearDraft
         };
     }
 
@@ -177,7 +311,8 @@
         }
         label.appendChild(select);
         const deploy = button('btn btn-primary', '盤面を開く');
-        setup.append(objective, label, deploy);
+        const manual = element('p', 'small text-muted', '青軍と赤軍を交互に手動で操作します。');
+        setup.append(objective, manual, label, deploy);
         briefing.append(bar, setup);
         context.stage.append(card, briefing);
 
@@ -185,7 +320,10 @@
         let mapView;
         function render() {
             resume.disabled = session.difficulty === null;
-            const progress = session.battle ? '第1ターン · 移動確認' : '出撃準備中';
+            const battle = session.battle;
+            let progress = '出撃準備中';
+            if (battle) progress = battle.result ? resultLabel(battle.result)
+                : '第' + Math.ceil(battle.ply / 2) + 'ターン · ' + armyName(rules.turnSide(battle)) + 'の手番';
             status.textContent = session.difficulty ? title + ' · ' + session.difficulty + ' · ' + progress : '未開始';
             select.value = session.difficulty || 'Normal';
             setup.hidden = !!session.battle;
@@ -193,7 +331,10 @@
         }
         function showMap() {
             if (!mapView) {
-                mapView = createMapView(context);
+                mapView = createMapView(context, function (next) {
+                    session.battle = next;
+                    updateViews();
+                });
                 briefing.appendChild(mapView.panel);
             }
             mapView.show(session.battle);

@@ -66,7 +66,7 @@ async function run(browser, width) {
     try {
         await page.goto('http://slg.test');
         await page.locator('.td-widget').waitFor();
-        assert(!requests.some(url => /^\/js\/slg(?:-map)?\.js/.test(url)));
+        assert(!requests.some(url => /^\/js\/slg(?:-map|-battle)?\.js/.test(url)));
         await page.evaluate(key => localStorage.setItem(key,'keep existing save'),sharedKey);
         await press(page.getByRole('button',{name:'メニュー',exact:true}));
         await press(page.locator('[data-bs-target="#widgetCatalog-game"]'));
@@ -172,7 +172,96 @@ async function run(browser, width) {
         await press(slg.getByRole('button',{name:'続きから'}));
         assert.equal(await briefing.locator('[data-destination]').count(),0);
         assert.deepEqual(await unitsOnBoard(),initialPositions);
-        await press(briefing.getByRole('button',{name:'閉じる'}));
+
+        const control = name => briefing.getByRole('button',{name,exact:true});
+        const finishTurn = () => press(control('手番終了'));
+        const announce = () => briefing.locator('.slg-move-status').textContent();
+        const verifyHP = async ([x,y], hp) => assert.match(await tile(x,y).getAttribute('aria-label'), new RegExp('HP ' + hp));
+        async function chooseAction(from, to, name, target) {
+            await press(tile(...from));
+            await press(tile(...to));
+            assert(await control(name).isEnabled());
+            await press(control(name));
+            if (target) {
+                assert(await control('行動を確定').isDisabled());
+                assert.equal(await tile(...target).getAttribute('data-attackable'),'');
+                await press(tile(...target));
+            }
+            assert(await control('行動を確定').isEnabled());
+        }
+        async function act(from, to, name, target) {
+            await chooseAction(from, to, name, target);
+            await press(control('行動を確定'));
+            assert.equal(await tile(...to).getAttribute('data-acted'),'');
+        }
+
+        await act([2,5],[5,5],'待機');
+        await press(tile(5,5));
+        assert.equal(await tile(5,5).getAttribute('data-reachable'),null);
+        await act([3,6],[10,6],'待機');
+        await finishTurn();
+        assert.match(await briefing.locator('.slg-board-panel > p').first().textContent(), /赤軍の手番/);
+
+        await chooseAction([12,6],[11,6],'攻撃',[10,6]);
+        await verifyHP([12,6],2);
+        await verifyHP([10,6],2);
+        assert.equal(await tile(11,6).getAttribute('data-side'),'');
+        await press(control('仮移動を取り消す'));
+        await verifyHP([12,6],2);
+        await verifyHP([10,6],2);
+        await act([12,6],[11,6],'攻撃',[10,6]);
+        await verifyHP([11,6],1);
+        await verifyHP([10,6],1);
+        assert.match(await briefing.locator('.slg-action-notice').textContent(), /攻撃 1ダメージ.*反撃 1ダメージ/);
+        await finishTurn();
+
+        await act([5,5],[7,4],'占領');
+        assert.match(await tile(7,4).getAttribute('aria-label'), /資源施設.*所有 青軍/);
+        await act([10,6],[10,6],'攻撃',[11,6]);
+        assert.match(await briefing.locator('.slg-action-notice').textContent(), /攻撃 1ダメージ · 撃破/);
+        assert.equal(await tile(11,6).getAttribute('data-side'),'');
+        await finishTurn();
+        await finishTurn();
+        await act([10,6],[14,6],'占領');
+        assert.equal(await tile(14,6).getAttribute('data-capture-pending'),'');
+        assert.match(await tile(14,6).getAttribute('aria-label'), /占領進捗 50%/);
+        await finishTurn();
+        await finishTurn();
+        await act([14,6],[14,6],'占領');
+        assert.match(await announce(), /青軍の勝利（本陣占領）/);
+        assert.equal(await control('手番終了').count(),0);
+        await press(control('閉じる'));
+        assert.match(await another.locator('.slg-progress').textContent(),/青軍の勝利/);
+        await press(another.getByRole('button',{name:'続きから'}));
+        assert.match(await another.locator('.slg-move-status').textContent(),/青軍の勝利/);
+        await press(another.getByRole('button',{name:'閉じる'}));
+
+        if (!touch) {
+            page.once('dialog', dialog => dialog.accept());
+            await press(start);
+            await press(control('盤面を開く'));
+            await finishTurn();
+            await act([12,6],[5,6],'待機');
+            await finishTurn();
+            await finishTurn();
+            await act([5,6],[1,6],'占領');
+            await finishTurn();
+            await finishTurn();
+            await act([1,6],[1,6],'占領');
+            assert.match(await announce(), /赤軍の勝利（本陣占領）/);
+            await press(control('閉じる'));
+
+            page.once('dialog', dialog => dialog.accept());
+            await press(start);
+            await press(control('盤面を開く'));
+            page.once('dialog', dialog => dialog.dismiss());
+            await press(control('投了'));
+            assert(await control('手番終了').isEnabled());
+            page.once('dialog', dialog => dialog.accept());
+            await press(control('投了'));
+            assert.match(await announce(), /赤軍の勝利（相手の投了）/);
+            await press(control('閉じる'));
+        }
 
         const clock = page.locator('[data-dashboard-widget-id="6"]');
         await press(clock.locator('[data-clock-view-trigger="timer"]'));
@@ -211,8 +300,10 @@ async function run(browser, width) {
         assert(requests.includes('/js/slg.js?v=slg-test'));
         assert.equal(requests.filter(url=>url.startsWith('/js/slg-map.js')).length,1);
         assert(requests.includes('/js/slg-map.js?v=slg-test'));
+        assert.equal(requests.filter(url=>url.startsWith('/js/slg-battle.js')).length,1);
+        assert(requests.includes('/js/slg-battle.js?v=slg-test'));
         assert.deepEqual(errors,[]);
-        console.log('PASS: SLG add, open, focus, resume, shared cards, movement preview/cancel, Clock timer, TD pause/resume and isolated storage at '+width+'px');
+        console.log('PASS: SLG add, open, focus, resume, shared cards, movement, combat, capture, victory, Clock timer, TD pause/resume and isolated storage at '+width+'px');
     } finally {
         await context.close();
     }
