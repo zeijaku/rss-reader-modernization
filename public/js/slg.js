@@ -4,12 +4,13 @@
     const rules = window.RssSlgMap;
     const battleRules = window.RssSlgBattle;
     const cpu = window.RssSlgAI;
-    const stage = rules.stageOne;
-    const title = 'Stage 1　' + stage.name;
     const sessions = new Map();
     const cpuDelay = 160;
     const arrows = {ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]};
     const terrainIcons = {w: 'water', f: 'tree', m: 'mountain', h: 'hill-rockslide'};
+    const unitIcons = {infantry: 'person-rifle', scout: 'binoculars', ranged: 'bullseye', heavy: 'shield-halved'};
+    const siteIcons = {hq: 'chess-rook', resource: 'gem', factory: 'industry'};
+    const siteNames = {hq: '本陣', resource: '資源施設', factory: '工場'};
 
     function element(tag, className, text) {
         const result = document.createElement(tag);
@@ -50,6 +51,10 @@
         return armyName(result.winner) + 'の勝利（' + (result.reason === 'hq' ? '本陣占領' : '相手の投了') + '）';
     }
 
+    function stageTitle(stage) {
+        return 'Stage ' + stage.id + '　' + stage.name;
+    }
+
     function unitPiece(unit) {
         const type = rules.unitTypes[unit.type];
         const piece = element('span', 'slg-unit');
@@ -57,16 +62,54 @@
         piece.setAttribute('aria-hidden', 'true');
         const hp = element('span', 'slg-unit-hp', unit.hp + '/' + type.hp);
         hp.style.setProperty('--slg-hp', (unit.hp / type.hp * 100) + '%');
-        piece.append(element('span', '', type.mark), hp);
+        piece.append(icon(unitIcons[unit.type]), hp);
         return piece;
     }
 
-    function createMapView(context, publish) {
+    function createLegend() {
+        const legend = element('section', 'slg-legend');
+        legend.setAttribute('aria-label', '盤面の凡例');
+        const groups = [
+            ['部隊', ...Object.entries(unitIcons).map(([type, symbol]) => [symbol, rules.unitTypes[type].name])],
+            ['施設', ...Object.entries(siteIcons).map(([type, symbol]) => [symbol, siteNames[type]])],
+            ['地形', ['tree', '森林'], ['hill-rockslide', '丘陵'], ['water', '水域'], ['mountain', '山岳']]
+        ];
+        for (const [heading, ...items] of groups) {
+            const group = element('div', 'slg-legend-group');
+            group.appendChild(element('strong', '', heading));
+            for (const [symbol, name] of items) {
+                const entry = element('span', 'slg-legend-item');
+                entry.append(icon(symbol), name);
+                group.appendChild(entry);
+            }
+            legend.appendChild(group);
+        }
+        const colors = element('div', 'slg-legend-key');
+        colors.append(element('span', 'slg-army-key slg-army-blue', '青軍'), element('span', 'slg-army-key slg-army-red', '赤軍'),
+            '数値は残りHP / 最大HP。移動コストは平地・道路・施設が1、森林・丘陵が2。水域・山岳は通行不可。');
+        legend.appendChild(colors);
+        return legend;
+    }
+
+    function createMapView(context, stage, publish, continueToStage) {
         const board = stage.board;
+        const nextStage = rules.stages.find(candidate => candidate.id === stage.id + 1);
         const panel = element('section', 'slg-board-panel');
-        const matchInfo = element('p', 'slg-map-legend');
+        const matchInfo = element('div', 'slg-hud');
+        const metrics = {};
+        for (const [name, symbol] of Object.entries({round: 'clock', turn: 'flag', funds: 'coins', units: 'users'})) {
+            const item = element('span', 'slg-hud-item');
+            metrics[name] = element('span');
+            item.append(icon(symbol), metrics[name]);
+            matchInfo.appendChild(item);
+        }
+        const instruction = element('div', 'slg-instruction');
         const info = element('p', 'slg-move-status');
         info.setAttribute('role', 'status');
+        const nextMission = button('btn btn-warning slg-next-stage');
+        nextMission.hidden = true;
+        if (nextStage) nextMission.append('Stage ' + nextStage.id + ' へ進む', icon('arrow-right'));
+        instruction.append(info, nextMission);
         const cancel = actionButton('outline-secondary', 'xmark', '取消');
         const actionBar = element('div', 'slg-unit-actions');
         actionBar.hidden = true;
@@ -104,26 +147,27 @@
         const viewport = element('div', 'slg-map-viewport');
         const grid = element('div', 'slg-map');
         grid.setAttribute('role', 'group');
-        grid.setAttribute('aria-label', title + ' マップ');
+        grid.setAttribute('aria-label', stageTitle(stage) + ' マップ');
         grid.style.setProperty('--slg-columns', board.width);
+        const facilities = new Map(stage.sites.map(site => [rules.tileIndex(board, site.x, site.y), site]));
         const tiles = board.tiles.map((code, index) => {
             const tile = button('slg-tile', '');
             tile.dataset.tile = index;
             tile.dataset.terrain = code;
             tile.tabIndex = -1;
             if (terrainIcons[code]) tile.appendChild(icon(terrainIcons[code], 'slg-terrain-icon'));
+            const facility = facilities.get(index);
+            if (facility) {
+                tile.dataset.facility = facility.type;
+                tile.appendChild(icon(siteIcons[facility.type], 'slg-site-icon'));
+            }
             grid.appendChild(tile);
             return tile;
         });
         const marks = tiles.map(tile => tile.appendChild(element('span', 'slg-tile-mark')));
         viewport.appendChild(grid);
-        const legend = element('p', 'slg-map-legend');
-        legend.append('青：青軍　赤：赤軍　数値：残りHP / 最大HP　◆：資源施設　移動コスト：',
-            icon('tree'), ' 森林・', icon('hill-rockslide'), ' 丘陵 2、平地・道路・施設 1　',
-            icon('water'), ' 水域・', icon('mountain'), ' 山岳は通行不可');
-        panel.append(matchInfo, info, dock, notice, viewport, actionBar, legend);
+        panel.append(matchInfo, instruction, dock, notice, viewport, actionBar, createLegend());
 
-        const facilities = new Map(stage.sites.map(site => [rules.tileIndex(board, site.x, site.y), site]));
         let state;
         let draft = null;
         let plan = null;
@@ -250,13 +294,15 @@
             const activeSide = rules.turnSide(state);
             const finished = state.phase === 'finished';
             const playerTurn = activeSide === 'player' && !finished;
-            const round = '第' + Math.ceil(state.ply / 2) + 'ターン';
-            const current = playerTurn ? '青軍の手番' : 'CPUの手番';
             const roster = state.units.filter(unit => unit.side === 'player');
             panel.dataset.ply = state.ply;
             panel.dataset.phase = state.phase;
-            matchInfo.textContent = finished ? round
-                : round + ' · ' + current + ' · 自軍資金 ' + state.funds.player + ' · 部隊 ' + roster.length + '/' + stage.unitLimit;
+            panel.dataset.outcome = state.result?.winner ?? '';
+            metrics.round.textContent = '第' + Math.ceil(state.ply / 2) + 'ターン';
+            metrics.turn.textContent = finished ? '対戦終了' : playerTurn ? '青軍の手番' : 'CPUの手番';
+            metrics.funds.textContent = '自軍資金 ' + state.funds.player;
+            metrics.units.textContent = '部隊 ' + roster.length + '/' + stage.unitLimit;
+            nextMission.hidden = !nextStage || state.result?.winner !== 'player';
             const available = production?.sites.find(facility => facility.site.id === production.facilityId);
             const spawnCells = available?.options.find(option => option.type === production.type)?.cells ?? [];
             const occupants = new Map(units.map(unit => [rules.tileIndex(board, unit.x, unit.y), unit]));
@@ -285,6 +331,7 @@
                 const destination = target?.x === x && target?.y === y;
                 tile.dataset.side = unit?.side ?? owner ?? '';
                 tile.dataset.owner = owner ?? '';
+                tile.toggleAttribute('data-occupied', !!unit);
                 tile.toggleAttribute('data-reachable', !target && !!option);
                 tile.toggleAttribute('data-selected', !!selected && unit === selected);
                 tile.toggleAttribute('data-route', path.has(index));
@@ -297,7 +344,7 @@
                 tile.toggleAttribute('data-spawn-selected', production?.index === index);
 
                 const position = (x + 1) + '列 ' + (y + 1) + '行';
-                const site = facility?.type === 'hq' ? armyName(facility.owner) + '本陣' : facility ? '資源施設' : ground.name;
+                const site = facility?.type === 'hq' ? armyName(facility.owner) + '本陣' : facility ? siteNames[facility.type] : ground.name;
                 const force = unit ? armyName(unit.side) + rules.unitTypes[unit.type].name + ' HP ' + unit.hp + '/' + rules.unitTypes[unit.type].hp : '';
                 const cost = option ? '移動コスト ' + option.cost : ground.cost === null ? '通行不可' : '';
                 const possession = holding?.capture ? '占領進捗 50%' : holding?.owner ? '所有 ' + armyName(owner) : '';
@@ -305,7 +352,7 @@
                     destination && target.cost ? '行動未確定' : '', spawnCells.includes(index) ? '生産候補' : '', canTarget ? (unit.id === targetId ? '攻撃対象' : '攻撃可能') : ''].filter(Boolean).join('、'));
                 tile.title = tile.getAttribute('aria-label');
                 if (unit) marks[index].replaceChildren(unitPiece(unit));
-                else marks[index].textContent = facility?.type === 'hq' ? '本' : facility ? '◆' : '';
+                else if (marks[index].childElementCount) marks[index].replaceChildren();
             }
             actionBar.hidden = !playerTurn || !draft;
             dock.toggleAttribute('data-draft', !actionBar.hidden);
@@ -325,7 +372,7 @@
             if (motion?.preview) {
                 info.textContent = '移動中…';
             } else if (finished) {
-                info.textContent = resultLabel(state.result);
+                info.replaceChildren(icon(state.result.winner === 'player' ? 'trophy' : 'flag'), resultLabel(state.result));
             } else if (!playerTurn) {
                 info.textContent = 'CPUが行動中です。';
             } else if (motion) {
@@ -361,6 +408,9 @@
         context.on(viewport, 'scroll', positionActions);
         context.on(dialog, 'scroll', positionActions);
         context.on(window, 'resize', positionActions);
+        context.on(nextMission, 'click', function () {
+            if (visible && !nextMission.hidden) continueToStage(nextStage);
+        });
         context.on(grid, 'click', async function (event) {
             const tile = event.target.closest('[data-tile]');
             if (!tile) return;
@@ -511,7 +561,8 @@
                 return;
             }
             playAction(resolved, input, 'player');
-            markFocus(rules.tileIndex(board, x, y), true);
+            if (nextMission.hidden) markFocus(rules.tileIndex(board, x, y), true);
+            else nextMission.focus();
         });
         context.on(recruit, 'click', function () {
             if (motion || draft || production || recruit.disabled) return;
@@ -587,7 +638,8 @@
                 }
                 visible = true;
                 paint();
-                tiles[currentIndex].focus();
+                if (nextMission.hidden) tiles[currentIndex].focus();
+                else nextMission.focus();
                 syncCpu();
             },
             hide: function () {
@@ -610,7 +662,7 @@
 
     window.RssGameWidget.register('slg', function (context) {
         if (!sessions.has(context.ownerId)) {
-            sessions.set(context.ownerId, {difficulty: null, battle: null, views: new Set()});
+            sessions.set(context.ownerId, {stage: rules.stageOne, difficulty: null, battle: null, views: new Set()});
         }
         const session = sessions.get(context.ownerId);
         const card = element('div', 'slg-summary');
@@ -625,11 +677,22 @@
 
         const briefing = element('section', 'slg-briefing');
         briefing.hidden = true;
-        const heading = element('h2', 'h5', title);
+        const heading = element('h2', 'slg-stage-title');
+        const stageNumber = element('span', 'slg-stage-number');
+        const stageName = element('span', 'slg-stage-name');
+        heading.append(stageNumber, stageName);
         const bar = element('div', 'slg-briefing-header');
         bar.append(heading, context.closeButton);
         const setup = element('div', 'slg-setup');
         const objective = element('p', '', '同じ部隊で敵本陣を2ターン続けて占領すると勝利です。');
+        const stageLabel = element('label', 'slg-difficulty', 'ステージ');
+        const stageSelect = element('select', 'form-select');
+        for (const stage of rules.stages) {
+            const option = element('option', '', stageTitle(stage));
+            option.value = stage.id;
+            stageSelect.appendChild(option);
+        }
+        stageLabel.appendChild(stageSelect);
         const label = element('label', 'slg-difficulty', 'CPU難易度');
         const select = element('select', 'form-select');
         for (const difficulty of ['Easy', 'Normal']) {
@@ -639,12 +702,15 @@
         }
         label.appendChild(select);
         const deploy = button('btn btn-primary', '盤面を開く');
-        setup.append(objective, label, deploy);
+        const fields = element('div', 'slg-setup-fields');
+        fields.append(stageLabel, label);
+        setup.append(objective, fields, deploy);
         briefing.append(bar, setup);
         context.stage.append(card, briefing);
 
         let opener = start;
         let mapView;
+        const maps = new Map();
         let suspended = false;
         function render() {
             resume.disabled = session.difficulty === null;
@@ -652,27 +718,48 @@
             let progress = '出撃準備中';
             if (battle) progress = battle.result ? resultLabel(battle.result)
                 : '第' + Math.ceil(battle.ply / 2) + 'ターン · ' + (rules.turnSide(battle) === 'player' ? '青軍の手番' : 'CPUの手番');
-            status.textContent = session.difficulty ? title + ' · ' + session.difficulty + ' · ' + progress : '未開始';
+            status.textContent = session.difficulty ? stageTitle(session.stage) + ' · ' + session.difficulty + ' · ' + progress : '未開始';
+            stageNumber.textContent = 'Stage ' + session.stage.id;
+            stageName.textContent = session.stage.name;
+            briefing.style.setProperty('--slg-board-width', session.stage.board.width * 48 + 'px');
+            stageSelect.value = session.stage.id;
             select.value = session.difficulty || 'Normal';
             setup.hidden = !!session.battle;
-            if (mapView) mapView.panel.hidden = !session.battle;
+            if (mapView) mapView.panel.hidden = !battle || mapView !== maps.get(battle.stageId);
         }
         function showMap() {
-            if (!mapView) {
-                mapView = createMapView(context, function (next) {
+            const stage = session.stage;
+            if (!maps.has(stage.id)) {
+                maps.set(stage.id, createMapView(context, stage, function (next) {
                     session.battle = next;
                     updateViews();
-                });
-                mapView.suspend(suspended);
+                }, launchStage));
+            }
+            const selected = maps.get(stage.id);
+            if (mapView !== selected) {
+                if (mapView) {
+                    mapView.hide();
+                    mapView.panel.remove();
+                }
+                mapView = selected;
                 briefing.appendChild(mapView.panel);
             }
+            mapView.panel.hidden = false;
+            mapView.suspend(suspended);
             mapView.show(session.battle);
+        }
+        function launchStage(stage) {
+            session.stage = stage;
+            session.battle = stage.initialState(session.difficulty.toLowerCase());
+            updateViews();
+            showMap();
         }
         function updateViews() {
             session.views.forEach(update => update());
         }
         context.on(start, 'click', function () {
             if (session.difficulty && !window.confirm('現在の進行を上書きして、新規ゲームを開きますか？')) return;
+            session.stage = rules.stageOne;
             session.difficulty = 'Normal';
             session.battle = null;
             updateViews();
@@ -687,10 +774,12 @@
             session.difficulty = select.value;
             updateViews();
         });
-        context.on(deploy, 'click', function () {
-            session.battle = stage.initialState(session.difficulty.toLowerCase());
+        context.on(stageSelect, 'change', function () {
+            session.stage = rules.stages.find(stage => String(stage.id) === stageSelect.value);
             updateViews();
-            showMap();
+        });
+        context.on(deploy, 'click', function () {
+            launchStage(session.stage);
         });
         session.views.add(render);
         render();
@@ -701,7 +790,7 @@
                 if (enabled) {
                     render();
                     if (session.battle) showMap();
-                    else select.focus();
+                    else stageSelect.focus();
                 } else {
                     if (mapView) mapView.hide();
                     if (opener.isConnected) opener.focus();

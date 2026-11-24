@@ -88,7 +88,9 @@ async function run(browser, width) {
         assert(await slg.getByRole('button',{name:'続きから'}).isDisabled());
         await press(start);
         const briefing = slg.getByRole('dialog');
+        const stageSelect = briefing.getByLabel('ステージ');
         const select = briefing.getByLabel('CPU難易度');
+        assert.deepEqual(await stageSelect.locator('option').allTextContents(),['Stage 1　前線突破','Stage 2　資源争奪戦']);
         await select.selectOption(difficulty);
         assert.equal(await page.evaluate(()=>document.body.style.overflow),'hidden');
         assert(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth));
@@ -101,11 +103,11 @@ async function run(browser, width) {
             assert.equal(await select.inputValue(),difficulty);
             await page.setViewportSize({width,height:640});
         }
-        await select.focus();
+        await stageSelect.focus();
         await page.keyboard.press('Shift+Tab');
         assert(await briefing.getByRole('button',{name:'閉じる'}).evaluate(el => el === document.activeElement));
         await page.keyboard.press('Tab');
-        assert(await select.evaluate(el => el === document.activeElement));
+        assert(await stageSelect.evaluate(el => el === document.activeElement));
         if (touch) await press(briefing.getByRole('button',{name:'閉じる'}));
         else await page.keyboard.press('Escape');
         assert(await start.evaluate(el => el === document.activeElement));
@@ -127,7 +129,7 @@ async function run(browser, width) {
         await press(slg.getByRole('button',{name:'続きから'}));
         await press(briefing.getByRole('button',{name:'盤面を開く'}));
         const tiles = briefing.locator('[data-tile]');
-        const tile = (x,y) => tiles.nth(y * 16 + x);
+        const tile = (x,y,columns = 16) => tiles.nth(y * columns + x);
         assert.equal(await tiles.count(),192);
         await page.evaluate(() => document.fonts.ready);
         for (const [terrain, definition] of Object.entries({w:'water',f:'tree',m:'mountain',h:'hill-rockslide'})) {
@@ -139,6 +141,12 @@ async function run(browser, width) {
             }));
         }
         assert(requests.includes('/webfonts/fa-solid-900.woff2'));
+        assert.equal(await briefing.locator('.slg-stage-number').textContent(),'Stage 1');
+        assert.equal(await briefing.locator('.slg-hud-item').count(),4);
+        assert.equal(await briefing.getByRole('region',{name:'盤面の凡例'}).locator('.slg-legend-group').count(),3);
+        assert.equal(await tile(1,6).locator('.slg-site-icon.fa-chess-rook').count(),1);
+        assert.equal(await tile(2,5).locator('.slg-unit .fa-person-rifle').count(),1);
+        assert.equal(await tile(3,6).locator('.slg-unit .fa-binoculars').count(),1);
         const viewport = briefing.locator('.slg-map-viewport');
         const margins = await viewport.evaluate(el => {
             const map = el.firstElementChild;
@@ -213,7 +221,8 @@ async function run(browser, width) {
         assert.equal(await briefing.locator('[data-route]').count(),4);
         assert.equal(await briefing.locator('[data-reachable]').count(),0);
         assert.equal(await tile(2,5).textContent(),'');
-        assert.equal(await tile(4,4).textContent(),'歩3/3');
+        assert.equal(await tile(4,4).textContent(),'3/3');
+        assert.equal(await tile(4,4).locator('.slg-unit .fa-person-rifle').count(),1);
         assert.match(await tile(4,4).getAttribute('aria-label'),/青軍歩兵 HP 3.*行動未確定/);
         assert.equal(await tile(4,4).getAttribute('data-acted'),null);
         assert.deepEqual(await visibleActions(),['待機','移動を取り消す']);
@@ -230,7 +239,7 @@ async function run(browser, width) {
         }
         await press(tile(5,4));
         assert.equal(await tile(4,4).getAttribute('data-destination'),'');
-        assert.match(await briefing.locator('.slg-board-panel > p').first().textContent(),/自軍資金 8/);
+        assert.match(await briefing.locator('.slg-hud').textContent(),/自軍資金 8/);
         await press(unitActions.getByRole('button',{name:'待機',exact:true}));
         assert.deepEqual(await visibleActions(),['待機','待機を確定','移動を取り消す']);
         await press(unitActions.getByRole('button',{name:'移動を取り消す'}));
@@ -296,7 +305,7 @@ async function run(browser, width) {
         }
 
         const panel = briefing.locator('.slg-board-panel');
-        const balance = () => panel.locator('.slg-map-legend').first().textContent();
+        const balance = () => panel.locator('.slg-hud').textContent();
         await press(control('生産'));
         assert.equal(await briefing.getByLabel('生産施設').inputValue(),'pHQ');
         assert.equal(await briefing.getByLabel('兵種').inputValue(),'infantry');
@@ -332,7 +341,7 @@ async function run(browser, width) {
         const otherBoard = another.locator('.slg-board-panel');
         if (!reduced) await otherBoard.locator('.slg-moving-unit[data-side="cpu"]').waitFor({state:'attached'});
         await page.waitForFunction(el => el.dataset.ply === '3',await otherBoard.elementHandle());
-        assert.match(await otherBoard.locator('.slg-map-legend').first().textContent(),/自軍資金 7.*部隊 4\/6/);
+        assert.match(await otherBoard.locator('.slg-hud').textContent(),/自軍資金 7.*部隊 4\/6/);
         assert.equal(await otherBoard.locator('[data-tile="81"]').getAttribute('data-acted'),null);
         await press(another.getByRole('button',{name:'閉じる'}));
         await press(slg.getByRole('button',{name:'続きから'}));
@@ -373,6 +382,8 @@ async function run(browser, width) {
         assert(finished, difficulty + ' should reach an HQ victory');
         assert.match(await announce(),/赤軍の勝利（本陣占領）/);
         assert.equal(await control('手番終了').count(),0);
+        const nextStage = control('Stage 2 へ進む');
+        assert.equal(await nextStage.count(),0);
         await press(control('閉じる'));
         assert.match(await another.locator('.slg-progress').textContent(),/赤軍の勝利/);
         await press(another.getByRole('button',{name:'続きから'}));
@@ -404,18 +415,48 @@ async function run(browser, width) {
             await finishCpuRound();
             await act([14,6],[14,6],'占領');
             assert.match(await announce(),/青軍の勝利（本陣占領）/);
+            assert(await nextStage.evaluate(el => el === document.activeElement));
+            assert.equal(await tile(14,6).locator('.slg-site-icon.fa-chess-rook').count(),1);
+            await press(nextStage);
+            assert.equal(await tiles.count(),280);
+            assert.equal(await briefing.locator('.slg-stage-name').textContent(),'資源争奪戦');
+            assert.equal(await panel.getAttribute('data-ply'),'1');
+            assert.match(await balance(),/第1ターン.*自軍資金 8.*部隊 3\/8/);
+            assert.match(await tile(2,8,20).getAttribute('aria-label'),/青軍射撃兵/);
+            assert.equal(await tile(10,9,20).locator('.slg-site-icon.fa-industry').count(),1);
+            await press(tile(3,7,20));
+            await press(tile(6,4,20));
+            await press(control('占領'));
+            await press(control('占領を確定'));
+            assert.match(await tile(6,4,20).getAttribute('aria-label'),/資源施設.*所有 青軍/);
+            await finishCpuRound();
+            assert.match(await balance(),/自軍資金 13/);
             await press(control('閉じる'));
-            console.log('PASS: player beats Normal CPU through resource capture, recruitment and a southern flank');
+            await press(another.getByRole('button',{name:'続きから'}));
+            assert.equal(await another.locator('[data-tile]').count(),280);
+            await press(another.getByRole('button',{name:'閉じる'}));
+            console.log('PASS: player beats Normal CPU on Stage 1, continues into Stage 2, captures a resource, and resumes from another card');
 
             page.once('dialog', dialog => dialog.accept());
             await press(start);
+            await stageSelect.selectOption('2');
             await press(control('盤面を開く'));
+            assert.equal(await tiles.count(),280);
             page.once('dialog', dialog => dialog.dismiss());
             await press(control('投了'));
             assert(await control('手番終了').isEnabled());
             page.once('dialog', dialog => dialog.accept());
             await press(control('投了'));
             assert.match(await announce(),/赤軍の勝利（相手の投了）/);
+            await press(control('閉じる'));
+        } else if (reduced) {
+            page.once('dialog', dialog => dialog.accept());
+            await press(start);
+            await stageSelect.selectOption('2');
+            await press(control('盤面を開く'));
+            assert.equal(await tiles.count(),280);
+            assert(await viewport.evaluate(el => el.scrollWidth > el.clientWidth));
+            assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
             await press(control('閉じる'));
         }
 

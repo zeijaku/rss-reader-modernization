@@ -1,7 +1,7 @@
 'use strict';
 const assert = require('node:assert/strict');
 const {actions} = require('./fixtures/slg/rule-cases.js');
-const {stageOne, makeBoard, unitTypes, turnSide, selectUnit} = require('../public/js/slg-map.js');
+const {stageOne, stages, makeBoard, unitTypes, turnSide, selectUnit} = require('../public/js/slg-map.js');
 const battle = require('../public/js/slg-battle.js');
 const cpu = require('../public/js/slg-ai.js');
 
@@ -87,8 +87,9 @@ for (const side of ['player','cpu']) for (const type of Object.keys(unitTypes)) 
     assert.equal(next.units[0].actedPly,ply);
 }
 
-function runMatch(difficulty) {
-    let state = stageOne.initialState(difficulty,42);
+function runMatch(stage, difficulty) {
+    const {board, sites, unitLimit} = stage;
+    let state = stage.initialState(difficulty,42);
     const commandLog = [];
     const seen = new Set();
     for (let step=0; step<150 && !state.result; step++) {
@@ -98,7 +99,7 @@ function runMatch(difficulty) {
             continue;
         }
         const before = structuredClone(state);
-        const progress = cpu.step(stageOne,state);
+        const progress = cpu.step(stage,state);
         const {input,state: next} = progress;
         assert(next);
         assert.deepEqual(state,before);
@@ -118,13 +119,24 @@ function runMatch(difficulty) {
     }
     assert.deepEqual(state.result,{winner:'cpu',reason:'hq'});
     assert(commandLog.some(input=>input.op === 'produce'));
-    assert(commandLog.some(input=>input.command === 'attack'));
-    assert.equal(cpu.step(stageOne,state),null);
+    assert.equal(cpu.step(stage,state),null);
     return commandLog;
 }
-const easy = runMatch('easy'), normal = runMatch('normal');
-assert.deepEqual(runMatch('easy'), easy);
-assert.deepEqual(runMatch('normal'), normal);
-assert.notDeepEqual(easy,normal);
+for (const stage of stages) {
+    const easy = runMatch(stage,'easy'), normal = runMatch(stage,'normal');
+    assert.deepEqual(runMatch(stage,'easy'), easy);
+    assert.deepEqual(runMatch(stage,'normal'), normal);
+    if (stage === stageOne) {
+        assert.notDeepEqual(easy,normal);
+        assert(easy.some(input => input.command === 'attack'));
+        assert(normal.some(input => input.command === 'attack'));
+    } else {
+        for (const type of ['resource','factory']) {
+            const sites = stage.sites.filter(site => site.type === type);
+            for (const log of [easy, normal]) assert(log.some(input => input.command === 'capture' &&
+                sites.some(site => site.x === input.to[0] && site.y === input.to[1])));
+        }
+    }
+}
 assert.deepEqual(stageOne.initialState('easy',42),{...opening,difficulty:'easy'});
 console.log('PASS: SLG D4 — ' + economy.length + ' economy fixtures, both armies, factory types, and deterministic complete CPU matches on Easy and Normal');

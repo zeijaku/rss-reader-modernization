@@ -1,4 +1,4 @@
-/* Stage 1 map and movement rules. Browser and Node use the same implementation. */
+/* Stage maps and movement rules. Browser and Node use the same implementation. */
 (function (root) {
     'use strict';
 
@@ -26,12 +26,12 @@
         return {width, height, tiles};
     }
 
-    const sites = [
+    const firstSites = [
         {id: 'pHQ', type: 'hq', owner: 'player', x: 1, y: 6},
         {id: 'cHQ', type: 'hq', owner: 'cpu', x: 14, y: 6},
         {id: 'r1', type: 'resource', owner: null, x: 7, y: 4}
     ];
-    const board = makeBoard([
+    const firstRows = [
         'ff...wwwwww...ff',
         'f..h.wwwwww.h..f',
         '...ff..mm..ff...',
@@ -45,27 +45,54 @@
         '................',
         '..fff.wwww.fff..',
         '...hh......hh...'
-    ], sites);
-    const deployments = [
-        [2, 5, 'infantry'], [3, 6, 'scout'], [2, 8, 'infantry']
     ];
-    function initialState(difficulty, seed = 1) {
-        const units = [];
-        for (const side of ['player', 'cpu']) {
-            for (const [x, y, type] of deployments) {
-                units.push({
-                    id: units.length + 1, side, type,
-                    x: side === 'player' ? x : board.width - 1 - x,
-                    y, hp: unitTypes[type].hp, actedPly: 0, movedPly: 0
-                });
+    const secondSites = [
+        {id: 'pHQ', type: 'hq', owner: 'player', x: 1, y: 6},
+        {id: 'cHQ', type: 'hq', owner: 'cpu', x: 18, y: 6},
+        {id: 'r1', type: 'resource', owner: null, x: 6, y: 4},
+        {id: 'r2', type: 'resource', owner: null, x: 13, y: 4},
+        {id: 'r3', type: 'resource', owner: null, x: 9, y: 9},
+        {id: 'f1', type: 'factory', owner: null, x: 10, y: 9}
+    ];
+    // The mountain and lake belt leaves two crossings. The southern resource and factory are adjacent.
+    const secondRows = [
+        'ff..fffffw',
+        'f..h...ffw',
+        '...hh..f.w',
+        '..f...f..m',
+        'rrrrrrrrrr',
+        '..f...f..w',
+        '.r...h..ww',
+        '.r..f.h.ww',
+        '..f....h.m',
+        'rrrrrrrrrr',
+        '...f...f.w',
+        '..hh.f...w',
+        'f....h...w',
+        'ff...ffffw'
+    ].map(half => half + [...half].reverse().join(''));
+
+    function makeStage(id, name, unitLimit, rows, sites, deployments) {
+        const board = makeBoard(rows, sites);
+        function initialState(difficulty, seed = 1) {
+            const units = [];
+            for (const side of ['player', 'cpu']) {
+                for (const [x, y, type] of deployments) {
+                    units.push({
+                        id: units.length + 1, side, type,
+                        x: side === 'player' ? x : board.width - 1 - x,
+                        y, hp: unitTypes[type].hp, actedPly: 0, movedPly: 0
+                    });
+                }
             }
+            return {
+                stageId: id, stageRevision: '1', difficulty, seed, rngState: seed, ply: 1, phase: 'acting',
+                incomeAppliedPly: 1, nextUnitId: units.length + 1, cpuActionsDone: 0,
+                units, funds: {player: 8, cpu: 8}, result: null,
+                facilities: sites.map(({id, owner}) => ({id, owner, acquiredPly: 0, producedPly: 0, capture: null}))
+            };
         }
-        return {
-            stageId: 1, stageRevision: '1', difficulty, seed, rngState: seed, ply: 1, phase: 'acting',
-            incomeAppliedPly: 1, nextUnitId: units.length + 1, cpuActionsDone: 0,
-            units, funds: {player: 8, cpu: 8}, result: null,
-            facilities: sites.map(({id, owner}) => ({id, owner, acquiredPly: 0, producedPly: 0, capture: null}))
-        };
+        return {id, name, unitLimit, board, sites, initialState};
     }
 
     function tileIndex(map, x, y) {
@@ -132,8 +159,12 @@
         return option ? {...selection, destination: {x, y, ...option}} : null;
     }
 
-    const stageOne = {name: '前線突破', unitLimit: 6, board, sites, initialState};
-    const api = {terrain, unitTypes, stageOne, makeBoard, tileIndex, adjacent, movementOptions, turnSide, selectUnit, previewMove};
+    const stageOne = makeStage(1, '前線突破', 6, firstRows, firstSites,
+        [[2, 5, 'infantry'], [3, 6, 'scout'], [2, 8, 'infantry']]);
+    const stageTwo = makeStage(2, '資源争奪戦', 8, secondRows, secondSites,
+        [[2, 5, 'infantry'], [3, 7, 'scout'], [2, 8, 'ranged']]);
+    const stages = [stageOne, stageTwo];
+    const api = {terrain, unitTypes, stageOne, stages, makeBoard, tileIndex, adjacent, movementOptions, turnSide, selectUnit, previewMove};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.RssSlgMap = api;
 })(globalThis);
