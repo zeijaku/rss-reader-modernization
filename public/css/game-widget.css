@@ -215,6 +215,7 @@
     position:absolute; z-index:3; display:flex; flex-wrap:wrap; gap:4px; width:max-content;
     max-width:calc(100% - 12px); padding:4px; border:1px solid var(--bs-border-color,#c8cabc);
     border-radius:.5rem; background:var(--bs-body-bg,#fff); box-shadow:0 3px 12px rgba(0,0,0,.28);
+    transition-property:none;
 }
 .slg-context-actions button {
     display:grid; place-content:center; gap:3px; min-width:44px; min-height:44px;
