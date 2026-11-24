@@ -4,7 +4,7 @@
     var source = document.currentScript;
     var revisionMatch = source && /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(source.src || '');
     var revision = revisionMatch ? revisionMatch[1] : '';
-    var catalog = Object.assign(Object.create(null), {slg: {title:'SLG',script:'./js/slg.js'}, tower_defense: {title:'Tower Defense',script:'./js/tower-defense.js',core:'./js/tower-defense-core.js'}, maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js', dictionary: './js/word-tiles-words-en.js'}, word_tiles_ja: {title: 'Word Tiles 日本語', script: './js/word-tiles-ja.js', dictionary: './js/word-tiles-words-ja.js', core: './js/word-tiles.js'}});
+    var catalog = Object.assign(Object.create(null), {slg: {title:'SLG',script:'./js/slg.js',core:'./js/slg-map.js'}, tower_defense: {title:'Tower Defense',script:'./js/tower-defense.js',core:'./js/tower-defense-core.js'}, maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js', dictionary: './js/word-tiles-words-en.js'}, word_tiles_ja: {title: 'Word Tiles 日本語', script: './js/word-tiles-ja.js', dictionary: './js/word-tiles-words-ja.js', core: './js/word-tiles.js'}});
     var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks', word_tiles:'Word Tiles', word_tiles_ja:'Word Tiles 日本語', tower_defense:'Tower Defense', slg:'SLG'};
     var factories = Object.create(null), loads = Object.create(null), records = new Map();
     var expanded = null, previousOverflow = '', observer = null;
@@ -160,7 +160,7 @@
             if (event.key === 'Escape') { event.preventDefault(); setExpanded(record,false); if (record.game !== 'slg') expand.focus(); }
             if (event.key === 'Tab') {
                 var selector = 'button:not(:disabled),input:not(:disabled),[tabindex="0"]';
-                if (record.game === 'slg') selector += ',select:not(:disabled)';
+                if (record.game === 'slg') selector = ':is(button,input,select):not(:disabled):not([tabindex="-1"]),[tabindex="0"]';
                 var buttons = Array.from(record.inner.querySelectorAll(selector)).filter(function (el) { return el.getClientRects().length; });
                 var first = buttons[0], last = buttons[buttons.length-1];
                 if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }

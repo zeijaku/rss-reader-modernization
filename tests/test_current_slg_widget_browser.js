@@ -18,7 +18,7 @@ function html(rows) {
     const menu = php.match(/<li class="drawer-section-title">[^\n]*<span>Widget追加<\/span><\/li>([\s\S]*?)(?=<li class="drawer-section-title">)/)[0];
     const modules = [...php.matchAll(/app_asset_url\('js\/(dashboard[^']*\.js)'\)/g)].map(m => m[1]);
     const scripts = ['jquery-3.7.1.min.js','bootstrap.bundle-5.3.8.min.js','game-widget.js','mini-game.js',
-        'game-2048.js',...modules,'utility-widgets.js'];
+        'game-2048.js','clock-timer.js',...modules,'utility-widgets.js'];
     const cards = execFileSync('php',[path.join(__dirname,'fixtures/widget_header_page.php'),JSON.stringify(rows)],{encoding:'utf8'});
     return '<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
         ['bootstrap-5.3.8.min','mini-game','game-widget','dashboard'].map(name => '<link rel="stylesheet" href="/css/'+name+'.css">').join('')+
@@ -34,7 +34,7 @@ async function run(browser, width) {
     const press = locator => touch ? locator.tap() : locator.click();
     const errors = [], requests = [];
     page.on('pageerror', error => errors.push(error.message));
-    const rows = [row(3,'tower_defense')];
+    const rows = [row(3,'tower_defense'), {...row(6,'clock'), widget_type:'clock', widget_config:null}];
     const sharedKey = 'rssReader.slg.user.7.save';
     const oldKeys = ['rssReader.game2048.v1.user.7.widget.4','rssReader.miniGame.wireDefense.v1.user.7.widget.4'];
     const tdKey = 'rssReader.gameWidget.v1.tower_defense.user.7.widget.3.state.v2';
@@ -48,7 +48,7 @@ async function run(browser, width) {
             if (payload.get('action') === 'widget.game.create') {
                 assert.equal(payload.get('game_type'),'slg');
                 assert.equal(payload.get('game_title'),'SLG');
-                rows.push(row(rows.length+3,'slg'));
+                rows.push(row(4,'slg'));
             }
             if (payload.get('action') === 'widget.game.delete') {
                 const id = Number(payload.get('widget_id'));
@@ -66,7 +66,7 @@ async function run(browser, width) {
     try {
         await page.goto('http://slg.test');
         await page.locator('.td-widget').waitFor();
-        assert(!requests.some(url => url.startsWith('/js/slg.js')));
+        assert(!requests.some(url => /^\/js\/slg(?:-map)?\.js/.test(url)));
         await page.evaluate(key => localStorage.setItem(key,'keep existing save'),sharedKey);
         await press(page.getByRole('button',{name:'メニュー',exact:true}));
         await press(page.locator('[data-bs-target="#widgetCatalog-game"]'));
@@ -119,6 +119,66 @@ async function run(browser, width) {
         await press(start);
         assert.equal(await page.locator('.game-widget-expanded').count(),0);
         assert((await slg.locator('.slg-progress').textContent()).includes('Easy'));
+        await press(slg.getByRole('button',{name:'続きから'}));
+        await press(briefing.getByRole('button',{name:'盤面を開く'}));
+        const tiles = briefing.locator('[data-tile]');
+        const tile = (x,y) => tiles.nth(y * 16 + x);
+        assert.equal(await tiles.count(),192);
+        assert.equal(await briefing.locator('.slg-map-viewport').evaluate(el => el.scrollWidth > el.clientWidth),touch);
+        assert(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth));
+        const unitsOnBoard = () => briefing.locator('[data-side]:is([data-side="player"],[data-side="cpu"]):not([data-terrain="s"])')
+            .evaluateAll(units => units.map(el => [el.dataset.tile, el.textContent]));
+        const initialPositions = await unitsOnBoard();
+        assert.equal(initialPositions.length,6);
+        assert((await tile(2,5).getAttribute('aria-label')).includes('HP 3'));
+        await press(tile(2,5));
+        assert.equal(await tile(4,4).getAttribute('data-reachable'),'');
+        assert.equal(await tile(5,4).getAttribute('data-reachable'),null);
+        assert.match(await tile(4,4).getAttribute('aria-label'),/5列 5行.*森林.*移動コスト 4/);
+        if (touch) await press(tile(4,4));
+        else {
+            await page.keyboard.press('ArrowRight');
+            await page.keyboard.press('ArrowRight');
+            await page.keyboard.press('ArrowUp');
+            assert(await tile(4,4).evaluate(el => el === document.activeElement));
+            await page.keyboard.press('Enter');
+        }
+        assert.equal(await tile(4,4).getAttribute('data-destination'),'');
+        assert.equal(await briefing.locator('[data-route]').count(),4);
+        if (touch) {
+            await page.setViewportSize({width:640,height:320});
+            const rotated = await briefing.boundingBox();
+            assert(rotated.y >= 0 && rotated.y + rotated.height <= 321);
+            assert.equal(await tile(4,4).getAttribute('data-destination'),'');
+            await page.setViewportSize({width,height:640});
+        }
+        await press(tile(5,4));
+        assert.equal(await tile(4,4).getAttribute('data-destination'),'');
+        assert.deepEqual(await unitsOnBoard(),initialPositions);
+        assert.match(await briefing.locator('.slg-board-panel > p').first().textContent(),/自軍資金 8/);
+        await press(briefing.getByRole('button',{name:'仮移動を取り消す'}));
+        assert.equal(await briefing.locator('[data-route],[data-reachable]').count(),0);
+        await press(tile(3,6));
+        await press(tile(10,6));
+        assert.equal(await tile(10,6).getAttribute('data-destination'),'');
+        if (touch) assert(await briefing.locator('.slg-map-viewport').evaluate(el=>el.scrollLeft > 0));
+        await press(briefing.getByRole('button',{name:'閉じる'}));
+        await press(another.getByRole('button',{name:'続きから'}));
+        assert.equal(await another.locator('[data-tile]').count(),192);
+        assert.equal(await another.locator('[data-destination]').count(),0);
+        await press(another.getByRole('button',{name:'閉じる'}));
+        await press(slg.getByRole('button',{name:'続きから'}));
+        assert.equal(await briefing.locator('[data-destination]').count(),0);
+        assert.deepEqual(await unitsOnBoard(),initialPositions);
+        await press(briefing.getByRole('button',{name:'閉じる'}));
+
+        const clock = page.locator('[data-dashboard-widget-id="6"]');
+        await press(clock.locator('[data-clock-view-trigger="timer"]'));
+        await press(clock.locator('.clock-timer-start'));
+        assert.equal(await clock.getAttribute('data-clock-timer-status'),'running');
+        await press(clock.locator('.clock-timer-pause'));
+        assert.equal(await clock.getAttribute('data-clock-timer-status'),'paused');
+
         const td = page.locator('[data-dashboard-widget-id="3"]');
         await press(td.locator('.game-widget-expand'));
         await press(td.locator('.td-next'));
@@ -147,8 +207,10 @@ async function run(browser, width) {
         assert.equal(await page.evaluate(()=>Object.keys(localStorage).some(k=>k.includes('gameWidget.v1.slg'))),false);
         assert.equal(requests.filter(url=>url.startsWith('/js/slg.js')).length,1);
         assert(requests.includes('/js/slg.js?v=slg-test'));
+        assert.equal(requests.filter(url=>url.startsWith('/js/slg-map.js')).length,1);
+        assert(requests.includes('/js/slg-map.js?v=slg-test'));
         assert.deepEqual(errors,[]);
-        console.log('PASS: SLG add, open, focus, resume, shared cards, delete, TD pause/resume and isolated storage at '+width+'px');
+        console.log('PASS: SLG add, open, focus, resume, shared cards, movement preview/cancel, Clock timer, TD pause/resume and isolated storage at '+width+'px');
     } finally {
         await context.close();
     }
