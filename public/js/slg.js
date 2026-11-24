@@ -31,6 +31,17 @@
         return armyName(result.winner) + 'の勝利（' + (result.reason === 'hq' ? '本陣占領' : '相手の投了') + '）';
     }
 
+    function unitPiece(unit) {
+        const type = rules.unitTypes[unit.type];
+        const piece = element('span', 'slg-unit');
+        piece.dataset.side = unit.side;
+        piece.setAttribute('aria-hidden', 'true');
+        const hp = element('span', 'slg-unit-hp', unit.hp + '/' + type.hp);
+        hp.style.setProperty('--slg-hp', (unit.hp / type.hp * 100) + '%');
+        piece.append(element('span', '', type.mark), hp);
+        return piece;
+    }
+
     function createMapView(context, publish) {
         const board = stage.board;
         const panel = element('section', 'slg-board-panel');
@@ -82,7 +93,7 @@
             return tile;
         });
         viewport.appendChild(grid);
-        const legend = element('p', 'slg-map-legend', '青：青軍　赤：赤軍　◆：資源施設　移動コスト：森林・丘陵 2、平地・道路・施設 1');
+        const legend = element('p', 'slg-map-legend', '青：青軍　赤：赤軍　数値：残りHP / 最大HP　◆：資源施設　移動コスト：森林・丘陵 2、平地・道路・施設 1');
         panel.append(matchInfo, info, actionBar, turnBar, recruitmentBar, notice, viewport, legend);
 
         const facilities = new Map(stage.sites.map(site => [rules.tileIndex(board, site.x, site.y), site]));
@@ -95,6 +106,8 @@
         let production = null;
         let visible = false, suspended = false, timer = null;
         let currentIndex = 0;
+        let motion = null;
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
         function clearDraft() {
             draft = null;
@@ -132,7 +145,54 @@
             if (focus) tiles[index].focus();
         }
 
-        function paint() {
+        function stopMotion() {
+            const active = motion;
+            motion = null;
+            active?.animations?.forEach(animation => animation.cancel());
+            active?.piece?.remove();
+        }
+
+        async function animate(active, duration, clips) {
+            active.animations = clips.map(([node, frames]) => node.animate(frames, {duration}));
+            try {
+                await Promise.all(active.animations.map(animation => animation.finished));
+            } catch (error) {
+                if (motion === active) throw error;
+            }
+            return motion === active;
+        }
+
+        async function animateMove(active, unit, path) {
+            const destination = tiles[path[path.length - 1]].querySelector('.slg-unit');
+            const piece = active.piece = unitPiece(unit);
+            piece.classList.add('slg-moving-unit');
+            destination.style.visibility = 'hidden';
+            grid.appendChild(piece);
+            const frames = path.map(index => {
+                const tile = tiles[index];
+                const x = tile.offsetLeft + (tile.offsetWidth - piece.offsetWidth) / 2;
+                const y = tile.offsetTop + (tile.offsetHeight - piece.offsetHeight) / 2;
+                return {transform: 'translate(' + x + 'px,' + y + 'px)'};
+            });
+            const finished = await animate(active, (path.length - 1) * 100, [[piece, frames]]);
+            piece.remove();
+            destination.style.visibility = '';
+            return finished;
+        }
+
+        function animateHit(active, attacker, defender) {
+            const pieceAt = unit => tiles[rules.tileIndex(board, unit.x, unit.y)].querySelector('.slg-unit');
+            const x = Math.sign(defender.x - attacker.x) * 6;
+            const y = Math.sign(defender.y - attacker.y) * 6;
+            return animate(active, 280, [
+                [pieceAt(attacker), [{transform: 'none'}, {transform: 'translate(' + x + 'px,' + y + 'px)', offset: .3}, {transform: 'none'}]],
+                [pieceAt(defender), [{transform: 'none'}, {transform: 'none', offset: .25},
+                    {transform: 'translateX(-4px)', filter: 'brightness(1.7)'}, {transform: 'translateX(4px)'},
+                    {transform: 'translateX(-2px)'}, {transform: 'none'}]]
+            ]);
+        }
+
+        function paint(units = state.units) {
             const activeSide = rules.turnSide(state);
             const finished = state.phase === 'finished';
             const playerTurn = activeSide === 'player' && !finished;
@@ -145,7 +205,7 @@
                 : round + ' · ' + current + ' · 自軍資金 ' + state.funds.player + ' · 部隊 ' + roster.length + '/' + stage.unitLimit;
             const available = production?.sites.find(facility => facility.site.id === production.facilityId);
             const spawnCells = available?.options.find(option => option.type === production.type)?.cells ?? [];
-            const occupants = new Map(state.units.map(unit => [rules.tileIndex(board, unit.x, unit.y), unit]));
+            const occupants = new Map(units.map(unit => [rules.tileIndex(board, unit.x, unit.y), unit]));
             const holdings = new Map(state.facilities.map(site => [site.id, site]));
             const attackIds = new Set(command === 'attack' ? plan.targets.map(unit => unit.id) : []);
             const path = new Set(draft?.destination?.path);
@@ -169,6 +229,7 @@
                 const option = draft?.options.get(index);
                 const destination = target?.x === x && target?.y === y;
                 tile.dataset.side = unit?.side ?? owner ?? '';
+                tile.dataset.owner = owner ?? '';
                 tile.toggleAttribute('data-reachable', !target && !!option);
                 tile.toggleAttribute('data-selected', !!selected && unit === selected);
                 tile.toggleAttribute('data-route', path.has(index));
@@ -182,33 +243,37 @@
 
                 const position = (x + 1) + '列 ' + (y + 1) + '行';
                 const site = facility?.type === 'hq' ? armyName(facility.owner) + '本陣' : facility ? '資源施設' : ground.name;
-                const force = unit ? armyName(unit.side) + rules.unitTypes[unit.type].name + ' HP ' + unit.hp : '';
+                const force = unit ? armyName(unit.side) + rules.unitTypes[unit.type].name + ' HP ' + unit.hp + '/' + rules.unitTypes[unit.type].hp : '';
                 const cost = option ? '移動コスト ' + option.cost : ground.cost === null ? '通行不可' : '';
                 const possession = holding?.capture ? '占領進捗 50%' : holding?.owner ? '所有 ' + armyName(owner) : '';
                 tile.setAttribute('aria-label', [position, site, possession, force, cost, acted ? '行動済み' : '',
                     destination && target.cost ? '行動未確定' : '', spawnCells.includes(index) ? '生産候補' : '', canTarget ? (unit.id === targetId ? '攻撃対象' : '攻撃可能') : ''].filter(Boolean).join('、'));
                 tile.title = tile.getAttribute('aria-label');
-                tile.textContent = unit ? rules.unitTypes[unit.type].mark
-                    : facility?.type === 'hq' ? '本' : facility ? '◆' : '';
+                if (unit) tile.replaceChildren(unitPiece(unit));
+                else tile.textContent = facility?.type === 'hq' ? '本' : facility ? '◆' : '';
             }
             actionBar.hidden = !playerTurn || !draft;
-            turnBar.hidden = !playerTurn || !!draft || !!production;
+            turnBar.hidden = !playerTurn || !!draft || !!production || !!motion;
             recruitmentBar.hidden = !playerTurn || !production;
             placeUnit.disabled = !production || production.index === null;
             recruit.disabled = !playerTurn || !availableProductionSites().length;
-            choices.attack.hidden = !plan?.targets.length;
-            choices.capture.hidden = !plan?.capture;
-            choices.wait.hidden = !plan;
+            choices.attack.hidden = !!motion || !plan?.targets.length;
+            choices.capture.hidden = !!motion || !plan?.capture;
+            choices.wait.hidden = !!motion || !plan;
             for (const [name, choice] of Object.entries(choices)) choice.setAttribute('aria-pressed', String(name === command));
             confirm.hidden = !command || (command === 'attack' && targetId === null);
             confirm.textContent = command ? choices[command].textContent + 'を確定' : '行動を確定';
             cancel.textContent = target?.cost ? '移動を取り消す' : '選択を取り消す';
             notice.textContent = message;
-            notice.hidden = !message;
-            if (finished) {
+            notice.hidden = !message || (!!motion && !motion.preview);
+            if (motion?.preview) {
+                info.textContent = '移動中…';
+            } else if (finished) {
                 info.textContent = resultLabel(state.result);
             } else if (!playerTurn) {
                 info.textContent = 'CPUが行動中です。';
+            } else if (motion) {
+                info.textContent = '戦闘中…';
             } else if (production) {
                 if (production.index === null) {
                     info.textContent = '生産するマスを選んでください。';
@@ -219,8 +284,10 @@
             } else if (target) {
                 const unitName = rules.unitTypes[selected.type].name;
                 const position = (target.x + 1) + '列 ' + (target.y + 1) + '行';
+                const defender = plan.targets.find(unit => unit.id === targetId);
                 const instruction = !command ? '行動を選んでください。'
                     : command === 'attack' && targetId === null ? '枠で示した敵部隊を選んでください。'
+                    : defender ? '敵' + rules.unitTypes[defender.type].name + ' HP ' + defender.hp + '/' + rules.unitTypes[defender.type].hp + ' · 攻撃を確定してください。'
                     : choices[command].textContent + 'を確定してください。';
                 info.textContent = unitName + ' · ' + position + ' · ' + instruction;
             } else if (selected) {
@@ -233,14 +300,14 @@
             }
         }
 
-        context.on(grid, 'click', function (event) {
+        context.on(grid, 'click', async function (event) {
             const tile = event.target.closest('[data-tile]');
             if (!tile) return;
             const index = Number(tile.dataset.tile);
             const x = index % board.width;
             const y = Math.floor(index / board.width);
             markFocus(index, true);
-            if (state.phase !== 'acting' || rules.turnSide(state) !== 'player') return;
+            if (motion || state.phase !== 'acting' || rules.turnSide(state) !== 'player') return;
             if (production) {
                 if (tile.hasAttribute('data-spawn-cell')) production.index = index;
                 paint();
@@ -257,6 +324,13 @@
             if (next) {
                 draft = next;
                 plan = battleRules.planAction(board, stage.sites, state, draft.unitId, [x, y]);
+                if (next.destination.cost && !reducedMotion.matches) {
+                    const active = motion = {preview: true};
+                    paint();
+                    const unit = state.units.find(unit => unit.id === next.unitId);
+                    if (!await animateMove(active, unit, next.destination.path)) return;
+                    motion = null;
+                }
             } else if (unit) {
                 const selection = rules.selectUnit(board, state, unit.id);
                 if (selection) {
@@ -265,7 +339,9 @@
                 }
             }
             paint();
-            if (next && event.detail === 0) Object.values(choices).find(choice => !choice.hidden)?.focus();
+            if (next && event.detail === 0 && tiles[index] === document.activeElement) {
+                Object.values(choices).find(choice => !choice.hidden)?.focus();
+            }
         });
         context.on(grid, 'keydown', function (event) {
             const direction = Object.hasOwn(arrows, event.key) ? arrows[event.key] : null;
@@ -286,12 +362,12 @@
                 paint();
             });
         }
-        function advance(next, summary) {
+        function advance(next, summary, units) {
             state = next;
             message = summary;
             clearDraft();
             publish(next);
-            paint();
+            paint(units);
         }
         function actionSummary(resolution, side) {
             const {hits, removed, capture} = resolution;
@@ -305,29 +381,62 @@
             return side === 'cpu' ? 'CPU · ' + summary : summary;
         }
 
+        async function playAction(resolution, input, side) {
+            const summary = actionSummary(resolution, side);
+            const unit = state.units.find(unit => unit.id === input.unitId);
+            const [x, y] = input.to;
+            const destination = rules.tileIndex(board, x, y);
+            const canAnimate = !reducedMotion.matches;
+            const path = canAnimate && side === 'cpu' && (unit.x !== x || unit.y !== y)
+                ? rules.movementOptions(board, state.units, unit).get(destination).path : null;
+            if (!canAnimate || (!path && !resolution.hits.length)) {
+                advance(resolution.state, summary);
+                return true;
+            }
+
+            const active = motion = {};
+            // Publish the confirmed action immediately. Replay its effects using a separate visual roster.
+            let units = state.units.map(member => member === unit ? {...unit, x, y} : member);
+            advance(resolution.state, summary, units);
+            if (path && !await animateMove(active, unit, path)) return false;
+            for (const [index, [attackerId, defenderId, damage]] of resolution.hits.entries()) {
+                const attacker = units.find(member => member.id === attackerId);
+                const defender = units.find(member => member.id === defenderId);
+                if (!await animateHit(active, attacker, defender)) return false;
+                if (index < resolution.hits.length - 1) {
+                    units = units.map(member => member === defender ? {...defender, hp: defender.hp - damage} : member);
+                    paint(units);
+                }
+            }
+            motion = null;
+            paint();
+            return true;
+        }
+
         function syncCpu() {
             if (timer !== null) {
                 window.clearTimeout(timer);
                 timer = null;
             }
-            if (!visible || suspended || !state || state.phase !== 'acting' || rules.turnSide(state) !== 'cpu') return;
-            timer = window.setTimeout(function () {
+            if (!visible || suspended || motion || !state || state.phase !== 'acting' || rules.turnSide(state) !== 'cpu') return;
+            timer = window.setTimeout(async function () {
                 timer = null;
                 const resolution = cpu.step(stage, state);
                 const {input, state: next} = resolution;
                 if (input.op === 'endTurn') {
                     const income = next.funds.player - state.funds.player;
                     advance(next, '自軍ターン開始 · 収入 +' + income);
-                } else {
-                    const summary = input.op === 'produce' ? 'CPU · 部隊を生産しました。' : actionSummary(resolution, 'cpu');
-                    advance(next, summary);
+                } else if (input.op === 'produce') {
+                    advance(next, 'CPU · 部隊を生産しました。');
+                } else if (!await playAction(resolution, input, 'cpu')) {
+                    return;
                 }
                 syncCpu();
             }, cpuDelay);
         }
 
         context.on(confirm, 'click', function () {
-            if (state.phase !== 'acting' || rules.turnSide(state) !== 'player' || !draft?.destination || confirm.hidden) return;
+            if (motion || state.phase !== 'acting' || rules.turnSide(state) !== 'player' || !draft?.destination || confirm.hidden) return;
             const {x, y} = draft.destination;
             const input = {unitId: draft.unitId, to: [x, y], command};
             if (command === 'attack') input.targetId = targetId;
@@ -338,11 +447,11 @@
                 paint();
                 return;
             }
-            advance(resolved.state, actionSummary(resolved, 'player'));
+            playAction(resolved, input, 'player');
             markFocus(rules.tileIndex(board, x, y), true);
         });
         context.on(recruit, 'click', function () {
-            if (draft || production || recruit.disabled) return;
+            if (motion || draft || production || recruit.disabled) return;
             const sites = availableProductionSites();
             const first = sites[0];
             clearDraft();
@@ -379,7 +488,7 @@
             recruit.focus();
         });
         context.on(end, 'click', function () {
-            if (draft || production || rules.turnSide(state) !== 'player') return;
+            if (motion || draft || production || rules.turnSide(state) !== 'player') return;
             const next = battleRules.endTurn(state);
             if (!next) return;
             advance(battleRules.startTurn(stage.sites, next), '');
@@ -387,7 +496,7 @@
             syncCpu();
         });
         context.on(resign, 'click', function () {
-            if (draft || production || rules.turnSide(state) !== 'player' || state.phase !== 'acting') return;
+            if (motion || draft || production || rules.turnSide(state) !== 'player' || state.phase !== 'acting') return;
             if (!window.confirm(armyName(rules.turnSide(state)) + 'は投了しますか？')) return;
             const next = battleRules.resign(state);
             if (next) {
@@ -396,7 +505,9 @@
             }
         });
         context.on(cancel, 'click', function () {
+            if (!draft) return;
             const unit = state.units.find(unit => unit.id === draft.unitId);
+            stopMotion();
             clearDraft();
             paint();
             markFocus(rules.tileIndex(board, unit.x, unit.y), true);
@@ -418,12 +529,17 @@
             },
             hide: function () {
                 visible = false;
+                stopMotion();
                 clearDraft();
                 syncCpu();
             },
             suspend: function (value) {
                 if (suspended === value) return;
                 suspended = value;
+                if (suspended && motion) {
+                    stopMotion();
+                    if (visible) paint();
+                }
                 syncCpu();
             }
         };

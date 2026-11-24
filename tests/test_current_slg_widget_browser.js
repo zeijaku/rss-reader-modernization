@@ -30,7 +30,9 @@ function html(rows) {
 async function run(browser, width) {
     const touch = width < 600;
     const difficulty = width === 375 ? 'Normal' : 'Easy';
-    const context = await browser.newContext({viewport:{width,height:touch ? 640 : 900},hasTouch:touch});
+    const reduced = width === 375;
+    const context = await browser.newContext({viewport:{width,height:touch ? 640 : 900},hasTouch:touch,
+        reducedMotion:reduced ? 'reduce' : 'no-preference'});
     const page = await context.newPage();
     const press = locator => touch ? locator.tap() : locator.click();
     const errors = [], requests = [];
@@ -127,16 +129,27 @@ async function run(browser, width) {
         const tiles = briefing.locator('[data-tile]');
         const tile = (x,y) => tiles.nth(y * 16 + x);
         assert.equal(await tiles.count(),192);
-        assert.equal(await briefing.locator('.slg-map-viewport').evaluate(el => el.scrollWidth > el.clientWidth),touch);
+        const viewport = briefing.locator('.slg-map-viewport');
+        const margins = await viewport.evaluate(el => {
+            const map = el.firstElementChild;
+            const space = el.clientWidth - map.offsetWidth;
+            const left = map.getBoundingClientRect().left - el.getBoundingClientRect().left - el.clientLeft;
+            return {space,left};
+        });
+        assert(touch ? margins.space < 0 && margins.left === 0
+            : margins.space > 0 && Math.abs(margins.left - margins.space / 2) < 1);
         assert(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth));
-        const unitsOnBoard = () => briefing.locator('[data-side]:is([data-side="player"],[data-side="cpu"]):not([data-terrain="s"])')
+        const unitsOnBoard = () => briefing.locator('[data-tile]:is([data-side="player"],[data-side="cpu"]):not([data-terrain="s"])')
             .evaluateAll(units => units.map(el => [el.dataset.tile, el.textContent]));
         const initialPositions = await unitsOnBoard();
         assert.equal(initialPositions.length,6);
         const unitActions = briefing.getByRole('group',{name:'部隊の行動'});
         const visibleActions = () => unitActions.getByRole('button').allTextContents();
         assert.equal(await unitActions.count(),0);
-        assert.match(await tile(2,5).getAttribute('aria-label'),/青軍歩兵 HP 3/);
+        const hpText = (x,y) => tile(x,y).locator('.slg-unit-hp').textContent();
+        assert.match(await tile(2,5).getAttribute('aria-label'),/青軍歩兵 HP 3\/3/);
+        assert.equal(await hpText(2,5),'3/3');
+        assert.equal(await hpText(13,5),'3/3');
         await press(tile(2,5));
         assert.deepEqual(await visibleActions(),['選択を取り消す']);
         assert.equal(await briefing.getByRole('button',{name:'手番終了'}).count(),0);
@@ -152,11 +165,31 @@ async function run(browser, width) {
             assert(await tile(4,4).evaluate(el => el === document.activeElement));
             await page.keyboard.press('Enter');
         }
+        const movingPiece = briefing.locator('.slg-moving-unit');
+        if (reduced) {
+            assert.equal(await movingPiece.count(),0);
+        } else {
+            await movingPiece.waitFor({state:'visible'});
+            assert.deepEqual(await visibleActions(),['移動を取り消す']);
+            const checked = await movingPiece.evaluate(piece => {
+                const animation = piece.getAnimations()[0];
+                const route = animation.effect.getKeyframes();
+                animation.pause();
+                animation.currentTime = 0;
+                const from = piece.getBoundingClientRect();
+                animation.currentTime = 50;
+                const halfway = piece.getBoundingClientRect();
+                animation.play();
+                return {steps:route.length, distance:Math.abs(halfway.x - from.x) + Math.abs(halfway.y - from.y)};
+            });
+            assert.deepEqual(checked,{steps:4,distance:24});
+            await movingPiece.waitFor({state:'detached'});
+        }
         assert.equal(await tile(4,4).getAttribute('data-destination'),'');
         assert.equal(await briefing.locator('[data-route]').count(),4);
         assert.equal(await briefing.locator('[data-reachable]').count(),0);
         assert.equal(await tile(2,5).textContent(),'');
-        assert.equal(await tile(4,4).textContent(),'歩');
+        assert.equal(await tile(4,4).textContent(),'歩3/3');
         assert.match(await tile(4,4).getAttribute('aria-label'),/青軍歩兵 HP 3.*行動未確定/);
         assert.equal(await tile(4,4).getAttribute('data-acted'),null);
         assert.deepEqual(await visibleActions(),['待機','移動を取り消す']);
@@ -175,6 +208,14 @@ async function run(browser, width) {
         await press(unitActions.getByRole('button',{name:'移動を取り消す'}));
         assert.equal(await briefing.locator('[data-route],[data-reachable]').count(),0);
         assert.deepEqual(await unitsOnBoard(),initialPositions);
+        if (!touch) {
+            await press(tile(3,6));
+            await press(tile(10,6));
+            await movingPiece.waitFor({state:'visible'});
+            await unitActions.getByRole('button',{name:'移動を取り消す'}).evaluate(button => button.click());
+            assert.equal(await movingPiece.count(),0);
+            assert.deepEqual(await unitsOnBoard(),initialPositions);
+        }
         await press(tile(3,6));
         await press(tile(10,6));
         assert.equal(await tile(10,6).getAttribute('data-destination'),'');
@@ -191,11 +232,14 @@ async function run(browser, width) {
         const control = name => briefing.getByRole('button',{name,exact:true});
         const finishTurn = () => press(control('手番終了'));
         const announce = () => briefing.locator('.slg-move-status').textContent();
-        const verifyHP = async ([x,y], hp) => assert.match(await tile(x,y).getAttribute('aria-label'), new RegExp('HP ' + hp));
+        const verifyHP = async ([x,y], hp, max) => {
+            assert.equal(await hpText(x,y), hp + '/' + max);
+            assert((await tile(x,y).getAttribute('aria-label')).includes('HP ' + hp + '/' + max));
+        };
         async function chooseAction(from, to, name, target) {
             await press(tile(...from));
             await press(tile(...to));
-            assert(await control(name).isEnabled());
+            await control(name).waitFor({state:'visible'});
             assert.equal(await control(name + 'を確定').count(),0);
             await press(control(name));
             if (target) {
@@ -208,6 +252,7 @@ async function run(browser, width) {
         async function act(from, to, name, target) {
             await chooseAction(from, to, name, target);
             await press(control(name + 'を確定'));
+            if (name === '攻撃') await briefing.locator('.slg-action-notice').waitFor({state:'visible'});
             assert.equal(await tile(...to).getAttribute('data-acted'),'');
         }
 
@@ -246,6 +291,7 @@ async function run(browser, width) {
         assert.match(await another.locator('.slg-progress').textContent(),/第1ターン · CPUの手番/);
         await press(another.getByRole('button',{name:'続きから'}));
         const otherBoard = another.locator('.slg-board-panel');
+        if (!reduced) await otherBoard.locator('.slg-moving-unit[data-side="cpu"]').waitFor({state:'attached'});
         await page.waitForFunction(el => el.dataset.ply === '3',await otherBoard.elementHandle());
         assert.match(await otherBoard.locator('.slg-map-legend').first().textContent(),/自軍資金 7.*部隊 4\/6/);
         assert.equal(await otherBoard.locator('[data-tile="81"]').getAttribute('data-acted'),null);
@@ -254,12 +300,21 @@ async function run(browser, width) {
         assert.equal(await panel.getAttribute('data-ply'),'3');
         assert.match(await balance(),/自軍資金 7/);
         if (difficulty === 'Easy') {
-            await verifyHP([5,5],2);
-            await verifyHP([5,6],1);
+            await verifyHP([5,5],2,3);
+            await verifyHP([5,6],1,2);
             await chooseAction([5,5],[5,5],'攻撃',[5,6]);
             await press(control('選択を取り消す'));
-            await verifyHP([5,6],1);
-            await act([5,5],[5,5],'攻撃',[5,6]);
+            await verifyHP([5,6],1,2);
+            await chooseAction([5,5],[5,5],'攻撃',[5,6]);
+            assert.match(await announce(),/敵偵察兵 HP 1\/2/);
+            await press(control('攻撃を確定'));
+            await page.waitForFunction(({attacker, defender}) =>
+                attacker.querySelector('.slg-unit')?.getAnimations().length === 1 &&
+                defender.querySelector('.slg-unit')?.getAnimations().length === 1,
+            {attacker:await tile(5,5).elementHandle(), defender:await tile(5,6).elementHandle()});
+            await briefing.locator('.slg-action-notice').waitFor({state:'visible'});
+            assert.equal(await tile(5,6).locator('.slg-unit').count(),0);
+            assert.equal(await tile(5,5).getAttribute('data-acted'),'');
             assert.match(await briefing.locator('.slg-action-notice').textContent(), /攻撃 1ダメージ · 撃破/);
         } else {
             assert.match(await tile(7,4).getAttribute('aria-label'),/資源施設.*所有 赤軍/);
