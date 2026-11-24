@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SLG committed checkpoint v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema","generation","ownerId","stageId","stageRevision","difficulty","seed","rngState","ply","phase","incomeAppliedPly","cpuActionsDone","nextUnitId","funds","units","facilities","result"],
+  "properties": {
+    "schema": {"const": 1},
+    "generation": {"$ref":"#/$defs/positive"},
+    "ownerId": {"$ref":"#/$defs/positive"},
+    "stageId": {"type":"integer","minimum":1,"maximum":5},
+    "stageRevision": {"type":"string","minLength":1},
+    "difficulty": {"enum":["easy","normal","hard","nightmare"]},
+    "seed": {"$ref":"#/$defs/u32"},
+    "rngState": {"$ref":"#/$defs/u32"},
+    "ply": {"$ref":"#/$defs/positive"},
+    "phase": {"enum":["start","acting","finished"]},
+    "incomeAppliedPly": {"$ref":"#/$defs/count"},
+    "cpuActionsDone": {"$ref":"#/$defs/count"},
+    "nextUnitId": {"$ref":"#/$defs/positive"},
+    "funds": {
+      "type":"object","additionalProperties":false,"required":["player","cpu"],
+      "properties":{"player":{"$ref":"#/$defs/count"},"cpu":{"$ref":"#/$defs/count"}}
+    },
+    "units": {"type":"array","items":{"$ref":"#/$defs/unit"}},
+    "facilities": {"type":"array","items":{"$ref":"#/$defs/facility"}},
+    "result": {"oneOf":[{"type":"null"},{"$ref":"#/$defs/result"}]}
+  },
+  "allOf": [{
+    "if":{"properties":{"phase":{"const":"finished"}}},
+    "then":{"properties":{"result":{"$ref":"#/$defs/result"}}},
+    "else":{"properties":{"result":{"type":"null"}}}
+  }],
+  "$defs": {
+    "count":{"type":"integer","minimum":0,"maximum":9007199254740991},
+    "positive":{"type":"integer","minimum":1,"maximum":9007199254740991},
+    "u32":{"type":"integer","minimum":0,"maximum":4294967295},
+    "side":{"enum":["player","cpu"]},
+    "unit":{
+      "type":"object","additionalProperties":false,
+      "required":["id","side","type","x","y","hp","actedPly","movedPly"],
+      "properties":{
+        "id":{"$ref":"#/$defs/positive"},"side":{"$ref":"#/$defs/side"},
+        "type":{"enum":["infantry","scout","ranged","heavy"]},
+        "x":{"$ref":"#/$defs/count"},"y":{"$ref":"#/$defs/count"},
+        "hp":{"type":"integer","minimum":1,"maximum":5},
+        "actedPly":{"$ref":"#/$defs/count"},"movedPly":{"$ref":"#/$defs/count"}
+      }
+    },
+    "capture":{
+      "type":"object","additionalProperties":false,"required":["unitId","firstPly"],
+      "properties":{"unitId":{"$ref":"#/$defs/positive"},"firstPly":{"$ref":"#/$defs/positive"}}
+    },
+    "facility":{
+      "type":"object","additionalProperties":false,"required":["id","owner","acquiredPly","producedPly","capture"],
+      "properties":{
+        "id":{"type":"string","minLength":1},"owner":{"enum":["player","cpu",null]},
+        "acquiredPly":{"$ref":"#/$defs/count"},"producedPly":{"$ref":"#/$defs/count"},
+        "capture":{"oneOf":[{"type":"null"},{"$ref":"#/$defs/capture"}]}
+      }
+    },
+    "result":{
+      "type":"object","additionalProperties":false,"required":["winner","reason"],
+      "properties":{"winner":{"$ref":"#/$defs/side"},"reason":{"enum":["hq","resign"]}}
+    }
+  }
+}
