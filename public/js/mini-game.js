@@ -540,7 +540,7 @@
         moveCard(card, direction, true);
     }
     function initCard(card) {
-        if (!card || ['lights_out', 'wire_defense', 'block_collapse', 'cursor_field', 'game_2048', 'reversi', 'maze_chase', 'falling_blocks', 'word_tiles', 'word_tiles_ja', 'tower_defense'].indexOf(card.getAttribute('data-mini-game-type')) !== -1 || card.getAttribute('data-mini-game-initialized') === '1') return;
+        if (!card || ['slg', 'lights_out', 'wire_defense', 'block_collapse', 'cursor_field', 'game_2048', 'reversi', 'maze_chase', 'falling_blocks', 'word_tiles', 'word_tiles_ja', 'tower_defense'].indexOf(card.getAttribute('data-mini-game-type')) !== -1 || card.getAttribute('data-mini-game-initialized') === '1') return;
         card.setAttribute('data-mini-game-initialized', '1');
         var widgetId = card.getAttribute('data-dashboard-widget-id'), loadedResult = loadStateResult(cardUserId(), widgetId), loaded = loadedResult.state;
         var restored = loaded.moves > 0 || loaded.status !== 'playing' || loaded.levelId !== LEVELS[0].id;
@@ -2174,6 +2174,7 @@
         jq(document).off('ajaxSuccess.rssWireDefense').on('ajaxSuccess.rssWireDefense', function (event, xhr, settings, response) {
             if (!response || response.ok !== true || !settings || String(settings.url || '').indexOf('api_v1.php') === -1) return;
             var payload = parseAjaxData(settings.data);
+            if (window.RssGameWidget && typeof window.RssGameWidget.isSlgWidget === 'function' && window.RssGameWidget.isSlgWidget(payload.widget_id)) return;
             if (payload.action === 'widget.game.delete' && positiveId(payload.widget_id) !== null) {
                 removeWidgetState(payload.widget_id);
                 return;

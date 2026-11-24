@@ -467,5 +467,10 @@ node "$ROOT/tests/test_current_tower_defense.js"
 node --check "$ROOT/public/js/tower-defense.js"
 sh "$ROOT/tests/test_current_calendar_deadline_mariadb.sh"
 node --check "$ROOT/tests/test_current_tower_defense_browser.js"
+node --check "$ROOT/public/js/slg.js"
+node --check "$ROOT/tests/test_current_slg_widget_browser.js"
+if [ -n "${GAME_TEST_CHROME:-}" ]; then
+    node "$ROOT/tests/test_current_slg_widget_browser.js"
+fi
 node --check "$ROOT/tests/test_current_calendar_deadline_browser.js"
 node --check "$ROOT/tests/test_current_calendar_deadline_repeat_browser.js"

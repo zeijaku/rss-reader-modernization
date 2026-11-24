@@ -4,8 +4,8 @@
     var source = document.currentScript;
     var revisionMatch = source && /(?:[?&])v=([A-Za-z0-9._-]+)(?:[&#]|$)/.exec(source.src || '');
     var revision = revisionMatch ? revisionMatch[1] : '';
-    var catalog = Object.assign(Object.create(null), {tower_defense: {title:'Tower Defense',script:'./js/tower-defense.js',core:'./js/tower-defense-core.js'}, maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js', dictionary: './js/word-tiles-words-en.js'}, word_tiles_ja: {title: 'Word Tiles 日本語', script: './js/word-tiles-ja.js', dictionary: './js/word-tiles-words-ja.js', core: './js/word-tiles.js'}});
-    var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks', word_tiles:'Word Tiles', word_tiles_ja:'Word Tiles 日本語', tower_defense:'Tower Defense'};
+    var catalog = Object.assign(Object.create(null), {slg: {title:'SLG',script:'./js/slg.js'}, tower_defense: {title:'Tower Defense',script:'./js/tower-defense.js',core:'./js/tower-defense-core.js'}, maze_chase: {title: 'Maze Chase', script: './js/maze-chase.js'}, falling_blocks: {title: 'Falling Blocks', script: './js/falling-blocks.js'}, word_tiles: {title: 'Word Tiles', script: './js/word-tiles.js', dictionary: './js/word-tiles-words-en.js'}, word_tiles_ja: {title: 'Word Tiles 日本語', script: './js/word-tiles-ja.js', dictionary: './js/word-tiles-words-ja.js', core: './js/word-tiles.js'}});
+    var titles = {icon_quest:'Icon Quest', lights_out:'Lights Out', wire_defense:'Wire Defense', block_collapse:'Block Collapse', cursor_field:'Cursor Field', game_2048:'2048', reversi:'Reversi', maze_chase:'Maze Chase', falling_blocks:'Falling Blocks', word_tiles:'Word Tiles', word_tiles_ja:'Word Tiles 日本語', tower_defense:'Tower Defense', slg:'SLG'};
     var factories = Object.create(null), loads = Object.create(null), records = new Map();
     var expanded = null, previousOverflow = '', observer = null;
     function assetUrl(path) { return revision ? path + '?v=' + encodeURIComponent(revision) : path; }
@@ -17,7 +17,7 @@
     }
     function positive(value) { return /^[1-9][0-9]*$/.test(String(value || '')); }
     function storageKey(user, widget, game) {
-        return positive(user) && positive(widget) && catalog[game] ? 'rssReader.gameWidget.v1.' + game + '.user.' + user + '.widget.' + widget : null;
+        return positive(user) && positive(widget) && catalog[game] && game !== 'slg' ? 'rssReader.gameWidget.v1.' + game + '.user.' + user + '.widget.' + widget : null;
     }
     function readBest(key) {
         var best = 0;
@@ -44,6 +44,10 @@
             if (!key) return;
             ['localStorage','sessionStorage'].forEach(function (name) { try { window[name].removeItem(key); if (game === 'word_tiles' || game === 'word_tiles_ja' || game === 'tower_defense') window[name].removeItem(key + '.state'); if (game === 'tower_defense') window[name].removeItem(key + '.state.v2'); } catch (error) {} });
         });
+    }
+    function isSlgWidget(widgetId) {
+        if (!positive(widgetId)) return false;
+        return !!document.querySelector('.mini-game-card[data-mini-game-type="slg"][data-dashboard-widget-id="' + widgetId + '"]');
     }
     var assetLoads = Object.create(null);
     function loadAsset(path) {
@@ -84,8 +88,9 @@
             record.inner.removeAttribute('role'); record.inner.removeAttribute('aria-modal'); record.inner.removeAttribute('aria-label');
             if (expanded === record) { expanded = null; document.body.style.overflow = previousOverflow; }
         }
-        record.expandButton.textContent = enabled ? '縮小' : '拡大';
+        if (record.game !== 'slg') record.expandButton.textContent = enabled ? '縮小' : '拡大';
         record.expandButton.setAttribute('aria-expanded', enabled ? 'true' : 'false');
+        if (record.instance && record.instance.setExpanded) record.instance.setExpanded(enabled);
         if (record.instance && record.instance.resize) record.instance.resize();
         suspend(record);
     }
@@ -100,10 +105,7 @@
     function suspend(record) {
         if (record.instance && record.instance.setSuspended) record.instance.setSuspended(document.hidden || (record.visible === false && expanded !== record) || record.modalOpen === true);
     }
-    function shell(record, factory) {
-        var body = record.card.querySelector('.mini-game-card-body');
-        if (!body) throw new Error('Game body missing');
-        body.replaceChildren(); body.classList.add('game-widget-body');
+    function scoreShell(record, factory, body) {
         var summary = node('div','game-widget-summary');
         var score = node('strong','game-widget-score','0'), best = node('strong','game-widget-best',String(record.best));
         var scoreLabel = node('span', '', 'Score '), bestLabel = node('span', '', 'Best ');
@@ -135,19 +137,38 @@
         record.instance = factory(context);
         on(record,start,'click',function () { record.instance.restart(); });
         on(record,pause,'click',function () { record.instance.togglePause(); });
+    }
+    function shell(record, factory) {
+        var body = record.card.querySelector('.mini-game-card-body');
+        if (!body) throw new Error('Game body missing');
+        body.replaceChildren(); body.classList.add('game-widget-body');
+        if (record.game === 'slg') {
+            record.expandButton = node('button','btn btn-sm btn-outline-secondary game-widget-expand','閉じる');
+            record.expandButton.type = 'button';
+            record.instance = factory({
+                stage: body, ownerId: record.user, closeButton: record.expandButton,
+                open: function () { setExpanded(record,true); },
+                on: function (target,type,callback) { on(record,target,type,callback); }
+            });
+        } else {
+            scoreShell(record,factory,body);
+        }
+        var expand = record.expandButton;
         on(record,expand,'click',function () { setExpanded(record,expanded !== record); });
         on(record,record.card,'keydown',function (event) {
             if (expanded !== record) return;
-            if (event.key === 'Escape') { event.preventDefault(); setExpanded(record,false); expand.focus(); }
+            if (event.key === 'Escape') { event.preventDefault(); setExpanded(record,false); if (record.game !== 'slg') expand.focus(); }
             if (event.key === 'Tab') {
-                var buttons = Array.from(record.inner.querySelectorAll('button:not(:disabled),input:not(:disabled),[tabindex="0"]')).filter(function (el) { return el.getClientRects().length; });
+                var selector = 'button:not(:disabled),input:not(:disabled),[tabindex="0"]';
+                if (record.game === 'slg') selector += ',select:not(:disabled)';
+                var buttons = Array.from(record.inner.querySelectorAll(selector)).filter(function (el) { return el.getClientRects().length; });
                 var first = buttons[0], last = buttons[buttons.length-1];
                 if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
                 else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
             }
         });
         on(record,document,'visibilitychange',function () { suspend(record); });
-        on(record,window,'pagehide',function () { if (record.instance) record.instance.setSuspended(true); });
+        on(record,window,'pagehide',function () { if (record.instance && record.instance.setSuspended) record.instance.setSuspended(true); });
         on(record,window,'pageshow',function () { suspend(record); });
         if (window.IntersectionObserver) {
             var intersection = new window.IntersectionObserver(function (entries) { record.visible = entries[0].isIntersecting; suspend(record); });
@@ -161,9 +182,10 @@
         var main = document.getElementById('main-content'), id = card.getAttribute('data-dashboard-widget-id');
         var user = main && main.getAttribute('data-dashboard-user-id');
         if (!positive(id) || !positive(user)) return;
-        var record = {card:card, game:game, key:storageKey(user,id,game), best:0, storage:'memory', cleanups:[], visible:true, destroyed:false, inner:card.querySelector('.mini-game-card-inner')};
+        var record = {card:card, game:game, user:user, key:storageKey(user,id,game), best:0, storage:'memory', cleanups:[], visible:true, destroyed:false, inner:card.querySelector('.mini-game-card-inner')};
         if (!record.inner) return;
-        record.best = readBest(record.key); saveBest(record,record.best); records.set(card,record);
+        if (record.key) { record.best = readBest(record.key); saveBest(record,record.best); }
+        records.set(card,record);
         card.setAttribute('data-mini-game-initialized','1');
         load(game).then(function (factory) {
             if (record.destroyed || !card.isConnected || card.getAttribute('data-mini-game-type') !== game) return;
@@ -214,7 +236,7 @@
     }
     window.RssGameWidget = {
         register: function (game,factory) { if (!catalog[game] || typeof factory !== 'function') throw new Error('Unsupported Game module'); factories[game] = factory; },
-        init:init, destroy:destroy, removeWidgetState:removeWidgetState, storageKey:storageKey
+        init:init, destroy:destroy, removeWidgetState:removeWidgetState, storageKey:storageKey, isSlgWidget:isSlgWidget
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded',start,{once:true}); else start();
 })(window,document);

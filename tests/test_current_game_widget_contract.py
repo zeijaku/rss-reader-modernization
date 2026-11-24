@@ -52,4 +52,14 @@ check('word-tiles-dictionary-ja-notice.txt' in word and 'JMdict（EDRDG）' in w
 check('CC BY-SA 4.0' in text('licenses/word-tiles-jmdict-NOTICE.txt') and 'CC BY-SA 4.0' in text('public/js/word-tiles-words-ja.js'),'derived data attribution and share-alike notice shipped')
 for page in ['public/index.php','public/stock.php']:
  check("app_asset_url('js/word-tiles-ja.js')" not in text(page) and "app_asset_url('js/word-tiles-words-ja.js')" not in text(page),'Japanese assets are not eagerly loaded in '+page)
+for template in ['app/view/dashboard_modals.php','public/stock.php']:
+ source = text(template)
+ check(source.count('<option value="slg">') == 2, 'SLG is selectable in add and edit forms in '+template)
+ check('SLGの共通データは保持' in source, 'SLG deletion guidance in '+template)
+for page in ['public/index.php','public/stock.php']:
+ source = text(page)
+ check("app_asset_url('js/slg.js')" not in source, 'SLG is lazy loaded in '+page)
+ check(source.index("app_asset_url('js/dashboard-game.js')") < source.index("app_asset_url('js/dashboard.js')"),
+       'Game form handler available when Dashboard starts in '+page)
+check("catalogButton('#registerGameWidget', 'SLG'" in text('public/js/utility-widgets.js'), 'SLG registered in the existing Drawer catalog')
 print(f'RESULT: PASS {checks} / FAIL 0 / SKIP 0')

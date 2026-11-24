@@ -469,6 +469,7 @@
             if (!response || response.ok !== true || !settings || String(settings.url || '').indexOf('api_v1.php') === -1) return;
             var payload = parseAjaxData(settings.data);
             var widgetId = positiveId(payload.widget_id);
+            if (window.RssGameWidget && typeof window.RssGameWidget.isSlgWidget === 'function' && window.RssGameWidget.isSlgWidget(widgetId)) return;
             if (widgetId === null) return;
             if (payload.action === 'widget.game.delete') { removeWidgetState(widgetId); return; }
             if (payload.action === 'widget.game.update' && payload.game_type !== 'game_2048') removeWidgetState(widgetId);

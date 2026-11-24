@@ -60,4 +60,18 @@ check140(api_dispatch('widget.game.create',0,$ja)['status']===401,'unauthenticat
 $ja['widget_id']=(string)$jid;$ja['game_type']='word_tiles';check140(api_dispatch('widget.game.update',7,$ja)['status']===200,'Japanese switches to English through existing settings');
 check140(api_dispatch('widget.game.delete',7,['widget_id'=>(string)$jid])['status']===200,'owned Japanese delete accepted');
 check140((int)$pdo->query('SELECT COUNT(*) FROM v140_dashboard_widget WHERE widget_id='.$j2['body']['data']['widget_id'].' AND widget_flag=0')->fetchColumn()===1,'Japanese deletion preserves second instance');
+$slg = array_merge($input, ['game_type' => 'slg', 'game_title' => '前線突破']);
+$createdSlg = api_dispatch('widget.game.create', 7, $slg);
+check140($createdSlg['status'] === 201, 'SLG created through the Game API');
+$slgId = (string)$createdSlg['body']['data']['widget_id'];
+$slgRow = $pdo->query('SELECT * FROM v140_dashboard_widget WHERE widget_id='.(int)$slgId)->fetch();
+check140(dashboard_widget_normalize_row($slgRow)['widget_config_data'] === ['schema'=>1, 'title'=>'前線突破', 'game'=>'slg'], 'SLG type and custom title survive reload');
+$slg['widget_id'] = $slgId;
+check140(api_dispatch('widget.game.update', 8, $slg)['status'] === 404, 'only the owner can edit SLG');
+check140(api_dispatch('widget.game.delete', 8, ['widget_id'=>$slgId])['status'] === 404, 'only the owner can delete SLG');
+foreach (['tower_defense','slg'] as $type) {
+    $slg['game_type'] = $type;
+    check140(api_dispatch('widget.game.update', 7, $slg)['status'] === 200, 'same Game widget can switch to '.$type);
+}
+check140(api_dispatch('widget.game.delete', 7, ['widget_id'=>$slgId])['status'] === 200, 'owner can delete SLG');
 echo 'RESULT: PASS '.$checks." / FAIL 0 / SKIP 0\n";

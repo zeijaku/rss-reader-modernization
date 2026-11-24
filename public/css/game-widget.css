@@ -73,3 +73,15 @@
 .mini-game-card[data-mini-game-type="tower_defense"].game-widget-expanded .mini-game-card-inner { max-width:1180px; }
 
 #main-content:is([data-dashboard-theme="bootstrap-solar"],[data-dashboard-theme="bootstrap-slate"]) .td-widget { --td-bow:#f5c06b; --td-magic:#c697fc; --td-cannon:#f38264; --td-ice:#8fe6f1; --td-enemy:#ea868f; --td-base:#75b798; }
+
+/* SLG uses the shared expanded dialog and keeps the briefing outside the compact card. */
+.slg-summary, .slg-briefing { width:min(100%,42rem); margin-inline:auto; }
+.slg-summary { text-align:center; }
+.slg-progress { margin:.5rem 0; }
+.slg-actions { display:flex; flex-wrap:wrap; gap:.5rem; justify-content:center; }
+.slg-difficulty { display:block; max-width:15rem; margin-block:1rem; }
+.slg-actions button, .slg-briefing button, .slg-difficulty select { min-height:44px; }
+#main-content .mini-game-card[data-mini-game-type="slg"].game-widget-expanded .mini-game-card-inner {
+    max-width:1180px; min-height:0; height:auto; max-height:calc(100dvh - 16px); overflow:auto;
+}
+#main-content .mini-game-card[data-mini-game-type="slg"].game-widget-expanded .mini-game-card-header { display:none !important; }
