@@ -8,6 +8,11 @@ const {chromium} = require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES
 
 const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
+const [widgetCss, widgetLoader] = JSON.parse(execFileSync('php', ['-r',
+    'require $argv[1]; require $argv[2]; echo json_encode([app_asset_url("css/game-widget.css"), app_asset_url("js/game-widget.js")]);',
+    path.join(root,'app/version.php'),path.join(root,'app/asset.php')], {encoding:'utf8'}));
+const widgetRevision = new URL(widgetLoader,'http://slg.test/').search;
+
 function row(id, game) {
     return {widget_id:id, widget_owner:7, widget_location:0, widget_type:'game', widget_flag:0,
         widget_sort_order:id, widget_style:'primary', widget_width:1, widget_height:1,
@@ -21,10 +26,11 @@ function html(rows) {
         'game-2048.js','clock-timer.js',...modules,'utility-widgets.js'];
     const cards = execFileSync('php',[path.join(__dirname,'fixtures/widget_header_page.php'),JSON.stringify(rows)],{encoding:'utf8'});
     return '<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
-        ['bootstrap-5.3.8.min','all','mini-game','game-widget','dashboard'].map(name => '<link rel="stylesheet" href="/css/'+name+'.css">').join('')+
+        ['bootstrap-5.3.8.min','all','mini-game','game-widget','dashboard'].map(name =>
+            '<link rel="stylesheet" href="'+(name==='game-widget'?widgetCss:'/css/'+name+'.css')+'">').join('')+
         '</head><body><button data-bs-toggle="offcanvas" data-bs-target="#drawerMenu">メニュー</button>'+
         '<nav id="drawerMenu" class="offcanvas offcanvas-end drawer-nav" tabindex="-1"><ul class="drawer-menu">'+menu+'</ul></nav>'+cards+
-        scripts.map(name => '<script src="/js/'+name+'?v=slg-test"></script>').join('')+'</body></html>';
+        scripts.map(name => '<script src="'+(name==='game-widget.js'?widgetLoader:'/js/'+name)+'"></script>').join('')+'</body></html>';
 }
 
 async function run(browser, width) {
@@ -583,14 +589,11 @@ async function run(browser, width) {
         assert.equal(await page.evaluate(key => localStorage.getItem(key),tdKey),tdSave);
         assert(await page.evaluate(keys => keys.every(key => localStorage.getItem(key) === 'retain'),oldKeys));
         assert.equal(await page.evaluate(()=>Object.keys(localStorage).some(k=>k.includes('gameWidget.v1.slg'))),false);
-        assert.equal(requests.filter(url=>url.startsWith('/js/slg.js')).length,1);
-        assert(requests.includes('/js/slg.js?v=slg-test'));
-        assert.equal(requests.filter(url=>url.startsWith('/js/slg-map.js')).length,1);
-        assert(requests.includes('/js/slg-map.js?v=slg-test'));
-        assert.equal(requests.filter(url=>url.startsWith('/js/slg-battle.js')).length,1);
-        assert(requests.includes('/js/slg-battle.js?v=slg-test'));
-        assert.equal(requests.filter(url=>url.startsWith('/js/slg-ai.js')).length,1);
-        assert(requests.includes('/js/slg-ai.js?v=slg-test'));
+        assert.match(widgetRevision,/^\?v=[A-Za-z0-9._-]+$/);
+        assert(requests.includes('/css/game-widget.css'+widgetRevision));
+        for (const asset of ['slg.js','slg-map.js','slg-battle.js','slg-ai.js']) {
+            assert.deepEqual(requests.filter(url=>url.startsWith('/js/'+asset)), ['/js/'+asset+widgetRevision]);
+        }
         assert.deepEqual(errors,[]);
         console.log('PASS: SLG preview, production, CPU resume and HQ result ('+difficulty+'), Clock and TD regressions at '+width+'px');
     } finally {
