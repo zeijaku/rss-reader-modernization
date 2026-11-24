@@ -2,7 +2,7 @@
 const assert = require('node:assert/strict');
 const {actions, rays} = require('./fixtures/slg/rule-cases.js');
 const {stageOne, makeBoard, unitTypes, selectUnit, previewMove} = require('../public/js/slg-map.js');
-const {lineIsClear, planAction, commitAction, endTurn, startManualTurn, resign} = require('../public/js/slg-battle.js');
+const {lineIsClear, planAction, commitAction, endTurn, startTurn, resign} = require('../public/js/slg-battle.js');
 
 function position([x, y]) {
     return {x, y};
@@ -58,8 +58,8 @@ for (const fixture of cases) {
                 assert.equal(opening.incomeAppliedPly, opening.ply - 1);
                 assert.equal(commitAction(board, sites, opening, {unitId:1,to:[0,0],command:'wait'}), null);
             }
-            next = opening && startManualTurn(opening);
-            if (next) assert.equal(startManualTurn(next), null);
+            next = opening && startTurn(sites, opening);
+            if (next) assert.equal(startTurn(sites, next), null);
             break;
         }
         case 'resign':
@@ -111,7 +111,7 @@ assert.equal(commitAction(board, sites, state, {...shot,command:'capture'}), nul
 const holding = initialize(actions.find(fixture => fixture.id === 'CAP-04-skip'));
 const take = {unitId:1,to:[1,0],command:'capture'};
 const first = commitAction(holding.board, holding.sites, holding.state, take).state;
-const second = startManualTurn(endTurn(startManualTurn(endTurn(first))));
+const second = startTurn(holding.sites, endTurn(startTurn(holding.sites, endTurn(first))));
 const wait = commitAction(holding.board, holding.sites, second, {...take,command:'wait'});
 assert.equal(wait.state.facilities[0].capture, null); // A different action on the same HQ breaks the streak.
 

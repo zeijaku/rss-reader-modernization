@@ -12,10 +12,10 @@
         s: {name: '施設', cost: 1}
     });
     const unitTypes = Object.freeze({
-        infantry: {name: '歩兵', mark: '歩', hp: 3, movement: 4, minRange: 1, maxRange: 1, damage: 1},
-        scout: {name: '偵察兵', mark: '偵', hp: 2, movement: 7, minRange: 1, maxRange: 1, damage: 1},
-        ranged: {name: '射撃兵', mark: '射', hp: 2, movement: 3, minRange: 2, maxRange: 3, damage: 1},
-        heavy: {name: '重装兵', mark: '重', hp: 5, movement: 3, minRange: 1, maxRange: 1, damage: 2}
+        infantry: {name: '歩兵', mark: '歩', hp: 3, cost: 4, movement: 4, minRange: 1, maxRange: 1, damage: 1},
+        scout: {name: '偵察兵', mark: '偵', hp: 2, cost: 5, movement: 7, minRange: 1, maxRange: 1, damage: 1},
+        ranged: {name: '射撃兵', mark: '射', hp: 2, cost: 6, movement: 3, minRange: 2, maxRange: 3, damage: 1},
+        heavy: {name: '重装兵', mark: '重', hp: 5, cost: 8, movement: 3, minRange: 1, maxRange: 1, damage: 2}
     });
 
     function makeBoard(rows, facilities = []) {
@@ -49,7 +49,7 @@
     const deployments = [
         [2, 5, 'infantry'], [3, 6, 'scout'], [2, 8, 'infantry']
     ];
-    function initialState(difficulty) {
+    function initialState(difficulty, seed = 1) {
         const units = [];
         for (const side of ['player', 'cpu']) {
             for (const [x, y, type] of deployments) {
@@ -61,7 +61,7 @@
             }
         }
         return {
-            stageId: 1, stageRevision: '1', difficulty, ply: 1, phase: 'acting',
+            stageId: 1, stageRevision: '1', difficulty, seed, rngState: seed, ply: 1, phase: 'acting',
             incomeAppliedPly: 1, nextUnitId: units.length + 1, cpuActionsDone: 0,
             units, funds: {player: 8, cpu: 8}, result: null,
             facilities: sites.map(({id, owner}) => ({id, owner, acquiredPly: 0, producedPly: 0, capture: null}))
@@ -133,7 +133,7 @@
     }
 
     const stageOne = {name: '前線突破', unitLimit: 6, board, sites, initialState};
-    const api = {terrain, unitTypes, stageOne, makeBoard, tileIndex, movementOptions, turnSide, selectUnit, previewMove};
+    const api = {terrain, unitTypes, stageOne, makeBoard, tileIndex, adjacent, movementOptions, turnSide, selectUnit, previewMove};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.RssSlgMap = api;
 })(globalThis);

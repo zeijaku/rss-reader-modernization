@@ -130,3 +130,9 @@
     content:"½"; position:absolute; inset:auto 1px 0 auto; padding-inline:2px;
     background:#f5cb58; color:#162329; font-size:.75rem;
 }
+
+.slg-production-label { display:flex; flex-direction:column; gap:.2rem; font-size:.85rem; }
+.slg-tile[data-spawn-cell]::after {
+    content:""; position:absolute; inset:3px; border:2px dashed #21614c; pointer-events:none;
+}
+.slg-tile[data-spawn-selected]::after { border:3px solid #21614c; background:rgba(81,155,122,.28); }

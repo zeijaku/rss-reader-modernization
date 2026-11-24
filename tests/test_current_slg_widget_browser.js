@@ -29,6 +29,7 @@ function html(rows) {
 
 async function run(browser, width) {
     const touch = width < 600;
+    const difficulty = width === 375 ? 'Normal' : 'Easy';
     const context = await browser.newContext({viewport:{width,height:touch ? 640 : 900},hasTouch:touch});
     const page = await context.newPage();
     const press = locator => touch ? locator.tap() : locator.click();
@@ -66,7 +67,7 @@ async function run(browser, width) {
     try {
         await page.goto('http://slg.test');
         await page.locator('.td-widget').waitFor();
-        assert(!requests.some(url => /^\/js\/slg(?:-map|-battle)?\.js/.test(url)));
+        assert(!requests.some(url => /^\/js\/slg(?:-map|-battle|-ai)?\.js/.test(url)));
         await page.evaluate(key => localStorage.setItem(key,'keep existing save'),sharedKey);
         await press(page.getByRole('button',{name:'メニュー',exact:true}));
         await press(page.locator('[data-bs-target="#widgetCatalog-game"]'));
@@ -86,7 +87,7 @@ async function run(browser, width) {
         await press(start);
         const briefing = slg.getByRole('dialog');
         const select = briefing.getByLabel('CPU難易度');
-        await select.selectOption('Easy');
+        await select.selectOption(difficulty);
         assert.equal(await page.evaluate(()=>document.body.style.overflow),'hidden');
         assert(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth));
         const bounds = await briefing.boundingBox();
@@ -95,7 +96,7 @@ async function run(browser, width) {
             await page.setViewportSize({width:640,height:320});
             const rotated = await briefing.boundingBox();
             assert(rotated.y >= 0 && rotated.y + rotated.height <= 321);
-            assert.equal(await select.inputValue(),'Easy');
+            assert.equal(await select.inputValue(),difficulty);
             await page.setViewportSize({width,height:640});
         }
         await select.focus();
@@ -115,12 +116,12 @@ async function run(browser, width) {
         },second);
         const another = page.locator('[data-dashboard-widget-id="5"]');
         await press(another.getByRole('button',{name:'続きから'}));
-        assert.equal(await another.getByLabel('CPU難易度').inputValue(),'Easy');
+        assert.equal(await another.getByLabel('CPU難易度').inputValue(),difficulty);
         await press(another.getByRole('button',{name:'閉じる'}));
         page.once('dialog', dialog => dialog.dismiss());
         await press(start);
         assert.equal(await page.locator('.game-widget-expanded').count(),0);
-        assert((await slg.locator('.slg-progress').textContent()).includes('Easy'));
+        assert((await slg.locator('.slg-progress').textContent()).includes(difficulty));
         await press(slg.getByRole('button',{name:'続きから'}));
         await press(briefing.getByRole('button',{name:'盤面を開く'}));
         const tiles = briefing.locator('[data-tile]');
@@ -195,61 +196,107 @@ async function run(browser, width) {
             assert.equal(await tile(...to).getAttribute('data-acted'),'');
         }
 
+        const panel = briefing.locator('.slg-board-panel');
+        const balance = () => panel.locator('.slg-map-legend').first().textContent();
+        await press(control('生産'));
+        assert.equal(await briefing.getByLabel('生産施設').inputValue(),'pHQ');
+        assert.equal(await briefing.getByLabel('兵種').inputValue(),'infantry');
+        assert.equal(await briefing.getByLabel('兵種').locator('option').count(),1);
+        await press(tile(2,5)); // This cell is occupied and cannot be selected.
+        assert(await control('生産を確定').isDisabled());
+        await press(tile(1,5));
+        assert.equal(await tile(1,5).getAttribute('data-spawn-selected'),'');
+        assert.match(await balance(),/自軍資金 8.*部隊 3\/6/);
+        await press(control('生産を取り消す'));
+        assert.deepEqual(await unitsOnBoard(),initialPositions);
+        await press(control('生産'));
+        await press(tile(1,5));
+        await press(control('生産を確定'));
+        assert.match(await balance(),/自軍資金 4.*部隊 4\/6/);
+        assert.equal(await tile(1,5).getAttribute('data-acted'),'');
+        assert(await control('生産').isDisabled());
+        await press(tile(1,5));
+        assert.equal(await tile(1,5).getAttribute('data-reachable'),null);
+
         await act([2,5],[5,5],'待機');
         await press(tile(5,5));
         assert.equal(await tile(5,5).getAttribute('data-reachable'),null);
-        await act([3,6],[10,6],'待機');
-        await finishTurn();
-        assert.match(await briefing.locator('.slg-board-panel > p').first().textContent(), /赤軍の手番/);
 
-        await chooseAction([12,6],[11,6],'攻撃',[10,6]);
-        await verifyHP([12,6],2);
-        await verifyHP([10,6],2);
-        assert.equal(await tile(11,6).getAttribute('data-side'),'');
-        await press(control('仮移動を取り消す'));
-        await verifyHP([12,6],2);
-        await verifyHP([10,6],2);
-        await act([12,6],[11,6],'攻撃',[10,6]);
-        await verifyHP([11,6],1);
-        await verifyHP([10,6],1);
-        assert.match(await briefing.locator('.slg-action-notice').textContent(), /攻撃 1ダメージ.*反撃 1ダメージ/);
-        await finishTurn();
+        // Close in the same event loop turn as the handoff, before the first CPU action.
+        await briefing.evaluate(dialog => {
+            [...dialog.querySelectorAll('button')].find(button => button.textContent === '手番終了').click();
+            dialog.querySelector('.game-widget-expand').click();
+        });
+        await page.waitForTimeout(300);
+        assert.match(await another.locator('.slg-progress').textContent(),/第1ターン · CPUの手番/);
+        await press(another.getByRole('button',{name:'続きから'}));
+        const otherBoard = another.locator('.slg-board-panel');
+        await page.waitForFunction(el => el.dataset.ply === '3',await otherBoard.elementHandle());
+        assert.match(await otherBoard.locator('.slg-map-legend').first().textContent(),/自軍資金 7.*部隊 4\/6/);
+        assert.equal(await otherBoard.locator('[data-tile="81"]').getAttribute('data-acted'),null);
+        await press(another.getByRole('button',{name:'閉じる'}));
+        await press(slg.getByRole('button',{name:'続きから'}));
+        assert.equal(await panel.getAttribute('data-ply'),'3');
+        assert.match(await balance(),/自軍資金 7/);
+        if (difficulty === 'Easy') {
+            await verifyHP([5,5],2);
+            await verifyHP([5,6],1);
+            await chooseAction([5,5],[5,5],'攻撃',[5,6]);
+            await press(control('仮移動を取り消す'));
+            await verifyHP([5,6],1);
+            await act([5,5],[5,5],'攻撃',[5,6]);
+            assert.match(await briefing.locator('.slg-action-notice').textContent(), /攻撃 1ダメージ · 撃破/);
+        } else {
+            assert.match(await tile(7,4).getAttribute('aria-label'),/資源施設.*所有 赤軍/);
+        }
 
-        await act([5,5],[7,4],'占領');
-        assert.match(await tile(7,4).getAttribute('aria-label'), /資源施設.*所有 青軍/);
-        await act([10,6],[10,6],'攻撃',[11,6]);
-        assert.match(await briefing.locator('.slg-action-notice').textContent(), /攻撃 1ダメージ · 撃破/);
-        assert.equal(await tile(11,6).getAttribute('data-side'),'');
-        await finishTurn();
-        await finishTurn();
-        await act([10,6],[14,6],'占領');
-        assert.equal(await tile(14,6).getAttribute('data-capture-pending'),'');
-        assert.match(await tile(14,6).getAttribute('aria-label'), /占領進捗 50%/);
-        await finishTurn();
-        await finishTurn();
-        await act([14,6],[14,6],'占領');
-        assert.match(await announce(), /青軍の勝利（本陣占領）/);
+        async function finishCpuRound() {
+            const previous = Number(await panel.getAttribute('data-ply'));
+            await finishTurn();
+            await page.waitForFunction(({el,ply})=> el.dataset.phase === 'finished' || Number(el.dataset.ply) > ply + 1,
+                {el:await panel.elementHandle(),ply:previous});
+        }
+        let finished = false;
+        for (let round=0; round<12 && !finished; round++) {
+            await finishCpuRound();
+            finished = (await panel.getAttribute('data-phase')) === 'finished';
+        }
+        assert(finished, difficulty + ' should reach an HQ victory');
+        assert.match(await announce(),/赤軍の勝利（本陣占領）/);
         assert.equal(await control('手番終了').count(),0);
         await press(control('閉じる'));
-        assert.match(await another.locator('.slg-progress').textContent(),/青軍の勝利/);
+        assert.match(await another.locator('.slg-progress').textContent(),/赤軍の勝利/);
         await press(another.getByRole('button',{name:'続きから'}));
-        assert.match(await another.locator('.slg-move-status').textContent(),/青軍の勝利/);
+        assert.match(await another.locator('.slg-move-status').textContent(),/赤軍の勝利/);
         await press(another.getByRole('button',{name:'閉じる'}));
 
         if (!touch) {
             page.once('dialog', dialog => dialog.accept());
             await press(start);
+            await select.selectOption('Normal');
             await press(control('盤面を開く'));
-            await finishTurn();
-            await act([12,6],[5,6],'待機');
-            await finishTurn();
-            await finishTurn();
-            await act([5,6],[1,6],'占領');
-            await finishTurn();
-            await finishTurn();
-            await act([1,6],[1,6],'占領');
-            assert.match(await announce(), /赤軍の勝利（本陣占領）/);
+
+            // A reproducible player victory against the real Normal CPU on Stage 1.
+            await act([3,6],[7,4],'占領');
+            await act([2,5],[5,5],'待機');
+            await press(control('生産'));
+            await press(tile(2,6));
+            await press(control('生産を確定'));
+            await finishCpuRound();
+            assert.match(await balance(),/自軍資金 9/);
+            await act([7,4],[5,7],'攻撃',[5,6]);
+            await act([2,6],[6,6],'待機');
+            await finishCpuRound();
+            await act([5,5],[7,6],'攻撃',[8,6]);
+            await act([5,7],[10,9],'待機');
+            await finishCpuRound();
+            await act([10,9],[14,6],'占領');
+            assert.equal(await tile(14,6).getAttribute('data-capture-pending'),'');
+            await finishCpuRound();
+            await act([14,6],[14,6],'占領');
+            assert.match(await announce(),/青軍の勝利（本陣占領）/);
             await press(control('閉じる'));
+            console.log('PASS: player beats Normal CPU through resource capture, recruitment and a southern flank');
 
             page.once('dialog', dialog => dialog.accept());
             await press(start);
@@ -259,7 +306,7 @@ async function run(browser, width) {
             assert(await control('手番終了').isEnabled());
             page.once('dialog', dialog => dialog.accept());
             await press(control('投了'));
-            assert.match(await announce(), /赤軍の勝利（相手の投了）/);
+            assert.match(await announce(),/赤軍の勝利（相手の投了）/);
             await press(control('閉じる'));
         }
 
@@ -302,8 +349,10 @@ async function run(browser, width) {
         assert(requests.includes('/js/slg-map.js?v=slg-test'));
         assert.equal(requests.filter(url=>url.startsWith('/js/slg-battle.js')).length,1);
         assert(requests.includes('/js/slg-battle.js?v=slg-test'));
+        assert.equal(requests.filter(url=>url.startsWith('/js/slg-ai.js')).length,1);
+        assert(requests.includes('/js/slg-ai.js?v=slg-test'));
         assert.deepEqual(errors,[]);
-        console.log('PASS: SLG add, open, focus, resume, shared cards, movement, combat, capture, victory, Clock timer, TD pause/resume and isolated storage at '+width+'px');
+        console.log('PASS: SLG preview, production, CPU resume and HQ result ('+difficulty+'), Clock and TD regressions at '+width+'px');
     } finally {
         await context.close();
     }
