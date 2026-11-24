@@ -83,11 +83,12 @@
 .slg-actions button, .slg-briefing button, .slg-difficulty select { min-height:44px; }
 #main-content .mini-game-card[data-mini-game-type="slg"].game-widget-expanded .mini-game-card-inner {
     inset:8px; margin:0 auto; max-width:1180px; min-height:0; height:calc(100dvh - 16px); max-height:none;
-    overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable both-edges;
+    /* The shared Dashboard card rule clips overflow, including on expanded cards. */
+    overflow:auto !important; overscroll-behavior:contain; scrollbar-gutter:stable both-edges;
 }
 #main-content .mini-game-card[data-mini-game-type="slg"].game-widget-expanded .mini-game-card-header { display:none !important; }
 #main-content .mini-game-card[data-mini-game-type="slg"].game-widget-expanded .mini-game-card-body {
-    height:100% !important; min-height:0;
+    height:100% !important; min-height:0; overflow:visible;
 }
 
 .slg-briefing:not([hidden]) { display:flex; flex-direction:column; width:min(100%,62rem); height:100%; margin-inline:auto; }

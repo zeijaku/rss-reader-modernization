@@ -507,6 +507,18 @@ async function run(browser, width) {
             await stageSelect.selectOption('2');
             await press(control('盤面を開く'));
             assert.equal(await tiles.count(),280);
+            await page.setViewportSize({width:495,height:400});
+            assert(await briefing.evaluate(dialog => dialog.scrollHeight > dialog.clientHeight && getComputedStyle(dialog).overflowY === 'auto'));
+            await viewport.hover();
+            await page.mouse.wheel(0,900);
+            await page.waitForFunction(map => map.scrollTop > 0 && map.scrollHeight - map.scrollTop - map.clientHeight <= 1,
+                await viewport.elementHandle());
+            await page.mouse.wheel(0,900);
+            await page.waitForFunction(dialog => dialog.scrollTop > 0 &&
+                dialog.querySelector('.slg-legend-key').getBoundingClientRect().bottom <= dialog.getBoundingClientRect().bottom,
+                await briefing.elementHandle());
+            await verifyLegend();
+            await page.setViewportSize({width,height:900});
             for (const [from,to,command] of [[[3,7],[8,9],'待機'],[[8,9],[10,9],'占領']]) {
                 await press(tile(...from,20));
                 await press(tile(...to,20));
