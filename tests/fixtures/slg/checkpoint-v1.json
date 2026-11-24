@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "generation": 29,
+  "ownerId": 17,
+  "stageId": 3,
+  "stageRevision": "d0-fixture",
+  "difficulty": "normal",
+  "seed": 42,
+  "rngState": 3021,
+  "ply": 8,
+  "phase": "acting",
+  "incomeAppliedPly": 8,
+  "cpuActionsDone": 3,
+  "nextUnitId": 9,
+  "funds": {"player": 6, "cpu": 4},
+  "units": [
+    {"id":1, "side":"player", "type":"infantry", "x":22, "y":7, "hp":2, "actedPly":7, "movedPly":7},
+    {"id":3, "side":"player", "type":"ranged", "x":19, "y":6, "hp":2, "actedPly":7, "movedPly":5},
+    {"id":5, "side":"cpu", "type":"infantry", "x":20, "y":8, "hp":2, "actedPly":8, "movedPly":8},
+    {"id":6, "side":"cpu", "type":"scout", "x":15, "y":8, "hp":1, "actedPly":8, "movedPly":6},
+    {"id":7, "side":"cpu", "type":"ranged", "x":21, "y":6, "hp":2, "actedPly":6, "movedPly":6},
+    {"id":8, "side":"cpu", "type":"heavy", "x":18, "y":9, "hp":4, "actedPly":8, "movedPly":8}
+  ],
+  "facilities": [
+    {"id":"pHQ", "owner":"player", "acquiredPly":0, "producedPly":0, "capture":null},
+    {"id":"cHQ", "owner":"cpu", "acquiredPly":0, "producedPly":0, "capture":{"unitId":1,"firstPly":7}},
+    {"id":"r1", "owner":"player", "acquiredPly":5, "producedPly":0, "capture":null},
+    {"id":"r2", "owner":null, "acquiredPly":0, "producedPly":0, "capture":null},
+    {"id":"r3", "owner":null, "acquiredPly":0, "producedPly":0, "capture":null},
+    {"id":"factory", "owner":"cpu", "acquiredPly":4, "producedPly":0, "capture":null}
+  ],
+  "result": null
+}
