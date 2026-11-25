@@ -371,6 +371,11 @@
         }
     }
 
+    function formatTemperatureChange(change) {
+        var magnitude = Math.abs(change);
+        return (change > 0 ? '+' : change < 0 ? '−' : '') + String(magnitude) + '℃';
+    }
+
     function renderForecast($card, forecast) {
         var current = forecast && forecast.current ? forecast.current : null;
         var days = forecast && $.isArray(forecast.days) ? forecast.days : [];
@@ -387,6 +392,15 @@
         $current.append($text);
         $current.append($('<div class="weather-current-temp">').text(String(current.temperature) + '℃'));
         $body.append($current);
+
+        var change = forecast.temperature_change;
+        if (change && Number.isFinite(change.max) && Number.isFinite(change.min)) {
+            $body.append($('<div class="weather-temperature-change">').append(
+                $('<strong>').text('前日比'),
+                $('<span>').text('最高 ' + formatTemperatureChange(change.max)),
+                $('<span>').text('最低 ' + formatTemperatureChange(change.min))
+            ));
+        }
 
         var $days = $('<div class="weather-days">');
         days.forEach(function (day) {

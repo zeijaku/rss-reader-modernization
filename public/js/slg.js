@@ -702,6 +702,19 @@
         }
         const session = sessions.get(context.ownerId);
         const card = element('div', 'slg-summary');
+        const banner = element('div', 'slg-summary-banner');
+        const title = element('p', 'slg-summary-title', 'ターン制戦略');
+        const preview = element('div', 'slg-summary-map');
+        preview.setAttribute('aria-hidden', 'true');
+        const previewIcons = {f: terrainIcons.f, w: terrainIcons.w, b: siteIcons.hq, e: siteIcons.hq,
+            i: unitIcons.infantry, s: unitIcons.scout, g: siteIcons.resource};
+        for (const terrain of ['f..w.ff', 'bigrs.e', 'ff.w..f'].join('')) {
+            const tile = element('span', 'slg-summary-tile');
+            tile.dataset.terrain = terrain;
+            if (previewIcons[terrain]) tile.append(icon(previewIcons[terrain]));
+            preview.append(tile);
+        }
+        banner.append(title, preview);
         const status = element('p', 'slg-progress');
         status.setAttribute('role', 'status');
         const actions = element('div', 'slg-actions');
@@ -709,7 +722,7 @@
         const start = button('btn btn-outline-primary', '新規ゲーム');
         for (const control of [resume, start]) control.setAttribute('aria-haspopup', 'dialog');
         actions.append(resume, start);
-        card.append(status, actions);
+        card.append(banner, status, actions);
 
         const briefing = element('section', 'slg-briefing');
         briefing.hidden = true;

@@ -255,6 +255,7 @@ python3 -m py_compile \
 echo '== Current feature contracts: Reader Mode =='
 node "$SCRIPT_DIR/test_current_reader_split_runtime.js"
 php "$SCRIPT_DIR/test_v1_38_a_reader_mode.php"
+php "$SCRIPT_DIR/test_current_aggregate_reader.php"
 python3 "$SCRIPT_DIR/test_v1_38_a_reader_mode_contract.py"
 node --check "$ROOT/public/js/dashboard.js"
 php -l "$ROOT/app/api/content.php"

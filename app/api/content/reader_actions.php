@@ -33,14 +33,14 @@ function api_reader_full_text_diagnostic_error(
 /** @return array{status:int,body:array<string,mixed>} */
 function api_feed_reader_full_text(int $userId, array $input): array
 {
-    // Resolve the article URL from the authenticated user's owned Feed and the
-    // server-known item identity. Never accept a client-supplied article URL.
+    // Resolve the article URL from the authorized feed and its item identity.
+    // Never accept a client-supplied article URL.
     $readerResponse = api_feed_reader($userId, $input);
     if (($readerResponse['status'] ?? 500) !== 200) {
         return $readerResponse;
     }
 
-    $contentId = api_positive_int($input, 'content_id');
+    $contentId = api_positive_int($readerResponse['body']['data'], 'content_id');
     $reader = $readerResponse['body']['data']['reader'] ?? null;
     if ($contentId === null || !is_array($reader)) {
         return api_error('reader_full_text_unavailable', '元記事を取得できませんでした。RSS本文を表示しています。', 502);

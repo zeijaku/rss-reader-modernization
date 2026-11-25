@@ -167,6 +167,11 @@
 .weather-location { font-size: .78rem; }
 .weather-current-label { font-size: .82rem; font-weight: 600; }
 .weather-current-temp { font-size: 1.75rem; font-weight: 600; line-height: 1; white-space: nowrap; }
+.weather-temperature-change {
+    display: flex; flex-wrap: wrap; gap: .15rem .65rem; align-items: baseline;
+    margin: .35rem 0; font-size: .78rem; font-variant-numeric: tabular-nums;
+}
+.weather-temperature-change span { white-space: nowrap; }
 
 .weather-days {
     display: grid;

@@ -89,6 +89,8 @@ async function run(browser, width) {
         await press(add.locator('button[type="submit"]'));
         const slg = page.locator('[data-dashboard-widget-id="4"]');
         await slg.locator('.slg-summary').waitFor();
+        await slg.getByText('ターン制戦略', {exact:true}).waitFor();
+        assert.equal(await slg.locator('.slg-summary-tile').count(), 21);
         assert.equal(await slg.locator('.game-widget-score,.game-widget-pause,.mini-game-board').count(),0);
         const start = slg.getByRole('button',{name:'新規ゲーム'});
         assert(await slg.getByRole('button',{name:'続きから'}).isDisabled());

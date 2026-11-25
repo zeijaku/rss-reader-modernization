@@ -64,11 +64,13 @@
             .data('stock-title', articleActionValue($trigger, 'title'))
             .data('article-context', stockContext ? 'stock' : 'feed')
             .data('stock-id', hasStockId ? stockId : 0);
-        var readerContext = !stockContext && $trigger.closest('[data-feed-content-id]').length > 0;
+        var reader = window.IGuguruDashboardArticleReader;
+        var readerAvailable = !stockContext && ($trigger.closest('[data-feed-content-id]').length > 0
+            || Boolean(reader && reader.readerItemContext(articleActionsTrigger)));
         $menu.find('.article-action-reader')
-            .prop('hidden', !readerContext)
-            .prop('disabled', !readerContext)
-            .attr('aria-disabled', readerContext ? 'false' : 'true');
+            .prop('hidden', !readerAvailable)
+            .prop('disabled', !readerAvailable)
+            .attr('aria-disabled', readerAvailable ? 'false' : 'true');
         $menu.find('.article-action-stock')
             .prop('hidden', stockContext)
             .prop('disabled', stockContext || articleUrl === '')

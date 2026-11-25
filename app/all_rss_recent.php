@@ -319,6 +319,7 @@ function all_rss_recent_execute(int $ownerId, int $widgetId): array
                 $seenItems[$key] = true;
                 $sequence++;
                 $item['source_title'] = $sourceTitle;
+                $item['reader_source'] = ['content_id' => $source->sourceId];
                 $item['_all_rss_timestamp'] = all_rss_recent_item_timestamp($item);
                 $item['_all_rss_sequence'] = $sequence;
                 $items[] = $item;
