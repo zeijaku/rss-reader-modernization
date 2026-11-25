@@ -21,11 +21,14 @@ function pageWithDrawer(allowed) {
         eval('?>' . substr($source, $start, $end - $start + 6));
     `;
     const nav = execFileSync(process.env.PHP_BINARY || 'php', ['-r', fixture, path.join(root, 'public/index.php'), allowed ? '1' : '0'], {encoding:'utf8'});
-    const scripts = ['jquery-3.7.1.min', 'bootstrap.bundle-5.3.8.min', 'dashboard-core', 'openai-widget', 'drawer-categories']
+    // Match the dashboard: utility-widgets builds the catalog before calendar loads the drawer organizer.
+    const scripts = ['jquery-3.7.1.min', 'bootstrap.bundle-5.3.8.min', 'clock-timer', 'dashboard-core',
+        ...(allowed ? ['openai-widget'] : []), 'utility-widgets', 'calendar']
         .map(name => `<script src="/js/${name}.js?v=fixture"></script>`).join('');
     return `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
         <meta name="csrf-token" content="drawer-fixture-csrf"><link rel="stylesheet" href="/css/bootstrap-5.3.8.min.css">
         <link rel="stylesheet" href="/css/dashboard.css"></head><body>
+        <main id="main-content" data-dashboard-current-tab="0" data-dashboard-user-id="1"></main>
         <button type="button" data-bs-toggle="offcanvas" data-bs-target="#drawerMenu">メニュー</button>${nav}${scripts}</body></html>`;
 }
 
@@ -39,6 +42,10 @@ async function verify(browser, width, allowed) {
             const pathname = new URL(route.request().url()).pathname;
             if (pathname === '/') return route.fulfill({body:pageWithDrawer(allowed), contentType:'text/html'});
             if (pathname === '/api_v1.php') {
+                const action = new URLSearchParams(route.request().postData()).get('action');
+                if (action === 'widget.list') {
+                    return route.fulfill({json:{ok:true, data:{widgets:[]}}});
+                }
                 return route.fulfill({status:422, json:{ok:false, error:{message:'fixture'}}});
             }
             const file = path.join(root, 'public', pathname);
@@ -46,13 +53,17 @@ async function verify(browser, width, allowed) {
         });
         await page.goto('http://gpt-drawer.test/');
         await page.locator('[data-drawer-categories]').waitFor({state:'attached'});
-        const item = page.locator('#widgetCatalog-utility [data-openai-add]');
+        assert.equal(await page.locator('#drawerMenu').getAttribute('data-widget-catalog-v115'), '1');
+        const utility = page.locator('#widgetCatalog-utility');
+        await utility.getByRole('button', {name:'Calculator', exact:true, includeHidden:true}).waitFor({state:'attached'});
+        const item = utility.locator('[data-openai-add]');
         assert.equal(await page.locator('[data-openai-add]').count(), allowed ? 1 : 0);
         assert.equal(await item.count(), allowed ? 1 : 0, 'GPT Widget must be classified under Utility');
         if (allowed) {
             await page.getByRole('button', {name:'メニュー', exact:true}).click();
             await page.getByRole('button', {name:'Utility', exact:true}).click();
-            const posted = page.waitForRequest(request => new URL(request.url()).pathname === '/api_v1.php');
+            const posted = page.waitForRequest(request => new URL(request.url()).pathname === '/api_v1.php'
+                && new URLSearchParams(request.postData()).get('action') === 'widget.openai.create');
             await item.click();
             const input = new URLSearchParams((await posted).postData());
             assert.equal(input.get('action'), 'widget.openai.create');

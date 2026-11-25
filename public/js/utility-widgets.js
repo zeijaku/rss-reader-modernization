@@ -599,12 +599,19 @@
         }
 
         var buttons = {};
+        var utilityActions = [];
         var $cursor = $sectionTitle.next();
         while ($cursor.length > 0 && !$cursor.hasClass('drawer-section-title')) {
             var $next = $cursor.next();
             var $button = $cursor.find('button[data-drawer-modal-target]').first();
             if ($button.length > 0) {
                 buttons[String($button.attr('data-drawer-modal-target') || '')] = $button.detach();
+            } else {
+                var $action = $cursor.children('button[data-drawer-widget-category="utility"]');
+                if ($action.length > 0) {
+                    // Detach direct actions before removing their rows to preserve click handlers.
+                    utilityActions.push($action.detach().addClass('widget-catalog-tile w-100'));
+                }
             }
             $cursor.remove();
             $cursor = $next;
@@ -652,7 +659,7 @@
                 take('#registerLinksWidget', 'Links'),
                 take('#registerClock', 'Clock'),
                 take('#registerMemo', 'Memo')
-            ]),
+            ].concat(utilityActions)),
             catalogCategory('game', 'Game', 'fas fa-gamepad', false, [
                 take('#registerGameWidget', 'Game').attr('data-game-preset', 'icon_quest'),
                 catalogButton('#registerGameWidget', 'Lights Out', 'fas fa-lightbulb').attr('data-game-preset', 'lights_out'),
