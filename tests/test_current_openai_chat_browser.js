@@ -53,7 +53,10 @@ async function verify(browser, width) {
         page.on('pageerror', error => errors.push(error.message));
         await page.addInitScript(() => {
             Object.defineProperty(navigator, 'clipboard', {
-                value: {writeText: async text => { window.copiedCode = text; }}
+                value: {writeText: async text => {
+                    if (window.clipboardBlocked) throw new Error('Clipboard unavailable');
+                    window.copiedCode = text;
+                }}
             });
             window.SpeechRecognition = undefined;
             window.webkitSpeechRecognition = class {
@@ -86,7 +89,7 @@ async function verify(browser, width) {
                     if (sent.length > 1) return route.fulfill({status: 429, json: {ok: false, error: {message: '送信制限'}}});
                     await pending;
                     thread.messages.push({role: 'user', content: input.get('prompt')},
-                        {role: 'assistant', content: '長い回答です。\n'.repeat(28) + '\n' + formattedAnswer});
+                        {role: 'assistant', content: '長い回答です。\n'.repeat(28) + '\n' + formattedAnswer, truncated: true});
                 }
                 return route.fulfill({json: {ok: true, data: {threads: [thread], can_send: true, model: 'gpt-6.2-sol'}}});
             }
@@ -112,6 +115,10 @@ async function verify(browser, width) {
         await settings.click();
         const modal = panel.getByRole('dialog', {name: 'GPT Widgetの設定'});
         await modal.getByRole('button', {name: 'Widgetを削除'}).waitFor();
+        const modalHeader = modal.locator('.modal-header');
+        assert.equal(await modalHeader.evaluate(node => getComputedStyle(node).backgroundColor),
+            await panel.locator('header').evaluate(node => getComputedStyle(node).backgroundColor));
+        assert.equal(await modalHeader.getByRole('button', {name: '閉じる'}).getAttribute('data-bs-theme'), 'dark');
         await modal.locator('.modal-footer').getByRole('button', {name: '閉じる'}).click();
         await modal.waitFor({state: 'hidden'});
         await page.evaluate(() => { window.speechError = 'audio-capture'; });
@@ -201,6 +208,15 @@ async function verify(browser, width) {
         }), true, 'Messages align to opposite edges without horizontal overflow');
 
         const answer = history.locator('[data-role="assistant"]');
+        const userMessage = history.locator('[data-role="user"]');
+        for (const [message, speaker] of [[answer, 'GPT'], [userMessage, 'あなた']]) {
+            const label = message.locator(':scope > .visually-hidden');
+            assert.equal(await label.textContent(), speaker);
+            assert(await label.evaluate(node => node.clientWidth <= 1 && node.clientHeight <= 1));
+        }
+        assert.notEqual(await userMessage.evaluate(node => getComputedStyle(node).backgroundColor),
+            await answer.evaluate(node => getComputedStyle(node).backgroundColor));
+        await answer.getByText('回答の一部を表示しています。', {exact: true}).waitFor({state: 'visible'});
         assert.equal(await answer.getByRole('heading', {name: '使い方'}).count(), 1);
         assert.equal(await answer.locator('li strong').textContent(), '重要');
         assert.equal(await answer.locator('ol').getAttribute('start'), '3');
@@ -216,9 +232,18 @@ async function verify(browser, width) {
         const block = answer.locator('.openai-message-code');
         assert.equal(await block.locator('pre code').textContent(), codeExample);
         assert(await block.locator('pre').evaluate(node => node.scrollWidth > node.clientWidth));
-        await block.getByRole('button', {name: 'コピー', exact: true}).click();
-        await block.getByRole('button', {name: 'コピー済み', exact: true}).waitFor();
+        const copy = block.getByRole('button', {name: 'コードをコピー', exact: true});
+        assert(await copy.locator('.fa-copy').evaluate(icon => getComputedStyle(icon, '::before').content !== 'none'));
+        const copyWidth = (await copy.boundingBox()).width;
+        await copy.click();
+        const copied = block.getByRole('button', {name: 'コピー済み', exact: true});
+        await copied.locator('.fa-check').waitFor();
+        assert.equal((await copied.boundingBox()).width, copyWidth);
         assert.equal(await page.evaluate(() => window.copiedCode), codeExample);
+        await page.evaluate(() => { window.clipboardBlocked = true; });
+        await copied.click();
+        await block.getByRole('button', {name: 'コードを選択しました', exact: true}).waitFor();
+        assert.equal(await page.evaluate(() => window.getSelection().toString()), codeExample);
 
         await prompt.fill('ボタンで再送');
         await send.click();

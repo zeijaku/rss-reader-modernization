@@ -33,9 +33,9 @@
     <div class="modal fade" id="openai-settings-<?php echo $widgetId; ?>" data-openai-settings-modal tabindex="-1" aria-labelledby="openai-settings-title-<?php echo $widgetId; ?>" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h2 class="modal-title fs-5" id="openai-settings-title-<?php echo $widgetId; ?>">GPT Widgetの設定</h2>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+                <div class="modal-header text-bg-primary">
+                    <h2 class="modal-title fs-5" id="openai-settings-title-<?php echo $widgetId; ?>"><i class="fas fa-edit me-1" aria-hidden="true"></i>GPT Widgetの設定</h2>
+                    <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-outline-danger me-auto" data-openai-delete disabled><i class="fas fa-trash-alt" aria-hidden="true"></i> Widgetを削除</button>

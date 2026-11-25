@@ -89,9 +89,19 @@
         name.textContent = language || 'コード';
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'btn btn-sm btn-outline-secondary';
-        button.textContent = 'コピー';
-        button.setAttribute('aria-live', 'polite');
+        button.className = 'btn btn-sm btn-link openai-message-copy';
+        const icon = document.createElement('i');
+        icon.setAttribute('aria-hidden', 'true');
+        const feedback = document.createElement('span');
+        feedback.className = 'visually-hidden';
+        feedback.setAttribute('aria-live', 'polite');
+        button.append(icon, feedback);
+        function showCopyState(label, iconClass) {
+            button.title = label;
+            feedback.textContent = label;
+            icon.className = iconClass;
+        }
+        showCopyState('コードをコピー', 'far fa-copy');
         const pre = document.createElement('pre');
         pre.tabIndex = 0;
         const code = document.createElement('code');
@@ -99,18 +109,18 @@
         button.addEventListener('click', async () => {
             try {
                 await window.navigator.clipboard.writeText(text);
-                button.textContent = 'コピー済み';
+                showCopyState('コピー済み', 'fas fa-check');
             } catch {
                 const selection = window.getSelection();
                 if (!selection) {
-                    button.textContent = 'コピーできませんでした';
+                    showCopyState('コピーできませんでした', 'fas fa-exclamation-circle');
                     return;
                 }
                 const range = document.createRange();
                 range.selectNodeContents(code);
                 selection.removeAllRanges();
                 selection.addRange(range);
-                button.textContent = 'コードを選択しました';
+                showCopyState('コードを選択しました', 'fas fa-i-cursor');
             }
         });
         toolbar.append(name, button);
@@ -336,13 +346,20 @@
             } else {
                 for (const message of thread.messages) {
                     const entry = document.createElement('div');
-                    const label = document.createElement('strong');
+                    const label = document.createElement('span');
                     const content = message.role === 'assistant' ? renderAnswer(message.content) : document.createElement('p');
                     entry.className = 'openai-widget-message';
                     entry.dataset.role = message.role;
-                    label.textContent = message.role === 'user' ? 'あなた' : (message.truncated ? 'GPT（回答の一部）' : 'GPT');
+                    label.className = 'visually-hidden';
+                    label.textContent = message.role === 'user' ? 'あなた' : 'GPT';
                     if (message.role !== 'assistant') content.textContent = message.content;
                     entry.append(label, content);
+                    if (message.truncated) {
+                        const notice = document.createElement('small');
+                        notice.className = 'openai-message-notice text-muted';
+                        notice.textContent = '回答の一部を表示しています。';
+                        entry.append(notice);
+                    }
                     messages.append(entry);
                 }
                 messages.scrollTop = messages.scrollHeight;
