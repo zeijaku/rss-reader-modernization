@@ -22,8 +22,9 @@
             <div class="openai-widget-messages" data-openai-messages tabindex="0" role="region" aria-label="会話の履歴"></div>
             <form class="openai-widget-form" data-openai-form method="post" action="./">
                 <label class="visually-hidden" for="openai-prompt-<?php echo $widgetId; ?>">メッセージ</label>
-                <textarea class="form-control" id="openai-prompt-<?php echo $widgetId; ?>" data-openai-prompt rows="2" placeholder="GPTにメッセージを送る" disabled required></textarea>
+                <textarea class="form-control" id="openai-prompt-<?php echo $widgetId; ?>" data-openai-prompt rows="2" placeholder="GPTにメッセージを送る" aria-describedby="openai-shortcut-<?php echo $widgetId; ?>" disabled required></textarea>
                 <button type="submit" class="btn btn-primary" data-openai-send disabled>送信</button>
+                <small class="openai-widget-shortcut text-muted" id="openai-shortcut-<?php echo $widgetId; ?>">Shift＋Enterで送信</small>
             </form>
             <div class="openai-widget-footer">
                 <small data-openai-status role="status" aria-live="polite">会話を読み込み中…</small>

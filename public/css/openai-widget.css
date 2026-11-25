@@ -6,7 +6,7 @@
     color: var(--bs-body-color, #212529);
 }
 
-.openai-widget-header, .openai-widget-threads, .openai-widget-form, .openai-widget-footer {
+.openai-widget-header, .openai-widget-threads, .openai-widget-footer {
     display: flex;
     align-items: center;
     gap: .5rem;
@@ -30,15 +30,30 @@
 }
 
 .openai-widget-message {
+    inline-size: fit-content;
+    max-inline-size: 88%;
     padding: .6rem .7rem;
     margin-block-end: .55rem;
+    margin-inline-end: auto;
     border-radius: .4rem;
     background: var(--bs-body-bg, #fff);
 }
-.openai-widget-message[data-role="user"] { border-inline-start: .25rem solid var(--bs-primary, #0d6efd); }
+.openai-widget-message[data-role="user"] {
+    margin-inline: auto 0;
+    border-inline-end: .25rem solid var(--bs-primary, #0d6efd);
+}
 .openai-widget-message strong { display: block; margin-block-end: .2rem; font-size: .8rem; }
 .openai-widget-message p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.openai-widget-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: .2rem .5rem;
+}
 .openai-widget-form textarea { min-width: 0; resize: vertical; }
+.openai-widget-form button { white-space: nowrap; }
+.openai-widget-shortcut { grid-column: 1 / -1; }
+.openai-widget-form[data-openai-sending] .openai-widget-shortcut { visibility: hidden; }
 .openai-widget-footer { min-height: 1.25rem; flex-wrap: wrap; justify-content: space-between; }
 
 @media (min-width: 768px) {

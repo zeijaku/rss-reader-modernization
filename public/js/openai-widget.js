@@ -12,6 +12,7 @@
         const deleteWidget = get('delete');
         const refresh = get('refresh');
         const messages = get('messages');
+        const form = get('form');
         const prompt = get('prompt');
         const send = get('send');
         const status = get('status');
@@ -86,6 +87,7 @@
             if (busy) return null;
             busy = true;
             card.setAttribute('aria-busy', 'true');
+            form.toggleAttribute('data-openai-sending', action === 'send');
             status.textContent = pendingText;
             syncControls();
             try {
@@ -98,6 +100,7 @@
             } finally {
                 busy = false;
                 card.setAttribute('aria-busy', 'false');
+                form.removeAttribute('data-openai-sending');
                 syncControls();
             }
             return null;
@@ -114,6 +117,13 @@
             status.textContent = encoder.encode(prompt.value.trim()).length > 4000 ? 'メッセージが4,000バイトを超えています。' : '';
             syncControls();
         });
+        prompt.addEventListener('keydown', event => {
+            // Some browsers report 229 for Enter while an IME is confirming text.
+            if (event.key !== 'Enter' || !event.shiftKey || event.ctrlKey || event.altKey || event.metaKey
+                || event.isComposing || event.keyCode === 229) return;
+            event.preventDefault();
+            if (!event.repeat && !send.disabled) form.requestSubmit();
+        });
         refresh.addEventListener('click', reload);
         create.addEventListener('click', async () => {
             const data = await request('new', {}, '会話を作成中…');
@@ -128,7 +138,7 @@
             if (!window.confirm('GPT Widgetと保存した会話を削除しますか？')) return;
             if (await request('delete', {}, 'Widgetを削除中…')) window.location.reload();
         });
-        get('form').addEventListener('submit', async event => {
+        form.addEventListener('submit', async event => {
             event.preventDefault();
             const thread = currentThread();
             if (!thread || send.disabled) return;
