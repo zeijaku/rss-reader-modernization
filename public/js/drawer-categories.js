@@ -168,10 +168,16 @@
             var $grid;
             var $toggle;
             var $collapse;
+            var entries = [];
             category.targets.forEach(function (target) {
-                var $direct = itemByModalTarget($menu, target);
+                appendUnique(entries, itemByModalTarget($menu, target));
+            });
+            $menu.children('li').children('.drawer-menu-action[data-drawer-widget-category="' + category.id + '"]').parent().each(function () {
+                appendUnique(entries, $(this));
+            });
+            entries.forEach(function (entry) {
+                var $direct = $(entry);
                 var $button;
-                if ($direct.length === 0) { return; }
                 if ($item.length === 0) {
                     $item = $('<li>').addClass('widget-catalog-category').attr('data-widget-catalog-category', category.id);
                     $toggle = $('<button>').attr({type: 'button', 'data-bs-toggle': 'collapse', 'data-bs-target': '#widgetCatalog-' + category.id, 'aria-controls': 'widgetCatalog-' + category.id, 'aria-expanded': 'false'})

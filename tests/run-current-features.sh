@@ -67,6 +67,10 @@ echo '== Current feature contracts: Drawer / mobile navigation =='
 python3 "$SCRIPT_DIR/test_current_drawer_contract.py"
 node --check "$ROOT/public/js/drawer-categories.js"
 node --check "$ROOT/tests/test_current_drawer_browser.js"
+node --check "$ROOT/tests/test_current_openai_drawer_browser.js"
+if [ -n "${GAME_TEST_CHROME:-}" ]; then
+    node "$ROOT/tests/test_current_openai_drawer_browser.js"
+fi
 
 echo '== Current feature contracts: Feed Category =='
 php "$SCRIPT_DIR/test_current_feed_category.php"

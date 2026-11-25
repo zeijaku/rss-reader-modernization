@@ -545,7 +545,7 @@ function search_feed_form_fields(string $prefix): string
         <!-- Widget -->
         <li class="drawer-section-title"><i class="fas fa-th-large fa-fw" aria-hidden="true"></i><span>Widget追加</span></li>
         <?php if ($showOpenaiWidget): ?>
-        <li><button type="button" class="btn btn-link text-muted drawer-item" data-openai-add="<?php echo $addTargetLocation; ?>"><span class="drawer-item-icon"><i class="fas fa-comment-dots fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">GPT Widget</span></button></li>
+        <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-widget-category="utility" data-openai-add="<?php echo $addTargetLocation; ?>"><span class="drawer-item-icon"><i class="fas fa-comment-dots fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">GPT Widget</span></button></li>
         <?php endif; ?>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerContent"><span class="drawer-item-icon"><i class="fas fa-rss fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">RSS追加</span></button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerSearchFeed"><span class="drawer-item-icon"><i class="fas fa-search fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Search Feed追加</span></button></li>
