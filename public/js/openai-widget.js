@@ -2,6 +2,180 @@
     'use strict';
 
     const core = window.IGuguruDashboardCore;
+    // Match code and Markdown links before looking for bare URLs.
+    const inlinePattern = new RegExp([
+        /\\(?<escaped>[\\\x60*_[\]{}()!#>.+|-])/,
+        /(?<ticks>\x60+)(?<literal>[^\n]+?)\k<ticks>/,
+        /(?<image>!?)\[(?<label>[^\]\n]+)\]\((?<destination><[^<>\n]*>|(?:[^()\s]|\([^()\s]*\))+)(?:[ \t]+"[^"\n]*")?\)/,
+        /<(?<enclosed>https?:\/\/[^<>\s]+)>/,
+        /<\/?[a-z][\w:-]*(?:\s[^<>\n]*)?\/?>/,
+        /(?<bare>https?:\/\/[^\s<>"'\x60*。、，．！？；：「」『』【】（）〈〉《》]+)/,
+        /\*\*(?<bold>[^\s*](?:[^*\n]*[^\s*])?)\*\*/
+    ].map(pattern => pattern.source).join('|'), 'gi');
+
+    function makeLink(label, destination) {
+        if (!/^https?:\/\//i.test(destination)) return null;
+        try {
+            const url = new URL(destination);
+            if (url.username || url.password) return null;
+            const link = document.createElement('a');
+            link.href = url.href;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = label;
+            return link;
+        } catch {
+            return null;
+        }
+    }
+
+    function appendInline(container, text) {
+        let end = 0;
+        for (const match of text.matchAll(inlinePattern)) {
+            const source = match[0];
+            const {escaped, ticks, literal, image, label, destination, enclosed, bare, bold} = match.groups;
+            container.append(text.slice(end, match.index));
+            end = match.index + source.length;
+            if (escaped) {
+                container.append(escaped);
+            } else if (ticks) {
+                const code = document.createElement('code');
+                code.textContent = literal;
+                container.append(code);
+            } else if (label && !image) {
+                const url = destination.startsWith('<') ? destination.slice(1, -1) : destination;
+                container.append(makeLink(label, url) || source);
+            } else if (enclosed || bare) {
+                let url = enclosed || bare.replace(/[.,;:!?]+$/, '');
+                if (bare) {
+                    const brackets = {'(': ')', '[': ']', '{': '}'};
+                    for (const [open, close] of Object.entries(brackets)) {
+                        const extra = url.split(close).length - url.split(open).length;
+                        for (let index = 0; index < extra && url.endsWith(close); index++) {
+                            url = url.slice(0, -1);
+                        }
+                    }
+                }
+                const link = makeLink(url, url);
+                container.append(link || source);
+                if (link && bare) container.append(bare.slice(url.length));
+            } else if (bold) {
+                const strong = document.createElement('strong');
+                appendInline(strong, bold);
+                container.append(strong);
+            } else {
+                container.append(source);
+            }
+        }
+        container.append(text.slice(end));
+    }
+
+    function codeBlock(text, language) {
+        const block = document.createElement('div');
+        block.className = 'openai-message-code';
+        const toolbar = document.createElement('div');
+        toolbar.className = 'openai-message-code-toolbar';
+        const name = document.createElement('span');
+        name.textContent = language || 'コード';
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'btn btn-sm btn-outline-secondary';
+        button.textContent = 'コピー';
+        button.setAttribute('aria-live', 'polite');
+        const pre = document.createElement('pre');
+        pre.tabIndex = 0;
+        const code = document.createElement('code');
+        code.textContent = text;
+        button.addEventListener('click', async () => {
+            try {
+                await window.navigator.clipboard.writeText(text);
+                button.textContent = 'コピー済み';
+            } catch {
+                const selection = window.getSelection();
+                if (!selection) {
+                    button.textContent = 'コピーできませんでした';
+                    return;
+                }
+                const range = document.createRange();
+                range.selectNodeContents(code);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                button.textContent = 'コードを選択しました';
+            }
+        });
+        toolbar.append(name, button);
+        pre.append(code);
+        block.append(toolbar, pre);
+        return block;
+    }
+
+    function renderAnswer(text) {
+        const body = document.createElement('div');
+        body.className = 'openai-message-body';
+        const lines = text.replace(/\r\n?/g, '\n').split('\n');
+        const listItem = /^ {0,3}([-+*]|\d{1,9}[.)])[ \t]+(.+)$/;
+        const quoteLine = /^ {0,3}>[ \t]?(.*)$/;
+        let paragraph = [];
+
+        function flushParagraph() {
+            if (!paragraph.length) return;
+            const node = document.createElement('p');
+            appendInline(node, paragraph.join('\n'));
+            body.append(node);
+            paragraph = [];
+        }
+
+        for (let index = 0; index < lines.length;) {
+            const line = lines[index++];
+            const fence = /^ {0,3}(\x60{3,}|~{3,})[ \t]*([^\s\x60~]+)?[ \t]*$/.exec(line);
+            const heading = /^ {0,3}(#{1,6})[ \t]+(.+)$/.exec(line);
+            const item = listItem.exec(line);
+            const quote = quoteLine.exec(line);
+
+            if (line.trim() && !fence && !heading && !item && !quote) {
+                paragraph.push(line);
+                continue;
+            }
+            flushParagraph();
+
+            if (fence) {
+                const close = new RegExp('^ {0,3}' + fence[1][0] + '{' + fence[1].length + ',}[ \\t]*$');
+                const start = index;
+                while (index < lines.length && !close.test(lines[index])) index++;
+                body.append(codeBlock(lines.slice(start, index).join('\n'), fence[2]));
+                if (index < lines.length) index++;
+            } else if (heading) {
+                const node = document.createElement('h' + Math.min(heading[1].length + 2, 6));
+                appendInline(node, heading[2].replace(/[ \t]+#+[ \t]*$/, ''));
+                body.append(node);
+            } else if (item) {
+                const ordered = /^\d/.test(item[1]);
+                const list = document.createElement(ordered ? 'ol' : 'ul');
+                if (ordered) list.start = parseInt(item[1], 10);
+                let next = item;
+                do {
+                    const li = document.createElement('li');
+                    appendInline(li, next[2]);
+                    list.append(li);
+                    next = listItem.exec(lines[index] ?? '');
+                    if (!next || ordered !== /^\d/.test(next[1])) break;
+                    index++;
+                } while (true);
+                body.append(list);
+            } else if (quote) {
+                const quoted = [quote[1]];
+                for (let next = quoteLine.exec(lines[index] ?? ''); next; next = quoteLine.exec(lines[index] ?? '')) {
+                    quoted.push(next[1]);
+                    index++;
+                }
+                const block = document.createElement('blockquote');
+                appendInline(block, quoted.join('\n'));
+                body.append(block);
+            }
+        }
+        flushParagraph();
+        return body;
+    }
 
     function bindCard(card) {
         const widgetId = card.dataset.dashboardWidgetId;
@@ -57,11 +231,11 @@
                 for (const message of thread.messages) {
                     const entry = document.createElement('div');
                     const label = document.createElement('strong');
-                    const content = document.createElement('p');
+                    const content = message.role === 'assistant' ? renderAnswer(message.content) : document.createElement('p');
                     entry.className = 'openai-widget-message';
                     entry.dataset.role = message.role;
                     label.textContent = message.role === 'user' ? 'あなた' : (message.truncated ? 'GPT（回答の一部）' : 'GPT');
-                    content.textContent = message.content;
+                    if (message.role !== 'assistant') content.textContent = message.content;
                     entry.append(label, content);
                     messages.append(entry);
                 }

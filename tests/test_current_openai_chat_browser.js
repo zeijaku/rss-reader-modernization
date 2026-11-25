@@ -7,6 +7,24 @@ const {execFileSync} = require('node:child_process');
 const {chromium} = require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES
     ? path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, 'playwright') : 'playwright');
 const root = path.resolve(__dirname, '..');
+const fence = String.fromCharCode(96).repeat(3);
+const codeExample = '    echo "<script>alert(1)</script>";\n    // ' + 'longline'.repeat(32);
+const formattedAnswer = [
+    '## 使い方',
+    '- **重要**な設定',
+    '- [公式ガイド](https://example.test/reference_(PHP)?page=1)',
+    '3. 設定を保存',
+    '> 設定の補足',
+    '',
+    '「https://example.test/weather?city=hiroshima&day=1」。続けて確認できます。',
+    '文中の \x60https://example.test/code\x60 はコードです。',
+    '[無効なリンク](javascript:alert(1))、<img src="https://example.test/tracker" onerror="alert(1)">',
+    '![画像](https://example.test/pixel.png)',
+    '',
+    fence + 'php',
+    codeExample,
+    fence
+].join('\n');
 
 const widget = {
     widget_id: 5, widget_owner: 7, widget_location: 0, widget_type: 'openai_chat', widget_flag: 0,
@@ -33,6 +51,11 @@ async function verify(browser, width) {
     try {
         const page = await context.newPage();
         page.on('pageerror', error => errors.push(error.message));
+        await page.addInitScript(() => {
+            Object.defineProperty(navigator, 'clipboard', {
+                value: {writeText: async text => { window.copiedCode = text; }}
+            });
+        });
         await context.route('http://gpt-chat.test/**', async route => {
             const pathname = new URL(route.request().url()).pathname;
             if (pathname === '/') return route.fulfill({body: html, contentType: 'text/html'});
@@ -43,7 +66,7 @@ async function verify(browser, width) {
                     if (sent.length > 1) return route.fulfill({status: 429, json: {ok: false, error: {message: '送信制限'}}});
                     await pending;
                     thread.messages.push({role: 'user', content: input.get('prompt')},
-                        {role: 'assistant', content: '長い回答です。\n'.repeat(28) + 'https://example.test/' + 'longtext'.repeat(30)});
+                        {role: 'assistant', content: '長い回答です。\n'.repeat(28) + '\n' + formattedAnswer});
                 }
                 return route.fulfill({json: {ok: true, data: {threads: [thread], can_send: true, model: 'gpt-6.2-sol'}}});
             }
@@ -118,6 +141,26 @@ async function verify(browser, width) {
                 && user.left > assistant.left && box.scrollWidth <= box.clientWidth + 1;
         }), true, 'Messages align to opposite edges without horizontal overflow');
 
+        const answer = history.locator('[data-role="assistant"]');
+        assert.equal(await answer.getByRole('heading', {name: '使い方'}).count(), 1);
+        assert.equal(await answer.locator('li strong').textContent(), '重要');
+        assert.equal(await answer.locator('ol').getAttribute('start'), '3');
+        assert.equal(await answer.locator('blockquote').textContent(), '設定の補足');
+        assert.equal(await answer.locator('p code').textContent(), 'https://example.test/code');
+        const links = answer.getByRole('link');
+        assert.deepEqual(await links.evaluateAll(nodes => nodes.map(node => [node.href, node.target, node.rel])), [
+            ['https://example.test/reference_(PHP)?page=1', '_blank', 'noopener noreferrer'],
+            ['https://example.test/weather?city=hiroshima&day=1', '_blank', 'noopener noreferrer']
+        ]);
+        assert.equal(await answer.locator('img, script').count(), 0);
+        assert((await answer.textContent()).includes('[無効なリンク](javascript:alert(1))'));
+        const block = answer.locator('.openai-message-code');
+        assert.equal(await block.locator('pre code').textContent(), codeExample);
+        assert(await block.locator('pre').evaluate(node => node.scrollWidth > node.clientWidth));
+        await block.getByRole('button', {name: 'コピー', exact: true}).click();
+        await block.getByRole('button', {name: 'コピー済み', exact: true}).waitFor();
+        assert.equal(await page.evaluate(() => window.copiedCode), codeExample);
+
         await prompt.fill('ボタンで再送');
         await send.click();
         await status.getByText('送信制限', {exact: true}).waitFor();
@@ -126,7 +169,7 @@ async function verify(browser, width) {
         await status.getByText('Shift＋Enterで送信', {exact: true}).waitFor();
         assert.deepEqual(sent, ['日本語テスト\n', 'ボタンで再送']);
         assert.deepEqual(errors, []);
-        console.log('PASS: GPT Widget one-line status, header model, scroll, shortcuts and message alignment at ' + width + 'px');
+        console.log('PASS: GPT Widget formatting, safe links, copy, scroll and shortcuts at ' + width + 'px');
     } finally {
         finishSend();
         await context.close();
