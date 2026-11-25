@@ -17,6 +17,7 @@
         const send = get('send');
         const status = get('status');
         const model = get('model');
+        const shortcut = 'Shift＋Enterで送信';
         const drafts = new Map();
         const encoder = new TextEncoder();
         let state = null;
@@ -25,6 +26,11 @@
 
         function currentThread() {
             return state?.threads.find(thread => thread.id === active);
+        }
+
+        function showStatus(text) {
+            status.textContent = text;
+            status.title = text;
         }
 
         function syncControls() {
@@ -78,8 +84,9 @@
             }
             picker.value = active;
             model.textContent = data.model;
-            status.textContent = data.truncated ? '回答の一部を表示しています。'
-                : (data.can_send ? '' : 'サーバーにOpenAI APIキーとPHP cURLを設定してください。');
+            model.title = data.model;
+            showStatus(data.truncated ? '回答の一部を表示しています。'
+                : (data.can_send ? shortcut : 'サーバーにOpenAI APIキーとPHP cURLを設定してください。'));
             paintMessages();
         }
 
@@ -87,20 +94,18 @@
             if (busy) return null;
             busy = true;
             card.setAttribute('aria-busy', 'true');
-            form.toggleAttribute('data-openai-sending', action === 'send');
-            status.textContent = pendingText;
+            showStatus(pendingText);
             syncControls();
             try {
                 const result = await core.apiRequestPromise('widget.openai.' + action, {widget_id: widgetId, ...payload},
                     action === 'send' ? 45000 : 6000);
                 if (result?.ok && result.data) return result.data;
-                status.textContent = result?.error?.message || 'GPT Widgetを更新できませんでした。';
+                showStatus(result?.error?.message || 'GPT Widgetを更新できませんでした。');
             } catch (failure) {
-                status.textContent = core.apiErrorMessage(failure.xhr || null, failure.textStatus || '');
+                showStatus(core.apiErrorMessage(failure.xhr || null, failure.textStatus || ''));
             } finally {
                 busy = false;
                 card.setAttribute('aria-busy', 'false');
-                form.removeAttribute('data-openai-sending');
                 syncControls();
             }
             return null;
@@ -114,7 +119,7 @@
         picker.addEventListener('change', () => { active = picker.value; paintMessages(); });
         prompt.addEventListener('input', () => {
             drafts.set(active, prompt.value);
-            status.textContent = encoder.encode(prompt.value.trim()).length > 4000 ? 'メッセージが4,000バイトを超えています。' : '';
+            showStatus(encoder.encode(prompt.value.trim()).length > 4000 ? 'メッセージが4,000バイトを超えています。' : shortcut);
             syncControls();
         });
         prompt.addEventListener('keydown', event => {

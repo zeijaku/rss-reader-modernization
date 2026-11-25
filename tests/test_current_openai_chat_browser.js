@@ -18,8 +18,8 @@ const card = execFileSync(process.env.PHP_BINARY || 'php',
     {encoding: 'utf8', env: {...process.env, APP_OPENAI_USER_ID: '7'}});
 const html = '<!doctype html><html lang="ja"><head><meta charset="utf-8">'
     + '<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="csrf-token" content="fixture">'
-    + ['bootstrap-5.3.8.min', 'dashboard', 'openai-widget'].map(name => '<link rel="stylesheet" href="/css/' + name + '.css">').join('')
-    + '</head><body>' + card
+    + ['bootstrap-5.3.8.min', 'all', 'dashboard', 'openai-widget'].map(name => '<link rel="stylesheet" href="/css/' + name + '.css">').join('')
+    + '</head><body><main id="main-content">' + card + '</main>'
     + ['jquery-3.7.1.min', 'dashboard-core', 'openai-widget'].map(name => '<script src="/js/' + name + '.js"></script>').join('')
     + '</body></html>';
 
@@ -43,9 +43,9 @@ async function verify(browser, width) {
                     if (sent.length > 1) return route.fulfill({status: 429, json: {ok: false, error: {message: '送信制限'}}});
                     await pending;
                     thread.messages.push({role: 'user', content: input.get('prompt')},
-                        {role: 'assistant', content: 'https://example.test/' + 'longtext'.repeat(30)});
+                        {role: 'assistant', content: '長い回答です。\n'.repeat(28) + 'https://example.test/' + 'longtext'.repeat(30)});
                 }
-                return route.fulfill({json: {ok: true, data: {threads: [thread], can_send: true, model: 'gpt-6-luna'}}});
+                return route.fulfill({json: {ok: true, data: {threads: [thread], can_send: true, model: 'gpt-6.2-sol'}}});
             }
             const file = path.join(root, 'public', pathname);
             return fs.existsSync(file) && fs.statSync(file).isFile() ? route.fulfill({path: file}) : route.fulfill({status: 404});
@@ -54,15 +54,26 @@ async function verify(browser, width) {
         const panel = page.locator('.openai-widget');
         const form = panel.locator('[data-openai-form]');
         const prompt = panel.getByRole('textbox', {name: 'メッセージ'});
-        const hint = panel.getByText('Shift＋Enterで送信', {exact: true});
         const send = panel.getByRole('button', {name: '送信', exact: true});
         const status = panel.getByRole('status');
         const history = panel.getByRole('region', {name: '会話の履歴'});
+        const model = panel.locator('header [data-openai-model]');
 
         await history.getByText('メッセージを入力してください。').waitFor();
-        await hint.waitFor({state: 'visible'});
-        assert((await hint.boundingBox()).y >= (await prompt.boundingBox()).y + (await prompt.boundingBox()).height);
-        const formHeight = await form.evaluate(node => node.getBoundingClientRect().height);
+        await status.getByText('Shift＋Enterで送信', {exact: true}).waitFor();
+        await model.getByText('gpt-6.2-sol', {exact: true}).waitFor();
+        assert(await model.evaluate(node => {
+            const rect = node.getBoundingClientRect();
+            const header = node.parentElement.getBoundingClientRect();
+            return rect.right >= header.left + header.width / 2 && node.clientWidth >= node.scrollWidth;
+        }), 'The configured model fits on the right of the header');
+        assert(await send.locator('.fa-paper-plane').evaluate(icon => getComputedStyle(icon, '::before').content !== 'none'));
+        assert(await status.evaluate(node => getComputedStyle(node).whiteSpace === 'nowrap'));
+        const statusBox = await status.boundingBox();
+        const promptBox = await prompt.boundingBox();
+        assert(statusBox.y >= promptBox.y + promptBox.height);
+        const formBox = await form.boundingBox();
+        const historyHeight = await history.evaluate(node => node.clientHeight);
         await prompt.press('Shift+Enter');
         assert(await send.isDisabled(), 'Empty input remains unsendable');
         await prompt.fill('あ'.repeat(1334));
@@ -80,14 +91,23 @@ async function verify(browser, width) {
         }), 'false', 'IME confirmation does not send');
 
         await prompt.press('Shift+Enter');
-        await page.getByText('GPTが回答を生成中…', {exact: true}).waitFor();
-        await hint.waitFor({state: 'hidden'});
-        assert.equal(await form.evaluate(node => node.getBoundingClientRect().height), formHeight);
+        await status.getByText('GPTが回答を生成中…', {exact: true}).waitFor();
+        assert.deepEqual(await status.boundingBox(), statusBox);
+        assert.deepEqual(await form.boundingBox(), formBox);
         assert(await send.isDisabled());
         finishSend();
         await history.locator('[data-role="assistant"]').waitFor();
-        await hint.waitFor({state: 'visible'});
+        await status.getByText('Shift＋Enterで送信', {exact: true}).waitFor();
         assert.equal(await prompt.inputValue(), '');
+        assert.equal(await history.evaluate(node => node.clientHeight), historyHeight);
+        assert.deepEqual(await form.boundingBox(), formBox);
+        assert(await history.evaluate(node => {
+            const bottom = node.scrollHeight - node.clientHeight;
+            return bottom > 0 && Math.abs(node.scrollTop - bottom) <= 1;
+        }), 'Long history scrolls internally and opens at the newest message');
+        await history.press('Control+Home');
+        await page.waitForFunction(() => document.querySelector('[data-openai-messages]').scrollTop === 0);
+        assert.equal((await form.boundingBox()).height, formBox.height);
         assert.equal(await history.evaluate(box => {
             const style = getComputedStyle(box);
             const contentLeft = box.getBoundingClientRect().left + box.clientLeft + parseFloat(style.paddingLeft);
@@ -101,11 +121,12 @@ async function verify(browser, width) {
         await prompt.fill('ボタンで再送');
         await send.click();
         await status.getByText('送信制限', {exact: true}).waitFor();
-        await hint.waitFor({state: 'visible'});
         assert.equal(await prompt.inputValue(), 'ボタンで再送');
+        await prompt.fill('修正した下書き');
+        await status.getByText('Shift＋Enterで送信', {exact: true}).waitFor();
         assert.deepEqual(sent, ['日本語テスト\n', 'ボタンで再送']);
         assert.deepEqual(errors, []);
-        console.log('PASS: GPT Widget shortcut, IME, submission feedback, alignment and button at ' + width + 'px');
+        console.log('PASS: GPT Widget one-line status, header model, scroll, shortcuts and message alignment at ' + width + 'px');
     } finally {
         finishSend();
         await context.close();
