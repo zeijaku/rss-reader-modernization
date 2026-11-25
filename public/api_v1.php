@@ -184,6 +184,10 @@ try {
     if (str_starts_with($action, 'widget.infoboard.')) {
         api_emit(api_info_board_dispatch($action, $userId, $_POST));
     }
+    if (str_starts_with($action, 'widget.openai.')) {
+        require_once dirname(__DIR__) . '/app/api/openai_widget.php';
+        api_emit(api_openai_widget_dispatch($action, $userId, $_POST));
+    }
     if (str_starts_with($action, 'stock.state.')) {
         api_emit(stock_state_api_dispatch($action, $userId, $_POST));
     }

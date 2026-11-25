@@ -1,0 +1,55 @@
+.openai-widget-panel {
+    overflow: hidden;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: .5rem;
+    background: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+}
+
+.openai-widget-header, .openai-widget-threads, .openai-widget-form, .openai-widget-footer {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.openai-widget-header { padding: .4rem .65rem; }
+.openai-widget-header h2 { flex: 1; margin: 0; font-size: 1rem; }
+.openai-widget-body { display: grid; gap: .55rem; padding: .65rem; }
+.openai-widget-threads { flex-wrap: wrap; }
+.openai-widget-threads select { flex: 1 1 8rem; width: auto; min-width: 0; }
+.openai-widget button, .openai-widget select { min-height: 44px; }
+.openai-widget button { min-width: 44px; }
+.openai-widget-messages {
+    height: clamp(12rem, 32vh, 20rem);
+    padding: .65rem;
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: .4rem;
+    background: var(--bs-tertiary-bg, #f6f8fa);
+}
+
+.openai-widget-message {
+    padding: .6rem .7rem;
+    margin-block-end: .55rem;
+    border-radius: .4rem;
+    background: var(--bs-body-bg, #fff);
+}
+.openai-widget-message[data-role="user"] { border-inline-start: .25rem solid var(--bs-primary, #0d6efd); }
+.openai-widget-message strong { display: block; margin-block-end: .2rem; font-size: .8rem; }
+.openai-widget-message p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.openai-widget-form textarea { min-width: 0; resize: vertical; }
+.openai-widget-footer { min-height: 1.25rem; flex-wrap: wrap; justify-content: space-between; }
+
+@media (min-width: 768px) {
+    .dashboard-grid > .openai-widget .openai-widget-panel {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    .dashboard-grid > .openai-widget .openai-widget-body {
+        flex: 1 1 auto;
+        grid-template-rows: auto minmax(12rem, 1fr) auto auto;
+    }
+    .dashboard-grid > .openai-widget .openai-widget-messages { height: auto; }
+}

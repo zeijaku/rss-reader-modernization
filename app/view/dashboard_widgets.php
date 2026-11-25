@@ -300,6 +300,13 @@ if (is_int($content_location)) {
             ';
             continue;
         }
+        if ($widgetType === 'openai_chat') {
+            if (openai_widget_allowed_user($currentUserId)) {
+                require __DIR__ . '/widget_openai_card.php';
+            }
+            continue;
+        }
+
         if ($widgetType === 'links') {
             $linksConfig = is_array($result_content[$i]['widget_config_data'] ?? null)
                 ? $result_content[$i]['widget_config_data']

@@ -220,6 +220,7 @@ if ($token === 'login' && !$authCsrfInvalid) {
 $currentUserId = app_session_user_id();
 $ui = $currentUserId !== null ? user_ui_config($currentUserId) : app_safe_ui_config(default_ui_config());
 $tabParam = app_tab_from_query($_GET['tab'] ?? null);
+$showOpenaiWidget = $currentUserId !== null && is_int($tabParam) && openai_widget_allowed_user($currentUserId);
 
 if ($tabParam === 'stock') {
     $stockRedirectParams = [];
@@ -279,6 +280,9 @@ if ($tabParam === 'stock') {
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/reversi.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/clock-timer.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/memo-widget.css'), ENT_QUOTES, 'UTF-8'); ?>">
+    <?php if ($showOpenaiWidget): ?>
+    <link rel="stylesheet" href="<?php echo app_html(app_asset_url('css/openai-widget.css')); ?>">
+    <?php endif; ?>
     <?php if ($currentUserId === null): ?>
     <link rel="stylesheet" href="<?php echo htmlspecialchars(app_asset_url('css/auth.css'), ENT_QUOTES, 'UTF-8'); ?>">
     <?php endif; ?>
@@ -540,6 +544,9 @@ function search_feed_form_fields(string $prefix): string
 
         <!-- Widget -->
         <li class="drawer-section-title"><i class="fas fa-th-large fa-fw" aria-hidden="true"></i><span>Widget追加</span></li>
+        <?php if ($showOpenaiWidget): ?>
+        <li><button type="button" class="btn btn-link text-muted drawer-item" data-openai-add="<?php echo $addTargetLocation; ?>"><span class="drawer-item-icon"><i class="fas fa-comment-dots fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">GPT Widget</span></button></li>
+        <?php endif; ?>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerContent"><span class="drawer-item-icon"><i class="fas fa-rss fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">RSS追加</span></button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerSearchFeed"><span class="drawer-item-icon"><i class="fas fa-search fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Search Feed追加</span></button></li>
         <li><button type="button" class="btn btn-link text-muted drawer-menu-action drawer-item" data-drawer-modal-target="#registerTaskWidget"><span class="drawer-item-icon"><i class="fas fa-tasks fa-fw" aria-hidden="true"></i></span><span class="drawer-item-label">Task追加</span></button></li>
@@ -609,6 +616,9 @@ function search_feed_form_fields(string $prefix): string
 <script src="<?php echo htmlspecialchars(app_asset_url('js/reversi.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/clock-timer.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-core.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<?php if ($showOpenaiWidget): ?>
+<script src="<?php echo app_html(app_asset_url('js/openai-widget.js')); ?>"></script>
+<?php endif; ?>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-task.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-memo.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-game.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
