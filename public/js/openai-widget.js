@@ -2,6 +2,16 @@
     'use strict';
 
     const core = window.IGuguruDashboardCore;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const speechErrors = {
+        'audio-capture': 'マイクが見つかりません。接続を確認してください。',
+        'not-allowed': 'ブラウザーのサイト設定でマイクを許可してください。',
+        'service-not-allowed': '音声認識サービスを利用できません。',
+        'no-speech': '音声を認識できませんでした。',
+        'language-not-supported': 'このブラウザーは日本語の音声入力に対応していません。',
+        network: '音声認識サービスに接続できませんでした。'
+    };
+    let microphoneInUse = false;
     // Match code and Markdown links before looking for bare URLs.
     const inlinePattern = new RegExp([
         /\\(?<escaped>[\\\x60*_[\]{}()!#>.+|-])/,
@@ -185,9 +195,13 @@
         const remove = get('remove');
         const deleteWidget = get('delete');
         const refresh = get('refresh');
+        const settings = get('settings');
+        const settingsModal = get('settings-modal');
         const messages = get('messages');
         const form = get('form');
         const prompt = get('prompt');
+        const mic = get('mic');
+        const micIcon = mic.querySelector('i');
         const send = get('send');
         const status = get('status');
         const model = get('model');
@@ -197,6 +211,9 @@
         let state = null;
         let active = '';
         let busy = false;
+        let speech = null;
+        let speechStarted = false;
+        let stoppingSpeech = false;
 
         function currentThread() {
             return state?.threads.find(thread => thread.id === active);
@@ -209,14 +226,103 @@
 
         function syncControls() {
             const canType = !busy && state?.can_send && Boolean(active);
+            const locked = busy || speech !== null;
             const length = encoder.encode(prompt.value.trim()).length;
-            refresh.disabled = busy;
-            deleteWidget.disabled = busy || !state;
-            picker.disabled = busy || !state?.threads.length;
-            create.disabled = busy || !state || state.threads.length >= 6;
-            remove.disabled = busy || !active;
+            refresh.disabled = locked;
+            settings.disabled = locked || !state;
+            deleteWidget.disabled = settings.disabled;
+            picker.disabled = locked || !state?.threads.length;
+            create.disabled = locked || !state || state.threads.length >= 6;
+            remove.disabled = locked || !active;
             prompt.disabled = !canType;
-            send.disabled = !canType || length === 0 || length > 4000;
+            send.disabled = !canType || locked || length === 0 || length > 4000;
+            mic.disabled = !canType || stoppingSpeech;
+            const micLabel = speech ? '音声入力を停止' : '音声入力';
+            mic.setAttribute('aria-label', micLabel);
+            mic.title = micLabel;
+            mic.setAttribute('aria-pressed', String(speech !== null));
+            micIcon.classList.toggle('fa-microphone', !speech);
+            micIcon.classList.toggle('fa-stop', !!speech);
+        }
+
+        function releaseSpeech() {
+            speech = null;
+            speechStarted = false;
+            stoppingSpeech = false;
+            microphoneInUse = false;
+            syncControls();
+        }
+
+        function toggleSpeech() {
+            if (speech) {
+                const recognition = speech;
+                if (!speechStarted) {
+                    releaseSpeech();
+                    showStatus(shortcut);
+                    recognition.abort();
+                    return;
+                }
+                stoppingSpeech = true;
+                syncControls();
+                showStatus('音声を文字に変換中…');
+                try {
+                    recognition.stop();
+                } catch {
+                    releaseSpeech();
+                    showStatus('音声入力を終了しました。');
+                }
+                return;
+            }
+            if (!window.isSecureContext) return showStatus('音声入力にはHTTPS接続が必要です。');
+            if (typeof SpeechRecognition !== 'function') return showStatus('このブラウザーは音声入力に対応していません。');
+            const policy = document.permissionsPolicy || document.featurePolicy;
+            if (policy?.allowsFeature?.('microphone') === false) return showStatus('このページではマイクの使用が制限されています。');
+            if (microphoneInUse) return showStatus('別のWidgetで音声入力中です。');
+
+            let recognition;
+            try {
+                recognition = new SpeechRecognition();
+            } catch {
+                return showStatus('このブラウザーで音声入力を開始できませんでした。');
+            }
+            const transcripts = [];
+            recognition.lang = 'ja-JP';
+            recognition.onstart = () => {
+                if (speech !== recognition) return;
+                speechStarted = true;
+                showStatus('聞き取り中… もう一度押すと停止します');
+            };
+            recognition.onresult = event => {
+                for (let index = event.resultIndex; index < event.results.length; index++) {
+                    if (event.results[index].isFinal) transcripts[index] = event.results[index][0].transcript.trim();
+                }
+            };
+            recognition.onerror = event => {
+                if (speech !== recognition) return;
+                releaseSpeech();
+                showStatus(speechErrors[event.error] || '音声入力を開始または継続できませんでした。');
+            };
+            recognition.onend = () => {
+                if (speech !== recognition) return;
+                releaseSpeech();
+                const transcript = transcripts.filter(Boolean).join(' ');
+                if (!transcript) return showStatus('音声を認識できませんでした。');
+                const separator = prompt.value && !/\s$/.test(prompt.value) ? '\n' : '';
+                prompt.value += separator + transcript;
+                prompt.dispatchEvent(new Event('input', {bubbles: true}));
+                prompt.focus();
+            };
+
+            speech = recognition;
+            microphoneInUse = true;
+            showStatus('マイクの開始を待っています…');
+            syncControls();
+            try {
+                recognition.start();
+            } catch {
+                releaseSpeech();
+                showStatus('音声入力を開始できませんでした。');
+            }
         }
 
         function paintMessages() {
@@ -293,7 +399,7 @@
         picker.addEventListener('change', () => { active = picker.value; paintMessages(); });
         prompt.addEventListener('input', () => {
             drafts.set(active, prompt.value);
-            showStatus(encoder.encode(prompt.value.trim()).length > 4000 ? 'メッセージが4,000バイトを超えています。' : shortcut);
+            if (!speech) showStatus(encoder.encode(prompt.value.trim()).length > 4000 ? 'メッセージが4,000バイトを超えています。' : shortcut);
             syncControls();
         });
         prompt.addEventListener('keydown', event => {
@@ -304,6 +410,14 @@
             if (!event.repeat && !send.disabled) form.requestSubmit();
         });
         refresh.addEventListener('click', reload);
+        mic.addEventListener('click', toggleSpeech);
+        window.addEventListener('pagehide', () => {
+            if (!speech) return;
+            const recognition = speech;
+            releaseSpeech();
+            showStatus(shortcut);
+            recognition.abort();
+        });
         create.addEventListener('click', async () => {
             const data = await request('new', {}, '会話を作成中…');
             if (data) { acceptState(data); prompt.focus(); }
@@ -315,6 +429,7 @@
         });
         deleteWidget.addEventListener('click', async () => {
             if (!window.confirm('GPT Widgetと保存した会話を削除しますか？')) return;
+            window.bootstrap?.Modal.getInstance(settingsModal)?.hide();
             if (await request('delete', {}, 'Widgetを削除中…')) window.location.reload();
         });
         form.addEventListener('submit', async event => {

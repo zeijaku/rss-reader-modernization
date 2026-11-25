@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()');
+
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 require_once dirname(__DIR__) . '/app/common/common_login.php';
 
@@ -221,6 +223,9 @@ $currentUserId = app_session_user_id();
 $ui = $currentUserId !== null ? user_ui_config($currentUserId) : app_safe_ui_config(default_ui_config());
 $tabParam = app_tab_from_query($_GET['tab'] ?? null);
 $showOpenaiWidget = $currentUserId !== null && is_int($tabParam) && openai_widget_allowed_user($currentUserId);
+if ($showOpenaiWidget) {
+    header('Permissions-Policy: camera=(), microphone=(self), geolocation=(), payment=()');
+}
 
 if ($tabParam === 'stock') {
     $stockRedirectParams = [];

@@ -38,7 +38,7 @@ const html = '<!doctype html><html lang="ja"><head><meta charset="utf-8">'
     + '<meta name="viewport" content="width=device-width,initial-scale=1"><meta name="csrf-token" content="fixture">'
     + ['bootstrap-5.3.8.min', 'all', 'dashboard', 'openai-widget'].map(name => '<link rel="stylesheet" href="/css/' + name + '.css">').join('')
     + '</head><body><main id="main-content">' + card + '</main>'
-    + ['jquery-3.7.1.min', 'dashboard-core', 'openai-widget'].map(name => '<script src="/js/' + name + '.js"></script>').join('')
+    + ['jquery-3.7.1.min', 'bootstrap.bundle-5.3.8.min', 'dashboard-core', 'openai-widget'].map(name => '<script src="/js/' + name + '.js"></script>').join('')
     + '</body></html>';
 
 async function verify(browser, width) {
@@ -55,10 +55,30 @@ async function verify(browser, width) {
             Object.defineProperty(navigator, 'clipboard', {
                 value: {writeText: async text => { window.copiedCode = text; }}
             });
+            window.SpeechRecognition = undefined;
+            window.webkitSpeechRecognition = class {
+                start() {
+                    window.speechLanguage = this.lang;
+                    if (window.speechError) {
+                        this.onerror({error: window.speechError});
+                    } else if (!window.speechPending) {
+                        this.onstart();
+                    }
+                }
+                stop() {
+                    this.onresult({resultIndex: 0, results: [Object.assign([{transcript: '音声の入力'}], {isFinal: true})]});
+                    this.onend();
+                }
+                abort() {
+                    this.onend();
+                }
+            };
         });
-        await context.route('http://gpt-chat.test/**', async route => {
+        await context.route('https://gpt-chat.test/**', async route => {
             const pathname = new URL(route.request().url()).pathname;
-            if (pathname === '/') return route.fulfill({body: html, contentType: 'text/html'});
+            if (pathname === '/') return route.fulfill({body: html, contentType: 'text/html', headers: {
+                'Permissions-Policy': 'camera=(), microphone=(self), geolocation=(), payment=()'
+            }});
             if (pathname === '/api_v1.php') {
                 const input = new URLSearchParams(route.request().postData());
                 if (input.get('action') === 'widget.openai.send') {
@@ -73,7 +93,7 @@ async function verify(browser, width) {
             const file = path.join(root, 'public', pathname);
             return fs.existsSync(file) && fs.statSync(file).isFile() ? route.fulfill({path: file}) : route.fulfill({status: 404});
         });
-        await page.goto('http://gpt-chat.test/');
+        await page.goto('https://gpt-chat.test/');
         const panel = page.locator('.openai-widget');
         const form = panel.locator('[data-openai-form]');
         const prompt = panel.getByRole('textbox', {name: 'メッセージ'});
@@ -81,9 +101,48 @@ async function verify(browser, width) {
         const status = panel.getByRole('status');
         const history = panel.getByRole('region', {name: '会話の履歴'});
         const model = panel.locator('header [data-openai-model]');
+        const mic = panel.getByRole('button', {name: '音声入力', exact: true});
 
         await history.getByText('メッセージを入力してください。').waitFor();
         await status.getByText('Shift＋Enterで送信', {exact: true}).waitFor();
+        assert.equal(await panel.locator('header [data-openai-delete]').count(), 0);
+        assert.equal(await panel.getByRole('button', {name: '会話を更新'}).locator('.fa-sync-alt').count(), 1);
+        const settings = panel.getByRole('button', {name: 'GPT Widgetの設定'});
+        assert.equal(await settings.locator('.fa-edit').count(), 1);
+        await settings.click();
+        const modal = panel.getByRole('dialog', {name: 'GPT Widgetの設定'});
+        await modal.getByRole('button', {name: 'Widgetを削除'}).waitFor();
+        await modal.locator('.modal-footer').getByRole('button', {name: '閉じる'}).click();
+        await modal.waitFor({state: 'hidden'});
+        await page.evaluate(() => { window.speechError = 'audio-capture'; });
+        await prompt.fill('下書き');
+        await mic.click();
+        await status.getByText('マイクが見つかりません。接続を確認してください。').waitFor();
+        assert.equal(await prompt.inputValue(), '下書き');
+        assert(await send.isEnabled());
+        await page.evaluate(() => { window.speechError = 'not-allowed'; });
+        await mic.click();
+        await status.getByText('ブラウザーのサイト設定でマイクを許可してください。').waitFor();
+        assert(await send.isEnabled());
+        await page.evaluate(() => {
+            window.speechError = null;
+            window.speechPending = true;
+        });
+        await mic.click();
+        await status.getByText('マイクの開始を待っています…').waitFor();
+        await panel.getByRole('button', {name: '音声入力を停止'}).click();
+        assert.equal(await prompt.inputValue(), '下書き');
+        assert(await send.isEnabled());
+        await page.evaluate(() => { window.speechPending = false; });
+        await mic.click();
+        await page.getByText('聞き取り中… もう一度押すと停止します').waitFor();
+        assert.equal(await page.evaluate(() => window.speechLanguage), 'ja-JP');
+        assert(await send.isDisabled());
+        await panel.getByRole('button', {name: '音声入力を停止'}).click();
+        assert.equal(await prompt.inputValue(), '下書き\n音声の入力');
+        assert.deepEqual(sent, []);
+        await prompt.fill('');
+
         await model.getByText('gpt-6.2-sol', {exact: true}).waitFor();
         assert(await model.evaluate(node => {
             const rect = node.getBoundingClientRect();
@@ -169,7 +228,7 @@ async function verify(browser, width) {
         await status.getByText('Shift＋Enterで送信', {exact: true}).waitFor();
         assert.deepEqual(sent, ['日本語テスト\n', 'ボタンで再送']);
         assert.deepEqual(errors, []);
-        console.log('PASS: GPT Widget formatting, safe links, copy, scroll and shortcuts at ' + width + 'px');
+        console.log('PASS: GPT Widget settings, voice, formatting, copy, scroll and shortcuts at ' + width + 'px');
     } finally {
         finishSend();
         await context.close();
