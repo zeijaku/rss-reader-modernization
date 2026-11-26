@@ -1,7 +1,7 @@
 .openai-widget-panel {
     container-type: inline-size;
     border: 1px solid var(--bs-border-color, #dee2e6);
-    border-radius: .5rem;
+    border-radius: 4px;
     background: var(--bs-body-bg, #fff);
     color: var(--bs-body-color, #212529);
 }
@@ -20,8 +20,9 @@
 
 .openai-widget-header { padding: .4rem .65rem; }
 #main-content .openai-widget .openai-widget-panel > .openai-widget-header {
-    border-start-start-radius: .45rem !important;
-    border-start-end-radius: .45rem !important;
+    /* Follow the inner edge of the 4px outer corner and its 1px border. */
+    border-start-start-radius: 3px !important;
+    border-start-end-radius: 3px !important;
 }
 .openai-widget-header h2 { margin: 0; font-size: 1rem; }
 .openai-widget-model {

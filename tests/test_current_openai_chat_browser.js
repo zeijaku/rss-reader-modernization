@@ -143,7 +143,9 @@ async function verify(browser, width) {
         await history.getByText('メッセージを入力してください。').waitFor();
         assert(await panel.locator('header').evaluate(node => {
             const style = getComputedStyle(node);
-            return parseFloat(style.borderTopLeftRadius) > 0 && parseFloat(style.borderTopRightRadius) > 0
+            const outer = getComputedStyle(node.parentElement);
+            return outer.borderTopLeftRadius === '4px' && outer.borderTopRightRadius === '4px'
+                && style.borderTopLeftRadius === '3px' && style.borderTopRightRadius === '3px'
                 && parseFloat(style.borderBottomLeftRadius) === 0 && parseFloat(style.borderBottomRightRadius) === 0;
         }), 'The shared square header rule does not override the GPT card top corners');
         await status.getByText('Shift＋Enterで送信', {exact: true}).waitFor();
