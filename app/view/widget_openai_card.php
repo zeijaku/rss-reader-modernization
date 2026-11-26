@@ -18,7 +18,7 @@
                     <strong>API利用状況</strong>
                     <dl>
                         <div><dt>基準残高</dt><dd data-openai-usage-baseline>—</dd></div>
-                        <div><dt>Widget利用額（概算）</dt><dd data-openai-usage-spent>—</dd></div>
+                        <div><dt>GPT API利用額（概算）</dt><dd data-openai-usage-spent>—</dd></div>
                         <div><dt>推定残額</dt><dd data-openai-usage-remaining>—</dd></div>
                     </dl>
                     <small data-openai-usage-note></small>
@@ -96,7 +96,7 @@
                             <input class="form-control" id="openai-budget-<?php echo $widgetId; ?>" data-openai-budget type="number" min="0" max="99999.99" step="0.01" inputmode="decimal" required>
                             <button type="submit" class="btn btn-outline-primary" data-openai-budget-save>設定</button>
                         </div>
-                        <small class="d-block mt-2 text-muted">Billingで確認した現在残高を登録すると、その時点からWidgetの利用額を計測します。</small>
+                        <small class="d-block mt-2 text-muted">Billingで確認した現在残高を登録すると、その時点からRSS ReaderのGPT API利用額を計測します。</small>
                         <small class="d-block text-muted" data-openai-budget-status role="status"></small>
                     </form>
                 </div>

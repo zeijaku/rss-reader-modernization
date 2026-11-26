@@ -268,7 +268,7 @@
                 : !data ? '利用状況を読み込めません。'
                     : data.baseline_usd == null ? '設定からBillingの現在残高を登録できます。'
                         : data.unpriced ? '見積もれない利用があるため、残額はBillingで確認してください。'
-                            : '登録後のWidget利用分を計測しています。';
+                            : '登録後のRSS ReaderからのGPT API利用分を計測しています。';
         }
 
         function setUsageOpen(open) {

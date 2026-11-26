@@ -480,6 +480,11 @@ function search_feed_form_fields(string $prefix): string
     <button type="button" class="article-actions-item article-action-reader" role="menuitem">
         <i class="fas fa-book-open fa-fw" aria-hidden="true"></i><span>Readerで読む</span>
     </button>
+    <?php if (openai_widget_allowed_user((int) $currentUserId)) { ?>
+    <button type="button" class="article-actions-item article-action-openai" role="menuitem">
+        <i class="far fa-comment fa-fw" aria-hidden="true"></i><span>記事をGPTに聞く</span>
+    </button>
+    <?php } ?>
     <button type="button" class="article-actions-item article-action-stock" role="menuitem">
         <i class="far fa-bookmark fa-fw" aria-hidden="true"></i><span>Stockへ保存</span>
     </button>
@@ -498,6 +503,7 @@ function search_feed_form_fields(string $prefix): string
     </button>
 </div>
 
+<?php if (openai_widget_allowed_user((int) $currentUserId)) { require dirname(__DIR__) . '/app/view/article_openai.php'; } ?>
 <?php require dirname(__DIR__) . '/app/view/dashboard_widgets.php'; ?>
 
 <?php require dirname(__DIR__) . '/app/view/dashboard_modals.php'; ?>
@@ -621,6 +627,9 @@ function search_feed_form_fields(string $prefix): string
 <script src="<?php echo htmlspecialchars(app_asset_url('js/reversi.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/clock-timer.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-core.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<?php if (openai_widget_allowed_user((int) $currentUserId)) { ?>
+<script src="<?php echo app_html(app_asset_url('js/article-openai.js')); ?>"></script>
+<?php } ?>
 <?php if ($showOpenaiWidget): ?>
 <script src="<?php echo app_html(app_asset_url('js/openai-widget.js')); ?>"></script>
 <?php endif; ?>

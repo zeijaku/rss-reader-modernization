@@ -78,6 +78,9 @@
         $menu.find('.article-action-copy, .article-action-x')
             .prop('disabled', articleUrl === '')
             .attr('aria-disabled', articleUrl === '' ? 'true' : 'false');
+        $menu.find('.article-action-openai')
+            .prop('disabled', articleUrl === '')
+            .attr('aria-disabled', articleUrl === '' ? 'true' : 'false');
         $menu.find('.article-action-stock-only').prop('hidden', !stockContext);
         $menu.find('.article-action-stock-remove')
             .prop('disabled', !stockContext || !hasStockId)

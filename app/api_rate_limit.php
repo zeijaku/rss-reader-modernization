@@ -90,6 +90,7 @@ function api_rate_limit_is_network_action(string $action): bool
 {
     return in_array($action, [
         'feed.fetch', 'widget.search.fetch', 'blindspot.fetch', 'x.timeline.fetch', 'widget.openai.send',
+        'widget.openai.article',
     ], true) || str_starts_with($action, 'remote.')
         || str_starts_with($action, 'mail.account.')
         || str_starts_with($action, 'mail.message.')

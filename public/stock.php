@@ -194,6 +194,11 @@ function search_feed_form_fields(string $prefix): string
 
 <!-- 記事Actions: 通常RSS / Search Feed / Stockで共通利用 -->
 <div id="articleActionsMenu" class="article-actions-menu" role="menu" aria-label="記事Actions" hidden>
+    <?php if (openai_widget_allowed_user((int) $currentUserId)) { ?>
+    <button type="button" class="article-actions-item article-action-openai" role="menuitem">
+        <i class="far fa-comment fa-fw" aria-hidden="true"></i><span>記事をGPTに聞く</span>
+    </button>
+    <?php } ?>
     <button type="button" class="article-actions-item article-action-stock" role="menuitem">
         <i class="far fa-bookmark fa-fw" aria-hidden="true"></i><span>Stockへ保存</span>
     </button>
@@ -212,6 +217,7 @@ function search_feed_form_fields(string $prefix): string
     </button>
 </div>
 
+<?php if (openai_widget_allowed_user((int) $currentUserId)) { require dirname(__DIR__) . '/app/view/article_openai.php'; } ?>
 <main id="main-content" class="igcontainer container-fluid" tabindex="-1" data-dashboard-current-tab="<?php echo is_int($tabParam) ? (int) $tabParam : ''; ?>" data-dashboard-tab-count="4" data-dashboard-user-id="<?php echo (int) $currentUserId; ?>" data-dashboard-theme="<?php echo app_html((string) ($ui['conf_style'] ?? 'bootstrap')); ?>">
 <h1 class="visually-hidden">iGuguru RSS Reader</h1>
 <p id="widget-sort-help" class="visually-hidden">Widgetのタイトルバーにある並び替えボタンをドラッグして順番を変更出来ます。キーボードでは矢印キー、Home、Endキーを使用します。</p>
@@ -1753,6 +1759,9 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <script src="<?php echo htmlspecialchars(app_asset_url('js/reversi.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/clock-timer.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-core.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<?php if (openai_widget_allowed_user((int) $currentUserId)) { ?>
+<script src="<?php echo app_html(app_asset_url('js/article-openai.js')); ?>"></script>
+<?php } ?>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-game.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/utility-widgets.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>

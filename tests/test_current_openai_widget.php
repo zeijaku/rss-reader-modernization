@@ -43,6 +43,24 @@ $db->exec("CREATE TABLE {$table} (widget_id INTEGER PRIMARY KEY AUTOINCREMENT, w
 
 $dispatch = static fn(string $action, array $input = [], int $user = 7, ?callable $transport = null): array =>
     api_openai_widget_dispatch('widget.openai.' . $action, $user, $input, $transport);
+$article = ['title' => 'RSS記事', 'url' => 'https://example.test/article',
+    'summary' => '記事の概要', 'question' => '要点を教えて'];
+$articleTransport = static function (string $key, array $payload) use ($fixtureKey): array {
+    openai_test_check($key === $fixtureKey && $payload['store'] === false && count($payload['input']) === 1
+        && isset($payload['instructions']) && !isset($payload['tools'])
+        && str_contains($payload['input'][0]['content'], '記事の概要')
+        && str_contains($payload['input'][0]['content'], '要点を教えて'),
+        'Article requests reuse the server client, pass the excerpt and use no conversation or web tools');
+    return ['status' => 200, 'body' => '{"status":"completed","output":[{"type":"message","role":"assistant","content":[{"type":"output_text","text":"回答"}]}],"usage":{"input_tokens":1000,"output_tokens":100}}'];
+};
+openai_test_check($dispatch('article', $article, 8)['status'] === 404
+    && $dispatch('article', array_replace($article, ['url' => 'javascript:alert(1)']))['status'] === 422
+    && $dispatch('article', array_replace($article, ['question' => ' ']))['status'] === 422,
+    'Article questions require the opted-in account and valid article data');
+openai_test_check($dispatch('article', $article, 7, $articleTransport)['body']['data']['answer'] === '回答'
+    && $db->query("SELECT COUNT(*) FROM {$table}")->fetchColumn() === 0
+    && openai_usage_state(7)['spent_usd'] > 0,
+    'Article questions work without a Widget, do not create chat history, and count toward usage');
 $created = $dispatch('create', ['widget_location' => '0']);
 openai_test_check($created['status'] === 201, 'Authorized account can add GPT Widget without a schema migration');
 $widget = ['widget_id' => $created['body']['data']['widget_id']];
