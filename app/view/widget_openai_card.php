@@ -1,4 +1,4 @@
-<?php declare(strict_types=1); ?>
+<?php declare(strict_types=1); require_once dirname(__DIR__) . '/openai_responses.php'; ?>
 <section class="<?php echo app_html($widgetWidthClass); ?> dashboard-widget openai-widget"
     data-dashboard-widget-id="<?php echo $widgetId; ?>" data-dashboard-widget-type="openai_chat"
     data-dashboard-widget-location="<?php echo (int) $content_location; ?>"
@@ -52,7 +52,7 @@
         </div>
     </div>
     <div class="modal fade" id="openai-settings-<?php echo $widgetId; ?>" data-openai-settings-modal tabindex="-1" aria-labelledby="openai-settings-title-<?php echo $widgetId; ?>" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header text-bg-primary">
                     <h2 class="modal-title fs-5" id="openai-settings-title-<?php echo $widgetId; ?>"><i class="fas fa-edit me-1" aria-hidden="true"></i>GPT Widgetの設定</h2>
@@ -89,6 +89,17 @@
                             <button type="submit" class="btn btn-outline-primary" data-openai-layout-save>外観を保存</button>
                             <small class="text-muted" data-openai-layout-status role="status"></small>
                         </div>
+                    </form>
+                    <form class="border-bottom pb-3 mb-3" data-openai-model-form>
+                        <label class="form-label" for="openai-model-select-<?php echo $widgetId; ?>">使用モデル</label>
+                        <select class="form-select" id="openai-model-select-<?php echo $widgetId; ?>" data-openai-model-select>
+                            <option value="">サーバー既定（<?php echo app_html(openai_widget_configured_model()); ?>）</option>
+                            <?php foreach (openai_widget_model_options() as $modelOption) { ?>
+                                <option value="<?php echo app_html($modelOption); ?>"><?php echo app_html($modelOption); ?></option>
+                            <?php } ?>
+                        </select>
+                        <button type="submit" class="btn btn-outline-primary mt-2" data-openai-model-save>モデルを保存</button>
+                        <small class="text-muted" data-openai-model-status role="status"></small>
                     </form>
                     <form data-openai-budget-form>
                         <label class="form-label" for="openai-budget-<?php echo $widgetId; ?>">基準残高（USD）</label>

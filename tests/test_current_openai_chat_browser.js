@@ -48,6 +48,7 @@ async function verify(browser, width) {
     const errors = [];
     const sent = [];
     const savedHeights = [];
+    let selectedModel = '';
     const thread = {id: 'fixture-thread', title: '会話', messages: []};
     let usage = {baseline_usd: null, spent_usd: 0, remaining_usd: null, unpriced: 0};
     try {
@@ -90,6 +91,12 @@ async function verify(browser, width) {
                 const input = contentType.startsWith('multipart/form-data')
                     ? await new Response(request.postDataBuffer(), {headers: {'content-type': contentType}}).formData()
                     : new URLSearchParams(request.postData());
+                if (input.get('action') === 'widget.openai.model') {
+                    selectedModel = input.get('model_id');
+                    return route.fulfill({json: {ok: true, data: {
+                        model: selectedModel || 'gpt-6.2-sol', model_id: selectedModel
+                    }}});
+                }
                 if (input.get('action') === 'widget.openai.layout') {
                     assert.equal(input.get('widget_width'), '1');
                     const height = Number(input.get('widget_height'));
@@ -125,7 +132,8 @@ async function verify(browser, width) {
                             {role: 'assistant', content: '長い回答です。\n'.repeat(28) + '\n' + formattedAnswer, truncated: true});
                     }
                 }
-                return route.fulfill({json: {ok: true, data: {threads: [thread], can_send: true, model: 'gpt-6.2-sol', usage}}});
+                return route.fulfill({json: {ok: true, data: {threads: [thread], can_send: true,
+                    model: selectedModel || 'gpt-6.2-sol', model_id: selectedModel, usage}}});
             }
             const file = path.join(root, 'public', pathname);
             return fs.existsSync(file) && fs.statSync(file).isFile() ? route.fulfill({path: file}) : route.fulfill({status: 404});
@@ -378,6 +386,14 @@ async function verify(browser, width) {
         assert.equal(await panel.getAttribute('data-widget-height'), '1');
         assert.equal((await history.boundingBox()).height, initialHistoryHeight);
         assert.deepEqual(savedHeights, [2, 1]);
+        await settings.click();
+        const modelPicker = modal.getByLabel('使用モデル');
+        await modelPicker.selectOption('gpt-6-luna');
+        await modal.getByRole('button', {name: 'モデルを保存'}).click();
+        await modal.getByText('モデルを保存しました。').waitFor();
+        await modal.locator('.modal-footer').getByRole('button', {name: '閉じる'}).click();
+        await model.getByText('gpt-6-luna', {exact: true}).waitFor();
+        assert.equal(await prompt.inputValue(), '残高確認');
         assert.deepEqual(errors, []);
         console.log('PASS: GPT Widget appearance, attachments, usage, voice, formatting, copy, scroll and shortcuts at ' + width + 'px');
     } finally {

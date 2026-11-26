@@ -44,16 +44,17 @@ $db->exec("CREATE TABLE {$table} (widget_id INTEGER PRIMARY KEY AUTOINCREMENT, w
 $dispatch = static fn(string $action, array $input = [], int $user = 7, ?callable $transport = null): array =>
     api_openai_widget_dispatch('widget.openai.' . $action, $user, $input, $transport);
 $article = ['title' => 'RSS記事', 'url' => 'https://example.test/article',
-    'summary' => '記事の概要', 'question' => '要点を教えて'];
+    'summary' => '記事の概要', 'question' => '要点を教えて', 'model_id' => 'gpt-6.2-sol'];
 $articleTransport = static function (string $key, array $payload) use ($fixtureKey): array {
     openai_test_check($key === $fixtureKey && $payload['store'] === false && count($payload['input']) === 1
-        && isset($payload['instructions']) && !isset($payload['tools'])
+        && $payload['model'] === 'gpt-6.2-sol' && isset($payload['instructions']) && !isset($payload['tools'])
         && str_contains($payload['input'][0]['content'], '記事の概要')
         && str_contains($payload['input'][0]['content'], '要点を教えて'),
         'Article requests reuse the server client, pass the excerpt and use no conversation or web tools');
     return ['status' => 200, 'body' => '{"status":"completed","output":[{"type":"message","role":"assistant","content":[{"type":"output_text","text":"回答"}]}],"usage":{"input_tokens":1000,"output_tokens":100}}'];
 };
 openai_test_check($dispatch('article', $article, 8)['status'] === 404
+    && $dispatch('article', array_replace($article, ['model_id' => 'unlisted-model']))['status'] === 422
     && $dispatch('article', array_replace($article, ['url' => 'javascript:alert(1)']))['status'] === 422
     && $dispatch('article', array_replace($article, ['question' => ' ']))['status'] === 422,
     'Article questions require the opted-in account and valid article data');
@@ -183,6 +184,21 @@ openai_test_check($normalRow['widget_width'] === 3 && $normalRow['widget_height'
     && $normalRow['widget_style'] === 'warning' && $normalRow['widget_config'] === $beforeLayout,
     'Saving appearance persists width, height and color without modifying transcript');
 openai_test_check($normalRow['widget_config_data'] === [], 'Ordinary widget listing excludes private chat text');
+$preference = $widget + ['model_id' => 'gpt-6.2-sol'];
+$transcript = $dispatch('get', $widget)['body']['data']['threads'];
+openai_test_check($dispatch('model', $preference, 8)['status'] === 404
+    && $dispatch('model', $widget + ['model_id' => 'unlisted-model'])['status'] === 422
+    && $dispatch('model', $preference)['status'] === 200 && $dispatch('model', $preference)['status'] === 200
+    && $dispatch('get', $widget)['body']['data']['model'] === 'gpt-6.2-sol',
+    'The owner can persist a listed model without changing the server default');
+$unavailableModel = $dispatch('send', $next, 7, static function (string $key, array $request): array {
+    openai_test_check($request['model'] === 'gpt-6.2-sol', 'Chat sends use the saved Widget model');
+    return ['status' => 404, 'body' => '{}'];
+});
+openai_test_check($unavailableModel['body']['error']['code'] === 'openai_model_unavailable'
+    && $dispatch('model', $widget + ['model_id' => ''])['body']['data']['model'] === 'gpt-6-luna'
+    && $dispatch('get', $widget)['body']['data']['threads'] === $transcript,
+    'Unavailable models keep the transcript intact and the Widget can return to the server default');
 putenv('OPENAI_API_KEY=');
 openai_test_check($dispatch('get', $widget)['body']['data']['can_send'] === false && $dispatch('send', $next)['status'] === 503,
     'History stays readable when the API key is absent');

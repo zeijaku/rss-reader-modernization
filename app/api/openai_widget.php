@@ -23,7 +23,7 @@ function api_openai_widget_dispatch(string $action, int $ownerId, array $input, 
         return api_success(['widget_id' => openai_widget_create($ownerId, $location)], 201);
     }
     if (!in_array($action, ['widget.openai.get', 'widget.openai.new', 'widget.openai.send',
-        'widget.openai.remove', 'widget.openai.delete', 'widget.openai.budget', 'widget.openai.layout'], true)) {
+        'widget.openai.remove', 'widget.openai.delete', 'widget.openai.budget', 'widget.openai.layout', 'widget.openai.model'], true)) {
         return api_error('unknown_action', 'Unknown API action.', 400);
     }
 
@@ -64,6 +64,21 @@ function api_openai_widget_dispatch(string $action, int $ownerId, array $input, 
         return api_openai_widget_busy();
     }
     unset($state['lease_until'], $state['lease_token']);
+    if ($action === 'widget.openai.model') {
+        $selection = openai_widget_model_selection($input['model_id'] ?? null);
+        if ($selection === null) {
+            return api_validation_error('一覧から使用するモデルを選んでください。');
+        }
+        if ($selection === '') {
+            unset($state['model_id']);
+        } else {
+            $state['model_id'] = $selection;
+        }
+        if (openai_widget_encode_state($state) === $original) {
+            return api_openai_widget_state($state, '', false, openai_usage_state($ownerId));
+        }
+        return api_openai_widget_save($ownerId, $widgetId, $original, $state);
+    }
     if ($action === 'widget.openai.budget') {
         $baseline = openai_usage_baseline($input['baseline'] ?? null);
         if ($baseline === null) {
@@ -150,7 +165,7 @@ function api_openai_widget_dispatch(string $action, int $ownerId, array $input, 
 
     $saved = false;
     try {
-        $model = openai_widget_model();
+        $model = openai_widget_model($state['model_id'] ?? '');
         $payload = openai_widget_request_payload($thread['messages'], $model, $attachment);
         $response = ($transport ?? 'openai_widget_transport')($key, $payload);
         if (($response['status'] ?? 0) !== 200) {
@@ -190,6 +205,10 @@ function api_openai_article_ask(int $ownerId, array $input, ?callable $transport
     $url = app_validate_external_link($input['url'] ?? null);
     $summary = app_validate_text($input['summary'] ?? '', 3000);
     $question = openai_widget_prompt($input['question'] ?? null);
+    $selection = openai_widget_model_selection($input['model_id'] ?? '');
+    if ($selection === null) {
+        return api_validation_error('一覧から使用するモデルを選んでください。');
+    }
     if ($title === null || $url === null || $summary === null || $question === null) {
         return api_validation_error('記事情報と質問を確認してください。質問は4,000バイトまでです。');
     }
@@ -197,7 +216,7 @@ function api_openai_article_ask(int $ownerId, array $input, ?callable $transport
     if ($key === null || !function_exists('curl_init')) {
         return api_error('openai_not_configured', 'サーバーのOPENAI_API_KEYとPHP cURLの設定を確認してください。', 503);
     }
-    $model = openai_widget_model();
+    $model = openai_widget_model($selection);
     $article = json_encode(['title' => $title, 'url' => $url, 'summary' => $summary],
         JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
     $payload = openai_widget_request_payload([
@@ -220,11 +239,13 @@ function api_openai_article_ask(int $ownerId, array $input, ?callable $transport
 
 function api_openai_widget_state(array $state, string $selected, bool $truncated, ?array $usage): array
 {
+    $modelSelection = openai_widget_model_selection($state['model_id'] ?? '') ?? '';
     return api_success([
         'threads' => $state['threads'],
         'selected' => $selected,
         'can_send' => openai_widget_key() !== null && function_exists('curl_init'),
-        'model' => openai_widget_model(),
+        'model' => openai_widget_model($modelSelection),
+        'model_id' => $modelSelection,
         'truncated' => $truncated,
         'usage' => $usage,
     ]);

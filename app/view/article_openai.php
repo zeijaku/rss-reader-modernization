@@ -1,4 +1,4 @@
-<?php declare(strict_types=1); ?>
+<?php declare(strict_types=1); require_once dirname(__DIR__) . '/openai_responses.php'; ?>
 <div class="modal fade" id="articleOpenaiModal" tabindex="-1" aria-labelledby="articleOpenaiTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
@@ -15,6 +15,13 @@
                 </details>
                 <p class="small text-muted" data-article-openai-title-only hidden>タイトルとURLを送信します。この記事の概要はありません。</p>
                 <form data-article-openai-form>
+                    <label class="form-label" for="articleOpenaiModel">使用モデル</label>
+                    <select class="form-select mb-2" id="articleOpenaiModel">
+                        <option value="">サーバー既定（<?php echo app_html(openai_widget_configured_model()); ?>）</option>
+                        <?php foreach (openai_widget_model_options() as $modelOption) { ?>
+                            <option value="<?php echo app_html($modelOption); ?>"><?php echo app_html($modelOption); ?></option>
+                        <?php } ?>
+                    </select>
                     <label class="form-label" for="articleOpenaiQuestion">質問</label>
                     <textarea class="form-control" id="articleOpenaiQuestion" rows="3" maxlength="4000" required></textarea>
                     <button type="submit" class="btn btn-primary mt-2">送信</button>

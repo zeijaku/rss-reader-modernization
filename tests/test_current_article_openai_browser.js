@@ -7,7 +7,8 @@ const {execFileSync} = require('node:child_process');
 const {chromium} = require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES
     ? path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES, 'playwright') : 'playwright');
 const root = path.resolve(__dirname, '..');
-const modal = execFileSync(process.env.PHP_BINARY || 'php', [path.join(root, 'app/view/article_openai.php')], {encoding: 'utf8'});
+const modal = execFileSync(process.env.PHP_BINARY || 'php', ['-r',
+    'require $argv[1] . "/app/bootstrap.php"; require $argv[1] . "/app/view/article_openai.php";', root], {encoding: 'utf8'});
 const template = fs.readFileSync(path.join(root, 'public/index.php'), 'utf8');
 const menu = template.match(/<div id="articleActionsMenu"[\s\S]*?\n<\/div>/)[0].replace(/<\?php.*?\?>/g, '');
 const scripts = ['jquery-3.7.1.min', 'bootstrap.bundle-5.3.8.min', 'dashboard-core',
@@ -36,6 +37,7 @@ async function verify(browser, width) {
                 assert.equal(fields.get('url'), 'https://example.test/article');
                 assert.equal(fields.get('summary'), 'RSSの概要テスト');
                 assert.equal(fields.get('question'), '要点を教えて');
+                assert.equal(fields.get('model_id'), 'gpt-6.2-sol');
                 assert.equal(fields.has('widget_id'), false);
                 sent++;
                 if (sent > 1) return route.fulfill({status: 429, json: {ok: false, error: {message: '利用制限テスト'}}});
@@ -57,6 +59,7 @@ async function verify(browser, width) {
         assert.equal(await page.locator('.openai-widget').count(), 0);
         await dialog.getByText('GPTに渡すRSSの概要').click();
         await dialog.getByText('RSSの概要テスト').waitFor();
+        await dialog.getByLabel('使用モデル').selectOption('gpt-6.2-sol');
         await dialog.getByLabel('質問').fill('要点を教えて');
         await dialog.getByRole('button', {name: '送信'}).click();
         await dialog.getByText('<img src=x>回答テスト').waitFor();

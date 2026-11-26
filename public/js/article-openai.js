@@ -6,6 +6,7 @@
 
     const get = name => dialog.querySelector('[data-article-openai-' + name + ']');
     const form = get('form');
+    const model = document.getElementById('articleOpenaiModel');
     const question = document.getElementById('articleOpenaiQuestion');
     const submit = form.querySelector('button[type="submit"]');
     const status = get('status');
@@ -45,6 +46,8 @@
         get('summary').textContent = article.summary;
         get('title-only').hidden = !details.hidden;
         question.value = '';
+        model.value = '';
+        model.disabled = busy;
         submit.disabled = busy;
         status.textContent = busy ? '前の質問を処理しています…' : '';
         result.hidden = true;
@@ -65,10 +68,12 @@
         }
         const current = article;
         busy = submit.disabled = true;
+        model.disabled = true;
         result.hidden = true;
         status.textContent = 'GPTが回答を生成中…';
         try {
-            const response = await core.apiRequestPromise('widget.openai.article', {...current, question: prompt}, 45000);
+            const response = await core.apiRequestPromise('widget.openai.article',
+                {...current, question: prompt, model_id: model.value}, 45000);
             if (article !== current) return;
             if (response?.ok && response.data) {
                 get('answer').textContent = response.data.answer;
@@ -81,6 +86,7 @@
             if (article === current) status.textContent = core.apiErrorMessage(failure.xhr || null, failure.textStatus || '');
         } finally {
             busy = submit.disabled = false;
+            model.disabled = false;
             if (article !== current) status.textContent = '';
         }
     });

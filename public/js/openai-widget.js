@@ -214,6 +214,10 @@
         const style = get('style');
         const layoutSave = get('layout-save');
         const layoutStatus = get('layout-status');
+        const modelForm = get('model-form');
+        const modelSelect = get('model-select');
+        const modelSave = get('model-save');
+        const modelStatus = get('model-status');
         const messages = get('messages');
         const form = get('form');
         const prompt = get('prompt');
@@ -292,6 +296,7 @@
             settings.disabled = locked || !state;
             deleteWidget.disabled = settings.disabled;
             width.disabled = height.disabled = style.disabled = layoutSave.disabled = locked;
+            modelSelect.disabled = modelSave.disabled = locked;
             budget.disabled = budgetSave.disabled = locked;
             picker.disabled = locked || !state?.threads.length;
             create.disabled = locked || !state || state.threads.length >= 6;
@@ -545,6 +550,8 @@
             height.value = card.dataset.widgetHeight;
             style.value = card.dataset.widgetStyle;
             layoutStatus.textContent = '';
+            modelSelect.value = state.model_id || '';
+            modelStatus.textContent = '';
             budget.value = '';
             budgetStatus.textContent = '';
         });
@@ -568,6 +575,18 @@
             card.dataset.widgetWidthClass = data.widget_width_class;
             card.dataset.widgetStyle = data.widget_style;
             if (atBottom) messages.scrollTop = messages.scrollHeight;
+        });
+        modelForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            if (modelSave.disabled) return;
+            const previousStatus = status.textContent;
+            const data = await request('model', {model_id: modelSelect.value}, 'モデルを保存しています…');
+            modelStatus.textContent = data ? 'モデルを保存しました。' : status.textContent;
+            showStatus(previousStatus);
+            if (!data) return;
+            state.model_id = data.model_id;
+            model.textContent = data.model;
+            model.title = data.model;
         });
         budgetForm.addEventListener('submit', async event => {
             event.preventDefault();

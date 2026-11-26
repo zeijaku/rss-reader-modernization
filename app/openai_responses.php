@@ -11,10 +11,28 @@ function openai_widget_key(): ?string
     return preg_match('/\A[A-Za-z0-9_-]{16,512}\z/D', $key) === 1 ? $key : null;
 }
 
-function openai_widget_model(): string
+function openai_widget_configured_model(): string
 {
     $model = trim(app_env('APP_OPENAI_MODEL', OPENAI_WIDGET_DEFAULT_MODEL) ?? '');
     return preg_match('/\A[A-Za-z0-9][A-Za-z0-9._:-]{0,99}\z/D', $model) === 1 ? $model : OPENAI_WIDGET_DEFAULT_MODEL;
+}
+
+/** @return list<string> */
+function openai_widget_model_options(): array
+{
+    return array_values(array_unique([
+        openai_widget_configured_model(), 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.1-sol', 'gpt-6.2-sol', 'gpt-6.2-astra',
+    ]));
+}
+
+function openai_widget_model_selection(mixed $value): ?string
+{
+    return $value === '' ? '' : app_validate_enum($value, openai_widget_model_options());
+}
+
+function openai_widget_model(mixed $selection = ''): string
+{
+    return openai_widget_model_selection($selection) ?: openai_widget_configured_model();
 }
 
 function openai_widget_request_payload(array $messages, string $model, ?array $attachment = null): array
