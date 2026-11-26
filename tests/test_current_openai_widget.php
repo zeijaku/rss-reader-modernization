@@ -43,6 +43,14 @@ $db->exec("CREATE TABLE {$table} (widget_id INTEGER PRIMARY KEY AUTOINCREMENT, w
 
 $dispatch = static fn(string $action, array $input = [], int $user = 7, ?callable $transport = null): array =>
     api_openai_widget_dispatch('widget.openai.' . $action, $user, $input, $transport);
+$rankedModels = ['gpt-6.2-astra', 'gpt-6.2-sol', 'gpt-6.1-sol', 'gpt-6.1-terra', 'gpt-6-luna'];
+openai_test_check(openai_widget_model_options() === $rankedModels && openai_widget_model() === 'gpt-6-luna',
+    'Built-in model ordering does not depend on the server default');
+putenv('APP_OPENAI_MODEL=gpt-custom-fixture');
+openai_test_check(openai_widget_model_options() === [...$rankedModels, 'gpt-custom-fixture']
+    && openai_widget_model() === 'gpt-custom-fixture',
+    'A custom configured model stays usable and follows the ranked choices');
+putenv('APP_OPENAI_MODEL=gpt-6-luna');
 $article = ['title' => 'RSS記事', 'url' => 'https://example.test/article',
     'summary' => '記事の概要', 'question' => '要点を教えて', 'model_id' => 'gpt-6.2-sol'];
 $articleTransport = static function (string $key, array $payload) use ($fixtureKey): array {

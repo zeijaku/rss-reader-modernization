@@ -20,8 +20,10 @@ function openai_widget_configured_model(): string
 /** @return list<string> */
 function openai_widget_model_options(): array
 {
+    // Keep the built-in choices in general reasoning order; custom IDs have no ranking.
     return array_values(array_unique([
-        openai_widget_configured_model(), 'gpt-6-luna', 'gpt-6.1-terra', 'gpt-6.1-sol', 'gpt-6.2-sol', 'gpt-6.2-astra',
+        'gpt-6.2-astra', 'gpt-6.2-sol', 'gpt-6.1-sol', 'gpt-6.1-terra', 'gpt-6-luna',
+        openai_widget_configured_model(),
     ]));
 }
 
