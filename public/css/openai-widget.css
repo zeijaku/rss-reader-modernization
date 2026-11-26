@@ -19,7 +19,7 @@
 }
 
 .openai-widget-header { padding: .4rem .65rem; }
-.openai-widget-panel > .openai-widget-header {
+#main-content .openai-widget .openai-widget-panel > .openai-widget-header {
     border-start-start-radius: .45rem !important;
     border-start-end-radius: .45rem !important;
 }

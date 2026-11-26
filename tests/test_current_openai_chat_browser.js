@@ -141,6 +141,11 @@ async function verify(browser, width) {
         const mic = panel.getByRole('button', {name: '音声入力', exact: true});
 
         await history.getByText('メッセージを入力してください。').waitFor();
+        assert(await panel.locator('header').evaluate(node => {
+            const style = getComputedStyle(node);
+            return parseFloat(style.borderTopLeftRadius) > 0 && parseFloat(style.borderTopRightRadius) > 0
+                && parseFloat(style.borderBottomLeftRadius) === 0 && parseFloat(style.borderBottomRightRadius) === 0;
+        }), 'The shared square header rule does not override the GPT card top corners');
         await status.getByText('Shift＋Enterで送信', {exact: true}).waitFor();
         assert.equal(await panel.locator('header [data-openai-delete]').count(), 0);
         assert.equal(await panel.getByRole('button', {name: '会話を更新'}).locator('.fa-sync-alt').count(), 1);
