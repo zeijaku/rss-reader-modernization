@@ -6,6 +6,12 @@
     color: var(--bs-body-color, #212529);
 }
 
+@media (min-width: 768px) {
+    .dashboard-grid > .openai-widget > .openai-widget-panel {
+        min-height: 100%;
+    }
+}
+
 .openai-widget-header, .openai-widget-threads {
     display: flex;
     align-items: center;

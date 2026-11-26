@@ -2335,6 +2335,11 @@ select:focus,
 .dashboard-grid > .dashboard-widget[data-widget-width="4"] { grid-column: span 4; }
 .dashboard-grid > .dashboard-widget[data-widget-height="2"] { grid-row: span 2; }
 
+/* The grid gap already supplies spacing between these cards. */
+.dashboard-grid > .dashboard-widget:is(.mail-card, .links-card, .weather-card, .mini-game-card) {
+    margin-bottom: 0;
+}
+
 .dashboard-grid .feed-card-inner,
 .dashboard-grid .clock-card-inner,
 .dashboard-grid .memo-card-inner,
@@ -2388,6 +2393,13 @@ select:focus,
 .dashboard-grid > .mini-game-card[data-widget-height="1"] .mini-game-card-inner {
     height: auto;
     min-height: 320px;
+}
+
+@media (min-width: 768px) {
+    .dashboard-grid > .clock-card[data-widget-height="1"] .clock-card-inner,
+    .dashboard-grid > .mini-game-card[data-widget-height="1"] .mini-game-card-inner {
+        min-height: max(320px, 100%);
+    }
 }
 
 .dashboard-grid > .clock-card[data-widget-height="1"] .clock-card-body,
