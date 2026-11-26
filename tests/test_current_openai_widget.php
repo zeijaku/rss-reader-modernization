@@ -46,11 +46,14 @@ $dispatch = static fn(string $action, array $input = [], int $user = 7, ?callabl
 $created = $dispatch('create', ['widget_location' => '0']);
 openai_test_check($created['status'] === 201, 'Authorized account can add GPT Widget without a schema migration');
 $widget = ['widget_id' => $created['body']['data']['widget_id']];
+$layout = $widget + ['widget_width' => '3', 'widget_style' => 'warning'];
 openai_test_check($dispatch('get', $widget, 8)['status'] === 404, 'Other account cannot access GPT Widget');
+openai_test_check($dispatch('layout', $layout, 8)['status'] === 404, 'Other account cannot change GPT Widget appearance');
 $budget = $widget + ['baseline' => '4.32'];
 openai_test_check($dispatch('budget', $budget, 8)['status'] === 404, 'Other account cannot update the credit baseline');
 $db->exec("UPDATE {$table} SET widget_owner = 8 WHERE widget_id = " . $widget['widget_id']);
 openai_test_check($dispatch('get', $widget)['status'] === 404, 'Configured account cannot access a foreign widget ID');
+openai_test_check($dispatch('layout', $layout)['status'] === 404, 'Appearance changes cannot target a foreign widget');
 $db->exec("UPDATE {$table} SET widget_owner = 7 WHERE widget_id = " . $widget['widget_id']);
 openai_test_check($dispatch('budget', array_replace($budget, ['baseline' => '-1']))['status'] === 422
     && $dispatch('budget', $budget)['body']['data']['usage']['remaining_usd'] === 4.32,
@@ -141,7 +144,18 @@ openai_test_check($timeout['status'] === 504 && $timeout['body']['error']['usage
     && $dispatch('budget', $budget)['body']['data']['usage']['remaining_usd'] === 4.32,
     'Unpriced requests suppress the estimate until the balance is reset');
 
+$beforeLayout = $db->query("SELECT widget_config FROM {$table} LIMIT 1")->fetchColumn();
+$layoutResponse = $dispatch('layout', $layout);
+openai_test_check($layoutResponse['status'] === 200
+    && $layoutResponse['body']['data']['widget_width_class'] === dashboard_widget_width_class(3)
+    && $dispatch('layout', $layout)['status'] === 200
+    && $dispatch('layout', array_replace($layout, ['widget_width' => '5']))['status'] === 422
+    && $dispatch('layout', array_replace($layout, ['widget_style' => 'custom']))['status'] === 422,
+    'Appearance uses shared size and color rules and tolerates unchanged saves');
 $normalRow = dashboard_widget_normalize_row($db->query("SELECT * FROM {$table} LIMIT 1")->fetch());
+openai_test_check($normalRow['widget_width'] === 3 && $normalRow['widget_height'] === 2
+    && $normalRow['widget_style'] === 'warning' && $normalRow['widget_config'] === $beforeLayout,
+    'Saving appearance persists width and color without modifying transcript or height');
 openai_test_check($normalRow['widget_config_data'] === [], 'Ordinary widget listing excludes private chat text');
 putenv('OPENAI_API_KEY=');
 openai_test_check($dispatch('get', $widget)['body']['data']['can_send'] === false && $dispatch('send', $next)['status'] === 503,
@@ -149,3 +163,4 @@ openai_test_check($dispatch('get', $widget)['body']['data']['can_send'] === fals
 openai_test_check($dispatch('delete', $widget)['status'] === 200 && $dispatch('get', $widget)['status'] === 404
     && $db->query("SELECT widget_config FROM {$table} LIMIT 1")->fetchColumn() === '{"schema":1,"threads":[]}',
     'Deleting a GPT Widget removes access and clears its transcript');
+openai_test_check($dispatch('layout', $layout)['status'] === 404, 'Appearance changes cannot target a deleted widget');

@@ -30,6 +30,20 @@ function openai_widget_find(int $ownerId, int $widgetId): ?array
     return is_array($row) ? $row : null;
 }
 
+function openai_widget_update_layout(int $ownerId, int $widgetId, int $width, string $style): bool
+{
+    $stmt = conn_db()->prepare(
+        'UPDATE ' . db_table_identifier('dashboard_widget')
+        . ' SET widget_width = :width, widget_style = :style, widget_updated_at = :updated'
+        . " WHERE widget_id = :id AND widget_owner = :owner AND widget_type = 'openai_chat' AND widget_flag = 0"
+    );
+    $stmt->execute([
+        ':width' => $width, ':style' => $style, ':updated' => app_now(),
+        ':id' => $widgetId, ':owner' => $ownerId,
+    ]);
+    return $stmt->rowCount() === 1 || openai_widget_find($ownerId, $widgetId) !== null;
+}
+
 function openai_widget_create(int $ownerId, int $location): int
 {
     $pdo = conn_db();

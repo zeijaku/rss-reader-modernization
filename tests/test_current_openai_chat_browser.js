@@ -89,6 +89,13 @@ async function verify(browser, width) {
                 const input = contentType.startsWith('multipart/form-data')
                     ? await new Response(request.postDataBuffer(), {headers: {'content-type': contentType}}).formData()
                     : new URLSearchParams(request.postData());
+                if (input.get('action') === 'widget.openai.layout') {
+                    assert.equal(input.get('widget_width'), '1');
+                    assert.equal(input.get('widget_style'), 'warning');
+                    return route.fulfill({json: {ok: true, data: {
+                        widget_width: 1, widget_width_class: 'col-12 col-md-6 col-lg-3', widget_style: 'warning'
+                    }}});
+                }
                 if (input.get('action') === 'widget.openai.budget') {
                     assert.equal(input.get('baseline'), '4.32');
                     usage = {baseline_usd: 4.32, spent_usd: 0, remaining_usd: 4.32, unpriced: 0};
@@ -311,8 +318,41 @@ async function verify(browser, width) {
         assert.equal(await usagePanel.locator('[data-openai-usage-remaining]').textContent(), '—');
         assert.equal(await prompt.inputValue(), '残高確認');
         assert.deepEqual(sent, ['日本語テスト\n', 'ボタンで再送', 'このログを確認', '残高確認']);
+        const initialWidth = (await panel.boundingBox()).width;
+        await settings.click();
+        const widthPicker = modal.getByLabel('横幅');
+        const stylePicker = modal.getByLabel('見出し色');
+        assert.equal(await widthPicker.inputValue(), '2');
+        assert.equal(await stylePicker.inputValue(), 'primary');
+        await widthPicker.selectOption('1');
+        await stylePicker.selectOption('warning');
+        await modal.getByRole('button', {name: '外観を保存'}).click();
+        await modal.getByText('外観を保存しました。').waitFor();
+        await modal.locator('.modal-footer').getByRole('button', {name: '閉じる'}).click();
+        await modal.waitFor({state: 'hidden'});
+        assert.equal(await panel.locator('header').evaluate(node => node.classList.contains('text-bg-warning')), true);
+        assert.equal(await panel.getAttribute('data-widget-width'), '1');
+        const updatedWidth = (await panel.boundingBox()).width;
+        assert(width < 600 ? updatedWidth === initialWidth : updatedWidth < initialWidth);
+        assert.equal(await prompt.inputValue(), '残高確認');
+        assert.equal(await history.getByText('添付を確認しました。').count(), 1);
+        if (width >= 600) {
+            await page.setViewportSize({width: 1000, height: 850});
+            const composer = await form.boundingBox();
+            const field = await prompt.boundingBox();
+            assert(Math.abs(field.width - composer.width) <= 1, 'A narrow card keeps a full-width text field');
+            assert(await model.evaluate(node => {
+                const bounds = node.getBoundingClientRect();
+                const header = node.parentElement.getBoundingClientRect();
+                return bounds.bottom <= header.bottom && node.clientWidth >= node.scrollWidth;
+            }), 'A narrow card keeps the model label in the header');
+            await usageToggle.hover();
+            const popupBox = await usagePanel.boundingBox();
+            const cardBounds = await panel.boundingBox();
+            assert(popupBox.x >= cardBounds.x && popupBox.x + popupBox.width <= cardBounds.x + cardBounds.width);
+        }
         assert.deepEqual(errors, []);
-        console.log('PASS: GPT Widget attachments, usage, settings, voice, formatting, copy, scroll and shortcuts at ' + width + 'px');
+        console.log('PASS: GPT Widget appearance, attachments, usage, voice, formatting, copy, scroll and shortcuts at ' + width + 'px');
     } finally {
         finishSend();
         await context.close();

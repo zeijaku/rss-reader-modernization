@@ -1,4 +1,5 @@
 .openai-widget-panel {
+    container-type: inline-size;
     border: 1px solid var(--bs-border-color, #dee2e6);
     border-radius: .5rem;
     background: var(--bs-body-bg, #fff);
@@ -177,4 +178,27 @@
     color: var(--bs-danger-text-emphasis, #842029);
     background: var(--bs-danger-bg-subtle, #f8d7da);
     border-color: var(--bs-danger, #dc3545);
+}
+
+@container (max-width: 270px) {
+    #main-content .openai-widget .openai-widget-panel > .openai-widget-header {
+        position: relative;
+        flex-wrap: wrap;
+        height: auto !important;
+        max-height: none !important;
+    }
+    .openai-widget-model {
+        order: 1;
+        flex-basis: 100%;
+        margin-inline: 0;
+        padding: 0 .35rem .25rem;
+        text-align: end;
+    }
+    .openai-widget-usage { position: static; margin-inline-start: auto; }
+    .openai-widget-usage-panel {
+        inset-inline-end: .35rem;
+        width: min(16rem, calc(100% - .7rem));
+    }
+    .openai-widget-form { grid-template-columns: auto auto minmax(0, 1fr); }
+    .openai-widget-form textarea { grid-column: 1 / -1; }
 }

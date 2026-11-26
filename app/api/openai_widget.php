@@ -20,13 +20,28 @@ function api_openai_widget_dispatch(string $action, int $ownerId, array $input, 
         return api_success(['widget_id' => openai_widget_create($ownerId, $location)], 201);
     }
     if (!in_array($action, ['widget.openai.get', 'widget.openai.new', 'widget.openai.send',
-        'widget.openai.remove', 'widget.openai.delete', 'widget.openai.budget'], true)) {
+        'widget.openai.remove', 'widget.openai.delete', 'widget.openai.budget', 'widget.openai.layout'], true)) {
         return api_error('unknown_action', 'Unknown API action.', 400);
     }
 
     $widgetId = api_positive_int($input, 'widget_id');
     if ($widgetId === null) {
         return api_validation_error('Widget IDが正しくありません。');
+    }
+    if ($action === 'widget.openai.layout') {
+        $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
+        $style = app_normalize_content_style($input['widget_style'] ?? null);
+        if ($width === null || $style === null) {
+            return api_validation_error('横幅と見出し色を選び直してください。');
+        }
+        if (!openai_widget_update_layout($ownerId, $widgetId, $width, $style)) {
+            return api_error('not_found', 'GPT Widgetが見つかりません。', 404);
+        }
+        return api_success([
+            'widget_width' => $width,
+            'widget_width_class' => dashboard_widget_width_class($width),
+            'widget_style' => $style,
+        ]);
     }
     $row = openai_widget_find($ownerId, $widgetId);
     if ($row === null) {

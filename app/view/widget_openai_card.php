@@ -4,9 +4,10 @@
     data-dashboard-widget-location="<?php echo (int) $content_location; ?>"
     data-dashboard-widget-sort-order="<?php echo $widgetSortOrder; ?>"
     data-widget-width="<?php echo $widgetWidth; ?>" data-widget-height="<?php echo $widgetHeight; ?>"
+    data-widget-width-class="<?php echo app_html($widgetWidthClass); ?>" data-widget-style="<?php echo app_html($widgetStyle); ?>"
     aria-labelledby="openai-title-<?php echo $widgetId; ?>">
     <div class="openai-widget-panel">
-        <header class="openai-widget-header information-widget-header text-bg-primary">
+        <header class="openai-widget-header information-widget-header text-bg-<?php echo app_html($widgetStyle); ?>" data-openai-header>
             <button type="button" class="btn btn-link widget-drag-handle" aria-label="GPT Widgetを並び替え" aria-describedby="widget-sort-help"><i class="fas fa-grip-lines" aria-hidden="true"></i></button>
             <h2 id="openai-title-<?php echo $widgetId; ?>" class="widget-title-text">GPT</h2>
             <small class="openai-widget-model" data-openai-model></small>
@@ -58,6 +59,30 @@
                     <button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button>
                 </div>
                 <div class="modal-body">
+                    <form class="border-bottom pb-3 mb-3" data-openai-layout-form>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label" for="openai-width-<?php echo $widgetId; ?>">横幅</label>
+                                <select class="form-select" id="openai-width-<?php echo $widgetId; ?>" data-openai-width>
+                                    <?php foreach ([1 => '1列', 2 => '2列', 3 => '3列', 4 => '全幅'] as $width => $label) { ?>
+                                        <option value="<?php echo $width; ?>"<?php echo $width === $widgetWidth ? ' selected' : ''; ?>><?php echo $label; ?></option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="openai-style-<?php echo $widgetId; ?>">見出し色</label>
+                                <select class="form-select" id="openai-style-<?php echo $widgetId; ?>" data-openai-style>
+                                    <?php foreach (app_allowed_content_styles() as $style) { ?>
+                                        <option value="<?php echo app_html($style); ?>"<?php echo $style === $widgetStyle ? ' selected' : ''; ?>><?php echo app_html($style); ?></option>
+                                    <?php } ?>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mt-2">
+                            <button type="submit" class="btn btn-outline-primary" data-openai-layout-save>外観を保存</button>
+                            <small class="text-muted" data-openai-layout-status role="status"></small>
+                        </div>
+                    </form>
                     <form data-openai-budget-form>
                         <label class="form-label" for="openai-budget-<?php echo $widgetId; ?>">基準残高（USD）</label>
                         <div class="input-group">

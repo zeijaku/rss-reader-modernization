@@ -207,6 +207,12 @@
         const refresh = get('refresh');
         const settings = get('settings');
         const settingsModal = get('settings-modal');
+        const header = get('header');
+        const layoutForm = get('layout-form');
+        const width = get('width');
+        const style = get('style');
+        const layoutSave = get('layout-save');
+        const layoutStatus = get('layout-status');
         const messages = get('messages');
         const form = get('form');
         const prompt = get('prompt');
@@ -284,6 +290,7 @@
             refresh.disabled = locked;
             settings.disabled = locked || !state;
             deleteWidget.disabled = settings.disabled;
+            width.disabled = style.disabled = layoutSave.disabled = locked;
             budget.disabled = budgetSave.disabled = locked;
             picker.disabled = locked || !state?.threads.length;
             create.disabled = locked || !state || state.threads.length >= 6;
@@ -532,9 +539,28 @@
         document.addEventListener('pointerdown', event => {
             if (!usageMenu.contains(event.target)) setUsageOpen(false);
         });
-        settings.addEventListener('click', () => {
+        settingsModal.addEventListener('show.bs.modal', () => {
+            width.value = card.dataset.widgetWidth;
+            style.value = card.dataset.widgetStyle;
+            layoutStatus.textContent = '';
             budget.value = '';
             budgetStatus.textContent = '';
+        });
+        layoutForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            if (layoutSave.disabled) return;
+            const previousStatus = status.textContent;
+            layoutStatus.textContent = '外観を保存しています…';
+            const data = await request('layout', {widget_width: width.value, widget_style: style.value}, '外観を保存しています…');
+            layoutStatus.textContent = data ? '外観を保存しました。' : status.textContent;
+            showStatus(previousStatus);
+            if (!data) return;
+            card.classList.remove(...card.dataset.widgetWidthClass.split(' '));
+            card.classList.add(...data.widget_width_class.split(' '));
+            header.classList.replace('text-bg-' + card.dataset.widgetStyle, 'text-bg-' + data.widget_style);
+            card.dataset.widgetWidth = data.widget_width;
+            card.dataset.widgetWidthClass = data.widget_width_class;
+            card.dataset.widgetStyle = data.widget_style;
         });
         budgetForm.addEventListener('submit', async event => {
             event.preventDefault();
