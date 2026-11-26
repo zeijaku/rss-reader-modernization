@@ -60,8 +60,8 @@
                 </div>
                 <div class="modal-body">
                     <form class="border-bottom pb-3 mb-3" data-openai-layout-form>
-                        <div class="row g-2">
-                            <div class="col-6">
+                        <div class="row row-cols-2 row-cols-sm-3 g-2">
+                            <div class="col">
                                 <label class="form-label" for="openai-width-<?php echo $widgetId; ?>">横幅</label>
                                 <select class="form-select" id="openai-width-<?php echo $widgetId; ?>" data-openai-width>
                                     <?php foreach ([1 => '1列', 2 => '2列', 3 => '3列', 4 => '全幅'] as $width => $label) { ?>
@@ -69,7 +69,14 @@
                                     <?php } ?>
                                 </select>
                             </div>
-                            <div class="col-6">
+                            <div class="col">
+                                <label class="form-label" for="openai-height-<?php echo $widgetId; ?>">縦幅</label>
+                                <select class="form-select" id="openai-height-<?php echo $widgetId; ?>" data-openai-height>
+                                    <option value="1"<?php echo $widgetHeight === 1 ? ' selected' : ''; ?>>標準</option>
+                                    <option value="2"<?php echo $widgetHeight === 2 ? ' selected' : ''; ?>>縦2段</option>
+                                </select>
+                            </div>
+                            <div class="col">
                                 <label class="form-label" for="openai-style-<?php echo $widgetId; ?>">見出し色</label>
                                 <select class="form-select" id="openai-style-<?php echo $widgetId; ?>" data-openai-style>
                                     <?php foreach (app_allowed_content_styles() as $style) { ?>

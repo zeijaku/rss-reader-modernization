@@ -31,17 +31,22 @@ function api_openai_widget_dispatch(string $action, int $ownerId, array $input, 
     if ($action === 'widget.openai.layout') {
         $width = dashboard_widget_validate_width($input['widget_width'] ?? null);
         $style = app_normalize_content_style($input['widget_style'] ?? null);
+        $hasHeight = array_key_exists('widget_height', $input);
+        $height = dashboard_widget_validate_height($input['widget_height'] ?? null);
         if ($width === null || $style === null) {
             return api_validation_error('横幅と見出し色を選び直してください。');
         }
-        if (!openai_widget_update_layout($ownerId, $widgetId, $width, $style)) {
+        if ($hasHeight && $height === null) {
+            return api_validation_error('縦幅は「標準」または「縦2段」を選んでください。');
+        }
+        if (!openai_widget_update_layout($ownerId, $widgetId, $width, $style, $height)) {
             return api_error('not_found', 'GPT Widgetが見つかりません。', 404);
         }
         return api_success([
             'widget_width' => $width,
             'widget_width_class' => dashboard_widget_width_class($width),
             'widget_style' => $style,
-        ]);
+        ] + ($height === null ? [] : ['widget_height' => $height]));
     }
     $row = openai_widget_find($ownerId, $widgetId);
     if ($row === null) {

@@ -210,6 +210,7 @@
         const header = get('header');
         const layoutForm = get('layout-form');
         const width = get('width');
+        const height = get('height');
         const style = get('style');
         const layoutSave = get('layout-save');
         const layoutStatus = get('layout-status');
@@ -290,7 +291,7 @@
             refresh.disabled = locked;
             settings.disabled = locked || !state;
             deleteWidget.disabled = settings.disabled;
-            width.disabled = style.disabled = layoutSave.disabled = locked;
+            width.disabled = height.disabled = style.disabled = layoutSave.disabled = locked;
             budget.disabled = budgetSave.disabled = locked;
             picker.disabled = locked || !state?.threads.length;
             create.disabled = locked || !state || state.threads.length >= 6;
@@ -541,6 +542,7 @@
         });
         settingsModal.addEventListener('show.bs.modal', () => {
             width.value = card.dataset.widgetWidth;
+            height.value = card.dataset.widgetHeight;
             style.value = card.dataset.widgetStyle;
             layoutStatus.textContent = '';
             budget.value = '';
@@ -551,16 +553,21 @@
             if (layoutSave.disabled) return;
             const previousStatus = status.textContent;
             layoutStatus.textContent = '外観を保存しています…';
-            const data = await request('layout', {widget_width: width.value, widget_style: style.value}, '外観を保存しています…');
+            const data = await request('layout', {
+                widget_width: width.value, widget_height: height.value, widget_style: style.value
+            }, '外観を保存しています…');
             layoutStatus.textContent = data ? '外観を保存しました。' : status.textContent;
             showStatus(previousStatus);
             if (!data) return;
+            const atBottom = messages.scrollHeight - messages.clientHeight - messages.scrollTop <= 1;
             card.classList.remove(...card.dataset.widgetWidthClass.split(' '));
             card.classList.add(...data.widget_width_class.split(' '));
             header.classList.replace('text-bg-' + card.dataset.widgetStyle, 'text-bg-' + data.widget_style);
             card.dataset.widgetWidth = data.widget_width;
+            card.dataset.widgetHeight = data.widget_height;
             card.dataset.widgetWidthClass = data.widget_width_class;
             card.dataset.widgetStyle = data.widget_style;
+            if (atBottom) messages.scrollTop = messages.scrollHeight;
         });
         budgetForm.addEventListener('submit', async event => {
             event.preventDefault();

@@ -46,7 +46,9 @@ $dispatch = static fn(string $action, array $input = [], int $user = 7, ?callabl
 $created = $dispatch('create', ['widget_location' => '0']);
 openai_test_check($created['status'] === 201, 'Authorized account can add GPT Widget without a schema migration');
 $widget = ['widget_id' => $created['body']['data']['widget_id']];
-$layout = $widget + ['widget_width' => '3', 'widget_style' => 'warning'];
+$layout = $widget + ['widget_width' => '3', 'widget_height' => '2', 'widget_style' => 'warning'];
+openai_test_check((int) $db->query("SELECT widget_height FROM {$table} LIMIT 1")->fetchColumn() === 1,
+    'New GPT Widgets use standard height');
 openai_test_check($dispatch('get', $widget, 8)['status'] === 404, 'Other account cannot access GPT Widget');
 openai_test_check($dispatch('layout', $layout, 8)['status'] === 404, 'Other account cannot change GPT Widget appearance');
 $budget = $widget + ['baseline' => '4.32'];
@@ -148,14 +150,20 @@ $beforeLayout = $db->query("SELECT widget_config FROM {$table} LIMIT 1")->fetchC
 $layoutResponse = $dispatch('layout', $layout);
 openai_test_check($layoutResponse['status'] === 200
     && $layoutResponse['body']['data']['widget_width_class'] === dashboard_widget_width_class(3)
+    && $layoutResponse['body']['data']['widget_height'] === 2
     && $dispatch('layout', $layout)['status'] === 200
     && $dispatch('layout', array_replace($layout, ['widget_width' => '5']))['status'] === 422
     && $dispatch('layout', array_replace($layout, ['widget_style' => 'custom']))['status'] === 422,
     'Appearance uses shared size and color rules and tolerates unchanged saves');
+$oldLayout = $widget + ['widget_width' => '3', 'widget_style' => 'warning'];
+openai_test_check($dispatch('layout', $oldLayout)['status'] === 200
+    && $dispatch('layout', array_replace($layout, ['widget_height' => '3']))['status'] === 422
+    && $dispatch('layout', array_replace($layout, ['widget_height' => null]))['status'] === 422,
+    'Invalid heights are rejected and legacy appearance requests retain saved height');
 $normalRow = dashboard_widget_normalize_row($db->query("SELECT * FROM {$table} LIMIT 1")->fetch());
 openai_test_check($normalRow['widget_width'] === 3 && $normalRow['widget_height'] === 2
     && $normalRow['widget_style'] === 'warning' && $normalRow['widget_config'] === $beforeLayout,
-    'Saving appearance persists width and color without modifying transcript or height');
+    'Saving appearance persists width, height and color without modifying transcript');
 openai_test_check($normalRow['widget_config_data'] === [], 'Ordinary widget listing excludes private chat text');
 putenv('OPENAI_API_KEY=');
 openai_test_check($dispatch('get', $widget)['body']['data']['can_send'] === false && $dispatch('send', $next)['status'] === 503,

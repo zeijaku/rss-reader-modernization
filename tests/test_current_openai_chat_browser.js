@@ -28,7 +28,7 @@ const formattedAnswer = [
 
 const widget = {
     widget_id: 5, widget_owner: 7, widget_location: 0, widget_type: 'openai_chat', widget_flag: 0,
-    widget_sort_order: 10, widget_style: 'primary', widget_width: 2, widget_height: 2,
+    widget_sort_order: 10, widget_style: 'primary', widget_width: 2, widget_height: 1,
     widget_config: JSON.stringify({schema: 1, threads: []})
 };
 const card = execFileSync(process.env.PHP_BINARY || 'php',
@@ -47,6 +47,7 @@ async function verify(browser, width) {
     const pending = new Promise(resolve => { finishSend = resolve; });
     const errors = [];
     const sent = [];
+    const savedHeights = [];
     const thread = {id: 'fixture-thread', title: '会話', messages: []};
     let usage = {baseline_usd: null, spent_usd: 0, remaining_usd: null, unpriced: 0};
     try {
@@ -91,9 +92,11 @@ async function verify(browser, width) {
                     : new URLSearchParams(request.postData());
                 if (input.get('action') === 'widget.openai.layout') {
                     assert.equal(input.get('widget_width'), '1');
+                    const height = Number(input.get('widget_height'));
+                    savedHeights.push(height);
                     assert.equal(input.get('widget_style'), 'warning');
                     return route.fulfill({json: {ok: true, data: {
-                        widget_width: 1, widget_width_class: 'col-12 col-md-6 col-lg-3', widget_style: 'warning'
+                        widget_width: 1, widget_height: height, widget_width_class: 'col-12 col-md-6 col-lg-3', widget_style: 'warning'
                     }}});
                 }
                 if (input.get('action') === 'widget.openai.budget') {
@@ -319,12 +322,16 @@ async function verify(browser, width) {
         assert.equal(await prompt.inputValue(), '残高確認');
         assert.deepEqual(sent, ['日本語テスト\n', 'ボタンで再送', 'このログを確認', '残高確認']);
         const initialWidth = (await panel.boundingBox()).width;
+        const initialHistoryHeight = (await history.boundingBox()).height;
         await settings.click();
         const widthPicker = modal.getByLabel('横幅');
+        const heightPicker = modal.getByLabel('縦幅');
         const stylePicker = modal.getByLabel('見出し色');
         assert.equal(await widthPicker.inputValue(), '2');
+        assert.equal(await heightPicker.inputValue(), '1');
         assert.equal(await stylePicker.inputValue(), 'primary');
         await widthPicker.selectOption('1');
+        await heightPicker.selectOption('2');
         await stylePicker.selectOption('warning');
         await modal.getByRole('button', {name: '外観を保存'}).click();
         await modal.getByText('外観を保存しました。').waitFor();
@@ -332,6 +339,9 @@ async function verify(browser, width) {
         await modal.waitFor({state: 'hidden'});
         assert.equal(await panel.locator('header').evaluate(node => node.classList.contains('text-bg-warning')), true);
         assert.equal(await panel.getAttribute('data-widget-width'), '1');
+        assert.equal(await panel.getAttribute('data-widget-height'), '2');
+        assert((await history.boundingBox()).height > initialHistoryHeight);
+        assert.equal(await panel.evaluate(node => getComputedStyle(node).gridRowStart), width < 600 ? 'auto' : 'span 2');
         const updatedWidth = (await panel.boundingBox()).width;
         assert(width < 600 ? updatedWidth === initialWidth : updatedWidth < initialWidth);
         assert.equal(await prompt.inputValue(), '残高確認');
@@ -351,6 +361,16 @@ async function verify(browser, width) {
             const cardBounds = await panel.boundingBox();
             assert(popupBox.x >= cardBounds.x && popupBox.x + popupBox.width <= cardBounds.x + cardBounds.width);
         }
+        await settings.click();
+        assert.equal(await heightPicker.inputValue(), '2');
+        await heightPicker.selectOption('1');
+        await modal.getByRole('button', {name: '外観を保存'}).click();
+        await modal.getByText('外観を保存しました。').waitFor();
+        await modal.locator('.modal-footer').getByRole('button', {name: '閉じる'}).click();
+        await modal.waitFor({state: 'hidden'});
+        assert.equal(await panel.getAttribute('data-widget-height'), '1');
+        assert.equal((await history.boundingBox()).height, initialHistoryHeight);
+        assert.deepEqual(savedHeights, [2, 1]);
         assert.deepEqual(errors, []);
         console.log('PASS: GPT Widget appearance, attachments, usage, voice, formatting, copy, scroll and shortcuts at ' + width + 'px');
     } finally {

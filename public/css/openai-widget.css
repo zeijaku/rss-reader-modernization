@@ -64,6 +64,9 @@
     border-radius: .4rem;
     background: var(--bs-tertiary-bg, #f6f8fa);
 }
+.openai-widget[data-widget-height="2"] .openai-widget-messages {
+    height: clamp(16rem, 70vh, 48rem);
+}
 
 .openai-widget-message {
     inline-size: fit-content;
