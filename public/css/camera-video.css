@@ -108,6 +108,54 @@
     white-space: nowrap;
 }
 
+.camera-video-youtube-controls {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+}
+
+.camera-video-youtube-controls .camera-video-meta {
+    align-items: center;
+    margin-inline-end: auto;
+}
+
+.camera-video-youtube-help > summary {
+    display: inline-grid;
+    min-width: 32px;
+    min-height: 32px;
+    place-items: center;
+    list-style: none;
+}
+
+.camera-video-youtube-help > summary::-webkit-details-marker {
+    display: none;
+}
+
+.camera-video-youtube-help-text {
+    position: absolute;
+    z-index: 1;
+    inset-block-end: calc(100% + 4px);
+    inset-inline-end: 0;
+    max-width: min(100%, 24rem);
+    margin: 0;
+    padding: .55rem .7rem;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: .35rem;
+    background: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+    box-shadow: var(--bs-box-shadow-sm);
+    font-size: .8rem;
+}
+
+@media (pointer: coarse) {
+    .camera-video-youtube-help > summary {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
 .camera-video-modal-header {
     background-color: #333;
     color: #fff;

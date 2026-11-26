@@ -70,10 +70,12 @@ node --check "$ROOT/tests/test_current_drawer_browser.js"
 node --check "$ROOT/tests/test_current_openai_drawer_browser.js"
 node --check "$ROOT/tests/test_current_openai_chat_browser.js"
 node --check "$ROOT/tests/test_current_article_openai_browser.js"
+node --check "$ROOT/tests/test_current_camera_video_youtube_browser.js"
 if [ -n "${GAME_TEST_CHROME:-}" ]; then
     node "$ROOT/tests/test_current_openai_drawer_browser.js"
     node "$ROOT/tests/test_current_openai_chat_browser.js"
     node "$ROOT/tests/test_current_article_openai_browser.js"
+    node "$ROOT/tests/test_current_camera_video_youtube_browser.js"
 fi
 
 echo '== Current feature contracts: Feed Category =='
