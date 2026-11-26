@@ -11,6 +11,15 @@ putenv('APP_OPENAI_USER_ID=7');
 putenv('APP_OPENAI_MODEL=gpt-6-luna');
 $fixtureKey = 'fixture-placeholder-openai-key';
 putenv('OPENAI_API_KEY=' . $fixtureKey);
+define('OPENAI_WIDGET_USAGE_ROOT', sys_get_temp_dir() . '/rss-openai-test-' . bin2hex(random_bytes(8)));
+register_shutdown_function(static function (): void {
+    foreach (glob(OPENAI_WIDGET_USAGE_ROOT . '/*') ?: [] as $file) {
+        unlink($file);
+    }
+    if (is_dir(OPENAI_WIDGET_USAGE_ROOT)) {
+        rmdir(OPENAI_WIDGET_USAGE_ROOT);
+    }
+});
 
 require dirname(__DIR__) . '/app/bootstrap.php';
 require dirname(__DIR__) . '/app/api.php';
@@ -38,9 +47,14 @@ $created = $dispatch('create', ['widget_location' => '0']);
 openai_test_check($created['status'] === 201, 'Authorized account can add GPT Widget without a schema migration');
 $widget = ['widget_id' => $created['body']['data']['widget_id']];
 openai_test_check($dispatch('get', $widget, 8)['status'] === 404, 'Other account cannot access GPT Widget');
+$budget = $widget + ['baseline' => '4.32'];
+openai_test_check($dispatch('budget', $budget, 8)['status'] === 404, 'Other account cannot update the credit baseline');
 $db->exec("UPDATE {$table} SET widget_owner = 8 WHERE widget_id = " . $widget['widget_id']);
 openai_test_check($dispatch('get', $widget)['status'] === 404, 'Configured account cannot access a foreign widget ID');
 $db->exec("UPDATE {$table} SET widget_owner = 7 WHERE widget_id = " . $widget['widget_id']);
+openai_test_check($dispatch('budget', array_replace($budget, ['baseline' => '-1']))['status'] === 422
+    && $dispatch('budget', $budget)['body']['data']['usage']['remaining_usd'] === 4.32,
+    'Credit baseline validates USD and starts the estimate at the entered balance');
 
 $first = $dispatch('new', $widget)['body']['data']['selected'];
 $second = $dispatch('new', $widget)['body']['data']['selected'];
@@ -58,7 +72,7 @@ $transport = static function (string $key, array $request) use ($fixtureKey, $di
     return ['status' => 200, 'body' => json_encode(['status' => 'completed', 'output' => [
         ['type' => 'reasoning', 'summary' => []],
         ['type' => 'message', 'role' => 'assistant', 'content' => [['type' => 'output_text', 'text' => "こんにちは\n<script>literal</script>"]]],
-    ]], JSON_THROW_ON_ERROR)];
+    ], 'usage' => ['input_tokens' => 1000, 'output_tokens' => 100]], JSON_THROW_ON_ERROR)];
 };
 $sent = $dispatch('send', $payload, 7, $transport);
 $saved = $dispatch('get', $widget)['body']['data'];
@@ -67,6 +81,14 @@ openai_test_check($sent['status'] === 200 && $saved['threads'][0]['id'] === $fir
     'Reply and prompt survive reload in the selected conversation only');
 openai_test_check(!str_contains(json_encode($saved, JSON_THROW_ON_ERROR), $fixtureKey) && !isset($saved['lease_token']),
     'Widget state exposes neither the API key nor the lease');
+openai_test_check($saved['usage']['spent_usd'] === 0.00015 && abs($saved['usage']['remaining_usd'] - 4.31985) < 1e-9
+    && $saved['usage'] === $sent['body']['data']['usage'], 'Measured token cost is stored and deducted from the baseline');
+$usageResponse = '{"usage":{"input_tokens":1000,"output_tokens":100,"input_tokens_details":{"cached_tokens":100,"cache_write_tokens":100}}}';
+openai_test_check(openai_usage_cost('gpt-6.2-sol', $usageResponse) === 2860000
+    && openai_usage_cost('unknown-model', $usageResponse) === null,
+    'Supported model costs use cache read, cache write and output rates');
+openai_test_check(openai_usage_cost('gpt-6.2-sol', '{"service_tier":"priority",' . substr($usageResponse, 1)) === null,
+    'Requests served on another tier do not use the standard estimate');
 openai_test_check($dispatch('send', $payload, 7, $transport)['status'] === 409 && $called === 1,
     'Stale retries never call the provider again after a reply was saved');
 
@@ -79,10 +101,45 @@ $failed = $dispatch('send', $next, 7, static function (string $key, array $reque
 openai_test_check($failed['status'] === 429 && !str_contains(json_encode($failed, JSON_THROW_ON_ERROR), 'private upstream details')
     && $dispatch('get', $widget)['body']['data']['threads'][1]['messages'] === $saved['threads'][1]['messages'],
     'Provider failure leaves stored history intact and hides upstream details');
+$credit = $dispatch('send', $next, 7, static fn(): array =>
+    ['status' => 429, 'body' => '{"error":{"code":"credit_balance_exhausted"}}']);
+openai_test_check($credit['body']['error']['code'] === 'openai_credit_exhausted'
+    && $failed['body']['error']['code'] === 'openai_rate_limit', 'Credit exhaustion and generic 429 have distinct notices');
 openai_test_check($dispatch('send', array_replace($next, ['prompt' => str_repeat('あ', 1400)]))['status'] === 422,
     'Rejects oversized UTF-8 prompts before contacting OpenAI');
 openai_test_check($dispatch('remove', $widget + ['thread_id' => $first])['status'] === 200,
     'Temporary lease is released after a failed request');
+
+$pdf = openai_attachment_content('directory/report.pdf', "%PDF-1.7\n");
+$text = openai_attachment_content('日本語.log', "ログ\n2行目");
+$png = openai_attachment_content('pixel.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9ZL1sAAAAASUVORK5CYII=', true));
+openai_test_check($pdf['name'] === 'report.pdf' && $pdf['part']['type'] === 'input_file'
+    && $text['part']['type'] === 'input_text' && str_ends_with($text['part']['text'], "ログ\n2行目")
+    && $png['part']['type'] === 'input_image', 'PDF, UTF-8 text and PNG map to the expected Responses input types');
+$parts = openai_widget_request_payload([
+    ['role' => 'user', 'content' => '前の質問', 'attachment' => 'old.pdf'],
+    ['role' => 'assistant', 'content' => '前の回答'],
+    ['role' => 'user', 'content' => '何が書かれていますか？'],
+], 'gpt-6-luna', $pdf)['input'];
+openai_test_check($parts[0] === ['role' => 'user', 'content' => '前の質問']
+    && $parts[2]['content'] === [['type' => 'input_text', 'text' => '何が書かれていますか？'], $pdf['part']],
+    'The attachment is sent with the current prompt and prior turns still use text only');
+foreach (['image.png' => 'not an image', 'binary.log' => "\x00", 'archive.zip' => 'zip',
+    'large.txt' => str_repeat('x', OPENAI_WIDGET_ATTACHMENT_MAX_BYTES + 1)] as $filename => $contents) {
+    $rejected = false;
+    try {
+        openai_attachment_content($filename, $contents);
+    } catch (InvalidArgumentException $exception) {
+        $rejected = true;
+    }
+    openai_test_check($rejected, 'Rejects invalid attachment ' . $filename);
+}
+$timeout = $dispatch('send', $next, 7, static fn(): array =>
+    ['status' => 0, 'timeout' => true]);
+openai_test_check($timeout['status'] === 504 && $timeout['body']['error']['usage']['unpriced'] === 1
+    && $dispatch('get', $widget)['body']['data']['usage']['remaining_usd'] === null
+    && $dispatch('budget', $budget)['body']['data']['usage']['remaining_usd'] === 4.32,
+    'Unpriced requests suppress the estimate until the balance is reset');
 
 $normalRow = dashboard_widget_normalize_row($db->query("SELECT * FROM {$table} LIMIT 1")->fetch());
 openai_test_check($normalRow['widget_config_data'] === [], 'Ordinary widget listing excludes private chat text');

@@ -17,7 +17,7 @@ function openai_widget_model(): string
     return preg_match('/\A[A-Za-z0-9][A-Za-z0-9._:-]{0,99}\z/D', $model) === 1 ? $model : OPENAI_WIDGET_DEFAULT_MODEL;
 }
 
-function openai_widget_request_payload(array $messages, string $model): array
+function openai_widget_request_payload(array $messages, string $model, ?array $attachment = null): array
 {
     $payload = [
         'model' => $model,
@@ -28,6 +28,13 @@ function openai_widget_request_payload(array $messages, string $model): array
         'store' => false,
         'max_output_tokens' => 1000,
     ];
+    if ($attachment !== null) {
+        $index = array_key_last($payload['input']);
+        $payload['input'][$index]['content'] = [
+            ['type' => 'input_text', 'text' => $payload['input'][$index]['content']],
+            $attachment['part'],
+        ];
+    }
     if ($model === OPENAI_WIDGET_DEFAULT_MODEL) {
         $payload['reasoning'] = ['effort' => 'none'];
     }

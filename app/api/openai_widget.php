@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/openai_responses.php';
+require_once dirname(__DIR__) . '/openai_attachment.php';
+require_once dirname(__DIR__) . '/openai_usage.php';
 
 /** @return array{status:int,body:array<string,mixed>} */
-function api_openai_widget_dispatch(string $action, int $ownerId, array $input, ?callable $transport = null): array
+function api_openai_widget_dispatch(string $action, int $ownerId, array $input, ?callable $transport = null, array $files = []): array
 {
     if (!openai_widget_allowed_user($ownerId)) {
         return api_error('not_found', 'GPT Widgetを利用できません。', 404);
@@ -18,7 +20,7 @@ function api_openai_widget_dispatch(string $action, int $ownerId, array $input, 
         return api_success(['widget_id' => openai_widget_create($ownerId, $location)], 201);
     }
     if (!in_array($action, ['widget.openai.get', 'widget.openai.new', 'widget.openai.send',
-        'widget.openai.remove', 'widget.openai.delete'], true)) {
+        'widget.openai.remove', 'widget.openai.delete', 'widget.openai.budget'], true)) {
         return api_error('unknown_action', 'Unknown API action.', 400);
     }
 
@@ -33,12 +35,22 @@ function api_openai_widget_dispatch(string $action, int $ownerId, array $input, 
     $original = (string) $row['widget_config'];
     $state = openai_widget_decode_state($original);
     if ($action === 'widget.openai.get') {
-        return api_openai_widget_state($state);
+        return api_openai_widget_state($state, '', false, openai_usage_state($ownerId));
     }
     if (($state['lease_until'] ?? 0) > time()) {
         return api_openai_widget_busy();
     }
     unset($state['lease_until'], $state['lease_token']);
+    if ($action === 'widget.openai.budget') {
+        $baseline = openai_usage_baseline($input['baseline'] ?? null);
+        if ($baseline === null) {
+            return api_validation_error('Billingに表示された残高を米ドルで入力してください。');
+        }
+        $usage = openai_usage_state($ownerId, static fn(): array =>
+            ['baseline' => $baseline, 'spent' => 0, 'unpriced' => 0, 'since' => time()]);
+        return $usage === null ? api_error('openai_usage_unavailable', '利用状況を保存できませんでした。', 503)
+            : api_success(['usage' => $usage]);
+    }
 
     if ($action === 'widget.openai.delete') {
         return openai_widget_replace($ownerId, $widgetId, $original, openai_widget_encode_state(openai_widget_initial_state()), true)
@@ -75,6 +87,17 @@ function api_openai_widget_dispatch(string $action, int $ownerId, array $input, 
     if ($key === null || !function_exists('curl_init')) {
         return api_error('openai_not_configured', 'サーバーのOPENAI_API_KEYとPHP cURLの設定を確認してください。', 503);
     }
+    $attachment = null;
+    if (isset($files['openai_attachment'])) {
+        if (!is_array($files['openai_attachment'])) {
+            return api_validation_error('ファイルを読み込めませんでした。選び直してください。');
+        }
+        try {
+            $attachment = openai_attachment_from_upload($files['openai_attachment']);
+        } catch (InvalidArgumentException $exception) {
+            return api_validation_error($exception->getMessage());
+        }
+    }
 
     $thread =& $state['threads'][$index];
     if ($messageCount === 0) {
@@ -82,7 +105,11 @@ function api_openai_widget_dispatch(string $action, int $ownerId, array $input, 
         preg_match('/\A.{1,32}/u', $title, $matches);
         $thread['title'] = $matches[0] ?? '新しい会話';
     }
-    $thread['messages'][] = ['role' => 'user', 'content' => $prompt];
+    $message = ['role' => 'user', 'content' => $prompt];
+    if ($attachment !== null) {
+        $message['attachment'] = $attachment['name'];
+    }
+    $thread['messages'][] = $message;
 
     // Reserve space for the result, including JSON escaping of newlines and quotes.
     if (strlen(openai_widget_encode_state($state)) > OPENAI_WIDGET_MAX_BYTES - 2 * OPENAI_WIDGET_ANSWER_BYTES - 256) {
@@ -100,14 +127,22 @@ function api_openai_widget_dispatch(string $action, int $ownerId, array $input, 
 
     $saved = false;
     try {
-        $payload = openai_widget_request_payload($thread['messages'], openai_widget_model());
+        $model = openai_widget_model();
+        $payload = openai_widget_request_payload($thread['messages'], $model, $attachment);
         $response = ($transport ?? 'openai_widget_transport')($key, $payload);
         if (($response['status'] ?? 0) !== 200) {
-            return api_openai_widget_upstream_error($response);
+            $error = api_openai_widget_upstream_error($response);
+            if (($response['timeout'] ?? false) === true) {
+                $error['body']['error']['usage'] = openai_usage_record($ownerId, null);
+            }
+            return $error;
         }
+        $usage = openai_usage_record($ownerId, openai_usage_cost($model, $response['body']));
         $answer = openai_widget_parse_response($response['body']);
         if ($answer === null) {
-            return api_error('openai_empty_reply', '表示できる回答がありませんでした。指示を短くして再送してください。', 502);
+            $error = api_error('openai_empty_reply', '表示できる回答がありませんでした。指示を短くして再送してください。', 502);
+            $error['body']['error']['usage'] = $usage;
+            return $error;
         }
 
         $thread['messages'][] = ['role' => 'assistant', 'content' => $answer['text'], 'truncated' => $answer['truncated']];
@@ -116,7 +151,7 @@ function api_openai_widget_dispatch(string $action, int $ownerId, array $input, 
         if (!$saved) {
             return api_openai_widget_busy();
         }
-        return api_openai_widget_state($state, $threadId, $answer['truncated']);
+        return api_openai_widget_state($state, $threadId, $answer['truncated'], $usage);
     } finally {
         if (!$saved) {
             $restored = openai_widget_decode_state($original);
@@ -126,7 +161,7 @@ function api_openai_widget_dispatch(string $action, int $ownerId, array $input, 
     }
 }
 
-function api_openai_widget_state(array $state, string $selected = '', bool $truncated = false): array
+function api_openai_widget_state(array $state, string $selected, bool $truncated, ?array $usage): array
 {
     return api_success([
         'threads' => $state['threads'],
@@ -134,6 +169,7 @@ function api_openai_widget_state(array $state, string $selected = '', bool $trun
         'can_send' => openai_widget_key() !== null && function_exists('curl_init'),
         'model' => openai_widget_model(),
         'truncated' => $truncated,
+        'usage' => $usage,
     ]);
 }
 
@@ -145,7 +181,7 @@ function api_openai_widget_save(int $ownerId, int $widgetId, string $expected, a
         return api_openai_widget_full();
     }
     return openai_widget_replace($ownerId, $widgetId, $expected, $encoded)
-        ? api_openai_widget_state($state, $selected) : api_openai_widget_busy();
+        ? api_openai_widget_state($state, $selected, false, openai_usage_state($ownerId)) : api_openai_widget_busy();
 }
 
 function api_openai_widget_busy(): array
@@ -162,6 +198,12 @@ function api_openai_widget_upstream_error(array $response): array
 {
     if (($response['timeout'] ?? false) === true) {
         return api_error('openai_timeout', 'OpenAIからの応答がタイムアウトしました。', 504);
+    }
+    if (($response['status'] ?? 0) === 429) {
+        $error = json_decode((string) ($response['body'] ?? ''), true, 12);
+        if (($error['error']['code'] ?? null) === 'credit_balance_exhausted') {
+            return api_error('openai_credit_exhausted', 'APIクレジットを使い切りました。利用状況からBillingを開けます。', 429);
+        }
     }
     return match ($response['status'] ?? 0) {
         401, 403 => api_error('openai_key_rejected', 'OpenAIのAPIキー、プロジェクト、ResponsesのWrite権限を確認してください。', 502),

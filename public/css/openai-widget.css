@@ -1,5 +1,4 @@
 .openai-widget-panel {
-    overflow: hidden;
     border: 1px solid var(--bs-border-color, #dee2e6);
     border-radius: .5rem;
     background: var(--bs-body-bg, #fff);
@@ -13,6 +12,10 @@
 }
 
 .openai-widget-header { padding: .4rem .65rem; }
+.openai-widget-panel > .openai-widget-header {
+    border-start-start-radius: .45rem !important;
+    border-start-end-radius: .45rem !important;
+}
 .openai-widget-header h2 { margin: 0; font-size: 1rem; }
 .openai-widget-model {
     min-width: 0;
@@ -23,6 +26,29 @@
     white-space: nowrap;
 }
 .openai-widget-header button { flex: 0 0 auto; }
+.openai-widget-usage { position: relative; flex: 0 0 auto; }
+.openai-widget-usage > button {
+    min-width: var(--widget-header-action-size, 36px);
+    padding-inline: .4rem;
+    color: inherit;
+}
+.openai-widget-usage-panel {
+    position: absolute;
+    z-index: 1020;
+    inset-block-start: 100%;
+    inset-inline-end: -4rem;
+    width: min(16rem, calc(100vw - 2rem));
+    padding: .8rem;
+    border: 1px solid var(--bs-border-color, #dee2e6);
+    border-radius: .55rem;
+    background: var(--bs-body-bg, #fff);
+    color: var(--bs-body-color, #212529);
+    font-size: .85rem;
+}
+.openai-widget-usage-panel dl { margin: .5rem 0; }
+.openai-widget-usage-panel dl > div { display: flex; justify-content: space-between; gap: .5rem; }
+.openai-widget-usage-panel dt { font-weight: 400; }
+.openai-widget-usage-panel dd { margin: 0; font-variant-numeric: tabular-nums; }
 .openai-widget-body { display: grid; gap: .55rem; padding: .65rem; }
 .openai-widget-threads { flex-wrap: wrap; }
 .openai-widget-threads select { flex: 1 1 8rem; width: auto; min-width: 0; }
@@ -125,12 +151,21 @@
 }
 .openai-widget-form {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
     align-items: start;
     gap: .2rem .5rem;
 }
 .openai-widget-form textarea { min-width: 0; resize: vertical; }
 .openai-widget-form button { white-space: nowrap; }
+.openai-widget-attachment:not([hidden]) {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .85rem;
+}
+.openai-widget-attachment > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.openai-message-attachment { display: block; margin-block-start: .3rem; overflow-wrap: anywhere; }
 .openai-widget-status {
     grid-column: 1 / -1;
     overflow: hidden;

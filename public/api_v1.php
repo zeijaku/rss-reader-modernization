@@ -137,7 +137,11 @@ $contentType = isset($_SERVER['CONTENT_TYPE']) && is_string($_SERVER['CONTENT_TY
     ? strtolower(trim($_SERVER['CONTENT_TYPE']))
     : '';
 $mailMultipart = $action === 'mail.message.send' && str_starts_with($contentType, 'multipart/form-data');
+$openaiMultipart = $action === 'widget.openai.send' && str_starts_with($contentType, 'multipart/form-data');
 $maxRequestBytes = $mailMultipart ? mail_attachment_http_request_max_bytes() : APP_API_MAX_REQUEST_BYTES;
+if ($openaiMultipart) {
+    $maxRequestBytes = OPENAI_WIDGET_ATTACHMENT_MAX_BYTES + 65536;
+}
 if ($contentLength !== null && $contentLength > $maxRequestBytes) {
     api_emit(api_error('request_too_large', 'Request body is too large.', 413));
 }
@@ -186,7 +190,7 @@ try {
     }
     if (str_starts_with($action, 'widget.openai.')) {
         require_once dirname(__DIR__) . '/app/api/openai_widget.php';
-        api_emit(api_openai_widget_dispatch($action, $userId, $_POST));
+        api_emit(api_openai_widget_dispatch($action, $userId, $_POST, null, $_FILES));
     }
     if (str_starts_with($action, 'stock.state.')) {
         api_emit(stock_state_api_dispatch($action, $userId, $_POST));

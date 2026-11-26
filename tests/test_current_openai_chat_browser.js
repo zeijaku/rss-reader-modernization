@@ -48,6 +48,7 @@ async function verify(browser, width) {
     const errors = [];
     const sent = [];
     const thread = {id: 'fixture-thread', title: '会話', messages: []};
+    let usage = {baseline_usd: null, spent_usd: 0, remaining_usd: null, unpriced: 0};
     try {
         const page = await context.newPage();
         page.on('pageerror', error => errors.push(error.message));
@@ -83,15 +84,38 @@ async function verify(browser, width) {
                 'Permissions-Policy': 'camera=(), microphone=(self), geolocation=(), payment=()'
             }});
             if (pathname === '/api_v1.php') {
-                const input = new URLSearchParams(route.request().postData());
+                const request = route.request();
+                const contentType = request.headers()['content-type'];
+                const input = contentType.startsWith('multipart/form-data')
+                    ? await new Response(request.postDataBuffer(), {headers: {'content-type': contentType}}).formData()
+                    : new URLSearchParams(request.postData());
+                if (input.get('action') === 'widget.openai.budget') {
+                    assert.equal(input.get('baseline'), '4.32');
+                    usage = {baseline_usd: 4.32, spent_usd: 0, remaining_usd: 4.32, unpriced: 0};
+                    return route.fulfill({json: {ok: true, data: {usage}}});
+                }
                 if (input.get('action') === 'widget.openai.send') {
                     sent.push(input.get('prompt'));
-                    if (sent.length > 1) return route.fulfill({status: 429, json: {ok: false, error: {message: '送信制限'}}});
-                    await pending;
-                    thread.messages.push({role: 'user', content: input.get('prompt')},
-                        {role: 'assistant', content: '長い回答です。\n'.repeat(28) + '\n' + formattedAnswer, truncated: true});
+                    if (sent.length === 2) return route.fulfill({status: 429, json: {ok: false, error: {message: '送信制限'}}});
+                    if (sent.length === 4) return route.fulfill({status: 429, json: {ok: false, error: {
+                        code: 'openai_credit_exhausted', message: 'APIクレジットを使い切いました。利用状況からBillingを開けます。'
+                    }}});
+                    if (sent.length === 3) {
+                        const file = input.get('openai_attachment');
+                        assert.equal(input.get('csrf_token'), 'fixture');
+                        assert.equal(input.get('message_count'), '2');
+                        assert.equal(file.name, '日本語.log');
+                        assert.equal(await file.text(), 'ログの本文');
+                        usage = {...usage, spent_usd: 0.01, remaining_usd: 4.31};
+                        thread.messages.push({role: 'user', content: input.get('prompt'), attachment: file.name},
+                            {role: 'assistant', content: '添付を確認しました。'});
+                    } else {
+                        await pending;
+                        thread.messages.push({role: 'user', content: input.get('prompt')},
+                            {role: 'assistant', content: '長い回答です。\n'.repeat(28) + '\n' + formattedAnswer, truncated: true});
+                    }
                 }
-                return route.fulfill({json: {ok: true, data: {threads: [thread], can_send: true, model: 'gpt-6.2-sol'}}});
+                return route.fulfill({json: {ok: true, data: {threads: [thread], can_send: true, model: 'gpt-6.2-sol', usage}}});
             }
             const file = path.join(root, 'public', pathname);
             return fs.existsSync(file) && fs.statSync(file).isFile() ? route.fulfill({path: file}) : route.fulfill({status: 404});
@@ -101,7 +125,7 @@ async function verify(browser, width) {
         const form = panel.locator('[data-openai-form]');
         const prompt = panel.getByRole('textbox', {name: 'メッセージ'});
         const send = panel.getByRole('button', {name: '送信', exact: true});
-        const status = panel.getByRole('status');
+        const status = panel.locator('[data-openai-status]');
         const history = panel.getByRole('region', {name: '会話の履歴'});
         const model = panel.locator('header [data-openai-model]');
         const mic = panel.getByRole('button', {name: '音声入力', exact: true});
@@ -119,8 +143,22 @@ async function verify(browser, width) {
         assert.equal(await modalHeader.evaluate(node => getComputedStyle(node).backgroundColor),
             await panel.locator('header').evaluate(node => getComputedStyle(node).backgroundColor));
         assert.equal(await modalHeader.getByRole('button', {name: '閉じる'}).getAttribute('data-bs-theme'), 'dark');
+        await modal.getByLabel('基準残高（USD）').fill('4.32');
+        await modal.getByRole('button', {name: '設定', exact: true}).click();
+        await modal.getByText('基準残高を設定しました。').waitFor();
         await modal.locator('.modal-footer').getByRole('button', {name: '閉じる'}).click();
         await modal.waitFor({state: 'hidden'});
+        const usageToggle = panel.getByRole('button', {name: 'API利用状況'});
+        const usagePanel = panel.locator('[data-openai-usage-panel]');
+        if (width < 600) await usageToggle.tap();
+        else await usageToggle.hover();
+        await usagePanel.waitFor();
+        assert.equal(await usageToggle.getAttribute('aria-expanded'), 'true');
+        assert.equal(await usagePanel.locator('[data-openai-usage-remaining]').textContent(), '$4.32');
+        const usageBox = await usagePanel.boundingBox();
+        assert(usageBox.x >= 0 && usageBox.x + usageBox.width <= width);
+        await prompt.click();
+        await usagePanel.waitFor({state: 'hidden'});
         await page.evaluate(() => { window.speechError = 'audio-capture'; });
         await prompt.fill('下書き');
         await mic.click();
@@ -251,9 +289,30 @@ async function verify(browser, width) {
         assert.equal(await prompt.inputValue(), 'ボタンで再送');
         await prompt.fill('修正した下書き');
         await status.getByText('Shift＋Enterで送信', {exact: true}).waitFor();
-        assert.deepEqual(sent, ['日本語テスト\n', 'ボタンで再送']);
+        const attach = panel.getByRole('button', {name: 'ファイルを添付'});
+        const [chooser] = await Promise.all([page.waitForEvent('filechooser'), attach.click()]);
+        const upload = {name: '日本語.log', mimeType: 'text/plain', buffer: Buffer.from('ログの本文')};
+        await chooser.setFiles(upload);
+        await panel.locator('[data-openai-attachment-name]').getByText('日本語.log').waitFor();
+        await panel.getByRole('button', {name: '添付を外す'}).click();
+        await panel.locator('[data-openai-attachment]').waitFor({state: 'hidden'});
+        await panel.locator('[data-openai-file]').setInputFiles(upload);
+        await prompt.fill('このログを確認');
+        await send.click();
+        await history.getByText('添付を確認しました。').waitFor();
+        await history.getByText('添付: 日本語.log').waitFor();
+        await panel.locator('[data-openai-attachment]').waitFor({state: 'hidden'});
+        if (width < 600) await usageToggle.tap();
+        else await usageToggle.hover();
+        assert.equal(await usagePanel.locator('[data-openai-usage-remaining]').textContent(), '$4.31');
+        await prompt.fill('残高確認');
+        await send.click();
+        await status.getByText('APIクレジットを使い切いました。利用状況からBillingを開けます。').waitFor();
+        assert.equal(await usagePanel.locator('[data-openai-usage-remaining]').textContent(), '—');
+        assert.equal(await prompt.inputValue(), '残高確認');
+        assert.deepEqual(sent, ['日本語テスト\n', 'ボタンで再送', 'このログを確認', '残高確認']);
         assert.deepEqual(errors, []);
-        console.log('PASS: GPT Widget settings, voice, formatting, copy, scroll and shortcuts at ' + width + 'px');
+        console.log('PASS: GPT Widget attachments, usage, settings, voice, formatting, copy, scroll and shortcuts at ' + width + 'px');
     } finally {
         finishSend();
         await context.close();

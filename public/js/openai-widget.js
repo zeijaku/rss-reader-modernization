@@ -210,6 +210,18 @@
         const messages = get('messages');
         const form = get('form');
         const prompt = get('prompt');
+        const fileInput = get('file');
+        const attach = get('attach');
+        const attachmentChip = get('attachment');
+        const attachmentName = get('attachment-name');
+        const detach = get('attachment-remove');
+        const usageMenu = get('usage');
+        const usageToggle = get('usage-toggle');
+        const usagePanel = get('usage-panel');
+        const budgetForm = get('budget-form');
+        const budget = get('budget');
+        const budgetSave = get('budget-save');
+        const budgetStatus = get('budget-status');
         const mic = get('mic');
         const micIcon = mic.querySelector('i');
         const send = get('send');
@@ -217,13 +229,19 @@
         const model = get('model');
         const shortcut = 'Shift＋Enterで送信';
         const drafts = new Map();
+        const attachments = new Map();
         const encoder = new TextEncoder();
+        const dollars = new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD', maximumFractionDigits: 4});
         let state = null;
         let active = '';
         let busy = false;
         let speech = null;
         let speechStarted = false;
         let stoppingSpeech = false;
+        let usage = null;
+        let usagePinned = false;
+        let creditExhausted = false;
+        const creditMessage = 'APIクレジットを使い切いました。利用状況からBillingを開けます。';
 
         function currentThread() {
             return state?.threads.find(thread => thread.id === active);
@@ -234,6 +252,31 @@
             status.title = text;
         }
 
+        function renderUsage(data) {
+            usage = data;
+            get('usage-baseline').textContent = data?.baseline_usd == null ? '未設定' : dollars.format(data.baseline_usd);
+            get('usage-spent').textContent = data == null ? '—' : dollars.format(data.spent_usd);
+            get('usage-remaining').textContent = creditExhausted || data?.remaining_usd == null ? '—' : dollars.format(data.remaining_usd);
+            get('usage-note').textContent = creditExhausted ? '前回の送信でクレジット切れを確認しました。'
+                : !data ? '利用状況を読み込めません。'
+                    : data.baseline_usd == null ? '設定からBillingの現在残高を登録できます。'
+                        : data.unpriced ? '見積もれない利用があるため、残額はBillingで確認してください。'
+                            : '登録後のWidget利用分を計測しています。';
+        }
+
+        function setUsageOpen(open) {
+            usagePanel.hidden = !open;
+            usageToggle.setAttribute('aria-expanded', String(open));
+            if (!open) usagePinned = false;
+        }
+
+        function renderAttachment(locked) {
+            const file = attachments.get(active);
+            attachmentChip.hidden = !file;
+            attachmentName.textContent = file?.name || '';
+            detach.disabled = locked;
+        }
+
         function syncControls() {
             const canType = !busy && state?.can_send && Boolean(active);
             const locked = busy || speech !== null;
@@ -241,11 +284,14 @@
             refresh.disabled = locked;
             settings.disabled = locked || !state;
             deleteWidget.disabled = settings.disabled;
+            budget.disabled = budgetSave.disabled = locked;
             picker.disabled = locked || !state?.threads.length;
             create.disabled = locked || !state || state.threads.length >= 6;
             remove.disabled = locked || !active;
             prompt.disabled = !canType;
             send.disabled = !canType || locked || length === 0 || length > 4000;
+            attach.disabled = !canType || locked;
+            renderAttachment(locked);
             mic.disabled = !canType || stoppingSpeech;
             const micLabel = speech ? '音声入力を停止' : '音声入力';
             mic.setAttribute('aria-label', micLabel);
@@ -354,6 +400,12 @@
                     label.textContent = message.role === 'user' ? 'あなた' : 'GPT';
                     if (message.role !== 'assistant') content.textContent = message.content;
                     entry.append(label, content);
+                    if (message.attachment) {
+                        const filename = document.createElement('small');
+                        filename.className = 'openai-message-attachment';
+                        filename.textContent = '添付: ' + message.attachment;
+                        entry.append(filename);
+                    }
                     if (message.truncated) {
                         const notice = document.createElement('small');
                         notice.className = 'openai-message-notice text-muted';
@@ -382,24 +434,44 @@
             picker.value = active;
             model.textContent = data.model;
             model.title = data.model;
-            showStatus(data.truncated ? '回答の一部を表示しています。'
+            renderUsage(data.usage ?? null);
+            showStatus(creditExhausted ? creditMessage : data.truncated ? '回答の一部を表示しています。'
                 : (data.can_send ? shortcut : 'サーバーにOpenAI APIキーとPHP cURLを設定してください。'));
             paintMessages();
         }
 
-        async function request(action, payload, pendingText) {
+        function reportRequestError(error, message) {
+            if (error?.code === 'openai_credit_exhausted') {
+                creditExhausted = true;
+                renderUsage(usage);
+            }
+            if (error && Object.prototype.hasOwnProperty.call(error, 'usage')) renderUsage(error.usage);
+            showStatus(message);
+        }
+
+        async function request(action, payload, pendingText, file = null) {
             if (busy) return null;
             busy = true;
             card.setAttribute('aria-busy', 'true');
             showStatus(pendingText);
             syncControls();
             try {
-                const result = await core.apiRequestPromise('widget.openai.' + action, {widget_id: widgetId, ...payload},
+                const fields = {widget_id: widgetId, ...payload};
+                let requestBody = fields;
+                if (file) {
+                    requestBody = new FormData();
+                    for (const [name, value] of Object.entries(fields)) requestBody.set(name, value);
+                    requestBody.set('openai_attachment', file);
+                }
+                const result = await core.apiRequestPromise('widget.openai.' + action, requestBody,
                     action === 'send' ? 45000 : 6000);
-                if (result?.ok && result.data) return result.data;
-                showStatus(result?.error?.message || 'GPT Widgetを更新できませんでした。');
+                if (result?.ok && result.data) {
+                    if (action === 'send') creditExhausted = false;
+                    return result.data;
+                }
+                reportRequestError(result?.error, result?.error?.message || 'GPT Widgetを更新できませんでした。');
             } catch (failure) {
-                showStatus(core.apiErrorMessage(failure.xhr || null, failure.textStatus || ''));
+                reportRequestError(failure.xhr?.responseJSON?.error, core.apiErrorMessage(failure.xhr || null, failure.textStatus || ''));
             } finally {
                 busy = false;
                 card.setAttribute('aria-busy', 'false');
@@ -416,8 +488,64 @@
         picker.addEventListener('change', () => { active = picker.value; paintMessages(); });
         prompt.addEventListener('input', () => {
             drafts.set(active, prompt.value);
-            if (!speech) showStatus(encoder.encode(prompt.value.trim()).length > 4000 ? 'メッセージが4,000バイトを超えています。' : shortcut);
+            if (!speech) showStatus(encoder.encode(prompt.value.trim()).length > 4000
+                ? 'メッセージが4,000バイトを超えています。' : (creditExhausted ? creditMessage : shortcut));
             syncControls();
+        });
+        attach.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            fileInput.value = '';
+            if (!file || attach.disabled) return;
+            if (file.size === 0 || file.size > 2 * 1024 * 1024) {
+                showStatus('空でない、2 MB以内のファイルを選んでください。');
+                return;
+            }
+            attachments.set(active, file);
+            showStatus(creditExhausted ? creditMessage : shortcut);
+            syncControls();
+        });
+        detach.addEventListener('click', () => {
+            attachments.delete(active);
+            syncControls();
+            attach.focus();
+        });
+        usageMenu.addEventListener('pointerenter', event => {
+            if (event.pointerType === 'mouse') setUsageOpen(true);
+        });
+        usageMenu.addEventListener('pointerleave', () => {
+            if (!usagePinned && !usagePanel.contains(document.activeElement)) setUsageOpen(false);
+        });
+        usageToggle.addEventListener('click', () => {
+            usagePinned = !usagePinned;
+            setUsageOpen(usagePinned);
+        });
+        usageMenu.addEventListener('focusout', event => {
+            if (!usageMenu.contains(event.relatedTarget)) setUsageOpen(false);
+        });
+        usageMenu.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || usagePanel.hidden) return;
+            event.stopPropagation();
+            setUsageOpen(false);
+            usageToggle.focus();
+        });
+        document.addEventListener('pointerdown', event => {
+            if (!usageMenu.contains(event.target)) setUsageOpen(false);
+        });
+        settings.addEventListener('click', () => {
+            budget.value = '';
+            budgetStatus.textContent = '';
+        });
+        budgetForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            if (budgetSave.disabled) return;
+            const data = await request('budget', {baseline: budget.value}, '基準残高を保存中…');
+            budgetStatus.textContent = data ? '基準残高を設定しました。' : status.textContent;
+            if (data) {
+                renderUsage(data.usage);
+                budget.value = '';
+                showStatus(creditExhausted ? creditMessage : shortcut);
+            }
         });
         prompt.addEventListener('keydown', event => {
             // Some browsers report 229 for Enter while an IME is confirming text.
@@ -442,7 +570,11 @@
         remove.addEventListener('click', async () => {
             if (!active || !window.confirm('選択した会話を削除しますか？')) return;
             const data = await request('remove', {thread_id: active}, '会話を削除中…');
-            if (data) { drafts.delete(active); acceptState(data); }
+            if (data) {
+                drafts.delete(active);
+                attachments.delete(active);
+                acceptState(data);
+            }
         });
         deleteWidget.addEventListener('click', async () => {
             if (!window.confirm('GPT Widgetと保存した会話を削除しますか？')) return;
@@ -457,9 +589,10 @@
                 thread_id: thread.id,
                 message_count: thread.messages.length,
                 prompt: prompt.value
-            }, 'GPTが回答を生成中…');
+            }, 'GPTが回答を生成中…', attachments.get(thread.id));
             if (data) {
                 drafts.delete(thread.id);
+                attachments.delete(thread.id);
                 acceptState(data);
                 prompt.focus();
             }

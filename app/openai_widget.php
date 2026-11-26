@@ -7,6 +7,7 @@ const OPENAI_WIDGET_MAX_BYTES = 56000;
 const OPENAI_WIDGET_PROMPT_BYTES = 4000;
 const OPENAI_WIDGET_ANSWER_BYTES = 6000;
 const OPENAI_WIDGET_LEASE_SECONDS = 50;
+const OPENAI_WIDGET_ATTACHMENT_MAX_BYTES = 2 * 1024 * 1024;
 
 function openai_widget_allowed_user(int $ownerId): bool
 {
