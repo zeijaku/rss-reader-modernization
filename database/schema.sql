@@ -2,7 +2,7 @@
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
 -- Fresh installs use this file only; historical migrations remain upgrade-only for existing databases.
--- The schema includes all current tables and columns introduced through migrations 001-036.
+-- The schema includes all current tables and columns introduced through migrations 001-037.
 -- See docs/installation.md and docs/update-history.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
@@ -230,13 +230,15 @@ SET @sql = CONCAT(
   '`calendar_event_end_time` TIME NULL DEFAULT NULL,',
   '`calendar_event_url` VARCHAR(2048) NULL DEFAULT NULL,',
   '`calendar_event_location` VARCHAR(255) NULL DEFAULT NULL,',
+  '`calendar_event_ics_uid` VARBINARY(255) NULL DEFAULT NULL,',
   '`calendar_event_repeat_type` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none'',',
   '`calendar_event_repeat_until` DATE NULL DEFAULT NULL,',
   '`calendar_event_deadline_highlight` TINYINT UNSIGNED NOT NULL DEFAULT 0,',
   '`calendar_event_reminder` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''none'',',
   'PRIMARY KEY (`calendar_event_id`),',
   'KEY `idx_calendar_event_owner_range` (`calendar_event_owner`, `calendar_event_flag`, `calendar_event_start_date`, `calendar_event_end_date`, `calendar_event_id`),',
-  'KEY `idx_calendar_event_source` (`calendar_event_owner`, `calendar_event_source_id`, `calendar_event_flag`, `calendar_event_start_date`)',
+  'KEY `idx_calendar_event_source` (`calendar_event_owner`, `calendar_event_source_id`, `calendar_event_flag`, `calendar_event_start_date`),',
+  'KEY `idx_calendar_event_ics_uid` (`calendar_event_owner`, `calendar_event_source_id`, `calendar_event_flag`, `calendar_event_ics_uid`)',
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Calendar予定保管'''
 );
 PREPARE v11i_stmt FROM @sql; EXECUTE v11i_stmt; DEALLOCATE PREPARE v11i_stmt;

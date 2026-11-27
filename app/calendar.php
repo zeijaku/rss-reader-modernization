@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/calendar_ics_uid.php';
+
 /** @return array{schema:int,title:string,show_completed_tasks:bool} */
 function calendar_widget_defaults(): array
 {
@@ -205,6 +207,7 @@ function calendar_create_event(int $ownerId, string $title, string $startDate, s
             ':note' => $note,
         ]);
         $eventId = (int) $pdo->lastInsertId();
+        calendar_ics_uid_initialize_new($pdo, $ownerId, $eventId);
         if ($started) {
             $pdo->commit();
         }
