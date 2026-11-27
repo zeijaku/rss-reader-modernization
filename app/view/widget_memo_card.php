@@ -17,12 +17,14 @@ function dashboard_render_memo_widget_card(array $row, int $location): string
     $memoId = (int) ($row['memo_id'] ?? 0);
     $memoTitle = dashboard_widget_validate_memo_title($row['memo_title'] ?? null) ?? 'Memo';
     $memoBody = dashboard_widget_validate_memo_body($row['memo_body'] ?? null) ?? '';
+    $memoFormat = dashboard_widget_validate_memo_format($row['memo_format'] ?? 'text') ?? 'text';
+    $memoRevision = dashboard_widget_memo_revision($row, $row);
     $memoTitleId = 'memo-title-' . $widgetId;
     $content_location = $location;
 
     return '
             <!-- Memo Widget -->
-                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget memo-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="memo" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-memo-id="' . $memoId . '" data-memo-sha256="' . hash('sha256', $memoBody) . '" role="region" aria-labelledby="' . app_html($memoTitleId) . '">
+                <section class="' . app_html($widgetWidthClass) . ' dashboard-widget memo-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="memo" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-memo-id="' . $memoId . '" data-memo-sha256="' . hash('sha256', $memoBody) . '" data-memo-format="' . app_html($memoFormat) . '" data-memo-revision="' . $memoRevision . '" data-memo-raw="' . app_html($memoBody) . '" data-memo-updated-at="' . app_html((string)($row['memo_updated_at'] ?? '')) . '" role="region" aria-labelledby="' . app_html($memoTitleId) . '">
                     <div class="memo-card-inner">
                         <div class="text-bg-' . app_html($widgetStyle) . ' memo-card-header">
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines" aria-hidden="true"></i></button>
@@ -34,7 +36,7 @@ function dashboard_render_memo_widget_card(array $row, int $location): string
                             <div class="memo-body">' . app_html($memoBody) . '</div>
                             <div class="memo-inline-editor d-none">
                                 <label class="visually-hidden" for="memo-inline-text-' . $widgetId . '">Memo本文を編集</label>
-                                <textarea class="form-control memo-inline-textarea" id="memo-inline-text-' . $widgetId . '" maxlength="4000" rows="5" aria-label="Memo本文"></textarea>
+                                <textarea class="form-control memo-inline-textarea" id="memo-inline-text-' . $widgetId . '" maxlength="32000" rows="5" aria-label="Memo本文"></textarea>
                                 <div class="memo-inline-toolbar">
                                     <span class="memo-inline-status small" role="status" aria-live="polite"></span>
                                     <button type="button" class="btn btn-sm btn-outline-secondary memo-inline-cancel">キャンセル</button>

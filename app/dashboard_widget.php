@@ -204,7 +204,7 @@ function search_dashboard_widgets(int $ownerId, int $location): array
         . 'w.widget_config, w.widget_flag, w.widget_created_at, w.widget_updated_at, '
         . 'c.content_id, c.content_date, c.content_flag, c.content_owner, c.content_location, '
         . 'c.content_style, c.content_value, '
-        . 'm.memo_id, m.memo_date, m.memo_updated_at, m.memo_flag, m.memo_owner, m.memo_title, m.memo_body '
+        . 'm.* '
         . 'FROM ' . db_table_identifier('dashboard_widget') . ' w '
         . 'LEFT JOIN ' . db_table_identifier('content') . ' c '
         . "ON w.widget_type = 'feed' AND w.widget_reference_id = c.content_id AND w.widget_owner = c.content_owner "
@@ -242,6 +242,7 @@ function search_dashboard_widgets(int $ownerId, int $location): array
             }
             $normalized['memo_title'] = $memoTitle;
             $normalized['memo_body'] = $memoBody;
+            $normalized['memo_format'] = dashboard_widget_validate_memo_format($normalized['memo_format'] ?? 'text') ?? 'text';
         }
         if ($normalized['widget_type'] === 'task') {
             $taskWidgetIds[] = (int) $normalized['widget_id'];
@@ -351,6 +352,8 @@ function dashboard_widget_public_list(int $ownerId, int $location): array
                 'title' => $row['memo_title'],
                 'body' => $row['memo_body'],
                 'body_sha256' => hash('sha256', (string) $row['memo_body']),
+                'format' => $row['memo_format'],
+                'revision' => dashboard_widget_memo_revision($row, $row),
                 'updated_at' => $row['memo_updated_at'],
             ];
         }

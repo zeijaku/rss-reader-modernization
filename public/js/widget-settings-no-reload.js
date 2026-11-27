@@ -26,13 +26,22 @@
     }
 
     function apiRequest(action, data, timeout) {
+        var multipart = action === 'widget.memo.update' && typeof window.FormData === 'function';
+        var payload = $.extend({}, data || {}, {action: action, csrf_token: csrfToken()});
+        if (multipart) {
+            var form = new window.FormData();
+            Object.keys(payload).forEach(function (key) { if (payload[key] !== undefined) form.set(key, payload[key]); });
+            payload = form;
+        }
         return $.ajax({
             url: './api_v1.php',
             method: 'POST',
             cache: false,
             dataType: 'json',
             timeout: timeout || 8000,
-            data: $.extend({}, data || {}, {action: action, csrf_token: csrfToken()})
+            data: payload,
+            processData: multipart ? false : undefined,
+            contentType: multipart ? false : undefined
         });
     }
 
@@ -165,6 +174,7 @@
                     memo_title: val('.changeMemoTitleValue'),
                     memo_body: val('.changeMemoBody'),
                     expected_sha256: val('.changeMemoExpectedSha256'),
+                    expected_revision: val('.changeMemoExpectedRevision'),
                     widget_style: val('.changeMemoStyle'),
                     widget_width: val('.changeMemoWidth'),
                     widget_height: val('.changeMemoHeight')
@@ -571,6 +581,9 @@
             requestEnd($button);
             showNotice('設定更新処理を確認出来ませんでした', 'danger');
             return;
+        }
+        if (formId === 'changeMemoForm' && (!String(spec.data.memo_body || '').trim() || Array.from(String(spec.data.memo_body).replace(/\r\n?/g, '\n')).length > 16000)) {
+            requestEnd($button); showNotice('本文は1〜16,000文字で入力してください。', 'danger'); return;
         }
         handleSimple($form, spec, $button);
     }

@@ -372,7 +372,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label" for="registerMemoBody"><small class="text-dark">本文</small></label>
-                    <textarea class="form-control memo-textarea registerMemoBody" id="registerMemoBody" maxlength="4000" rows="8" required></textarea>
+                    <textarea class="form-control memo-textarea registerMemoBody" id="registerMemoBody" maxlength="32000" rows="8" required></textarea>
                     <small class="form-text text-muted">改行を含めて4,000文字まで保存できます。</small>
                 </div>
                 <div class="row g-2">
@@ -414,13 +414,14 @@
                 <input type="hidden" class="changeMemoWidgetId">
                 <input type="hidden" class="changeMemoId">
                 <input type="hidden" class="changeMemoExpectedSha256">
+                <input type="hidden" class="changeMemoExpectedRevision">
                 <div class="mb-3">
                     <label class="form-label" for="changeMemoTitleValue"><small class="text-dark">見出し</small></label>
                     <input type="text" class="form-control changeMemoTitleValue" id="changeMemoTitleValue" maxlength="32" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label" for="changeMemoBody"><small class="text-dark">本文</small></label>
-                    <textarea class="form-control memo-textarea changeMemoBody" id="changeMemoBody" maxlength="4000" rows="8" required></textarea>
+                    <textarea class="form-control memo-textarea changeMemoBody" id="changeMemoBody" maxlength="32000" rows="8" required></textarea>
                 </div>
                 <div class="row g-2">
                     <div class="mb-3 col-md-4">

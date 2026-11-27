@@ -47,6 +47,20 @@
         return form ? form.querySelector('button[type="submit"]') : null;
     }
 
+    const MEMO_MAX_LENGTH = 16000;
+    function rawMemo(card) {
+        return attribute(card, 'data-memo-raw', first('.memo-body', card)?.textContent || '');
+    }
+    function memoMultipart(payload) {
+        if (typeof window.FormData !== 'function') return payload;
+        const data = new window.FormData();
+        Object.keys(payload).forEach(key => { if (payload[key] !== undefined) data.set(key, payload[key]); });
+        return data;
+    }
+    function validMemoBody(body) {
+        return typeof body === 'string' && body.trim() !== '' && memoBodyLength(body) <= MEMO_MAX_LENGTH;
+    }
+
     function memoFormPayload(prefix) {
         return {
             'memo_title': value('.' + prefix + 'MemoTitleValue'),
@@ -60,7 +74,8 @@
     function addMemo(form) {
         const payload = memoFormPayload('register');
         payload.widget_location = value('.registerMemoLocation');
-        runMutation(submitButton(form), 'widget.memo.create', payload, function () {
+        if (!validMemoBody(payload.memo_body)) { showNotice('本文は1〜16,000文字で入力してください。', 'danger'); return; }
+        runMutation(submitButton(form), 'widget.memo.create', memoMultipart(payload), function () {
             window.location.reload();
         });
     }
@@ -68,12 +83,12 @@
     function editMemo(trigger) {
         const card = closestMatch(trigger, '[data-dashboard-widget-type="memo"]');
         const title = card ? first('.memo-title', card) : null;
-        const body = card ? first('.memo-body', card) : null;
         setValue('.changeMemoWidgetId', attribute(trigger, 'data-widget-id', ''));
         setValue('.changeMemoId', attribute(trigger, 'data-memo-id', ''));
         setValue('.changeMemoExpectedSha256', card ? (card.getAttribute('data-memo-sha256') || '') : '');
+        setValue('.changeMemoExpectedRevision', card ? (card.getAttribute('data-memo-revision') || '') : '');
         setValue('.changeMemoTitleValue', title && title.textContent ? title.textContent : 'Memo');
-        setValue('.changeMemoBody', body ? body.textContent : '');
+        setValue('.changeMemoBody', card ? rawMemo(card) : '');
         setValue('.changeMemoStyle', attribute(trigger, 'data-widget-style', 'success'));
         setValue('.changeMemoWidth', attribute(trigger, 'data-widget-width', '1'));
         setValue('.changeMemoHeight', attribute(trigger, 'data-widget-height', '1'));
@@ -83,7 +98,9 @@
         const payload = memoFormPayload('change');
         payload.widget_id = value('.changeMemoWidgetId');
         payload.expected_sha256 = value('.changeMemoExpectedSha256');
-        runMutation(submitButton(form), 'widget.memo.update', payload, function () {
+        payload.expected_revision = value('.changeMemoExpectedRevision');
+        if (!validMemoBody(payload.memo_body)) { showNotice('本文は1〜16,000文字で入力してください。', 'danger'); return; }
+        runMutation(submitButton(form), 'widget.memo.update', memoMultipart(payload), function () {
             window.location.reload();
         });
     }
@@ -108,10 +125,10 @@
     function updateInlineStatus(card, message, error) {
         const nodes = inlineElements(card);
         if (!nodes.status) { return; }
-        nodes.status.textContent = message || String(memoBodyLength(nodes.textarea.value)) + '/4000';
+        nodes.status.textContent = message || String(memoBodyLength(nodes.textarea.value)) + '/' + MEMO_MAX_LENGTH;
         nodes.status.classList.toggle('is-error', error === true);
         if (nodes.save && card.getAttribute('data-memo-inline-saving') !== 'true') {
-            nodes.save.disabled = memoBodyLength(nodes.textarea.value) > 4000;
+            nodes.save.disabled = memoBodyLength(nodes.textarea.value) > MEMO_MAX_LENGTH;
         }
     }
 
@@ -136,7 +153,7 @@
             showNotice('編集情報を取得できません。ページを再読み込みしてください。', 'danger');
             return;
         }
-        nodes.textarea.value = nodes.display.textContent || '';
+        nodes.textarea.value = rawMemo(card);
         nodes.display.classList.add('d-none');
         nodes.editor.classList.remove('d-none');
         card.setAttribute('data-memo-inline-editing', 'true');
@@ -150,8 +167,8 @@
         const counter = first('.memo-character-count', card);
         if (!counter) { return; }
         const length = memoBodyLength(body);
-        counter.textContent = String(length) + '/4000';
-        counter.classList.toggle('is-limit', length >= 4000);
+        counter.textContent = String(length) + '/' + MEMO_MAX_LENGTH;
+        counter.classList.toggle('is-limit', length >= MEMO_MAX_LENGTH);
     }
 
     function saveInlineEdit(trigger) {
@@ -160,13 +177,14 @@
         const nodes = inlineElements(card);
         const widgetId = card.getAttribute('data-dashboard-widget-id') || '';
         const expected = card.getAttribute('data-memo-sha256') || '';
+        const revision = card.getAttribute('data-memo-revision') || '';
         const body = nodes.textarea.value.replace(/\r\n?/g, '\n');
         if (!/^[1-9][0-9]*$/.test(widgetId) || !/^[a-f0-9]{64}$/.test(expected)) {
             updateInlineStatus(card, '編集情報が不正です。再読み込みしてください。', true);
             return;
         }
-        if (!body.trim() || memoBodyLength(body) > 4000) {
-            updateInlineStatus(card, '本文は1〜4,000文字で入力してください。', true);
+        if (!body.trim() || memoBodyLength(body) > MEMO_MAX_LENGTH) {
+            updateInlineStatus(card, '本文は1〜16,000文字で入力してください。', true);
             return;
         }
         if (!requestStartElement(nodes.save)) { return; }
@@ -174,11 +192,12 @@
         nodes.cancel.disabled = true;
         nodes.textarea.readOnly = true;
         nodes.status.textContent = '保存中...';
-        apiRequestPromise('widget.memo.body.update', {
+        apiRequestPromise('widget.memo.body.update', memoMultipart({
             widget_id: widgetId,
             memo_body: body,
-            expected_sha256: expected
-        }, 10000)
+            expected_sha256: expected,
+            expected_revision: revision
+        }), 10000)
             .then(function (data) {
                 if (!apiResponseOk(data)) {
                     updateInlineStatus(card, data && data.error && data.error.code === 'memo_conflict'
@@ -187,12 +206,17 @@
                     return;
                 }
                 const saved = data && data.data ? data.data : {};
-                if (typeof saved.memo_body !== 'string' || !/^[a-f0-9]{64}$/.test(saved.memo_sha256 || '')) {
+                if (typeof saved.memo_body !== 'string' || !/^[a-f0-9]{64}$/.test(saved.memo_sha256 || '')
+                    || !/^[a-f0-9]{64}$/.test(saved.memo_revision || '') || !['text','markdown'].includes(saved.memo_format)) {
                     updateInlineStatus(card, '保存結果を確認できません。再読み込みしてください。', true);
                     return;
                 }
                 nodes.display.textContent = saved.memo_body;
                 card.setAttribute('data-memo-sha256', saved.memo_sha256);
+                card.setAttribute('data-memo-raw', saved.memo_body);
+                card.setAttribute('data-memo-revision', saved.memo_revision);
+                card.setAttribute('data-memo-format', saved.memo_format);
+                card.setAttribute('data-memo-updated-at', saved.memo_updated_at);
                 updateInlineCounter(card, saved.memo_body);
                 card.removeAttribute('data-memo-inline-saving');
                 cancelInlineEdit(card);

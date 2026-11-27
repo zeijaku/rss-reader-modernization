@@ -50,6 +50,7 @@ function current_schema_tables(): array
 function current_schema_required_columns(): array
 {
     return [
+        'memo' => ['memo_format'],
         'calendar_day_mark' => ['mark_owner', 'mark_date', 'mark_label', 'mark_note'],
         'calendar_ics_subscription' => [
             'ics_owner', 'ics_url', 'ics_raw', 'ics_status',

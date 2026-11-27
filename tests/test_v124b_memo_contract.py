@@ -29,8 +29,8 @@ check('data-widget-height="1"' in css and 'height: 320px;' in css,
       'Smartphone Height 1 remains explicitly bounded')
 check('data-widget-height="2"' in css and 'height: 648px;' in css,
       'Smartphone Height 2 remains explicitly bounded')
-check('var MEMO_MAX_LENGTH = 4000;' in js,
-      'Memo counter uses the existing 4000-character server limit')
+check('var MEMO_MAX_LENGTH = 16000;' in js,
+      'Memo counter uses the 16000-character server limit')
 check("String(length) + '/' + String(MEMO_MAX_LENGTH)" in js,
       'Memo counter renders current length over maximum')
 check("document.querySelectorAll('.memo-card').forEach(ensureDashboardCounter)" in js,

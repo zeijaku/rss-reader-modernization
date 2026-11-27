@@ -2,7 +2,7 @@
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
 -- Fresh installs use this file only; historical migrations remain upgrade-only for existing databases.
--- The schema includes all current tables and columns introduced through migrations 001-037.
+-- The schema includes all current tables and columns introduced through migrations 001-038.
 -- See docs/installation.md and docs/update-history.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
@@ -163,6 +163,7 @@ SET @sql = CONCAT(
   '`memo_owner` INT UNSIGNED NOT NULL COMMENT ''user_info.user_id'',',
   '`memo_title` VARCHAR(128) NOT NULL,',
   '`memo_body` TEXT NOT NULL,',
+  '`memo_format` VARCHAR(8) CHARACTER SET ascii COLLATE ascii_bin NOT NULL DEFAULT ''text'',',
   'PRIMARY KEY (`memo_id`),',
   'KEY `idx_memo_owner_flag_id` (`memo_owner`, `memo_flag`, `memo_id`)',
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''Memo保管'''
