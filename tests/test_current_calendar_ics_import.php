@@ -89,6 +89,12 @@ $round=calendar_transfer_export($pdo,7,$copyId,null,true)['calendar-'.$copyId.'.
 import_check(str_contains($round,'RECURRENCE-ID')&&str_contains($round,'EXDATE')&&str_contains($round,'X-RSSREADER-DAY-MARK:'),'round trip exceptions and marks');
 $repeat=['source_id'=>(string)$copyId,'mode'=>'update','ics'=>$round];
 $p=import_preview($repeat); import_check($p['counts']['skip']===2&&!$p['can_apply'],'identical full import skips without rewriting');
+$standardOnly=['source_id'=>'1','include_extra'=>'0','ics'=>import_ics(import_event('standard-only','standard',"COLOR:green\r\nX-RSSREADER-COLOR:red\r\nX-RSSREADER-DEADLINE:1\r\n"))];
+$p=import_preview($standardOnly); import_check($p['counts']['add']===1&&import_execute($standardOnly,$p)['status']===200,'standard-only import');
+$r=$pdo->query("SELECT calendar_event_color,calendar_event_deadline_highlight FROM $events WHERE calendar_event_ics_uid='standard-only'")->fetch();
+import_check($r['calendar_event_color']==='green'&&(int)$r['calendar_event_deadline_highlight']===0,'custom attributes disabled without suppressing standard COLOR');
+$badInterval=['source_id'=>'1','ics'=>import_ics(import_event('badinterval','bad',"RRULE:FREQ=WEEKLY;INTERVAL=1oops\r\n"))];
+$p=import_preview($badInterval); import_check($p['counts']['unsupported']===1&&!$p['can_apply'],'malformed interval rejected');
 $badSyntax=['source_id'=>'1','ics'=>"BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nEND:VCALENDAR\r\n"];
 import_check(api_dispatch('calendar.transfer.preview',7,$badSyntax)['status']===422,'invalid component rejected');
 $rollback=['source_id'=>'1','ics'=>import_ics(import_event('rollback1','first').import_event('rollback2','second'))];

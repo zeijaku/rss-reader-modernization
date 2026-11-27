@@ -199,7 +199,7 @@ function api_calendar_transfer_import(string $action,int $owner,array $input): a
     if (!calendar_ics_uid_schema_ready($pdo)||!calendar_source_schema_ready($pdo)) return api_error('calendar_transfer_unavailable','Migration 037が必要です。',503);
     if ($pdo->inTransaction()) throw new LogicException('Import requires its own transaction.');
     try {
-        $parsed=calendar_import_parse($raw); $options=calendar_import_options($input,$parsed);
+        $parsed=calendar_import_parse($raw,($input['include_extra']??'1')!=='0'); $options=calendar_import_options($input,$parsed);
         $pdo->beginTransaction();
         $state=calendar_import_state($pdo,$owner,$apply);
         $expected=calendar_import_token($owner,$raw,$options,$state);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/calendar_ics_parser.php';
 
 const CALENDAR_IMPORT_MAX_LINES = 200000;
+const CALENDAR_IMPORT_MAX_PROPERTIES = 80000;
 const CALENDAR_IMPORT_MAX_MARKS = 37000;
 
 /** Single pass: a literal backslash followed by n must not become a newline. */
@@ -24,8 +25,8 @@ function calendar_import_components(string $raw): array
     $raw = str_replace(["\r\n", "\r"], "\n", $raw);
     $lines = explode("\n", $raw);
     if (count($lines) > CALENDAR_IMPORT_MAX_LINES) throw new LengthException('ICSの行数上限を超えています。');
-    $stack = []; $root = null; $components = 0;
-    $consume = static function (string $line) use (&$stack, &$root, &$components): void {
+    $stack = []; $root = null; $components = 0; $properties = 0;
+    $consume = static function (string $line) use (&$stack, &$root, &$components, &$properties): void {
         if ($line === '') return;
         if (strlen($line) > 32768) throw new LengthException('ICSのプロパティが長すぎます。');
         if (preg_match('/\A(BEGIN|END):([A-Z0-9-]+)\z/i', $line, $m)) {
@@ -44,6 +45,7 @@ function calendar_import_components(string $raw): array
             return;
         }
         if ($stack === []) throw new InvalidArgumentException('VCALENDAR外のデータがあります。');
+        if (++$properties > CALENDAR_IMPORT_MAX_PROPERTIES) throw new LengthException('ICSのプロパティ数上限を超えています。');
         // A colon inside a quoted parameter value is not the property delimiter.
         if (!preg_match('/\A([A-Za-z0-9-]+)((?:;[A-Za-z0-9-]+=(?:"[^"]*"|[^;:"]*))*)\:(.*)\z/D', $line, $m)) {
             throw new InvalidArgumentException('ICSのプロパティ形式が不正です。');
@@ -182,6 +184,12 @@ function calendar_import_repeat(array $p,array $event): array
     $type='none'; $until=null;
     if (isset($p['RRULE'])) {
         $rule=calendar_ics_rrule($p);
+        // The subscription parser tolerates numeric coercion; writes must not.
+        foreach (explode(';',strtoupper((string)calendar_import_value($p,'RRULE'))) as $part) {
+            if (str_starts_with($part,'INTERVAL=') && !preg_match('/\AINTERVAL=0*1\z/D',$part)) {
+                throw new DomainException('INTERVALが非対応です。');
+            }
+        }
         if ($rule===null || isset($rule['invalid']) || array_diff(array_keys($rule),['FREQ','INTERVAL','COUNT','UNTIL','WKST'])!==[]
             || $rule['INTERVAL']!==1 || (isset($rule['WKST'])&&!in_array($rule['WKST'],['MO','TU','WE','TH','FR','SA','SU'],true))
             || ($rule['COUNT']!==null&&isset($rule['UNTIL']))) throw new DomainException('複雑な繰り返し条件は非対応です。');
@@ -232,9 +240,19 @@ function calendar_import_original(array $prop,array $event,array $repeat): strin
     return $date;
 }
 
-function calendar_import_parse(string $raw): array
+function calendar_import_remove_extra(array $node): array
 {
-    $root=calendar_import_components($raw); $groups=[]; $issues=[]; $count=0; $series=[];
+    foreach (array_keys($node['props']) as $key) {
+        if (str_starts_with($key,'X-RSSREADER-')) unset($node['props'][$key]);
+    }
+    $node['children']=array_map('calendar_import_remove_extra',$node['children']);
+    return $node;
+}
+
+function calendar_import_parse(string $raw,bool $extra=true): array
+{
+    $root=calendar_import_components($raw);
+    if (!$extra) $root=calendar_import_remove_extra($root); $groups=[]; $issues=[]; $count=0; $series=[];
     foreach ($root['children'] as $node) {
         if ($node['type']!=='VEVENT') {
             if ($node['type']!=='VTIMEZONE') $issues[]=['uid'=>'','reason'=>$node['type'].' は非対応です。'];
