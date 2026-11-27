@@ -101,6 +101,26 @@ jobs:
           node tests/test_current_calendar_transfer_browser.js
 
 
+  calendar_transfer_mariadb:
+    name: Calendar transfer MariaDB migration
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install MariaDB server tools
+        run: |
+          if ! command -v mariadbd >/dev/null 2>&1 || ! command -v mariadb-install-db >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends mariadb-server
+          fi
+      - name: Verify fresh schema and repeatable Migration 037
+        env:
+          REQUIRE_CALENDAR_TRANSFER_MARIADB: '1'
+        run: sh tests/test_current_calendar_transfer_mariadb.sh
+
   p2b_apache_probe:
     name: P2-B Apache isolation probe
     runs-on: ubuntu-latest

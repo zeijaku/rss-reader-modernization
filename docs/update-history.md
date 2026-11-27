@@ -1,3 +1,7 @@
+## Version 1.54.0
+
+通常CalendarのICS Import／Exportを正式化。既存v1.53.0環境ではMigration 037をコード更新前に適用します。詳細は [更新手順](update.md#v1540-正式版へ更新) を参照してください。Memo・外部ICS購読は変更しません。
+
 ## Version 1.53.0
 
 GPT Widget、Calendar日付マーク・検索と現行SLGを正式化。日付マーク未導入の既存環境ではMigration 036を適用します。詳細は [1.53.0更新手順](v1.53.0-release.md) を参照してください。

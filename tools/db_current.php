@@ -68,6 +68,7 @@ function current_schema_required_columns(): array
             'calendar_event_reminder',
             'calendar_event_deadline_highlight',
             'calendar_event_location',
+            'calendar_event_ics_uid',
         ],
         'calendar_event_exception' => [
             'calendar_event_exception_kind',
@@ -129,7 +130,7 @@ function current_schema_required_indexes(): array
         'calendar_source' => ['PRIMARY', 'idx_calendar_source_owner'],
         'calendar_ics_subscription' => ['PRIMARY', 'idx_ics_owner'],
         'calendar_day_mark' => ['PRIMARY'],
-        'calendar_event' => ['PRIMARY', 'idx_calendar_event_owner_range', 'idx_calendar_event_source'],
+        'calendar_event' => ['PRIMARY', 'idx_calendar_event_owner_range', 'idx_calendar_event_source', 'idx_calendar_event_ics_uid'],
         'calendar_event_exception' => ['PRIMARY', 'uq_cal_exception_owner_event_original'],
         'notification' => ['PRIMARY', 'uq_notification_owner_source'],
         'remember_token' => ['PRIMARY', 'uq_remember_token_selector'],

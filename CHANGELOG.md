@@ -1,3 +1,12 @@
+## 1.54.0 - 2026-11-28
+
+- Add local Calendar ICS import/export in a third Calendar management tab; keep external subscription behavior unchanged.
+- Persist event UIDs with additive migration 037, support full series/exception export and bounded period export, reminders, standard fields and optional RSS Reader metadata/date marks.
+- Add read-only import preview, default add-only or explicit update, owner/Calendar/UID duplicate detection, stale-preview rejection and transactional rollback. Unsupported rules are reported; absent existing events are not deleted.
+- Add individual ICS and all-Calendar ZIP downloads, responsive desktop/mobile controls, HTTP round-trip and browser checks.
+- Update application and asset revision to 1.54.0. Preserve existing Memo and other widgets. Require migration 037 for upgraded databases.
+- Retain official Runtime and Complete Source package gates and add migration verification.
+
 ## 1.53.0 - 2026-11-27
 
 - Release the accumulated GPT Widget work through dev.26, including article questions, file input, browser speech input, model selection, formatted responses and estimated API balance.

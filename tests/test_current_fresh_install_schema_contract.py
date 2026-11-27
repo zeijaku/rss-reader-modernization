@@ -44,6 +44,7 @@ upgrade_migrations = [
     '034_v1_44_calendar_location.sql',
     '035_v1_51_calendar_ics_subscription.sql',
     '036_v1_53_calendar_day_mark.sql',
+    '037_v1_54_calendar_ics_uid.sql',
 ]
 
 for migration in upgrade_migrations:
@@ -83,6 +84,9 @@ check("'`calendar_event_source_id` BIGINT UNSIGNED NULL DEFAULT NULL" in SCHEMA,
       'fresh calendar schema contains Calendar source membership')
 check("'`calendar_source_name` VARCHAR(40) NOT NULL" in SCHEMA,
       'fresh schema contains Calendar source definitions')
+
+check('`calendar_event_ics_uid` VARBINARY(255) NULL DEFAULT NULL' in SCHEMA and '`idx_calendar_event_ics_uid`' in SCHEMA,
+      'fresh schema contains binary transfer UID and lookup index')
 
 check('Fresh Installでは `database/schema.sql` だけを1回実行します' in INSTALL,
       'installation guide documents the single-SQL fresh install contract')
