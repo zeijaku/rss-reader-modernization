@@ -170,6 +170,7 @@ require_once __DIR__ . '/api/account.php';
 require_once __DIR__ . '/api/integrations.php';
 require_once __DIR__ . '/api/opml.php';
 require_once __DIR__ . '/calendar_ics_export.php';
+require_once __DIR__ . '/calendar_ics_import.php';
 require_once __DIR__ . '/api/feed_category.php';
 require_once __DIR__ . '/api/feed_health.php';
 require_once __DIR__ . '/api/rss_rule.php';
@@ -283,6 +284,7 @@ function api_dispatch(string $action, int $userId, array $input): array
         'x.config.status' => api_x_config_status($userId, $input),
         'x.timeline.fetch' => api_x_timeline_fetch($userId, $input),
         'calendar.transfer.export' => api_calendar_transfer_export($userId, $input),
+        'calendar.transfer.preview', 'calendar.transfer.import' => api_calendar_transfer_import($action, $userId, $input),
         'calendar.month.list' => api_calendar_month_list($userId, $input),
         'calendar.holiday.refresh' => api_calendar_holiday_refresh($userId, $input),
         'calendar.event.create' => api_calendar_event_create($userId, $input),
