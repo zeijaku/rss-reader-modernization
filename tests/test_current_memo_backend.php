@@ -38,6 +38,8 @@ memo_check(api_dispatch('widget.memo.body.update',7,['widget_id'=>(string)$id,'m
 $now=$rev();
 $update=['widget_id'=>(string)$id,'widget_style'=>'primary','widget_width'=>'2','widget_height'=>'2','memo_title'=>'new title','memo_body'=>$normalized,'expected_revision'=>$now];
 memo_check(api_dispatch('widget.memo.update',8,$update)['status']===404,'foreign full update denied');
+$legacySettings=$update; unset($legacySettings['expected_revision']); $legacySettings['expected_sha256']=hash('sha256',$normalized);
+memo_check(api_dispatch('widget.memo.update',7,$legacySettings)['status']===409,'legacy settings cannot overwrite without full revision');
 memo_check(api_dispatch('widget.memo.update',7,$update)['status']===200&&$get()['memo_format']==='markdown','settings update retains format if omitted');
 memo_check(api_dispatch('widget.memo.body.update',7,['widget_id'=>(string)$id,'memo_body'=>'stale','expected_revision'=>$now])['status']===409,'title and widget settings changes invalidate body draft');
 $long=str_repeat('😀',16000);

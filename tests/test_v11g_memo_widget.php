@@ -173,7 +173,7 @@ v11g_check($pdo->widgets[$secondWidget]['widget_sort_order']===20, 'second Memo 
 
 $wrong=api_dispatch('widget.memo.update',8,['widget_id'=>(string)$widgetId,'widget_style'=>'danger','widget_width'=>'4', 'widget_height' => '1','memo_title'=>'Hijack','memo_body'=>'Bad']);
 v11g_check($wrong['status']===404 && $pdo->memos[$memoId]['memo_title']==='連絡', 'another user cannot update Memo');
-$update=api_dispatch('widget.memo.update',7,['widget_id'=>(string)$widgetId,'widget_style'=>'success','widget_width'=>'3', 'widget_height' => '1','memo_title'=>'更新','memo_body'=>"新しい\n本文"]);
+$update=api_dispatch('widget.memo.update',7,['widget_id'=>(string)$widgetId,'widget_style'=>'success','widget_width'=>'3', 'widget_height' => '1','memo_title'=>'更新','memo_body'=>"新しい\n本文",'expected_revision'=>dashboard_widget_memo_revision($pdo->memos[$memoId],$pdo->widgets[$widgetId])]);
 v11g_check($update['status']===200 && $pdo->memos[$memoId]['memo_title']==='更新', 'owner can update Memo content');
 v11g_check($pdo->widgets[$widgetId]['widget_width']===3 && $pdo->widgets[$widgetId]['widget_style']==='success', 'Memo Widget style and width update together');
 v11g_check($pdo->widgets[$widgetId]['widget_location']===1, 'Memo edit does not move it to another tab');
@@ -221,6 +221,7 @@ $settingsWithRevision = api_dispatch('widget.memo.update', 7, [
     'widget_width' => '2', 'widget_height' => '1',
     'memo_title' => '設定変更', 'memo_body' => $pdo->memos[$memoId]['memo_body'],
     'expected_sha256' => $currentHash,
+    'expected_revision' => dashboard_widget_memo_revision($pdo->memos[$memoId],$pdo->widgets[$widgetId]),
 ]);
 v11g_check($settingsWithRevision['status'] === 200
     && $pdo->memos[$memoId]['memo_title'] === '設定変更',

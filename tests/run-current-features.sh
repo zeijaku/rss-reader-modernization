@@ -143,6 +143,7 @@ node --check "$ROOT/public/js/rss-rules-integration.js"
 echo '== Current feature contracts: Memo =='
 python3 "$SCRIPT_DIR/test_v124b_memo_contract.py"
 php "$SCRIPT_DIR/test_current_memo_backend.php"
+sh "$SCRIPT_DIR/test_current_memo_mariadb.sh"
 node --check "$ROOT/public/js/memo-counter.js"
 
 echo '== Current feature contracts: Stock state =='

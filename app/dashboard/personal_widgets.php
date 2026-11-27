@@ -298,6 +298,9 @@ function dashboard_widget_update_memo(
             return false;
         }
 
+        if ($expectedRevision === null) {
+            throw new AppMemoBodyConflictException('Memo settings require a current revision.');
+        }
         dashboard_widget_memo_assert_revision($memo, $widget, $expectedSha256, $expectedRevision, $format);
         $format = $format ?? ($memo['memo_format'] ?? 'text');
 

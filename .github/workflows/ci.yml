@@ -120,6 +120,10 @@ jobs:
         env:
           REQUIRE_CALENDAR_TRANSFER_MARIADB: '1'
         run: sh tests/test_current_calendar_transfer_mariadb.sh
+      - name: Verify Memo migration and UTF-8 capacity
+        env:
+          REQUIRE_MEMO_MARIADB: '1'
+        run: sh tests/test_current_memo_mariadb.sh
 
   p2b_apache_probe:
     name: P2-B Apache isolation probe

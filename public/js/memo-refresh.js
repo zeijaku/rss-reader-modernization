@@ -76,7 +76,10 @@
         formBody = normalizeNewlines($('.changeMemoBody').val());
 
         return {
-            dirty: cardTitle !== formTitle || cardBody !== formBody,
+            dirty: cardTitle !== formTitle || cardBody !== formBody
+                || String($('.changeMemoWidth').val()) !== String($card.attr('data-widget-width'))
+                || String($('.changeMemoHeight').val()) !== String($card.attr('data-widget-height'))
+                || String($('.changeMemoStyle').val()) !== String($card.find('.memo-edit-trigger').first().attr('data-widget-style')),
             title: formTitle,
             body: formBody
         };
@@ -114,6 +117,9 @@
             $('.changeMemoExpectedSha256').val(memo.body_sha256);
         }
         $('.changeMemoExpectedRevision').val(memo.revision || '');
+        $('.changeMemoWidth').val(String(memo.widget_width));
+        $('.changeMemoHeight').val(String(memo.widget_height));
+        $('.changeMemoStyle').val(String(memo.widget_style));
     }
 
     function findMemo(response, widgetId, memoId) {
@@ -136,7 +142,7 @@
             if (typeof widget.memo.title !== 'string' || typeof widget.memo.body !== 'string') {
                 return false;
             }
-            found = widget.memo;
+            found = Object.assign({}, widget.memo, {widget_width: widget.widget_width, widget_height: widget.widget_height, widget_style: widget.widget_style});
             return true;
         });
 
@@ -147,6 +153,17 @@
         if (window.IGuguruDashboardMemo && typeof window.IGuguruDashboardMemo.cancelInlineEdit === 'function') {
             window.IGuguruDashboardMemo.cancelInlineEdit($card.get(0));
         }
+        var width = String(memo.widget_width), height = String(memo.widget_height), style = String(memo.widget_style);
+        if (!/^[1-4]$/.test(width) || !/^[12]$/.test(height) || !/^(success|primary|info|secondary|dark|warning|danger)$/.test(style)
+            || !/^[a-f0-9]{64}$/.test(memo.revision || '')) {
+            showNotice('Memo設定を確認できません。画面を再読み込みしてください。', 'danger');
+            return false;
+        }
+        var widthClasses = {'1':'col-12 col-md-6 col-lg-3','2':'col-12 col-md-12 col-lg-6','3':'col-12 col-lg-9','4':'col-12'};
+        $card.removeClass('col-12 col-md-6 col-md-12 col-lg-3 col-lg-6 col-lg-9').addClass(widthClasses[width])
+            .attr('data-widget-width', width).attr('data-widget-height', height);
+        $card.find('.memo-card-header').first().removeClass('text-bg-success text-bg-primary text-bg-info text-bg-secondary text-bg-dark text-bg-warning text-bg-danger').addClass('text-bg-' + style);
+        $card.find('.memo-edit-trigger').first().attr('data-widget-width', width).attr('data-widget-height', height).attr('data-widget-style', style);
         var title = String(memo.title || '');
         var body = String(memo.body || '');
         $card.find('.memo-title').first().text(title).attr('title', title);
@@ -164,6 +181,7 @@
             $card.attr('data-memo-updated-at', memo.updated_at);
         }
         syncOpenMemoForm($card, memo);
+        return true;
     }
 
     function setPending($button, pending) {
@@ -201,8 +219,7 @@
                     showNotice('Memoが見つかりませんでした。画面を再読み込みしてください。', 'danger');
                     return;
                 }
-                applyMemo($card, memo);
-                showNotice('Memoを更新しました', 'success');
+                if (applyMemo($card, memo)) showNotice('Memoを更新しました', 'success');
             })
             .fail(function (xhr, status) {
                 var message = status === 'timeout' ? 'Memoの更新がタイムアウトしました。' : 'Memoを更新出来ませんでした。';
