@@ -7,6 +7,7 @@ from version_contract_utils import read_app_version_constants
 root = Path(__file__).resolve().parents[1]
 dashboard = (root / 'app/view/dashboard_widgets.php').read_text(encoding='utf-8')
 stock = (root / 'public/stock.php').read_text(encoding='utf-8')
+header = (root / 'app/view/calendar_widget_header.php').read_text(encoding='utf-8')
 css = (root / 'public/css/calendar-views.css').read_text(encoding='utf-8')
 deadline_css = (root / 'public/css/calendar-deadline.css').read_text(encoding='utf-8')
 loader = (root / 'public/js/calendar.js').read_text(encoding='utf-8')
@@ -58,9 +59,15 @@ check('#main-content .calendar-toolbar-stack .calendar-toolbar-with-sources {' i
       'only truly narrow cards and Smartphone layouts move the grouped actions to a second row')
 check('grid-template-areas' not in deadline_css,
       'later-loaded Deadline CSS does not override the Calendar toolbar grid')
-check(dashboard.index('calendar-month-label') < dashboard.index('class="calendar-toolbar')
-      and stock.index('calendar-month-label') < stock.index('class="calendar-toolbar'),
-      'period label appears in the Calendar card header in both views')
+check('calendar-month-label' in header
+      and all(markup.index('calendar_widget_header.php') < markup.index('class="calendar-toolbar')
+              and 'calendar-month-label' not in markup for markup in (dashboard, stock)),
+      'both views share one Calendar header with the period label')
+check(all(header.count(action) == 1 for action in ('calendar-search-trigger', 'calendar-widget-edit-trigger'))
+      and header.index('calendar-search-trigger') < header.index('calendar-widget-edit-trigger'),
+      'shared header keeps Search immediately before Edit')
+check('.calendar-card-header > .calendar-search-trigger' in css and '.calendar-card-header' not in deadline_css,
+      'view stylesheet owns Calendar header layout')
 check('grid-area: switch;' in css and 'width: min(100%, 15rem);' in css,
       'view switch stays centered and bounded in compact layouts')
 check(version_match is not None and tuple(map(int, version_match.groups()[:3])) >= (1, 33, 1),

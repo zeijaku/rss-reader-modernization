@@ -203,6 +203,14 @@ const html = '<!doctype html><html lang="ja"><head><meta charset="utf-8">'
                 };
             });
             assert.deepEqual(positions, {visible: true, sameRow: true, separate: true, centered: true});
+            await first.getByRole('button', {name: 'このCalendar Widgetを編集'}).click();
+            const settings = page.locator('#changeCalendarWidget');
+            await settings.waitFor({state: 'visible'});
+            assert.equal(await settings.locator('.changeCalendarWidgetId').inputValue(), '1');
+            assert.equal(await settings.locator('.changeCalendarWidgetTitleValue').inputValue(), 'Calendar');
+            await settings.locator('.btn-close').click();
+            await settings.waitFor({state: 'hidden'});
+
             const searchSubmit = search.getByRole('button', {name: '検索', exact: true});
             const eventQuery = search.getByLabel('タイトル・場所・メモ');
             const searchMode = search.getByLabel('検索対象');
