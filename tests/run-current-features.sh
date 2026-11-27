@@ -193,6 +193,13 @@ php "$SCRIPT_DIR/test_current_calendar_ics_export.php"
 php "$SCRIPT_DIR/test_current_calendar_ics_export_extended.php"
 python3 "$SCRIPT_DIR/test_current_calendar_ics_zip.py"
 php "$SCRIPT_DIR/test_current_calendar_ics_import.php"
+node --check "$ROOT/public/js/calendar-transfer.js"
+python3 "$SCRIPT_DIR/test_current_calendar_transfer_ui_contract.py"
+python3 "$SCRIPT_DIR/test_current_calendar_transfer_http.py"
+node --check "$SCRIPT_DIR/test_current_calendar_transfer_browser.js"
+if [ -n "${GAME_TEST_CHROME:-}" ]; then
+    node "$SCRIPT_DIR/test_current_calendar_transfer_browser.js"
+fi
 php "$SCRIPT_DIR/test_current_calendar_ics_sync.php"
 python3 "$SCRIPT_DIR/test_current_calendar_ics_autosync_contract.py"
 php -l "$ROOT/app/calendar_ics_parser.php"

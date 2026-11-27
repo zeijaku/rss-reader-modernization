@@ -1,0 +1,18 @@
+.calendar-manager-modal .calendar-transfer-pane [hidden] { display: none !important; }
+.calendar-manager-modal .calendar-transfer-pane { min-width: 0; overflow-wrap: anywhere; }
+.calendar-manager-modal .calendar-transfer-pane fieldset { min-width: 0; }
+.calendar-manager-modal .calendar-transfer-pane .form-control,
+.calendar-manager-modal .calendar-transfer-pane .form-select { width: 100%; min-width: 0; }
+.calendar-transfer-counts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .35rem .8rem; }
+.calendar-transfer-counts > div { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; border-bottom: 1px solid var(--bs-border-color); padding: .25rem 0; }
+.calendar-transfer-counts dt { font-size: .85rem; font-weight: 500; }
+.calendar-transfer-counts dd { margin: 0; font-weight: 600; }
+.calendar-transfer-details { max-height: 15rem; overflow-y: auto; overflow-wrap: anywhere; }
+.calendar-transfer-pane .btn, .calendar-transfer-pane .form-select, .calendar-transfer-pane .form-control { min-height: 42px; }
+@media (max-width: 575.98px) {
+    .calendar-manager-modal .calendar-manager-tabs { gap: .25rem !important; }
+    .calendar-manager-modal .calendar-manager-tabs .nav-link { min-height: 48px; font-size: .76rem; overflow-wrap: anywhere; }
+    .calendar-manager-modal .calendar-manager-tabs .nav-link i { display: none; }
+    .calendar-transfer-pane .btn, .calendar-transfer-pane .form-select, .calendar-transfer-pane .form-control { min-height: 44px; }
+    .calendar-transfer-details { max-height: 12rem; }
+}

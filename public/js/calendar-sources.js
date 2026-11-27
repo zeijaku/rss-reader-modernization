@@ -404,6 +404,7 @@
             window.setTimeout(syncOccurrenceSourceLock, 0);
         })
         .on('change.iguguruCalendarSources', '.calendarOccurrenceScope', syncOccurrenceSourceLock)
+        .on('calendar:transferImported.iguguruCalendarSources', function () { refreshSourcesFromApi(); })
         .on('shown.bs.modal.iguguruCalendarSources', '#calendarSourceManager', function () {
             refreshSourcesFromApi();
         })
