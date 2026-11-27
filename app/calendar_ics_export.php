@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/calendar_ics_uid.php';
 require_once __DIR__ . '/calendar_time.php';
-require_once __DIR__ . '/calendar_exception.php';
-require_once __DIR__ . '/calendar_reminder.php';
 require_once __DIR__ . '/calendar_ics_zip.php';
+
+/** Keep advanced transfer dependencies out of legacy Calendar API paths. */
+function calendar_transfer_load_dependencies(): void
+{
+    require_once __DIR__ . '/calendar_exception.php';
+    require_once __DIR__ . '/calendar_reminder.php';
+}
 
 /** RFC 5545 TEXT escaping, including line-break injection prevention. */
 function calendar_transfer_text(string $value): string
@@ -280,6 +285,7 @@ function calendar_transfer_period(mixed $start, mixed $end): ?array
 /** Build one calendar, with a hard bound on components and encoded bytes. */
 function calendar_transfer_build(array $source, array $rows, array $exceptions, array $marks, ?array $period, bool $extra): string
 {
+    calendar_transfer_load_dependencies();
     $lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//RSS Reader Modernization//Calendar//EN', 'CALSCALE:GREGORIAN',
         'NAME:' . calendar_transfer_text($source['name']), 'COLOR:' . $source['color']];
     if ($extra) {
@@ -423,6 +429,7 @@ function calendar_transfer_build(array $source, array $rows, array $exceptions, 
 /** Read owner-scoped data without initializing defaults or mutating any rows. */
 function calendar_transfer_export(PDO $pdo, int $ownerId, ?int $sourceId, ?array $period, bool $extra): array
 {
+    calendar_transfer_load_dependencies();
     if ($ownerId <= 0 || ($sourceId !== null && $sourceId <= 0)) {
         throw new InvalidArgumentException('Invalid Calendar source.');
     }
