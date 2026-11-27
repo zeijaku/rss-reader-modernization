@@ -14,12 +14,34 @@ fi
 TEST_ROOT=$(mktemp -d /tmp/rss-transfer-mariadb.XXXXXX)
 DATA_DIR="$TEST_ROOT/data"
 mkdir -p "$DATA_DIR"
-cleanup() { find "$TEST_ROOT" -depth -mindepth 1 -delete 2>/dev/null || true; rmdir "$TEST_ROOT" 2>/dev/null || true; }
+SERVER_PID=''
+cleanup() {
+    if [ -n "$SERVER_PID" ]; then
+        kill "$SERVER_PID" 2>/dev/null || true
+        wait "$SERVER_PID" 2>/dev/null || true
+    fi
+    find "$TEST_ROOT" -depth -mindepth 1 -delete 2>/dev/null || true
+    rmdir "$TEST_ROOT" 2>/dev/null || true
+}
 trap cleanup EXIT HUP INT TERM
 "$INSTALL_DB" --basedir=/usr --datadir="$DATA_DIR" --auth-root-authentication-method=normal --skip-test-db >/dev/null 2>&1
-run_bootstrap() {
-    "$MARIADBD" --no-defaults --basedir=/usr --datadir="$DATA_DIR" --bootstrap --user="$(id -un)" --wsrep-on=OFF --innodb-use-native-aio=0 2>&1
+# Run the actual client SQL parser (schema includes multiple statements per line).
+# Isolated socket; never connect to the runner's system database.
+SOCKET="$TEST_ROOT/db.sock"
+"$MARIADBD" --no-defaults --basedir=/usr --datadir="$DATA_DIR" --user="$(id -un)" --wsrep-on=OFF --innodb-use-native-aio=0 --skip-networking --socket="$SOCKET" --pid-file="$TEST_ROOT/db.pid" >"$TEST_ROOT/server.log" 2>&1 &
+SERVER_PID=$!
+n=0
+until mariadb --no-defaults --protocol=SOCKET --socket="$SOCKET" -u root -e 'SELECT 1' >/dev/null 2>&1; do
+    n=$((n+1))
+    if [ "$n" -ge 100 ] || ! kill -0 "$SERVER_PID" 2>/dev/null; then
+        cat "$TEST_ROOT/server.log" >&2; exit 1
+    fi
+    sleep .1
+done
+run_client() {
+    mariadb --no-defaults --protocol=SOCKET --socket="$SOCKET" -u root --default-character-set=utf8mb4 --batch
 }
+
 {
     printf '%s\n' 'CREATE DATABASE rss_transfer CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;' 'USE rss_transfer;'
     sed "s/SET @table_prefix = 'rss_';/SET @table_prefix = 'qa_';/" "$ROOT/database/schema.sql"
@@ -37,5 +59,5 @@ run_bootstrap() {
         "SET @index_ok = ((SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='qa_calendar_event' AND INDEX_NAME='idx_calendar_event_ics_uid')=4);" \
         "SET @assert_sql=IF(@fresh_ok AND @migration_ok AND @index_ok,'SELECT 1','SELECT * FROM calendar_transfer_migration_assertion_failed');" \
         'PREPARE transfer_assert FROM @assert_sql; EXECUTE transfer_assert; DEALLOCATE PREPARE transfer_assert;'
-} | run_bootstrap
+} | run_client
 echo 'PASS: MariaDB fresh schema and Migration 037 applied twice; stable distinct UID, preserved owner/content/timestamp, index and marker'
