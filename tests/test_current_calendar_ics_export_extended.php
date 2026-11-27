@@ -1,0 +1,72 @@
+<?php
+
+declare(strict_types=1);
+require_once __DIR__ . '/../app/bootstrap.php';
+require_once __DIR__ . '/../app/api.php';
+require_once __DIR__ . '/../app/calendar_ics_parser.php';
+
+function extended_check(bool $ok, string $label): void {
+    if (!$ok) throw new RuntimeException($label);
+    echo "PASS: $label\n";
+}
+function extended_unfold(string $ics): string { return preg_replace('/\r\n[ \t]/', '', $ics); }
+$pdo = new PDO('sqlite::memory:', null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+set_db_connection_for_testing($pdo);
+$events = db_table_identifier('calendar_event');
+$sources = db_table_identifier('calendar_source');
+$exceptions = db_table_identifier('calendar_event_exception');
+$marks = db_table_identifier('calendar_day_mark');
+$pdo->exec("CREATE TABLE $events (calendar_event_id INTEGER PRIMARY KEY, calendar_event_owner INTEGER, calendar_event_flag INTEGER DEFAULT 0, calendar_event_source_id INTEGER, calendar_event_date TEXT, calendar_event_updated_at TEXT, calendar_event_title TEXT, calendar_event_start_date TEXT, calendar_event_end_date TEXT, calendar_event_note TEXT, calendar_event_all_day INTEGER DEFAULT 1, calendar_event_start_time TEXT, calendar_event_end_time TEXT, calendar_event_url TEXT, calendar_event_location TEXT, calendar_event_repeat_type TEXT DEFAULT 'none',calendar_event_repeat_until TEXT,calendar_event_color TEXT DEFAULT 'blue',calendar_event_deadline_highlight INTEGER DEFAULT 0,calendar_event_reminder TEXT DEFAULT 'none',calendar_event_ics_uid BLOB)");
+$pdo->exec("CREATE TABLE $sources (calendar_source_id INTEGER PRIMARY KEY, calendar_source_owner INTEGER, calendar_source_flag INTEGER, calendar_source_default INTEGER,calendar_source_name TEXT,calendar_source_color TEXT)");
+$pdo->exec("INSERT INTO $sources VALUES (1,7,0,1,'仕事','blue'),(2,7,0,0,'私用','green'),(3,8,0,1,'OTHER','red')");
+$pdo->exec("CREATE TABLE $exceptions (calendar_event_exception_id INTEGER PRIMARY KEY,calendar_event_exception_owner INTEGER,calendar_event_exception_event_id INTEGER,calendar_event_exception_original_start_date TEXT,calendar_event_exception_kind TEXT,calendar_event_exception_revision INTEGER DEFAULT 1,calendar_event_exception_flag INTEGER DEFAULT 0,calendar_event_exception_start_date TEXT,calendar_event_exception_end_date TEXT,calendar_event_exception_title TEXT,calendar_event_exception_note TEXT,calendar_event_exception_color TEXT,calendar_event_exception_all_day INTEGER,calendar_event_exception_start_time TEXT,calendar_event_exception_end_time TEXT,calendar_event_exception_url TEXT,calendar_event_exception_location TEXT,calendar_event_exception_deadline_highlight INTEGER,calendar_event_exception_created_at TEXT,calendar_event_exception_updated_at TEXT)");
+$pdo->exec("CREATE TABLE $marks (mark_owner INTEGER,mark_date TEXT,mark_label TEXT,mark_note TEXT, PRIMARY KEY(mark_owner,mark_date))");
+$pdo->exec("INSERT INTO $marks VALUES (7,'2026-03-31','締切','メモ,;'),(7,'2026-01-01','別日',''),(8,'2026-03-31','OTHER','PRIVATE')");
+$id=calendar_create_event(7,'毎月31日','2026-01-31','2026-01-31','note');
+$pdo->exec("UPDATE $events SET calendar_event_source_id=1,calendar_event_repeat_type='monthly',calendar_event_repeat_until='2026-12-31',calendar_event_all_day=0,calendar_event_start_time='08:30:45',calendar_event_end_time='09:30:50',calendar_event_reminder='10m',calendar_event_color='red',calendar_event_deadline_highlight=1 WHERE calendar_event_id=$id");
+$uid=$pdo->query("SELECT calendar_event_ics_uid FROM $events WHERE calendar_event_id=$id")->fetchColumn();
+$pdo->exec("INSERT INTO $exceptions (calendar_event_exception_owner,calendar_event_exception_event_id,calendar_event_exception_original_start_date,calendar_event_exception_kind,calendar_event_exception_created_at,calendar_event_exception_updated_at) VALUES (7,$id,'2026-03-31','cancelled','2026-01-01 00:00:00','2026-01-01 00:00:00')");
+$pdo->exec("INSERT INTO $exceptions (calendar_event_exception_owner,calendar_event_exception_event_id,calendar_event_exception_original_start_date,calendar_event_exception_kind,calendar_event_exception_start_date,calendar_event_exception_end_date,calendar_event_exception_title,calendar_event_exception_note,calendar_event_exception_color,calendar_event_exception_all_day,calendar_event_exception_start_time,calendar_event_exception_end_time,calendar_event_exception_deadline_highlight,calendar_event_exception_created_at,calendar_event_exception_updated_at) VALUES (7,$id,'2026-05-31','override','2026-03-25','2026-03-25','移動','変更','green',0,'11:12:13','12:13:14',0,'2026-02-01 00:00:00','2026-02-02 00:00:00')");
+$daily=calendar_create_event(7,'終日繰返','2026-03-30','2026-03-30','');
+$pdo->exec("UPDATE $events SET calendar_event_source_id=1,calendar_event_repeat_type='daily',calendar_event_repeat_until='2026-04-01',calendar_event_reminder='1d' WHERE calendar_event_id=$daily");
+$weekly=calendar_create_event(7,'週予定','2026-03-29','2026-03-30','');
+$pdo->exec("UPDATE $events SET calendar_event_source_id=2,calendar_event_repeat_type='weekly' WHERE calendar_event_id=$weekly");
+$year=calendar_create_event(7,'閏日','2024-02-29','2024-02-29','');
+$pdo->exec("UPDATE $events SET calendar_event_source_id=2,calendar_event_repeat_type='yearly' WHERE calendar_event_id=$year");
+$other=calendar_create_event(8,'OTHER OWNER','2026-03-31','2026-03-31','');
+$pdo->exec("UPDATE $events SET calendar_event_source_id=3 WHERE calendar_event_id=$other");
+$before=$pdo->query("SELECT * FROM $events ORDER BY calendar_event_id")->fetchAll();
+$full=calendar_transfer_export($pdo,7,1,null,true)['calendar-1.ics'];
+$u=extended_unfold($full);
+extended_check(str_contains($u,'BEGIN:VTIMEZONE') && str_contains($u,'DTSTART;TZID=Asia/Tokyo:20260131T083045'),'timed monthly series retains local anchor and seconds');
+extended_check(str_contains($u,'RRULE:FREQ=MONTHLY;UNTIL=20261230T233045Z'),'timed UNTIL in UTC');
+extended_check(str_contains($u,'EXDATE;TZID=Asia/Tokyo:20260331T083045'),'cancelled occurrence original identity');
+extended_check(str_contains($u,'RECURRENCE-ID;TZID=Asia/Tokyo:20260531T083045') && str_contains($u,'DTSTART;TZID=Asia/Tokyo:20260325T111213'),'moved override keeps original identity and raw seconds');
+extended_check(substr_count($u,'UID:'.$uid."\r\n")===2,'master and override share UID');
+extended_check(str_contains($u,'RRULE:FREQ=DAILY;UNTIL=20260401') && str_contains($u,'TRIGGER:-PT15H'),'all-day UNTIL and reminder relative to 09 JST');
+extended_check(str_contains($u,'TRIGGER:-PT10M') && str_contains($u,'X-RSSREADER-DEADLINE:1') && str_contains($u,'COLOR:red'),'timed alarm and metadata');
+extended_check(substr_count($u,'X-RSSREADER-DAY-MARK:')===2 && !str_contains($u,'OTHER'),'owner-level marks and isolation');
+$standard=calendar_transfer_export($pdo,7,1,null,false)['calendar-1.ics'];
+extended_check(!str_contains($standard,'X-RSSREADER-') && str_contains($standard,'BEGIN:VALARM') && str_contains($standard,'COLOR:red'),'standard-only export preserves standard alarms and colors');
+$period=calendar_transfer_export($pdo,7,1,['2026-03-25','2026-03-31'],true)['calendar-1.ics'];
+$p=extended_unfold($period);
+extended_check(substr_count($p,'BEGIN:VEVENT')===3 && str_contains($p,'SUMMARY:移動') && !str_contains($p,'SUMMARY:毎月31日'),'period includes moved-in override and excludes cancellation');
+extended_check(!str_contains($p,'RRULE:') && !str_contains($p,'RECURRENCE-ID') && str_contains($p,'UID:'.calendar_transfer_occurrence_uid($uid,'2026-05-31')),'period emits standalone stable occurrence UID');
+extended_check(substr_count($p,'X-RSSREADER-DAY-MARK:')===1,'period filters marks');
+$otherPeriod=extended_unfold(calendar_transfer_export($pdo,7,1,['2026-03-01','2026-04-01'],true)['calendar-1.ics']);
+extended_check(str_contains($otherPeriod,'UID:'.calendar_transfer_occurrence_uid($uid,'2026-05-31')),'occurrence UID independent of selected period');
+$all=calendar_transfer_export($pdo,7,null,null,true);
+extended_check(array_keys($all)===['calendar-1.ics','calendar-2.ics'] && !str_contains($all['calendar-2.ics'],'X-RSSREADER-DAY-MARK:'),'all local Calendars with owner marks once');
+extended_check(str_contains($all['calendar-2.ics'],'RRULE:FREQ=WEEKLY') && str_contains($all['calendar-2.ics'],'RRULE:FREQ=YEARLY'),'weekly and yearly rule');
+$leap=calendar_transfer_export($pdo,7,2,['2025-02-28','2025-03-01'],false)['calendar-2.ics'];
+extended_check(!str_contains($leap,'SUMMARY:閏日'),'non-leap year skipped');
+$overlap=calendar_transfer_export($pdo,7,2,['2026-03-30','2026-03-30'],false)['calendar-2.ics'];
+extended_check(str_contains($overlap,'DTSTART;VALUE=DATE:20260329') && str_contains($overlap,'DTEND;VALUE=DATE:20260331'),'overlapping multi-day occurrence retains full range');
+extended_check($before===$pdo->query("SELECT * FROM $events ORDER BY calendar_event_id")->fetchAll(),'extended export is read-only');
+$api=api_calendar_transfer_export(7,['scope'=>'all','include_extra'=>'1']);
+extended_check($api['status']===200 && str_starts_with(base64_decode($api['body']['data']['zip_base64'],true),"PK\x03\x04"),'API ZIP response');
+extended_check(api_calendar_transfer_export(7,['scope'=>'single','source_id'=>'3'])['status']===404,'API denies foreign source');
+extended_check(api_calendar_transfer_export(7,['source_id'=>'1','range'=>'period','start_date'=>'2026-01-01','end_date'=>'2027-01-03'])['status']===422,'API rejects oversized period');
+extended_check(api_calendar_transfer_export(7,['source_id'=>'1','include_extra'=>'bad'])['status']===422,'API rejects invalid options');
+$expanded=calendar_ics_expand($full,1,'仕事','blue','2026-03-25','2026-03-31');
+extended_check(count($expanded)===3,'generated ICS compatible with existing subscription parser');
