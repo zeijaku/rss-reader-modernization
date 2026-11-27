@@ -537,7 +537,7 @@
         <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Gameを追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <div class="mb-3"><label class="form-label" for="registerGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerGameTitleValue" id="registerGameTitleValue" maxlength="32" value="Icon Quest" required></div>
-            <div class="mb-3"><label class="form-label" for="registerGameType"><small class="text-dark">Game</small></label><select class="form-select registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="wire_defense">Wire Defense（Network防衛）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option><option value="tower_defense">Tower Defense（配置・戦術）</option></select></div>
+            <div class="mb-3"><label class="form-label" for="registerGameType"><small class="text-dark">Game</small></label><select class="form-select registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="wire_defense">Wire Defense（Network防衛）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option><option value="tower_defense">Tower Defense（配置・戦術）</option><option value="slg">SLG（ターン制戦略）</option></select></div>
             <input type="hidden" class="registerGameLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
             <div class="row g-2">
                 <div class="mb-3 col-md-4"><label class="form-label" for="registerGameWidth"><small class="text-dark">横幅</small></label><select class="form-select registerGameWidth" id="registerGameWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
@@ -560,13 +560,13 @@
         <div class="modal-body">
             <input type="hidden" class="changeGameWidgetId">
             <div class="mb-3"><label class="form-label" for="changeGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeGameTitleValue" id="changeGameTitleValue" maxlength="32" required></div>
-            <div class="mb-3"><label class="form-label" for="changeGameType"><small class="text-dark">Game</small></label><select class="form-select changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="wire_defense">Wire Defense（Network防衛）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option><option value="tower_defense">Tower Defense（配置・戦術）</option></select></div>
+            <div class="mb-3"><label class="form-label" for="changeGameType"><small class="text-dark">Game</small></label><select class="form-select changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="wire_defense">Wire Defense（Network防衛）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option><option value="tower_defense">Tower Defense（配置・戦術）</option><option value="slg">SLG（ターン制戦略）</option></select></div>
             <div class="row g-2">
                 <div class="mb-3 col-md-4"><label class="form-label" for="changeGameWidth"><small class="text-dark">横幅</small></label><select class="form-select changeGameWidth" id="changeGameWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
                 <div class="mb-3 col-md-4"><label class="form-label" for="changeGameHeight"><small class="text-dark">縦幅</small></label><select class="form-select changeGameHeight" id="changeGameHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
                     <div class="mb-3 col-md-4"><label class="form-label" for="changeGameStyle"><small class="text-dark">見出し色</small></label><select class="form-select changeGameStyle" id="changeGameStyle"><option value="secondary">secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
             </div>
-            <small class="form-text text-muted">Widget削除時は、このWidgetのBrowser保存状態も削除します。</small>
+            <small class="form-text text-muted">Widget削除時は、このWidgetのBrowser保存状態も削除します。SLGの共通データは保持します。</small>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_game_widget">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
         </form>
@@ -709,6 +709,8 @@
 </div>
 
 <!-- Calendar予定追加モーダル -->
+<?php require __DIR__ . '/calendar_day_mark_modal.php'; ?>
+<?php require __DIR__ . '/calendar_search_modal.php'; ?>
 <div class="modal fade calendar-event-modal" id="registerCalendarEvent" tabindex="-1" role="dialog" aria-labelledby="registerCalendarEventTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg calendar-event-modal-dialog" role="document"><div class="modal-content">
         <form id="registerCalendarEventForm" method="post" action="./">
@@ -819,30 +821,7 @@
 </div>
 
 
-<!-- ICS読み取り専用イベント詳細：編集・削除は元カレンダーで行う -->
-<div class="modal fade calendar-ics-event-details-modal" id="calendarIcsEventDetails" tabindex="-1"
-     role="dialog" aria-labelledby="calendarIcsEventDetailsTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="calendarIcsEventDetailsTitle"><i class="fas fa-link me-2" aria-hidden="true"></i>外部ICSの予定</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="閉じる"></button>
-            </div>
-            <div class="modal-body">
-                <p class="small text-body-secondary mb-3"><i class="fas fa-lock me-1" aria-hidden="true"></i>読み取り専用です。予定の変更は元のカレンダーで行ってください。</p>
-                <h6 class="calendar-ics-detail-title mb-3"></h6>
-                <dl class="calendar-ics-detail-list mb-0">
-                    <dt>Calendar</dt><dd class="calendar-ics-detail-source"></dd>
-                    <dt>日時</dt><dd class="calendar-ics-detail-when"></dd>
-                    <dt>場所</dt><dd class="calendar-ics-detail-location"></dd>
-                    <dt>詳細</dt><dd class="calendar-ics-detail-description"></dd>
-                    <dt>リンク</dt><dd><a class="calendar-ics-detail-url" href="#" target="_blank" rel="noopener noreferrer" hidden>元のリンクを開く</a></dd>
-                </dl>
-            </div>
-            <div class="modal-footer"><button class="btn btn-secondary" type="button" data-bs-dismiss="modal">閉じる</button></div>
-        </div>
-    </div>
-</div>
+<?php require __DIR__ . '/calendar_ics_event_details_modal.php'; ?>
 
 <?php
 require_once __DIR__ . '/account_security.php';

@@ -21,6 +21,8 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 COMMON_CSP = "frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'"
 CONTENT_CSP = "default-src 'none'; sandbox"
+MICROPHONE_DENIED = "camera=(), microphone=(), geolocation=(), payment=()"
+MICROPHONE_ALLOWED = "camera=(), microphone=(self), geolocation=(), payment=()"
 
 
 def check(ok: bool, label: str) -> None:
@@ -94,6 +96,8 @@ def run() -> None:
 
         (backend / "index.php").write_text(
             '<?php header("Content-Type: text/html; charset=UTF-8");'
+            ' $policy = isset($_GET["voice"]) ? "' + MICROPHONE_ALLOWED + '" : "' + MICROPHONE_DENIED + '";'
+            ' header("Permissions-Policy: " . $policy);'
             ' echo "<!doctype html><title>safe-fixture</title>";', encoding="utf-8"
         )
         (backend / "file_content.php").write_text(
@@ -140,12 +144,19 @@ DocumentRoot "{public}"
             csp = [v for k, v in headers if k.lower() == "content-security-policy"]
             check(status == 200 and b"safe-fixture" in body, "allowlisted HTML reaches PHP backend")
             check(csp == [COMMON_CSP], "HTML retains the exact current enforcing CSP")
+            microphone_policy = [v for k, v in headers if k.lower() == "permissions-policy"]
+            check(microphone_policy == [MICROPHONE_DENIED], "Dashboard default microphone denial reaches the browser")
+            status, headers, _ = request(apache_port, "/index.php?voice=1")
+            microphone_policy = [v for k, v in headers if k.lower() == "permissions-policy"]
+            check(status == 200 and microphone_policy == [MICROPHONE_ALLOWED],
+                  "The PHP dashboard opt-in reaches the browser as a single permissions policy")
             status, headers, body = request(apache_port, "/file_content.php")
             csp = [v for k, v in headers if k.lower() == "content-security-policy"]
             check(status == 200 and body == b"SAFE_BINARY_FIXTURE", "allowlisted binary endpoint runs PHP")
             check(csp.count(COMMON_CSP) == 1 and csp.count(CONTENT_CSP) == 1,
                   "both Apache common CSP and PHP sandbox CSP remain enforced independently")
             norm = {k.lower(): v for k, v in headers}
+            check(norm.get("permissions-policy") == MICROPHONE_DENIED, "Other PHP endpoints deny microphone access")
             check(norm.get("cross-origin-resource-policy") == "same-origin",
                   "PHP binary same-origin resource policy remains")
             check(norm.get("cache-control") == "no-store, max-age=0",

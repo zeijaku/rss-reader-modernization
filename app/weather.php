@@ -270,29 +270,54 @@ function weather_parse_forecast(string $body, array $config): ?array
     if (!is_array($times) || !is_array($codes) || !is_array($maxes) || !is_array($mins) || !is_array($rain)) {
         return null;
     }
+
+    $timezone = new DateTimeZone($config['timezone']);
+    $currentTime = $json['current']['time'] ?? null;
+    $localDate = is_string($currentTime) ? substr($currentTime, 0, 10) : '';
+    $today = preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/D', $localDate) === 1
+        ? DateTimeImmutable::createFromFormat('!Y-m-d', $localDate, $timezone)
+        : false;
+    if ($today === false || $today->format('Y-m-d') !== $localDate) {
+        $today = new DateTimeImmutable('today', $timezone);
+        $localDate = $today->format('Y-m-d');
+    }
+    $yesterday = $today->modify('-1 day')->format('Y-m-d');
+    $temperatures = [];
     $days = [];
-    $limit = min($config['forecast_days'], count($times), count($codes), count($maxes), count($mins), count($rain));
-    for ($i = 0; $i < $limit; $i++) {
-        if (!is_string($times[$i]) || preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/D', $times[$i]) !== 1
-            || !is_numeric($codes[$i]) || !is_numeric($maxes[$i]) || !is_numeric($mins[$i])) {
+    foreach ($times as $i => $date) {
+        if (!is_string($date) || preg_match('/\A[0-9]{4}-[0-9]{2}-[0-9]{2}\z/D', $date) !== 1
+            || !is_numeric($maxes[$i] ?? null) || !is_numeric($mins[$i] ?? null)) {
+            continue;
+        }
+        if ($date === $localDate || $date === $yesterday) {
+            $temperatures[$date] = ['max' => (float) $maxes[$i], 'min' => (float) $mins[$i]];
+        }
+        if ($date < $localDate || count($days) >= $config['forecast_days'] || !is_numeric($codes[$i] ?? null)) {
             continue;
         }
         $code = (int) $codes[$i];
         $meta = weather_code_meta($code);
         $days[] = [
-            'date' => $times[$i],
+            'date' => $date,
             'weather_code' => $code,
             'label' => $meta['label'],
             'icon' => $meta['icon'],
             'temperature_max' => round((float) $maxes[$i], 1),
             'temperature_min' => round((float) $mins[$i], 1),
-            'precipitation_probability' => is_numeric($rain[$i]) ? max(0, min(100, (int) round((float) $rain[$i]))) : null,
+            'precipitation_probability' => is_numeric($rain[$i] ?? null) ? max(0, min(100, (int) round((float) $rain[$i]))) : null,
         ];
     }
     if ($days === []) {
         return null;
     }
     $currentMeta = weather_code_meta($currentCode);
+    $temperatureChange = null;
+    if (isset($temperatures[$localDate], $temperatures[$yesterday])) {
+        $temperatureChange = [
+            'max' => round($temperatures[$localDate]['max'] - $temperatures[$yesterday]['max'], 1),
+            'min' => round($temperatures[$localDate]['min'] - $temperatures[$yesterday]['min'], 1),
+        ];
+    }
     return [
         'location_name' => $config['location_name'],
         'timezone' => $config['timezone'],
@@ -302,6 +327,7 @@ function weather_parse_forecast(string $body, array $config): ?array
             'label' => $currentMeta['label'],
             'icon' => $currentMeta['icon'],
         ],
+        'temperature_change' => $temperatureChange,
         'days' => $days,
         'updated_at' => gmdate('c'),
         'stale' => false,
@@ -328,6 +354,7 @@ function weather_forecast(array $config, bool $force = false, ?callable $fetcher
         'daily' => 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max',
         'timezone' => $config['timezone'],
         'forecast_days' => $config['forecast_days'],
+        'past_days' => 1,
     ], '', '&', PHP_QUERY_RFC3986);
     $response = $fetcher !== null ? $fetcher($url) : weather_safe_fetch($url, WEATHER_FORECAST_HOST);
     if (is_array($response) && ($response['ok'] ?? false) === true && is_string($response['body'] ?? null)) {

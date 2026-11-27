@@ -53,6 +53,42 @@ function check(ok,name){assert(ok,name);checks++;console.log('PASS: '+name);}
    const after=await card.evaluate(n=>({vx:n.__rssCursorFieldState.bodies[0].vx,vy:n.__rssCursorFieldState.bodies[0].vy}));
    check(Math.abs(after.vx-target.vx)>0.05||Math.abs(after.vy-target.vy)>0.05,'mouse collider changes body motion at '+width);
 
+   if(width===360){
+    await canvas.scrollIntoViewIfNeeded();
+    const touchBounds=await canvas.boundingBox();
+    const point=(x,y)=>({x:touchBounds.x+touchBounds.width*x,y:touchBounds.y+touchBounds.height*y});
+    const readState=()=>card.evaluate(n=>{
+     const field=n.__rssCursorFieldState;
+     return {count:field.bodies.length,active:field.pointer.active,touch:field.touch,body:{...field.bodies[0]}};
+    });
+    await card.evaluate(n=>{
+     const field=n.__rssCursorFieldState;
+     field.bodies.forEach((body,i)=>Object.assign(body,{x:field.width*(.5+.1*i),y:field.height*.4,vx:0,vy:0}));
+    });
+    const tap=point(.2,.73);
+    await page.touchscreen.tap(tap.x,tap.y);
+    check((await readState()).count===before+1,'an empty touch tap adds one body without compatibility-click duplication');
+    await page.touchscreen.tap(tap.x,tap.y);
+    check((await readState()).count===before+1,'tapping an existing body does not duplicate it');
+
+    const cdp=await context.newCDPSession(page);
+    const touch=(type,...touchPoints)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints});
+    const beforeSwipe=await readState();
+    await touch('touchStart',point(.25,.4));
+    for(const x of [.32,.39,.45,.51,.57]) await touch('touchMove',point(x,.4));
+    await page.waitForFunction(()=>document.querySelector('.mini-game-card').__rssCursorFieldState.bodies[0].vx>0.05);
+    await touch('touchEnd');
+    const afterSwipe=await readState();
+    check(afterSwipe.body.x>beforeSwipe.body.x,'touch drag displaces the body on the playfield');
+    check(afterSwipe.count===beforeSwipe.count&&!afterSwipe.active&&afterSwipe.touch===null,'touch release clears the collider without adding a body');
+    await touch('touchStart',point(.25,.2));
+    await touch('touchMove',point(.4,.2));
+    await touch('touchCancel');
+    const cancelled=await readState();
+    check(cancelled.count===beforeSwipe.count&&!cancelled.active&&cancelled.touch===null,'touch cancellation clears the collider');
+    check(await canvas.evaluate(n=>getComputedStyle(n).touchAction)==='none','touch gestures are reserved for play only on the canvas');
+   }
+
    const countBeforeResize=await card.evaluate(n=>n.__rssCursorFieldState.bodies.length);
    await page.setViewportSize({width:width===1280?1100:390,height:800});
    await page.waitForTimeout(80);

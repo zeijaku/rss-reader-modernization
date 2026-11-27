@@ -2106,6 +2106,65 @@ select:focus,
     font-weight: 400;
 }
 
+.calendar-month-view .calendar-day {
+    position: relative;
+}
+
+.calendar-day-mark {
+    position: absolute;
+    inset-block-start: 4px;
+    inset-inline-start: 34px;
+    min-width: 24px;
+    max-width: calc(100% - 36px);
+    min-height: 24px;
+    padding: 0 3px;
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: var(--bs-border-radius, 4px);
+    background: transparent;
+    color: var(--bs-secondary-color, #6c757d);
+    font-size: 0.68rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.calendar-day-mark:hover,
+.calendar-day-mark:focus-visible,
+.calendar-day-mark-set {
+    border-color: rgba(var(--bs-primary-rgb, 44, 62, 80), 0.24);
+    background-color: rgba(var(--bs-primary-rgb, 44, 62, 80), 0.08);
+    color: inherit;
+}
+
+.calendar-day-mark-set > i {
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.calendar-day-mark-picker .dropdown-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.calendar-day-mark-picker .dropdown-menu {
+    --bs-dropdown-link-active-color: var(--bs-body-color);
+    --bs-dropdown-link-active-bg: var(--bs-tertiary-bg);
+    max-height: min(22rem, 48vh);
+    overflow-y: auto;
+}
+
+.calendar-day-mark-picker i {
+    margin-inline-end: 0.5rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .calendar-day:not(:hover):not(:focus-within) .calendar-day-mark:not(.calendar-day-mark-set) {
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
 .calendar-day-outside-month .calendar-day-entries {
     opacity: 0.82;
 }
@@ -2245,6 +2304,19 @@ select:focus,
         font-size: 0.74rem;
     }
 
+    .calendar-month-view.calendar-day-marks-ready .calendar-day-number {
+        width: 50%;
+        min-width: 0;
+    }
+
+    .calendar-day-mark {
+        inset-block-start: 2px;
+        inset-inline-start: 50%;
+        min-width: min(20px, calc(50% - 1px));
+        max-width: calc(50% - 1px);
+        padding-inline: 1px;
+    }
+
     .calendar-entry {
         min-height: 22px;
         padding: 2px 3px;
@@ -2335,6 +2407,11 @@ select:focus,
 .dashboard-grid > .dashboard-widget[data-widget-width="4"] { grid-column: span 4; }
 .dashboard-grid > .dashboard-widget[data-widget-height="2"] { grid-row: span 2; }
 
+/* The grid gap already supplies spacing between these cards. */
+.dashboard-grid > .dashboard-widget:is(.mail-card, .links-card, .weather-card, .mini-game-card) {
+    margin-bottom: 0;
+}
+
 .dashboard-grid .feed-card-inner,
 .dashboard-grid .clock-card-inner,
 .dashboard-grid .memo-card-inner,
@@ -2388,6 +2465,13 @@ select:focus,
 .dashboard-grid > .mini-game-card[data-widget-height="1"] .mini-game-card-inner {
     height: auto;
     min-height: 320px;
+}
+
+@media (min-width: 768px) {
+    .dashboard-grid > .clock-card[data-widget-height="1"] .clock-card-inner,
+    .dashboard-grid > .mini-game-card[data-widget-height="1"] .mini-game-card-inner {
+        min-height: max(320px, 100%);
+    }
 }
 
 .dashboard-grid > .clock-card[data-widget-height="1"] .clock-card-body,

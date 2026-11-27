@@ -69,6 +69,16 @@ def create_fixture(path: Path) -> None:
             calendar_source_name TEXT NOT NULL, calendar_source_color TEXT NOT NULL DEFAULT 'blue',
             calendar_source_default INTEGER NOT NULL DEFAULT 0, calendar_source_sort_order INTEGER NOT NULL DEFAULT 0
         );
+        CREATE TABLE ig_calendar_day_mark (
+            mark_owner INTEGER NOT NULL, mark_date TEXT NOT NULL,
+            mark_label TEXT NOT NULL, mark_note TEXT NOT NULL,
+            PRIMARY KEY (mark_owner, mark_date)
+        );
+        INSERT INTO ig_calendar_day_mark VALUES (99, '2026-09-10', '他人', '');
+        CREATE TABLE ig_calendar_ics_subscription (
+            ics_id INTEGER PRIMARY KEY, ics_owner INTEGER NOT NULL,
+            ics_name TEXT NOT NULL, ics_color TEXT NOT NULL, ics_raw TEXT
+        );
         CREATE TABLE ig_calendar_event (
             calendar_event_id INTEGER PRIMARY KEY AUTOINCREMENT,
             calendar_event_date TEXT NOT NULL, calendar_event_updated_at TEXT NOT NULL,
@@ -145,6 +155,11 @@ def create_fixture(path: Path) -> None:
          '', 'red', 1, None, None, None, 'none', None),
     ]
     db.executemany(event_sql, rows)
+    db.execute('INSERT INTO ig_calendar_ics_subscription VALUES (300, 42, ?, ?, ?)',
+               ('外部', 'blue', '\r\n'.join(['BEGIN:VCALENDAR', 'VERSION:2.0', 'BEGIN:VEVENT',
+                                            'UID:search-ics-1', 'DTSTART;VALUE=DATE:20260820',
+                                            'SUMMARY:外部の予定', 'LOCATION:外部ホール', 'END:VEVENT', 'END:VCALENDAR', ''])))
+    db.execute("UPDATE ig_calendar_event SET calendar_event_location = '広島中央ビル' WHERE calendar_event_id = 1")
     db.execute('''INSERT INTO ig_task (
         task_date, task_updated_at, task_flag, task_owner, task_widget_id, task_title,
         task_due_date, task_priority, task_completed, task_completed_at, task_sort_order
@@ -243,6 +258,48 @@ try:
     check(data.get('tasks', [{}])[0].get('title') == 'Task', 'owned Task is returned with the common range')
     check('no-store' in response_headers.get('Cache-Control', ''), 'successful range response is non-cacheable')
     check(bool(response_headers.get('X-CSRF-Token')), 'successful range response keeps CSRF synchronization header')
+
+    check(data.get('day_marks') == {}, 'empty day marks form a date map and exclude other owners')
+    mark = {
+        'action': 'calendar.day_mark.save', 'csrf_token': csrf, 'mark_date': '2026-09-10',
+        'mark_label': '病院', 'mark_note': '午前', 'mark_owner': '99',
+    }
+    status, _, _ = request(port, 'POST', '/calendar_recurrence_api.php', {**mark, 'csrf_token': '0' * 64}, cookie)
+    check(status == 403, 'saving a mark requires a valid CSRF token')
+    status, _, raw = request(port, 'POST', '/calendar_recurrence_api.php', mark, cookie)
+    check(status == 200 and json.loads(raw).get('data', {}).get('mark') == {'label': '病院', 'note': '午前'},
+          'HTTP day mark save uses the authenticated session')
+    status, _, raw = request(port, 'POST', '/calendar_recurrence_api.php', valid, cookie)
+    check(status == 200 and json.loads(raw).get('data', {}).get('day_marks') == {'2026-09-10': {'label': '病院', 'note': '午前'}},
+          'saved day mark is returned with its Calendar range')
+
+    search = {
+        'action': 'calendar.search', 'csrf_token': csrf, 'search_mode': 'events',
+        'search_start': '2026-08-01', 'search_end': '2026-09-30', 'search_query': '会議',
+    }
+    for query, key in [('会議', 'title'), ('中央ビル', 'location'), ('alert(1)', 'note')]:
+        status, _, raw = request(port, 'POST', '/calendar_recurrence_api.php', {**search, 'search_query': query}, cookie)
+        results = json.loads(raw).get('data', {}).get('results', [])
+        check(status == 200 and len(results) == 1 and query in results[0][key], f'partial event search matches {key}')
+    status, _, raw = request(port, 'POST', '/calendar_recurrence_api.php', {**search, 'search_query': '毎週'}, cookie)
+    results = json.loads(raw).get('data', {}).get('results', [])
+    check(status == 200 and [row['occurrence_start_date'] for row in results] ==
+          ['2026-09-21', '2026-09-14', '2026-09-07', '2026-08-31'], 'search returns individual recurring events across windows, newest first')
+    status, _, raw = request(port, 'POST', '/calendar_recurrence_api.php', {**search, 'search_query': '外部ホール'}, cookie)
+    results = json.loads(raw).get('data', {}).get('results', [])
+    check(status == 200 and len(results) == 1 and results[0].get('external_read_only') is True,
+          'search matches cached external ICS locations and keeps read-only status')
+    status, _, raw = request(port, 'POST', '/calendar_recurrence_api.php', {**search, 'search_query': '他人'}, cookie)
+    check(status == 200 and json.loads(raw).get('data', {}).get('results') == [], 'event search excludes other owners')
+    for query in ['', '病院']:
+        mark_search = {**search, 'search_mode': 'marks', 'search_query': query}
+        status, _, raw = request(port, 'POST', '/calendar_recurrence_api.php', mark_search, cookie)
+        check(status == 200 and json.loads(raw).get('data', {}).get('results') ==
+              [{'date': '2026-09-10', 'label': '病院', 'note': '午前'}], 'marks search returns own marks by exact label or all')
+    status, _, _ = request(port, 'POST', '/calendar_recurrence_api.php', {**search, 'search_end': '2028-01-01'}, cookie)
+    check(status == 422, 'search limits the requested date interval')
+    status, _, _ = request(port, 'POST', '/calendar_recurrence_api.php', {**search, 'csrf_token': '0' * 64}, cookie)
+    check(status == 403, 'calendar search requires CSRF protection')
 
     invalid = dict(valid)
     invalid['calendar_range_end'] = '2026-10-13'

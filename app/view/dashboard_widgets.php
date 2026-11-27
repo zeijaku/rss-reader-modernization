@@ -162,7 +162,9 @@ if (is_int($content_location)) {
             echo '</div>';
             echo '<div class="mini-game-card-body">';
 
-            if ($gameType === 'tower_defense') {
+            if ($gameType === 'slg') {
+                echo '<p class="game-widget-loading text-muted" role="status">SLGを読み込んでいます...</p>';
+            } elseif ($gameType === 'tower_defense') {
                 echo '<p class="game-widget-loading text-muted" role="status">Tower Defenseを読み込んでいます...</p>';
             } elseif ($gameType === 'word_tiles' || $gameType === 'word_tiles_ja') {
                 echo '<p class="game-widget-loading text-muted" role="status">Word Tilesを読み込んでいます...</p>';
@@ -298,6 +300,13 @@ if (is_int($content_location)) {
             ';
             continue;
         }
+        if ($widgetType === 'openai_chat') {
+            if (openai_widget_allowed_user($currentUserId)) {
+                require __DIR__ . '/widget_openai_card.php';
+            }
+            continue;
+        }
+
         if ($widgetType === 'links') {
             $linksConfig = is_array($result_content[$i]['widget_config_data'] ?? null)
                 ? $result_content[$i]['widget_config_data']
@@ -388,13 +397,9 @@ if (is_int($content_location)) {
             echo '
             <!-- Calendar Widget -->
                 <section class="' . app_html($widgetWidthClass) . ' dashboard-widget calendar-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="calendar" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" role="region" aria-labelledby="' . app_html($calendarTitleId) . '">
-                    <div class="calendar-card-inner">
-                        <div class="text-bg-' . app_html($widgetStyle) . ' calendar-card-header">
-                            <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines" aria-hidden="true"></i></button>
-                            <small class="calendar-widget-title widget-title-text" id="' . app_html($calendarTitleId) . '" title="' . app_html($calendarTitle) . '">' . app_html($calendarTitle) . '</small>
-                            <strong class="calendar-month-label" aria-live="polite">----</strong>
-                            <button type="button" class="btn btn-link calendar-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" data-bs-toggle="modal" data-bs-target="#changeCalendarWidget" aria-label="このCalendar Widgetを編集"><i class="fas fa-edit" aria-hidden="true"></i></button>
-                        </div>
+                    <div class="calendar-card-inner">';
+            require __DIR__ . '/calendar_widget_header.php';
+            echo '
                         <div class="calendar-card-body">
                             <div class="calendar-toolbar calendar-toolbar-with-sources">
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-prev-month" aria-label="前の月"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>

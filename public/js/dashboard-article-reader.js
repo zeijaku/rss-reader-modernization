@@ -13,14 +13,30 @@
         var $trigger = trigger ? $(trigger) : $();
         var $row = $trigger.closest('.feed-item-row');
         var $card = $trigger.closest('[data-feed-content-id]');
+        if (!$card.length) {
+            $card = $trigger.closest('.search-feed-card');
+        }
         var index = Number($row.attr('data-feed-item-index'));
         var items = $card.data('feed-render-items');
-        var contentId = String($card.attr('data-feed-content-id') || '');
-        if (!/^\d+$/.test(contentId) || !Number.isInteger(index) || !Array.isArray(items) || !items[index]) {
+        if (!Number.isInteger(index) || !Array.isArray(items) || !items[index]) {
             return null;
         }
-        var itemIdentity = String(items[index].item_identity || '');
-        if (!/^m1i:v1:[a-f0-9]{64}$/.test(itemIdentity)) {
+        var item = items[index];
+        var contentId = $card.attr('data-feed-content-id');
+        return readerRequestData(contentId ? {content_id: contentId} : item.reader_source, item.item_identity);
+    }
+
+    function readerRequestData(source, itemIdentity) {
+        if (!source || !/^m1i:v1:[a-f0-9]{64}$/.test(itemIdentity)) {
+            return null;
+        }
+        var widgetId = String(source.search_widget_id || '');
+        var commonKey = String(source.common_source_key || '');
+        if (/^\d+$/.test(widgetId) && /^[a-f0-9]{64}$/.test(commonKey)) {
+            return {search_widget_id: widgetId, common_source_key: commonKey, item_identity: itemIdentity};
+        }
+        var contentId = String(source.content_id || '');
+        if (!/^\d+$/.test(contentId)) {
             return null;
         }
         return {
@@ -108,9 +124,7 @@
         var $modal = $('#readerModeModal');
         var context = $modal.data('reader-context');
         var $status = $('#readerModeFullTextStatus');
-        if (!context || !/^\d+$/.test(String(context.content_id || ''))
-            || !/^m1i:v1:[a-f0-9]{64}$/.test(String(context.item_identity || ''))
-        ) {
+        if (!context || readerRequestData(context, context.item_identity) === null) {
             $status.prop('hidden', false).text('全文取得用の記事情報を確認できませんでした。RSS本文を表示しています。');
             return;
         }

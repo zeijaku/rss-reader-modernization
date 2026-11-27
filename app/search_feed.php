@@ -130,7 +130,18 @@ function search_feed_owned_sources(int $ownerId, ?string $ownedCategoryPath=null
 function search_feed_common_sources(int $ownerId,string $category): array
 {
     $out=[]; $i=1;
-    foreach(search_feed_common_catalog() as $r){if($category!=='all'&&($r['category']??'')!==$category)continue; $url=app_validate_feed_url($r['url']??null); if($url===null)continue; $out[]=['source_id'=>900000000+$i,'url'=>$url,'name'=>(string)($r['name']??'')]; $i++;}
+    foreach (search_feed_common_catalog() as $row) {
+        if ($category !== 'all' && ($row['category'] ?? '') !== $category) continue;
+        $url = app_validate_feed_url($row['url'] ?? null);
+        if ($url === null) continue;
+        $out[] = [
+            'source_id' => 900000000 + $i,
+            'url' => $url,
+            'name' => (string) ($row['name'] ?? ''),
+            'common_source_key' => hash('sha256', $url),
+        ];
+        $i++;
+    }
     return $out;
 }
 function search_feed_sources_for_config(int $ownerId,array $config): array
@@ -149,6 +160,25 @@ function search_feed_owned_widget(int $ownerId,int $widgetId): ?array
 {
     $stmt=conn_db()->prepare('SELECT * FROM '.db_table_identifier('dashboard_widget')." WHERE widget_id=:id AND widget_owner=:owner AND widget_type='search' AND widget_flag=0");
     $stmt->execute([':id'=>$widgetId,':owner'=>$ownerId]); $r=$stmt->fetch(); return is_array($r)?$r:null;
+}
+
+function search_feed_common_reader_source(int $ownerId, int $widgetId, string $sourceKey): ?FeedSource
+{
+    $widget = search_feed_owned_widget($ownerId, $widgetId);
+    if ($widget === null) {
+        return null;
+    }
+    $config = search_feed_config_from_storage($widget['widget_config'] ?? null);
+    if (!in_array($config['scope'], ['common', 'both'], true)) {
+        return null;
+    }
+
+    foreach (search_feed_common_sources($ownerId, $config['category']) as $source) {
+        if (hash_equals($source['common_source_key'], $sourceKey)) {
+            return FeedSource::fromValidatedValues($source['source_id'], $ownerId, $source['url']);
+        }
+    }
+    return null;
 }
 function search_feed_create(int $ownerId,int $location,string $style,int $width,array $config,int $height=1): int
 {
@@ -175,7 +205,32 @@ function search_feed_execute(int $ownerId,int $widgetId): array
     $sources=search_feed_sources_for_config($ownerId,$cfg);
     $seenUrl=[];$unique=[];foreach($sources as $s){if(isset($seenUrl[$s['url']]))continue;$seenUrl[$s['url']]=1;$unique[]=$s;}
     $terms=search_feed_terms($cfg['query']);$items=[];$failed=0;$service=FeedFetchService::fromRuntimeConfiguration();
-    foreach($unique as $s){try{$source=FeedSource::fromValidatedValues((int)$s['source_id'],$ownerId,(string)$s['url']);$loaded=$service->load($source);if(($loaded['ok']??false)!==true){$failed++;continue;}$rawFeed=is_array($loaded['result_feed']??null)?$loaded['result_feed']:[];$effective=is_string($loaded['effective_url']??null)?$loaded['effective_url']:(string)$s['url'];$feed=api_safe_feed_payload($rawFeed,$effective);$channel=is_array($feed['channel']??null)?$feed['channel']:[];foreach(is_array($feed['item']??null)?$feed['item']:[] as $item){if(!is_array($item)||!search_feed_item_matches($item,$terms,$cfg['condition']))continue;$link=(string)($item['link']??'');$key=hash('sha256',$link."\n".(string)($item['title']??''));if(isset($items[$key]))continue;$item['source_title']=(string)($channel['title']??$s['name']);$items[$key]=$item;}}catch(Throwable){$failed++;}}
+    foreach ($unique as $sourceRow) {
+        try {
+            $source = FeedSource::fromValidatedValues($sourceRow['source_id'], $ownerId, $sourceRow['url']);
+            $loaded = $service->load($source);
+            if (($loaded['ok'] ?? false) !== true) {
+                $failed++;
+                continue;
+            }
+            $rawFeed = is_array($loaded['result_feed'] ?? null) ? $loaded['result_feed'] : [];
+            $effective = is_string($loaded['effective_url'] ?? null) ? $loaded['effective_url'] : $sourceRow['url'];
+            $feed = api_safe_feed_payload($rawFeed, $effective);
+            $readerSource = isset($sourceRow['common_source_key'])
+                ? ['search_widget_id' => $widgetId, 'common_source_key' => $sourceRow['common_source_key']]
+                : ['content_id' => $source->sourceId];
+            foreach ($feed['item'] as $item) {
+                if (!search_feed_item_matches($item, $terms, $cfg['condition'])) continue;
+                $key = hash('sha256', $item['link'] . "\n" . $item['title']);
+                if (isset($items[$key])) continue;
+                $item['source_title'] = (string) ($feed['channel']['title'] ?? $sourceRow['name']);
+                $item['reader_source'] = $readerSource;
+                $items[$key] = $item;
+            }
+        } catch (Throwable) {
+            $failed++;
+        }
+    }
     $items=array_slice(array_values($items),0,$cfg['limit']);
     return ['ok'=>true,'query'=>$cfg['query'],'items'=>$items,'source_count'=>count($unique),'failed_count'=>$failed,'limit'=>$cfg['limit'],'owned_category_filter'=>search_feed_owned_category_filter_value($ownedCategoryPath)];
 }

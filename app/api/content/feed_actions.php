@@ -185,8 +185,26 @@ function api_feed_reader_payload(array $feed, string $itemIdentity): ?array
 /** @return array{status:int,body:array<string,mixed>} */
 function api_feed_reader(int $userId, array $input): array
 {
-    $contentId = api_positive_int($input, 'content_id');
     $itemIdentity = feed_item_state_valid_identity($input['item_identity'] ?? null);
+    if (array_key_exists('search_widget_id', $input) || array_key_exists('common_source_key', $input)) {
+        $widgetId = api_positive_int($input, 'search_widget_id');
+        $sourceKey = $input['common_source_key'] ?? null;
+        if ($widgetId === null || !is_string($sourceKey) || preg_match('/\A[a-f0-9]{64}\z/D', $sourceKey) !== 1
+            || array_key_exists('content_id', $input)) {
+            return api_validation_error('Common Reader source is invalid.');
+        }
+        if ($itemIdentity === null) {
+            return api_validation_error('item_identity is invalid.');
+        }
+
+        $source = search_feed_common_reader_source($userId, $widgetId, $sourceKey);
+        if ($source === null) {
+            return api_error('not_found', 'Search Feed source was not found.', 404);
+        }
+        return api_feed_reader_from_source($source, $itemIdentity);
+    }
+
+    $contentId = api_positive_int($input, 'content_id');
     if ($contentId === null) {
         return api_validation_error('content_id must be a positive integer.');
     }
@@ -215,12 +233,17 @@ function api_feed_reader(int $userId, array $input): array
             new RuntimeException('Feed source mapping rejected.')
         );
     }
+    return api_feed_reader_from_source($source, $itemIdentity);
+}
 
+/** @return array{status:int,body:array<string,mixed>} */
+function api_feed_reader_from_source(FeedSource $source, string $itemIdentity): array
+{
     try {
         // V1.38-Aは元記事を取得しない。既存RSS Cache/Fetch経路だけを再利用する。
         $loaded = FeedFetchService::fromRuntimeConfiguration()->load($source);
     } catch (Throwable $exception) {
-        return api_feed_internal_failure('feed.reader', $userId, $contentId, $exception);
+        return api_feed_internal_failure('feed.reader', $source->ownerId, $source->sourceId, $exception);
     }
 
     if (($loaded['ok'] ?? false) !== true) {
@@ -241,7 +264,7 @@ function api_feed_reader(int $userId, array $input): array
     }
 
     return api_success([
-        'content_id' => $contentId,
+        'content_id' => $source->sourceId,
         'reader' => $reader,
     ]);
 }

@@ -105,18 +105,24 @@
     }
 
     function apiRequest(action, data, timeout) {
-        var payload = $.extend({}, data || {}, {
+        var fields = {
             'action': action,
             'csrf_token': appCsrfToken()
-        });
-
+        };
+        var multipart = typeof window.FormData === 'function' && data instanceof window.FormData;
+        if (multipart) {
+            data.set('action', fields.action);
+            data.set('csrf_token', fields.csrf_token);
+        }
         return $.ajax({
             url: './api_v1.php',
             method: 'POST',
             cache: false,
             dataType: 'json',
             timeout: timeout || 4000,
-            data: payload
+            data: multipart ? data : $.extend({}, data || {}, fields),
+            processData: multipart ? false : undefined,
+            contentType: multipart ? false : undefined
         });
     }
 

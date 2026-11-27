@@ -1,3 +1,11 @@
+## 1.53.0 - 2026-11-27
+
+- Release the accumulated GPT Widget work through dev.26, including article questions, file input, browser speech input, model selection, formatted responses and estimated API balance.
+- Add Calendar date marks and schedule/date-mark search, owner-scoped migration 036, and a shared Dashboard/Stock Calendar header.
+- Include the existing SLG Stage 1/2 CPU gameplay and presentation improvements, Cursor Field touch controls and compact YouTube controls from the development branch.
+- Update version and asset revision to 1.53.0. Existing dev.20+ installations with migration 036 applied require no additional SQL.
+- Preserve the PHP 8.1/8.4 regression and official Runtime/Complete Source release gates.
+
 ## 1.51.0 - 2026-11-10
 
 - Integrate the user-verified ICS subscription work from development checkpoints v1.51.0-dev.1 through dev.4 as a dedicated Calendar feature release, based only on stable v1.49.1. Do **not** include the in-progress v1.50 Precision Sniper or unrelated game code.

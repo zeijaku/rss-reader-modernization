@@ -194,6 +194,11 @@ function search_feed_form_fields(string $prefix): string
 
 <!-- 記事Actions: 通常RSS / Search Feed / Stockで共通利用 -->
 <div id="articleActionsMenu" class="article-actions-menu" role="menu" aria-label="記事Actions" hidden>
+    <?php if (openai_widget_allowed_user((int) $currentUserId)) { ?>
+    <button type="button" class="article-actions-item article-action-openai" role="menuitem">
+        <i class="far fa-comment fa-fw" aria-hidden="true"></i><span>記事をGPTに聞く</span>
+    </button>
+    <?php } ?>
     <button type="button" class="article-actions-item article-action-stock" role="menuitem">
         <i class="far fa-bookmark fa-fw" aria-hidden="true"></i><span>Stockへ保存</span>
     </button>
@@ -212,6 +217,7 @@ function search_feed_form_fields(string $prefix): string
     </button>
 </div>
 
+<?php if (openai_widget_allowed_user((int) $currentUserId)) { require dirname(__DIR__) . '/app/view/article_openai.php'; } ?>
 <main id="main-content" class="igcontainer container-fluid" tabindex="-1" data-dashboard-current-tab="<?php echo is_int($tabParam) ? (int) $tabParam : ''; ?>" data-dashboard-tab-count="4" data-dashboard-user-id="<?php echo (int) $currentUserId; ?>" data-dashboard-theme="<?php echo app_html((string) ($ui['conf_style'] ?? 'bootstrap')); ?>">
 <h1 class="visually-hidden">iGuguru RSS Reader</h1>
 <p id="widget-sort-help" class="visually-hidden">Widgetのタイトルバーにある並び替えボタンをドラッグして順番を変更出来ます。キーボードでは矢印キー、Home、Endキーを使用します。</p>
@@ -367,7 +373,9 @@ if (is_int($content_location)) {
             echo '</div>';
             echo '<div class="mini-game-card-body">';
 
-            if ($gameType === 'tower_defense') {
+            if ($gameType === 'slg') {
+                echo '<p class="game-widget-loading text-muted" role="status">SLGを読み込んでいます...</p>';
+            } elseif ($gameType === 'tower_defense') {
                 echo '<p class="game-widget-loading text-muted" role="status">Tower Defenseを読み込んでいます...</p>';
             } elseif ($gameType === 'word_tiles' || $gameType === 'word_tiles_ja') {
                 echo '<p class="game-widget-loading text-muted" role="status">Word Tilesを読み込んでいます...</p>';
@@ -593,13 +601,9 @@ if (is_int($content_location)) {
             echo '
             <!-- Calendar Widget -->
                 <section class="' . app_html($widgetWidthClass) . ' dashboard-widget calendar-card" data-dashboard-widget-id="' . $widgetId . '" data-dashboard-widget-type="calendar" data-dashboard-widget-location="' . (int) $content_location . '" data-dashboard-widget-sort-order="' . $widgetSortOrder . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" role="region" aria-labelledby="' . app_html($calendarTitleId) . '">
-                    <div class="calendar-card-inner">
-                        <div class="text-bg-' . app_html($widgetStyle) . ' calendar-card-header">
-                            <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines" aria-hidden="true"></i></button>
-                            <small class="calendar-widget-title widget-title-text" id="' . app_html($calendarTitleId) . '" title="' . app_html($calendarTitle) . '">' . app_html($calendarTitle) . '</small>
-                            <strong class="calendar-month-label" aria-live="polite">----</strong>
-                            <button type="button" class="btn btn-link calendar-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" data-bs-toggle="modal" data-bs-target="#changeCalendarWidget" aria-label="このCalendar Widgetを編集"><i class="fas fa-edit" aria-hidden="true"></i></button>
-                        </div>
+                    <div class="calendar-card-inner">';
+            require dirname(__DIR__) . '/app/view/calendar_widget_header.php';
+            echo '
                         <div class="calendar-card-body">
                             <div class="calendar-toolbar">
                                 <button type="button" class="btn btn-sm btn-outline-secondary calendar-prev-month" aria-label="前の月"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
@@ -1321,7 +1325,7 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
         <div class="modal-header" style="color: #fff; background-color: #333;"><h5 class="modal-title" id="registerGameWidgetTitle"><i class="fas fa-chess-knight" aria-hidden="true"></i> Gameを追加</h5><button type="button" class="btn-close" data-bs-theme="dark" data-bs-dismiss="modal" aria-label="閉じる"></button></div>
         <div class="modal-body">
             <div class="mb-3"><label class="form-label" for="registerGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control registerGameTitleValue" id="registerGameTitleValue" maxlength="32" value="Icon Quest" required></div>
-            <div class="mb-3"><label class="form-label" for="registerGameType"><small class="text-dark">Game</small></label><select class="form-select registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option><option value="tower_defense">Tower Defense（配置・戦術）</option></select></div>
+            <div class="mb-3"><label class="form-label" for="registerGameType"><small class="text-dark">Game</small></label><select class="form-select registerGameType" id="registerGameType"><option value="icon_quest" selected>Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option><option value="tower_defense">Tower Defense（配置・戦術）</option><option value="slg">SLG（ターン制戦略）</option></select></div>
             <input type="hidden" class="registerGameLocation" value="<?php echo app_html((string) $addTargetLocation); ?>">
             <div class="row g-2">
                 <div class="mb-3 col-md-4"><label class="form-label" for="registerGameWidth"><small class="text-dark">横幅</small></label><select class="form-select registerGameWidth" id="registerGameWidth"><option value="1" selected>1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
@@ -1344,13 +1348,13 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
         <div class="modal-body">
             <input type="hidden" class="changeGameWidgetId">
             <div class="mb-3"><label class="form-label" for="changeGameTitleValue"><small class="text-dark">見出し</small></label><input type="text" class="form-control changeGameTitleValue" id="changeGameTitleValue" maxlength="32" required></div>
-            <div class="mb-3"><label class="form-label" for="changeGameType"><small class="text-dark">Game</small></label><select class="form-select changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option><option value="tower_defense">Tower Defense（配置・戦術）</option></select></div>
+            <div class="mb-3"><label class="form-label" for="changeGameType"><small class="text-dark">Game</small></label><select class="form-select changeGameType" id="changeGameType"><option value="icon_quest">Icon Quest（5×5 Icon戦略）</option><option value="lights_out">Lights Out（5×5 消灯Puzzle）</option><option value="maze_chase">Maze Chase（迷路追跡）</option><option value="falling_blocks">Falling Blocks（Block落下）</option><option value="word_tiles">Word Tiles（英語単語）</option><option value="word_tiles_ja">Word Tiles 日本語（ひらがな）</option><option value="tower_defense">Tower Defense（配置・戦術）</option><option value="slg">SLG（ターン制戦略）</option></select></div>
             <div class="row g-2">
                 <div class="mb-3 col-md-4"><label class="form-label" for="changeGameWidth"><small class="text-dark">横幅</small></label><select class="form-select changeGameWidth" id="changeGameWidth"><option value="1">1列</option><option value="2">2列</option><option value="3">3列</option><option value="4">全幅</option></select></div>
                 <div class="mb-3 col-md-4"><label class="form-label" for="changeGameHeight"><small class="text-dark">縦幅</small></label><select class="form-select changeGameHeight" id="changeGameHeight"><option value="1" selected>標準</option><option value="2">縦2段</option></select></div>
                     <div class="mb-3 col-md-4"><label class="form-label" for="changeGameStyle"><small class="text-dark">見出し色</small></label><select class="form-select changeGameStyle" id="changeGameStyle"><option value="secondary">secondary</option><option value="primary">primary</option><option value="success">success</option><option value="info">info</option><option value="dark">dark</option><option value="warning">warning</option><option value="danger">danger</option></select></div>
             </div>
-            <small class="form-text text-muted">Widget削除時は、このWidgetのBrowser保存状態も削除します。</small>
+            <small class="form-text text-muted">Widget削除時は、このWidgetのBrowser保存状態も削除します。SLGの共通データは保持します。</small>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button><button type="button" class="btn btn-outline-danger delete_game_widget">削除する</button><button type="submit" class="btn btn-primary">変更する</button></div>
         </form>
@@ -1493,6 +1497,9 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 </div>
 
 <!-- Calendar予定追加モーダル -->
+<?php require dirname(__DIR__) . '/app/view/calendar_day_mark_modal.php'; ?>
+<?php require dirname(__DIR__) . '/app/view/calendar_search_modal.php'; ?>
+<?php require dirname(__DIR__) . '/app/view/calendar_ics_event_details_modal.php'; ?>
 <div class="modal fade" id="registerCalendarEvent" tabindex="-1" role="dialog" aria-labelledby="registerCalendarEventTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="registerCalendarEventForm" method="post" action="./">
@@ -1751,6 +1758,10 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 <script src="<?php echo htmlspecialchars(app_asset_url('js/reversi.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/clock-timer.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-core.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<?php if (openai_widget_allowed_user((int) $currentUserId)) { ?>
+<script src="<?php echo app_html(app_asset_url('js/article-openai.js')); ?>"></script>
+<?php } ?>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-game.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/utility-widgets.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/calendar.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>

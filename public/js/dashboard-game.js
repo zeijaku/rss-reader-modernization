@@ -59,6 +59,7 @@
     }
 
     function gameDefaultTitle(gameType) {
+        if (gameType === 'slg') return 'SLG';
         if (gameType === 'maze_chase') return 'Maze Chase';
         if (gameType === 'falling_blocks') return 'Falling Blocks';
         if (gameType === 'word_tiles') return 'Word Tiles';
@@ -131,11 +132,13 @@
             showNotice('削除するGame Widgetを確認出来ませんでした', 'danger');
             return;
         }
-        if (!window.confirm('このGame Widgetを削除しますか？Browserに保存されたこのWidgetの状態も削除します。')) {
+        const isSlg = attribute(first('.changeGameType'), 'data-original-game-type', '') === 'slg';
+        const message = isSlg ? 'このSLG Widgetを削除しますか？SLGの共通データは保持します。' : 'このGame Widgetを削除しますか？Browserに保存されたこのWidgetの状態も削除します。';
+        if (!window.confirm(message)) {
             return;
         }
         runMutation(button, 'widget.game.delete', {'widget_id': widgetId}, function () {
-            removeGameWidgetBrowserState(widgetId, null);
+            if (!isSlg) removeGameWidgetBrowserState(widgetId, null);
             window.location.reload();
         });
     }

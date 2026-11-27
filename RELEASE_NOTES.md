@@ -1,29 +1,31 @@
-# RSS Reader Modernization 1.51.0
+# RSS Reader Modernization 1.53.0
 
-v1.51.0は、既存の正式版v1.49.1へ、利用者が動作確認したICS購読の開発版（dev.1〜dev.4）だけを統合するCalendar拡張版です。**開発中のv1.50 Precision Sniper等は含みません。** APP_VERSIONとAPP_ASSET_REVISIONはともに `1.51.0` です。
+GPT WidgetとCalendar拡張を正式化します。開発ブランチに含まれるSLGのStage 1・2対CPU戦、Cursor Fieldのタッチ操作、Mediaのコンパクト表示も含みます。
 
 ## Changes
 
-- Google Calendar／Outlook等の非公開HTTPS ICS URLを購読登録・編集・削除し、取得状態をCalendar管理画面の専用タブで確認。非公開URLのパス／クエリは画面やAPIに返しません。
-- 保存済みICSの予定を月・週・日表示に統合し、Calendarごとの表示フィルターに追加。外部予定は**読み取り専用**で、通常Calendarの編集・削除・ドラッグ対象にはなりません。
-- DTSTART／DTEND、終日、主要タイムゾーン、説明、場所、HTTPS URL、日次／週次／月次／年次の主要RRULE、EXDATE／RDATE、RECURRENCE-IDの個別変更・取消を処理。
-- **30分期限のアクセス連動型自動更新**：Calendar表示中に期限確認を行い、期限切れICSを取得。Calendarの更新ボタンやICS管理からの手動取得は最短60秒間隔です。ページを閉じている間の常駐・cron更新は行いません。
-- 取得成功時には新しいICS内容へ差し替え、削除された予定も反映。通信失敗時は最後に正常取得したICSを保持し、失敗状態を表示。
-- SSRF・HTTPS・TLS確認、サイズ1MiB制限、Owner／CSRF、APIレスポンスからの秘密URL隔離を維持。通常Calendarの保存API、Mail／RSS／Remote Files／Gameなど既存領域を維持します。
+- GPT Widgetの会話選択、モデル選択、Shift+Enter送信、Markdown・コードコピー・リンク表示、ファイル添付、対応ブラウザーの音声入力。
+- RSS記事メニューから、Widgetがない場合も記事のタイトルとURLを添えて質問。
+- 登録した基準残高とWidgetの利用記録から残高を概算表示。
+- Calendarの日付マーク12種類と自由入力、単色Font Awesome表示、マークの編集・解除。
+- Calendarの予定検索（タイトル・場所・メモの部分一致）と日付マーク検索。検索期間最大366日、結果は新しい日付順に最大50件。繰り返し予定とキャッシュ済み外部ICSも対象。
+- DashboardとStockのCalendarヘッダーを共通化。PC・スマホで検索・編集ボタンを配置。
+- SLGのStage 1・2、資源・生産・戦闘・対CPU戦、盤面アニメーションと行動メニュー、Cursor Fieldのタッチ対応、YouTube説明と操作行の省スペース化。
 
 ## Database migration
 
-**v1.49.1などICS未導入の既存環境から更新する場合だけ**、アプリ更新前に `database/migrations/035_v1_51_calendar_ics_subscription.sql` を適用してください。SQL内`@table_prefix`を`DB_TABLE_PREFIX`へ合わせます。Migration 035は新しい`calendar_ics_subscription`テーブルを追加するだけで、既存のCalendar予定は移動・変更しません。
+既存DBで日付マーク未導入なら、コード更新前に `database/migrations/036_v1_53_calendar_day_mark.sql` の `@table_prefix` を `config/local.php` の `DB_TABLE_PREFIX` に合わせて適用してください。dev.20以降で036を適用済みなら追加SQLは不要です。新規インストールは `database/schema.sql` のみで構築します。
 
-**v1.51.0-dev.1以降で035を適用済みなら再実行しないでください。** Fresh Installは新しい`database/schema.sql`のみを使用し、Migrationを追加実行しません。必須の新しい設定値はありません。
+GPT Widgetを利用する場合は `OPENAI_API_KEY` と `APP_OPENAI_USER_ID` をサーバー側で設定します。`APP_OPENAI_MODEL` で既定モデルを指定できます。詳しくは [GPT Widget設定](docs/v1.53.0-openai-widget-dev.md) を参照してください。
 
 ## Verification limits
 
-- ユーザーが開発版でGoogle CalendarのICS登録・予定表示・更新を確認済みです。各種Google／Outlookアカウント・環境・ブラウザ・通信障害のすべてを検証したものではありません。
-- Google／Outlook側のICS配信遅延により、更新実行後でも新しい状態の公開まで時間がかかることがあります。30分は閲覧中の再取得条件であって、画面を閉じている間の処理を保証するものではありません。
-- RFC 5545の特殊な再帰ルール（例：BYWEEKNO／BYHOUR／独自VTIMEZONEの一部）は対象外。ICS公開URLの発行と双方向編集は含みません。
-- GitHub ActionsのPHP 8.1／8.4回帰・Apache隔離・正式Release Workflowのソース検証・秘密情報検査・両ZIPのManifest／SHA-256／clean-room検査が正式版のRelease Gateです。
+- API残高表示は利用者が登録した基準残高からの概算です。OpenAIの請求画面の残高との自動同期は行いません。
+- 音声入力はブラウザーの音声認識とマイク許可に依存します。既存のchatgpt.com会話・プロジェクトとの同期機能はありません。
+- Calendar検索は指定期間内を対象とし、配信元のICSキャッシュに含まれない過去予定は取得できません。
+- SLGは開発済みのStage 1・2と現行の保存・再開実装を含みます。全ステージの完成を示す版ではありません。
+- 正式Release WorkflowでPHP 8.1・8.4回帰、秘密情報検査、Runtime／Complete Source ZIPとチェックサム、clean-room検証を実施します。
 
 ## Deployment and rollback
 
-[正式版v1.51.0の適用・動作確認・復旧手順](docs/v1.51.0-release.md)を参照してください。ZIP適用前にアプリケーションコード／vendor／`.htaccess`／`config/local.php`／DB／`var/`／アップロード済みデータをバックアップしてください。既存DBへ`schema.sql`を再実行しないでください。不具合時は旧アプリコードを復元し、Migration 035で作った独立テーブルを利用者の判断なく削除しないでください。
+[1.53.0の更新手順](docs/v1.53.0-release.md)を参照してください。

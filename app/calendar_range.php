@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/calendar_exception.php';
 require_once __DIR__ . '/calendar_ics.php';
 require_once __DIR__ . '/calendar_ics_parser.php';
+require_once __DIR__ . '/calendar_day_mark.php';
 
 const CALENDAR_RANGE_MAX_DAYS = 42;
 const CALENDAR_RANGE_MAX_SOURCE_EVENTS = 500;
@@ -260,7 +261,9 @@ function calendar_range_data(int $ownerId, int $widgetId, string $rangeStart, st
         error_log('Calendar ICS range unavailable: ' . $exception::class);
         $icsState = ['events' => [], 'sources' => []];
     }
+    $dayMarks = calendar_day_mark_list($ownerId, $range['start'], $range['end']);
     return [
+        'day_marks' => $dayMarks === null ? null : (object) $dayMarks,
         'range_start' => $range['start'],
         'range_end' => $range['end'],
         'range_days' => $range['days'],

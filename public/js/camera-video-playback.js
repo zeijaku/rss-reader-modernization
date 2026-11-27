@@ -113,10 +113,13 @@
                 allowfullscreen: ''
             })
             .appendTo($stage);
-        $('<div>')
-            .addClass('camera-video-playback-hint text-muted')
-            .text('YouTube標準Playerで再生・一時停止・シーク・音量・全画面を操作出来ます。埋め込み不可の場合は下のMedia URLからYouTubeで開いてください。')
-            .insertAfter($stage);
+        var $help = $('<details>').addClass('camera-video-youtube-help')
+            .appendTo($card.find('.camera-video-youtube-controls').first());
+        $('<summary>').addClass('btn btn-sm btn-outline-secondary')
+            .attr('aria-label', 'YouTubeプレーヤーの説明').text('？').appendTo($help);
+        $('<p>').addClass('camera-video-youtube-help-text')
+            .text('YouTube標準Playerでは再生・一時停止・シーク・音量・全画面表示を操作できます。埋め込みで再生できない場合は「Media URLを開く」からYouTubeで開いてください。')
+            .appendTo($help);
         $card.attr('data-camera-youtube-id', videoId);
     }
 

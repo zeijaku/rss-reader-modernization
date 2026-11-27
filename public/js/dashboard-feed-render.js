@@ -283,6 +283,7 @@
                 content: String(item.content || ''),
                 date: String(item.date || ''),
                 item_identity: String(item.item_identity || ''),
+                reader_source: item.reader_source,
                 summary: summary,
                 summary_id: summaryId
             });

@@ -246,3 +246,18 @@
         font-size: 0.68rem;
     }
 }
+
+.calendar-upcoming-item.calendar-search-result {
+    grid-template-columns: 6.25rem minmax(0, 1fr);
+}
+
+.calendar-search-result .calendar-search-result-date {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.calendar-search-result .calendar-search-result-text {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}

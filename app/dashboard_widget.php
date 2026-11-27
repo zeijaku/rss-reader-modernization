@@ -10,7 +10,7 @@ declare(strict_types=1);
 /** @return list<string> */
 function dashboard_widget_types(): array
 {
-    return ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game', 'links', 'weather', 'sun_moon', 'air_quality', 'earthquake', 'health_probe', 'calculator', 'blind_spot', 'x_timeline'];
+    return ['feed', 'search', 'clock', 'memo', 'task', 'calendar', 'game', 'links', 'weather', 'sun_moon', 'air_quality', 'earthquake', 'health_probe', 'calculator', 'blind_spot', 'x_timeline', 'openai_chat'];
 }
 
 function dashboard_widget_validate_type(mixed $value): ?string
@@ -182,6 +182,7 @@ function dashboard_widget_normalize_row(array $row): ?array
         'air_quality' => air_quality_widget_config_from_storage($row['widget_config'] ?? null),
         'blind_spot' => dashboard_widget_blind_spot_config_from_storage($row['widget_config'] ?? null),
         'x_timeline' => x_widget_config_from_storage($row['widget_config'] ?? null),
+        'openai_chat' => [], // Conversation history is only returned by its owner-scoped API.
         default => dashboard_widget_decode_config($row['widget_config'] ?? null),
     };
     $row['widget_width_class'] = dashboard_widget_width_class($width);

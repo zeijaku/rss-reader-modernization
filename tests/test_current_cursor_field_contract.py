@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +36,9 @@ check('ResizeObserver' in runtime and 'IntersectionObserver' in runtime, 'Canvas
 check('visibilitychange' in runtime and 'pagehide' in runtime, 'background pages stop the animation loop')
 check('prefers-reduced-motion: reduce' in style and 'prefers-reduced-motion: reduce' in runtime, 'reduced-motion preference is respected')
 check('localStorage' not in runtime and 'sessionStorage' not in runtime, 'body layout remains intentionally non-persistent')
-check('touch-action: pan-y' in style, 'touch scrolling is not captured by the passive mouse toy')
+check(len(re.findall(r'touch-action\s*:', style)) == 1
+      and re.search(r'\.cursor-field-canvas\s*\{[^}]*touch-action:\s*none;', style) is not None,
+      'only the playfield consumes touch gestures')
 check(all(token not in runtime for token in ['localStorage', 'sessionStorage', 'fetch(', 'XMLHttpRequest', '$.ajax']), 'Cursor Field has no persistence or network access')
 check(all(token not in runtime for token in ['Score', 'CLEAR', 'Game Over']), 'Cursor Field has no score, goal, or game-over state')
 check("'cursor_field'" in icon_runtime, 'Icon Quest runtime leaves Cursor Field cards untouched')

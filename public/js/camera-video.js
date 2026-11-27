@@ -419,14 +419,15 @@
             buildDeferredStage($stage, renderType);
         }
 
-        var $meta = $('<div>').addClass('camera-video-meta text-muted small').appendTo($body);
+        var $footer = renderType === 'youtube' ? $('<div>').addClass('camera-video-youtube-controls').appendTo($body) : $body;
+        var $meta = $('<div>').addClass('camera-video-meta text-muted small').appendTo($footer);
         $('<span>').text('形式: ' + (sourceType === 'auto' ? 'Auto → ' + sourceLabel(renderType) : sourceLabel(sourceType))).appendTo($meta);
         if (renderType === 'snapshot') {
             $('<span>').text('更新間隔: ' + refreshLabel(refreshSeconds)).appendTo($meta);
             $('<span>').addClass('camera-video-last-updated').text('最終更新: --:--:--').appendTo($meta);
         }
 
-        var $links = $('<div>').addClass('camera-video-links').appendTo($body);
+        var $links = $('<div>').addClass('camera-video-links').appendTo($footer);
         if (renderType === 'snapshot') {
             $('<button>')
                 .attr({type: 'button', 'aria-label': title + ' のSnapshotを今すぐ更新'})

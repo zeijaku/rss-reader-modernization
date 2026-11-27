@@ -14,6 +14,7 @@
     var POINTER_RADIUS = 15;
     var POINTER_TRANSFER = 0.43;
     var POINTER_SPEED_LIMIT = 11.2;
+    var TAP_SLOP = 8;
     var DRAG = 0.9995;
     var states = [];
     var observer = null;
@@ -147,11 +148,11 @@
         var panel = createElement('div', 'cursor-field-panel');
         var wrap = createElement('div', 'cursor-field-canvas-wrap');
         var canvas = createElement('canvas', 'cursor-field-canvas');
-        var help = createElement('p', 'cursor-field-help', '○と□が漂います。カーソルで弾き、空いている場所をクリックすると物体を追加できます。');
+        var help = createElement('p', 'cursor-field-help', 'カーソルや指でなぞって物体を弾きます。空いている場所をクリック・タップすると物体を追加できます。');
         var widgetId = String(card.getAttribute('data-dashboard-widget-id') || '0');
         help.id = 'cursor-field-help-' + widgetId;
         canvas.setAttribute('role', 'img');
-        canvas.setAttribute('aria-label', '円と正方形が壁・物体・マウスカーソルに反射する物理演算フィールド');
+        canvas.setAttribute('aria-label', '円と正方形をカーソルやタッチで動かせるフィールド');
         canvas.setAttribute('aria-describedby', help.id);
         canvas.tabIndex = 0;
         wrap.appendChild(canvas);
@@ -544,7 +545,14 @@
     }
 
     function handlePointerMove(state, event) {
-        if (event.pointerType && event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
+        if (event.pointerType === 'touch') {
+            var touch = state.touch;
+            if (!touch || touch.id !== event.pointerId) return;
+            if (!touch.moved && Math.hypot(event.clientX - touch.x, event.clientY - touch.y) < TAP_SLOP) return;
+            touch.moved = true;
+        } else if (state.touch || (event.pointerType && event.pointerType !== 'mouse' && event.pointerType !== 'pen')) {
+            return;
+        }
         var position = pointerPosition(state, event);
         if (!position) return;
         var now = Number(event.timeStamp) || Date.now();
@@ -563,6 +571,24 @@
         startFrame(state);
     }
 
+    function clearPointer(state) {
+        state.pointer.active = false;
+        state.pointer.vx = 0;
+        state.pointer.vy = 0;
+        state.pointer.time = 0;
+    }
+
+    function finishTouch(state, event) {
+        var touch = state.touch;
+        if (!touch || touch.id !== event.pointerId) return;
+        state.touch = null;
+        clearPointer(state);
+        if (event.type === 'pointerup' && !touch.moved
+            && Math.hypot(event.clientX - touch.x, event.clientY - touch.y) < TAP_SLOP) {
+            addBodyAt(state, pointerPosition(state, event));
+        }
+    }
+
     function addBodyAt(state, position) {
         if (!position || state.bodies.length >= MAX_BODIES) return false;
         var shape = state.nextShape === 'circle' ? 'circle' : 'square';
@@ -574,10 +600,7 @@
         }
         state.bodies.push(body);
         state.nextShape = shape === 'circle' ? 'square' : 'circle';
-        state.pointer.active = false;
-        state.pointer.vx = 0;
-        state.pointer.vy = 0;
-        state.pointer.time = 0;
+        clearPointer(state);
         draw(state);
         startFrame(state);
         return true;
@@ -599,6 +622,8 @@
             context: context,
             bodies: [],
             pointer: {active: false, x: 0, y: 0, vx: 0, vy: 0, time: 0},
+            touch: null,
+            lastPointerWasTouch: false,
             nextShape: 'square',
             width: 0,
             height: 0,
@@ -616,14 +641,23 @@
         resizeState(state);
 
         elements.canvas.addEventListener('pointerenter', function (event) { handlePointerMove(state, event); });
+        elements.canvas.addEventListener('pointerdown', function (event) {
+            if (state.touch) return;
+            state.lastPointerWasTouch = event.pointerType === 'touch';
+            if (!state.lastPointerWasTouch) return;
+            clearPointer(state);
+            state.touch = {id: event.pointerId, x: event.clientX, y: event.clientY, moved: false};
+        });
         elements.canvas.addEventListener('pointermove', function (event) { handlePointerMove(state, event); });
-        elements.canvas.addEventListener('pointerleave', function () {
-            state.pointer.active = false;
-            state.pointer.vx = 0;
-            state.pointer.vy = 0;
-            state.pointer.time = 0;
+        elements.canvas.addEventListener('pointerleave', function (event) {
+            if (!state.touch && event.pointerType !== 'touch') clearPointer(state);
+        });
+        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (name) {
+            elements.canvas.addEventListener(name, function (event) { finishTouch(state, event); });
         });
         elements.canvas.addEventListener('click', function (event) {
+            // Some browsers emit a compatibility MouseEvent after a touch.
+            if (state.lastPointerWasTouch || event.pointerType === 'touch') return;
             addBodyAt(state, pointerPosition(state, event));
         });
 
@@ -672,9 +706,8 @@
         pageHidden = document.hidden === true;
         for (var index = 0; index < states.length; index++) {
             if (pageHidden) {
-                states[index].pointer.active = false;
-                states[index].pointer.vx = 0;
-                states[index].pointer.vy = 0;
+                states[index].touch = null;
+                clearPointer(states[index]);
                 stopFrame(states[index]);
             } else startFrame(states[index]);
         }
@@ -701,7 +734,8 @@
         window.addEventListener('pagehide', function () {
             pageHidden = true;
             for (var index = 0; index < states.length; index++) {
-                states[index].pointer.active = false;
+                states[index].touch = null;
+                clearPointer(states[index]);
                 stopFrame(states[index]);
             }
         });

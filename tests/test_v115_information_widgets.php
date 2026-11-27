@@ -144,6 +144,31 @@ v115_check(is_array($weatherConfig) && $weatherConfig['location_name']==='広島
 v115_check(is_array($sunConfig) && $sunConfig['latitude']===34.3853, 'Sun Moon uses shared location');
 v115_check(is_array($airConfig) && $airConfig['timezone']==='Asia/Tokyo', 'Air Quality uses shared location');
 
+$weatherResponse = [
+    'current' => ['time' => '2026-01-01T00:00', 'temperature_2m' => 4.2, 'weather_code' => 1],
+    'daily' => [
+        'time' => ['2025-12-31', '2026-01-01', '2026-01-02', '2026-01-03'],
+        'weather_code' => [null, 1, 0, 1],
+        'temperature_2m_max' => [12.5, 10.4, 10.0, 12.0],
+        'temperature_2m_min' => [1.2, 3.0, 2.1, 4.0],
+        'precipitation_probability_max' => [null, 10, 0, 20],
+    ],
+];
+$forecast = weather_forecast($weatherConfig, true, static function (string $url) use ($weatherResponse): array {
+    parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+    v115_check($query['past_days'] === '1' && $query['forecast_days'] === '3'
+        && $query['timezone'] === 'Asia/Tokyo', 'Weather requests yesterday alongside the configured forecast');
+    return ['ok' => true, 'body' => json_encode($weatherResponse, JSON_THROW_ON_ERROR)];
+});
+v115_check($forecast['temperature_change'] === ['max' => -2.1, 'min' => 1.8],
+    'Weather computes location-local high and low changes across the year boundary');
+v115_check(array_column($forecast['days'], 'date') === ['2026-01-01', '2026-01-02', '2026-01-03'],
+    'Weather keeps three forecast days starting today');
+$weatherResponse['daily']['temperature_2m_min'][0] = null;
+$forecast = weather_parse_forecast(json_encode($weatherResponse, JSON_THROW_ON_ERROR), $weatherConfig);
+v115_check(is_array($forecast) && $forecast['temperature_change'] === null && count($forecast['days']) === 3,
+    'Weather retains forecast when yesterday is missing temperatures');
+
 v115_check(air_quality_aqi_label(0)==='良好' && air_quality_aqi_label(50)==='良好', 'US AQI good boundary');
 v115_check(air_quality_aqi_label(51)==='普通' && air_quality_aqi_label(100)==='普通', 'US AQI moderate boundary');
 v115_check(air_quality_aqi_label(101)==='敏感な人は注意' && air_quality_aqi_label(150)==='敏感な人は注意', 'US AQI sensitive boundary');

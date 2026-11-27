@@ -67,6 +67,16 @@ echo '== Current feature contracts: Drawer / mobile navigation =='
 python3 "$SCRIPT_DIR/test_current_drawer_contract.py"
 node --check "$ROOT/public/js/drawer-categories.js"
 node --check "$ROOT/tests/test_current_drawer_browser.js"
+node --check "$ROOT/tests/test_current_openai_drawer_browser.js"
+node --check "$ROOT/tests/test_current_openai_chat_browser.js"
+node --check "$ROOT/tests/test_current_article_openai_browser.js"
+node --check "$ROOT/tests/test_current_camera_video_youtube_browser.js"
+if [ -n "${GAME_TEST_CHROME:-}" ]; then
+    node "$ROOT/tests/test_current_openai_drawer_browser.js"
+    node "$ROOT/tests/test_current_openai_chat_browser.js"
+    node "$ROOT/tests/test_current_article_openai_browser.js"
+    node "$ROOT/tests/test_current_camera_video_youtube_browser.js"
+fi
 
 echo '== Current feature contracts: Feed Category =='
 php "$SCRIPT_DIR/test_current_feed_category.php"
@@ -153,6 +163,10 @@ php "$SCRIPT_DIR/test_v1_25_e_calendar_source_actions_contract.php"
 php "$SCRIPT_DIR/test_v1_25_f_calendar_polish_contract.php"
 php "$SCRIPT_DIR/test_v1_25_f_calendar_polish_r3_contract.php"
 php "$SCRIPT_DIR/test_v1_33_c_calendar_range.php"
+php "$SCRIPT_DIR/test_current_calendar_day_mark.php"
+if [ -n "${GAME_TEST_CHROME:-}" ]; then
+    node "$SCRIPT_DIR/test_current_calendar_day_mark_browser.js"
+fi
 python3 "$SCRIPT_DIR/test_v1_33_c_calendar_range_http.py"
 python3 "$SCRIPT_DIR/test_v1_33_c_calendar_range_contract.py"
 node "$SCRIPT_DIR/test_v1_33_c_calendar_range_ui.js"
@@ -255,6 +269,8 @@ python3 -m py_compile \
 echo '== Current feature contracts: Reader Mode =='
 node "$SCRIPT_DIR/test_current_reader_split_runtime.js"
 php "$SCRIPT_DIR/test_v1_38_a_reader_mode.php"
+php "$SCRIPT_DIR/test_current_aggregate_reader.php"
+php "$SCRIPT_DIR/test_current_openai_widget.php"
 python3 "$SCRIPT_DIR/test_v1_38_a_reader_mode_contract.py"
 node --check "$ROOT/public/js/dashboard.js"
 php -l "$ROOT/app/api/content.php"
@@ -464,8 +480,17 @@ node "$ROOT/tests/test_current_wire_defense_lifecycle.js"
 node "$ROOT/tests/test_current_calendar_deadline.js"
 php "$ROOT/tests/test_current_calendar_deadline.php"
 node "$ROOT/tests/test_current_tower_defense.js"
+node "$ROOT/tests/test_current_slg_d0.js"
+node "$ROOT/tests/test_current_slg_d2.js"
+node "$ROOT/tests/test_current_slg_d3.js"
+node "$ROOT/tests/test_current_slg_d4.js"
 node --check "$ROOT/public/js/tower-defense.js"
 sh "$ROOT/tests/test_current_calendar_deadline_mariadb.sh"
 node --check "$ROOT/tests/test_current_tower_defense_browser.js"
+node --check "$ROOT/public/js/slg.js"
+node --check "$ROOT/tests/test_current_slg_widget_browser.js"
+if [ -n "${GAME_TEST_CHROME:-}" ]; then
+    node "$ROOT/tests/test_current_slg_widget_browser.js"
+fi
 node --check "$ROOT/tests/test_current_calendar_deadline_browser.js"
 node --check "$ROOT/tests/test_current_calendar_deadline_repeat_browser.js"

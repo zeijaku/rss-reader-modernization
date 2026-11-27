@@ -371,6 +371,11 @@
         }
     }
 
+    function formatTemperatureChange(change) {
+        var magnitude = Math.abs(change);
+        return (change > 0 ? '+' : change < 0 ? '−' : '') + String(magnitude) + '℃';
+    }
+
     function renderForecast($card, forecast) {
         var current = forecast && forecast.current ? forecast.current : null;
         var days = forecast && $.isArray(forecast.days) ? forecast.days : [];
@@ -387,6 +392,15 @@
         $current.append($text);
         $current.append($('<div class="weather-current-temp">').text(String(current.temperature) + '℃'));
         $body.append($current);
+
+        var change = forecast.temperature_change;
+        if (change && Number.isFinite(change.max) && Number.isFinite(change.min)) {
+            $body.append($('<div class="weather-temperature-change">').append(
+                $('<strong>').text('前日比'),
+                $('<span>').text('最高 ' + formatTemperatureChange(change.max)),
+                $('<span>').text('最低 ' + formatTemperatureChange(change.min))
+            ));
+        }
 
         var $days = $('<div class="weather-days">');
         days.forEach(function (day) {
@@ -585,12 +599,19 @@
         }
 
         var buttons = {};
+        var utilityActions = [];
         var $cursor = $sectionTitle.next();
         while ($cursor.length > 0 && !$cursor.hasClass('drawer-section-title')) {
             var $next = $cursor.next();
             var $button = $cursor.find('button[data-drawer-modal-target]').first();
             if ($button.length > 0) {
                 buttons[String($button.attr('data-drawer-modal-target') || '')] = $button.detach();
+            } else {
+                var $action = $cursor.children('button[data-drawer-widget-category="utility"]');
+                if ($action.length > 0) {
+                    // Detach direct actions before removing their rows to preserve click handlers.
+                    utilityActions.push($action.detach().addClass('widget-catalog-tile w-100'));
+                }
             }
             $cursor.remove();
             $cursor = $next;
@@ -638,7 +659,7 @@
                 take('#registerLinksWidget', 'Links'),
                 take('#registerClock', 'Clock'),
                 take('#registerMemo', 'Memo')
-            ]),
+            ].concat(utilityActions)),
             catalogCategory('game', 'Game', 'fas fa-gamepad', false, [
                 take('#registerGameWidget', 'Game').attr('data-game-preset', 'icon_quest'),
                 catalogButton('#registerGameWidget', 'Lights Out', 'fas fa-lightbulb').attr('data-game-preset', 'lights_out'),
@@ -646,7 +667,8 @@
                 catalogButton('#registerGameWidget', 'Falling Blocks', 'fas fa-cubes').attr('data-game-preset', 'falling_blocks'),
                 catalogButton('#registerGameWidget', 'Word Tiles', 'fas fa-font').attr('data-game-preset', 'word_tiles'),
                 catalogButton('#registerGameWidget', 'Word Tiles 日本語', 'fas fa-language').attr('data-game-preset', 'word_tiles_ja'),
-                catalogButton('#registerGameWidget', 'Tower Defense', 'fas fa-chess-rook').attr('data-game-preset', 'tower_defense')
+                catalogButton('#registerGameWidget', 'Tower Defense', 'fas fa-chess-rook').attr('data-game-preset', 'tower_defense'),
+                catalogButton('#registerGameWidget', 'SLG', 'fas fa-flag').attr('data-game-preset', 'slg')
             ])
         ];
 
