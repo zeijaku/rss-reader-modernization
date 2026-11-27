@@ -1,3 +1,7 @@
+## Version 1.53.0
+
+GPT Widget、Calendar日付マーク・検索と現行SLGを正式化。日付マーク未導入の既存環境ではMigration 036を適用します。詳細は [1.53.0更新手順](v1.53.0-release.md) を参照してください。
+
 ## Version 1.53.0-dev.20 Calendarの日付マーク
 
 既存DBでは `database/migrations/036_v1_53_calendar_day_mark.sql` の `@table_prefix` を `DB_TABLE_PREFIX` に合わせて適用します。新規インストールでは `database/schema.sql` に含まれます。月表示の日付番号の横にある「＋」から、日付ごとにマーク1件と任意のメモを登録できます。
