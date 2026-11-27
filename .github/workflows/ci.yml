@@ -68,6 +68,39 @@ jobs:
         run: bash tests/run-ci.sh
 
 
+
+  calendar_transfer_browser:
+    name: Calendar transfer desktop/mobile browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: '8.4'
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
+          coverage: none
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+      - name: Run focused transfer browser checks
+        run: |
+          test_dir="$RUNNER_TEMP/rss-calendar-browser"
+          npm install --prefix "$test_dir" --no-package-lock --no-audit --no-fund --ignore-scripts playwright@1.56.1
+          export CODEX_PRIMARY_RUNTIME_NODE_MODULES="$test_dir/node_modules"
+          if command -v google-chrome >/dev/null 2>&1; then
+            export GAME_TEST_CHROME="$(command -v google-chrome)"
+          else
+            "$test_dir/node_modules/.bin/playwright" install --with-deps chromium
+          fi
+          node tests/test_current_calendar_transfer_browser.js
+
+
   p2b_apache_probe:
     name: P2-B Apache isolation probe
     runs-on: ubuntu-latest
