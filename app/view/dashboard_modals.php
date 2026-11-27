@@ -754,7 +754,7 @@
     </div></div>
 </div>
 
-<!-- Calendar管理モーダル：通常Calendar / 外部ICS購読 -->
+<!-- Calendar管理モーダル：通常Calendar / 外部ICS購読 / Import・Export -->
 <div class="modal fade calendar-manager-modal" id="calendarSourceManager" tabindex="-1" role="dialog" aria-labelledby="calendarSourceManagerTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg" role="document"><div class="modal-content">
         <div class="modal-header bg-primary text-white">
@@ -768,6 +768,9 @@
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="calendarManagerIcsTab" data-bs-toggle="tab" data-bs-target="#calendarManagerIcsPane" type="button" role="tab" aria-controls="calendarManagerIcsPane" aria-selected="false" tabindex="-1"><i class="fas fa-link me-1" aria-hidden="true"></i>外部ICS購読</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="calendarManagerTransferTab" data-bs-toggle="tab" data-bs-target="#calendarManagerTransferPane" type="button" role="tab" aria-controls="calendarManagerTransferPane" aria-selected="false" tabindex="-1"><i class="fas fa-exchange-alt me-1" aria-hidden="true"></i>Import / Export</button>
                 </li>
             </ul>
             <div class="tab-content calendar-manager-content" id="calendarManagerTabContent">
@@ -814,6 +817,7 @@
                     <h6 class="calendar-manager-section-title mt-3">登録済みICS購読</h6>
                     <div class="calendar-ics-manager-list" aria-live="polite"><span class="small text-body-secondary">ICS購読を読み込んでいます</span></div>
                 </section>
+                <?php require __DIR__ . '/calendar_transfer_pane.php'; ?>
             </div>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button></div>

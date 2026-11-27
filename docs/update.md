@@ -31,6 +31,19 @@ php tools/healthcheck.php
 
 Production serverでLocal変更がある場合は、その内容を確認するまで更新を進めません。
 
+## V1.54.0 正式版へ更新
+
+1. アプリケーション、DB、`config/local.php`、`vendor/`、`var/`、利用者ファイルをバックアップし、更新中の予定編集を停止します。
+2. v1.53.0からは `database/migrations/037_v1_54_calendar_ics_uid.sql` の `@table_prefix` を実環境の `DB_TABLE_PREFIX` に変更して適用します。以前の版では先に未適用Migrationを番号順に適用します。Fresh Installでは `database/schema.sql` のみ使用します。
+3. 037のUID列・Indexが存在し、有効予定にNULL UIDがないことを確認します。適用済みなら再実行しません。DDL成功後にMigrationが中断した場合は列・Index・markerの状態を確認してから復旧してください。推測で再実行しないでください。
+4. 正式Runtime ZIPのSHA-256を照合し、展開したアプリケーションフォルダーからアプリRootへ上書きします。既存の設定・DB・稼働データを上書きしません。Complete Source ZIPは開発・保管用です。
+5. フッターが1.54.0、アセットのRevisionも1.54.0であることを確認します。Calendar管理のImport / Exportタブで少数予定のICS出力・プレビュー・新規Calendarへの登録、重複スキップ、ZIP出力を確認します。通常Calendar編集・既存外部購読も確認します。
+6. 8 MiBのICSを受信する場合、PHPの `post_max_size` とWebサーバーのRequest上限をmultipartの付加サイズ込みで確認してください（例: 10 MiB以上）。他APIのアプリ側制限は維持します。
+
+Importは既定で追加のみです。追加・更新でもICSに含まれない既存予定・個別例外を削除しません。移行は全期間を推奨し、期間指定は繰り返しを個別予定へ展開します。日付マークはOwner共通情報です。外部購読・Task・Memo・通知履歴は出力対象外です。ZIPは出力のみで、Importは展開後の個別ICSです。対応外の規則はプレビューで通知します。
+
+不具合時はバックアップした旧コードへ戻し、追加したUID列は維持します。Import後のデータを元に戻す場合は、変更後のデータを別途保全した上で、事前DBバックアップから復旧する必要があります。コードの戻しだけではImport済み予定は消えません。
+
 ## V1.51.0 正式版へ更新
 
 ICS購読を初めて導入する既存v1.49.1環境では、コード更新前に `database/migrations/035_v1_51_calendar_ics_subscription.sql` を、`@table_prefix`を実環境の`DB_TABLE_PREFIX`に合わせて**1回だけ**適用してください。v1.51.0-dev.1〜dev.4で既に035適用済みなら再実行しません。新規DBは`database/schema.sql`のみで構築します。

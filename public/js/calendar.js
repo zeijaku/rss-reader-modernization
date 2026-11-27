@@ -53,6 +53,7 @@
     loadStyle(assetUrl('./css/calendar-colors.css'), 'data-calendar-colors-style');
     loadStyle(assetUrl('./css/calendar-sources.css'), 'data-calendar-sources-style');
     loadStyle(assetUrl('./css/calendar-ics.css'), 'data-calendar-ics-style');
+    loadStyle(assetUrl('./css/calendar-transfer.css'), 'data-calendar-transfer-style');
     loadStyle(assetUrl('./css/calendar-event-details.css'), 'data-calendar-event-details-style');
     loadStyle(assetUrl('./css/calendar-recurrence.css'), 'data-calendar-recurrence-style');
     loadStyle(assetUrl('./css/calendar-occurrence.css'), 'data-calendar-occurrence-style');
@@ -79,6 +80,7 @@
     loadScript(assetUrl('./js/calendar-views.js'));
     loadScript(assetUrl('./js/calendar-sources.js'));
     loadScript(assetUrl('./js/calendar-ics.js'));
+    loadScript(assetUrl('./js/calendar-transfer.js'));
     loadScript(assetUrl('./js/calendar-core.js'));
     loadScript(assetUrl('./js/calendar-occurrence.js'));
     loadScript(assetUrl('./js/calendar-recurrence.js'));

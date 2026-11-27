@@ -80,6 +80,12 @@ final class V11iCalendarPDO extends PDO
     public function __construct() {}
     public function getAttribute(int $attribute): mixed { return $attribute === PDO::ATTR_DRIVER_NAME ? 'mysql' : null; }
     public function prepare(string $query, array $options = []): PDOStatement|false { return new V11iCalendarStatement($this, $query); }
+    public function query(string $query, ?int $fetchMode = null, mixed ...$fetchModeArgs): PDOStatement|false
+    {
+        $stmt = $this->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
     public function beginTransaction(): bool { $this->transaction=true; $this->snapshot=[$this->widgets,$this->events,$this->tasks,$this->widgetSeq,$this->eventSeq,$this->lastId]; return true; }
     public function commit(): bool { $this->transaction=false; $this->snapshot=null; return true; }
     public function rollBack(): bool { if ($this->snapshot !== null) { [$this->widgets,$this->events,$this->tasks,$this->widgetSeq,$this->eventSeq,$this->lastId]=$this->snapshot; } $this->transaction=false; $this->snapshot=null; return true; }
@@ -130,6 +136,9 @@ final class V11iCalendarStatement extends PDOStatement
             $id=(int)$params[':widget_id']; $w=$this->pdo->widgets[$id]??null;
             if(is_array($w)&&$w['widget_owner']===(int)$params[':owner']&&$w['widget_type']==='calendar'&&$w['widget_flag']===0){$this->pdo->widgets[$id]['widget_flag']=1;$this->affected=1;} return true;
         }
+        if ($this->sql === 'SELECT calendar_event_ics_uid FROM `ig_calendar_event` WHERE 1 = 0') {
+            return true;
+        }
         if (str_starts_with($this->sql, 'SELECT COUNT(*) FROM `ig_calendar_event`')) {
             $count=0; foreach($this->pdo->events as $e) if($e['calendar_event_owner']===(int)$params[':owner']&&$e['calendar_event_flag']===0)$count++;
             $this->column=$count; return true;
@@ -141,12 +150,19 @@ final class V11iCalendarStatement extends PDOStatement
                 'calendar_event_id'=>$id,'calendar_event_date'=>(string)$params[':created_at'],'calendar_event_updated_at'=>(string)$params[':updated_at'],
                 'calendar_event_flag'=>0,'calendar_event_owner'=>(int)$params[':owner'],'calendar_event_title'=>(string)$params[':title'],
                 'calendar_event_start_date'=>(string)$params[':start_date'],'calendar_event_end_date'=>(string)$params[':end_date'],
-                'calendar_event_note'=>(string)$params[':note'],
+                'calendar_event_note'=>(string)$params[':note'], 'calendar_event_ics_uid'=>null,
             ]; $this->affected=1; return true;
         }
         if (str_starts_with($this->sql, 'SELECT * FROM `ig_calendar_event`')) {
             $e=$this->pdo->events[(int)($params[':event_id']??0)]??null;
             if(is_array($e)&&$e['calendar_event_owner']===(int)($params[':owner']??0)&&$e['calendar_event_flag']===0)$this->rows=[$e];
+            return true;
+        }
+        if (str_starts_with($this->sql, 'UPDATE `ig_calendar_event` SET calendar_event_ics_uid = :uid')) {
+            $id=(int)$params[':id']; $e=$this->pdo->events[$id]??null;
+            if(is_array($e)&&$e['calendar_event_owner']===(int)$params[':owner']&&$e['calendar_event_flag']===0&&$e['calendar_event_ics_uid']===null){
+                $this->pdo->events[$id]['calendar_event_ics_uid']=(string)$params[':uid']; $this->affected=1;
+            }
             return true;
         }
         if (str_starts_with($this->sql, 'UPDATE `ig_calendar_event` SET calendar_event_title')) {
@@ -208,12 +224,15 @@ $eventCreate=api_dispatch('calendar.event.create',7,[
 v11i_check($eventCreate['status']===201&&($eventCreate['body']['ok']??false)===true,'Calendar event can be created');
 $eventId=(int)($eventCreate['body']['data']['event_id']??0);
 v11i_check($pdo->events[$eventId]['calendar_event_owner']===7,'Calendar event owner ignores a client owner field');
+$eventUid=$pdo->events[$eventId]['calendar_event_ics_uid']??null;
+v11i_check(calendar_ics_uid_valid($eventUid), 'Calendar API creates a persistent transfer UID on migrated schema');
 v11i_check($pdo->events[$eventId]['calendar_event_start_date']==='2026-08-09'&&$pdo->events[$eventId]['calendar_event_end_date']==='2026-08-10','Calendar event range is stored');
 
 $otherUpdate=api_dispatch('calendar.event.update',8,['event_id'=>(string)$eventId,'calendar_event_title'=>'改変','calendar_event_start_date'=>'2026-08-09','calendar_event_end_date'=>'2026-08-10','calendar_event_note'=>'']);
 v11i_check($otherUpdate['status']===404,'another user cannot update a Calendar event');
 $update=api_dispatch('calendar.event.update',7,['event_id'=>(string)$eventId,'calendar_event_title'=>'会議変更','calendar_event_start_date'=>'2026-08-10','calendar_event_end_date'=>'2026-08-12','calendar_event_note'=>'更新']);
 v11i_check($update['status']===200&&$pdo->events[$eventId]['calendar_event_title']==='会議変更','Calendar event can be updated');
+v11i_check($pdo->events[$eventId]['calendar_event_ics_uid']===$eventUid,'Calendar API update preserves transfer UID');
 
 $month=api_dispatch('calendar.month.list',7,['widget_id'=>(string)$widgetId,'calendar_year'=>'2026','calendar_month'=>'8']);
 $data=$month['body']['data']??[];

@@ -9,8 +9,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.53.0`
-Release tag: `v1.53.0`
+**Stable release:** `RSS Reader Modernization 1.54.0`
+Release tag: `v1.54.0`
+
+Version 1.54.0は、通常CalendarのICS Import／Export、繰り返し・例外・独自属性の移行、期間指定と全CalendarのZIP出力を追加します。既存DBはMigration 037を適用してください。外部ICS購読とMemoは変更しません。[更新・確認手順](docs/update.md#v1540-正式版へ更新)を参照してください。
 
 Version 1.53.0は、GPT Widget、記事への質問、添付・音声入力、モデル選択と利用額の概算表示、Calendarの日付マーク・検索、SLGのStage 1・2対CPU戦と操作改善をまとめた正式版です。既存環境にはMigration 036を適用します。dev.20以降で適用済みなら再実行は不要です。[更新・確認手順](docs/v1.53.0-release.md)を参照してください。
 
@@ -75,6 +77,7 @@ Application Versionの正本は `app/version.php`、Versionごとの変更履歴
 - 複数Calendarの作成／名称・識別色変更／表示Filter
 - 外部Google／Outlook等のICS購読（HTTPSのみ）・Calendarへの読み取り専用表示・主要な繰り返し規則／例外の解析
 - ICSごとの表示切替・取得状況管理・30分間隔のアクセス連動型更新・手動取得（最短60秒間隔）
+- 通常CalendarのICS Import／Export、プレビュー、UID重複防止、期間指定・全Calendar ZIP出力
 - 予定のCalendar選択／移動
 - 場所からGoogle Maps検索を開くリンク（API Key不要）
 - 複数日予定

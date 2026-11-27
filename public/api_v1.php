@@ -142,6 +142,11 @@ $maxRequestBytes = $mailMultipart ? mail_attachment_http_request_max_bytes() : A
 if ($openaiMultipart) {
     $maxRequestBytes = OPENAI_WIDGET_ATTACHMENT_MAX_BYTES + 65536;
 }
+// ICS transfer alone accepts a bounded multipart text field (no file persistence).
+if (in_array($action, ['calendar.transfer.preview', 'calendar.transfer.import'], true)
+    && str_starts_with($contentType, 'multipart/form-data')) {
+    $maxRequestBytes = CALENDAR_TRANSFER_MAX_BYTES + 65536;
+}
 if ($contentLength !== null && $contentLength > $maxRequestBytes) {
     api_emit(api_error('request_too_large', 'Request body is too large.', 413));
 }
