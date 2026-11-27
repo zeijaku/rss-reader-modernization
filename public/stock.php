@@ -606,6 +606,7 @@ if (is_int($content_location)) {
                             <button type="button" class="btn btn-link widget-drag-handle" draggable="false" aria-describedby="widget-sort-help" aria-label="このWidgetを並び替え" aria-pressed="false" title="ここを掴んで並び替え"><i class="fas fa-grip-lines" aria-hidden="true"></i></button>
                             <small class="calendar-widget-title widget-title-text" id="' . app_html($calendarTitleId) . '" title="' . app_html($calendarTitle) . '">' . app_html($calendarTitle) . '</small>
                             <strong class="calendar-month-label" aria-live="polite">----</strong>
+                            <button type="button" class="btn btn-link calendar-search-trigger" data-bs-toggle="modal" data-bs-target="#calendarSearchModal" title="カレンダー検索" aria-label="カレンダー検索"><i class="fas fa-search" aria-hidden="true"></i></button>
                             <button type="button" class="btn btn-link calendar-widget-edit-trigger" data-widget-id="' . $widgetId . '" data-widget-style="' . app_html($widgetStyle) . '" data-widget-width="' . $widgetWidth . '" data-widget-height="' . $widgetHeight . '" data-calendar-title="' . app_html($calendarTitle) . '" data-calendar-show-completed-tasks="' . ($calendarShowCompleted ? '1' : '0') . '" data-bs-toggle="modal" data-bs-target="#changeCalendarWidget" aria-label="このCalendar Widgetを編集"><i class="fas fa-edit" aria-hidden="true"></i></button>
                         </div>
                         <div class="calendar-card-body">
@@ -1501,6 +1502,9 @@ if ($result_content_cnt === 0 && $content_location !== 'stock') {
 </div>
 
 <!-- Calendar予定追加モーダル -->
+<?php require dirname(__DIR__) . '/app/view/calendar_day_mark_modal.php'; ?>
+<?php require dirname(__DIR__) . '/app/view/calendar_search_modal.php'; ?>
+<?php require dirname(__DIR__) . '/app/view/calendar_ics_event_details_modal.php'; ?>
 <div class="modal fade" id="registerCalendarEvent" tabindex="-1" role="dialog" aria-labelledby="registerCalendarEventTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document"><div class="modal-content">
         <form id="registerCalendarEventForm" method="post" action="./">

@@ -163,6 +163,10 @@ php "$SCRIPT_DIR/test_v1_25_e_calendar_source_actions_contract.php"
 php "$SCRIPT_DIR/test_v1_25_f_calendar_polish_contract.php"
 php "$SCRIPT_DIR/test_v1_25_f_calendar_polish_r3_contract.php"
 php "$SCRIPT_DIR/test_v1_33_c_calendar_range.php"
+php "$SCRIPT_DIR/test_current_calendar_day_mark.php"
+if [ -n "${GAME_TEST_CHROME:-}" ]; then
+    node "$SCRIPT_DIR/test_current_calendar_day_mark_browser.js"
+fi
 python3 "$SCRIPT_DIR/test_v1_33_c_calendar_range_http.py"
 python3 "$SCRIPT_DIR/test_v1_33_c_calendar_range_contract.py"
 node "$SCRIPT_DIR/test_v1_33_c_calendar_range_ui.js"

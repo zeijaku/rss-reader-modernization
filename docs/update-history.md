@@ -1,3 +1,7 @@
+## Version 1.53.0-dev.20 Calendarの日付マーク
+
+既存DBでは `database/migrations/036_v1_53_calendar_day_mark.sql` の `@table_prefix` を `DB_TABLE_PREFIX` に合わせて適用します。新規インストールでは `database/schema.sql` に含まれます。月表示の日付番号の横にある「＋」から、日付ごとにマーク1件と任意のメモを登録できます。
+
 ## Version 1.49.1からVersion 1.51.0（ICS購読）
 
 v1.51.0は、Google／OutlookなどのICS購読、読み取り専用Calendar表示、30分期限のアクセス連動自動更新を正式化します。開発中のPrecision Sniperなどv1.50系の機能は含まれません。

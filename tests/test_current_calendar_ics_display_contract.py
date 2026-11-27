@@ -10,6 +10,7 @@ parser=read("app/calendar_ics_parser.php")
 core=read("public/js/calendar-core.js")
 sources=read("public/js/calendar-sources.js")
 modal=read("app/view/dashboard_modals.php")
+ics_modal=read("app/view/calendar_ics_event_details_modal.php")
 css=read("public/css/calendar-ics.css")
 version=read("app/version.php")
 checks={
@@ -38,7 +39,8 @@ checks={
         and core.index("if (item.external_read_only === true") <
             core.index("calendar-event-edit-trigger calendar-event-color-"),
     "ICS read-only modal is separate from local edit modal":
-        'id="calendarIcsEventDetails"' in modal
+        'calendar_ics_event_details_modal.php' in modal
+        and 'id="calendarIcsEventDetails"' in ics_modal
         and 'id="changeCalendarEvent"' in modal
         and "window.bootstrap.Modal.getOrCreateInstance(modal).show()" in core,
     "Untrusted calendar text inserted as text rather than HTML":
@@ -47,7 +49,7 @@ checks={
         and ".find('.calendar-ics-detail-location').text(" in core,
     "Link accepts HTTPS only and uses noopener noreferrer":
         "if (/^https:" in core
-        and 'rel="noopener noreferrer"' in modal,
+        and 'rel="noopener noreferrer"' in ics_modal,
     "ICS UI is visible in month/week/day view through shared item renderer":
         "function calendarItemButton(item, date)" in core
         and "calendarItemElement(item, date)" in core

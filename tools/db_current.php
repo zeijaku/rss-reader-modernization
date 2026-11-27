@@ -22,6 +22,7 @@ function current_schema_tables(): array
         'task',
         'calendar_source',
         'calendar_ics_subscription',
+        'calendar_day_mark',
         'calendar_event',
         'calendar_event_exception',
         'dashboard_widget',
@@ -49,6 +50,7 @@ function current_schema_tables(): array
 function current_schema_required_columns(): array
 {
     return [
+        'calendar_day_mark' => ['mark_owner', 'mark_date', 'mark_label', 'mark_note'],
         'calendar_ics_subscription' => [
             'ics_owner', 'ics_url', 'ics_raw', 'ics_status',
         ],
@@ -126,6 +128,7 @@ function current_schema_required_indexes(): array
         'content_stock' => ['PRIMARY', 'idx_stock_owner_flag_archived_id'],
         'calendar_source' => ['PRIMARY', 'idx_calendar_source_owner'],
         'calendar_ics_subscription' => ['PRIMARY', 'idx_ics_owner'],
+        'calendar_day_mark' => ['PRIMARY'],
         'calendar_event' => ['PRIMARY', 'idx_calendar_event_owner_range', 'idx_calendar_event_source'],
         'calendar_event_exception' => ['PRIMARY', 'uq_cal_exception_owner_event_original'],
         'notification' => ['PRIMARY', 'uq_notification_owner_source'],

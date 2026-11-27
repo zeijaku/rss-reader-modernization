@@ -2,7 +2,7 @@
 -- Sanitized schema only. Contains NO production rows or credentials.
 -- Target: MySQL / MariaDB, InnoDB, utf8mb4.
 -- Fresh installs use this file only; historical migrations remain upgrade-only for existing databases.
--- The schema includes all current tables and columns introduced through migrations 001-035.
+-- The schema includes all current tables and columns introduced through migrations 001-036.
 -- See docs/installation.md and docs/update-history.md.
 --
 -- IMPORTANT: Set @table_prefix to the SAME value as DB_TABLE_PREFIX in
@@ -21,6 +21,7 @@ SET @t_memo = CONCAT('`', @table_prefix, 'memo`');
 SET @t_task = CONCAT('`', @table_prefix, 'task`');
 SET @t_calendar_source = CONCAT('`', @table_prefix, 'calendar_source`');
 SET @t_calendar_ics_subscription = CONCAT('`', @table_prefix, 'calendar_ics_subscription`');
+SET @t_calendar_day_mark = CONCAT('`', @table_prefix, 'calendar_day_mark`');
 SET @t_calendar_event = CONCAT('`', @table_prefix, 'calendar_event`');
 SET @t_calendar_event_exception = CONCAT('`', @table_prefix, 'calendar_event_exception`');
 SET @t_dashboard_widget = CONCAT('`', @table_prefix, 'dashboard_widget`');
@@ -617,6 +618,19 @@ SET @sql = CONCAT(
   ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=''RSS Rule conditions'''
 );
 PREPARE current_rss_rule_condition_stmt FROM @sql; EXECUTE current_rss_rule_condition_stmt; DEALLOCATE PREPARE current_rss_rule_condition_stmt;
+
+SET @sql = CONCAT(
+  'CREATE TABLE ', @t_calendar_day_mark, ' (',
+  '`mark_owner` INT UNSIGNED NOT NULL,',
+  '`mark_date` DATE NOT NULL,',
+  '`mark_label` VARCHAR(12) NOT NULL,',
+  '`mark_note` VARCHAR(120) NOT NULL,',
+  'PRIMARY KEY (`mark_owner`, `mark_date`)',
+  ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
+);
+PREPARE current_calendar_day_mark_stmt FROM @sql;
+EXECUTE current_calendar_day_mark_stmt;
+DEALLOCATE PREPARE current_calendar_day_mark_stmt;
 
 -- Foreign keys are intentionally NOT added in SB-13.
 -- Legacy orphan data and the user deletion policy must be resolved first.

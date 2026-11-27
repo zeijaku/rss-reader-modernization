@@ -10,6 +10,7 @@ require_once dirname(__DIR__) . '/app/calendar_time.php';
 require_once dirname(__DIR__) . '/app/calendar_recurrence.php';
 require_once dirname(__DIR__) . '/app/calendar_range.php';
 require_once dirname(__DIR__) . '/app/calendar_upcoming.php';
+require_once dirname(__DIR__) . '/app/calendar_search.php';
 
 /** @param array<string,mixed> $body */
 function calendar_recurrence_emit(int $status, array $body): never
@@ -85,6 +86,8 @@ if ($contentLength !== null && $contentLength > APP_API_MAX_REQUEST_BYTES) {
 $action = isset($_POST['action']) && is_string($_POST['action']) ? trim($_POST['action']) : '';
 if (!in_array($action, [
     'calendar.range.list',
+    'calendar.day_mark.save',
+    'calendar.search',
     'calendar.recurrence.list',
     'calendar.upcoming.list',
     'calendar.recurrence.create',
@@ -116,6 +119,19 @@ try {
         } catch (OutOfBoundsException) {
             calendar_recurrence_error('not_found', 'Calendar Widget was not found.', 404);
         }
+    }
+
+    if ($action === 'calendar.day_mark.save') {
+        calendar_recurrence_success(['mark' => calendar_day_mark_save(
+            $userId,
+            $_POST['mark_date'] ?? null,
+            $_POST['mark_label'] ?? null,
+            $_POST['mark_note'] ?? ''
+        )]);
+    }
+
+    if ($action === 'calendar.search') {
+        calendar_recurrence_success(calendar_search($userId, $_POST));
     }
 
     if ($action === 'calendar.upcoming.list') {
@@ -291,6 +307,12 @@ try {
     error_log('Calendar recurrence API failed: ' . $exception->getMessage());
     if ($action === 'calendar.range.list') {
         calendar_recurrence_error('calendar_range_unavailable', 'Calendar data could not be loaded.', 503);
+    }
+    if ($action === 'calendar.search') {
+        calendar_recurrence_error('calendar_search_unavailable', 'カレンダーを検索できませんでした。', 503);
+    }
+    if ($action === 'calendar.day_mark.save') {
+        calendar_recurrence_error('calendar_day_mark_unavailable', '日付マークを保存できませんでした。', 503);
     }
     if (str_starts_with($action, 'calendar.occurrence.')) {
         calendar_recurrence_error('calendar_exception_unavailable', 'Calendar occurrence data could not be saved.', 503);

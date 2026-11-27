@@ -88,7 +88,7 @@
         }
     }
 
-    function rangeRequest(data) {
+    function calendarRequest(data) {
         return $.ajax({
             url: rangeEndpoint,
             method: 'POST',
@@ -96,7 +96,6 @@
             dataType: 'json',
             timeout: 5000,
             data: $.extend({}, data || {}, {
-                action: 'calendar.range.list',
                 csrf_token: appCsrfToken()
             })
         }).always(function (first, textStatus, third) {
@@ -508,6 +507,7 @@
             .attr('data-calendar-source-start-time', publicTime(item.source_start_time !== undefined ? item.source_start_time : item.start_time))
             .attr('data-calendar-source-end-time', publicTime(item.source_end_time !== undefined ? item.source_end_time : item.end_time))
             .attr('data-calendar-source-url', String(item.source_url !== undefined && item.source_url !== null ? item.source_url : item.url || ''))
+            .attr('data-calendar-source-location', String(item.source_location !== undefined ? item.source_location || '' : item.location || ''))
             .attr('data-calendar-source-reminder', String(item.source_reminder !== undefined ? item.source_reminder : item.reminder || 'none'))
             .attr('data-calendar-source-id', String(item.calendar_source_id !== undefined ? item.calendar_source_id : '0'))
             .attr('data-calendar-source-name', String(item.calendar_source_name || '既定Calendar'))
@@ -519,6 +519,7 @@
             .attr('data-calendar-event-start-time', publicTime(item.start_time))
             .attr('data-calendar-event-end-time', publicTime(item.end_time))
             .attr('data-calendar-event-url', String(item.url || ''))
+            .attr('data-calendar-event-location', String(item.location || ''))
             .attr('data-calendar-event-deadline-highlight', item.deadline_highlight ? '1' : '0')
             .attr('data-calendar-source-deadline-highlight', (item.source_deadline_highlight !== undefined ? item.source_deadline_highlight : item.deadline_highlight) ? '1' : '0')
             .attr('data-calendar-event-reminder', String(item.reminder || 'none'))
@@ -621,6 +622,275 @@
         updateCompactCalendar($card);
     }
 
+    function dayMarkOption(label) {
+        return $('#calendarDayMarkOptions [data-calendar-mark-value]').filter(function () {
+            return this.getAttribute('data-calendar-mark-value') === label;
+        });
+    }
+
+    function dayMarkIcon(label) {
+        return dayMarkOption(label).not('[data-calendar-mark-value=":custom"]').children('i').clone();
+    }
+
+    function setDayMarkButton($button, mark) {
+        var date = $button.attr('data-calendar-mark-date');
+        var label = mark ? mark.label : '';
+        var note = mark && mark.note ? '、' + mark.note : '';
+        var description = mark ? label + note : '日付マークを追加';
+        $button.data('calendar-mark', mark)
+            .toggleClass('calendar-day-mark-set', Boolean(mark))
+            .attr('aria-label', date + '、' + description)
+            .attr('title', description);
+        if (mark) {
+            var $icon = dayMarkIcon(label);
+            $button.text($icon.length ? '' : label).append($icon);
+        } else {
+            $('<i>').addClass('far fa-bookmark').attr('aria-hidden', 'true').appendTo($button.empty());
+        }
+    }
+
+    function selectDayMarkKind(kind) {
+        var $option = dayMarkOption(kind);
+        var $choice = $('#calendarDayMarkChoice').empty();
+        $('#calendarDayMarkKind').data('calendar-mark-value', kind);
+        $('#calendarDayMarkOptions .active').removeClass('active').attr('aria-checked', 'false');
+        if ($option.length) {
+            $option.addClass('active').attr('aria-checked', 'true');
+            $choice.append($option.children().clone());
+        } else {
+            $choice.text('選択してください');
+        }
+        var custom = kind === ':custom';
+        $('#calendarDayMarkCustomField').prop('hidden', !custom);
+        $('#calendarDayMarkCustom').prop({disabled: !custom, required: custom});
+    }
+
+    function bindDayMarkEvents() {
+        var $modal = $('#calendarDayMarkModal');
+        $modal.on('show.bs.modal' + eventNamespace, function (event) {
+            var $button = $(event.relatedTarget);
+            var date = $button.attr('data-calendar-mark-date');
+            if (!date) {
+                event.preventDefault();
+                return;
+            }
+            var mark = $button.data('calendar-mark');
+            var preset = mark && mark.label !== ':custom' && dayMarkOption(mark.label).length > 0;
+            $modal.data('calendar-mark-date', date);
+            $('#calendarDayMarkDate').text(date);
+            selectDayMarkKind(!mark ? '' : (preset ? mark.label : ':custom'));
+            $('#calendarDayMarkCustom').val(mark && !preset ? mark.label : '');
+            $('#calendarDayMarkNote').val(mark ? mark.note : '');
+            $('#calendarDayMarkDelete').prop('hidden', !mark);
+            $('#calendarDayMarkError').prop('hidden', true).empty();
+        }).on('hide.bs.modal' + eventNamespace, function (event) {
+            if ($modal.data('calendar-mark-pending')) {
+                event.preventDefault();
+            }
+        });
+        var $kind = $('#calendarDayMarkKind');
+        var $options = $('#calendarDayMarkOptions');
+        $kind.on('shown.bs.dropdown' + eventNamespace, function () {
+            var $selected = $options.find('.active');
+            ($selected.length ? $selected : $options.children().first()).trigger('focus');
+        });
+        $options.on('click' + eventNamespace, '.dropdown-item', function () {
+            selectDayMarkKind(this.getAttribute('data-calendar-mark-value'));
+            window.bootstrap.Dropdown.getInstance($kind[0]).hide();
+            $kind.trigger('focus');
+        });
+
+        function save(remove) {
+            if ($modal.data('calendar-mark-pending')) return;
+            var $error = $('#calendarDayMarkError').prop('hidden', true).empty();
+            var date = $modal.data('calendar-mark-date');
+            var kind = $kind.data('calendar-mark-value');
+            var label = kind === ':custom' ? String($('#calendarDayMarkCustom').val()).trim() : kind;
+            if (!remove && !label) {
+                $error.text('マークを入力してください。').prop('hidden', false);
+                return;
+            }
+            var payload = {
+                action: 'calendar.day_mark.save',
+                mark_date: date,
+                mark_label: remove ? '' : label,
+                mark_note: remove ? '' : $('#calendarDayMarkNote').val()
+            };
+            var $controls = $modal.find('button, input, select').filter(':enabled').prop('disabled', true);
+            $modal.data('calendar-mark-pending', true);
+            calendarRequest(payload).always(function () {
+                $controls.prop('disabled', false);
+                $modal.removeData('calendar-mark-pending');
+            }).done(function (response) {
+                if (!response || response.ok !== true || !response.data) {
+                    $error.text('日付マークを保存できませんでした。').prop('hidden', false);
+                    return;
+                }
+                var mark = response.data.mark;
+                $('.calendar-day-mark[data-calendar-mark-date="' + date + '"]').each(function () {
+                    var $button = $(this);
+                    var $card = $button.closest('[data-dashboard-widget-type="calendar"]');
+                    var data = $card.data('calendar-range-data');
+                    var request = $card.data('calendar-range-request');
+                    if (request) request.abort();
+                    if (mark) {
+                        data.day_marks[date] = mark;
+                    } else {
+                        delete data.day_marks[date];
+                    }
+                    $card.data('calendar-range-signature', rangeSignature(data));
+                    setDayMarkButton($button, mark);
+                });
+                window.bootstrap.Modal.getInstance($modal[0]).hide();
+            }).fail(function (xhr, status) {
+                $error.text(apiErrorMessage(xhr, status)).prop('hidden', false);
+            });
+        }
+        $('#calendarDayMarkForm').on('submit' + eventNamespace, function (event) {
+            event.preventDefault();
+            save(false);
+        });
+        $('#calendarDayMarkDelete').on('click' + eventNamespace, function () { save(true); });
+    }
+
+    function bindCalendarSearch() {
+        var $modal = $('#calendarSearchModal');
+        if (!$modal[0] || $modal[0].id !== 'calendarSearchModal') return;
+        var $form = $('#calendarSearchForm');
+        var $mode = $('#calendarSearchMode');
+        var $eventQuery = $('#calendarSearchEventQuery');
+        var $markQuery = $('#calendarSearchMarkQuery');
+        var $status = $('#calendarSearchStatus');
+        var $results = $('#calendarSearchResults');
+        var $submit = $form.find('button[type="submit"]');
+        var $trigger = $();
+        var activeRequest = null;
+
+        $('#calendarDayMarkOptions [data-calendar-mark-value]').not('[data-calendar-mark-value=":custom"]').each(function () {
+            $('<option>').val(this.getAttribute('data-calendar-mark-value')).appendTo('#calendarSearchMarkNames');
+        });
+
+        function isMarkSearch() {
+            return $mode.val() === 'marks';
+        }
+
+        function prepareFields() {
+            var marks = isMarkSearch();
+            $('#calendarSearchMarksField').prop('hidden', !marks);
+            $('#calendarSearchEventsField').prop('hidden', marks);
+            $eventQuery.prop('disabled', marks);
+        }
+
+        function clearResults() {
+            if (activeRequest) activeRequest.abort();
+            $results.empty();
+            $status.empty();
+        }
+
+        $modal.on('show.bs.modal' + eventNamespace, function (event) {
+            $trigger = $(event.relatedTarget);
+            if (!$trigger.closest('[data-dashboard-widget-type="calendar"]').length) {
+                event.preventDefault();
+                return;
+            }
+            if (!$('#calendarSearchStart').val() || !$('#calendarSearchEnd').val()) {
+                var today = utcDateFromIso(localIsoDate(new Date()));
+                var start = new Date(today.getTime());
+                start.setUTCDate(start.getUTCDate() - 180);
+                today.setUTCDate(today.getUTCDate() + 180);
+                $('#calendarSearchStart').val(isoFromUtcDate(start));
+                $('#calendarSearchEnd').val(isoFromUtcDate(today));
+            }
+            prepareFields();
+            clearResults();
+        }).on('hide.bs.modal' + eventNamespace, function () {
+            if (activeRequest) activeRequest.abort();
+        });
+        $mode.on('change' + eventNamespace, function () {
+            prepareFields();
+            clearResults();
+        });
+
+        function renderSearchResult(item, marks) {
+            var date = marks ? item.date : item.occurrence_start_date;
+            var $button = $('<button>').attr('type', 'button')
+                .addClass('calendar-upcoming-item calendar-search-result')
+                .data('calendar-search-item', item);
+            if (!marks) {
+                $button.addClass('calendar-event-color-' + validEventColor(item.color));
+            }
+            var $date = $('<span>').addClass('calendar-search-result-date').text(date);
+            if (!marks && item.occurrence_end_date && item.occurrence_end_date !== date) {
+                $date.append($('<small>').addClass('d-block text-body-secondary').text('〜 ' + item.occurrence_end_date));
+            }
+            $button.append($date);
+            var $content = $('<span>').addClass('calendar-search-result-text').appendTo($button);
+            var $title = $('<span>').appendTo($content);
+            if (marks) {
+                $title.append(dayMarkIcon(item.label).addClass('me-1'));
+            }
+            $title.append($('<span>').text(marks ? item.label : item.title));
+            var description = marks ? item.note : [
+                eventTimeLabel(item, date) || (item.all_day ? '終日' : ''),
+                item.location, item.calendar_source_name
+            ].filter(Boolean).join(' ・ ');
+            if (description) {
+                $('<small>').addClass('d-block text-body-secondary').text(description).appendTo($content);
+            }
+            return $button;
+        }
+
+        $form.on('submit' + eventNamespace, function (event) {
+            event.preventDefault();
+            if (activeRequest) return;
+            var marks = isMarkSearch();
+            clearResults();
+            $status.text('検索中…');
+            $submit.prop('disabled', true);
+            activeRequest = calendarRequest({
+                action: 'calendar.search',
+                search_mode: $mode.val(),
+                search_query: (marks ? $markQuery : $eventQuery).val(),
+                search_start: $('#calendarSearchStart').val(),
+                search_end: $('#calendarSearchEnd').val()
+            }).done(function (response) {
+                if (!response || response.ok !== true || !response.data) {
+                    $status.text('検索できませんでした。');
+                    return;
+                }
+                var data = response.data;
+                data.results.forEach(function (item) { $results.append(renderSearchResult(item, marks)); });
+                $status.text(data.results.length === 0 ? '一致する結果がありません。'
+                    : (data.has_more ? '最新50件を表示しています。必要に応じて期間を絞ってください。' : data.results.length + '件見つかりました。'));
+            }).fail(function (xhr, status) {
+                if (status !== 'abort') $status.text(apiErrorMessage(xhr, status));
+            }).always(function () {
+                activeRequest = null;
+                $submit.prop('disabled', false);
+            });
+        });
+
+        $results.on('click' + eventNamespace, '.calendar-search-result', function () {
+            var item = $(this).data('calendar-search-item');
+            var marks = isMarkSearch();
+            var $card = $trigger.closest('[data-dashboard-widget-type="calendar"]');
+            $modal.one('hidden.bs.modal', function () {
+                if (marks) {
+                    loadCalendarView($card, 'day', item.date);
+                    return;
+                }
+                var $entry = calendarItemButton(item, item.occurrence_start_date).prop('hidden', true).appendTo($card);
+                // Use the real click path so the existing occurrence, location,
+                // source and read-only detail handlers prepare the same fields.
+                $entry[0].click();
+                $entry.remove();
+                var $detail = $(item.external_read_only ? '#calendarIcsEventDetails' : '#changeCalendarEvent');
+                $detail.one('hidden.bs.modal', function () { $trigger.trigger('focus'); });
+            });
+            window.bootstrap.Modal.getInstance($modal[0]).hide();
+        });
+    }
+
     function renderMonthCalendar($card, data) {
         var year = Number(data.year || 0);
         var month = Number(data.month || 0);
@@ -658,9 +928,11 @@
         var dayCount = new Date(Date.UTC(year, month, 0)).getUTCDate();
         var cellCount = Math.ceil((firstDay + dayCount) / 7) * 7;
         var today = localIsoDate(new Date());
+        var showDayMarks = Boolean(data.day_marks && $('#calendarDayMarkModal').length);
         var $days = $card.find('.calendar-days')
             .removeClass('calendar-day-view calendar-week-view')
             .addClass('calendar-month-view')
+            .toggleClass('calendar-day-marks-ready', showDayMarks)
             .empty()
             .attr('role', 'grid')
             .attr('aria-label', '月間Calendar')
@@ -699,6 +971,15 @@
                 $dateButton.prop('disabled', true).removeClass('calendar-day-add-trigger');
             }
             $day.append($dateButton);
+            if (supportedDate && showDayMarks) {
+                var $markButton = $('<button>').attr({
+                    type: 'button',
+                    'data-calendar-mark-date': date,
+                    'data-bs-toggle': 'modal',
+                    'data-bs-target': '#calendarDayMarkModal'
+                }).addClass('calendar-day-mark').appendTo($day);
+                setDayMarkButton($markButton, data.day_marks[date] || null);
+            }
             var $entries = $('<div>').addClass('calendar-day-entries');
             (itemsByDate[date] || []).forEach(function (item) {
                 $entries.append(calendarItemElement(item, date));
@@ -761,6 +1042,12 @@
             .appendTo($heading);
         if (holidayName !== '') {
             $('<span>').addClass('calendar-view-holiday').text(holidayName).appendTo($heading);
+        }
+        var mark = data.day_marks && data.day_marks[date];
+        if (mark) {
+            $('<span>').addClass('badge text-bg-light text-wrap')
+                .attr('title', mark.note || mark.label).append(dayMarkIcon(mark.label).addClass('me-1'))
+                .append($('<span>').text(mark.label)).appendTo($heading);
         }
         $('<button>')
             .attr('type', 'button')
@@ -934,7 +1221,7 @@
             }
             return value;
         }
-        return JSON.stringify(stable({events:data.events || [], sources:data.sources || [], tasks:data.tasks || [], holidays:data.holidays || {}, cancelled:data.cancelled_occurrences || [], start:data.range_start, end:data.range_end}));
+        return JSON.stringify(stable({events:data.events || [], sources:data.sources || [], tasks:data.tasks || [], holidays:data.holidays || {}, marks:data.day_marks || null, cancelled:data.cancelled_occurrences || [], start:data.range_start, end:data.range_end}));
     }
 
     function refreshCalendarsQuietly(manualCard) {
@@ -1000,7 +1287,8 @@
             appendLoadingText($loading, 'Calendarを読み込んでいます');
         }
         $card.data('calendar-last-check', Date.now());
-        var activeRequest = rangeRequest({
+        var activeRequest = calendarRequest({
+            action: 'calendar.range.list',
             widget_id: widgetId,
             calendar_range_start: period.start,
             calendar_range_end: period.end
@@ -1233,6 +1521,8 @@
 
     function init() {
         bindEvents();
+        bindDayMarkEvents();
+        bindCalendarSearch();
         initCalendars();
         $(document).off('visibilitychange' + eventNamespace).on('visibilitychange' + eventNamespace, function () { if (!document.hidden) refreshCalendarsQuietly(); scheduleRefresh(); });
         $(window).off('focus' + eventNamespace).on('focus' + eventNamespace, function () { refreshCalendarsQuietly(); });
