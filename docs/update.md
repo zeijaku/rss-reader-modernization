@@ -31,6 +31,10 @@ php tools/healthcheck.php
 
 Production serverでLocal変更がある場合は、その内容を確認するまで更新を進めません。
 
+## V1.55.1 正式版へ更新
+
+PHP 8.3以上が必要です。v1.55.0からの追加SQL・必須設定変更はありません。v1.54.0からは下記038 Migrationを先に適用します。バックアップ後、旧vendorを退避し、新Runtime ZIPのvendor一式へ置換してください。設定・DB・利用者データは維持します。
+
 ## V1.55.0 正式版へ更新
 
 1. アプリケーション、DB、config/local.php、vendor、var、利用者ファイルをバックアップし、更新中は編集を停止します。
