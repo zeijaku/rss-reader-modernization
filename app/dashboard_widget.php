@@ -204,7 +204,7 @@ function search_dashboard_widgets(int $ownerId, int $location): array
         . 'w.widget_config, w.widget_flag, w.widget_created_at, w.widget_updated_at, '
         . 'c.content_id, c.content_date, c.content_flag, c.content_owner, c.content_location, '
         . 'c.content_style, c.content_value, '
-        . 'm.* '
+        . 'm.memo_id, m.memo_date, m.memo_updated_at, m.memo_flag, m.memo_owner, m.memo_title, m.memo_body, m.memo_format '
         . 'FROM ' . db_table_identifier('dashboard_widget') . ' w '
         . 'LEFT JOIN ' . db_table_identifier('content') . ' c '
         . "ON w.widget_type = 'feed' AND w.widget_reference_id = c.content_id AND w.widget_owner = c.content_owner "

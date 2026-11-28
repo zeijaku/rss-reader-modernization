@@ -49,10 +49,10 @@
                     }
                 }
             } else if (token === '[' || token === '![') {
-                const m = /^(?:!)?\[([^\]\n]{0,512})\]\((<[^<>\n]{1,2048}>|(?:[^()\s]|\([^()\s]*\)){1,2048})\)/.exec(tail);
+                const m = /^(?:!)?\[((?:\\[\\[\]]|[^\\\]\n]|\\(?![\\[\]])){0,512})\]\((<[^<>\n]{1,2048}>|(?:[^()\s]|\([^()\s]*\)){1,2048})\)/.exec(tail);
                 if (m) {
                     const href = m[2][0] === '<' ? m[2].slice(1,-1) : m[2];
-                    out = token === '[' ? link(doc, m[1], href) : null;
+                    out = token === '[' ? link(doc, m[1].replace(/\\([\\[\]])/g,'$1'), href) : null;
                     if (!out) { plain(m[0]); out = true; }
                     consumed = m[0].length;
                 }

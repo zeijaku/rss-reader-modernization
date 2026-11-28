@@ -122,7 +122,9 @@
         $('.changeMemoWidth').val(String(memo.widget_width));
         $('.changeMemoHeight').val(String(memo.widget_height));
         $('.changeMemoStyle').val(String(memo.widget_style));
-        if(window.RssMemoEditor)window.RssMemoEditor.reset($('.changeMemoBody').get(0));
+        var textarea = $('.changeMemoBody').get(0);
+        if(window.RssMemoEditor)window.RssMemoEditor.reset(textarea);
+        if(textarea)textarea.dispatchEvent(new Event('input',{bubbles:true}));
     }
 
     function findMemo(response, widgetId, memoId) {
@@ -153,14 +155,15 @@
     }
 
     function applyMemo($card, memo) {
-        if (window.IGuguruDashboardMemo && typeof window.IGuguruDashboardMemo.cancelInlineEdit === 'function') {
-            window.IGuguruDashboardMemo.cancelInlineEdit($card.get(0));
-        }
         var width = String(memo.widget_width), height = String(memo.widget_height), style = String(memo.widget_style);
         if (!/^[1-4]$/.test(width) || !/^[12]$/.test(height) || !/^(success|primary|info|secondary|dark|warning|danger)$/.test(style)
-            || !/^[a-f0-9]{64}$/.test(memo.revision || '')) {
+            || !/^[a-f0-9]{64}$/.test(memo.revision || '') || !/^[a-f0-9]{64}$/.test(memo.body_sha256 || '')
+            || !['text','markdown'].includes(memo.format) || typeof memo.updated_at !== 'string') {
             showNotice('Memo設定を確認できません。画面を再読み込みしてください。', 'danger');
             return false;
+        }
+        if (window.IGuguruDashboardMemo && typeof window.IGuguruDashboardMemo.cancelInlineEdit === 'function') {
+            if (!window.IGuguruDashboardMemo.cancelInlineEdit($card.get(0))) return false;
         }
         var widthClasses = {'1':'col-12 col-md-6 col-lg-3','2':'col-12 col-md-12 col-lg-6','3':'col-12 col-lg-9','4':'col-12'};
         $card.removeClass('col-12 col-md-6 col-md-12 col-lg-3 col-lg-6 col-lg-9').addClass(widthClasses[width])
@@ -240,6 +243,7 @@
                 $card.removeAttr('aria-busy');
                 $controls.each(function(i){ this.disabled = prior[i]; });
                 if ($card.attr('data-memo-inline-editing') !== 'true') $card.find('.memo-inline-trigger, .memo-edit-trigger').prop('disabled', false);
+                if(window.RssMemoEditor)window.RssMemoEditor.busy($card.find('.memo-inline-textarea').get(0),false);
                 setPending($button, false);
             });
     }

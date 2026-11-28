@@ -48,10 +48,10 @@
             const label=selected||'リンク',href='https://example.com/';
             // URL selection is ready for direct replacement.
             const text='['+label.replace(/[\\[\]]/g,'\\$&')+']('+href+')';
-            const x=text.indexOf(href);return replace(start,end,text,x,x+href.length);
+            const x=text.length-href.length-1;return replace(start,end,text,x,x+href.length);
         }
         if(['heading','bullet','number','task'].includes(action)){
-            const a=value.lastIndexOf('\n',start-1)+1;
+            const a=start===0?0:value.lastIndexOf('\n',start-1)+1;
             // When the selection ends just after a newline, do not prefix the next line.
             const last=end>start && value[end-1]==='\n'?end-1:end;
             const next=value.indexOf('\n',last),b=next<0?value.length:next;

@@ -5,6 +5,8 @@ let x=transform('日本語',0,3,'bold');assert.equal(x.value,'**日本語**');as
 assert.equal(transform('abc',1,2,'italic').value,'a*b*c');
 assert.equal(transform('a\nb\nc',0,4,'number').value,'1. a\n2. b\nc');
 assert.equal(transform('a\nb',0,3,'task').value,'- [ ] a\n- [ ] b');
+assert.equal(transform('\nabc',0,0,'heading').value,'## 項目\nabc');
+const linkSelection=transform('https://example.com/',0,20,'link');assert.equal(linkSelection.value.slice(linkSelection.start,linkSelection.end),'https://example.com/');assert(linkSelection.start>20);
 assert.equal(transform('abc',0,3,'strike').value,'~~abc~~');
 assert.equal(transform('abc',1,1,'link').value,'a[リンク](https://example.com/)bc');
 assert(transform('abc',0,3,'code').value.includes('\nabc\n'));

@@ -41,8 +41,8 @@ function dashboard_widget_memo_revision(array $memo, array $widget): string
     return hash('sha256', json_encode([
         (int)($memo['memo_id'] ?? 0),
         (int)($widget['widget_id'] ?? 0),
-        (string)($memo['memo_title'] ?? ''),
-        (string)($memo['memo_body'] ?? ''),
+        trim((string)($memo['memo_title'] ?? '')),
+        str_replace(["\r\n", "\r"], "\n", (string)($memo['memo_body'] ?? '')),
         dashboard_widget_validate_memo_format($memo['memo_format'] ?? 'text') ?? 'text',
         (int)($widget['widget_width'] ?? 1),
         (int)($widget['widget_height'] ?? 1),
@@ -61,7 +61,7 @@ function dashboard_widget_memo_assert_revision(array $memo, array $widget, ?stri
     // Compatibility for older text-only clients. They must never edit Markdown
     // or change the format with only the former body hash.
     if ($format !== null || ($memo['memo_format'] ?? 'text') !== 'text'
-        || ($legacyHash !== null && !hash_equals(hash('sha256', (string)$memo['memo_body']), $legacyHash))) {
+        || ($legacyHash !== null && !hash_equals(hash('sha256', str_replace(["\r\n", "\r"], "\n", (string)$memo['memo_body'])), $legacyHash))) {
         throw new AppMemoBodyConflictException('Memo requires a current revision.');
     }
 }
