@@ -47,45 +47,76 @@
         return form ? form.querySelector('button[type="submit"]') : null;
     }
 
+    const MEMO_MAX_LENGTH = 16000;
+    function rawMemo(card) {
+        return attribute(card, 'data-memo-raw', first('.memo-body', card)?.textContent || '');
+    }
+    function memoMultipart(payload) {
+        if (typeof window.FormData !== 'function') return payload;
+        const data = new window.FormData();
+        Object.keys(payload).forEach(key => { if (payload[key] !== undefined) data.set(key, payload[key]); });
+        return data;
+    }
+    function validMemoBody(body) {
+        return typeof body === 'string' && body.trim() !== '' && memoBodyLength(body) <= MEMO_MAX_LENGTH;
+    }
+
     function memoFormPayload(prefix) {
         return {
             'memo_title': value('.' + prefix + 'MemoTitleValue'),
             'memo_body': value('.' + prefix + 'MemoBody'),
+            'memo_format': value('.' + prefix + 'MemoFormat'),
             'widget_style': value('.' + prefix + 'MemoStyle'),
             'widget_width': value('.' + prefix + 'MemoWidth'),
             'widget_height': value('.' + prefix + 'MemoHeight')
         };
     }
 
+    function submitMemoForm(form, action, payload) {
+        const editor=window.RssMemoEditor;
+        const textarea=first('.registerMemoBody, .changeMemoBody',form);
+        const button=submitButton(form);
+        if (!editor || !textarea) {
+            runMutation(button, action, memoMultipart(payload), function () { window.location.reload(); });
+            return;
+        }
+        if (!editor.canSubmit(textarea) || !requestStartElement(button)) return;
+        const release=editor.lockForm(form);
+        apiRequestPromise(action,memoMultipart(payload),10000).then(function(data){
+            if(apiResponseOk(data))window.location.reload();
+        },requestFailReason).finally(function(){release();requestEndElement(button);});
+    }
+
     function addMemo(form) {
         const payload = memoFormPayload('register');
         payload.widget_location = value('.registerMemoLocation');
-        runMutation(submitButton(form), 'widget.memo.create', payload, function () {
-            window.location.reload();
-        });
+        if (!validMemoBody(payload.memo_body)) { showNotice('本文は1〜16,000文字で入力してください。', 'danger'); return; }
+        submitMemoForm(form, 'widget.memo.create', payload);
     }
 
     function editMemo(trigger) {
         const card = closestMatch(trigger, '[data-dashboard-widget-type="memo"]');
         const title = card ? first('.memo-title', card) : null;
-        const body = card ? first('.memo-body', card) : null;
         setValue('.changeMemoWidgetId', attribute(trigger, 'data-widget-id', ''));
         setValue('.changeMemoId', attribute(trigger, 'data-memo-id', ''));
         setValue('.changeMemoExpectedSha256', card ? (card.getAttribute('data-memo-sha256') || '') : '');
+        setValue('.changeMemoExpectedRevision', card ? (card.getAttribute('data-memo-revision') || '') : '');
         setValue('.changeMemoTitleValue', title && title.textContent ? title.textContent : 'Memo');
-        setValue('.changeMemoBody', body ? body.textContent : '');
+        setValue('.changeMemoBody', card ? rawMemo(card) : '');
+        setValue('.changeMemoFormat', attribute(card, 'data-memo-format', 'text'));
         setValue('.changeMemoStyle', attribute(trigger, 'data-widget-style', 'success'));
         setValue('.changeMemoWidth', attribute(trigger, 'data-widget-width', '1'));
         setValue('.changeMemoHeight', attribute(trigger, 'data-widget-height', '1'));
+        if(window.RssMemoEditor)window.RssMemoEditor.reset(first('.changeMemoBody'));
     }
 
     function changeMemo(form) {
         const payload = memoFormPayload('change');
         payload.widget_id = value('.changeMemoWidgetId');
         payload.expected_sha256 = value('.changeMemoExpectedSha256');
-        runMutation(submitButton(form), 'widget.memo.update', payload, function () {
-            window.location.reload();
-        });
+        payload.expected_revision = value('.changeMemoExpectedRevision');
+        if (!validMemoBody(payload.memo_body)) { showNotice('本文は1〜16,000文字で入力してください。', 'danger'); return; }
+        submitMemoForm(form, 'widget.memo.update', payload);
     }
 
     function inlineElements(card) {
@@ -108,10 +139,10 @@
     function updateInlineStatus(card, message, error) {
         const nodes = inlineElements(card);
         if (!nodes.status) { return; }
-        nodes.status.textContent = message || String(memoBodyLength(nodes.textarea.value)) + '/4000';
+        nodes.status.textContent = message || String(memoBodyLength(nodes.textarea.value)) + '/' + MEMO_MAX_LENGTH;
         nodes.status.classList.toggle('is-error', error === true);
         if (nodes.save && card.getAttribute('data-memo-inline-saving') !== 'true') {
-            nodes.save.disabled = memoBodyLength(nodes.textarea.value) > 4000;
+            nodes.save.disabled = memoBodyLength(nodes.textarea.value) > MEMO_MAX_LENGTH;
         }
     }
 
@@ -119,6 +150,7 @@
         if (!card || card.getAttribute('data-memo-inline-saving') === 'true') { return false; }
         const nodes = inlineElements(card);
         if (!nodes.display || !nodes.editor) { return false; }
+        if(window.RssMemoEditor)window.RssMemoEditor.end(nodes.textarea);
         nodes.editor.classList.add('d-none');
         nodes.display.classList.remove('d-none');
         card.removeAttribute('data-memo-inline-editing');
@@ -129,19 +161,20 @@
 
     function startInlineEdit(trigger) {
         const card = closestMatch(trigger, '[data-dashboard-widget-type="memo"]');
-        if (!card || card.getAttribute('data-memo-inline-editing') === 'true') { return; }
+        if (!card || card.getAttribute('aria-busy') === 'true' || card.getAttribute('data-memo-inline-editing') === 'true') { return; }
         const nodes = inlineElements(card);
         if (!nodes.display || !nodes.editor || !nodes.textarea) { return; }
         if (!/^[a-f0-9]{64}$/.test(card.getAttribute('data-memo-sha256') || '')) {
             showNotice('編集情報を取得できません。ページを再読み込みしてください。', 'danger');
             return;
         }
-        nodes.textarea.value = nodes.display.textContent || '';
+        nodes.textarea.value = rawMemo(card);
         nodes.display.classList.add('d-none');
         nodes.editor.classList.remove('d-none');
         card.setAttribute('data-memo-inline-editing', 'true');
         if (nodes.settings) { nodes.settings.disabled = true; }
         if (nodes.trigger) { nodes.trigger.disabled = true; }
+        if(window.RssMemoEditor)window.RssMemoEditor.reset(nodes.textarea);
         updateInlineStatus(card);
         nodes.textarea.focus();
     }
@@ -150,35 +183,39 @@
         const counter = first('.memo-character-count', card);
         if (!counter) { return; }
         const length = memoBodyLength(body);
-        counter.textContent = String(length) + '/4000';
-        counter.classList.toggle('is-limit', length >= 4000);
+        counter.textContent = String(length) + '/' + MEMO_MAX_LENGTH;
+        counter.classList.toggle('is-limit', length >= MEMO_MAX_LENGTH);
     }
 
     function saveInlineEdit(trigger) {
         const card = closestMatch(trigger, '[data-dashboard-widget-type="memo"]');
-        if (!card || card.getAttribute('data-memo-inline-editing') !== 'true') { return; }
+        if (!card || card.getAttribute('aria-busy') === 'true' || card.getAttribute('data-memo-inline-editing') !== 'true') { return; }
         const nodes = inlineElements(card);
+        if(window.RssMemoEditor&&!window.RssMemoEditor.canSubmit(nodes.textarea))return;
         const widgetId = card.getAttribute('data-dashboard-widget-id') || '';
         const expected = card.getAttribute('data-memo-sha256') || '';
+        const revision = card.getAttribute('data-memo-revision') || '';
         const body = nodes.textarea.value.replace(/\r\n?/g, '\n');
         if (!/^[1-9][0-9]*$/.test(widgetId) || !/^[a-f0-9]{64}$/.test(expected)) {
             updateInlineStatus(card, '編集情報が不正です。再読み込みしてください。', true);
             return;
         }
-        if (!body.trim() || memoBodyLength(body) > 4000) {
-            updateInlineStatus(card, '本文は1〜4,000文字で入力してください。', true);
+        if (!body.trim() || memoBodyLength(body) > MEMO_MAX_LENGTH) {
+            updateInlineStatus(card, '本文は1〜16,000文字で入力してください。', true);
             return;
         }
         if (!requestStartElement(nodes.save)) { return; }
         card.setAttribute('data-memo-inline-saving', 'true');
         nodes.cancel.disabled = true;
         nodes.textarea.readOnly = true;
+        if(window.RssMemoEditor)window.RssMemoEditor.busy(nodes.textarea,true);
         nodes.status.textContent = '保存中...';
-        apiRequestPromise('widget.memo.body.update', {
+        apiRequestPromise('widget.memo.body.update', memoMultipart({
             widget_id: widgetId,
             memo_body: body,
-            expected_sha256: expected
-        }, 10000)
+            expected_sha256: expected,
+            expected_revision: revision
+        }), 10000)
             .then(function (data) {
                 if (!apiResponseOk(data)) {
                     updateInlineStatus(card, data && data.error && data.error.code === 'memo_conflict'
@@ -187,13 +224,20 @@
                     return;
                 }
                 const saved = data && data.data ? data.data : {};
-                if (typeof saved.memo_body !== 'string' || !/^[a-f0-9]{64}$/.test(saved.memo_sha256 || '')) {
+                if (typeof saved.memo_body !== 'string' || !/^[a-f0-9]{64}$/.test(saved.memo_sha256 || '')
+                    || !/^[a-f0-9]{64}$/.test(saved.memo_revision || '') || !['text','markdown'].includes(saved.memo_format)) {
                     updateInlineStatus(card, '保存結果を確認できません。再読み込みしてください。', true);
                     return;
                 }
                 nodes.display.textContent = saved.memo_body;
                 card.setAttribute('data-memo-sha256', saved.memo_sha256);
+                card.setAttribute('data-memo-raw', saved.memo_body);
+                card.setAttribute('data-memo-revision', saved.memo_revision);
+                card.setAttribute('data-memo-format', saved.memo_format);
+                card.setAttribute('data-memo-updated-at', saved.memo_updated_at);
                 updateInlineCounter(card, saved.memo_body);
+                if (window.RssMemoMarkdown) window.RssMemoMarkdown.renderCard(card);
+                if (window.RssMemoManagement) window.RssMemoManagement.syncTimestamp(card);
                 card.removeAttribute('data-memo-inline-saving');
                 cancelInlineEdit(card);
                 showNotice('Memo本文を保存しました', 'success');
@@ -205,8 +249,117 @@
                 card.removeAttribute('data-memo-inline-saving');
                 nodes.cancel.disabled = false;
                 nodes.textarea.readOnly = false;
+                if(window.RssMemoEditor)window.RssMemoEditor.busy(nodes.textarea,false);
                 requestEndElement(nodes.save);
             });
+    }
+
+    function toggleChecklist(event) {
+        const input = closestMatch(event.target, '.memo-md-task');
+        if (!input || !window.RssMemoMarkdown) return;
+        const card = closestMatch(input, '[data-dashboard-widget-type="memo"]');
+        if (!card || card.getAttribute('data-memo-format') !== 'markdown') return;
+        const body = rawMemo(card), offset = Number(input.dataset.memoTaskOffset), checked = input.checked;
+        const originalChecked = String(body[offset] || '').toLowerCase() === 'x';
+        // Confirmed server state remains visible until the request succeeds.
+        input.checked = originalChecked;
+        if (card.getAttribute('aria-busy') === 'true' || card.getAttribute('data-memo-inline-editing') === 'true'
+            || card.getAttribute('data-memo-inline-saving') === 'true') return;
+        const revision = card.getAttribute('data-memo-revision') || '';
+        const widgetId = card.getAttribute('data-dashboard-widget-id') || '';
+        const next = window.RssMemoMarkdown.toggleTask(body, offset, checked);
+        if (!/^[a-f0-9]{64}$/.test(revision) || !/^[1-9][0-9]*$/.test(widgetId) || next === null || next === body) {
+            showNotice('Memoのチェック項目を確認できません。更新してください。','danger');return;
+        }
+        const scroll = first('.memo-card-body',card), top = scroll ? scroll.scrollTop : 0;
+        const focused = document.activeElement === input;
+        const controls = Array.from(card.querySelectorAll('.memo-md-task, .memo-inline-trigger, .memo-edit-trigger, .memo-refresh-trigger'));
+        const disabled = controls.map(el=>el.disabled);
+        controls.forEach(el=>{el.disabled=true;});
+        card.setAttribute('aria-busy','true');
+        card.setAttribute('data-memo-check-saving','true');
+        apiRequestPromise('widget.memo.body.update', memoMultipart({
+            widget_id:widgetId, memo_body:next, expected_revision:revision
+        }),10000).then(function(response){
+            const saved=response && response.data;
+            if (!response || response.ok!==true || !saved || saved.memo_body!==next || saved.memo_format!=='markdown'
+                || !/^[a-f0-9]{64}$/.test(saved.memo_revision || '') || !/^[a-f0-9]{64}$/.test(saved.memo_sha256 || '')) {
+                showNotice('チェック状態を保存できませんでした。Memoを更新して確認してください。','danger');return;
+            }
+            card.setAttribute('data-memo-raw',saved.memo_body);
+            card.setAttribute('data-memo-revision',saved.memo_revision);
+            card.setAttribute('data-memo-sha256',saved.memo_sha256);
+            card.setAttribute('data-memo-updated-at',saved.memo_updated_at || '');
+            updateInlineCounter(card,saved.memo_body);
+            window.RssMemoMarkdown.renderCard(card);
+            if(window.RssMemoManagement)window.RssMemoManagement.syncTimestamp(card);
+            if(scroll) scroll.scrollTop=top;
+            if(focused) {
+                const replacement=card.querySelector('.memo-md-task[data-memo-task-offset="'+offset+'"]');
+                if(replacement) replacement.focus({preventScroll:true});
+            }
+            showNotice('チェック状態を保存しました','success');
+        },function(reason){
+            requestFailReason(reason);
+            showNotice(reason && reason.xhr && reason.xhr.status===409
+                ? '別の画面でMemoが変更されています。更新してから操作してください。'
+                : 'チェック状態を保存できませんでした。Memoを更新して確認してください。','danger');
+        }).finally(function(){
+            controls.forEach((el,i)=>{el.disabled=disabled[i];});
+            card.removeAttribute('aria-busy');card.removeAttribute('data-memo-check-saving');
+            if(focused && input.isConnected) input.focus({preventScroll:true});
+        });
+    }
+
+    function managedMemo(button) {
+        const form=closestMatch(button,'#changeMemoForm');
+        const id=String(value('.changeMemoWidgetId')||'');
+        if(!form||!/^[1-9]\d*$/.test(id))return null;
+        const card=first('[data-dashboard-widget-type="memo"][data-dashboard-widget-id="'+id+'"]');
+        const revision=String(value('.changeMemoExpectedRevision')||'');
+        if(!card||card.getAttribute('data-memo-revision')!==revision||!/^[a-f0-9]{64}$/.test(revision)
+            ||card.getAttribute('aria-busy')==='true'||card.getAttribute('data-memo-inline-saving')==='true'){
+            showNotice('保存済みMemoを確認できません。最新の内容を取得してください。','danger');return null;
+        }
+        return {form,card,id,revision};
+    }
+
+    function downloadMemo(button){
+        const state=managedMemo(button);
+        if(!state)return;
+        try{
+            if(!window.RssMemoManagement||!window.RssMemoManagement.download(state.card,button.dataset.memoExport))throw Error('download');
+        }catch(_){showNotice('Memoをダウンロードできませんでした。','danger');}
+    }
+
+    function duplicateMemo(button){
+        const state=managedMemo(button);
+        if(!state)return;
+        // Reload is the existing Widget-create lifecycle. Never discard another
+        // Memo's active draft, and explicitly confirm the current form's draft.
+        if(first('.memo-card[data-memo-inline-editing="true"], .memo-card[data-memo-check-saving="true"], .memo-card[aria-busy="true"]')){
+            showNotice('他のMemoを編集中または更新中です。終了してから複製してください。','info');return;
+        }
+        const {form,card,id,revision}=state,textarea=first('.changeMemoBody',form),editor=window.RssMemoEditor;
+        if(editor&&!editor.canSubmit(textarea))return;
+        const draft=memoFormPayload('change'),dirty=draft.memo_title!==first('.memo-title',card)?.textContent||draft.memo_body!==rawMemo(card)
+            ||draft.memo_format!==card.getAttribute('data-memo-format')||String(draft.widget_width)!==card.getAttribute('data-widget-width')
+            ||String(draft.widget_height)!==card.getAttribute('data-widget-height')||draft.widget_style!==first('.memo-edit-trigger',card)?.getAttribute('data-widget-style');
+        if(!window.confirm(dirty?'保存済みMemoを複製します。現在の未保存変更は成功後に破棄されます。続けますか？':'保存済みMemoを同じタブの末尾に複製しますか？'))return;
+        if(!requestStartElement(button))return;
+        const submit=submitButton(form),wasDisabled=submit.disabled;
+        submit.disabled=true;
+        const release=editor?editor.lockForm(form):()=>{};
+        card.setAttribute('aria-busy','true');
+        apiRequestPromise('widget.memo.duplicate',{widget_id:id,expected_revision:revision},10000).then(function(response){
+            if(!apiResponseOk(response))return;
+            if(!response.data||!/^[1-9]\d*$/.test(String(response.data.widget_id||''))||String(response.data.widget_id)===id){
+                showNotice('複製結果を確認できません。再読み込みして確認してください。','danger');return;
+            }
+            window.location.reload();
+        },requestFailReason).finally(function(){
+            card.removeAttribute('aria-busy');release();submit.disabled=wasDisabled;requestEndElement(button);
+        });
     }
 
     function deleteMemo(button) {
@@ -258,6 +411,10 @@
             editMemo(editTrigger);
             return;
         }
+        const duplicateTrigger = closestMatch(event.target, '.memo-duplicate');
+        if(duplicateTrigger){duplicateMemo(duplicateTrigger);return;}
+        const downloadTrigger = closestMatch(event.target, '.memo-download');
+        if(downloadTrigger){downloadMemo(downloadTrigger);return;}
         const deleteTrigger = closestMatch(event.target, '.delete_memo');
         if (deleteTrigger) {
             deleteMemo(deleteTrigger);
@@ -271,6 +428,7 @@
         eventsBound = true;
         document.addEventListener('submit', handleSubmit);
         document.addEventListener('click', handleClick);
+        document.addEventListener('change', toggleChecklist);
         document.addEventListener('input', function (event) {
             const textarea = closestMatch(event.target, '.memo-inline-textarea');
             if (!textarea) { return; }

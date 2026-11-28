@@ -1,3 +1,7 @@
+## Version 1.55.0
+
+Memo機能拡張を正式化。既存v1.54.0環境はMigration 038をコード更新前に適用します。既存本文と日時は維持し、Textを既定とします。詳細は [更新手順](update.md#v1550-正式版へ更新) を参照してください。
+
 ## Version 1.54.0
 
 通常CalendarのICS Import／Exportを正式化。既存v1.53.0環境ではMigration 037をコード更新前に適用します。詳細は [更新手順](update.md#v1540-正式版へ更新) を参照してください。Memo・外部ICS購読は変更しません。

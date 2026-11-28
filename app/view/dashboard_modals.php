@@ -371,9 +371,11 @@
                     <input type="text" class="form-control registerMemoTitleValue" id="registerMemoTitleValue" value="Memo" maxlength="32" required>
                 </div>
                 <div class="mb-3">
+                    <label class="form-label" for="registerMemoFormat"><small class="text-dark">表示形式</small></label>
+                    <select class="form-select registerMemoFormat mb-2" id="registerMemoFormat"><option value="text">Text（従来形式）</option><option value="markdown">Markdown</option></select>
                     <label class="form-label" for="registerMemoBody"><small class="text-dark">本文</small></label>
-                    <textarea class="form-control memo-textarea registerMemoBody" id="registerMemoBody" maxlength="4000" rows="8" required></textarea>
-                    <small class="form-text text-muted">改行を含めて4,000文字まで保存できます。</small>
+                    <textarea class="form-control memo-textarea registerMemoBody" id="registerMemoBody" maxlength="32000" rows="8" required></textarea>
+                    <small class="form-text text-muted">改行を含めて16,000文字まで保存できます。</small>
                 </div>
                 <div class="row g-2">
                     <div class="mb-3 col-md-4">
@@ -414,13 +416,24 @@
                 <input type="hidden" class="changeMemoWidgetId">
                 <input type="hidden" class="changeMemoId">
                 <input type="hidden" class="changeMemoExpectedSha256">
+                <input type="hidden" class="changeMemoExpectedRevision">
+                <div class="memo-management mb-3" role="group" aria-label="保存済みMemoの管理">
+                    <small class="text-muted">保存済みMemo（編集中の内容は含みません）</small>
+                    <div class="memo-management-actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary memo-duplicate"><i class="far fa-copy" aria-hidden="true"></i> 複製</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary memo-download" data-memo-export="txt"><i class="fas fa-download" aria-hidden="true"></i> TXT</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary memo-download" data-memo-export="md"><i class="fas fa-download" aria-hidden="true"></i> Markdown</button>
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label class="form-label" for="changeMemoTitleValue"><small class="text-dark">見出し</small></label>
                     <input type="text" class="form-control changeMemoTitleValue" id="changeMemoTitleValue" maxlength="32" required>
                 </div>
                 <div class="mb-3">
+                    <label class="form-label" for="changeMemoFormat"><small class="text-dark">表示形式</small></label>
+                    <select class="form-select changeMemoFormat mb-2" id="changeMemoFormat"><option value="text">Text（従来形式）</option><option value="markdown">Markdown</option></select>
                     <label class="form-label" for="changeMemoBody"><small class="text-dark">本文</small></label>
-                    <textarea class="form-control memo-textarea changeMemoBody" id="changeMemoBody" maxlength="4000" rows="8" required></textarea>
+                    <textarea class="form-control memo-textarea changeMemoBody" id="changeMemoBody" maxlength="32000" rows="8" required></textarea>
                 </div>
                 <div class="row g-2">
                     <div class="mb-3 col-md-4">

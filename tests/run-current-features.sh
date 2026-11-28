@@ -142,7 +142,23 @@ node --check "$ROOT/public/js/rss-rules-integration.js"
 
 echo '== Current feature contracts: Memo =='
 python3 "$SCRIPT_DIR/test_v124b_memo_contract.py"
+php "$SCRIPT_DIR/test_current_memo_backend.php"
+python3 "$SCRIPT_DIR/test_current_memo_http.py"
+sh "$SCRIPT_DIR/test_current_memo_mariadb.sh"
 node --check "$ROOT/public/js/memo-counter.js"
+node --check "$ROOT/public/js/memo-markdown.js"
+node --check "$ROOT/public/js/memo-editor.js"
+node --check "$ROOT/public/js/memo-management.js"
+node "$SCRIPT_DIR/test_current_memo_management.js"
+node --check "$SCRIPT_DIR/test_current_memo_management_browser.js"
+node --check "$SCRIPT_DIR/test_current_memo_integration_browser.js"
+node "$SCRIPT_DIR/test_current_memo_editor.js"
+node --check "$SCRIPT_DIR/test_current_memo_editor_browser.js"
+node "$SCRIPT_DIR/test_current_memo_markdown.js"
+node --check "$SCRIPT_DIR/test_current_memo_markdown_browser.js"
+if [ -n "${GAME_TEST_CHROME:-}" ]; then
+    node "$SCRIPT_DIR/test_current_memo_markdown_browser.js"
+fi
 
 echo '== Current feature contracts: Stock state =='
 php "$SCRIPT_DIR/test_v124c_stock_state.php"

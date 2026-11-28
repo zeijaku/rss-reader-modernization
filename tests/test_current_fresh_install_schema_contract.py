@@ -45,6 +45,7 @@ upgrade_migrations = [
     '035_v1_51_calendar_ics_subscription.sql',
     '036_v1_53_calendar_day_mark.sql',
     '037_v1_54_calendar_ics_uid.sql',
+    '038_v1_55_memo_format.sql',
 ]
 
 for migration in upgrade_migrations:

@@ -12,13 +12,58 @@ function dashboard_widget_validate_memo_title(mixed $value): ?string
     return app_validate_text($value, 32, false);
 }
 
+const DASHBOARD_MEMO_MAX_LENGTH = 16000;
+const DASHBOARD_MEMO_MAX_BYTES = 64000;
+
+function dashboard_widget_validate_memo_format(mixed $value): ?string
+{
+    return is_string($value) && in_array($value, ['text', 'markdown'], true) ? $value : null;
+}
+
 function dashboard_widget_validate_memo_body(mixed $value): ?string
 {
-    if (!is_string($value)) {
+    if (!is_string($value) || strlen($value) > DASHBOARD_MEMO_MAX_BYTES + DASHBOARD_MEMO_MAX_LENGTH
+        || !app_is_valid_utf8($value) || app_has_control_characters($value)) {
         return null;
     }
     $value = str_replace(["\r\n", "\r"], "\n", $value);
-    return app_validate_text($value, 4000, false);
+    // Whitespace is Markdown syntax. Validate blankness, but never trim the source.
+    if (trim($value) === '' || strlen($value) > DASHBOARD_MEMO_MAX_BYTES
+        || preg_match_all('/./us', $value) > DASHBOARD_MEMO_MAX_LENGTH) {
+        return null;
+    }
+    return $value;
+}
+
+/** Full snapshot of fields that Memo settings can overwrite; excludes sort/location. */
+function dashboard_widget_memo_revision(array $memo, array $widget): string
+{
+    return hash('sha256', json_encode([
+        (int)($memo['memo_id'] ?? 0),
+        (int)($widget['widget_id'] ?? 0),
+        trim((string)($memo['memo_title'] ?? '')),
+        str_replace(["\r\n", "\r"], "\n", (string)($memo['memo_body'] ?? '')),
+        dashboard_widget_validate_memo_format($memo['memo_format'] ?? 'text') ?? 'text',
+        (int)($widget['widget_width'] ?? 1),
+        (int)($widget['widget_height'] ?? 1),
+        (string)($widget['widget_style'] ?? 'success'),
+    ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+}
+
+function dashboard_widget_memo_assert_revision(array $memo, array $widget, ?string $legacyHash, ?string $revision, ?string $format): void
+{
+    if ($revision !== null) {
+        if (!hash_equals(dashboard_widget_memo_revision($memo, $widget), $revision)) {
+            throw new AppMemoBodyConflictException('Memo has changed.');
+        }
+        return;
+    }
+    // Compatibility for older text-only clients. They must never edit Markdown
+    // or change the format with only the former body hash.
+    if ($format !== null || ($memo['memo_format'] ?? 'text') !== 'text'
+        || ($legacyHash !== null && !hash_equals(hash('sha256', str_replace(["\r\n", "\r"], "\n", (string)$memo['memo_body'])), $legacyHash))) {
+        throw new AppMemoBodyConflictException('Memo requires a current revision.');
+    }
 }
 
 /** @return array{schema:int,title:string} */
@@ -143,7 +188,8 @@ function dashboard_widget_create_memo(
     int $width,
     string $title,
     string $body,
-    int $height = 1
+    int $height = 1,
+    string $format = 'text'
 ): array {
     $title = dashboard_widget_validate_memo_title($title);
     $body = dashboard_widget_validate_memo_body($body);
@@ -153,7 +199,7 @@ function dashboard_widget_create_memo(
         || dashboard_widget_validate_width($width) === null
         || dashboard_widget_validate_height($height) === null
         || $title === null
-        || $body === null) {
+        || $body === null || dashboard_widget_validate_memo_format($format) === null) {
         throw new InvalidArgumentException('Memo Widget settings are invalid.');
     }
 
@@ -167,8 +213,8 @@ function dashboard_widget_create_memo(
         $now = app_now();
         $memoStmt = $pdo->prepare(
             'INSERT INTO ' . db_table_identifier('memo') . ' '
-            . '(memo_date, memo_updated_at, memo_flag, memo_owner, memo_title, memo_body) '
-            . 'VALUES (:memo_date, :memo_updated_at, 0, :memo_owner, :memo_title, :memo_body)'
+            . '(memo_date, memo_updated_at, memo_flag, memo_owner, memo_title, memo_body, memo_format) '
+            . 'VALUES (:memo_date, :memo_updated_at, 0, :memo_owner, :memo_title, :memo_body, :memo_format)'
         );
         $memoStmt->execute([
             ':memo_date' => $now,
@@ -176,6 +222,7 @@ function dashboard_widget_create_memo(
             ':memo_owner' => $ownerId,
             ':memo_title' => $title,
             ':memo_body' => $body,
+            ':memo_format' => $format,
         ]);
         $memoId = (int) $pdo->lastInsertId();
 
@@ -210,6 +257,57 @@ function dashboard_widget_create_memo(
     }
 }
 
+/** Copy an authenticated, current Memo snapshot into a new Memo and placement. */
+function dashboard_widget_duplicate_memo(int $ownerId, int $widgetId, string $revision): ?array
+{
+    if ($ownerId <= 0 || $widgetId <= 0 || preg_match('/\A[a-f0-9]{64}\z/D', $revision) !== 1) {
+        throw new InvalidArgumentException('Memo duplicate is invalid.');
+    }
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+    try {
+        $widget = dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'memo');
+        $memoId = is_array($widget) ? app_validate_positive_int($widget['widget_reference_id'] ?? null) : null;
+        $memo = $memoId === null ? null : dashboard_widget_lock_owned_memo($pdo, $ownerId, $memoId);
+        if (!is_array($memo)) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return null;
+        }
+        dashboard_widget_memo_assert_revision($memo, $widget, null, $revision, null);
+        $title = dashboard_widget_validate_memo_title($memo['memo_title'] ?? null);
+        $body = dashboard_widget_validate_memo_body($memo['memo_body'] ?? null);
+        $format = dashboard_widget_validate_memo_format($memo['memo_format'] ?? 'text');
+        $location = dashboard_widget_validate_location($widget['widget_location'] ?? null);
+        $style = app_normalize_content_style($widget['widget_style'] ?? null);
+        $width = dashboard_widget_validate_width($widget['widget_width'] ?? null);
+        $height = dashboard_widget_validate_height($widget['widget_height'] ?? null);
+        if ($title === null || $body === null || $format === null || $location === null || $style === null || $width === null || $height === null) {
+            throw new InvalidArgumentException('Memo source is invalid.');
+        }
+        // Count Unicode code points (same title limit as the existing validator).
+        $suffix = '（コピー）';
+        preg_match_all('/./us', $title, $chars);
+        $copyTitle = implode('', array_slice($chars[0], 0, 32 - app_text_length($suffix))) . $suffix;
+        // Nested call shares this transaction, allocates new IDs, appends at end,
+        // and creates fresh timestamps. No original data is modified.
+        $copy = dashboard_widget_create_memo($ownerId, $location, $style, $width, $copyTitle, $body, $height, $format);
+        if ($started) {
+            $pdo->commit();
+        }
+        return $copy + ['widget_location' => $location];
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
 function dashboard_widget_update_memo(
     int $ownerId,
     int $widgetId,
@@ -218,7 +316,9 @@ function dashboard_widget_update_memo(
     string $title,
     string $body,
     int $height = 1,
-    ?string $expectedSha256 = null
+    ?string $expectedSha256 = null,
+    ?string $format = null,
+    ?string $expectedRevision = null
 ): bool {
     $title = dashboard_widget_validate_memo_title($title);
     $body = dashboard_widget_validate_memo_body($body);
@@ -228,7 +328,7 @@ function dashboard_widget_update_memo(
         || dashboard_widget_validate_width($width) === null
         || dashboard_widget_validate_height($height) === null
         || $title === null
-        || $body === null) {
+        || $body === null || ($format !== null && dashboard_widget_validate_memo_format($format) === null)) {
         throw new InvalidArgumentException('Memo Widget settings are invalid.');
     }
 
@@ -249,20 +349,22 @@ function dashboard_widget_update_memo(
             return false;
         }
 
-        if ($expectedSha256 !== null
-            && !hash_equals($expectedSha256, hash('sha256', (string) $memo['memo_body']))) {
-            throw new AppMemoBodyConflictException('Memo body has changed.');
+        if ($expectedRevision === null) {
+            throw new AppMemoBodyConflictException('Memo settings require a current revision.');
         }
+        dashboard_widget_memo_assert_revision($memo, $widget, $expectedSha256, $expectedRevision, $format);
+        $format = $format ?? ($memo['memo_format'] ?? 'text');
 
         $now = app_now();
         $memoStmt = $pdo->prepare(
             'UPDATE ' . db_table_identifier('memo') . ' '
-            . 'SET memo_title = :memo_title, memo_body = :memo_body, memo_updated_at = :updated_at '
+            . 'SET memo_title = :memo_title, memo_body = :memo_body, memo_format = :memo_format, memo_updated_at = :updated_at '
             . 'WHERE memo_id = :memo_id AND memo_owner = :owner AND memo_flag = 0'
         );
         $memoStmt->execute([
             ':memo_title' => $title,
             ':memo_body' => $body,
+            ':memo_format' => $format,
             ':updated_at' => $now,
             ':memo_id' => $memoId,
             ':owner' => $ownerId,
@@ -303,17 +405,22 @@ final class AppMemoBodyConflictException extends RuntimeException
  * Update only the Memo body. Keep the Widget layout, title, and style unchanged.
  * Compare against the body snapshot shown in the browser to avoid lost updates.
  *
- * @return array{memo_body:string,memo_sha256:string}|null
+ * @return array{memo_body:string,memo_sha256:string,memo_format:string,memo_revision:string,memo_updated_at:string}|null
  */
 function dashboard_widget_update_memo_body(
     int $ownerId,
     int $widgetId,
     string $body,
-    string $expectedSha256
+    ?string $expectedSha256,
+    ?string $format = null,
+    ?string $expectedRevision = null
 ): ?array {
     $body = dashboard_widget_validate_memo_body($body);
     if ($ownerId <= 0 || $widgetId <= 0 || $body === null
-        || preg_match('/\A[a-f0-9]{64}\z/D', $expectedSha256) !== 1) {
+        || ($expectedSha256 === null && $expectedRevision === null)
+        || ($expectedSha256 !== null && preg_match('/\A[a-f0-9]{64}\z/D', $expectedSha256) !== 1)
+        || ($expectedRevision !== null && preg_match('/\A[a-f0-9]{64}\z/D', $expectedRevision) !== 1)
+        || ($format !== null && dashboard_widget_validate_memo_format($format) === null)) {
         throw new InvalidArgumentException('Memo body update is invalid.');
     }
 
@@ -333,25 +440,29 @@ function dashboard_widget_update_memo_body(
             return null;
         }
 
-        if (!hash_equals($expectedSha256, hash('sha256', (string) $memo['memo_body']))) {
-            throw new AppMemoBodyConflictException('Memo body has changed.');
-        }
+        dashboard_widget_memo_assert_revision($memo, $widget, $expectedSha256, $expectedRevision, $format);
+        $format = $format ?? ($memo['memo_format'] ?? 'text');
+        $now = app_now();
 
         $stmt = $pdo->prepare(
             'UPDATE ' . db_table_identifier('memo')
-            . ' SET memo_body = :body, memo_updated_at = :updated_at'
+            . ' SET memo_body = :body, memo_format = :memo_format, memo_updated_at = :updated_at'
             . ' WHERE memo_id = :memo_id AND memo_owner = :owner AND memo_flag = 0'
         );
         $stmt->execute([
             ':body' => $body,
-            ':updated_at' => app_now(),
+            ':memo_format' => $format,
+            ':updated_at' => $now,
             ':memo_id' => $memoId,
             ':owner' => $ownerId,
         ]);
         if ($started) {
             $pdo->commit();
         }
-        return ['memo_body' => $body, 'memo_sha256' => hash('sha256', $body)];
+        $memo['memo_body'] = $body;
+        $memo['memo_format'] = $format;
+        return ['memo_body' => $body, 'memo_sha256' => hash('sha256', $body), 'memo_format' => $format,
+            'memo_revision' => dashboard_widget_memo_revision($memo, $widget), 'memo_updated_at' => $now];
     } catch (Throwable $exception) {
         if ($started && $pdo->inTransaction()) {
             $pdo->rollBack();

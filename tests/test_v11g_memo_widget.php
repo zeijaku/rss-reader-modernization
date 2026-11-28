@@ -32,8 +32,8 @@ v11g_check(dashboard_widget_validate_memo_title('') === null, 'Memo title cannot
 v11g_check(dashboard_widget_validate_memo_title(str_repeat('a', 33)) === null, 'Memo title is limited to 32 characters');
 v11g_check(dashboard_widget_validate_memo_body("line1\r\nline2") === "line1\nline2", 'Memo body normalizes CRLF');
 v11g_check(dashboard_widget_validate_memo_body('') === null, 'Memo body cannot be empty');
-v11g_check(dashboard_widget_validate_memo_body(str_repeat('a', 4000)) !== null, 'Memo body accepts 4000 characters');
-v11g_check(dashboard_widget_validate_memo_body(str_repeat('a', 4001)) === null, 'Memo body rejects more than 4000 characters');
+v11g_check(dashboard_widget_validate_memo_body(str_repeat('a', 16000)) !== null, 'Memo body accepts 16000 characters');
+v11g_check(dashboard_widget_validate_memo_body(str_repeat('a', 16001)) === null, 'Memo body rejects more than 16000 characters');
 v11g_check(dashboard_widget_validate_memo_body("ok\x00bad") === null, 'Memo body rejects control characters');
 v11g_check(dashboard_widget_validate_memo_body('<script>alert(1)</script>') !== null, 'Memo HTML-like text remains data for escaped output');
 
@@ -91,7 +91,7 @@ final class V11gMemoStatement extends PDOStatement
             $id = ++$this->pdo->memoSeq; $this->pdo->lastId = $id;
             $this->pdo->memos[$id] = [
                 'memo_id'=>$id, 'memo_date'=>(string)$params[':memo_date'], 'memo_updated_at'=>(string)$params[':memo_updated_at'],
-                'memo_flag'=>0, 'memo_owner'=>(int)$params[':memo_owner'], 'memo_title'=>(string)$params[':memo_title'], 'memo_body'=>(string)$params[':memo_body'],
+                'memo_flag'=>0, 'memo_owner'=>(int)$params[':memo_owner'], 'memo_title'=>(string)$params[':memo_title'], 'memo_body'=>(string)$params[':memo_body'], 'memo_format'=>(string)$params[':memo_format'],
             ]; $this->affected=1; return true;
         }
         if (str_starts_with($this->sql, 'INSERT INTO `ig_dashboard_widget`') && str_contains($this->sql, "'memo'")) {
@@ -118,6 +118,7 @@ final class V11gMemoStatement extends PDOStatement
             $id=(int)$params[':memo_id']; $m=$this->pdo->memos[$id]??null;
             if (is_array($m) && $m['memo_owner']===(int)$params[':owner'] && $m['memo_flag']===0) {
                 $this->pdo->memos[$id]['memo_body']=(string)$params[':body'];
+                $this->pdo->memos[$id]['memo_format']=(string)$params[':memo_format'];
                 $this->pdo->memos[$id]['memo_updated_at']=(string)$params[':updated_at']; $this->affected=1;
             } return true;
         }
@@ -126,6 +127,7 @@ final class V11gMemoStatement extends PDOStatement
             if (is_array($m) && $m['memo_owner']===(int)$params[':owner'] && $m['memo_flag']===0) {
                 $this->pdo->memos[$id]['memo_title']=(string)$params[':memo_title'];
                 $this->pdo->memos[$id]['memo_body']=(string)$params[':memo_body'];
+                $this->pdo->memos[$id]['memo_format']=(string)$params[':memo_format'];
                 $this->pdo->memos[$id]['memo_updated_at']=(string)$params[':updated_at']; $this->affected=1;
             } return true;
         }
@@ -171,7 +173,7 @@ v11g_check($pdo->widgets[$secondWidget]['widget_sort_order']===20, 'second Memo 
 
 $wrong=api_dispatch('widget.memo.update',8,['widget_id'=>(string)$widgetId,'widget_style'=>'danger','widget_width'=>'4', 'widget_height' => '1','memo_title'=>'Hijack','memo_body'=>'Bad']);
 v11g_check($wrong['status']===404 && $pdo->memos[$memoId]['memo_title']==='連絡', 'another user cannot update Memo');
-$update=api_dispatch('widget.memo.update',7,['widget_id'=>(string)$widgetId,'widget_style'=>'success','widget_width'=>'3', 'widget_height' => '1','memo_title'=>'更新','memo_body'=>"新しい\n本文"]);
+$update=api_dispatch('widget.memo.update',7,['widget_id'=>(string)$widgetId,'widget_style'=>'success','widget_width'=>'3', 'widget_height' => '1','memo_title'=>'更新','memo_body'=>"新しい\n本文",'expected_revision'=>dashboard_widget_memo_revision($pdo->memos[$memoId],$pdo->widgets[$widgetId])]);
 v11g_check($update['status']===200 && $pdo->memos[$memoId]['memo_title']==='更新', 'owner can update Memo content');
 v11g_check($pdo->widgets[$widgetId]['widget_width']===3 && $pdo->widgets[$widgetId]['widget_style']==='success', 'Memo Widget style and width update together');
 v11g_check($pdo->widgets[$widgetId]['widget_location']===1, 'Memo edit does not move it to another tab');
@@ -219,6 +221,7 @@ $settingsWithRevision = api_dispatch('widget.memo.update', 7, [
     'widget_width' => '2', 'widget_height' => '1',
     'memo_title' => '設定変更', 'memo_body' => $pdo->memos[$memoId]['memo_body'],
     'expected_sha256' => $currentHash,
+    'expected_revision' => dashboard_widget_memo_revision($pdo->memos[$memoId],$pdo->widgets[$widgetId]),
 ]);
 v11g_check($settingsWithRevision['status'] === 200
     && $pdo->memos[$memoId]['memo_title'] === '設定変更',

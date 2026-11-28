@@ -1,0 +1,16 @@
+'use strict';
+const assert=require('node:assert/strict');
+const md=require('../public/js/memo-markdown.js');
+for (const url of ['javascript:alert(1)','data:text/html,x','//example.org','https://u:p@example.org/','https://example.org/\n','https:\\example.org','file:///tmp/x']) assert.equal(md.safeUrl(url),null,url);
+assert.equal(md.safeUrl('https://example.org/a?x=1&y=2'),'https://example.org/a?x=1&y=2');
+assert.equal(md.safeUrl('http://example.org'),'http://example.org/');
+const source='😀 first\n- [ ] same\n- [X] same\n\n~~~\n- [ ] code\n~~~\n    - [ ] indented\ntext [ ] literal\n1. [ ] ordered\n';
+const first=source.indexOf('[ ]')+1, second=source.indexOf('[X]')+1;
+assert.equal(md.toggleTask(source,first,true),source.slice(0,first)+'x'+source.slice(first+1));
+assert.equal(md.toggleTask(source,second,false),source.slice(0,second)+' '+source.slice(second+1));
+assert.equal(md.toggleTask(source,source.indexOf('[ ] code')+1,true),null);
+assert.equal(md.toggleTask(source,source.indexOf('[ ] indented')+1,true),null);
+assert.equal(md.toggleTask(source,source.indexOf('[ ] literal')+1,true),null);
+assert.equal(md.toggleTask(source,source.indexOf('[ ] ordered')+1,true),source.replace('[ ] ordered','[x] ordered'));
+assert.equal(md.toggleTask(source,NaN,true),null);
+console.log('PASS: Memo Markdown URL allowlist and exact Unicode checklist source offsets');

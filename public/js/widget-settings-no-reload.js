@@ -26,13 +26,22 @@
     }
 
     function apiRequest(action, data, timeout) {
+        var multipart = action === 'widget.memo.update' && typeof window.FormData === 'function';
+        var payload = $.extend({}, data || {}, {action: action, csrf_token: csrfToken()});
+        if (multipart) {
+            var form = new window.FormData();
+            Object.keys(payload).forEach(function (key) { if (payload[key] !== undefined) form.set(key, payload[key]); });
+            payload = form;
+        }
         return $.ajax({
             url: './api_v1.php',
             method: 'POST',
             cache: false,
             dataType: 'json',
             timeout: timeout || 8000,
-            data: $.extend({}, data || {}, {action: action, csrf_token: csrfToken()})
+            data: payload,
+            processData: multipart ? false : undefined,
+            contentType: multipart ? false : undefined
         });
     }
 
@@ -164,7 +173,9 @@
                     widget_id: val('.changeMemoWidgetId'),
                     memo_title: val('.changeMemoTitleValue'),
                     memo_body: val('.changeMemoBody'),
+                    memo_format: val('.changeMemoFormat'),
                     expected_sha256: val('.changeMemoExpectedSha256'),
+                    expected_revision: val('.changeMemoExpectedRevision'),
                     widget_style: val('.changeMemoStyle'),
                     widget_width: val('.changeMemoWidth'),
                     widget_height: val('.changeMemoHeight')
@@ -510,6 +521,22 @@
         });
     }
 
+    function handleMemoSettings($form,spec,$button){
+        var editor=window.RssMemoEditor,form=$form.get(0),textarea=form.querySelector('.changeMemoBody');
+        if(!editor){handleSimple($form,spec,$button);return;}
+        if(!editor.canSubmit(textarea)){requestEnd($button);return;}
+        var release=editor.lockForm(form),finished=false;
+        function finish(){if(finished)return;finished=true;release();requestEnd($button);}
+        apiRequest(spec.action,spec.data,10000).done(function(response){
+            if(!apiOk(response)){showNotice(response&&response.error&&response.error.message||'処理を完了出来ませんでした','danger');finish();return;}
+            if(!window.RssWidgetCardRefresh){showNotice('設定は保存されましたがカード表示を更新出来ませんでした。再読み込みしてください。','danger');finish();return;}
+            var promise=window.RssWidgetCardRefresh.refreshWidget(spec.id,spec.action,spec.data);
+            // Release before afterSaved hides the modal. Keep controls locked until the replacement completes.
+            promise.always(finish);
+            finishCardRefresh(promise,form);
+        }).fail(function(xhr,status){showNotice(errorMessage(xhr,status),'danger');finish();});
+    }
+
     function handleCamera($form, $button) {
         var payload = cameraPayload();
         apiRequest('camera.widget.update', payload, 5000).done(function (response) {
@@ -572,6 +599,10 @@
             showNotice('設定更新処理を確認出来ませんでした', 'danger');
             return;
         }
+        if (formId === 'changeMemoForm' && (!String(spec.data.memo_body || '').trim() || Array.from(String(spec.data.memo_body).replace(/\r\n?/g, '\n')).length > 16000)) {
+            requestEnd($button); showNotice('本文は1〜16,000文字で入力してください。', 'danger'); return;
+        }
+        if(formId==='changeMemoForm'){handleMemoSettings($form,spec,$button);return;}
         handleSimple($form, spec, $button);
     }
 

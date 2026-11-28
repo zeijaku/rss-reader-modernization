@@ -71,25 +71,29 @@
         }
 
         cardTitle = normalizeNewlines($card.find('.memo-title').first().text());
-        cardBody = normalizeNewlines($card.find('.memo-body').first().text());
+        cardBody = normalizeNewlines($card.attr('data-memo-raw') ?? $card.find('.memo-body').first().text());
         formTitle = normalizeNewlines($('.changeMemoTitleValue').val());
         formBody = normalizeNewlines($('.changeMemoBody').val());
 
         return {
-            dirty: cardTitle !== formTitle || cardBody !== formBody,
+            dirty: cardTitle !== formTitle || cardBody !== formBody
+                || String($('.changeMemoFormat').val()) !== String($card.attr('data-memo-format'))
+                || String($('.changeMemoWidth').val()) !== String($card.attr('data-widget-width'))
+                || String($('.changeMemoHeight').val()) !== String($card.attr('data-widget-height'))
+                || String($('.changeMemoStyle').val()) !== String($card.find('.memo-edit-trigger').first().attr('data-widget-style')),
             title: formTitle,
             body: formBody
         };
     }
 
     function confirmDraftReplacement($card) {
-        if ($card.attr('data-memo-inline-saving') === 'true') {
+        if ($card.attr('data-memo-inline-saving') === 'true' || $card.attr('data-memo-check-saving') === 'true') {
             showNotice('Memoを保存中です。完了後に更新してください。', 'info');
             return false;
         }
         if ($card.attr('data-memo-inline-editing') === 'true') {
             var inlineText = $card.find('.memo-inline-textarea').first().val();
-            var currentText = $card.find('.memo-body').first().text();
+            var currentText = $card.attr('data-memo-raw') ?? $card.find('.memo-body').first().text();
             if (normalizeNewlines(inlineText) !== normalizeNewlines(currentText)
                 && !window.confirm('保存していない本文の編集内容があります。破棄してサーバーのMemoを取得しますか？')) {
                 return false;
@@ -113,6 +117,14 @@
         if (typeof memo.body_sha256 === 'string') {
             $('.changeMemoExpectedSha256').val(memo.body_sha256);
         }
+        $('.changeMemoExpectedRevision').val(memo.revision || '');
+        $('.changeMemoFormat').val(memo.format || 'text');
+        $('.changeMemoWidth').val(String(memo.widget_width));
+        $('.changeMemoHeight').val(String(memo.widget_height));
+        $('.changeMemoStyle').val(String(memo.widget_style));
+        var textarea = $('.changeMemoBody').get(0);
+        if(window.RssMemoEditor)window.RssMemoEditor.reset(textarea);
+        if(textarea)textarea.dispatchEvent(new Event('input',{bubbles:true}));
     }
 
     function findMemo(response, widgetId, memoId) {
@@ -135,7 +147,7 @@
             if (typeof widget.memo.title !== 'string' || typeof widget.memo.body !== 'string') {
                 return false;
             }
-            found = widget.memo;
+            found = Object.assign({}, widget.memo, {widget_width: widget.widget_width, widget_height: widget.widget_height, widget_style: widget.widget_style});
             return true;
         });
 
@@ -143,25 +155,41 @@
     }
 
     function applyMemo($card, memo) {
-        if (window.IGuguruDashboardMemo && typeof window.IGuguruDashboardMemo.cancelInlineEdit === 'function') {
-            window.IGuguruDashboardMemo.cancelInlineEdit($card.get(0));
+        var width = String(memo.widget_width), height = String(memo.widget_height), style = String(memo.widget_style);
+        if (!/^[1-4]$/.test(width) || !/^[12]$/.test(height) || !/^(success|primary|info|secondary|dark|warning|danger)$/.test(style)
+            || !/^[a-f0-9]{64}$/.test(memo.revision || '') || !/^[a-f0-9]{64}$/.test(memo.body_sha256 || '')
+            || !['text','markdown'].includes(memo.format) || typeof memo.updated_at !== 'string') {
+            showNotice('Memo設定を確認できません。画面を再読み込みしてください。', 'danger');
+            return false;
         }
+        if (window.IGuguruDashboardMemo && typeof window.IGuguruDashboardMemo.cancelInlineEdit === 'function') {
+            if (!window.IGuguruDashboardMemo.cancelInlineEdit($card.get(0))) return false;
+        }
+        var widthClasses = {'1':'col-12 col-md-6 col-lg-3','2':'col-12 col-md-12 col-lg-6','3':'col-12 col-lg-9','4':'col-12'};
+        $card.removeClass('col-12 col-md-6 col-md-12 col-lg-3 col-lg-6 col-lg-9').addClass(widthClasses[width])
+            .attr('data-widget-width', width).attr('data-widget-height', height);
+        $card.find('.memo-card-header').first().removeClass('text-bg-success text-bg-primary text-bg-info text-bg-secondary text-bg-dark text-bg-warning text-bg-danger').addClass('text-bg-' + style);
+        $card.find('.memo-edit-trigger').first().attr('data-widget-width', width).attr('data-widget-height', height).attr('data-widget-style', style);
         var title = String(memo.title || '');
         var body = String(memo.body || '');
         $card.find('.memo-title').first().text(title).attr('title', title);
         $card.find('.memo-body').first().text(body);
+        $card.attr('data-memo-raw', body).attr('data-memo-format', memo.format || 'text').attr('data-memo-revision', memo.revision || '');
         if (typeof memo.body_sha256 === 'string' && /^[a-f0-9]{64}$/.test(memo.body_sha256)) {
             $card.attr('data-memo-sha256', memo.body_sha256);
         }
         var $counter = $card.find('.memo-character-count').first();
         if ($counter.length && window.RssMemoCounter) {
             $counter.text(window.RssMemoCounter.counterText(body))
-                .toggleClass('is-limit', window.RssMemoCounter.textLength(body) >= 4000);
+                .toggleClass('is-limit', window.RssMemoCounter.textLength(body) >= window.RssMemoCounter.maxLength);
         }
         if (typeof memo.updated_at === 'string') {
             $card.attr('data-memo-updated-at', memo.updated_at);
         }
+        if (window.RssMemoMarkdown) window.RssMemoMarkdown.renderCard($card.get(0));
+        if (window.RssMemoManagement) window.RssMemoManagement.syncTimestamp($card.get(0));
         syncOpenMemoForm($card, memo);
+        return true;
     }
 
     function setPending($button, pending) {
@@ -176,7 +204,7 @@
         var memoId = positiveId($card.attr('data-memo-id'));
         var location = locationValue($card.attr('data-dashboard-widget-location'));
 
-        if (widgetId === null || memoId === null || location === null || $button.prop('disabled')) {
+        if (widgetId === null || memoId === null || location === null || $button.prop('disabled') || $card.attr('aria-busy') === 'true') {
             return;
         }
         if (!confirmDraftReplacement($card)) {
@@ -184,6 +212,9 @@
         }
 
         setPending($button, true);
+        var $controls = $card.find('.memo-md-task, .memo-inline-trigger, .memo-edit-trigger, .memo-inline-save, .memo-inline-cancel, .memo-inline-textarea, .memo-editor-button');
+        var prior = $controls.map(function(){return this.disabled;}).get();
+        $controls.prop('disabled', true);
         $card.attr('aria-busy', 'true');
         requestMemoList(location)
             .done(function (response) {
@@ -199,8 +230,7 @@
                     showNotice('Memoが見つかりませんでした。画面を再読み込みしてください。', 'danger');
                     return;
                 }
-                applyMemo($card, memo);
-                showNotice('Memoを更新しました', 'success');
+                if (applyMemo($card, memo)) showNotice('Memoを更新しました', 'success');
             })
             .fail(function (xhr, status) {
                 var message = status === 'timeout' ? 'Memoの更新がタイムアウトしました。' : 'Memoを更新出来ませんでした。';
@@ -211,6 +241,9 @@
             })
             .always(function () {
                 $card.removeAttr('aria-busy');
+                $controls.each(function(i){ this.disabled = prior[i]; });
+                if ($card.attr('data-memo-inline-editing') !== 'true') $card.find('.memo-inline-trigger, .memo-edit-trigger').prop('disabled', false);
+                if(window.RssMemoEditor)window.RssMemoEditor.busy($card.find('.memo-inline-textarea').get(0),false);
                 setPending($button, false);
             });
     }

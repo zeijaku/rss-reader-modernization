@@ -19,7 +19,7 @@ for(const action of ['widget.memo.create','widget.memo.update','widget.memo.dele
 check(js.includes("payload.widget_location = value('.registerMemoLocation')"),'Memo create sends the current tab location');
 check(js.includes("payload.widget_id = value('.changeMemoWidgetId')"),'Memo update sends the selected Widget ID');
 check(js.includes("title && title.textContent ? title.textContent : 'Memo'"),'Memo title edit uses textContent extraction with the existing empty-title fallback');
-check(js.includes("body ? body.textContent"),'Memo body edit uses textContent extraction');
+check(js.includes("card ? rawMemo(card) : ''") && js.includes("'data-memo-raw'") && html.includes('data-memo-raw='),'Memo body edit uses independent escaped raw source');
 check(!js.includes('.innerHTML')&&!js.includes('.html('),'Memo edit never reads or writes HTML');
 check(js.includes("window.confirm('このMemoを削除しますか？')"),'Memo delete has an explicit confirmation');
 check(js.includes("document.addEventListener('submit', handleSubmit)"),'Memo uses native delegated submit handling');
@@ -28,7 +28,7 @@ check(js.includes('if (eventsBound)'),'Memo native event binding is idempotent')
 check(js.includes('.finally(function ()'),'Memo mutations always release native pending state');
 check(!js.includes('jQuery')&&!js.includes('$(')&&!js.includes('.on(')&&!js.includes('.off('),'Memo controller has no direct jQuery dependency');
 check(html.includes('id="registerMemoForm"')&&html.includes('id="changeMemoForm"'),'Memo forms are present in the page');
-check(html.includes('maxlength="4000"')&&html.includes('rows="8"'),'Memo textarea has bounded usable dimensions');
+check(html.includes('maxlength="32000"')&&html.includes('rows="8"')&&js.includes('const MEMO_MAX_LENGTH = 16000')&&js.includes('memoBodyLength(body) <= MEMO_MAX_LENGTH'),'Memo textarea accommodates UTF-16 surrogate pairs with 16000-codepoint validation');
 check(html.includes('data-dashboard-widget-type="memo"'),'Memo card exposes its Widget type');
 check(html.includes('app_html($memoBody)'),'Memo body is escaped before HTML output');
 check(css.includes('.memo-body')&&css.includes('white-space: pre-wrap'),'Memo line breaks are rendered by CSS');
@@ -41,10 +41,10 @@ check(html.includes('memo-inline-trigger') && html.includes('memo-inline-textare
   && html.includes('memo-inline-save') && html.includes('memo-inline-cancel'), 'Memo body inline editor renders Save and Cancel');
 check(html.includes('data-memo-sha256'), 'Memo cards render the initial body revision token');
 check(html.includes("dashboard_render_memo_widget_card") && html.includes("changeMemoExpectedSha256"), 'Memo shared renderer and settings snapshot field are present');
-check(js.includes("setValue('.changeMemoExpectedSha256'") && js.includes("payload.expected_sha256 = value('.changeMemoExpectedSha256')"), 'Settings mutation includes original Memo body revision');
+check(js.includes("setValue('.changeMemoExpectedSha256'") && js.includes("payload.expected_sha256 = value('.changeMemoExpectedSha256')") && js.includes("payload.expected_revision = value('.changeMemoExpectedRevision')"), 'Settings mutation includes full Memo revision');
 
 check(js.includes("apiRequestPromise('widget.memo.body.update'"), 'Inline save uses body-only API action');
-check(js.includes("card.setAttribute('data-memo-sha256'"), 'Inline save advances revision after success');
+check(js.includes("card.setAttribute('data-memo-sha256'") && js.includes("card.setAttribute('data-memo-revision'") && js.includes("card.setAttribute('data-memo-raw'"), 'Inline save advances full revision and raw source after success');
 check(js.includes("nodes.display.textContent = saved.memo_body"), 'Inline save updates visible text without HTML or reload');
 check(js.includes('cancelInlineEdit(card)') && js.includes('data-memo-inline-saving'), 'Inline editor restores view and guards pending saves');
 check(api.includes('api_widget_memo_body_update') && api.includes("'memo_conflict'"), 'Inline API detects body conflicts');

@@ -1,7 +1,7 @@
 (function (root) {
     'use strict';
 
-    var MEMO_MAX_LENGTH = 4000;
+    var MEMO_MAX_LENGTH = 16000;
 
     function normalizeMemoText(value) {
         return String(value == null ? '' : value).replace(/\r\n|\r/g, '\n');
@@ -39,9 +39,9 @@
             counter = document.createElement('div');
             counter.className = 'memo-character-count';
             counter.setAttribute('aria-label', 'Memo文字数');
-            inner.appendChild(counter);
+            (inner.querySelector('.memo-card-footer') || inner).appendChild(counter);
         }
-        updateCounter(counter, body.textContent || '');
+        updateCounter(counter, card.getAttribute('data-memo-raw') ?? body.textContent ?? '');
     }
 
     function ensureInputCounter(textarea) {
