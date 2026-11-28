@@ -145,3 +145,28 @@
         min-height: 100px;
     }
 }
+
+/* V1.55 D2: scoped Markdown body; Text rendering stays unchanged. */
+.memo-body.memo-markdown { white-space: normal; overflow-wrap: anywhere; min-width: 0; }
+.memo-markdown p { margin: 0 0 .55rem; white-space: pre-wrap; }
+.memo-markdown h1,.memo-markdown h2,.memo-markdown h3,.memo-markdown h4,.memo-markdown h5,.memo-markdown h6 { font-weight: 600; margin: .6rem 0 .4rem; line-height: 1.3; }
+.memo-markdown h1 { font-size: 1.35em; }
+.memo-markdown h2 { font-size: 1.2em; }
+.memo-markdown h3,.memo-markdown h4,.memo-markdown h5,.memo-markdown h6 { font-size: 1.08em; }
+.memo-markdown ul,.memo-markdown ol { padding-inline-start: 1.4rem; margin-bottom: .55rem; }
+.memo-markdown li { margin-block: .15rem; }
+.memo-markdown .memo-md-task-item { list-style: none; margin-inline-start: -1.1rem; }
+.memo-markdown .memo-md-task-item label { display:flex; gap:.4rem; align-items:flex-start; cursor:pointer; min-height:28px; }
+.memo-markdown .memo-md-task { flex:0 0 auto; width:1.15rem; height:1.15rem; margin-top:.15rem; accent-color:var(--bs-primary,#0d6efd); }
+.memo-markdown .memo-md-task:focus-visible { outline:2px solid currentColor; outline-offset:2px; }
+.memo-markdown code { background:var(--bs-tertiary-bg,#eee); color:var(--bs-body-color,#212529); padding:.1em .25em; border-radius:3px; }
+.memo-markdown pre { max-width:100%; overflow:auto; white-space:pre; padding:.5rem; margin:0 0 .55rem; background:var(--bs-tertiary-bg,#eee); border:1px solid var(--bs-border-color,#ddd); border-radius:4px; }
+.memo-markdown pre code { padding:0; background:none; color:inherit; }
+.memo-markdown .memo-md-table-scroll { max-width:100%; overflow-x:auto; margin-bottom:.55rem; }
+.memo-markdown table { border-collapse:collapse; width:max-content; min-width:100%; font-size:.9em; }
+.memo-markdown th,.memo-markdown td { border:1px solid var(--bs-border-color,#bbb); padding:.3rem .5rem; max-width:24rem; overflow-wrap:anywhere; }
+.memo-markdown th { background:var(--bs-tertiary-bg,#eee); }
+.memo-markdown .memo-md-center { text-align:center; }
+.memo-markdown .memo-md-right { text-align:right; }
+.memo-markdown a { text-decoration:underline; overflow-wrap:anywhere; }
+@media (pointer:coarse) { .memo-markdown .memo-md-task-item label { min-height:44px; } .memo-markdown .memo-md-task { width:1.35rem;height:1.35rem; } }

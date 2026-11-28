@@ -99,6 +99,7 @@ jobs:
             "$test_dir/node_modules/.bin/playwright" install --with-deps chromium
           fi
           node tests/test_current_calendar_transfer_browser.js
+          node tests/test_current_memo_markdown_browser.js
 
 
   calendar_transfer_mariadb:

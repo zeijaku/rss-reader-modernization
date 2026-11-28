@@ -65,6 +65,7 @@
         return {
             'memo_title': value('.' + prefix + 'MemoTitleValue'),
             'memo_body': value('.' + prefix + 'MemoBody'),
+            'memo_format': value('.' + prefix + 'MemoFormat'),
             'widget_style': value('.' + prefix + 'MemoStyle'),
             'widget_width': value('.' + prefix + 'MemoWidth'),
             'widget_height': value('.' + prefix + 'MemoHeight')
@@ -89,6 +90,7 @@
         setValue('.changeMemoExpectedRevision', card ? (card.getAttribute('data-memo-revision') || '') : '');
         setValue('.changeMemoTitleValue', title && title.textContent ? title.textContent : 'Memo');
         setValue('.changeMemoBody', card ? rawMemo(card) : '');
+        setValue('.changeMemoFormat', attribute(card, 'data-memo-format', 'text'));
         setValue('.changeMemoStyle', attribute(trigger, 'data-widget-style', 'success'));
         setValue('.changeMemoWidth', attribute(trigger, 'data-widget-width', '1'));
         setValue('.changeMemoHeight', attribute(trigger, 'data-widget-height', '1'));
@@ -146,7 +148,7 @@
 
     function startInlineEdit(trigger) {
         const card = closestMatch(trigger, '[data-dashboard-widget-type="memo"]');
-        if (!card || card.getAttribute('data-memo-inline-editing') === 'true') { return; }
+        if (!card || card.getAttribute('aria-busy') === 'true' || card.getAttribute('data-memo-inline-editing') === 'true') { return; }
         const nodes = inlineElements(card);
         if (!nodes.display || !nodes.editor || !nodes.textarea) { return; }
         if (!/^[a-f0-9]{64}$/.test(card.getAttribute('data-memo-sha256') || '')) {
@@ -173,7 +175,7 @@
 
     function saveInlineEdit(trigger) {
         const card = closestMatch(trigger, '[data-dashboard-widget-type="memo"]');
-        if (!card || card.getAttribute('data-memo-inline-editing') !== 'true') { return; }
+        if (!card || card.getAttribute('aria-busy') === 'true' || card.getAttribute('data-memo-inline-editing') !== 'true') { return; }
         const nodes = inlineElements(card);
         const widgetId = card.getAttribute('data-dashboard-widget-id') || '';
         const expected = card.getAttribute('data-memo-sha256') || '';
@@ -218,6 +220,7 @@
                 card.setAttribute('data-memo-format', saved.memo_format);
                 card.setAttribute('data-memo-updated-at', saved.memo_updated_at);
                 updateInlineCounter(card, saved.memo_body);
+                if (window.RssMemoMarkdown) window.RssMemoMarkdown.renderCard(card);
                 card.removeAttribute('data-memo-inline-saving');
                 cancelInlineEdit(card);
                 showNotice('Memo本文を保存しました', 'success');
@@ -231,6 +234,62 @@
                 nodes.textarea.readOnly = false;
                 requestEndElement(nodes.save);
             });
+    }
+
+    function toggleChecklist(event) {
+        const input = closestMatch(event.target, '.memo-md-task');
+        if (!input || !window.RssMemoMarkdown) return;
+        const card = closestMatch(input, '[data-dashboard-widget-type="memo"]');
+        if (!card || card.getAttribute('data-memo-format') !== 'markdown') return;
+        const body = rawMemo(card), offset = Number(input.dataset.memoTaskOffset), checked = input.checked;
+        const originalChecked = String(body[offset] || '').toLowerCase() === 'x';
+        // Confirmed server state remains visible until the request succeeds.
+        input.checked = originalChecked;
+        if (card.getAttribute('aria-busy') === 'true' || card.getAttribute('data-memo-inline-editing') === 'true'
+            || card.getAttribute('data-memo-inline-saving') === 'true') return;
+        const revision = card.getAttribute('data-memo-revision') || '';
+        const widgetId = card.getAttribute('data-dashboard-widget-id') || '';
+        const next = window.RssMemoMarkdown.toggleTask(body, offset, checked);
+        if (!/^[a-f0-9]{64}$/.test(revision) || !/^[1-9][0-9]*$/.test(widgetId) || next === null || next === body) {
+            showNotice('Memoのチェック項目を確認できません。更新してください。','danger');return;
+        }
+        const scroll = first('.memo-card-body',card), top = scroll ? scroll.scrollTop : 0;
+        const focused = document.activeElement === input;
+        const controls = Array.from(card.querySelectorAll('.memo-md-task, .memo-inline-trigger, .memo-edit-trigger, .memo-refresh-trigger'));
+        const disabled = controls.map(el=>el.disabled);
+        controls.forEach(el=>{el.disabled=true;});
+        card.setAttribute('aria-busy','true');
+        card.setAttribute('data-memo-check-saving','true');
+        apiRequestPromise('widget.memo.body.update', memoMultipart({
+            widget_id:widgetId, memo_body:next, expected_revision:revision
+        }),10000).then(function(response){
+            const saved=response && response.data;
+            if (!response || response.ok!==true || !saved || saved.memo_body!==next || saved.memo_format!=='markdown'
+                || !/^[a-f0-9]{64}$/.test(saved.memo_revision || '') || !/^[a-f0-9]{64}$/.test(saved.memo_sha256 || '')) {
+                showNotice('チェック状態を保存できませんでした。Memoを更新して確認してください。','danger');return;
+            }
+            card.setAttribute('data-memo-raw',saved.memo_body);
+            card.setAttribute('data-memo-revision',saved.memo_revision);
+            card.setAttribute('data-memo-sha256',saved.memo_sha256);
+            card.setAttribute('data-memo-updated-at',saved.memo_updated_at || '');
+            updateInlineCounter(card,saved.memo_body);
+            window.RssMemoMarkdown.renderCard(card);
+            if(scroll) scroll.scrollTop=top;
+            if(focused) {
+                const replacement=card.querySelector('.memo-md-task[data-memo-task-offset="'+offset+'"]');
+                if(replacement) replacement.focus({preventScroll:true});
+            }
+            showNotice('チェック状態を保存しました','success');
+        },function(reason){
+            requestFailReason(reason);
+            showNotice(reason && reason.xhr && reason.xhr.status===409
+                ? '別の画面でMemoが変更されています。更新してから操作してください。'
+                : 'チェック状態を保存できませんでした。Memoを更新して確認してください。','danger');
+        }).finally(function(){
+            controls.forEach((el,i)=>{el.disabled=disabled[i];});
+            card.removeAttribute('aria-busy');card.removeAttribute('data-memo-check-saving');
+            if(focused && input.isConnected) input.focus({preventScroll:true});
+        });
     }
 
     function deleteMemo(button) {
@@ -295,6 +354,7 @@
         eventsBound = true;
         document.addEventListener('submit', handleSubmit);
         document.addEventListener('click', handleClick);
+        document.addEventListener('change', toggleChecklist);
         document.addEventListener('input', function (event) {
             const textarea = closestMatch(event.target, '.memo-inline-textarea');
             if (!textarea) { return; }

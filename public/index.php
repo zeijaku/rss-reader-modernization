@@ -634,6 +634,7 @@ function search_feed_form_fields(string $prefix): string
 <script src="<?php echo app_html(app_asset_url('js/openai-widget.js')); ?>"></script>
 <?php endif; ?>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-task.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
+<script src="<?php echo htmlspecialchars(app_asset_url('js/memo-markdown.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-memo.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-game.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>
 <script src="<?php echo htmlspecialchars(app_asset_url('js/dashboard-clock.js'), ENT_QUOTES, 'UTF-8'); ?>"></script>

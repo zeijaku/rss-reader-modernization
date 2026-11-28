@@ -371,6 +371,8 @@
                     <input type="text" class="form-control registerMemoTitleValue" id="registerMemoTitleValue" value="Memo" maxlength="32" required>
                 </div>
                 <div class="mb-3">
+                    <label class="form-label" for="registerMemoFormat"><small class="text-dark">表示形式</small></label>
+                    <select class="form-select registerMemoFormat mb-2" id="registerMemoFormat"><option value="text">Text（従来形式）</option><option value="markdown">Markdown</option></select>
                     <label class="form-label" for="registerMemoBody"><small class="text-dark">本文</small></label>
                     <textarea class="form-control memo-textarea registerMemoBody" id="registerMemoBody" maxlength="32000" rows="8" required></textarea>
                     <small class="form-text text-muted">改行を含めて16,000文字まで保存できます。</small>
@@ -420,6 +422,8 @@
                     <input type="text" class="form-control changeMemoTitleValue" id="changeMemoTitleValue" maxlength="32" required>
                 </div>
                 <div class="mb-3">
+                    <label class="form-label" for="changeMemoFormat"><small class="text-dark">表示形式</small></label>
+                    <select class="form-select changeMemoFormat mb-2" id="changeMemoFormat"><option value="text">Text（従来形式）</option><option value="markdown">Markdown</option></select>
                     <label class="form-label" for="changeMemoBody"><small class="text-dark">本文</small></label>
                     <textarea class="form-control memo-textarea changeMemoBody" id="changeMemoBody" maxlength="32000" rows="8" required></textarea>
                 </div>

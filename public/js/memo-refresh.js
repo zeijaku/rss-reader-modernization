@@ -77,6 +77,7 @@
 
         return {
             dirty: cardTitle !== formTitle || cardBody !== formBody
+                || String($('.changeMemoFormat').val()) !== String($card.attr('data-memo-format'))
                 || String($('.changeMemoWidth').val()) !== String($card.attr('data-widget-width'))
                 || String($('.changeMemoHeight').val()) !== String($card.attr('data-widget-height'))
                 || String($('.changeMemoStyle').val()) !== String($card.find('.memo-edit-trigger').first().attr('data-widget-style')),
@@ -86,7 +87,7 @@
     }
 
     function confirmDraftReplacement($card) {
-        if ($card.attr('data-memo-inline-saving') === 'true') {
+        if ($card.attr('data-memo-inline-saving') === 'true' || $card.attr('data-memo-check-saving') === 'true') {
             showNotice('Memoを保存中です。完了後に更新してください。', 'info');
             return false;
         }
@@ -117,6 +118,7 @@
             $('.changeMemoExpectedSha256').val(memo.body_sha256);
         }
         $('.changeMemoExpectedRevision').val(memo.revision || '');
+        $('.changeMemoFormat').val(memo.format || 'text');
         $('.changeMemoWidth').val(String(memo.widget_width));
         $('.changeMemoHeight').val(String(memo.widget_height));
         $('.changeMemoStyle').val(String(memo.widget_style));
@@ -180,6 +182,7 @@
         if (typeof memo.updated_at === 'string') {
             $card.attr('data-memo-updated-at', memo.updated_at);
         }
+        if (window.RssMemoMarkdown) window.RssMemoMarkdown.renderCard($card.get(0));
         syncOpenMemoForm($card, memo);
         return true;
     }
@@ -196,7 +199,7 @@
         var memoId = positiveId($card.attr('data-memo-id'));
         var location = locationValue($card.attr('data-dashboard-widget-location'));
 
-        if (widgetId === null || memoId === null || location === null || $button.prop('disabled')) {
+        if (widgetId === null || memoId === null || location === null || $button.prop('disabled') || $card.attr('aria-busy') === 'true') {
             return;
         }
         if (!confirmDraftReplacement($card)) {
@@ -204,6 +207,9 @@
         }
 
         setPending($button, true);
+        var $controls = $card.find('.memo-md-task, .memo-inline-trigger, .memo-edit-trigger, .memo-inline-save, .memo-inline-cancel, .memo-inline-textarea');
+        var prior = $controls.map(function(){return this.disabled;}).get();
+        $controls.prop('disabled', true);
         $card.attr('aria-busy', 'true');
         requestMemoList(location)
             .done(function (response) {
@@ -230,6 +236,8 @@
             })
             .always(function () {
                 $card.removeAttr('aria-busy');
+                $controls.each(function(i){ this.disabled = prior[i]; });
+                if ($card.attr('data-memo-inline-editing') !== 'true') $card.find('.memo-inline-trigger, .memo-edit-trigger').prop('disabled', false);
                 setPending($button, false);
             });
     }
