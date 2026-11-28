@@ -14,7 +14,10 @@ import time
 import uuid
 import zipfile
 
-ROOT = Path(__file__).resolve().parents[1]
+SOURCE_ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(os.environ.get('RSS_RUNTIME_TEST_ROOT', str(SOURCE_ROOT))).resolve()
+if 'RSS_RUNTIME_TEST_ROOT' in os.environ:
+    assert (ROOT/'vendor/autoload.php').is_file(), 'Runtime package must contain Composer vendor'
 def check(ok, label):
     if not ok:
         raise AssertionError(label)
@@ -26,12 +29,12 @@ with tempfile.TemporaryDirectory(prefix='rss-memo-http-') as tmp:
                APP_HASH_KEY='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
                DB_DRIVER='sqlite', DB_SQLITE_PATH=str(db), DB_TABLE_PREFIX='ig_',
                APP_API_MAX_REQUEST_BYTES='65536', APP_API_RATE_LIMIT_ENABLED='false')
-    subprocess.run(['python3',str(ROOT/'tests/fixtures/memo_integration_db.py'),str(db)],check=True)
+    subprocess.run(['python3',str(SOURCE_ROOT/'tests/fixtures/memo_integration_db.py'),str(db)],check=True)
     with socket.socket() as sock:
         sock.bind(('127.0.0.1',0))
         port=sock.getsockname()[1]
     with open(Path(tmp)/'server.log','w+') as log:
-        proc=subprocess.Popen(['php','-d','post_max_size=10M','-S',f'127.0.0.1:{port}','-t',str(ROOT/'public'),str(ROOT/'tests/api_http_router.php')],cwd=ROOT,env=env,stdout=log,stderr=log)
+        proc=subprocess.Popen(['php','-d','post_max_size=10M','-S',f'127.0.0.1:{port}','-t',str(ROOT/'public'),str(SOURCE_ROOT/'tests/api_http_router.php')],cwd=ROOT,env=env,stdout=log,stderr=log)
         cookie=None; csrf=None
         def call(method='POST', fields=None, use_cookie=True, endpoint='/api_v1.php'):
             headers={}

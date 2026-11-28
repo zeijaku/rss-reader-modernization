@@ -17,6 +17,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  runtime_php83:
+    name: Packaged Runtime PHP 8.3 compatibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240
+        with:
+          php-version: '8.4'
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml, intl, openssl, xml, dom, iconv
+          tools: composer:v2
+          coverage: none
+      - name: Build official Runtime with production dependencies
+        run: |
+          bash tools/build_mail_dependencies.sh "$RUNNER_TEMP/mail"
+          VERSION="$(php -r 'require "app/version.php"; echo APP_VERSION;')"
+          python3 tools/build_release_package.py --release "$VERSION" --mode final --mail-dependencies-dir "$RUNNER_TEMP/mail" --output-dir "$RUNNER_TEMP/package"
+          unzip -q "$RUNNER_TEMP/package/rss-reader-modernization-$VERSION.zip" -d "$RUNNER_TEMP/extracted"
+          echo "RSS_RUNTIME_TEST_ROOT=$RUNNER_TEMP/extracted/rss-reader-modernization-$VERSION" >> "$GITHUB_ENV"
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240
+        with:
+          php-version: '8.3'
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml, intl, openssl, xml, dom, iconv
+          tools: composer:v2
+          coverage: none
+      - name: Verify real extracted ZIP on PHP 8.3
+        run: |
+          composer check-platform-reqs --working-dir="$RSS_RUNTIME_TEST_ROOT" --no-dev
+          php -r 'require $argv[1]."/vendor/autoload.php"; require $argv[1]."/app/mail/mail_client.php"; if (!mail_client_available() || !class_exists("AppMailPinnedImapStream")) exit(1);' "$RSS_RUNTIME_TEST_ROOT"
+          python3 tests/test_current_memo_http.py
+
   regression:
     name: PHP ${{ matrix.php }} regression
     runs-on: ubuntu-latest
@@ -27,6 +60,7 @@ jobs:
       matrix:
         php:
           - '8.1'
+          - '8.3'
           - '8.4'
 
     steps:
@@ -170,7 +204,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Assemble deployment overlay after PHP 8.1 and 8.4 passes
+      - name: Assemble deployment overlay after PHP 8.3 and 8.4 passes
         shell: bash
         run: |
           set -euo pipefail
@@ -290,7 +324,7 @@ jobs:
       - name: Set up PHP and Composer for formal Mail runtime
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
         with:
-          php-version: '8.1'
+          php-version: '8.3'
           extensions: curl, mbstring, pdo_sqlite, intl, openssl, xml, dom, iconv
           tools: composer:v2
           coverage: none

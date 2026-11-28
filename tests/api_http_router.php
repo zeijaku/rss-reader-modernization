@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-$root = dirname(__DIR__);
+$root = getenv('RSS_RUNTIME_TEST_ROOT') ?: dirname(__DIR__);
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 
 if ($uri === '/__test_login') {

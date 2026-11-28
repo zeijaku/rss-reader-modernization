@@ -23,7 +23,8 @@ Trigger:
 
 Runtime Matrix / Tooling:
 
-- PHP 8.1
+- PHP 8.1（従来のソース回帰テスト・必須保護チェックのみ。Runtime配布対象外）
+- PHP 8.3
 - PHP 8.4
 - Python 3.12
 - Node.js 24
@@ -81,7 +82,7 @@ Release WorkflowはSourceを書き換えたり、自動Commitしたりしませ�
 3. `app/version.php` / README / CHANGELOG / RELEASE_NOTES等のRelease-ready整合
 4. 実行開始時のRemote `main` SHA一致
 5. 既存Tagがある場合は同一Commit
-6. PHP 8.1 / 8.4 Current regression
+6. PHP 8.3 / 8.4 Current regression
 7. high-signal secret scan
 8. Runtime Package生成・Verify
 9. Complete Source Package生成・Verify
