@@ -17,10 +17,11 @@ cat > "$DEST/composer.json" <<'JSON'
   "type": "project",
   "description": "Pinned Mail dependencies for RSS Reader official Runtime ZIP",
   "require": {
-    "php": "^8.1",
+    "php": "^8.3",
     "directorytree/imapengine": "1.25.6"
   },
   "config": {
+    "platform": {"php": "8.3.0"},
     "sort-packages": true,
     "allow-plugins": false
   }
@@ -29,6 +30,7 @@ JSON
 
 composer install --working-dir="$DEST" --prefer-dist --no-dev --no-interaction --no-progress --no-scripts --no-plugins --optimize-autoloader
 composer audit --working-dir="$DEST" --locked --no-interaction
+composer check-platform-reqs --working-dir="$DEST" --no-dev
 test -f "$DEST/vendor/autoload.php"
 test -f "$DEST/vendor/directorytree/imapengine/composer.json"
 test -f "$DEST/composer.lock"

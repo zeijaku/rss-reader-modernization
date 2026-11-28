@@ -43,8 +43,8 @@ check('tools/check_release_ready.py --release "${RELEASE_VERSION}"' in workflow,
 
 version_runner = re.compile(r'\b(?:bash|sh)\s+tests/run-v\d', flags=re.IGNORECASE)
 check(not version_runner.search(workflow), 'Release workflow does not accumulate historical run-v*.sh gates')
-check(workflow.count('bash tests/run-current.sh') == 2, 'Release workflow runs current regression on PHP 8.1 and 8.4')
-check(workflow.count('bash tests/run-current-features.sh') == 2, 'Release workflow runs durable current feature contracts on PHP 8.1 and 8.4')
+check(workflow.count('bash tests/run-current.sh') == 2, 'Release workflow runs current regression on PHP 8.3 and 8.4')
+check(workflow.count('bash tests/run-current-features.sh') == 2, 'Release workflow runs durable current feature contracts on PHP 8.3 and 8.4')
 check('group: release-main' in workflow, 'Release workflow serializes final publication runs')
 check('rss-reader-modernization-final-${{ github.run_id }}' in workflow, 'Actions artifact name does not depend on workflow_dispatch-only inputs')
 check('\n  verify:' in workflow and '\n  publish:' in workflow, 'Release workflow separates verification from publication jobs')
@@ -121,3 +121,6 @@ for path in (
 failed = len(checks) - sum(checks)
 print(f'RESULT: PASS {sum(checks)} / FAIL {failed} / SKIP 0')
 raise SystemExit(1 if failed else 0)
+
+assert 'Actual ZIP PHP 8.3 autoload and HTTP gate' in workflow
+assert 'Actual ZIP PHP 8.4 HTTP gate' in workflow

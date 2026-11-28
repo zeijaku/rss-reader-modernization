@@ -1,3 +1,7 @@
+## 1.55.1 - 2026-11-28
+
+- Fix official Runtime Composer platform resolution for PHP 8.3; validate actual extracted package autoload and HTTP on PHP 8.3/8.4 before release. Minimum supported PHP is 8.3. No feature or database changes.
+
 ## 1.55.0 - 2026-11-28
 
 - Extend Memo to 16,000 Unicode code points and Text/Markdown formats with additive migration 038; preserve existing Text data and source whitespace.

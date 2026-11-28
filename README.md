@@ -9,8 +9,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.55.0`
-Release tag: `v1.55.0`
+**Stable release:** `RSS Reader Modernization 1.55.1`
+Release tag: `v1.55.1`
+
+Version 1.55.1はPHP 8.3互換のComposer依存関係と完成Runtime ZIPの実HTTP検証を追加する修正版です。最低対応PHPは8.3。DB変更なし。
 
 Version 1.55.0はMemoのText／Markdown、16,000文字、チェックリスト、編集ツールバー・全画面・Undo／Redo、複製・TXT／MD出力・更新日時を正式化します。既存DBはMigration 038を適用してください。既存MemoはText形式を維持します。[更新手順](docs/update.md#v1550-正式版へ更新)を参照してください。
 
@@ -159,7 +161,7 @@ Application Versionの正本は `app/version.php`、Versionごとの変更履歴
 
 ## Runtime Requirements
 
-- PHP 8.1+
+- PHP 8.3+
 - PDO / `pdo_mysql`
 - cURL
 - SimpleXML
@@ -212,7 +214,7 @@ Backup / Restoreは [`docs/backup-and-restore.md`](docs/backup-and-restore.md) �
 bash tests/run-ci.sh
 ```
 
-GitHub ActionsのCIは `main` push / Pull Requestで同じCurrent GateをPHP 8.1 / 8.4に対して実行します。
+GitHub ActionsのCIは `main` push / Pull Requestで同じCurrent GateをPHP 8.3 / 8.4に対して実行します。
 
 過去Version固有の挙動を調査する場合だけ、Historical testを含む `bash tests/run.sh` または対応する `tests/run-v*.sh` を追加実行します。
 

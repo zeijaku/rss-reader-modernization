@@ -125,14 +125,14 @@ jobs:
             echo "${TAG} already points to this release commit."
           fi
 
-      - name: Set up PHP 8.1 regression runtime
+      - name: Set up PHP 8.3 regression runtime
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
         with:
-          php-version: '8.1'
+          php-version: '8.3'
           extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml
           coverage: none
 
-      - name: Run PHP 8.1 release regression
+      - name: Run PHP 8.3 release regression
         shell: bash
         run: |
           set -euo pipefail
@@ -227,6 +227,39 @@ jobs:
             echo "PASS: official Runtime IMAP autoload" . PHP_EOL;
           ' "${ROOT_DIR}"
           echo 'PASS: Runtime package clean-room checks'
+
+      - name: Verify packaged runtime on PHP 8.3
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: '8.3'
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml, intl, openssl, xml, dom, iconv
+          tools: composer:v2
+          coverage: none
+
+      - name: Actual ZIP PHP 8.3 autoload and HTTP gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          export RSS_RUNTIME_TEST_ROOT="${RUNNER_TEMP}/runtime-check/${RUNTIME_STEM}"
+          composer check-platform-reqs --working-dir="$RSS_RUNTIME_TEST_ROOT" --no-dev
+          php -r 'require $argv[1]."/vendor/autoload.php"; require $argv[1]."/app/mail/mail_client.php"; if (!mail_client_available() || !class_exists("AppMailPinnedImapStream")) exit(1);' "$RSS_RUNTIME_TEST_ROOT"
+          python3 tests/test_current_memo_http.py
+
+      - name: Restore PHP 8.4 and verify actual ZIP HTTP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
+        with:
+          php-version: '8.4'
+          extensions: curl, mbstring, pdo_mysql, pdo_sqlite, simplexml, intl, openssl, xml, dom, iconv
+          tools: composer:v2
+          coverage: none
+
+      - name: Actual ZIP PHP 8.4 HTTP gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          export RSS_RUNTIME_TEST_ROOT="${RUNNER_TEMP}/runtime-check/${RUNTIME_STEM}"
+          composer check-platform-reqs --working-dir="$RSS_RUNTIME_TEST_ROOT" --no-dev
+          python3 tests/test_current_memo_http.py
 
       - name: Complete Source package clean-room checks
         shell: bash

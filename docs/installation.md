@@ -6,7 +6,7 @@
 
 ## 1. 必要な環境
 
-- PHP 8.1以上
+- PHP 8.3以上
 - PDO / `pdo_mysql`
 - cURL
 - SimpleXML
