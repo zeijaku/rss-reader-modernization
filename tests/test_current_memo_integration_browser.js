@@ -9,7 +9,7 @@ async function ready(p){for(let i=0;i<80;i++){if(await new Promise(resolve=>{con
  try{
   for(const width of [1280,360]){
    const dir=fs.mkdtempSync(path.join(os.tmpdir(),'rss-memo-e2e-')),db=path.join(dir,'fixture.sqlite'),p=await port(),url='http://127.0.0.1:'+p;
-   execFileSync('python3',['-c','import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); c.executescript(open(sys.argv[2],encoding="utf8").read()); c.close()',db,path.join(fixture,'memo_integration.sql')]);
+   execFileSync('python3',[path.join(fixture,'memo_integration_db.py'),db]);
    const env={...process.env,APP_ENV:'testing',APP_DEBUG:'false',APP_LOG_ENABLED:'false',APP_HASH_KEY:'0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',DB_DRIVER:'sqlite',DB_SQLITE_PATH:db,DB_TABLE_PREFIX:'ig_',APP_API_MAX_REQUEST_BYTES:'65536',APP_API_RATE_LIMIT_ENABLED:'false'};
    const php=spawn('php',['-d','post_max_size=10M','-S','127.0.0.1:'+p,'-t',path.join(root,'public'),path.join(fixture,'memo_integration_router.php')],{cwd:root,env});let logs='';php.stderr.on('data',x=>{logs=(logs+x).slice(-10000);});php.stdout.resume();
    const context=await browser.newContext({viewport:{width,height:850},hasTouch:width===360,acceptDownloads:true});let cookie='';

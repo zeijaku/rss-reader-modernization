@@ -26,8 +26,7 @@ with tempfile.TemporaryDirectory(prefix='rss-memo-http-') as tmp:
                APP_HASH_KEY='0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
                DB_DRIVER='sqlite', DB_SQLITE_PATH=str(db), DB_TABLE_PREFIX='ig_',
                APP_API_MAX_REQUEST_BYTES='65536', APP_API_RATE_LIMIT_ENABLED='false')
-    with sqlite3.connect(db) as c:
-        c.executescript((ROOT/'tests/fixtures/memo_integration.sql').read_text(encoding='utf8'))
+    subprocess.run(['python3',str(ROOT/'tests/fixtures/memo_integration_db.py'),str(db)],check=True)
     with socket.socket() as sock:
         sock.bind(('127.0.0.1',0))
         port=sock.getsockname()[1]
