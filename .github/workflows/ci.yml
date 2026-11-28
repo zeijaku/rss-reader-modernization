@@ -102,6 +102,7 @@ jobs:
           node tests/test_current_memo_markdown_browser.js
           node tests/test_current_memo_editor_browser.js
           node tests/test_current_memo_management_browser.js
+          node tests/test_current_memo_integration_browser.js
 
 
   calendar_transfer_mariadb:
