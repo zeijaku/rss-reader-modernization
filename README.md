@@ -9,8 +9,10 @@
 
 ## Stable Release
 
-**Stable release:** `RSS Reader Modernization 1.54.0`
-Release tag: `v1.54.0`
+**Stable release:** `RSS Reader Modernization 1.55.0`
+Release tag: `v1.55.0`
+
+Version 1.55.0はMemoのText／Markdown、16,000文字、チェックリスト、編集ツールバー・全画面・Undo／Redo、複製・TXT／MD出力・更新日時を正式化します。既存DBはMigration 038を適用してください。既存MemoはText形式を維持します。[更新手順](docs/update.md#v1550-正式版へ更新)を参照してください。
 
 Version 1.54.0は、通常CalendarのICS Import／Export、繰り返し・例外・独自属性の移行、期間指定と全CalendarのZIP出力を追加します。既存DBはMigration 037を適用してください。外部ICS購読とMemoは変更しません。[更新・確認手順](docs/update.md#v1540-正式版へ更新)を参照してください。
 
@@ -70,7 +72,7 @@ Application Versionの正本は `app/version.php`、Versionごとの変更履歴
 
 - Dashboard Widgetの追加・編集・削除・並び替え・サイズ変更
 - Clock
-- Memo
+- Memo（Text／Markdown、16,000文字、チェックリスト、編集支援、複製・TXT／MD出力）
 - Task
 - Calendarの日／週／月表示
 - Calendarの終日／時刻／URL／場所／5色予定

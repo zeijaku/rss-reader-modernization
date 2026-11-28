@@ -31,6 +31,17 @@ php tools/healthcheck.php
 
 Production serverでLocal変更がある場合は、その内容を確認するまで更新を進めません。
 
+## V1.55.0 正式版へ更新
+
+1. アプリケーション、DB、config/local.php、vendor、var、利用者ファイルをバックアップし、更新中は編集を停止します。
+2. v1.54.0からは `database/migrations/038_v1_55_memo_format.sql` の `@table_prefix` を実環境の `DB_TABLE_PREFIX` に合わせ、未適用の場合のみ実行します。過去Migrationが未適用なら先に番号順に適用します。新規DBはschema.sqlのみ。
+3. memo_format列（VARCHAR(8)、NOT NULL、既定text）を確認します。既存本文・日時は維持されます。既存DBへschema.sqlを再実行しません。
+4. 正式Runtime ZIPのSHA-256を照合し、展開したアプリケーションをRootへ上書きします。設定、実DB、稼働データは維持します。Complete Sourceは開発・保管用です。
+5. ブラウザを再読み込みし、フッターとアセットRevisionが1.55.0であることを確認します。
+6. 既存Text Memo、Markdown新規作成、チェックリスト、編集・プレビュー・全画面、複製、TXT／MD出力、更新日時を確認します。Login／2FAと普段使用するRSS・Calendarなども確認します。
+
+不具合時は編集を停止し、更新後のデータを別途保全してからバックアップを復元します。旧版では4,000文字を超えるMemoやMarkdown表示に対応しません。コードのみのRollbackでデータ互換性を保証しません。形式列を不用意に削除しないでください。
+
 ## V1.54.0 正式版へ更新
 
 1. アプリケーション、DB、`config/local.php`、`vendor/`、`var/`、利用者ファイルをバックアップし、更新中の予定編集を停止します。

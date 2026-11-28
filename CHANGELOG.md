@@ -1,3 +1,12 @@
+## 1.55.0 - 2026-11-28
+
+- Extend Memo to 16,000 Unicode code points and Text/Markdown formats with additive migration 038; preserve existing Text data and source whitespace.
+- Add bounded safe Markdown rendering, checklist persistence, toolbar, fullscreen editing, edit/preview switching and 100-operation undo/redo with IME event handling.
+- Add owner-scoped duplication, saved-source TXT/MD downloads and last-updated display.
+- Protect concurrent changes using full revisions; preserve drafts on failed saves and invalid refresh responses.
+- Verify real HTTP and Chromium/SQLite lifecycle, MariaDB migration and PHP 8.1/8.4 regression. Keep other features unchanged.
+- Set application and asset revision to 1.55.0; retain official package and release gates.
+
 ## 1.54.0 - 2026-11-28
 
 - Add local Calendar ICS import/export in a third Calendar management tab; keep external subscription behavior unchanged.
