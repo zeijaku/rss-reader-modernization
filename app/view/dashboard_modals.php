@@ -417,6 +417,14 @@
                 <input type="hidden" class="changeMemoId">
                 <input type="hidden" class="changeMemoExpectedSha256">
                 <input type="hidden" class="changeMemoExpectedRevision">
+                <div class="memo-management mb-3" role="group" aria-label="保存済みMemoの管理">
+                    <small class="text-muted">保存済みMemo（編集中の内容は含みません）</small>
+                    <div class="memo-management-actions">
+                        <button type="button" class="btn btn-sm btn-outline-secondary memo-duplicate"><i class="far fa-copy" aria-hidden="true"></i> 複製</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary memo-download" data-memo-export="txt"><i class="fas fa-download" aria-hidden="true"></i> TXT</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary memo-download" data-memo-export="md"><i class="fas fa-download" aria-hidden="true"></i> Markdown</button>
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label class="form-label" for="changeMemoTitleValue"><small class="text-dark">見出し</small></label>
                     <input type="text" class="form-control changeMemoTitleValue" id="changeMemoTitleValue" maxlength="32" required>

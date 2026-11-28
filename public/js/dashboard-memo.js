@@ -237,6 +237,7 @@
                 card.setAttribute('data-memo-updated-at', saved.memo_updated_at);
                 updateInlineCounter(card, saved.memo_body);
                 if (window.RssMemoMarkdown) window.RssMemoMarkdown.renderCard(card);
+                if (window.RssMemoManagement) window.RssMemoManagement.syncTimestamp(card);
                 card.removeAttribute('data-memo-inline-saving');
                 cancelInlineEdit(card);
                 showNotice('Memo本文を保存しました', 'success');
@@ -291,6 +292,7 @@
             card.setAttribute('data-memo-updated-at',saved.memo_updated_at || '');
             updateInlineCounter(card,saved.memo_body);
             window.RssMemoMarkdown.renderCard(card);
+            if(window.RssMemoManagement)window.RssMemoManagement.syncTimestamp(card);
             if(scroll) scroll.scrollTop=top;
             if(focused) {
                 const replacement=card.querySelector('.memo-md-task[data-memo-task-offset="'+offset+'"]');
@@ -306,6 +308,57 @@
             controls.forEach((el,i)=>{el.disabled=disabled[i];});
             card.removeAttribute('aria-busy');card.removeAttribute('data-memo-check-saving');
             if(focused && input.isConnected) input.focus({preventScroll:true});
+        });
+    }
+
+    function managedMemo(button) {
+        const form=closestMatch(button,'#changeMemoForm');
+        const id=String(value('.changeMemoWidgetId')||'');
+        if(!form||!/^[1-9]\d*$/.test(id))return null;
+        const card=first('[data-dashboard-widget-type="memo"][data-dashboard-widget-id="'+id+'"]');
+        const revision=String(value('.changeMemoExpectedRevision')||'');
+        if(!card||card.getAttribute('data-memo-revision')!==revision||!/^[a-f0-9]{64}$/.test(revision)
+            ||card.getAttribute('aria-busy')==='true'||card.getAttribute('data-memo-inline-saving')==='true'){
+            showNotice('保存済みMemoを確認できません。最新の内容を取得してください。','danger');return null;
+        }
+        return {form,card,id,revision};
+    }
+
+    function downloadMemo(button){
+        const state=managedMemo(button);
+        if(!state)return;
+        try{
+            if(!window.RssMemoManagement||!window.RssMemoManagement.download(state.card,button.dataset.memoExport))throw Error('download');
+        }catch(_){showNotice('Memoをダウンロードできませんでした。','danger');}
+    }
+
+    function duplicateMemo(button){
+        const state=managedMemo(button);
+        if(!state)return;
+        // Reload is the existing Widget-create lifecycle. Never discard another
+        // Memo's active draft, and explicitly confirm the current form's draft.
+        if(first('.memo-card[data-memo-inline-editing="true"], .memo-card[data-memo-check-saving="true"], .memo-card[aria-busy="true"]')){
+            showNotice('他のMemoを編集中または更新中です。終了してから複製してください。','info');return;
+        }
+        const {form,card,id,revision}=state,textarea=first('.changeMemoBody',form),editor=window.RssMemoEditor;
+        if(editor&&!editor.canSubmit(textarea))return;
+        const draft=memoFormPayload('change'),dirty=draft.memo_title!==first('.memo-title',card)?.textContent||draft.memo_body!==rawMemo(card)
+            ||draft.memo_format!==card.getAttribute('data-memo-format')||String(draft.widget_width)!==card.getAttribute('data-widget-width')
+            ||String(draft.widget_height)!==card.getAttribute('data-widget-height')||draft.widget_style!==first('.memo-edit-trigger',card)?.getAttribute('data-widget-style');
+        if(!window.confirm(dirty?'保存済みMemoを複製します。現在の未保存変更は成功後に破棄されます。続けますか？':'保存済みMemoを同じタブの末尾に複製しますか？'))return;
+        if(!requestStartElement(button))return;
+        const submit=submitButton(form),wasDisabled=submit.disabled;
+        submit.disabled=true;
+        const release=editor?editor.lockForm(form):()=>{};
+        card.setAttribute('aria-busy','true');
+        apiRequestPromise('widget.memo.duplicate',{widget_id:id,expected_revision:revision},10000).then(function(response){
+            if(!apiResponseOk(response))return;
+            if(!response.data||!/^[1-9]\d*$/.test(String(response.data.widget_id||''))||String(response.data.widget_id)===id){
+                showNotice('複製結果を確認できません。再読み込みして確認してください。','danger');return;
+            }
+            window.location.reload();
+        },requestFailReason).finally(function(){
+            card.removeAttribute('aria-busy');release();submit.disabled=wasDisabled;requestEndElement(button);
         });
     }
 
@@ -358,6 +411,10 @@
             editMemo(editTrigger);
             return;
         }
+        const duplicateTrigger = closestMatch(event.target, '.memo-duplicate');
+        if(duplicateTrigger){duplicateMemo(duplicateTrigger);return;}
+        const downloadTrigger = closestMatch(event.target, '.memo-download');
+        if(downloadTrigger){downloadMemo(downloadTrigger);return;}
         const deleteTrigger = closestMatch(event.target, '.delete_memo');
         if (deleteTrigger) {
             deleteMemo(deleteTrigger);

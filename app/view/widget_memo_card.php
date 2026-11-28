@@ -20,6 +20,8 @@ function dashboard_render_memo_widget_card(array $row, int $location): string
     $memoFormat = dashboard_widget_validate_memo_format($row['memo_format'] ?? 'text') ?? 'text';
     $memoRevision = dashboard_widget_memo_revision($row, $row);
     $memoTitleId = 'memo-title-' . $widgetId;
+    $updatedAt = (string) ($row['memo_updated_at'] ?? '');
+    $updatedLabel = preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/D', $updatedAt) === 1 ? substr($updatedAt, 0, 16) : '—';
     $content_location = $location;
 
     return '
@@ -43,6 +45,9 @@ function dashboard_render_memo_widget_card(array $row, int $location): string
                                     <button type="button" class="btn btn-sm btn-primary memo-inline-save"><i class="fas fa-save" aria-hidden="true"></i> 保存</button>
                                 </div>
                             </div>
+                        </div>
+                        <div class="memo-card-footer">
+                            <span class="memo-updated-label" title="最終更新日時">更新：<time class="memo-updated-at" datetime="' . app_html(str_replace(' ', 'T', $updatedAt)) . '">' . app_html($updatedLabel) . '</time></span>
                         </div>
                     </div>
                 </section>

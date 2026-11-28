@@ -4,7 +4,7 @@ const {chromium}=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES?process.
 const root=path.resolve(__dirname,'..'),source='日本語\n- [ ] 項目\n<img src=x onerror=alert(1)>';
 const rows=[source,'Text **literal**'].map((body,i)=>({widget_id:i+1,widget_owner:7,widget_location:0,widget_type:'memo',widget_reference_id:i+1,widget_sort_order:i,widget_width:2,widget_height:2,widget_style:'success',widget_config:null,widget_flag:0,widget_created_at:'2026-11-28 00:00:00',widget_updated_at:'2026-11-28 00:00:00',memo_id:i+1,memo_owner:7,memo_flag:0,memo_title:'Memo '+i,memo_body:body,memo_format:i===0?'markdown':'text',memo_updated_at:'2026-11-28 00:00:00'}));
 const fixture=execFileSync('php',[path.join(__dirname,'fixtures/widget_header_page.php'),JSON.stringify(rows)],{encoding:'utf8'});
-const scripts=['jquery-3.7.1.min','bootstrap.bundle-5.3.8.min','dashboard-core','memo-markdown','memo-editor','dashboard-memo','memo-counter','memo-refresh','widget-settings-no-reload'];
+const scripts=['jquery-3.7.1.min','bootstrap.bundle-5.3.8.min','dashboard-core','memo-markdown','memo-management','memo-editor','dashboard-memo','memo-counter','memo-refresh','widget-settings-no-reload'];
 const html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="csrf-token" content="'+ 'a'.repeat(64)+'">'+['bootstrap-5.3.8.min','dashboard','memo-widget','memo-refresh'].map(x=>'<link rel="stylesheet" href="/css/'+x+'.css">').join('')+'</head><body><div id="app-notice" hidden></div>'+fixture+scripts.map(x=>'<script src="/js/'+x+'.js"></script>').join('')+'</body></html>';
 const hash=x=>crypto.createHash('sha256').update(x).digest('hex');
 (async()=>{
@@ -54,7 +54,7 @@ const hash=x=>crypto.createHash('sha256').update(x).digest('hex');
     assert.equal(await t.inputValue(),expected);assert.equal(await card.locator('dialog[open]').count(),1);assert.equal(requests,1);
     fail=false;await editor.locator('.memo-inline-save').click();
     await page.waitForFunction(()=>!document.querySelector('[data-dashboard-widget-id="1"]').hasAttribute('data-memo-inline-editing'));
-    assert.equal(await card.locator('dialog[open]').count(),0);assert.equal(await card.getAttribute('data-memo-raw'),expected);assert.equal(requests,2);
+    assert.equal(await card.locator('dialog[open]').count(),0);assert.equal(await card.getAttribute('data-memo-raw'),expected);assert.equal(await card.locator('.memo-updated-at').textContent(),'2026-11-28 09:00');assert.equal(requests,2);
     await card.locator('.memo-inline-trigger').click();assert.equal(await btn('undo').isDisabled(),true);await editor.locator('.memo-inline-cancel').click();
     await other.locator('.memo-inline-trigger').click();assert.equal(await other.locator('.memo-editor-formatting').isVisible(),false);assert.equal(await other.locator('[data-memo-action="preview"]').isVisible(),false);await other.locator('.memo-inline-cancel').click();
     await card.locator('.memo-edit-trigger').click();await page.waitForSelector('#changeMemo.show');

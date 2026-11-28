@@ -6,7 +6,7 @@ const source=['# 見出し','**太字** *斜体* ~~取消~~ '+tick+'a<b'+tick,'h
 const plain='**装飾しない**\n- [ ] plain\n<img src=x onerror=alert(1)>';
 const rows=[source,plain].map((body,i)=>({widget_id:i+1,widget_owner:7,widget_location:0,widget_type:'memo',widget_reference_id:i+1,widget_sort_order:i,widget_width:2,widget_height:2,widget_style:'success',widget_config:null,widget_flag:0,widget_created_at:'2026-11-28 00:00:00',widget_updated_at:'2026-11-28 00:00:00',memo_id:i+1,memo_owner:7,memo_flag:0,memo_title:'Memo '+i,memo_body:body,memo_format:i===0?'markdown':'text',memo_updated_at:'2026-11-28 00:00:00'}));
 const fixture=execFileSync('php',[path.join(__dirname,'fixtures/widget_header_page.php'),JSON.stringify(rows)],{encoding:'utf8'});
-const scripts=['jquery-3.7.1.min','bootstrap.bundle-5.3.8.min','dashboard-core','memo-markdown','dashboard-memo','memo-counter','memo-refresh'];
+const scripts=['jquery-3.7.1.min','bootstrap.bundle-5.3.8.min','dashboard-core','memo-markdown','memo-management','dashboard-memo','memo-counter','memo-refresh'];
 const html='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="csrf-token" content="'+ 'a'.repeat(64)+'">'+['bootstrap-5.3.8.min','dashboard','memo-widget','memo-refresh'].map(x=>'<link rel="stylesheet" href="/css/'+x+'.css">').join('')+'</head><body><div id="app-notice" hidden></div>'+fixture+scripts.map(x=>'<script src="/js/'+x+'.js"></script>').join('')+'</body></html>';
 const hash=x=>crypto.createHash('sha256').update(x).digest('hex');
 (async()=>{
@@ -59,6 +59,7 @@ const hash=x=>crypto.createHash('sha256').update(x).digest('hex');
    await page.waitForFunction(()=>document.querySelector('#app-notice').textContent.includes('チェック状態を保存しました'));
    assert.equal(await tasks.first().isChecked(),true);assert.equal(requests,1);
    assert.equal(await card.getAttribute('data-memo-raw'),stored);
+   assert.equal(await card.locator('.memo-updated-at').textContent(),'2026-11-28 09:00');
    fail=true;await tasks.first().click();
    await page.waitForFunction(()=>document.querySelector('#app-notice').textContent.includes('別の画面'));
    assert.equal(await tasks.first().isChecked(),true);assert.equal(requests,2);
@@ -66,6 +67,7 @@ const hash=x=>crypto.createHash('sha256').update(x).digest('hex');
    await card.locator('.memo-refresh-trigger').click();
    await page.waitForFunction(()=>document.querySelector('#app-notice').textContent.includes('Memoを更新しました'));
    assert.equal(await tasks.first().isChecked(),true);
+   assert.equal(await card.locator('.memo-updated-at').textContent(),'2026-11-28 09:00');
    await card.locator('.memo-inline-trigger').click();
    assert.equal(await card.locator('.memo-inline-textarea').inputValue(),stored);
    await card.locator('.memo-inline-cancel').click();

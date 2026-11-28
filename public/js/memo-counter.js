@@ -39,7 +39,7 @@
             counter = document.createElement('div');
             counter.className = 'memo-character-count';
             counter.setAttribute('aria-label', 'Memo文字数');
-            inner.appendChild(counter);
+            (inner.querySelector('.memo-card-footer') || inner).appendChild(counter);
         }
         updateCounter(counter, card.getAttribute('data-memo-raw') ?? body.textContent ?? '');
     }

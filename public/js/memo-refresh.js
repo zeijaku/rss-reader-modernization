@@ -184,6 +184,7 @@
             $card.attr('data-memo-updated-at', memo.updated_at);
         }
         if (window.RssMemoMarkdown) window.RssMemoMarkdown.renderCard($card.get(0));
+        if (window.RssMemoManagement) window.RssMemoManagement.syncTimestamp($card.get(0));
         syncOpenMemoForm($card, memo);
         return true;
     }

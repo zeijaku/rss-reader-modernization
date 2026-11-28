@@ -451,6 +451,26 @@ function api_widget_memo_body_update(int $userId, array $input): array
     }
 }
 
+function api_widget_memo_duplicate(int $userId, array $input): array
+{
+    $widgetId = api_positive_int($input, 'widget_id');
+    $revision = $input['expected_revision'] ?? null;
+    if ($widgetId === null || !is_string($revision) || preg_match('/\A[a-f0-9]{64}\z/D', $revision) !== 1) {
+        return api_validation_error('Memo duplicate is invalid.');
+    }
+    try {
+        $copy = dashboard_widget_duplicate_memo($userId, $widgetId, $revision);
+        return $copy === null ? api_error('not_found', 'Memo Widget was not found.', 404) : api_success($copy, 201);
+    } catch (AppMemoBodyConflictException $exception) {
+        return api_error('memo_conflict', 'Memoが変更されています。最新の内容を取得してから複製してください。', 409);
+    } catch (InvalidArgumentException $exception) {
+        return api_validation_error($exception->getMessage());
+    } catch (PDOException | OverflowException $exception) {
+        error_log('Memo Widget duplicate failed.');
+        return api_error('memo_unavailable', 'Memoを複製できませんでした。', 503);
+    }
+}
+
 function api_widget_memo_delete(int $userId, array $input): array
 {
     $widgetId = api_positive_int($input, 'widget_id');

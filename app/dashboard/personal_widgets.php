@@ -257,6 +257,57 @@ function dashboard_widget_create_memo(
     }
 }
 
+/** Copy an authenticated, current Memo snapshot into a new Memo and placement. */
+function dashboard_widget_duplicate_memo(int $ownerId, int $widgetId, string $revision): ?array
+{
+    if ($ownerId <= 0 || $widgetId <= 0 || preg_match('/\A[a-f0-9]{64}\z/D', $revision) !== 1) {
+        throw new InvalidArgumentException('Memo duplicate is invalid.');
+    }
+    $pdo = conn_db();
+    $started = !$pdo->inTransaction();
+    if ($started) {
+        $pdo->beginTransaction();
+    }
+    try {
+        $widget = dashboard_widget_lock_owned_widget($pdo, $ownerId, $widgetId, 'memo');
+        $memoId = is_array($widget) ? app_validate_positive_int($widget['widget_reference_id'] ?? null) : null;
+        $memo = $memoId === null ? null : dashboard_widget_lock_owned_memo($pdo, $ownerId, $memoId);
+        if (!is_array($memo)) {
+            if ($started) {
+                $pdo->rollBack();
+            }
+            return null;
+        }
+        dashboard_widget_memo_assert_revision($memo, $widget, null, $revision, null);
+        $title = dashboard_widget_validate_memo_title($memo['memo_title'] ?? null);
+        $body = dashboard_widget_validate_memo_body($memo['memo_body'] ?? null);
+        $format = dashboard_widget_validate_memo_format($memo['memo_format'] ?? 'text');
+        $location = dashboard_widget_validate_location($widget['widget_location'] ?? null);
+        $style = app_normalize_content_style($widget['widget_style'] ?? null);
+        $width = dashboard_widget_validate_width($widget['widget_width'] ?? null);
+        $height = dashboard_widget_validate_height($widget['widget_height'] ?? null);
+        if ($title === null || $body === null || $format === null || $location === null || $style === null || $width === null || $height === null) {
+            throw new InvalidArgumentException('Memo source is invalid.');
+        }
+        // Count Unicode code points (same title limit as the existing validator).
+        $suffix = '（コピー）';
+        preg_match_all('/./us', $title, $chars);
+        $copyTitle = implode('', array_slice($chars[0], 0, 32 - app_text_length($suffix))) . $suffix;
+        // Nested call shares this transaction, allocates new IDs, appends at end,
+        // and creates fresh timestamps. No original data is modified.
+        $copy = dashboard_widget_create_memo($ownerId, $location, $style, $width, $copyTitle, $body, $height, $format);
+        if ($started) {
+            $pdo->commit();
+        }
+        return $copy + ['widget_location' => $location];
+    } catch (Throwable $exception) {
+        if ($started && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $exception;
+    }
+}
+
 function dashboard_widget_update_memo(
     int $ownerId,
     int $widgetId,
