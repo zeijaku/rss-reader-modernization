@@ -267,12 +267,12 @@ async function flush() {
 
     check(documentObject.listenerCount('submit') === 4, 'four native delegated submit listeners are registered');
     check(documentObject.listenerCount('click') === 4, 'four native delegated click listeners are registered');
-    check(documentObject.listenerCount('change') === 1, 'Game registers one native delegated change listener');
+    check(documentObject.listenerCount('change') === 2, 'Game and Memo each register one native delegated change listener');
 
     modules.forEach((module) => module.bindEvents('.iguguruDashboard'));
     check(documentObject.listenerCount('submit') === 4, 'rebinding does not duplicate native submit listeners');
     check(documentObject.listenerCount('click') === 4, 'rebinding does not duplicate native click listeners');
-    check(documentObject.listenerCount('change') === 1, 'rebinding does not duplicate native change listeners');
+    check(documentObject.listenerCount('change') === 2, 'rebinding does not duplicate Game or Memo native change listeners');
 
     control(documentObject, '.registerTaskWidgetTitleValue', 'Tasks');
     control(documentObject, '.registerTaskWidgetStyle', 'primary');
