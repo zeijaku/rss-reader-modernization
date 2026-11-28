@@ -23,6 +23,7 @@ Trigger:
 
 Runtime Matrix / Tooling:
 
+- PHP 8.1（従来のソース回帰テスト・必須保護チェックのみ。Runtime配布対象外）
 - PHP 8.3
 - PHP 8.4
 - Python 3.12

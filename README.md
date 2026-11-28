@@ -214,7 +214,7 @@ Backup / Restoreは [`docs/backup-and-restore.md`](docs/backup-and-restore.md) �
 bash tests/run-ci.sh
 ```
 
-GitHub ActionsのCIは `main` push / Pull Requestで同じCurrent GateをPHP 8.3 / 8.4に対して実行します。
+GitHub ActionsのCIは `main` push / Pull Requestで同じCurrent GateをPHP 8.1 / 8.3 / 8.4に対して実行します（8.1は従来のソース回帰テストのみ。配布Runtimeの最低対応は8.3）。
 
 過去Version固有の挙動を調査する場合だけ、Historical testを含む `bash tests/run.sh` または対応する `tests/run-v*.sh` を追加実行します。
 
