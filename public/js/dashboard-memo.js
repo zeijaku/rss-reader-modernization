@@ -72,13 +72,26 @@
         };
     }
 
+    function submitMemoForm(form, action, payload) {
+        const editor=window.RssMemoEditor;
+        const textarea=first('.registerMemoBody, .changeMemoBody',form);
+        const button=submitButton(form);
+        if (!editor || !textarea) {
+            runMutation(button, action, memoMultipart(payload), function () { window.location.reload(); });
+            return;
+        }
+        if (!editor.canSubmit(textarea) || !requestStartElement(button)) return;
+        const release=editor.lockForm(form);
+        apiRequestPromise(action,memoMultipart(payload),10000).then(function(data){
+            if(apiResponseOk(data))window.location.reload();
+        },requestFailReason).finally(function(){release();requestEndElement(button);});
+    }
+
     function addMemo(form) {
         const payload = memoFormPayload('register');
         payload.widget_location = value('.registerMemoLocation');
         if (!validMemoBody(payload.memo_body)) { showNotice('本文は1〜16,000文字で入力してください。', 'danger'); return; }
-        runMutation(submitButton(form), 'widget.memo.create', memoMultipart(payload), function () {
-            window.location.reload();
-        });
+        submitMemoForm(form, 'widget.memo.create', payload);
     }
 
     function editMemo(trigger) {
@@ -94,6 +107,7 @@
         setValue('.changeMemoStyle', attribute(trigger, 'data-widget-style', 'success'));
         setValue('.changeMemoWidth', attribute(trigger, 'data-widget-width', '1'));
         setValue('.changeMemoHeight', attribute(trigger, 'data-widget-height', '1'));
+        if(window.RssMemoEditor)window.RssMemoEditor.reset(first('.changeMemoBody'));
     }
 
     function changeMemo(form) {
@@ -102,9 +116,7 @@
         payload.expected_sha256 = value('.changeMemoExpectedSha256');
         payload.expected_revision = value('.changeMemoExpectedRevision');
         if (!validMemoBody(payload.memo_body)) { showNotice('本文は1〜16,000文字で入力してください。', 'danger'); return; }
-        runMutation(submitButton(form), 'widget.memo.update', memoMultipart(payload), function () {
-            window.location.reload();
-        });
+        submitMemoForm(form, 'widget.memo.update', payload);
     }
 
     function inlineElements(card) {
@@ -138,6 +150,7 @@
         if (!card || card.getAttribute('data-memo-inline-saving') === 'true') { return false; }
         const nodes = inlineElements(card);
         if (!nodes.display || !nodes.editor) { return false; }
+        if(window.RssMemoEditor)window.RssMemoEditor.end(nodes.textarea);
         nodes.editor.classList.add('d-none');
         nodes.display.classList.remove('d-none');
         card.removeAttribute('data-memo-inline-editing');
@@ -161,6 +174,7 @@
         card.setAttribute('data-memo-inline-editing', 'true');
         if (nodes.settings) { nodes.settings.disabled = true; }
         if (nodes.trigger) { nodes.trigger.disabled = true; }
+        if(window.RssMemoEditor)window.RssMemoEditor.reset(nodes.textarea);
         updateInlineStatus(card);
         nodes.textarea.focus();
     }
@@ -177,6 +191,7 @@
         const card = closestMatch(trigger, '[data-dashboard-widget-type="memo"]');
         if (!card || card.getAttribute('aria-busy') === 'true' || card.getAttribute('data-memo-inline-editing') !== 'true') { return; }
         const nodes = inlineElements(card);
+        if(window.RssMemoEditor&&!window.RssMemoEditor.canSubmit(nodes.textarea))return;
         const widgetId = card.getAttribute('data-dashboard-widget-id') || '';
         const expected = card.getAttribute('data-memo-sha256') || '';
         const revision = card.getAttribute('data-memo-revision') || '';
@@ -193,6 +208,7 @@
         card.setAttribute('data-memo-inline-saving', 'true');
         nodes.cancel.disabled = true;
         nodes.textarea.readOnly = true;
+        if(window.RssMemoEditor)window.RssMemoEditor.busy(nodes.textarea,true);
         nodes.status.textContent = '保存中...';
         apiRequestPromise('widget.memo.body.update', memoMultipart({
             widget_id: widgetId,
@@ -232,6 +248,7 @@
                 card.removeAttribute('data-memo-inline-saving');
                 nodes.cancel.disabled = false;
                 nodes.textarea.readOnly = false;
+                if(window.RssMemoEditor)window.RssMemoEditor.busy(nodes.textarea,false);
                 requestEndElement(nodes.save);
             });
     }

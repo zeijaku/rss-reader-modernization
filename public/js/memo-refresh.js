@@ -122,6 +122,7 @@
         $('.changeMemoWidth').val(String(memo.widget_width));
         $('.changeMemoHeight').val(String(memo.widget_height));
         $('.changeMemoStyle').val(String(memo.widget_style));
+        if(window.RssMemoEditor)window.RssMemoEditor.reset($('.changeMemoBody').get(0));
     }
 
     function findMemo(response, widgetId, memoId) {
@@ -207,7 +208,7 @@
         }
 
         setPending($button, true);
-        var $controls = $card.find('.memo-md-task, .memo-inline-trigger, .memo-edit-trigger, .memo-inline-save, .memo-inline-cancel, .memo-inline-textarea');
+        var $controls = $card.find('.memo-md-task, .memo-inline-trigger, .memo-edit-trigger, .memo-inline-save, .memo-inline-cancel, .memo-inline-textarea, .memo-editor-button');
         var prior = $controls.map(function(){return this.disabled;}).get();
         $controls.prop('disabled', true);
         $card.attr('aria-busy', 'true');
